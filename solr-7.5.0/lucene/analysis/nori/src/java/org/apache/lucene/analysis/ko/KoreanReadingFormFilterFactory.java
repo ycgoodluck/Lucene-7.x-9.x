@@ -31,20 +31,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;
  * </pre>
+ *
  * @lucene.experimental
  */
 public class KoreanReadingFormFilterFactory extends TokenFilterFactory {
 
-  /** Creates a new KoreanReadingFilterFactory */
-  public KoreanReadingFormFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new KoreanReadingFormFilter(input);
-  }
+	/**
+	 * Creates a new KoreanReadingFilterFactory
+	 */
+	public KoreanReadingFormFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new KoreanReadingFormFilter(input);
+	}
 }

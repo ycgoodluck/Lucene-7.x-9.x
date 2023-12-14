@@ -22,85 +22,87 @@ import java.util.Properties;
 
 import org.apache.lucene.document.DateTools;
 
-/** Output of parsing (e.g. HTML parsing) of an input document. */
+/**
+ * Output of parsing (e.g. HTML parsing) of an input document.
+ */
 public class DocData {
-  
-  private String name;
-  private String body;
-  private String title;
-  private String date;
-  private int id;
-  private Properties props;
-  
-  public void clear() {
-    name = null;
-    body = null;
-    title = null;
-    date = null;
-    props = null;
-    id = -1;
-  }
-  
-  public String getBody() {
-    return body;
-  }
 
-  /**
-   * @return the date. If the ctor with Date was called, then the String
-   *         returned is the output of
-   *         {@link DateTools#dateToString(Date, org.apache.lucene.document.DateTools.Resolution)}
-   *         . Otherwise it's the String passed to the other ctor.
-   */
-  public String getDate() {
-    return date;
-  }
+	private String name;
+	private String body;
+	private String title;
+	private String date;
+	private int id;
+	private Properties props;
 
-  public String getName() {
-    return name;
-  }
+	public void clear() {
+		name = null;
+		body = null;
+		title = null;
+		date = null;
+		props = null;
+		id = -1;
+	}
 
-  public int getID() {
-    return id;
-  }
+	public String getBody() {
+		return body;
+	}
 
-  public Properties getProps() {
-    return props;
-  }
+	/**
+	 * @return the date. If the ctor with Date was called, then the String
+	 * returned is the output of
+	 * {@link DateTools#dateToString(Date, org.apache.lucene.document.DateTools.Resolution)}
+	 * . Otherwise it's the String passed to the other ctor.
+	 */
+	public String getDate() {
+		return date;
+	}
 
-  public String getTitle() {
-    return title;
-  }
+	public String getName() {
+		return name;
+	}
 
-  public void setBody(String body) {
-    this.body = body;
-  }
+	public int getID() {
+		return id;
+	}
 
-  public void setDate(Date date) {
-    if (date != null) {
-      setDate(DateTools.dateToString(date, DateTools.Resolution.SECOND));
-    } else {
-      this.date = null;
-    }
-  }
+	public Properties getProps() {
+		return props;
+	}
 
-  public void setDate(String date) {
-    this.date = date;
-  }
+	public String getTitle() {
+		return title;
+	}
 
-  public void setName(String name) {
-    this.name = name;
-  }
+	public void setBody(String body) {
+		this.body = body;
+	}
 
-  public void setID(int id) {
-    this.id = id;
-  }
+	public void setDate(Date date) {
+		if (date != null) {
+			setDate(DateTools.dateToString(date, DateTools.Resolution.SECOND));
+		} else {
+			this.date = null;
+		}
+	}
 
-  public void setProps(Properties props) {
-    this.props = props;
-  }
+	public void setDate(String date) {
+		this.date = date;
+	}
 
-  public void setTitle(String title) {
-    this.title = title;
-  }
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setID(int id) {
+		this.id = id;
+	}
+
+	public void setProps(Properties props) {
+		this.props = props;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
 
 }

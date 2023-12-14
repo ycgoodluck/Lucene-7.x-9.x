@@ -24,24 +24,27 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
  * Factory for {@link KeywordRepeatFilter}.
- *
+ * <p>
  * Since {@link KeywordRepeatFilter} emits two tokens for every input token, and any tokens that aren't transformed
  * later in the analysis chain will be in the document twice. Therefore, consider adding
  * {@link RemoveDuplicatesTokenFilterFactory} later in the analysis chain.
+ *
  * @since 4.3.0
  */
 public final class KeywordRepeatFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new KeywordRepeatFilterFactory */
-  public KeywordRepeatFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new KeywordRepeatFilter(input);
-  }
+
+	/**
+	 * Creates a new KeywordRepeatFilterFactory
+	 */
+	public KeywordRepeatFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new KeywordRepeatFilter(input);
+	}
 }

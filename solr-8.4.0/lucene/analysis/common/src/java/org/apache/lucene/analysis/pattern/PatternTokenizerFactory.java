@@ -53,38 +53,42 @@ import org.apache.lucene.util.AttributeFactory;
  *   &lt;analyzer&gt;
  *     &lt;tokenizer class="solr.PatternTokenizerFactory" pattern="\'([^\']+)\'" group="1"/&gt;
  *   &lt;/analyzer&gt;
- * &lt;/fieldType&gt;</pre> 
- * 
+ * &lt;/fieldType&gt;</pre>
+ *
+ * @lucene.spi {@value #NAME}
  * @see PatternTokenizer
  * @since solr1.2
- * @lucene.spi {@value #NAME}
  */
 public class PatternTokenizerFactory extends TokenizerFactory {
 
-  /** SPI name */
-  public static final String NAME = "pattern";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "pattern";
 
-  public static final String PATTERN = "pattern";
-  public static final String GROUP = "group";
- 
-  protected final Pattern pattern;
-  protected final int group;
-  
-  /** Creates a new PatternTokenizerFactory */
-  public PatternTokenizerFactory(Map<String,String> args) {
-    super(args);
-    pattern = getPattern(args, PATTERN);
-    group = getInt(args, GROUP, -1);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  /**
-   * Split the input using configured pattern
-   */
-  @Override
-  public PatternTokenizer create(final AttributeFactory factory) {
-    return new PatternTokenizer(factory, pattern, group);
-  }
+	public static final String PATTERN = "pattern";
+	public static final String GROUP = "group";
+
+	protected final Pattern pattern;
+	protected final int group;
+
+	/**
+	 * Creates a new PatternTokenizerFactory
+	 */
+	public PatternTokenizerFactory(Map<String, String> args) {
+		super(args);
+		pattern = getPattern(args, PATTERN);
+		group = getInt(args, GROUP, -1);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	/**
+	 * Split the input using configured pattern
+	 */
+	@Override
+	public PatternTokenizer create(final AttributeFactory factory) {
+		return new PatternTokenizer(factory, pattern, group);
+	}
 }

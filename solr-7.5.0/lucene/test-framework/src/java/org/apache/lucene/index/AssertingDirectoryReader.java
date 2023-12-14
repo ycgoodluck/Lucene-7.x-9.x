@@ -24,25 +24,25 @@ import java.io.IOException;
  */
 public class AssertingDirectoryReader extends FilterDirectoryReader {
 
-  static class AssertingSubReaderWrapper extends SubReaderWrapper {
-    @Override
-    public LeafReader wrap(LeafReader reader) {
-      return new AssertingLeafReader(reader);
-    }
-  }
+	static class AssertingSubReaderWrapper extends SubReaderWrapper {
+		@Override
+		public LeafReader wrap(LeafReader reader) {
+			return new AssertingLeafReader(reader);
+		}
+	}
 
-  public AssertingDirectoryReader(DirectoryReader in) throws IOException {
-    super(in, new AssertingSubReaderWrapper());
-  }
+	public AssertingDirectoryReader(DirectoryReader in) throws IOException {
+		super(in, new AssertingSubReaderWrapper());
+	}
 
-  @Override
-  protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
-    return new AssertingDirectoryReader(in);
-  }
+	@Override
+	protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
+		return new AssertingDirectoryReader(in);
+	}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    return in.getReaderCacheHelper();
-  }
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		return in.getReaderCacheHelper();
+	}
 
 }

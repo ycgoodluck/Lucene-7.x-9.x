@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link FrenchMinimalStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_frminstem" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -33,24 +33,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.FrenchMinimalStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.1.0
  */
 public class FrenchMinimalStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "frenchMinimalStem";
-  
-  /** Creates a new FrenchMinimalStemFilterFactory */
-  public FrenchMinimalStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new FrenchMinimalStemFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "frenchMinimalStem";
+
+	/**
+	 * Creates a new FrenchMinimalStemFilterFactory
+	 */
+	public FrenchMinimalStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new FrenchMinimalStemFilter(input);
+	}
 }

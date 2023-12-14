@@ -27,34 +27,40 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Norwegian Light stem factory is working.
  */
 public class TestNorwegianLightStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("epler eple");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("NorwegianLightStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "epl", "epl" });
-  }
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("epler eple");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("NorwegianLightStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"epl", "epl"});
+	}
 
-  /** Test stemming with variant set explicitly to Bokmål */
-  public void testBokmaalStemming() throws Exception {
-    Reader reader = new StringReader("epler eple");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("NorwegianLightStem", "variant", "nb").create(stream);
-    assertTokenStreamContents(stream, new String[] { "epl", "epl" });
-  }
+	/**
+	 * Test stemming with variant set explicitly to Bokmål
+	 */
+	public void testBokmaalStemming() throws Exception {
+		Reader reader = new StringReader("epler eple");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("NorwegianLightStem", "variant", "nb").create(stream);
+		assertTokenStreamContents(stream, new String[]{"epl", "epl"});
+	}
 
-  /** Test stemming with variant set explicitly to Nynorsk */
-  public void testNynorskStemming() throws Exception {
-    Reader reader = new StringReader("gutar gutane");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("NorwegianLightStem", "variant", "nn").create(stream);
-    assertTokenStreamContents(stream, new String[] { "gut", "gut" });
-  }
+	/**
+	 * Test stemming with variant set explicitly to Nynorsk
+	 */
+	public void testNynorskStemming() throws Exception {
+		Reader reader = new StringReader("gutar gutane");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("NorwegianLightStem", "variant", "nn").create(stream);
+		assertTokenStreamContents(stream, new String[]{"gut", "gut"});
+	}
 
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("NorwegianLightStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("NorwegianLightStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

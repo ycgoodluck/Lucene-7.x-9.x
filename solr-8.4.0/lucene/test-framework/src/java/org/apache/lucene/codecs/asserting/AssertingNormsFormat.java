@@ -36,116 +36,116 @@ import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
  * Just like the default but with additional asserts.
  */
 public class AssertingNormsFormat extends NormsFormat {
-  private final NormsFormat in = TestUtil.getDefaultCodec().normsFormat();
-  
-  @Override
-  public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
-    NormsConsumer consumer = in.normsConsumer(state);
-    assert consumer != null;
-    return new AssertingNormsConsumer(consumer, state.segmentInfo.maxDoc());
-  }
+	private final NormsFormat in = TestUtil.getDefaultCodec().normsFormat();
 
-  @Override
-  public NormsProducer normsProducer(SegmentReadState state) throws IOException {
-    assert state.fieldInfos.hasNorms();
-    NormsProducer producer = in.normsProducer(state);
-    assert producer != null;
-    return new AssertingNormsProducer(producer, state.segmentInfo.maxDoc(), false);
-  }
-  
-  static class AssertingNormsConsumer extends NormsConsumer {
-    private final NormsConsumer in;
-    private final int maxDoc;
-    
-    AssertingNormsConsumer(NormsConsumer in, int maxDoc) {
-      this.in = in;
-      this.maxDoc = maxDoc;
-    }
+	@Override
+	public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
+		NormsConsumer consumer = in.normsConsumer(state);
+		assert consumer != null;
+		return new AssertingNormsConsumer(consumer, state.segmentInfo.maxDoc());
+	}
 
-    @Override
-    public void addNormsField(FieldInfo field, NormsProducer valuesProducer) throws IOException {
-      NumericDocValues values = valuesProducer.getNorms(field);
+	@Override
+	public NormsProducer normsProducer(SegmentReadState state) throws IOException {
+		assert state.fieldInfos.hasNorms();
+		NormsProducer producer = in.normsProducer(state);
+		assert producer != null;
+		return new AssertingNormsProducer(producer, state.segmentInfo.maxDoc(), false);
+	}
 
-      int docID;
-      int lastDocID = -1;
-      while ((docID = values.nextDoc()) != NO_MORE_DOCS) {
-        assert docID >= 0 && docID < maxDoc;
-        assert docID > lastDocID;
-        lastDocID = docID;
-        long value = values.longValue();
-      }
+	static class AssertingNormsConsumer extends NormsConsumer {
+		private final NormsConsumer in;
+		private final int maxDoc;
 
-      in.addNormsField(field, valuesProducer);
-    }
-    
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
-  }
-  
-  static class AssertingNormsProducer extends NormsProducer {
-    private final NormsProducer in;
-    private final int maxDoc;
-    private final boolean merging;
-    private final Thread creationThread;
-    
-    AssertingNormsProducer(NormsProducer in, int maxDoc, boolean merging) {
-      this.in = in;
-      this.maxDoc = maxDoc;
-      this.merging = merging;
-      this.creationThread = Thread.currentThread();
-      // do a few simple checks on init
-      assert toString() != null;
-      assert ramBytesUsed() >= 0;
-      assert getChildResources() != null;
-    }
+		AssertingNormsConsumer(NormsConsumer in, int maxDoc) {
+			this.in = in;
+			this.maxDoc = maxDoc;
+		}
 
-    @Override
-    public NumericDocValues getNorms(FieldInfo field) throws IOException {
-      if (merging) {
-        AssertingCodec.assertThread("NormsProducer", creationThread);
-      }
-      assert field.hasNorms();
-      NumericDocValues values = in.getNorms(field);
-      assert values != null;
-      return new AssertingLeafReader.AssertingNumericDocValues(values, maxDoc);
-    }
+		@Override
+		public void addNormsField(FieldInfo field, NormsProducer valuesProducer) throws IOException {
+			NumericDocValues values = valuesProducer.getNorms(field);
 
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
+			int docID;
+			int lastDocID = -1;
+			while ((docID = values.nextDoc()) != NO_MORE_DOCS) {
+				assert docID >= 0 && docID < maxDoc;
+				assert docID > lastDocID;
+				lastDocID = docID;
+				long value = values.longValue();
+			}
 
-    @Override
-    public long ramBytesUsed() {
-      long v = in.ramBytesUsed();
-      assert v >= 0;
-      return v;
-    }
-    
-    @Override
-    public Collection<Accountable> getChildResources() {
-      Collection<Accountable> res = in.getChildResources();
-      TestUtil.checkReadOnly(res);
-      return res;
-    }
+			in.addNormsField(field, valuesProducer);
+		}
 
-    @Override
-    public void checkIntegrity() throws IOException {
-      in.checkIntegrity();
-    }
-    
-    @Override
-    public NormsProducer getMergeInstance() {
-      return new AssertingNormsProducer(in.getMergeInstance(), maxDoc, true);
-    }
-    
-    @Override
-    public String toString() {
-      return getClass().getSimpleName() + "(" + in.toString() + ")";
-    }
-  }
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
+	}
+
+	static class AssertingNormsProducer extends NormsProducer {
+		private final NormsProducer in;
+		private final int maxDoc;
+		private final boolean merging;
+		private final Thread creationThread;
+
+		AssertingNormsProducer(NormsProducer in, int maxDoc, boolean merging) {
+			this.in = in;
+			this.maxDoc = maxDoc;
+			this.merging = merging;
+			this.creationThread = Thread.currentThread();
+			// do a few simple checks on init
+			assert toString() != null;
+			assert ramBytesUsed() >= 0;
+			assert getChildResources() != null;
+		}
+
+		@Override
+		public NumericDocValues getNorms(FieldInfo field) throws IOException {
+			if (merging) {
+				AssertingCodec.assertThread("NormsProducer", creationThread);
+			}
+			assert field.hasNorms();
+			NumericDocValues values = in.getNorms(field);
+			assert values != null;
+			return new AssertingLeafReader.AssertingNumericDocValues(values, maxDoc);
+		}
+
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
+
+		@Override
+		public long ramBytesUsed() {
+			long v = in.ramBytesUsed();
+			assert v >= 0;
+			return v;
+		}
+
+		@Override
+		public Collection<Accountable> getChildResources() {
+			Collection<Accountable> res = in.getChildResources();
+			TestUtil.checkReadOnly(res);
+			return res;
+		}
+
+		@Override
+		public void checkIntegrity() throws IOException {
+			in.checkIntegrity();
+		}
+
+		@Override
+		public NormsProducer getMergeInstance() {
+			return new AssertingNormsProducer(in.getMergeInstance(), maxDoc, true);
+		}
+
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + "(" + in.toString() + ")";
+		}
+	}
 }

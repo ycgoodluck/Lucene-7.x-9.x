@@ -25,10 +25,10 @@ import org.apache.lucene.util.TestUtil;
  * Basic tests for BloomPostingsFormat
  */
 public class TestBloomPostingsFormat extends BasePostingsFormatTestCase {
-  private final Codec codec = TestUtil.alwaysPostingsFormat(new TestBloomFilteredLucenePostings());
+	private final Codec codec = TestUtil.alwaysPostingsFormat(new TestBloomFilteredLucenePostings());
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

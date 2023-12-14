@@ -17,19 +17,21 @@
 
 package org.apache.lucene.luke.models;
 
-/** Wrapper exception class to convert checked exceptions to runtime exceptions. */
+/**
+ * Wrapper exception class to convert checked exceptions to runtime exceptions.
+ */
 public class LukeException extends RuntimeException {
 
-  public LukeException(String message, Throwable cause) {
-    super(message, cause);
-  }
+	public LukeException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-  public LukeException(Throwable cause) {
-    super(cause);
-  }
+	public LukeException(Throwable cause) {
+		super(cause);
+	}
 
-  public LukeException(String message) {
-    super(message);
-  }
+	public LukeException(String message) {
+		super(message);
+	}
 
 }

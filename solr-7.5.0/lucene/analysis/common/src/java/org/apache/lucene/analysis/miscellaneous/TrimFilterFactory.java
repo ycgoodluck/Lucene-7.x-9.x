@@ -38,22 +38,24 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * @see TrimFilter
  */
 public class TrimFilterFactory extends TokenFilterFactory implements MultiTermAwareComponent {
-  
-  /** Creates a new TrimFilterFactory */
-  public TrimFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TrimFilter create(TokenStream input) {
-    return new TrimFilter(input);
-  }
 
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	/**
+	 * Creates a new TrimFilterFactory
+	 */
+	public TrimFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TrimFilter create(TokenStream input) {
+		return new TrimFilter(input);
+	}
+
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

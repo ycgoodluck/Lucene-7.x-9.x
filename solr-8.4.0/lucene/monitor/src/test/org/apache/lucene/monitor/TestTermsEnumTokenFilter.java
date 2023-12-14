@@ -28,46 +28,46 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestTermsEnumTokenFilter extends LuceneTestCase {
 
-  final class LeapfrogTokenFilter extends TokenFilter {
+	final class LeapfrogTokenFilter extends TokenFilter {
 
-    final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
+		final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
 
-    LeapfrogTokenFilter(TokenStream input) {
-      super(input);
-    }
+		LeapfrogTokenFilter(TokenStream input) {
+			super(input);
+		}
 
-    @Override
-    public boolean incrementToken() throws IOException {
-      posIncAtt.setPositionIncrement(100000000);
-      return input.incrementToken();
-    }
-  }
+		@Override
+		public boolean incrementToken() throws IOException {
+			posIncAtt.setPositionIncrement(100000000);
+			return input.incrementToken();
+		}
+	}
 
-  public void testPosIncAttributeOverflow() throws IOException {
+	public void testPosIncAttributeOverflow() throws IOException {
 
-    final BytesRef foo = new BytesRef("foo");
-    final BytesRef bar = new BytesRef("bar");
+		final BytesRef foo = new BytesRef("foo");
+		final BytesRef bar = new BytesRef("bar");
 
-    BytesRefIterator terms = new BytesRefIterator() {
+		BytesRefIterator terms = new BytesRefIterator() {
 
-      long count = 1000;
+			long count = 1000;
 
-      @Override
-      public BytesRef next() throws IOException {
-        if (count-- > 100)
-          return foo;
-        if (count-- > 0)
-          return bar;
-        return null;
-      }
-    };
+			@Override
+			public BytesRef next() throws IOException {
+				if (count-- > 100)
+					return foo;
+				if (count-- > 0)
+					return bar;
+				return null;
+			}
+		};
 
-    try (TokenStream ts = new LeapfrogTokenFilter(new TermsEnumTokenStream(terms))) {
-      while (ts.incrementToken()) {
-        // This tight loop will throw an exception if clearAttributes() is not called
-        // by TermsEnumTokenStream.  See issue #46
-      }
-    }
-  }
+		try (TokenStream ts = new LeapfrogTokenFilter(new TermsEnumTokenStream(terms))) {
+			while (ts.incrementToken()) {
+				// This tight loop will throw an exception if clearAttributes() is not called
+				// by TermsEnumTokenStream.  See issue #46
+			}
+		}
+	}
 
 }

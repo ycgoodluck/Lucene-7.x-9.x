@@ -36,61 +36,61 @@ import com.carrotsearch.randomizedtesting.generators.RandomNumbers;
 
 public class TestForUtil extends LuceneTestCase {
 
-  public void testEncodeDecode() throws IOException {
-    final int iterations = RandomNumbers.randomIntBetween(random(), 1, 1000);
-    final float acceptableOverheadRatio = random().nextFloat();
-    final int[] values = new int[iterations * BLOCK_SIZE];
-    for (int i = 0; i < iterations; ++i) {
-      final int bpv = random().nextInt(32);
-      if (bpv == 0) {
-        final int value = RandomNumbers.randomIntBetween(random(), 0, Integer.MAX_VALUE);
-        for (int j = 0; j < BLOCK_SIZE; ++j) {
-          values[i * BLOCK_SIZE + j] = value;
-        }
-      } else {
-        for (int j = 0; j < BLOCK_SIZE; ++j) {
-          values[i * BLOCK_SIZE + j] = RandomNumbers.randomIntBetween(random(),
-              0, (int) PackedInts.maxValue(bpv));
-        }
-      }
-    }
+	public void testEncodeDecode() throws IOException {
+		final int iterations = RandomNumbers.randomIntBetween(random(), 1, 1000);
+		final float acceptableOverheadRatio = random().nextFloat();
+		final int[] values = new int[iterations * BLOCK_SIZE];
+		for (int i = 0; i < iterations; ++i) {
+			final int bpv = random().nextInt(32);
+			if (bpv == 0) {
+				final int value = RandomNumbers.randomIntBetween(random(), 0, Integer.MAX_VALUE);
+				for (int j = 0; j < BLOCK_SIZE; ++j) {
+					values[i * BLOCK_SIZE + j] = value;
+				}
+			} else {
+				for (int j = 0; j < BLOCK_SIZE; ++j) {
+					values[i * BLOCK_SIZE + j] = RandomNumbers.randomIntBetween(random(),
+						0, (int) PackedInts.maxValue(bpv));
+				}
+			}
+		}
 
-    final Directory d = new RAMDirectory();
-    final long endPointer;
+		final Directory d = new RAMDirectory();
+		final long endPointer;
 
-    {
-      // encode
-      IndexOutput out = d.createOutput("test.bin", IOContext.DEFAULT);
-      final ForUtil forUtil = new ForUtil(acceptableOverheadRatio, out);
-      
-      for (int i = 0; i < iterations; ++i) {
-        // Although values after BLOCK_SIZE are garbage, we need to allocate extra bytes to avoid AIOOBE.
-        int[] block = ArrayUtil.grow(ArrayUtil.copyOfSubArray(values, i*BLOCK_SIZE, (i+1)*BLOCK_SIZE));
-        forUtil.writeBlock(ArrayUtil.grow(block, MAX_DATA_SIZE), new byte[MAX_ENCODED_SIZE], out);
-      }
-      endPointer = out.getFilePointer();
-      out.close();
-    }
+		{
+			// encode
+			IndexOutput out = d.createOutput("test.bin", IOContext.DEFAULT);
+			final ForUtil forUtil = new ForUtil(acceptableOverheadRatio, out);
 
-    {
-      // decode
-      IndexInput in = d.openInput("test.bin", IOContext.READONCE);
-      final ForUtil forUtil = new ForUtil(in);
-      for (int i = 0; i < iterations; ++i) {
-        if (random().nextBoolean()) {
-          forUtil.skipBlock(in);
-          continue;
-        }
-        final int[] restored = new int[MAX_DATA_SIZE];
-        forUtil.readBlock(in, new byte[MAX_ENCODED_SIZE], restored);
-        assertArrayEquals(ArrayUtil.copyOfSubArray(values, i*BLOCK_SIZE, (i+1)*BLOCK_SIZE),
-            ArrayUtil.copyOfSubArray(restored, 0, BLOCK_SIZE));
-      }
-      assertEquals(endPointer, in.getFilePointer());
-      in.close();
-    }
-    
-    d.close();
-  }
+			for (int i = 0; i < iterations; ++i) {
+				// Although values after BLOCK_SIZE are garbage, we need to allocate extra bytes to avoid AIOOBE.
+				int[] block = ArrayUtil.grow(ArrayUtil.copyOfSubArray(values, i * BLOCK_SIZE, (i + 1) * BLOCK_SIZE));
+				forUtil.writeBlock(ArrayUtil.grow(block, MAX_DATA_SIZE), new byte[MAX_ENCODED_SIZE], out);
+			}
+			endPointer = out.getFilePointer();
+			out.close();
+		}
+
+		{
+			// decode
+			IndexInput in = d.openInput("test.bin", IOContext.READONCE);
+			final ForUtil forUtil = new ForUtil(in);
+			for (int i = 0; i < iterations; ++i) {
+				if (random().nextBoolean()) {
+					forUtil.skipBlock(in);
+					continue;
+				}
+				final int[] restored = new int[MAX_DATA_SIZE];
+				forUtil.readBlock(in, new byte[MAX_ENCODED_SIZE], restored);
+				assertArrayEquals(ArrayUtil.copyOfSubArray(values, i * BLOCK_SIZE, (i + 1) * BLOCK_SIZE),
+					ArrayUtil.copyOfSubArray(restored, 0, BLOCK_SIZE));
+			}
+			assertEquals(endPointer, in.getFilePointer());
+			in.close();
+		}
+
+		d.close();
+	}
 
 }

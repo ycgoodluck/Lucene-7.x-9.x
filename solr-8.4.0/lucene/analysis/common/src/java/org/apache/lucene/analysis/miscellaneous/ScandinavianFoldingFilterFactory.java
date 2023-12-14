@@ -31,28 +31,31 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.ScandinavianFoldingFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 4.4.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 4.4.0
  */
 public class ScandinavianFoldingFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "scandinavianFolding";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "scandinavianFolding";
 
-  public ScandinavianFoldingFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	public ScandinavianFoldingFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new ScandinavianFoldingFilter(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new ScandinavianFoldingFilter(input);
+	}
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

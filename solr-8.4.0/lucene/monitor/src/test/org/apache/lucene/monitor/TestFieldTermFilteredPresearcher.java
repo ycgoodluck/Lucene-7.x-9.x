@@ -21,8 +21,8 @@ import java.util.Collections;
 
 public class TestFieldTermFilteredPresearcher extends FieldFilterPresearcherComponentTestBase {
 
-  @Override
-  protected Presearcher createPresearcher() {
-    return new TermFilteredPresearcher(TermWeightor.DEFAULT, Collections.emptyList(), Collections.singleton("language"));
-  }
+	@Override
+	protected Presearcher createPresearcher() {
+		return new TermFilteredPresearcher(TermWeightor.DEFAULT, Collections.emptyList(), Collections.singleton("language"));
+	}
 }

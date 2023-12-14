@@ -34,46 +34,46 @@ import java.io.InputStream;
  * client is on revision <em>r1</em> and revisions <em>r2</em> and <em>r3</em>
  * were published, then when the cllient will next check for update, it will
  * receive <em>r3</em>.
- * 
+ *
  * @lucene.experimental
  */
 public interface Replicator extends Closeable {
-  
-  /**
-   * Publish a new {@link Revision} for consumption by clients. It is the
-   * caller's responsibility to verify that the revision files exist and can be
-   * read by clients. When the revision is no longer needed, it will be
-   * {@link Revision#release() released} by the replicator.
-   */
-  public void publish(Revision revision) throws IOException;
-  
-  /**
-   * Check whether the given version is up-to-date and returns a
-   * {@link SessionToken} which can be used for fetching the revision files,
-   * otherwise returns {@code null}.
-   * <p>
-   * <b>NOTE:</b> when the returned session token is no longer needed, you
-   * should call {@link #release(String)} so that the session resources can be
-   * reclaimed, including the revision files.
-   */
-  public SessionToken checkForUpdate(String currVersion) throws IOException;
-  
-  /**
-   * Notify that the specified {@link SessionToken} is no longer needed by the
-   * caller.
-   */
-  public void release(String sessionID) throws IOException;
-  
-  /**
-   * Returns an {@link InputStream} for the requested file and source in the
-   * context of the given {@link SessionToken#id session}.
-   * <p>
-   * <b>NOTE:</b> it is the caller's responsibility to close the returned
-   * stream.
-   * 
-   * @throws SessionExpiredException if the specified session has already
-   *         expired
-   */
-  public InputStream obtainFile(String sessionID, String source, String fileName) throws IOException;
-  
+
+	/**
+	 * Publish a new {@link Revision} for consumption by clients. It is the
+	 * caller's responsibility to verify that the revision files exist and can be
+	 * read by clients. When the revision is no longer needed, it will be
+	 * {@link Revision#release() released} by the replicator.
+	 */
+	public void publish(Revision revision) throws IOException;
+
+	/**
+	 * Check whether the given version is up-to-date and returns a
+	 * {@link SessionToken} which can be used for fetching the revision files,
+	 * otherwise returns {@code null}.
+	 * <p>
+	 * <b>NOTE:</b> when the returned session token is no longer needed, you
+	 * should call {@link #release(String)} so that the session resources can be
+	 * reclaimed, including the revision files.
+	 */
+	public SessionToken checkForUpdate(String currVersion) throws IOException;
+
+	/**
+	 * Notify that the specified {@link SessionToken} is no longer needed by the
+	 * caller.
+	 */
+	public void release(String sessionID) throws IOException;
+
+	/**
+	 * Returns an {@link InputStream} for the requested file and source in the
+	 * context of the given {@link SessionToken#id session}.
+	 * <p>
+	 * <b>NOTE:</b> it is the caller's responsibility to close the returned
+	 * stream.
+	 *
+	 * @throws SessionExpiredException if the specified session has already
+	 *                                 expired
+	 */
+	public InputStream obtainFile(String sessionID, String source, String fileName) throws IOException;
+
 }

@@ -32,29 +32,33 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class ArabicNormalizationFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "arabicNormalization";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "arabicNormalization";
 
-  /** Creates a new ArabicNormalizationFilterFactory */
-  public ArabicNormalizationFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new ArabicNormalizationFilterFactory
+	 */
+	public ArabicNormalizationFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new ArabicNormalizationFilter(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new ArabicNormalizationFilter(input);
+	}
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

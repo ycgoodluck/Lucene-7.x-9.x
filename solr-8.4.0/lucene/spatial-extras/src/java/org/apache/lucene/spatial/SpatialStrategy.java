@@ -55,96 +55,97 @@ import org.locationtech.spatial4j.shape.Shape;
  */
 public abstract class SpatialStrategy {
 
-  protected final SpatialContext ctx;
-  private final String fieldName;
+	protected final SpatialContext ctx;
+	private final String fieldName;
 
-  /**
-   * Constructs the spatial strategy with its mandatory arguments.
-   */
-  public SpatialStrategy(SpatialContext ctx, String fieldName) {
-    if (ctx == null)
-      throw new IllegalArgumentException("ctx is required");
-    this.ctx = ctx;
-    if (fieldName == null || fieldName.length() == 0)
-      throw new IllegalArgumentException("fieldName is required");
-    this.fieldName = fieldName;
-  }
+	/**
+	 * Constructs the spatial strategy with its mandatory arguments.
+	 */
+	public SpatialStrategy(SpatialContext ctx, String fieldName) {
+		if (ctx == null)
+			throw new IllegalArgumentException("ctx is required");
+		this.ctx = ctx;
+		if (fieldName == null || fieldName.length() == 0)
+			throw new IllegalArgumentException("fieldName is required");
+		this.fieldName = fieldName;
+	}
 
-  public SpatialContext getSpatialContext() {
-    return ctx;
-  }
+	public SpatialContext getSpatialContext() {
+		return ctx;
+	}
 
-  /**
-   * The name of the field or the prefix of them if there are multiple
-   * fields needed internally.
-   * @return Not null.
-   */
-  public String getFieldName() {
-    return fieldName;
-  }
+	/**
+	 * The name of the field or the prefix of them if there are multiple
+	 * fields needed internally.
+	 *
+	 * @return Not null.
+	 */
+	public String getFieldName() {
+		return fieldName;
+	}
 
-  /**
-   * Returns the IndexableField(s) from the {@code shape} that are to be
-   * added to the {@link org.apache.lucene.document.Document}.  These fields
-   * are expected to be marked as indexed and not stored.
-   * <p>
-   * Note: If you want to <i>store</i> the shape as a string for retrieval in
-   * search results, you could add it like this:
-   * <pre>document.add(new StoredField(fieldName,ctx.toString(shape)));</pre>
-   * The particular string representation used doesn't matter to the Strategy
-   * since it doesn't use it.
-   *
-   * @return Not null nor will it have null elements.
-   * @throws UnsupportedOperationException if given a shape incompatible with the strategy
-   */
-  public abstract Field[] createIndexableFields(Shape shape);
+	/**
+	 * Returns the IndexableField(s) from the {@code shape} that are to be
+	 * added to the {@link org.apache.lucene.document.Document}.  These fields
+	 * are expected to be marked as indexed and not stored.
+	 * <p>
+	 * Note: If you want to <i>store</i> the shape as a string for retrieval in
+	 * search results, you could add it like this:
+	 * <pre>document.add(new StoredField(fieldName,ctx.toString(shape)));</pre>
+	 * The particular string representation used doesn't matter to the Strategy
+	 * since it doesn't use it.
+	 *
+	 * @return Not null nor will it have null elements.
+	 * @throws UnsupportedOperationException if given a shape incompatible with the strategy
+	 */
+	public abstract Field[] createIndexableFields(Shape shape);
 
-  /**
-   * See {@link #makeDistanceValueSource(org.locationtech.spatial4j.shape.Point, double)} called with
-   * a multiplier of 1.0 (i.e. units of degrees).
-   */
-  public DoubleValuesSource makeDistanceValueSource(Point queryPoint) {
-    return makeDistanceValueSource(queryPoint, 1.0);
-  }
+	/**
+	 * See {@link #makeDistanceValueSource(org.locationtech.spatial4j.shape.Point, double)} called with
+	 * a multiplier of 1.0 (i.e. units of degrees).
+	 */
+	public DoubleValuesSource makeDistanceValueSource(Point queryPoint) {
+		return makeDistanceValueSource(queryPoint, 1.0);
+	}
 
-  /**
-   * Make a ValueSource returning the distance between the center of the
-   * indexed shape and {@code queryPoint}.  If there are multiple indexed shapes
-   * then the closest one is chosen. The result is multiplied by {@code multiplier}, which
-   * conveniently is used to get the desired units.
-   */
-  public abstract DoubleValuesSource makeDistanceValueSource(Point queryPoint, double multiplier);
+	/**
+	 * Make a ValueSource returning the distance between the center of the
+	 * indexed shape and {@code queryPoint}.  If there are multiple indexed shapes
+	 * then the closest one is chosen. The result is multiplied by {@code multiplier}, which
+	 * conveniently is used to get the desired units.
+	 */
+	public abstract DoubleValuesSource makeDistanceValueSource(Point queryPoint, double multiplier);
 
-  /**
-   * Make a Query based principally on {@link org.apache.lucene.spatial.query.SpatialOperation}
-   * and {@link Shape} from the supplied {@code args}.  It should be constant scoring of 1.
-   *
-   * @throws UnsupportedOperationException If the strategy does not support the shape in {@code args}
-   * @throws org.apache.lucene.spatial.query.UnsupportedSpatialOperation If the strategy does not support the {@link
-   * org.apache.lucene.spatial.query.SpatialOperation} in {@code args}.
-   */
-  public abstract Query makeQuery(SpatialArgs args);
+	/**
+	 * Make a Query based principally on {@link org.apache.lucene.spatial.query.SpatialOperation}
+	 * and {@link Shape} from the supplied {@code args}.  It should be constant scoring of 1.
+	 *
+	 * @throws UnsupportedOperationException                               If the strategy does not support the shape in {@code args}
+	 * @throws org.apache.lucene.spatial.query.UnsupportedSpatialOperation If the strategy does not support the {@link
+	 *                                                                     org.apache.lucene.spatial.query.SpatialOperation} in {@code args}.
+	 */
+	public abstract Query makeQuery(SpatialArgs args);
 
-  /**
-   * Returns a ValueSource with values ranging from 1 to 0, depending inversely
-   * on the distance from {@link #makeDistanceValueSource(org.locationtech.spatial4j.shape.Point,double)}.
-   * The formula is {@code c/(d + c)} where 'd' is the distance and 'c' is
-   * one tenth the distance to the farthest edge from the center. Thus the
-   * scores will be 1 for indexed points at the center of the query shape and as
-   * low as ~0.1 at its furthest edges.
-   */
-  public final DoubleValuesSource makeRecipDistanceValueSource(Shape queryShape) {
-    Rectangle bbox = queryShape.getBoundingBox();
-    double diagonalDist = ctx.getDistCalc().distance(
-        ctx.makePoint(bbox.getMinX(), bbox.getMinY()), bbox.getMaxX(), bbox.getMaxY());
-    double distToEdge = diagonalDist * 0.5;
-    float c = (float)distToEdge * 0.1f;//one tenth
-    DoubleValuesSource distance = makeDistanceValueSource(queryShape.getCenter(), 1.0);
-    return new ReciprocalDoubleValuesSource(c, distance);
-  }
+	/**
+	 * Returns a ValueSource with values ranging from 1 to 0, depending inversely
+	 * on the distance from {@link #makeDistanceValueSource(org.locationtech.spatial4j.shape.Point, double)}.
+	 * The formula is {@code c/(d + c)} where 'd' is the distance and 'c' is
+	 * one tenth the distance to the farthest edge from the center. Thus the
+	 * scores will be 1 for indexed points at the center of the query shape and as
+	 * low as ~0.1 at its furthest edges.
+	 */
+	public final DoubleValuesSource makeRecipDistanceValueSource(Shape queryShape) {
+		Rectangle bbox = queryShape.getBoundingBox();
+		double diagonalDist = ctx.getDistCalc().distance(
+			ctx.makePoint(bbox.getMinX(), bbox.getMinY()), bbox.getMaxX(), bbox.getMaxY());
+		double distToEdge = diagonalDist * 0.5;
+		float c = (float) distToEdge * 0.1f;//one tenth
+		DoubleValuesSource distance = makeDistanceValueSource(queryShape.getCenter(), 1.0);
+		return new ReciprocalDoubleValuesSource(c, distance);
+	}
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName()+" field:"+fieldName+" ctx="+ctx;
-  }
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + " field:" + fieldName + " ctx=" + ctx;
+	}
 }

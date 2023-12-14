@@ -41,7 +41,7 @@ import org.apache.lucene.store.DataOutput;
  * <ol>
  *   <li><a name="nvm"></a>
  *   <p>The Norms metadata or .nvm file.</p>
- *   <p>For each norms field, this stores metadata, such as the offset into the 
+ *   <p>For each norms field, this stores metadata, such as the offset into the
  *      Norms data (.nvd)</p>
  *   <p>Norms metadata (.dvm) --&gt; Header,&lt;Entry&gt;<sup>NumFields</sup>,Footer</p>
  *   <ul>
@@ -53,7 +53,7 @@ import org.apache.lucene.store.DataOutput;
  *     <li>Footer --&gt; {@link CodecUtil#writeFooter CodecFooter}</li>
  *   </ul>
  *   <p>FieldNumber of -1 indicates the end of metadata.</p>
- *   <p>Offset is the pointer to the start of the data in the norms data (.nvd), or the singleton value 
+ *   <p>Offset is the pointer to the start of the data in the norms data (.nvd), or the singleton value
  *      when BytesPerValue = 0</p>
  *   <li><a name="nvd"></a>
  *   <p>The Norms data or .nvd file.</p>
@@ -65,27 +65,31 @@ import org.apache.lucene.store.DataOutput;
  *     <li>Footer --&gt; {@link CodecUtil#writeFooter CodecFooter}</li>
  *   </ul>
  * </ol>
+ *
  * @lucene.experimental
  */
 public class Lucene53NormsFormat extends NormsFormat {
 
-  /** Sole Constructor */
-  public Lucene53NormsFormat() {}
-  
-  @Override
-  public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
-    throw new UnsupportedOperationException("This format can only be used for reading");
-  }
+	/**
+	 * Sole Constructor
+	 */
+	public Lucene53NormsFormat() {
+	}
 
-  @Override
-  public NormsProducer normsProducer(SegmentReadState state) throws IOException {
-    return new Lucene53NormsProducer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION);
-  }
-  
-  static final String DATA_CODEC = "Lucene53NormsData";
-  static final String DATA_EXTENSION = "nvd";
-  static final String METADATA_CODEC = "Lucene53NormsMetadata";
-  static final String METADATA_EXTENSION = "nvm";
-  static final int VERSION_START = 0;
-  static final int VERSION_CURRENT = VERSION_START;
+	@Override
+	public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
+		throw new UnsupportedOperationException("This format can only be used for reading");
+	}
+
+	@Override
+	public NormsProducer normsProducer(SegmentReadState state) throws IOException {
+		return new Lucene53NormsProducer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION);
+	}
+
+	static final String DATA_CODEC = "Lucene53NormsData";
+	static final String DATA_EXTENSION = "nvd";
+	static final String METADATA_CODEC = "Lucene53NormsMetadata";
+	static final String METADATA_EXTENSION = "nvm";
+	static final int VERSION_START = 0;
+	static final int VERSION_CURRENT = VERSION_START;
 }

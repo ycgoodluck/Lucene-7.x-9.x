@@ -27,7 +27,7 @@ import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link KeepWordFilter}. 
+ * Factory for {@link KeepWordFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_keepword" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -36,51 +36,55 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class KeepWordFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
 
-  /** SPI name */
-  public static final String NAME = "keepWord";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "keepWord";
 
-  private final boolean ignoreCase;
-  private final String wordFiles;
-  private CharArraySet words;
-  
-  /** Creates a new KeepWordFilterFactory */
-  public KeepWordFilterFactory(Map<String,String> args) {
-    super(args);
-    wordFiles = get(args, "words");
-    ignoreCase = getBoolean(args, "ignoreCase", false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private final boolean ignoreCase;
+	private final String wordFiles;
+	private CharArraySet words;
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    if (wordFiles != null) {
-      words = getWordSet(loader, wordFiles, ignoreCase);
-    }
-  }
+	/**
+	 * Creates a new KeepWordFilterFactory
+	 */
+	public KeepWordFilterFactory(Map<String, String> args) {
+		super(args);
+		wordFiles = get(args, "words");
+		ignoreCase = getBoolean(args, "ignoreCase", false);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  public boolean isIgnoreCase() {
-    return ignoreCase;
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		if (wordFiles != null) {
+			words = getWordSet(loader, wordFiles, ignoreCase);
+		}
+	}
 
-  public CharArraySet getWords() {
-    return words;
-  }
+	public boolean isIgnoreCase() {
+		return ignoreCase;
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    // if the set is null, it means it was empty
-    if (words == null) {
-      return input;
-    } else {
-      final TokenStream filter = new KeepWordFilter(input, words);
-      return filter;
-    }
-  }
+	public CharArraySet getWords() {
+		return words;
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		// if the set is null, it means it was empty
+		if (words == null) {
+			return input;
+		} else {
+			final TokenStream filter = new KeepWordFilter(input, words);
+			return filter;
+		}
+	}
 }

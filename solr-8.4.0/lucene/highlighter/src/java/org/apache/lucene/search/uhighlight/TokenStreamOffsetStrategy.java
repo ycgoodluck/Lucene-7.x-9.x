@@ -34,100 +34,100 @@ import org.apache.lucene.util.automaton.CharacterRunAutomaton;
  */
 public class TokenStreamOffsetStrategy extends AnalysisOffsetStrategy {
 
-  private final CharArrayMatcher[] combinedAutomata;
+	private final CharArrayMatcher[] combinedAutomata;
 
-  public TokenStreamOffsetStrategy(UHComponents components, Analyzer indexAnalyzer) {
-    super(components, indexAnalyzer);
-    assert components.getPhraseHelper().hasPositionSensitivity() == false;
-    combinedAutomata = convertTermsToMatchers(components.getTerms(), components.getAutomata());
-  }
+	public TokenStreamOffsetStrategy(UHComponents components, Analyzer indexAnalyzer) {
+		super(components, indexAnalyzer);
+		assert components.getPhraseHelper().hasPositionSensitivity() == false;
+		combinedAutomata = convertTermsToMatchers(components.getTerms(), components.getAutomata());
+	}
 
-  //TODO this is inefficient; instead build a union automata just for terms part.
-  private static CharArrayMatcher[] convertTermsToMatchers(BytesRef[] terms, CharArrayMatcher[] matchers) {
-    CharArrayMatcher[] newAutomata = new CharArrayMatcher[terms.length + matchers.length];
-    for (int i = 0; i < terms.length; i++) {
-      String termString = terms[i].utf8ToString();
-      CharacterRunAutomaton a = new CharacterRunAutomaton(Automata.makeString(termString));
-      newAutomata[i] = LabelledCharArrayMatcher.wrap(termString, a::run);
-    }
-    // Append existing automata (that which is used for MTQs)
-    System.arraycopy(matchers, 0, newAutomata, terms.length, matchers.length);
-    return newAutomata;
-  }
+	//TODO this is inefficient; instead build a union automata just for terms part.
+	private static CharArrayMatcher[] convertTermsToMatchers(BytesRef[] terms, CharArrayMatcher[] matchers) {
+		CharArrayMatcher[] newAutomata = new CharArrayMatcher[terms.length + matchers.length];
+		for (int i = 0; i < terms.length; i++) {
+			String termString = terms[i].utf8ToString();
+			CharacterRunAutomaton a = new CharacterRunAutomaton(Automata.makeString(termString));
+			newAutomata[i] = LabelledCharArrayMatcher.wrap(termString, a::run);
+		}
+		// Append existing automata (that which is used for MTQs)
+		System.arraycopy(matchers, 0, newAutomata, terms.length, matchers.length);
+		return newAutomata;
+	}
 
-  @Override
-  public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
-    return new TokenStreamOffsetsEnum(tokenStream(content), combinedAutomata);
-  }
+	@Override
+	public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
+		return new TokenStreamOffsetsEnum(tokenStream(content), combinedAutomata);
+	}
 
-  private static class TokenStreamOffsetsEnum extends OffsetsEnum {
-    TokenStream stream; // becomes null when closed
-    final CharArrayMatcher[] matchers;
-    final CharTermAttribute charTermAtt;
-    final OffsetAttribute offsetAtt;
+	private static class TokenStreamOffsetsEnum extends OffsetsEnum {
+		TokenStream stream; // becomes null when closed
+		final CharArrayMatcher[] matchers;
+		final CharTermAttribute charTermAtt;
+		final OffsetAttribute offsetAtt;
 
-    int currentMatch = -1;
+		int currentMatch = -1;
 
-    final BytesRef matchDescriptions[];
+		final BytesRef matchDescriptions[];
 
-    TokenStreamOffsetsEnum(TokenStream ts, CharArrayMatcher[] matchers) throws IOException {
-      this.stream = ts;
-      this.matchers = matchers;
-      matchDescriptions = new BytesRef[matchers.length];
-      charTermAtt = ts.addAttribute(CharTermAttribute.class);
-      offsetAtt = ts.addAttribute(OffsetAttribute.class);
-      ts.reset();
-    }
+		TokenStreamOffsetsEnum(TokenStream ts, CharArrayMatcher[] matchers) throws IOException {
+			this.stream = ts;
+			this.matchers = matchers;
+			matchDescriptions = new BytesRef[matchers.length];
+			charTermAtt = ts.addAttribute(CharTermAttribute.class);
+			offsetAtt = ts.addAttribute(OffsetAttribute.class);
+			ts.reset();
+		}
 
-    @Override
-    public boolean nextPosition() throws IOException {
-      if (stream != null) {
-        while (stream.incrementToken()) {
-          for (int i = 0; i < matchers.length; i++) {
-            if (matchers[i].match(charTermAtt.buffer(), 0, charTermAtt.length())) {
-              currentMatch = i;
-              return true;
-            }
-          }
-        }
-        stream.end();
-        close();
-      }
-      // exhausted
-      return false;
-    }
+		@Override
+		public boolean nextPosition() throws IOException {
+			if (stream != null) {
+				while (stream.incrementToken()) {
+					for (int i = 0; i < matchers.length; i++) {
+						if (matchers[i].match(charTermAtt.buffer(), 0, charTermAtt.length())) {
+							currentMatch = i;
+							return true;
+						}
+					}
+				}
+				stream.end();
+				close();
+			}
+			// exhausted
+			return false;
+		}
 
-    @Override
-    public int freq() throws IOException {
-      return Integer.MAX_VALUE; // lie
-    }
+		@Override
+		public int freq() throws IOException {
+			return Integer.MAX_VALUE; // lie
+		}
 
 
-    @Override
-    public int startOffset() throws IOException {
-      return offsetAtt.startOffset();
-    }
+		@Override
+		public int startOffset() throws IOException {
+			return offsetAtt.startOffset();
+		}
 
-    @Override
-    public int endOffset() throws IOException {
-      return offsetAtt.endOffset();
-    }
+		@Override
+		public int endOffset() throws IOException {
+			return offsetAtt.endOffset();
+		}
 
-    @Override
-    public BytesRef getTerm() throws IOException {
-      if (matchDescriptions[currentMatch] == null) {
-        // these CharRunAutomata are subclassed so that toString() returns the query
-        matchDescriptions[currentMatch] = new BytesRef(matchers[currentMatch].toString());
-      }
-      return matchDescriptions[currentMatch];
-    }
+		@Override
+		public BytesRef getTerm() throws IOException {
+			if (matchDescriptions[currentMatch] == null) {
+				// these CharRunAutomata are subclassed so that toString() returns the query
+				matchDescriptions[currentMatch] = new BytesRef(matchers[currentMatch].toString());
+			}
+			return matchDescriptions[currentMatch];
+		}
 
-    @Override
-    public void close() throws IOException {
-      if (stream != null) {
-        stream.close();
-        stream = null;
-      }
-    }
-  }
+		@Override
+		public void close() throws IOException {
+			if (stream != null) {
+				stream.close();
+				stream = null;
+			}
+		}
+	}
 }

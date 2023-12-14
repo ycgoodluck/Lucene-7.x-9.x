@@ -32,42 +32,42 @@ import org.apache.lucene.util.AttributeFactory;
  */
 
 public class LetterTokenizer extends CharTokenizer {
-  
-  /**
-   * Construct a new LetterTokenizer.
-   */
-  public LetterTokenizer() {
-  }
-  
-  /**
-   * Construct a new LetterTokenizer using a given
-   * {@link org.apache.lucene.util.AttributeFactory}.
-   * 
-   * @param factory
-   *          the attribute factory to use for this {@link Tokenizer}
-   */
-  public LetterTokenizer(AttributeFactory factory) {
-    super(factory);
-  }
-  
-  /**
-   * Construct a new LetterTokenizer using a given
-   * {@link org.apache.lucene.util.AttributeFactory}.
-   *
-   * @param factory the attribute factory to use for this {@link Tokenizer}
-   * @param maxTokenLen maximum token length the tokenizer will emit. 
-   *        Must be greater than 0 and less than MAX_TOKEN_LENGTH_LIMIT (1024*1024)
-   * @throws IllegalArgumentException if maxTokenLen is invalid.
 
-   */
-  public LetterTokenizer(AttributeFactory factory, int maxTokenLen) {
-    super(factory, maxTokenLen);
-  }
+	/**
+	 * Construct a new LetterTokenizer.
+	 */
+	public LetterTokenizer() {
+	}
 
-  /** Collects only characters which satisfy
-   * {@link Character#isLetter(int)}.*/
-  @Override
-  protected boolean isTokenChar(int c) {
-    return Character.isLetter(c);
-  }
+	/**
+	 * Construct a new LetterTokenizer using a given
+	 * {@link org.apache.lucene.util.AttributeFactory}.
+	 *
+	 * @param factory the attribute factory to use for this {@link Tokenizer}
+	 */
+	public LetterTokenizer(AttributeFactory factory) {
+		super(factory);
+	}
+
+	/**
+	 * Construct a new LetterTokenizer using a given
+	 * {@link org.apache.lucene.util.AttributeFactory}.
+	 *
+	 * @param factory     the attribute factory to use for this {@link Tokenizer}
+	 * @param maxTokenLen maximum token length the tokenizer will emit.
+	 *                    Must be greater than 0 and less than MAX_TOKEN_LENGTH_LIMIT (1024*1024)
+	 * @throws IllegalArgumentException if maxTokenLen is invalid.
+	 */
+	public LetterTokenizer(AttributeFactory factory, int maxTokenLen) {
+		super(factory, maxTokenLen);
+	}
+
+	/**
+	 * Collects only characters which satisfy
+	 * {@link Character#isLetter(int)}.
+	 */
+	@Override
+	protected boolean isTokenChar(int c) {
+		return Character.isLetter(c);
+	}
 }

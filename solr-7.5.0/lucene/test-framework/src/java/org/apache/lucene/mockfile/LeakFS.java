@@ -22,45 +22,46 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** 
+/**
  * FileSystem that tracks open handles.
  * <p>
  * When {@link FileSystem#close()} is called, this class will throw
  * an exception if any file handles are still open.
  */
 public class LeakFS extends HandleTrackingFS {
-  // we explicitly use reference hashcode/equality in our keys
-  private final Map<Object,Exception> openHandles = new ConcurrentHashMap<>();
-  
-  /**
-   * Create a new instance, tracking file handle leaks for the 
-   * specified delegate filesystem.
-   * @param delegate delegate filesystem to wrap.
-   */
-  public LeakFS(FileSystem delegate) {
-    super("leakfs://", delegate);
-  }
+	// we explicitly use reference hashcode/equality in our keys
+	private final Map<Object, Exception> openHandles = new ConcurrentHashMap<>();
 
-  @Override
-  protected void onOpen(Path path, Object stream) {
-    openHandles.put(stream, new Exception());
-  }
+	/**
+	 * Create a new instance, tracking file handle leaks for the
+	 * specified delegate filesystem.
+	 *
+	 * @param delegate delegate filesystem to wrap.
+	 */
+	public LeakFS(FileSystem delegate) {
+		super("leakfs://", delegate);
+	}
 
-  @Override
-  protected void onClose(Path path, Object stream) {
-    openHandles.remove(stream);
-  }
+	@Override
+	protected void onOpen(Path path, Object stream) {
+		openHandles.put(stream, new Exception());
+	}
 
-  @Override
-  public synchronized void onClose() {
-    if (!openHandles.isEmpty()) {
-      // print the first one as it's very verbose otherwise
-      Exception cause = null;
-      Iterator<Exception> stacktraces = openHandles.values().iterator();
-      if (stacktraces.hasNext()) {
-        cause = stacktraces.next();
-      }
-      throw new RuntimeException("file handle leaks: " + openHandles.keySet(), cause);
-    }
-  }
+	@Override
+	protected void onClose(Path path, Object stream) {
+		openHandles.remove(stream);
+	}
+
+	@Override
+	public synchronized void onClose() {
+		if (!openHandles.isEmpty()) {
+			// print the first one as it's very verbose otherwise
+			Exception cause = null;
+			Iterator<Exception> stacktraces = openHandles.values().iterator();
+			if (stacktraces.hasNext()) {
+				cause = stacktraces.next();
+			}
+			throw new RuntimeException("file handle leaks: " + openHandles.keySet(), cause);
+		}
+	}
 }

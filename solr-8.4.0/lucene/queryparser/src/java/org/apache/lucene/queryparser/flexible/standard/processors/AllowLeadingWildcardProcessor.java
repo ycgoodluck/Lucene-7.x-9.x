@@ -35,70 +35,70 @@ import org.apache.lucene.queryparser.flexible.standard.parser.EscapeQuerySyntaxI
  * {@link QueryConfigHandler}. If it is and leading wildcard is not allowed, it
  * looks for every {@link WildcardQueryNode} contained in the query node tree
  * and throws an exception if any of them has a leading wildcard ('*' or '?').
- * 
+ *
  * @see ConfigurationKeys#ALLOW_LEADING_WILDCARD
  */
 public class AllowLeadingWildcardProcessor extends QueryNodeProcessorImpl {
 
-  public AllowLeadingWildcardProcessor() {
-    // empty constructor
-  }
+	public AllowLeadingWildcardProcessor() {
+		// empty constructor
+	}
 
-  @Override
-  public QueryNode process(QueryNode queryTree) throws QueryNodeException {
-    Boolean allowsLeadingWildcard = getQueryConfigHandler().get(ConfigurationKeys.ALLOW_LEADING_WILDCARD);
+	@Override
+	public QueryNode process(QueryNode queryTree) throws QueryNodeException {
+		Boolean allowsLeadingWildcard = getQueryConfigHandler().get(ConfigurationKeys.ALLOW_LEADING_WILDCARD);
 
-    if (allowsLeadingWildcard != null) {
+		if (allowsLeadingWildcard != null) {
 
-      if (!allowsLeadingWildcard) {
-        return super.process(queryTree);
-      }
+			if (!allowsLeadingWildcard) {
+				return super.process(queryTree);
+			}
 
-    }
+		}
 
-    return queryTree;
-  }
+		return queryTree;
+	}
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-    if (node instanceof WildcardQueryNode) {
-      WildcardQueryNode wildcardNode = (WildcardQueryNode) node;
+		if (node instanceof WildcardQueryNode) {
+			WildcardQueryNode wildcardNode = (WildcardQueryNode) node;
 
-      if (wildcardNode.getText().length() > 0) {
-        
-        // Validate if the wildcard was escaped
-        if (UnescapedCharSequence.wasEscaped(wildcardNode.getText(), 0))
-          return node;
-        
-        switch (wildcardNode.getText().charAt(0)) {    
-          case '*':
-          case '?':
-            throw new QueryNodeException(new MessageImpl(
-                QueryParserMessages.LEADING_WILDCARD_NOT_ALLOWED, node
-                    .toQueryString(new EscapeQuerySyntaxImpl())));    
-        }
-      }
+			if (wildcardNode.getText().length() > 0) {
 
-    }
+				// Validate if the wildcard was escaped
+				if (UnescapedCharSequence.wasEscaped(wildcardNode.getText(), 0))
+					return node;
 
-    return node;
+				switch (wildcardNode.getText().charAt(0)) {
+					case '*':
+					case '?':
+						throw new QueryNodeException(new MessageImpl(
+							QueryParserMessages.LEADING_WILDCARD_NOT_ALLOWED, node
+							.toQueryString(new EscapeQuerySyntaxImpl())));
+				}
+			}
 
-  }
+		}
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+		return node;
 
-    return node;
+	}
 
-  }
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
+		return node;
 
-    return children;
+	}
 
-  }
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
+
+		return children;
+
+	}
 
 }

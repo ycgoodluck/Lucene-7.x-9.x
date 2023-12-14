@@ -36,104 +36,104 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;
 
 public class TestFieldInvertState extends LuceneTestCase {
-  /**
-   * Similarity holds onto the FieldInvertState for subsequent verification.
-   */
-  private static class NeverForgetsSimilarity extends Similarity {
-    public FieldInvertState lastState;
-    private final static NeverForgetsSimilarity INSTANCE = new NeverForgetsSimilarity();
+	/**
+	 * Similarity holds onto the FieldInvertState for subsequent verification.
+	 */
+	private static class NeverForgetsSimilarity extends Similarity {
+		public FieldInvertState lastState;
+		private final static NeverForgetsSimilarity INSTANCE = new NeverForgetsSimilarity();
 
-    private NeverForgetsSimilarity() {
-      // no
-    }
-    
-    @Override
-    public long computeNorm(FieldInvertState state) {
-      this.lastState = state;
-      return 1;
-    }
-    
-    @Override
-    public SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-      throw new UnsupportedOperationException();
-    }
+		private NeverForgetsSimilarity() {
+			// no
+		}
 
-    @Override
-    public SimScorer simScorer(SimWeight weight, LeafReaderContext context) throws IOException {
-      throw new UnsupportedOperationException();
-    }
-  }
+		@Override
+		public long computeNorm(FieldInvertState state) {
+			this.lastState = state;
+			return 1;
+		}
 
-  public void testBasic() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()));
-    iwc.setSimilarity(NeverForgetsSimilarity.INSTANCE);
-    IndexWriter w = new IndexWriter(dir, iwc);
-    Document doc = new Document();
-    Field field = new Field("field",
-                            new CannedTokenStream(new Token("a", 0, 1),
-                                                  new Token("b", 2, 3),
-                                                  new Token("c", 4, 5)),
-                            TextField.TYPE_NOT_STORED);
-    doc.add(field);
-    w.addDocument(doc);
-    FieldInvertState fis = NeverForgetsSimilarity.INSTANCE.lastState;
-    assertEquals(1, fis.getMaxTermFrequency());
-    assertEquals(3, fis.getUniqueTermCount());
-    assertEquals(0, fis.getNumOverlap());
-    assertEquals(3, fis.getLength());
-    IOUtils.close(w, dir);
-  }
+		@Override
+		public SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+			throw new UnsupportedOperationException();
+		}
 
-  public void testRandom() throws Exception {
-    int numUniqueTokens = TestUtil.nextInt(random(), 1, 25);
-    Directory dir = newDirectory();
-    IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()));
-    iwc.setSimilarity(NeverForgetsSimilarity.INSTANCE);
-    IndexWriter w = new IndexWriter(dir, iwc);
-    Document doc = new Document();
+		@Override
+		public SimScorer simScorer(SimWeight weight, LeafReaderContext context) throws IOException {
+			throw new UnsupportedOperationException();
+		}
+	}
 
-    int numTokens = atLeast(10000);
-    Token[] tokens = new Token[numTokens];
-    Map<Character,Integer> counts = new HashMap<>();
-    int numStacked = 0;
-    int maxTermFreq = 0;
-    int pos = -1;
-    for (int i=0;i<numTokens;i++) {
-      char tokenChar = (char) ('a' + random().nextInt(numUniqueTokens));
-      Integer oldCount = counts.get(tokenChar);
-      int newCount;
-      if (oldCount == null) {
-        newCount = 1;
-      } else {
-        newCount = 1 + oldCount;
-      }
-      counts.put(tokenChar, newCount);
-      maxTermFreq = Math.max(maxTermFreq, newCount);
-      
-      Token token = new Token(Character.toString(tokenChar), 2*i, 2*i+1);
-      
-      if (i > 0 && random().nextInt(7) == 3) {
-        token.setPositionIncrement(0);
-        numStacked++;
-      } else {
-        pos++;
-      }
-      tokens[i] = token;
-    }
+	public void testBasic() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()));
+		iwc.setSimilarity(NeverForgetsSimilarity.INSTANCE);
+		IndexWriter w = new IndexWriter(dir, iwc);
+		Document doc = new Document();
+		Field field = new Field("field",
+			new CannedTokenStream(new Token("a", 0, 1),
+				new Token("b", 2, 3),
+				new Token("c", 4, 5)),
+			TextField.TYPE_NOT_STORED);
+		doc.add(field);
+		w.addDocument(doc);
+		FieldInvertState fis = NeverForgetsSimilarity.INSTANCE.lastState;
+		assertEquals(1, fis.getMaxTermFrequency());
+		assertEquals(3, fis.getUniqueTermCount());
+		assertEquals(0, fis.getNumOverlap());
+		assertEquals(3, fis.getLength());
+		IOUtils.close(w, dir);
+	}
 
-    Field field = new Field("field",
-                            new CannedTokenStream(tokens),
-                            TextField.TYPE_NOT_STORED);
-    doc.add(field);
-    w.addDocument(doc);
-    FieldInvertState fis = NeverForgetsSimilarity.INSTANCE.lastState;
-    assertEquals(maxTermFreq, fis.getMaxTermFrequency());
-    assertEquals(counts.size(), fis.getUniqueTermCount());
-    assertEquals(numStacked, fis.getNumOverlap());
-    assertEquals(numTokens, fis.getLength());
-    assertEquals(pos, fis.getPosition());
-    
-    IOUtils.close(w, dir);
-  }
+	public void testRandom() throws Exception {
+		int numUniqueTokens = TestUtil.nextInt(random(), 1, 25);
+		Directory dir = newDirectory();
+		IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()));
+		iwc.setSimilarity(NeverForgetsSimilarity.INSTANCE);
+		IndexWriter w = new IndexWriter(dir, iwc);
+		Document doc = new Document();
+
+		int numTokens = atLeast(10000);
+		Token[] tokens = new Token[numTokens];
+		Map<Character, Integer> counts = new HashMap<>();
+		int numStacked = 0;
+		int maxTermFreq = 0;
+		int pos = -1;
+		for (int i = 0; i < numTokens; i++) {
+			char tokenChar = (char) ('a' + random().nextInt(numUniqueTokens));
+			Integer oldCount = counts.get(tokenChar);
+			int newCount;
+			if (oldCount == null) {
+				newCount = 1;
+			} else {
+				newCount = 1 + oldCount;
+			}
+			counts.put(tokenChar, newCount);
+			maxTermFreq = Math.max(maxTermFreq, newCount);
+
+			Token token = new Token(Character.toString(tokenChar), 2 * i, 2 * i + 1);
+
+			if (i > 0 && random().nextInt(7) == 3) {
+				token.setPositionIncrement(0);
+				numStacked++;
+			} else {
+				pos++;
+			}
+			tokens[i] = token;
+		}
+
+		Field field = new Field("field",
+			new CannedTokenStream(tokens),
+			TextField.TYPE_NOT_STORED);
+		doc.add(field);
+		w.addDocument(doc);
+		FieldInvertState fis = NeverForgetsSimilarity.INSTANCE.lastState;
+		assertEquals(maxTermFreq, fis.getMaxTermFrequency());
+		assertEquals(counts.size(), fis.getUniqueTermCount());
+		assertEquals(numStacked, fis.getNumOverlap());
+		assertEquals(numTokens, fis.getLength());
+		assertEquals(pos, fis.getPosition());
+
+		IOUtils.close(w, dir);
+	}
 }

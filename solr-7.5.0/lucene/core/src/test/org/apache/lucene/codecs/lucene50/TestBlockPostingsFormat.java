@@ -34,48 +34,50 @@ import org.apache.lucene.util.TestUtil;
  * Tests BlockPostingsFormat
  */
 public class TestBlockPostingsFormat extends BasePostingsFormatTestCase {
-  private final Codec codec = TestUtil.alwaysPostingsFormat(new Lucene50PostingsFormat());
+	private final Codec codec = TestUtil.alwaysPostingsFormat(new Lucene50PostingsFormat());
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
-  
-  /** Make sure the final sub-block(s) are not skipped. */
-  public void testFinalBlock() throws Exception {
-    Directory d = newDirectory();
-    IndexWriter w = new IndexWriter(d, new IndexWriterConfig(new MockAnalyzer(random())));
-    for(int i=0;i<25;i++) {
-      Document doc = new Document();
-      doc.add(newStringField("field", Character.toString((char) (97+i)), Field.Store.NO));
-      doc.add(newStringField("field", "z" + Character.toString((char) (97+i)), Field.Store.NO));
-      w.addDocument(doc);
-    }
-    w.forceMerge(1);
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 
-    DirectoryReader r = DirectoryReader.open(w);
-    assertEquals(1, r.leaves().size());
-    FieldReader field = (FieldReader) r.leaves().get(0).reader().terms("field");
-    // We should see exactly two blocks: one root block (prefix empty string) and one block for z* terms (prefix z):
-    Stats stats = field.getStats();
-    assertEquals(0, stats.floorBlockCount);
-    assertEquals(2, stats.nonFloorBlockCount);
-    r.close();
-    w.close();
-    d.close();
-  }
+	/**
+	 * Make sure the final sub-block(s) are not skipped.
+	 */
+	public void testFinalBlock() throws Exception {
+		Directory d = newDirectory();
+		IndexWriter w = new IndexWriter(d, new IndexWriterConfig(new MockAnalyzer(random())));
+		for (int i = 0; i < 25; i++) {
+			Document doc = new Document();
+			doc.add(newStringField("field", Character.toString((char) (97 + i)), Field.Store.NO));
+			doc.add(newStringField("field", "z" + Character.toString((char) (97 + i)), Field.Store.NO));
+			w.addDocument(doc);
+		}
+		w.forceMerge(1);
 
-  private void shouldFail(int minItemsInBlock, int maxItemsInBlock) {
-    expectThrows(IllegalArgumentException.class, () -> {
-      new Lucene50PostingsFormat(minItemsInBlock, maxItemsInBlock);
-    });
-  }
+		DirectoryReader r = DirectoryReader.open(w);
+		assertEquals(1, r.leaves().size());
+		FieldReader field = (FieldReader) r.leaves().get(0).reader().terms("field");
+		// We should see exactly two blocks: one root block (prefix empty string) and one block for z* terms (prefix z):
+		Stats stats = field.getStats();
+		assertEquals(0, stats.floorBlockCount);
+		assertEquals(2, stats.nonFloorBlockCount);
+		r.close();
+		w.close();
+		d.close();
+	}
 
-  public void testInvalidBlockSizes() throws Exception {
-    shouldFail(0, 0);
-    shouldFail(10, 8);
-    shouldFail(-1, 10);
-    shouldFail(10, -1);
-    shouldFail(10, 12);
-  }
+	private void shouldFail(int minItemsInBlock, int maxItemsInBlock) {
+		expectThrows(IllegalArgumentException.class, () -> {
+			new Lucene50PostingsFormat(minItemsInBlock, maxItemsInBlock);
+		});
+	}
+
+	public void testInvalidBlockSizes() throws Exception {
+		shouldFail(0, 0);
+		shouldFail(10, 8);
+		shouldFail(-1, 10);
+		shouldFail(10, -1);
+		shouldFail(10, 12);
+	}
 }

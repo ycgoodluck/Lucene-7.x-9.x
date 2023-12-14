@@ -20,13 +20,13 @@ import java.util.Comparator;
 
 public class TestIntroSorter extends BaseSortTestCase {
 
-  public TestIntroSorter() {
-    super(false);
-  }
+	public TestIntroSorter() {
+		super(false);
+	}
 
-  @Override
-  public Sorter newSorter(Entry[] arr) {
-    return new ArrayIntroSorter<>(arr, Comparator.naturalOrder());
-  }
+	@Override
+	public Sorter newSorter(Entry[] arr) {
+		return new ArrayIntroSorter<>(arr, Comparator.naturalOrder());
+	}
 
 }

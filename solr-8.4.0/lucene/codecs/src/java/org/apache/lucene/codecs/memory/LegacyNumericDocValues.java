@@ -25,15 +25,19 @@ import org.apache.lucene.index.NumericDocValues;
  */
 @Deprecated
 abstract class LegacyNumericDocValues {
-  
-  /** Sole constructor. (For invocation by subclass 
-   *  constructors, typically implicit.) */
-  protected LegacyNumericDocValues() {}
 
-  /**
-   * Returns the numeric value for the specified document ID.
-   * @param docID document ID to lookup
-   * @return numeric value
-   */
-  public abstract long get(int docID);
+	/**
+	 * Sole constructor. (For invocation by subclass
+	 * constructors, typically implicit.)
+	 */
+	protected LegacyNumericDocValues() {
+	}
+
+	/**
+	 * Returns the numeric value for the specified document ID.
+	 *
+	 * @param docID document ID to lookup
+	 * @return numeric value
+	 */
+	public abstract long get(int docID);
 }

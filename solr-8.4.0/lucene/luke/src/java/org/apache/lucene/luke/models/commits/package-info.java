@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Models and APIs for the Commits tab */
+/**
+ * Models and APIs for the Commits tab
+ */
 package org.apache.lucene.luke.models.commits;

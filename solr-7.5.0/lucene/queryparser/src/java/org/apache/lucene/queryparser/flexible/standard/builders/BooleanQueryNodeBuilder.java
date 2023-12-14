@@ -42,68 +42,68 @@ import org.apache.lucene.search.BooleanQuery.TooManyClauses;
  */
 public class BooleanQueryNodeBuilder implements StandardQueryBuilder {
 
-  public BooleanQueryNodeBuilder() {
-    // empty constructor
-  }
+	public BooleanQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public BooleanQuery build(QueryNode queryNode) throws QueryNodeException {
-    BooleanQueryNode booleanNode = (BooleanQueryNode) queryNode;
+	@Override
+	public BooleanQuery build(QueryNode queryNode) throws QueryNodeException {
+		BooleanQueryNode booleanNode = (BooleanQueryNode) queryNode;
 
-    BooleanQuery.Builder bQuery = new BooleanQuery.Builder();
-    List<QueryNode> children = booleanNode.getChildren();
+		BooleanQuery.Builder bQuery = new BooleanQuery.Builder();
+		List<QueryNode> children = booleanNode.getChildren();
 
-    if (children != null) {
+		if (children != null) {
 
-      for (QueryNode child : children) {
-        Object obj = child.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+			for (QueryNode child : children) {
+				Object obj = child.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
 
-        if (obj != null) {
-          Query query = (Query) obj;
+				if (obj != null) {
+					Query query = (Query) obj;
 
-          try {
-            bQuery.add(query, getModifierValue(child));
+					try {
+						bQuery.add(query, getModifierValue(child));
 
-          } catch (TooManyClauses ex) {
+					} catch (TooManyClauses ex) {
 
-            throw new QueryNodeException(new MessageImpl(
-                QueryParserMessages.TOO_MANY_BOOLEAN_CLAUSES, BooleanQuery
-                    .getMaxClauseCount(), queryNode
-                    .toQueryString(new EscapeQuerySyntaxImpl())), ex);
+						throw new QueryNodeException(new MessageImpl(
+							QueryParserMessages.TOO_MANY_BOOLEAN_CLAUSES, BooleanQuery
+							.getMaxClauseCount(), queryNode
+							.toQueryString(new EscapeQuerySyntaxImpl())), ex);
 
-          }
+					}
 
-        }
+				}
 
-      }
+			}
 
-    }
+		}
 
-    return bQuery.build();
+		return bQuery.build();
 
-  }
+	}
 
-  private static BooleanClause.Occur getModifierValue(QueryNode node) {
+	private static BooleanClause.Occur getModifierValue(QueryNode node) {
 
-    if (node instanceof ModifierQueryNode) {
-      ModifierQueryNode mNode = ((ModifierQueryNode) node);
-      switch (mNode.getModifier()) {
+		if (node instanceof ModifierQueryNode) {
+			ModifierQueryNode mNode = ((ModifierQueryNode) node);
+			switch (mNode.getModifier()) {
 
-      case MOD_REQ:
-        return BooleanClause.Occur.MUST;
+				case MOD_REQ:
+					return BooleanClause.Occur.MUST;
 
-      case MOD_NOT:
-        return BooleanClause.Occur.MUST_NOT;
+				case MOD_NOT:
+					return BooleanClause.Occur.MUST_NOT;
 
-      case MOD_NONE:
-        return BooleanClause.Occur.SHOULD;
+				case MOD_NONE:
+					return BooleanClause.Occur.SHOULD;
 
-      }
+			}
 
-    }
+		}
 
-    return BooleanClause.Occur.SHOULD;
+		return BooleanClause.Occur.SHOULD;
 
-  }
+	}
 
 }

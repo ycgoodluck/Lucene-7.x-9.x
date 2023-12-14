@@ -45,117 +45,119 @@ import org.apache.lucene.luke.app.desktop.PreferencesFactory;
 import org.apache.lucene.luke.app.desktop.util.DialogOpener;
 import org.apache.lucene.luke.app.desktop.util.MessageUtils;
 
-/** Factory of analysis chain dialog */
+/**
+ * Factory of analysis chain dialog
+ */
 public class AnalysisChainDialogFactory implements DialogOpener.DialogFactory {
 
-  private static AnalysisChainDialogFactory instance;
+	private static AnalysisChainDialogFactory instance;
 
-  private final Preferences prefs;
+	private final Preferences prefs;
 
-  private JDialog dialog;
+	private JDialog dialog;
 
-  private CustomAnalyzer analyzer;
+	private CustomAnalyzer analyzer;
 
-  public synchronized static AnalysisChainDialogFactory getInstance() throws IOException {
-    if (instance == null) {
-      instance = new AnalysisChainDialogFactory();
-    }
-    return instance;
-  }
+	public synchronized static AnalysisChainDialogFactory getInstance() throws IOException {
+		if (instance == null) {
+			instance = new AnalysisChainDialogFactory();
+		}
+		return instance;
+	}
 
-  private AnalysisChainDialogFactory() throws IOException {
-    this.prefs = PreferencesFactory.getInstance();
-  }
+	private AnalysisChainDialogFactory() throws IOException {
+		this.prefs = PreferencesFactory.getInstance();
+	}
 
-  public void setAnalyzer(CustomAnalyzer analyzer) {
-    this.analyzer = analyzer;
-  }
+	public void setAnalyzer(CustomAnalyzer analyzer) {
+		this.analyzer = analyzer;
+	}
 
-  @Override
-  public JDialog create(Window owner, String title, int width, int height) {
-    dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
-    dialog.add(content());
-    dialog.setSize(new Dimension(width, height));
-    dialog.setLocationRelativeTo(owner);
-    dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
-    return dialog;
-  }
+	@Override
+	public JDialog create(Window owner, String title, int width, int height) {
+		dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
+		dialog.add(content());
+		dialog.setSize(new Dimension(width, height));
+		dialog.setLocationRelativeTo(owner);
+		dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
+		return dialog;
+	}
 
-  private JPanel content() {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setOpaque(false);
-    panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	private JPanel content() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setOpaque(false);
+		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-    panel.add(analysisChain(), BorderLayout.PAGE_START);
+		panel.add(analysisChain(), BorderLayout.PAGE_START);
 
-    JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING, 10, 5));
-    footer.setOpaque(false);
-    JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
-    closeBtn.addActionListener(e -> dialog.dispose());
-    footer.add(closeBtn);
-    panel.add(footer, BorderLayout.PAGE_END);
+		JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING, 10, 5));
+		footer.setOpaque(false);
+		JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
+		closeBtn.addActionListener(e -> dialog.dispose());
+		footer.add(closeBtn);
+		panel.add(footer, BorderLayout.PAGE_END);
 
-    return panel;
-  }
+		return panel;
+	}
 
-  private JPanel analysisChain() {
-    JPanel panel = new JPanel(new GridBagLayout());
-    panel.setOpaque(false);
+	private JPanel analysisChain() {
+		JPanel panel = new JPanel(new GridBagLayout());
+		panel.setOpaque(false);
 
-    GridBagConstraints c = new GridBagConstraints();
-    c.fill = GridBagConstraints.HORIZONTAL;
-    c.insets = new Insets(5, 5, 5, 5);
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(5, 5, 5, 5);
 
-    c.gridx = 0;
-    c.gridy = 0;
-    c.weightx = 0.1;
-    c.weighty = 0.5;
-    panel.add(new JLabel(MessageUtils.getLocalizedMessage("analysis.dialog.chain.label.charfilters")), c);
+		c.gridx = 0;
+		c.gridy = 0;
+		c.weightx = 0.1;
+		c.weighty = 0.5;
+		panel.add(new JLabel(MessageUtils.getLocalizedMessage("analysis.dialog.chain.label.charfilters")), c);
 
-    String[] charFilters = analyzer.getCharFilterFactories().stream().map(f -> CharFilterFactory.findSPIName(f.getClass())).toArray(String[]::new);
-    JList<String> charFilterList = new JList<>(charFilters);
-    charFilterList.setVisibleRowCount(charFilters.length == 0 ? 1 : Math.min(charFilters.length, 5));
-    c.gridx = 1;
-    c.gridy = 0;
-    c.weightx = 0.5;
-    c.weighty = 0.5;
-    panel.add(new JScrollPane(charFilterList), c);
+		String[] charFilters = analyzer.getCharFilterFactories().stream().map(f -> CharFilterFactory.findSPIName(f.getClass())).toArray(String[]::new);
+		JList<String> charFilterList = new JList<>(charFilters);
+		charFilterList.setVisibleRowCount(charFilters.length == 0 ? 1 : Math.min(charFilters.length, 5));
+		c.gridx = 1;
+		c.gridy = 0;
+		c.weightx = 0.5;
+		c.weighty = 0.5;
+		panel.add(new JScrollPane(charFilterList), c);
 
-    c.gridx = 0;
-    c.gridy = 1;
-    c.weightx = 0.1;
-    c.weighty = 0.1;
-    panel.add(new JLabel(MessageUtils.getLocalizedMessage("analysis.dialog.chain.label.tokenizer")), c);
+		c.gridx = 0;
+		c.gridy = 1;
+		c.weightx = 0.1;
+		c.weighty = 0.1;
+		panel.add(new JLabel(MessageUtils.getLocalizedMessage("analysis.dialog.chain.label.tokenizer")), c);
 
-    String tokenizer = TokenizerFactory.findSPIName(analyzer.getTokenizerFactory().getClass());
-    JTextField tokenizerTF = new JTextField(tokenizer);
-    tokenizerTF.setColumns(30);
-    tokenizerTF.setEditable(false);
-    tokenizerTF.setPreferredSize(new Dimension(300, 25));
-    tokenizerTF.setBorder(BorderFactory.createLineBorder(Color.gray));
-    c.gridx = 1;
-    c.gridy = 1;
-    c.weightx = 0.5;
-    c.weighty = 0.1;
-    panel.add(tokenizerTF, c);
+		String tokenizer = TokenizerFactory.findSPIName(analyzer.getTokenizerFactory().getClass());
+		JTextField tokenizerTF = new JTextField(tokenizer);
+		tokenizerTF.setColumns(30);
+		tokenizerTF.setEditable(false);
+		tokenizerTF.setPreferredSize(new Dimension(300, 25));
+		tokenizerTF.setBorder(BorderFactory.createLineBorder(Color.gray));
+		c.gridx = 1;
+		c.gridy = 1;
+		c.weightx = 0.5;
+		c.weighty = 0.1;
+		panel.add(tokenizerTF, c);
 
-    c.gridx = 0;
-    c.gridy = 2;
-    c.weightx = 0.1;
-    c.weighty = 0.5;
-    panel.add(new JLabel(MessageUtils.getLocalizedMessage("analysis.dialog.chain.label.tokenfilters")), c);
+		c.gridx = 0;
+		c.gridy = 2;
+		c.weightx = 0.1;
+		c.weighty = 0.5;
+		panel.add(new JLabel(MessageUtils.getLocalizedMessage("analysis.dialog.chain.label.tokenfilters")), c);
 
-    String[] tokenFilters = analyzer.getTokenFilterFactories().stream().map(f -> TokenFilterFactory.findSPIName(f.getClass())).toArray(String[]::new);
-    JList<String> tokenFilterList = new JList<>(tokenFilters);
-    tokenFilterList.setVisibleRowCount(tokenFilters.length == 0 ? 1 : Math.min(tokenFilters.length, 5));
-    tokenFilterList.setMinimumSize(new Dimension(300, 25));
-    c.gridx = 1;
-    c.gridy = 2;
-    c.weightx = 0.5;
-    c.weighty = 0.5;
-    panel.add(new JScrollPane(tokenFilterList), c);
+		String[] tokenFilters = analyzer.getTokenFilterFactories().stream().map(f -> TokenFilterFactory.findSPIName(f.getClass())).toArray(String[]::new);
+		JList<String> tokenFilterList = new JList<>(tokenFilters);
+		tokenFilterList.setVisibleRowCount(tokenFilters.length == 0 ? 1 : Math.min(tokenFilters.length, 5));
+		tokenFilterList.setMinimumSize(new Dimension(300, 25));
+		c.gridx = 1;
+		c.gridy = 2;
+		c.weightx = 0.5;
+		c.weighty = 0.5;
+		panel.add(new JScrollPane(tokenFilterList), c);
 
-    return panel;
-  }
+		return panel;
+	}
 
 }

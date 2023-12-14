@@ -30,51 +30,52 @@ import org.apache.lucene.index.LeafReaderContext;
  * usage of {@code IndexSearcher} and {@code Weight}.
  */
 public class AssertingIndexSearcher extends IndexSearcher {
-  final Random random;
-  public  AssertingIndexSearcher(Random random, IndexReader r) {
-    super(r);
-    this.random = new Random(random.nextLong());
-  }
-  
-  public  AssertingIndexSearcher(Random random, IndexReaderContext context) {
-    super(context);
-    this.random = new Random(random.nextLong());
-  }
-  
-  public  AssertingIndexSearcher(Random random, IndexReader r, ExecutorService ex) {
-    super(r, ex);
-    this.random = new Random(random.nextLong());
-  }
-  
-  public  AssertingIndexSearcher(Random random, IndexReaderContext context, ExecutorService ex) {
-    super(context, ex);
-    this.random = new Random(random.nextLong());
-  }
+	final Random random;
 
-  @Override
-  public Weight createWeight(Query query, boolean needsScores, float boost) throws IOException {
-    // this adds assertions to the inner weights/scorers too
-    return new AssertingWeight(random, super.createWeight(query, needsScores, boost), needsScores);
-  }
+	public AssertingIndexSearcher(Random random, IndexReader r) {
+		super(r);
+		this.random = new Random(random.nextLong());
+	}
 
-  @Override
-  public Query rewrite(Query original) throws IOException {
-    // TODO: use the more sophisticated QueryUtils.check sometimes!
-    QueryUtils.check(original);
-    Query rewritten = super.rewrite(original);
-    QueryUtils.check(rewritten);
-    return rewritten;
-  }
+	public AssertingIndexSearcher(Random random, IndexReaderContext context) {
+		super(context);
+		this.random = new Random(random.nextLong());
+	}
 
-  @Override
-  protected void search(List<LeafReaderContext> leaves, Weight weight, Collector collector) throws IOException {
-    assert weight instanceof AssertingWeight;
-    super.search(leaves, weight, AssertingCollector.wrap(random, collector));
-  }
+	public AssertingIndexSearcher(Random random, IndexReader r, ExecutorService ex) {
+		super(r, ex);
+		this.random = new Random(random.nextLong());
+	}
 
-  @Override
-  public String toString() {
-    return "AssertingIndexSearcher(" + super.toString() + ")";
-  }
+	public AssertingIndexSearcher(Random random, IndexReaderContext context, ExecutorService ex) {
+		super(context, ex);
+		this.random = new Random(random.nextLong());
+	}
+
+	@Override
+	public Weight createWeight(Query query, boolean needsScores, float boost) throws IOException {
+		// this adds assertions to the inner weights/scorers too
+		return new AssertingWeight(random, super.createWeight(query, needsScores, boost), needsScores);
+	}
+
+	@Override
+	public Query rewrite(Query original) throws IOException {
+		// TODO: use the more sophisticated QueryUtils.check sometimes!
+		QueryUtils.check(original);
+		Query rewritten = super.rewrite(original);
+		QueryUtils.check(rewritten);
+		return rewritten;
+	}
+
+	@Override
+	protected void search(List<LeafReaderContext> leaves, Weight weight, Collector collector) throws IOException {
+		assert weight instanceof AssertingWeight;
+		super.search(leaves, weight, AssertingCollector.wrap(random, collector));
+	}
+
+	@Override
+	public String toString() {
+		return "AssertingIndexSearcher(" + super.toString() + ")";
+	}
 
 }

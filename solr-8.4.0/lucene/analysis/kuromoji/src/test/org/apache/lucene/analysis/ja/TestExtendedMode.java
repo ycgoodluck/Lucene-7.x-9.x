@@ -30,57 +30,65 @@ import org.apache.lucene.util.TestUtil;
 import org.apache.lucene.util.UnicodeUtil;
 
 public class TestExtendedMode extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new JapaneseTokenizer(newAttributeFactory(), null, true, Mode.EXTENDED);
-        return new TokenStreamComponents(tokenizer, tokenizer);
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    analyzer.close();
-    super.tearDown();
-  }
-  
-  /** simple test for supplementary characters */
-  public void testSurrogates() throws IOException {
-    assertAnalyzesTo(analyzer, "𩬅艱鍟䇹愯瀛",
-      new String[] { "𩬅", "艱", "鍟", "䇹", "愯", "瀛" });
-  }
-  
-  /** random test ensuring we don't ever split supplementaries */
-  public void testSurrogates2() throws IOException {
-    int numIterations = atLeast(1000);
-    for (int i = 0; i < numIterations; i++) {
-      String s = TestUtil.randomUnicodeString(random(), 100);
-      try (TokenStream ts = analyzer.tokenStream("foo", s)) {
-        CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);
-        ts.reset();
-        while (ts.incrementToken()) {
-          assertTrue(UnicodeUtil.validUTF16String(termAtt));
-        }
-        ts.end();
-      }
-    }
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Random random = random();
-    checkRandomData(random, analyzer, 500*RANDOM_MULTIPLIER);
-  }
-  
-  /** blast some random large strings through the analyzer */
-  public void testRandomHugeStrings() throws Exception {
-    Random random = random();
-    checkRandomData(random, analyzer, 30*RANDOM_MULTIPLIER, 8192);
-  }
+	private Analyzer analyzer;
+
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new JapaneseTokenizer(newAttributeFactory(), null, true, Mode.EXTENDED);
+				return new TokenStreamComponents(tokenizer, tokenizer);
+			}
+		};
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		analyzer.close();
+		super.tearDown();
+	}
+
+	/**
+	 * simple test for supplementary characters
+	 */
+	public void testSurrogates() throws IOException {
+		assertAnalyzesTo(analyzer, "𩬅艱鍟䇹愯瀛",
+			new String[]{"𩬅", "艱", "鍟", "䇹", "愯", "瀛"});
+	}
+
+	/**
+	 * random test ensuring we don't ever split supplementaries
+	 */
+	public void testSurrogates2() throws IOException {
+		int numIterations = atLeast(1000);
+		for (int i = 0; i < numIterations; i++) {
+			String s = TestUtil.randomUnicodeString(random(), 100);
+			try (TokenStream ts = analyzer.tokenStream("foo", s)) {
+				CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);
+				ts.reset();
+				while (ts.incrementToken()) {
+					assertTrue(UnicodeUtil.validUTF16String(termAtt));
+				}
+				ts.end();
+			}
+		}
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Random random = random();
+		checkRandomData(random, analyzer, 500 * RANDOM_MULTIPLIER);
+	}
+
+	/**
+	 * blast some random large strings through the analyzer
+	 */
+	public void testRandomHugeStrings() throws Exception {
+		Random random = random();
+		checkRandomData(random, analyzer, 30 * RANDOM_MULTIPLIER, 8192);
+	}
 }

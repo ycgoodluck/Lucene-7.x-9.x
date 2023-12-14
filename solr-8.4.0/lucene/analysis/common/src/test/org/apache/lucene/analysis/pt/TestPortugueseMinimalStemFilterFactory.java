@@ -29,19 +29,21 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Portuguese Minimal stem factory is working.
  */
 public class TestPortugueseMinimalStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("questões");
-    TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("PortugueseMinimalStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "questão" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("PortugueseMinimalStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("questões");
+		TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		((Tokenizer) stream).setReader(reader);
+		stream = tokenFilterFactory("PortugueseMinimalStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"questão"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("PortugueseMinimalStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

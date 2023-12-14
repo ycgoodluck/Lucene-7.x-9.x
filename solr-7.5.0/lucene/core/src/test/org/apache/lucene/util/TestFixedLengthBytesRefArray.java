@@ -21,64 +21,64 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public class TestFixedLengthBytesRefArray extends LuceneTestCase {
-  
-  public void testBasic() throws Exception {
-    FixedLengthBytesRefArray a = new FixedLengthBytesRefArray(Integer.BYTES);
-    int numValues = 100;
-    for(int i=0;i<numValues;i++) {      
-      byte[] bytes = {0, 0, 0, (byte) (10-i)};
-      a.append(new BytesRef(bytes));
-    }
 
-    BytesRefIterator iterator = a.iterator(new Comparator<BytesRef>() {
-        @Override
-        public int compare(BytesRef a, BytesRef b) {
-          return a.compareTo(b);
-        }
-      });
+	public void testBasic() throws Exception {
+		FixedLengthBytesRefArray a = new FixedLengthBytesRefArray(Integer.BYTES);
+		int numValues = 100;
+		for (int i = 0; i < numValues; i++) {
+			byte[] bytes = {0, 0, 0, (byte) (10 - i)};
+			a.append(new BytesRef(bytes));
+		}
 
-    BytesRef last = null;
+		BytesRefIterator iterator = a.iterator(new Comparator<BytesRef>() {
+			@Override
+			public int compare(BytesRef a, BytesRef b) {
+				return a.compareTo(b);
+			}
+		});
 
-    int count = 0;
-    while (true) {
-      BytesRef bytes = iterator.next();
-      if (bytes == null) {
-        break;
-      }
-      if (last != null) {
-        assertTrue("count=" + count + " last=" + last + " bytes=" + bytes, last.compareTo(bytes) < 0);
-      }
-      last = BytesRef.deepCopyOf(bytes);
-      count++;
-    }
+		BytesRef last = null;
 
-    assertEquals(numValues, count);
-  }
+		int count = 0;
+		while (true) {
+			BytesRef bytes = iterator.next();
+			if (bytes == null) {
+				break;
+			}
+			if (last != null) {
+				assertTrue("count=" + count + " last=" + last + " bytes=" + bytes, last.compareTo(bytes) < 0);
+			}
+			last = BytesRef.deepCopyOf(bytes);
+			count++;
+		}
 
-  public void testRandom() throws Exception {
-    int length = TestUtil.nextInt(random(), 4, 10);
-    int count = atLeast(10000);
-    BytesRef[] values = new BytesRef[count];
+		assertEquals(numValues, count);
+	}
 
-    FixedLengthBytesRefArray a = new FixedLengthBytesRefArray(length);
-    for(int i=0;i<count;i++) {
-      BytesRef value = new BytesRef(new byte[length]);
-      random().nextBytes(value.bytes);
-      values[i] = value;
-      a.append(value);
-    }
+	public void testRandom() throws Exception {
+		int length = TestUtil.nextInt(random(), 4, 10);
+		int count = atLeast(10000);
+		BytesRef[] values = new BytesRef[count];
 
-    Arrays.sort(values);
-    BytesRefIterator iterator = a.iterator(new Comparator<BytesRef>() {
-        @Override
-        public int compare(BytesRef a, BytesRef b) {
-          return a.compareTo(b);
-        }
-      });
-    for(int i=0;i<count;i++) {
-      BytesRef next = iterator.next();
-      assertNotNull(next);
-      assertEquals(values[i], next);
-    }
-  }
+		FixedLengthBytesRefArray a = new FixedLengthBytesRefArray(length);
+		for (int i = 0; i < count; i++) {
+			BytesRef value = new BytesRef(new byte[length]);
+			random().nextBytes(value.bytes);
+			values[i] = value;
+			a.append(value);
+		}
+
+		Arrays.sort(values);
+		BytesRefIterator iterator = a.iterator(new Comparator<BytesRef>() {
+			@Override
+			public int compare(BytesRef a, BytesRef b) {
+				return a.compareTo(b);
+			}
+		});
+		for (int i = 0; i < count; i++) {
+			BytesRef next = iterator.next();
+			assertNotNull(next);
+			assertEquals(values[i], next);
+		}
+	}
 }

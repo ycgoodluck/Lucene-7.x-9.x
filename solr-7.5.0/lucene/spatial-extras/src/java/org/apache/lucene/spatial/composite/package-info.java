@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Composite strategies. */
+/**
+ * Composite strategies.
+ */
 package org.apache.lucene.spatial.composite;

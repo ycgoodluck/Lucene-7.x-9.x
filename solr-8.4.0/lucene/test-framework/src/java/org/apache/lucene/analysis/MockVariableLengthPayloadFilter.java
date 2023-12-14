@@ -26,28 +26,28 @@ import org.apache.lucene.util.BytesRef;
  * TokenFilter that adds random variable-length payloads.
  */
 public final class MockVariableLengthPayloadFilter extends TokenFilter {
-  private static final int MAXLENGTH = 129;
+	private static final int MAXLENGTH = 129;
 
-  private final PayloadAttribute payloadAtt = addAttribute(PayloadAttribute.class);
-  private final Random random;
-  private final byte[] bytes = new byte[MAXLENGTH];
-  private final BytesRef payload;
+	private final PayloadAttribute payloadAtt = addAttribute(PayloadAttribute.class);
+	private final Random random;
+	private final byte[] bytes = new byte[MAXLENGTH];
+	private final BytesRef payload;
 
-  public MockVariableLengthPayloadFilter(Random random, TokenStream in) {
-    super(in);
-    this.random = random;
-    this.payload = new BytesRef(bytes);
-  }
+	public MockVariableLengthPayloadFilter(Random random, TokenStream in) {
+		super(in);
+		this.random = random;
+		this.payload = new BytesRef(bytes);
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      random.nextBytes(bytes);
-      payload.length = random.nextInt(MAXLENGTH);
-      payloadAtt.setPayload(payload);
-      return true;
-    } else {
-      return false;
-    }
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			random.nextBytes(bytes);
+			payload.length = random.nextInt(MAXLENGTH);
+			payloadAtt.setPayload(payload);
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

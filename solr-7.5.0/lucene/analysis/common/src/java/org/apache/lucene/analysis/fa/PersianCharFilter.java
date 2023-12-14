@@ -28,37 +28,37 @@ import org.apache.lucene.analysis.CharFilter;
  */
 public class PersianCharFilter extends CharFilter {
 
-  public PersianCharFilter(Reader in) {
-    super(in);
-  }
-  
-  @Override
-  public int read(char[] cbuf, int off, int len) throws IOException {
-    final int charsRead = input.read(cbuf, off, len);
-    if (charsRead > 0) {
-      final int end = off + charsRead;
-      while (off < end) {
-        if (cbuf[off] == '\u200C')
-          cbuf[off] = ' ';
-        off++;
-      }
-    }
-    return charsRead;
-  }
-  
-  // optimized impl: some other charfilters consume with read()
-  @Override
-  public int read() throws IOException {
-    int ch = input.read();
-    if (ch == '\u200C') {
-      return ' ';
-    } else {
-      return ch;
-    }
-  }
+	public PersianCharFilter(Reader in) {
+		super(in);
+	}
 
-  @Override
-  protected int correct(int currentOff) {
-    return currentOff; // we don't change the length of the string
-  }
+	@Override
+	public int read(char[] cbuf, int off, int len) throws IOException {
+		final int charsRead = input.read(cbuf, off, len);
+		if (charsRead > 0) {
+			final int end = off + charsRead;
+			while (off < end) {
+				if (cbuf[off] == '\u200C')
+					cbuf[off] = ' ';
+				off++;
+			}
+		}
+		return charsRead;
+	}
+
+	// optimized impl: some other charfilters consume with read()
+	@Override
+	public int read() throws IOException {
+		int ch = input.read();
+		if (ch == '\u200C') {
+			return ' ';
+		} else {
+			return ch;
+		}
+	}
+
+	@Override
+	protected int correct(int currentOff) {
+		return currentOff; // we don't change the length of the string
+	}
 }

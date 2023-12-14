@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** UI components of the desktop Luke */
+/**
+ * UI components of the desktop Luke
+ */
 package org.apache.lucene.luke.app.desktop.components;

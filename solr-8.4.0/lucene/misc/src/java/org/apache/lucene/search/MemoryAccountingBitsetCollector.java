@@ -23,36 +23,38 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.misc.CollectorMemoryTracker;
 import org.apache.lucene.util.FixedBitSet;
 
-/** Bitset collector which supports memory tracking */
+/**
+ * Bitset collector which supports memory tracking
+ */
 public class MemoryAccountingBitsetCollector extends SimpleCollector {
 
-  final CollectorMemoryTracker tracker;
-  FixedBitSet bitSet = new FixedBitSet(0);
-  int length = 0;
-  int docBase = 0;
+	final CollectorMemoryTracker tracker;
+	FixedBitSet bitSet = new FixedBitSet(0);
+	int length = 0;
+	int docBase = 0;
 
-  public MemoryAccountingBitsetCollector(CollectorMemoryTracker tracker) {
-    this.tracker = tracker;
-    tracker.updateBytes(bitSet.ramBytesUsed());
-  }
+	public MemoryAccountingBitsetCollector(CollectorMemoryTracker tracker) {
+		this.tracker = tracker;
+		tracker.updateBytes(bitSet.ramBytesUsed());
+	}
 
-  @Override
-  protected void doSetNextReader(LeafReaderContext context) throws IOException {
-    length += context.reader().maxDoc();
-    FixedBitSet newBitSet = FixedBitSet.ensureCapacity(bitSet, length);
-    if (newBitSet != bitSet) {
-      tracker.updateBytes(newBitSet.ramBytesUsed() - bitSet.ramBytesUsed());
-      bitSet = newBitSet;
-    }
-  }
+	@Override
+	protected void doSetNextReader(LeafReaderContext context) throws IOException {
+		length += context.reader().maxDoc();
+		FixedBitSet newBitSet = FixedBitSet.ensureCapacity(bitSet, length);
+		if (newBitSet != bitSet) {
+			tracker.updateBytes(newBitSet.ramBytesUsed() - bitSet.ramBytesUsed());
+			bitSet = newBitSet;
+		}
+	}
 
-  @Override
-  public void collect(int doc) {
-    bitSet.set(docBase + doc);
-  }
+	@Override
+	public void collect(int doc) {
+		bitSet.set(docBase + doc);
+	}
 
-  @Override
-  public ScoreMode scoreMode() {
-    return ScoreMode.COMPLETE_NO_SCORES;
-  }
+	@Override
+	public ScoreMode scoreMode() {
+		return ScoreMode.COMPLETE_NO_SCORES;
+	}
 }

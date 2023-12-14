@@ -29,9 +29,9 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestFixBrokenOffsets extends LuceneTestCase {
 
-  // Run this in Lucene 6.x:
-  //
-  //     ant test -Dtestcase=TestFixBrokenOffsets -Dtestmethod=testCreateBrokenOffsetsIndex -Dtests.codec=default -Dtests.useSecurityManager=false
+	// Run this in Lucene 6.x:
+	//
+	//     ant test -Dtestcase=TestFixBrokenOffsets -Dtestmethod=testCreateBrokenOffsetsIndex -Dtests.codec=default -Dtests.useSecurityManager=false
   /*
   public void testCreateBrokenOffsetsIndex() throws IOException {
 
@@ -57,56 +57,56 @@ public class TestFixBrokenOffsets extends LuceneTestCase {
     field.setTokenStream(new CannedTokenStream(new Token("bar", 15, 17), new Token("bar", 1, 5)));
     doc.add(field);
     writer.addDocument(doc);
-    
+
     writer.close();
 
     dir.close();
   }
   */
 
-  public void testFixBrokenOffsetsIndex() throws IOException {
-    InputStream resource = getClass().getResourceAsStream("index.630.brokenoffsets.zip");
-    assertNotNull("Broken offsets index not found", resource);
-    Path path = createTempDir("brokenoffsets");
-    TestUtil.unzip(resource, path);
-    Directory dir = newFSDirectory(path);
+	public void testFixBrokenOffsetsIndex() throws IOException {
+		InputStream resource = getClass().getResourceAsStream("index.630.brokenoffsets.zip");
+		assertNotNull("Broken offsets index not found", resource);
+		Path path = createTempDir("brokenoffsets");
+		TestUtil.unzip(resource, path);
+		Directory dir = newFSDirectory(path);
 
-    // OK: index is 6.3.0 so offsets not checked:
-    TestUtil.checkIndex(dir);
-    
-    MockDirectoryWrapper tmpDir = newMockDirectory();
-    tmpDir.setCheckIndexOnClose(false);
-    IndexWriter w = new IndexWriter(tmpDir, new IndexWriterConfig());
-    IndexWriter finalW = w;
-    IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> finalW.addIndexes(dir));
-    assertTrue(e.getMessage(), e.getMessage().startsWith("Cannot use addIndexes(Directory) with indexes that have been created by a different Lucene version."));
-    w.close();
-    // OK: addIndexes(Directory...) refuses to execute if the index creation version is different so broken offsets are not carried over
-    tmpDir.close();
+		// OK: index is 6.3.0 so offsets not checked:
+		TestUtil.checkIndex(dir);
 
-    final MockDirectoryWrapper tmpDir2 = newMockDirectory();
-    tmpDir2.setCheckIndexOnClose(false);
-    w = new IndexWriter(tmpDir2, new IndexWriterConfig());
-    DirectoryReader reader = DirectoryReader.open(dir);
-    List<LeafReaderContext> leaves = reader.leaves();
-    CodecReader[] codecReaders = new CodecReader[leaves.size()];
-    for(int i=0;i<leaves.size();i++) {
-      codecReaders[i] = (CodecReader) leaves.get(i).reader();
-    }
-    IndexWriter finalW2 = w;
-    e = expectThrows(IllegalArgumentException.class, () -> finalW2.addIndexes(codecReaders));
-    assertEquals("Cannot merge a segment that has been created with major version 6 into this index which has been created by major version 7", e.getMessage());
-    reader.close();
-    w.close();
-    tmpDir2.close();
+		MockDirectoryWrapper tmpDir = newMockDirectory();
+		tmpDir.setCheckIndexOnClose(false);
+		IndexWriter w = new IndexWriter(tmpDir, new IndexWriterConfig());
+		IndexWriter finalW = w;
+		IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> finalW.addIndexes(dir));
+		assertTrue(e.getMessage(), e.getMessage().startsWith("Cannot use addIndexes(Directory) with indexes that have been created by a different Lucene version."));
+		w.close();
+		// OK: addIndexes(Directory...) refuses to execute if the index creation version is different so broken offsets are not carried over
+		tmpDir.close();
 
-    // Now run the tool and confirm the broken offsets are fixed:
-    Path path2 = createTempDir("fixedbrokenoffsets").resolve("subdir");
-    FixBrokenOffsets.main(new String[] {path.toString(), path2.toString()});
-    Directory tmpDir3 = FSDirectory.open(path2);
-    TestUtil.checkIndex(tmpDir3);
-    tmpDir3.close();
-    
-    dir.close();
-  }
+		final MockDirectoryWrapper tmpDir2 = newMockDirectory();
+		tmpDir2.setCheckIndexOnClose(false);
+		w = new IndexWriter(tmpDir2, new IndexWriterConfig());
+		DirectoryReader reader = DirectoryReader.open(dir);
+		List<LeafReaderContext> leaves = reader.leaves();
+		CodecReader[] codecReaders = new CodecReader[leaves.size()];
+		for (int i = 0; i < leaves.size(); i++) {
+			codecReaders[i] = (CodecReader) leaves.get(i).reader();
+		}
+		IndexWriter finalW2 = w;
+		e = expectThrows(IllegalArgumentException.class, () -> finalW2.addIndexes(codecReaders));
+		assertEquals("Cannot merge a segment that has been created with major version 6 into this index which has been created by major version 7", e.getMessage());
+		reader.close();
+		w.close();
+		tmpDir2.close();
+
+		// Now run the tool and confirm the broken offsets are fixed:
+		Path path2 = createTempDir("fixedbrokenoffsets").resolve("subdir");
+		FixBrokenOffsets.main(new String[]{path.toString(), path2.toString()});
+		Directory tmpDir3 = FSDirectory.open(path2);
+		TestUtil.checkIndex(tmpDir3);
+		tmpDir3.close();
+
+		dir.close();
+	}
 }

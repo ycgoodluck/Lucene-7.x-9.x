@@ -30,67 +30,68 @@ import org.apache.lucene.util.IOUtils;
  * n-gram connection cost data
  */
 public final class ConnectionCosts {
-  
-  public static final String FILENAME_SUFFIX = ".dat";
-  public static final String HEADER = "ko_cc";
-  public static final int VERSION = 1;
 
-  private final ByteBuffer buffer;
-  private final int forwardSize;
+	public static final String FILENAME_SUFFIX = ".dat";
+	public static final String HEADER = "ko_cc";
+	public static final int VERSION = 1;
 
-  private ConnectionCosts() throws IOException {
-    InputStream is = null;
-    ByteBuffer buffer = null;
-    boolean success = false;
-    try {
-      is = BinaryDictionary.getClassResource(getClass(), FILENAME_SUFFIX);
-      is = new BufferedInputStream(is);
-      final DataInput in = new InputStreamDataInput(is);
-      CodecUtil.checkHeader(in, HEADER, VERSION, VERSION);
-      this.forwardSize = in.readVInt();
-      int backwardSize = in.readVInt();
-      int size = forwardSize * backwardSize;
+	private final ByteBuffer buffer;
+	private final int forwardSize;
 
-      // copy the matrix into a direct byte buffer
-      final ByteBuffer tmpBuffer = ByteBuffer.allocateDirect(size*2);
-      int accum = 0;
-      for (int j = 0; j < backwardSize; j++) {
-        for (int i = 0; i < forwardSize; i++) {
-          accum += in.readZInt();
-          tmpBuffer.putShort((short) accum);
-        }
-      }
-      buffer = tmpBuffer.asReadOnlyBuffer();
-      success = true;
-    } finally {
-      if (success) {
-        IOUtils.close(is);
-      } else {
-        IOUtils.closeWhileHandlingException(is);
-      }
-    }
-    this.buffer = buffer;
-  }
-  
-  public int get(int forwardId, int backwardId) {
-    // map 2d matrix into a single dimension short array
-    int offset = (backwardId * forwardSize + forwardId) * 2;
-    return buffer.getShort(offset);
-  }
-  
-  public static ConnectionCosts getInstance() {
-    return SingletonHolder.INSTANCE;
-  }
-  
-  private static class SingletonHolder {
-    static final ConnectionCosts INSTANCE;
-    static {
-      try {
-        INSTANCE = new ConnectionCosts();
-      } catch (IOException ioe) {
-        throw new RuntimeException("Cannot load ConnectionCosts.", ioe);
-      }
-    }
-   }
-  
+	private ConnectionCosts() throws IOException {
+		InputStream is = null;
+		ByteBuffer buffer = null;
+		boolean success = false;
+		try {
+			is = BinaryDictionary.getClassResource(getClass(), FILENAME_SUFFIX);
+			is = new BufferedInputStream(is);
+			final DataInput in = new InputStreamDataInput(is);
+			CodecUtil.checkHeader(in, HEADER, VERSION, VERSION);
+			this.forwardSize = in.readVInt();
+			int backwardSize = in.readVInt();
+			int size = forwardSize * backwardSize;
+
+			// copy the matrix into a direct byte buffer
+			final ByteBuffer tmpBuffer = ByteBuffer.allocateDirect(size * 2);
+			int accum = 0;
+			for (int j = 0; j < backwardSize; j++) {
+				for (int i = 0; i < forwardSize; i++) {
+					accum += in.readZInt();
+					tmpBuffer.putShort((short) accum);
+				}
+			}
+			buffer = tmpBuffer.asReadOnlyBuffer();
+			success = true;
+		} finally {
+			if (success) {
+				IOUtils.close(is);
+			} else {
+				IOUtils.closeWhileHandlingException(is);
+			}
+		}
+		this.buffer = buffer;
+	}
+
+	public int get(int forwardId, int backwardId) {
+		// map 2d matrix into a single dimension short array
+		int offset = (backwardId * forwardSize + forwardId) * 2;
+		return buffer.getShort(offset);
+	}
+
+	public static ConnectionCosts getInstance() {
+		return SingletonHolder.INSTANCE;
+	}
+
+	private static class SingletonHolder {
+		static final ConnectionCosts INSTANCE;
+
+		static {
+			try {
+				INSTANCE = new ConnectionCosts();
+			} catch (IOException ioe) {
+				throw new RuntimeException("Cannot load ConnectionCosts.", ioe);
+			}
+		}
+	}
+
 }

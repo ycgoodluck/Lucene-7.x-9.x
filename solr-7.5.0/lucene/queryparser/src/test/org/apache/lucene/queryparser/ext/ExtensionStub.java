@@ -23,10 +23,10 @@ import org.apache.lucene.search.TermQuery;
 
 class ExtensionStub extends ParserExtension {
 
-  @Override
-  public Query parse(ExtensionQuery components) throws ParseException {
-    return new TermQuery(new Term(components.getField(), components
-        .getRawQueryString()));
-  }
+	@Override
+	public Query parse(ExtensionQuery components) throws ParseException {
+		return new TermQuery(new Term(components.getField(), components
+			.getRawQueryString()));
+	}
 
 }

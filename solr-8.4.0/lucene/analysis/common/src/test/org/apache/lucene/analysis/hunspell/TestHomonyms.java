@@ -20,13 +20,13 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestHomonyms extends StemmerTestBase {
-  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("homonyms.aff", "homonyms.dic");
-  }
-  
-  public void testExamples() {
-    assertStemsTo("works", "work", "work");
-  }
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("homonyms.aff", "homonyms.dic");
+	}
+
+	public void testExamples() {
+		assertStemsTo("works", "work", "work");
+	}
 }

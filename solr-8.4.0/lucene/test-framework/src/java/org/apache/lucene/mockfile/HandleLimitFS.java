@@ -22,35 +22,36 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** 
- * FileSystem that throws exception if file handles 
- * in use exceeds a specified limit 
+/**
+ * FileSystem that throws exception if file handles
+ * in use exceeds a specified limit
  */
 public class HandleLimitFS extends HandleTrackingFS {
-  final int limit;
-  final AtomicInteger count = new AtomicInteger();
-  
-  /**
-   * Create a new instance, limiting the maximum number
-   * of open files to {@code limit}
-   * @param delegate delegate filesystem to wrap.
-   * @param limit maximum number of open files.
-   */
-  public HandleLimitFS(FileSystem delegate, int limit) {
-    super("handlelimit://", delegate);
-    this.limit = limit;
-  }
+	final int limit;
+	final AtomicInteger count = new AtomicInteger();
 
-  @Override
-  protected void onOpen(Path path, Object stream) throws IOException {
-    if (count.incrementAndGet() > limit) {
-      count.decrementAndGet();
-      throw new FileSystemException(path.toString(), null, "Too many open files");
-    }
-  }
+	/**
+	 * Create a new instance, limiting the maximum number
+	 * of open files to {@code limit}
+	 *
+	 * @param delegate delegate filesystem to wrap.
+	 * @param limit    maximum number of open files.
+	 */
+	public HandleLimitFS(FileSystem delegate, int limit) {
+		super("handlelimit://", delegate);
+		this.limit = limit;
+	}
 
-  @Override
-  protected void onClose(Path path, Object stream) throws IOException {
-    count.decrementAndGet();
-  }
+	@Override
+	protected void onOpen(Path path, Object stream) throws IOException {
+		if (count.incrementAndGet() > limit) {
+			count.decrementAndGet();
+			throw new FileSystemException(path.toString(), null, "Too many open files");
+		}
+	}
+
+	@Override
+	protected void onClose(Path path, Object stream) throws IOException {
+		count.decrementAndGet();
+	}
 }

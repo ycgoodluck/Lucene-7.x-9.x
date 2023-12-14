@@ -29,53 +29,53 @@ import org.apache.lucene.search.similarities.Similarity;
  */
 public class ScoringMatch extends QueryMatch {
 
-  public static final MatcherFactory<ScoringMatch> matchWithSimilarity(Similarity similarity) {
-    return searcher -> {
-      searcher.setSimilarity(similarity);
-      return new CollectingMatcher<ScoringMatch>(searcher, ScoreMode.COMPLETE) {
-        @Override
-        protected ScoringMatch doMatch(String queryId, int doc, Scorable scorer) throws IOException {
-          float score = scorer.score();
-          if (score > 0)
-            return new ScoringMatch(queryId, score);
-          return null;
-        }
+	public static final MatcherFactory<ScoringMatch> matchWithSimilarity(Similarity similarity) {
+		return searcher -> {
+			searcher.setSimilarity(similarity);
+			return new CollectingMatcher<ScoringMatch>(searcher, ScoreMode.COMPLETE) {
+				@Override
+				protected ScoringMatch doMatch(String queryId, int doc, Scorable scorer) throws IOException {
+					float score = scorer.score();
+					if (score > 0)
+						return new ScoringMatch(queryId, score);
+					return null;
+				}
 
-        @Override
-        public ScoringMatch resolve(ScoringMatch match1, ScoringMatch match2) {
-          return new ScoringMatch(match1.getQueryId(), match1.getScore() + match2.getScore());
-        }
-      };
-    };
-  }
+				@Override
+				public ScoringMatch resolve(ScoringMatch match1, ScoringMatch match2) {
+					return new ScoringMatch(match1.getQueryId(), match1.getScore() + match2.getScore());
+				}
+			};
+		};
+	}
 
-  public static final MatcherFactory<ScoringMatch> DEFAULT_MATCHER = matchWithSimilarity(new BM25Similarity());
+	public static final MatcherFactory<ScoringMatch> DEFAULT_MATCHER = matchWithSimilarity(new BM25Similarity());
 
-  private final float score;
+	private final float score;
 
-  private ScoringMatch(String queryId, float score) {
-    super(queryId);
-    this.score = score;
-  }
+	private ScoringMatch(String queryId, float score) {
+		super(queryId);
+		this.score = score;
+	}
 
-  public float getScore() {
-    return score;
-  }
+	public float getScore() {
+		return score;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof ScoringMatch)) return false;
-    if (!super.equals(o)) return false;
-    ScoringMatch that = (ScoringMatch) o;
-    return Float.compare(that.score, score) == 0;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof ScoringMatch)) return false;
+		if (!super.equals(o)) return false;
+		ScoringMatch that = (ScoringMatch) o;
+		return Float.compare(that.score, score) == 0;
 
-  }
+	}
 
-  @Override
-  public int hashCode() {
-    int result = super.hashCode();
-    result = 31 * result + (score != +0.0f ? Float.floatToIntBits(score) : 0);
-    return result;
-  }
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + (score != +0.0f ? Float.floatToIntBits(score) : 0);
+		return result;
+	}
 }

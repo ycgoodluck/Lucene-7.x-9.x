@@ -46,29 +46,29 @@ public class TestManyPointsInOldIndex extends LuceneTestCase {
 //  cd manypointsindex
 //  zip manypointsindex.zip *
 
-  public static void main(String[] args) throws IOException {
-    Directory dir = FSDirectory.open(Paths.get("manypointsindex"));
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig());
-    for(int i=0;i<1025;i++) {
-      Document doc = new Document();
-      doc.add(new IntPoint("intpoint", 1025-i));
-      w.addDocument(doc);
-    }
-    w.close();
-    dir.close();
-  }
+	public static void main(String[] args) throws IOException {
+		Directory dir = FSDirectory.open(Paths.get("manypointsindex"));
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig());
+		for (int i = 0; i < 1025; i++) {
+			Document doc = new Document();
+			doc.add(new IntPoint("intpoint", 1025 - i));
+			w.addDocument(doc);
+		}
+		w.close();
+		dir.close();
+	}
 
-  public void testCheckOldIndex() throws IOException {
-    Path path = createTempDir("manypointsindex");
-    InputStream resource = getClass().getResourceAsStream("manypointsindex.zip");
-    assertNotNull("manypointsindex not found", resource);
-    TestUtil.unzip(resource, path);
-    BaseDirectoryWrapper dir = newFSDirectory(path);
-    // disable default checking...
-    dir.setCheckIndexOnClose(false);
+	public void testCheckOldIndex() throws IOException {
+		Path path = createTempDir("manypointsindex");
+		InputStream resource = getClass().getResourceAsStream("manypointsindex.zip");
+		assertNotNull("manypointsindex not found", resource);
+		TestUtil.unzip(resource, path);
+		BaseDirectoryWrapper dir = newFSDirectory(path);
+		// disable default checking...
+		dir.setCheckIndexOnClose(false);
 
-    // ... because we check ourselves here:
-    TestUtil.checkIndex(dir, false, true, null);
-    dir.close();
-  }
+		// ... because we check ourselves here:
+		TestUtil.checkIndex(dir, false, true, null);
+		dir.close();
+	}
 }

@@ -17,12 +17,11 @@
 package org.apache.lucene.codecs.compressing;
 
 
-
 public class TestHighCompressionMode extends AbstractTestCompressionMode {
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    mode = CompressionMode.HIGH_COMPRESSION;
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		mode = CompressionMode.HIGH_COMPRESSION;
+	}
 }

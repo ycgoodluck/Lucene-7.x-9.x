@@ -28,127 +28,127 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.Version;
 
 public class TestAnalysisSPILoader extends LuceneTestCase {
-  
-  private Map<String,String> versionArgOnly() {
-    return new HashMap<String,String>() {{
-      put("luceneMatchVersion", Version.LATEST.toString());
-    }};
-  }
-  
-  public void testLookupTokenizer() {
-    assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.forName("Whitespace", versionArgOnly()).getClass());
-    assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.forName("WHITESPACE", versionArgOnly()).getClass());
-    assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.forName("whitespace", versionArgOnly()).getClass());
-  }
-  
-  public void testBogusLookupTokenizer() {
-    expectThrows(IllegalArgumentException.class, () -> {
-      TokenizerFactory.forName("sdfsdfsdfdsfsdfsdf", new HashMap<String,String>());
-    });
-    
-    expectThrows(IllegalArgumentException.class, () -> {
-      TokenizerFactory.forName("!(**#$U*#$*", new HashMap<String,String>());
-    });
-  }
 
-  public void testLookupTokenizerClass() {
-    assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.lookupClass("Whitespace"));
-    assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.lookupClass("WHITESPACE"));
-    assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.lookupClass("whitespace"));
-  }
-  
-  public void testBogusLookupTokenizerClass() {
-    expectThrows(IllegalArgumentException.class, () -> {
-      TokenizerFactory.lookupClass("sdfsdfsdfdsfsdfsdf");
-    });
-    
-    expectThrows(IllegalArgumentException.class, () -> {
-      TokenizerFactory.lookupClass("!(**#$U*#$*");
-    });
-  }
-  
-  public void testAvailableTokenizers() {
-    assertTrue(TokenizerFactory.availableTokenizers().contains("whitespace"));
-  }
-  
-  public void testLookupTokenFilter() {
-    assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.forName("Lowercase", versionArgOnly()).getClass());
-    assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.forName("LOWERCASE", versionArgOnly()).getClass());
-    assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.forName("lowercase", versionArgOnly()).getClass());
-    
-    assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.forName("RemoveDuplicates", versionArgOnly()).getClass());
-    assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.forName("REMOVEDUPLICATES", versionArgOnly()).getClass());
-    assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.forName("removeduplicates", versionArgOnly()).getClass());
-  }
-  
-  public void testBogusLookupTokenFilter() {
-    expectThrows(IllegalArgumentException.class, () -> {
-      TokenFilterFactory.forName("sdfsdfsdfdsfsdfsdf", new HashMap<String,String>());
-    });
-    
-    expectThrows(IllegalArgumentException.class, () -> {
-      TokenFilterFactory.forName("!(**#$U*#$*", new HashMap<String,String>());
-    });
-  }
+	private Map<String, String> versionArgOnly() {
+		return new HashMap<String, String>() {{
+			put("luceneMatchVersion", Version.LATEST.toString());
+		}};
+	}
 
-  public void testLookupTokenFilterClass() {
-    assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.lookupClass("Lowercase"));
-    assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.lookupClass("LOWERCASE"));
-    assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.lookupClass("lowercase"));
-    
-    assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.lookupClass("RemoveDuplicates"));
-    assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.lookupClass("REMOVEDUPLICATES"));
-    assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.lookupClass("removeduplicates"));
-  }
-  
-  public void testBogusLookupTokenFilterClass() {
-    expectThrows(IllegalArgumentException.class, () -> {
-      TokenFilterFactory.lookupClass("sdfsdfsdfdsfsdfsdf");
-    });
-    
-    expectThrows(IllegalArgumentException.class, () -> {
-      TokenFilterFactory.lookupClass("!(**#$U*#$*");
-    });
-  }
-  
-  public void testAvailableTokenFilters() {
-    assertTrue(TokenFilterFactory.availableTokenFilters().contains("lowercase"));
-    assertTrue(TokenFilterFactory.availableTokenFilters().contains("removeduplicates"));
-  }
-  
-  public void testLookupCharFilter() {
-    assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.forName("HTMLStrip", versionArgOnly()).getClass());
-    assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.forName("HTMLSTRIP", versionArgOnly()).getClass());
-    assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.forName("htmlstrip", versionArgOnly()).getClass());
-  }
-  
-  public void testBogusLookupCharFilter() {
-    expectThrows(IllegalArgumentException.class, () -> {
-      CharFilterFactory.forName("sdfsdfsdfdsfsdfsdf", new HashMap<String,String>());
-    });
-    
-    expectThrows(IllegalArgumentException.class, () -> {
-      CharFilterFactory.forName("!(**#$U*#$*", new HashMap<String,String>());
-    });
-  }
+	public void testLookupTokenizer() {
+		assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.forName("Whitespace", versionArgOnly()).getClass());
+		assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.forName("WHITESPACE", versionArgOnly()).getClass());
+		assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.forName("whitespace", versionArgOnly()).getClass());
+	}
 
-  public void testLookupCharFilterClass() {
-    assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.lookupClass("HTMLStrip"));
-    assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.lookupClass("HTMLSTRIP"));
-    assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.lookupClass("htmlstrip"));
-  }
-  
-  public void testBogusLookupCharFilterClass() {
-    expectThrows(IllegalArgumentException.class, () -> {
-      CharFilterFactory.lookupClass("sdfsdfsdfdsfsdfsdf");
-    });
-    
-    expectThrows(IllegalArgumentException.class, () -> {
-      CharFilterFactory.lookupClass("!(**#$U*#$*");
-    });
-  }
-  
-  public void testAvailableCharFilters() {
-    assertTrue(CharFilterFactory.availableCharFilters().contains("htmlstrip"));
-  }
+	public void testBogusLookupTokenizer() {
+		expectThrows(IllegalArgumentException.class, () -> {
+			TokenizerFactory.forName("sdfsdfsdfdsfsdfsdf", new HashMap<String, String>());
+		});
+
+		expectThrows(IllegalArgumentException.class, () -> {
+			TokenizerFactory.forName("!(**#$U*#$*", new HashMap<String, String>());
+		});
+	}
+
+	public void testLookupTokenizerClass() {
+		assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.lookupClass("Whitespace"));
+		assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.lookupClass("WHITESPACE"));
+		assertSame(WhitespaceTokenizerFactory.class, TokenizerFactory.lookupClass("whitespace"));
+	}
+
+	public void testBogusLookupTokenizerClass() {
+		expectThrows(IllegalArgumentException.class, () -> {
+			TokenizerFactory.lookupClass("sdfsdfsdfdsfsdfsdf");
+		});
+
+		expectThrows(IllegalArgumentException.class, () -> {
+			TokenizerFactory.lookupClass("!(**#$U*#$*");
+		});
+	}
+
+	public void testAvailableTokenizers() {
+		assertTrue(TokenizerFactory.availableTokenizers().contains("whitespace"));
+	}
+
+	public void testLookupTokenFilter() {
+		assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.forName("Lowercase", versionArgOnly()).getClass());
+		assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.forName("LOWERCASE", versionArgOnly()).getClass());
+		assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.forName("lowercase", versionArgOnly()).getClass());
+
+		assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.forName("RemoveDuplicates", versionArgOnly()).getClass());
+		assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.forName("REMOVEDUPLICATES", versionArgOnly()).getClass());
+		assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.forName("removeduplicates", versionArgOnly()).getClass());
+	}
+
+	public void testBogusLookupTokenFilter() {
+		expectThrows(IllegalArgumentException.class, () -> {
+			TokenFilterFactory.forName("sdfsdfsdfdsfsdfsdf", new HashMap<String, String>());
+		});
+
+		expectThrows(IllegalArgumentException.class, () -> {
+			TokenFilterFactory.forName("!(**#$U*#$*", new HashMap<String, String>());
+		});
+	}
+
+	public void testLookupTokenFilterClass() {
+		assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.lookupClass("Lowercase"));
+		assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.lookupClass("LOWERCASE"));
+		assertSame(LowerCaseFilterFactory.class, TokenFilterFactory.lookupClass("lowercase"));
+
+		assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.lookupClass("RemoveDuplicates"));
+		assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.lookupClass("REMOVEDUPLICATES"));
+		assertSame(RemoveDuplicatesTokenFilterFactory.class, TokenFilterFactory.lookupClass("removeduplicates"));
+	}
+
+	public void testBogusLookupTokenFilterClass() {
+		expectThrows(IllegalArgumentException.class, () -> {
+			TokenFilterFactory.lookupClass("sdfsdfsdfdsfsdfsdf");
+		});
+
+		expectThrows(IllegalArgumentException.class, () -> {
+			TokenFilterFactory.lookupClass("!(**#$U*#$*");
+		});
+	}
+
+	public void testAvailableTokenFilters() {
+		assertTrue(TokenFilterFactory.availableTokenFilters().contains("lowercase"));
+		assertTrue(TokenFilterFactory.availableTokenFilters().contains("removeduplicates"));
+	}
+
+	public void testLookupCharFilter() {
+		assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.forName("HTMLStrip", versionArgOnly()).getClass());
+		assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.forName("HTMLSTRIP", versionArgOnly()).getClass());
+		assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.forName("htmlstrip", versionArgOnly()).getClass());
+	}
+
+	public void testBogusLookupCharFilter() {
+		expectThrows(IllegalArgumentException.class, () -> {
+			CharFilterFactory.forName("sdfsdfsdfdsfsdfsdf", new HashMap<String, String>());
+		});
+
+		expectThrows(IllegalArgumentException.class, () -> {
+			CharFilterFactory.forName("!(**#$U*#$*", new HashMap<String, String>());
+		});
+	}
+
+	public void testLookupCharFilterClass() {
+		assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.lookupClass("HTMLStrip"));
+		assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.lookupClass("HTMLSTRIP"));
+		assertSame(HTMLStripCharFilterFactory.class, CharFilterFactory.lookupClass("htmlstrip"));
+	}
+
+	public void testBogusLookupCharFilterClass() {
+		expectThrows(IllegalArgumentException.class, () -> {
+			CharFilterFactory.lookupClass("sdfsdfsdfdsfsdfsdf");
+		});
+
+		expectThrows(IllegalArgumentException.class, () -> {
+			CharFilterFactory.lookupClass("!(**#$U*#$*");
+		});
+	}
+
+	public void testAvailableCharFilters() {
+		assertTrue(CharFilterFactory.availableCharFilters().contains("htmlstrip"));
+	}
 }

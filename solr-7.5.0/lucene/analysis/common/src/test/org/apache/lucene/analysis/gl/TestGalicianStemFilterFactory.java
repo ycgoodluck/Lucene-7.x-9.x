@@ -27,18 +27,20 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Galician stem factory is working.
  */
 public class TestGalicianStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("cariñosa");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("GalicianStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "cariñ" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("GalicianStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("cariñosa");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("GalicianStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"cariñ"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("GalicianStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

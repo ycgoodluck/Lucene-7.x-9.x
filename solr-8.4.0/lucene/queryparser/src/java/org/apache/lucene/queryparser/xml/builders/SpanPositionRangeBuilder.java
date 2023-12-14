@@ -28,23 +28,23 @@ import org.w3c.dom.Element;
  */
 public class SpanPositionRangeBuilder extends SpanBuilderBase {
 
-  private final SpanQueryBuilder factory;
+	private final SpanQueryBuilder factory;
 
-  public SpanPositionRangeBuilder(SpanQueryBuilder factory) {
-    this.factory = factory;
-  }
+	public SpanPositionRangeBuilder(SpanQueryBuilder factory) {
+		this.factory = factory;
+	}
 
-  @Override
-  public SpanQuery getSpanQuery(Element e) throws ParserException {
-    int start = DOMUtils.getAttribute(e, "start", 1);
-    int end = DOMUtils.getAttribute(e, "end", 1);
-    Element child = DOMUtils.getFirstChildElement(e);
-    SpanQuery q = factory.getSpanQuery(child);
+	@Override
+	public SpanQuery getSpanQuery(Element e) throws ParserException {
+		int start = DOMUtils.getAttribute(e, "start", 1);
+		int end = DOMUtils.getAttribute(e, "end", 1);
+		Element child = DOMUtils.getFirstChildElement(e);
+		SpanQuery q = factory.getSpanQuery(child);
 
-    SpanPositionRangeQuery query = new SpanPositionRangeQuery(q, start, end);
+		SpanPositionRangeQuery query = new SpanPositionRangeQuery(q, start, end);
 
-    float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
-    return new SpanBoostQuery(query, boost);
-  }
+		float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+		return new SpanBoostQuery(query, boost);
+	}
 
 }

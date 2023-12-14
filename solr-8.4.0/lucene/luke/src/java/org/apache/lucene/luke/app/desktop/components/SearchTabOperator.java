@@ -17,13 +17,15 @@
 
 package org.apache.lucene.luke.app.desktop.components;
 
-/** Operator for the Search tab */
+/**
+ * Operator for the Search tab
+ */
 public interface SearchTabOperator extends ComponentOperatorRegistry.ComponentOperator {
-  void searchByTerm(String field, String term);
+	void searchByTerm(String field, String term);
 
-  void mltSearch(int docNum);
+	void mltSearch(int docNum);
 
-  void enableExactHitsCB(boolean value);
+	void enableExactHitsCB(boolean value);
 
-  void setExactHits(boolean value);
+	void setExactHits(boolean value);
 }

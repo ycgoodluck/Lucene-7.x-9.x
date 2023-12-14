@@ -29,15 +29,15 @@ import java.io.IOException;
  */
 public class OpenTaxonomyIndexTask extends PerfTask {
 
-  public OpenTaxonomyIndexTask(PerfRunData runData) {
-    super(runData);
-  }
+	public OpenTaxonomyIndexTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  public int doLogic() throws IOException {
-    PerfRunData runData = getRunData();
-    runData.setTaxonomyWriter(new DirectoryTaxonomyWriter(runData.getTaxonomyDir()));
-    return 1;
-  }
+	@Override
+	public int doLogic() throws IOException {
+		PerfRunData runData = getRunData();
+		runData.setTaxonomyWriter(new DirectoryTaxonomyWriter(runData.getTaxonomyDir()));
+		return 1;
+	}
 
 }

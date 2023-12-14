@@ -22,15 +22,15 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestMergeRateLimiter extends LuceneTestCase {
-  public void testInitDefaults() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
-    w.addDocument(new Document());
-    w.close();
+	public void testInitDefaults() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+		w.addDocument(new Document());
+		w.close();
 
-    MergeRateLimiter rateLimiter = new MergeRateLimiter(new MergePolicy.OneMergeProgress());
-    assertEquals(Double.POSITIVE_INFINITY, rateLimiter.getMBPerSec(), 0.0);
-    assertTrue(rateLimiter.getMinPauseCheckBytes() > 0);
-    dir.close();
-  }
+		MergeRateLimiter rateLimiter = new MergeRateLimiter(new MergePolicy.OneMergeProgress());
+		assertEquals(Double.POSITIVE_INFINITY, rateLimiter.getMBPerSec(), 0.0);
+		assertTrue(rateLimiter.getMinPauseCheckBytes() > 0);
+		dir.close();
+	}
 }

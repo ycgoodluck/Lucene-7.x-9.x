@@ -16,14 +16,23 @@
  */
 package org.apache.lucene.util;
 
-/** time unit constants for use in annotations. */
+/**
+ * time unit constants for use in annotations.
+ */
 public final class TimeUnits {
-  private TimeUnits() {}
+	private TimeUnits() {
+	}
 
-  /** 1 second in milliseconds */
-  public static final int SECOND = 1000;
-  /** 1 minute in milliseconds */
-  public static final int MINUTE = 60 * SECOND;
-  /** 1 hour in milliseconds */
-  public static final int HOUR = 60 * MINUTE;  
+	/**
+	 * 1 second in milliseconds
+	 */
+	public static final int SECOND = 1000;
+	/**
+	 * 1 minute in milliseconds
+	 */
+	public static final int MINUTE = 60 * SECOND;
+	/**
+	 * 1 hour in milliseconds
+	 */
+	public static final int HOUR = 60 * MINUTE;
 }

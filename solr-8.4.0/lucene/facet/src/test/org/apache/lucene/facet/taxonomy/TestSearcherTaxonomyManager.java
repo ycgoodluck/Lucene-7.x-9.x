@@ -50,315 +50,315 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestSearcherTaxonomyManager extends FacetTestCase {
 
-  private static class IndexerThread extends Thread {
-    
-    private IndexWriter w;
-    private FacetsConfig config;
-    private TaxonomyWriter tw;
-    private ReferenceManager<SearcherAndTaxonomy> mgr;
-    private int ordLimit;
-    private AtomicBoolean stop;
+	private static class IndexerThread extends Thread {
 
-    public IndexerThread(IndexWriter w, FacetsConfig config, TaxonomyWriter tw,
-        ReferenceManager<SearcherAndTaxonomy> mgr, int ordLimit, AtomicBoolean stop) {
-      this.w = w;
-      this.config = config;
-      this.tw = tw;
-      this.mgr = mgr;
-      this.ordLimit = ordLimit;
-      this.stop = stop;
-    }
+		private IndexWriter w;
+		private FacetsConfig config;
+		private TaxonomyWriter tw;
+		private ReferenceManager<SearcherAndTaxonomy> mgr;
+		private int ordLimit;
+		private AtomicBoolean stop;
 
-    @Override
-    public void run() {
-      try {
-        Set<String> seen = new HashSet<>();
-        List<String> paths = new ArrayList<>();
-        while (true) {
-          Document doc = new Document();
-          int numPaths = TestUtil.nextInt(random(), 1, 5);
-          for(int i=0;i<numPaths;i++) {
-            String path;
-            if (!paths.isEmpty() && random().nextInt(5) != 4) {
-              // Use previous path
-              path = paths.get(random().nextInt(paths.size()));
-            } else {
-              // Create new path
-              path = null;
-              while (true) {
-                path = TestUtil.randomRealisticUnicodeString(random());
-                if (path.length() != 0 && !seen.contains(path)) {
-                  seen.add(path);
-                  paths.add(path);
-                  break;
-                }
-              }
-            }
-            doc.add(new FacetField("field", path));
-          }
-          try {
-            w.addDocument(config.build(tw, doc));
-            if (mgr != null && random().nextDouble() < 0.02) {
-              w.commit();
-              tw.commit();
-              mgr.maybeRefresh();
-            }
-          } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-          }
+		public IndexerThread(IndexWriter w, FacetsConfig config, TaxonomyWriter tw,
+												 ReferenceManager<SearcherAndTaxonomy> mgr, int ordLimit, AtomicBoolean stop) {
+			this.w = w;
+			this.config = config;
+			this.tw = tw;
+			this.mgr = mgr;
+			this.ordLimit = ordLimit;
+			this.stop = stop;
+		}
 
-          if (VERBOSE) {
-            System.out.println("TW size=" + tw.getSize() + " vs " + ordLimit);
-          }
+		@Override
+		public void run() {
+			try {
+				Set<String> seen = new HashSet<>();
+				List<String> paths = new ArrayList<>();
+				while (true) {
+					Document doc = new Document();
+					int numPaths = TestUtil.nextInt(random(), 1, 5);
+					for (int i = 0; i < numPaths; i++) {
+						String path;
+						if (!paths.isEmpty() && random().nextInt(5) != 4) {
+							// Use previous path
+							path = paths.get(random().nextInt(paths.size()));
+						} else {
+							// Create new path
+							path = null;
+							while (true) {
+								path = TestUtil.randomRealisticUnicodeString(random());
+								if (path.length() != 0 && !seen.contains(path)) {
+									seen.add(path);
+									paths.add(path);
+									break;
+								}
+							}
+						}
+						doc.add(new FacetField("field", path));
+					}
+					try {
+						w.addDocument(config.build(tw, doc));
+						if (mgr != null && random().nextDouble() < 0.02) {
+							w.commit();
+							tw.commit();
+							mgr.maybeRefresh();
+						}
+					} catch (IOException ioe) {
+						throw new RuntimeException(ioe);
+					}
 
-          if (tw.getSize() >= ordLimit) {
-            break;
-          }
-        }
-      } finally {
-        stop.set(true);
-      }
-    }
+					if (VERBOSE) {
+						System.out.println("TW size=" + tw.getSize() + " vs " + ordLimit);
+					}
 
-  }
+					if (tw.getSize() >= ordLimit) {
+						break;
+					}
+				}
+			} finally {
+				stop.set(true);
+			}
+		}
 
-  public void testNRT() throws Exception {
-    Directory dir = newDirectory();
-    Directory taxoDir = newDirectory();
-    IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()));
-    // Don't allow tiny maxBufferedDocs; it can make this
-    // test too slow:
-    iwc.setMaxBufferedDocs(Math.max(500, iwc.getMaxBufferedDocs()));
+	}
 
-    // MockRandom/AlcololicMergePolicy are too slow:
-    TieredMergePolicy tmp = new TieredMergePolicy();
-    tmp.setFloorSegmentMB(.001);
-    iwc.setMergePolicy(tmp);
-    final IndexWriter w = new IndexWriter(dir, iwc);
-    final DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
-    final FacetsConfig config = new FacetsConfig();
-    config.setMultiValued("field", true);
-    final AtomicBoolean stop = new AtomicBoolean();
+	public void testNRT() throws Exception {
+		Directory dir = newDirectory();
+		Directory taxoDir = newDirectory();
+		IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()));
+		// Don't allow tiny maxBufferedDocs; it can make this
+		// test too slow:
+		iwc.setMaxBufferedDocs(Math.max(500, iwc.getMaxBufferedDocs()));
 
-    // How many unique facets to index before stopping:
-    final int ordLimit = TEST_NIGHTLY ? 100000 : 6000;
+		// MockRandom/AlcololicMergePolicy are too slow:
+		TieredMergePolicy tmp = new TieredMergePolicy();
+		tmp.setFloorSegmentMB(.001);
+		iwc.setMergePolicy(tmp);
+		final IndexWriter w = new IndexWriter(dir, iwc);
+		final DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
+		final FacetsConfig config = new FacetsConfig();
+		config.setMultiValued("field", true);
+		final AtomicBoolean stop = new AtomicBoolean();
 
-    Thread indexer = new IndexerThread(w, config, tw, null, ordLimit, stop);
+		// How many unique facets to index before stopping:
+		final int ordLimit = TEST_NIGHTLY ? 100000 : 6000;
 
-    final SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(w, true, null, tw);
+		Thread indexer = new IndexerThread(w, config, tw, null, ordLimit, stop);
 
-    Thread reopener = new Thread() {
-        @Override
-        public void run() {
-          while(!stop.get()) {
-            try {
-              // Sleep for up to 20 msec:
-              Thread.sleep(random().nextInt(20));
+		final SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(w, true, null, tw);
 
-              if (VERBOSE) {
-                System.out.println("TEST: reopen");
-              }
+		Thread reopener = new Thread() {
+			@Override
+			public void run() {
+				while (!stop.get()) {
+					try {
+						// Sleep for up to 20 msec:
+						Thread.sleep(random().nextInt(20));
 
-              mgr.maybeRefresh();
+						if (VERBOSE) {
+							System.out.println("TEST: reopen");
+						}
 
-              if (VERBOSE) {
-                System.out.println("TEST: reopen done");
-              }
-            } catch (Exception ioe) {
-              throw new RuntimeException(ioe);
-            }
-          }
-        }
-      };
+						mgr.maybeRefresh();
 
-    reopener.setName("reopener");
-    reopener.start();
+						if (VERBOSE) {
+							System.out.println("TEST: reopen done");
+						}
+					} catch (Exception ioe) {
+						throw new RuntimeException(ioe);
+					}
+				}
+			}
+		};
 
-    indexer.setName("indexer");
-    indexer.start();
+		reopener.setName("reopener");
+		reopener.start();
 
-    try {
-      while (!stop.get()) {
-        SearcherAndTaxonomy pair = mgr.acquire();
-        try {
-          //System.out.println("search maxOrd=" + pair.taxonomyReader.getSize());
-          FacetsCollector sfc = new FacetsCollector();
-          pair.searcher.search(new MatchAllDocsQuery(), sfc);
-          Facets facets = getTaxonomyFacetCounts(pair.taxonomyReader, config, sfc);
-          FacetResult result = facets.getTopChildren(10, "field");
-          if (pair.searcher.getIndexReader().numDocs() > 0) { 
-            //System.out.println(pair.taxonomyReader.getSize());
-            assertTrue(result.childCount > 0);
-            assertTrue(result.labelValues.length > 0);
-          }
+		indexer.setName("indexer");
+		indexer.start();
 
-          //if (VERBOSE) {
-          //System.out.println("TEST: facets=" + FacetTestUtils.toString(results.get(0)));
-          //}
-        } finally {
-          mgr.release(pair);
-        }
-      }
-    } finally {
-      indexer.join();
-      reopener.join();
-    }
+		try {
+			while (!stop.get()) {
+				SearcherAndTaxonomy pair = mgr.acquire();
+				try {
+					//System.out.println("search maxOrd=" + pair.taxonomyReader.getSize());
+					FacetsCollector sfc = new FacetsCollector();
+					pair.searcher.search(new MatchAllDocsQuery(), sfc);
+					Facets facets = getTaxonomyFacetCounts(pair.taxonomyReader, config, sfc);
+					FacetResult result = facets.getTopChildren(10, "field");
+					if (pair.searcher.getIndexReader().numDocs() > 0) {
+						//System.out.println(pair.taxonomyReader.getSize());
+						assertTrue(result.childCount > 0);
+						assertTrue(result.labelValues.length > 0);
+					}
 
-    if (VERBOSE) {
-      System.out.println("TEST: now stop");
-    }
+					//if (VERBOSE) {
+					//System.out.println("TEST: facets=" + FacetTestUtils.toString(results.get(0)));
+					//}
+				} finally {
+					mgr.release(pair);
+				}
+			}
+		} finally {
+			indexer.join();
+			reopener.join();
+		}
 
-    w.close();
-    IOUtils.close(mgr, tw, taxoDir, dir);
-  }
-  
-  public void testDirectory() throws Exception {
-    Directory indexDir = newDirectory();
-    Directory taxoDir = newDirectory();
-    final IndexWriter w = new IndexWriter(indexDir, newIndexWriterConfig(new MockAnalyzer(random())));
-    final DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
-    // first empty commit
-    w.commit();
-    tw.commit();
-    final SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(indexDir, taxoDir, null);
-    final FacetsConfig config = new FacetsConfig();
-    config.setMultiValued("field", true);
-    final AtomicBoolean stop = new AtomicBoolean();
+		if (VERBOSE) {
+			System.out.println("TEST: now stop");
+		}
 
-    // How many unique facets to index before stopping:
-    final int ordLimit = TEST_NIGHTLY ? 100000 : 6000;
+		w.close();
+		IOUtils.close(mgr, tw, taxoDir, dir);
+	}
 
-    Thread indexer = new IndexerThread(w, config, tw, mgr, ordLimit, stop);
-    indexer.start();
+	public void testDirectory() throws Exception {
+		Directory indexDir = newDirectory();
+		Directory taxoDir = newDirectory();
+		final IndexWriter w = new IndexWriter(indexDir, newIndexWriterConfig(new MockAnalyzer(random())));
+		final DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
+		// first empty commit
+		w.commit();
+		tw.commit();
+		final SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(indexDir, taxoDir, null);
+		final FacetsConfig config = new FacetsConfig();
+		config.setMultiValued("field", true);
+		final AtomicBoolean stop = new AtomicBoolean();
 
-    try {
-      while (!stop.get()) {
-        SearcherAndTaxonomy pair = mgr.acquire();
-        try {
-          //System.out.println("search maxOrd=" + pair.taxonomyReader.getSize());
-          FacetsCollector sfc = new FacetsCollector();
-          pair.searcher.search(new MatchAllDocsQuery(), sfc);
-          Facets facets = getTaxonomyFacetCounts(pair.taxonomyReader, config, sfc);
-          FacetResult result = facets.getTopChildren(10, "field");
-          if (pair.searcher.getIndexReader().numDocs() > 0) { 
-            //System.out.println(pair.taxonomyReader.getSize());
-            assertTrue(result.childCount > 0);
-            assertTrue(result.labelValues.length > 0);
-          }
+		// How many unique facets to index before stopping:
+		final int ordLimit = TEST_NIGHTLY ? 100000 : 6000;
 
-          //if (VERBOSE) {
-          //System.out.println("TEST: facets=" + FacetTestUtils.toString(results.get(0)));
-          //}
-        } finally {
-          mgr.release(pair);
-        }
-      }
-    } finally {
-      indexer.join();
-    }
+		Thread indexer = new IndexerThread(w, config, tw, mgr, ordLimit, stop);
+		indexer.start();
 
-    if (VERBOSE) {
-      System.out.println("TEST: now stop");
-    }
+		try {
+			while (!stop.get()) {
+				SearcherAndTaxonomy pair = mgr.acquire();
+				try {
+					//System.out.println("search maxOrd=" + pair.taxonomyReader.getSize());
+					FacetsCollector sfc = new FacetsCollector();
+					pair.searcher.search(new MatchAllDocsQuery(), sfc);
+					Facets facets = getTaxonomyFacetCounts(pair.taxonomyReader, config, sfc);
+					FacetResult result = facets.getTopChildren(10, "field");
+					if (pair.searcher.getIndexReader().numDocs() > 0) {
+						//System.out.println(pair.taxonomyReader.getSize());
+						assertTrue(result.childCount > 0);
+						assertTrue(result.labelValues.length > 0);
+					}
 
-    w.close();
-    IOUtils.close(mgr, tw, taxoDir, indexDir);
-  }
-  
-  public void testReplaceTaxonomyNRT() throws Exception {
-    Directory dir = newDirectory();
-    Directory taxoDir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random())));
-    DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
+					//if (VERBOSE) {
+					//System.out.println("TEST: facets=" + FacetTestUtils.toString(results.get(0)));
+					//}
+				} finally {
+					mgr.release(pair);
+				}
+			}
+		} finally {
+			indexer.join();
+		}
 
-    Directory taxoDir2 = newDirectory();
-    DirectoryTaxonomyWriter tw2 = new DirectoryTaxonomyWriter(taxoDir2);
-    tw2.close();
+		if (VERBOSE) {
+			System.out.println("TEST: now stop");
+		}
 
-    SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(w, true, null, tw);
-    w.addDocument(new Document());
-    tw.replaceTaxonomy(taxoDir2);
-    taxoDir2.close();
+		w.close();
+		IOUtils.close(mgr, tw, taxoDir, indexDir);
+	}
 
-    expectThrows(IllegalStateException.class, () -> {
-      mgr.maybeRefresh();
-    });
+	public void testReplaceTaxonomyNRT() throws Exception {
+		Directory dir = newDirectory();
+		Directory taxoDir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random())));
+		DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
 
-    w.close();
-    IOUtils.close(mgr, tw, taxoDir, dir);
-  }
-  
-  public void testReplaceTaxonomyDirectory() throws Exception {
-    Directory indexDir = newDirectory();
-    Directory taxoDir = newDirectory();
-    IndexWriter w = new IndexWriter(indexDir, newIndexWriterConfig(new MockAnalyzer(random())));
-    DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
-    w.commit();
-    tw.commit();
+		Directory taxoDir2 = newDirectory();
+		DirectoryTaxonomyWriter tw2 = new DirectoryTaxonomyWriter(taxoDir2);
+		tw2.close();
 
-    Directory taxoDir2 = newDirectory();
-    DirectoryTaxonomyWriter tw2 = new DirectoryTaxonomyWriter(taxoDir2);
-    tw2.addCategory(new FacetLabel("a", "b"));
-    tw2.close();
+		SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(w, true, null, tw);
+		w.addDocument(new Document());
+		tw.replaceTaxonomy(taxoDir2);
+		taxoDir2.close();
 
-    SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(indexDir, taxoDir, null);
-    SearcherAndTaxonomy pair = mgr.acquire();
-    try {
-      assertEquals(1, pair.taxonomyReader.getSize());
-    } finally {
-      mgr.release(pair);
-    }
-    
-    w.addDocument(new Document());
-    tw.replaceTaxonomy(taxoDir2);
-    taxoDir2.close();
-    w.commit();
-    tw.commit();
+		expectThrows(IllegalStateException.class, () -> {
+			mgr.maybeRefresh();
+		});
 
-    mgr.maybeRefresh();
-    pair = mgr.acquire();
-    try {
-      assertEquals(3, pair.taxonomyReader.getSize());
-    } finally {
-      mgr.release(pair);
-    }
+		w.close();
+		IOUtils.close(mgr, tw, taxoDir, dir);
+	}
 
-    w.close();
-    IOUtils.close(mgr, tw, taxoDir, indexDir);
-  }
+	public void testReplaceTaxonomyDirectory() throws Exception {
+		Directory indexDir = newDirectory();
+		Directory taxoDir = newDirectory();
+		IndexWriter w = new IndexWriter(indexDir, newIndexWriterConfig(new MockAnalyzer(random())));
+		DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
+		w.commit();
+		tw.commit();
 
-  public void testExceptionDuringRefresh() throws Exception {
+		Directory taxoDir2 = newDirectory();
+		DirectoryTaxonomyWriter tw2 = new DirectoryTaxonomyWriter(taxoDir2);
+		tw2.addCategory(new FacetLabel("a", "b"));
+		tw2.close();
 
-    Directory indexDir = newDirectory();
-    Directory taxoDir = newDirectory();
+		SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(indexDir, taxoDir, null);
+		SearcherAndTaxonomy pair = mgr.acquire();
+		try {
+			assertEquals(1, pair.taxonomyReader.getSize());
+		} finally {
+			mgr.release(pair);
+		}
 
-    IndexWriter w = new IndexWriter(indexDir, newIndexWriterConfig(new MockAnalyzer(random())));
-    DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
-    w.commit();
-    tw.commit();
+		w.addDocument(new Document());
+		tw.replaceTaxonomy(taxoDir2);
+		taxoDir2.close();
+		w.commit();
+		tw.commit();
 
-    SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(indexDir, taxoDir, null);
+		mgr.maybeRefresh();
+		pair = mgr.acquire();
+		try {
+			assertEquals(3, pair.taxonomyReader.getSize());
+		} finally {
+			mgr.release(pair);
+		}
 
-    tw.addCategory(new FacetLabel("a", "b"));
-    w.addDocument(new Document());
+		w.close();
+		IOUtils.close(mgr, tw, taxoDir, indexDir);
+	}
 
-    tw.commit();
-    w.commit();
+	public void testExceptionDuringRefresh() throws Exception {
 
-    // intentionally corrupt the taxo index:
-    SegmentInfos infos = SegmentInfos.readLatestCommit(taxoDir);
-    taxoDir.deleteFile(infos.getSegmentsFileName());
-    expectThrows(IndexNotFoundException.class, mgr::maybeRefreshBlocking);
-    IOUtils.close(w, tw, mgr, indexDir, taxoDir);
-  }
+		Directory indexDir = newDirectory();
+		Directory taxoDir = newDirectory();
 
-  private SearcherTaxonomyManager getSearcherTaxonomyManager(Directory indexDir, Directory taxoDir, SearcherFactory searcherFactory) throws IOException {
-    if (random().nextBoolean()) {
-      return new SearcherTaxonomyManager(indexDir, taxoDir, searcherFactory);
-    } else {
-      IndexReader reader = DirectoryReader.open(indexDir);
-      DirectoryTaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
-      return new SearcherTaxonomyManager(reader, taxoReader, searcherFactory);
-    }
-  }
+		IndexWriter w = new IndexWriter(indexDir, newIndexWriterConfig(new MockAnalyzer(random())));
+		DirectoryTaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir);
+		w.commit();
+		tw.commit();
+
+		SearcherTaxonomyManager mgr = new SearcherTaxonomyManager(indexDir, taxoDir, null);
+
+		tw.addCategory(new FacetLabel("a", "b"));
+		w.addDocument(new Document());
+
+		tw.commit();
+		w.commit();
+
+		// intentionally corrupt the taxo index:
+		SegmentInfos infos = SegmentInfos.readLatestCommit(taxoDir);
+		taxoDir.deleteFile(infos.getSegmentsFileName());
+		expectThrows(IndexNotFoundException.class, mgr::maybeRefreshBlocking);
+		IOUtils.close(w, tw, mgr, indexDir, taxoDir);
+	}
+
+	private SearcherTaxonomyManager getSearcherTaxonomyManager(Directory indexDir, Directory taxoDir, SearcherFactory searcherFactory) throws IOException {
+		if (random().nextBoolean()) {
+			return new SearcherTaxonomyManager(indexDir, taxoDir, searcherFactory);
+		} else {
+			IndexReader reader = DirectoryReader.open(indexDir);
+			DirectoryTaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
+			return new SearcherTaxonomyManager(reader, taxoReader, searcherFactory);
+		}
+	}
 }

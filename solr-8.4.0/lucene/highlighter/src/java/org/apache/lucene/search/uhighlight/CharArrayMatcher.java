@@ -31,21 +31,21 @@ import org.apache.lucene.util.automaton.CharacterRunAutomaton;
  */
 public interface CharArrayMatcher {
 
-  /**
-   * Return {@code true} if the passed-in character array matches
-   */
-  boolean match(char[] s, int offset, int length);
+	/**
+	 * Return {@code true} if the passed-in character array matches
+	 */
+	boolean match(char[] s, int offset, int length);
 
-  /**
-   * Return {@code true} if the passed-in CharsRef matches
-   */
-  default boolean match(CharsRef chars) {
-    return match(chars.chars, chars.offset, chars.length);
-  }
+	/**
+	 * Return {@code true} if the passed-in CharsRef matches
+	 */
+	default boolean match(CharsRef chars) {
+		return match(chars.chars, chars.offset, chars.length);
+	}
 
-  static CharArrayMatcher fromTerms(List<BytesRef> terms) {
-    CharacterRunAutomaton a = new CharacterRunAutomaton(Automata.makeStringUnion(terms));
-    return a::run;
-  }
+	static CharArrayMatcher fromTerms(List<BytesRef> terms) {
+		CharacterRunAutomaton a = new CharacterRunAutomaton(Automata.makeStringUnion(terms));
+		return a::run;
+	}
 
 }

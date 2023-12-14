@@ -17,29 +17,29 @@ import org.apache.lucene.util.BytesRef;
  */
 public class MemoryIndexTest {
 
-    private final Analyzer analyzer = new WhitespaceAnalyzer();
-    private final IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private final Analyzer analyzer = new WhitespaceAnalyzer();
+	private final IndexWriterConfig conf = new IndexWriterConfig(analyzer);
 
-    public void doSearch() throws Exception {
-        Document document = new Document();
-        document.add(new StringField("author", "jay", Field.Store.YES));
-        document.add(new StringField("author", "lily", Field.Store.YES));
-        document.add(new StringField("author", "jay", Field.Store.YES));
-        document.add(new StringField("author", "lucy", Field.Store.YES));
-        int count = 0;
-        MemoryIndex memoryIndex = MemoryIndex.fromDocument(document, analyzer, true, true, 0);
-        Query query = new TermQuery(new Term("author", new BytesRef("lily")));
-        float score = memoryIndex.search(query);
-        if (score >= 0.0f) {
-            System.out.println("it's a match: "+score+"");
-            System.out.println(memoryIndex.toStringDebug());
-        } else {
-            System.out.println("no match found");
-        }
-    }
+	public void doSearch() throws Exception {
+		Document document = new Document();
+		document.add(new StringField("author", "jay", Field.Store.YES));
+		document.add(new StringField("author", "lily", Field.Store.YES));
+		document.add(new StringField("author", "jay", Field.Store.YES));
+		document.add(new StringField("author", "lucy", Field.Store.YES));
+		int count = 0;
+		MemoryIndex memoryIndex = MemoryIndex.fromDocument(document, analyzer, true, true, 0);
+		Query query = new TermQuery(new Term("author", new BytesRef("lily")));
+		float score = memoryIndex.search(query);
+		if (score >= 0.0f) {
+			System.out.println("it's a match: " + score + "");
+			System.out.println(memoryIndex.toStringDebug());
+		} else {
+			System.out.println("no match found");
+		}
+	}
 
-    public static void main(String[] args) throws Exception{
-        MemoryIndexTest test = new MemoryIndexTest();
-        test.doSearch();
-    }
+	public static void main(String[] args) throws Exception {
+		MemoryIndexTest test = new MemoryIndexTest();
+		test.doSearch();
+	}
 }

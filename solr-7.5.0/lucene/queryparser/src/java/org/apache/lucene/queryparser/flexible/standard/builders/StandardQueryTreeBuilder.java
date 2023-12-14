@@ -45,40 +45,40 @@ import org.apache.lucene.search.Query;
  * {@link Query} tree object. It should be used to generate a {@link Query} tree
  * object from a query node tree processed by a
  * {@link StandardQueryNodeProcessorPipeline}.
- * 
+ *
  * @see QueryTreeBuilder
  * @see StandardQueryNodeProcessorPipeline
  */
 public class StandardQueryTreeBuilder extends QueryTreeBuilder implements
-    StandardQueryBuilder {
-  
-  public StandardQueryTreeBuilder() {
-    setBuilder(GroupQueryNode.class, new GroupQueryNodeBuilder());
-    setBuilder(FieldQueryNode.class, new FieldQueryNodeBuilder());
-    setBuilder(BooleanQueryNode.class, new BooleanQueryNodeBuilder());
-    setBuilder(FuzzyQueryNode.class, new FuzzyQueryNodeBuilder());
-    setBuilder(PointQueryNode.class, new DummyQueryNodeBuilder());
-    setBuilder(PointRangeQueryNode.class, new PointRangeQueryNodeBuilder());
-    setBuilder(BoostQueryNode.class, new BoostQueryNodeBuilder());
-    setBuilder(ModifierQueryNode.class, new ModifierQueryNodeBuilder());
-    setBuilder(WildcardQueryNode.class, new WildcardQueryNodeBuilder());
-    setBuilder(TokenizedPhraseQueryNode.class, new PhraseQueryNodeBuilder());
-    setBuilder(MatchNoDocsQueryNode.class, new MatchNoDocsQueryNodeBuilder());
-    setBuilder(PrefixWildcardQueryNode.class,
-        new PrefixWildcardQueryNodeBuilder());
-    setBuilder(TermRangeQueryNode.class, new TermRangeQueryNodeBuilder());
-    setBuilder(RegexpQueryNode.class, new RegexpQueryNodeBuilder());
-    setBuilder(SlopQueryNode.class, new SlopQueryNodeBuilder());
-    setBuilder(SynonymQueryNode.class,
-        new SynonymQueryNodeBuilder());
-    setBuilder(MultiPhraseQueryNode.class, new MultiPhraseQueryNodeBuilder());
-    setBuilder(MatchAllDocsQueryNode.class, new MatchAllDocsQueryNodeBuilder());
-    
-  }
-  
-  @Override
-  public Query build(QueryNode queryNode) throws QueryNodeException {
-    return (Query) super.build(queryNode);
-  }
-  
+	StandardQueryBuilder {
+
+	public StandardQueryTreeBuilder() {
+		setBuilder(GroupQueryNode.class, new GroupQueryNodeBuilder());
+		setBuilder(FieldQueryNode.class, new FieldQueryNodeBuilder());
+		setBuilder(BooleanQueryNode.class, new BooleanQueryNodeBuilder());
+		setBuilder(FuzzyQueryNode.class, new FuzzyQueryNodeBuilder());
+		setBuilder(PointQueryNode.class, new DummyQueryNodeBuilder());
+		setBuilder(PointRangeQueryNode.class, new PointRangeQueryNodeBuilder());
+		setBuilder(BoostQueryNode.class, new BoostQueryNodeBuilder());
+		setBuilder(ModifierQueryNode.class, new ModifierQueryNodeBuilder());
+		setBuilder(WildcardQueryNode.class, new WildcardQueryNodeBuilder());
+		setBuilder(TokenizedPhraseQueryNode.class, new PhraseQueryNodeBuilder());
+		setBuilder(MatchNoDocsQueryNode.class, new MatchNoDocsQueryNodeBuilder());
+		setBuilder(PrefixWildcardQueryNode.class,
+			new PrefixWildcardQueryNodeBuilder());
+		setBuilder(TermRangeQueryNode.class, new TermRangeQueryNodeBuilder());
+		setBuilder(RegexpQueryNode.class, new RegexpQueryNodeBuilder());
+		setBuilder(SlopQueryNode.class, new SlopQueryNodeBuilder());
+		setBuilder(SynonymQueryNode.class,
+			new SynonymQueryNodeBuilder());
+		setBuilder(MultiPhraseQueryNode.class, new MultiPhraseQueryNodeBuilder());
+		setBuilder(MatchAllDocsQueryNode.class, new MatchAllDocsQueryNodeBuilder());
+
+	}
+
+	@Override
+	public Query build(QueryNode queryNode) throws QueryNodeException {
+		return (Query) super.build(queryNode);
+	}
+
 }

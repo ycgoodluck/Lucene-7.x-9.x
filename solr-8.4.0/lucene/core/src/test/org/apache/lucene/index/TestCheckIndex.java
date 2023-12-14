@@ -23,37 +23,37 @@ import org.apache.lucene.store.Directory;
 import org.junit.Test;
 
 public class TestCheckIndex extends BaseTestCheckIndex {
-  private Directory directory;
+	private Directory directory;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    directory = newDirectory();
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		directory = newDirectory();
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    directory.close();
-    super.tearDown();
-  }
-  
-  @Test
-  public void testDeletedDocs() throws IOException {
-    testDeletedDocs(directory);
-  }
-  
-  @Test
-  public void testChecksumsOnly() throws IOException {
-    testChecksumsOnly(directory);
-  }
-  
-  @Test
-  public void testChecksumsOnlyVerbose() throws IOException {
-    testChecksumsOnlyVerbose(directory);
-  }
+	@Override
+	public void tearDown() throws Exception {
+		directory.close();
+		super.tearDown();
+	}
 
-  @Test
-  public void testObtainsLock() throws IOException {
-    testObtainsLock(directory);
-  }
+	@Test
+	public void testDeletedDocs() throws IOException {
+		testDeletedDocs(directory);
+	}
+
+	@Test
+	public void testChecksumsOnly() throws IOException {
+		testChecksumsOnly(directory);
+	}
+
+	@Test
+	public void testChecksumsOnlyVerbose() throws IOException {
+		testChecksumsOnlyVerbose(directory);
+	}
+
+	@Test
+	public void testObtainsLock() throws IOException {
+		testObtainsLock(directory);
+	}
 }

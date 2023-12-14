@@ -25,68 +25,68 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.QueryVisitor;
 
 class IntRangeSlowRangeQuery extends BinaryRangeFieldRangeQuery {
-  private final String field;
-  private final int[] min;
-  private final int[] max;
+	private final String field;
+	private final int[] min;
+	private final int[] max;
 
-  IntRangeSlowRangeQuery(String field, int[] min, int[] max, RangeFieldQuery.QueryType queryType) {
-    super(field, encodeRanges(min, max), IntRange.BYTES, min.length, queryType);
-    this.field = field;
-    this.min = min;
-    this.max = max;
-  }
+	IntRangeSlowRangeQuery(String field, int[] min, int[] max, RangeFieldQuery.QueryType queryType) {
+		super(field, encodeRanges(min, max), IntRange.BYTES, min.length, queryType);
+		this.field = field;
+		this.min = min;
+		this.max = max;
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (sameClassAs(obj) == false) {
-      return false;
-    }
-    IntRangeSlowRangeQuery that = (IntRangeSlowRangeQuery) obj;
-    return Objects.equals(field, that.field)
-        && Arrays.equals(min, that.min)
-        && Arrays.equals(max, that.max);
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (sameClassAs(obj) == false) {
+			return false;
+		}
+		IntRangeSlowRangeQuery that = (IntRangeSlowRangeQuery) obj;
+		return Objects.equals(field, that.field)
+			&& Arrays.equals(min, that.min)
+			&& Arrays.equals(max, that.max);
+	}
 
-  @Override
-  public int hashCode() {
-    int h = classHash();
-    h = 31 * h + field.hashCode();
-    h = 31 * h + Arrays.hashCode(min);
-    h = 31 * h + Arrays.hashCode(max);
-    return h;
-  }
+	@Override
+	public int hashCode() {
+		int h = classHash();
+		h = 31 * h + field.hashCode();
+		h = 31 * h + Arrays.hashCode(min);
+		h = 31 * h + Arrays.hashCode(max);
+		return h;
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    if (visitor.acceptField(field)) {
-      visitor.visitLeaf(this);
-    }
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		if (visitor.acceptField(field)) {
+			visitor.visitLeaf(this);
+		}
+	}
 
-  @Override
-  public String toString(String field) {
-    StringBuilder b = new StringBuilder();
-    if (this.field.equals(field) == false) {
-      b.append(this.field).append(":");
-    }
-    return b
-        .append("[")
-        .append(Arrays.toString(min))
-        .append(" TO ")
-        .append(Arrays.toString(max))
-        .append("]")
-        .toString();
-  }
+	@Override
+	public String toString(String field) {
+		StringBuilder b = new StringBuilder();
+		if (this.field.equals(field) == false) {
+			b.append(this.field).append(":");
+		}
+		return b
+			.append("[")
+			.append(Arrays.toString(min))
+			.append(" TO ")
+			.append(Arrays.toString(max))
+			.append("]")
+			.toString();
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    return super.rewrite(reader);
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		return super.rewrite(reader);
+	}
 
-  private static byte[] encodeRanges(int[] min, int[] max) {
-    byte[] result = new byte[2 * IntRange.BYTES * min.length];
+	private static byte[] encodeRanges(int[] min, int[] max) {
+		byte[] result = new byte[2 * IntRange.BYTES * min.length];
 
-    IntRange.verifyAndEncode(min, max, result);
-    return result;
-  }
+		IntRange.verifyAndEncode(min, max, result);
+		return result;
+	}
 }

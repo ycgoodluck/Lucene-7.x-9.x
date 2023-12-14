@@ -29,17 +29,17 @@ import org.apache.lucene.search.Query;
  */
 public class ModifierQueryNodeBuilder implements StandardQueryBuilder {
 
-  public ModifierQueryNodeBuilder() {
-    // empty constructor
-  }
+	public ModifierQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public Query build(QueryNode queryNode) throws QueryNodeException {
-    ModifierQueryNode modifierNode = (ModifierQueryNode) queryNode;
+	@Override
+	public Query build(QueryNode queryNode) throws QueryNodeException {
+		ModifierQueryNode modifierNode = (ModifierQueryNode) queryNode;
 
-    return (Query) (modifierNode).getChild().getTag(
-        QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+		return (Query) (modifierNode).getChild().getTag(
+			QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
 
-  }
+	}
 
 }

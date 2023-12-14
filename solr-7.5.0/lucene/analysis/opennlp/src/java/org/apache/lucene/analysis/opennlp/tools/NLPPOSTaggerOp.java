@@ -29,13 +29,13 @@ import opennlp.tools.postag.POSTaggerME;
  */
 
 public class NLPPOSTaggerOp {
-  private POSTagger tagger = null;
+	private POSTagger tagger = null;
 
-  public NLPPOSTaggerOp(POSModel model) throws IOException {
-    tagger = new POSTaggerME(model);
-  }
+	public NLPPOSTaggerOp(POSModel model) throws IOException {
+		tagger = new POSTaggerME(model);
+	}
 
-  public synchronized String[] getPOSTags(String[] words) {
-    return tagger.tag(words);
-  }
+	public synchronized String[] getPOSTags(String[] words) {
+		return tagger.tag(words);
+	}
 }

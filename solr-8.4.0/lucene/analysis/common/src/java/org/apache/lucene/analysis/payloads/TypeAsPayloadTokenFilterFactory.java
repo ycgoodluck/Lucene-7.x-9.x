@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link TypeAsPayloadTokenFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_typeaspayload" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -32,25 +32,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class TypeAsPayloadTokenFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "typeAsPayload";
-  
-  /** Creates a new TypeAsPayloadTokenFilterFactory */
-  public TypeAsPayloadTokenFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TypeAsPayloadTokenFilter create(TokenStream input) {
-    return new TypeAsPayloadTokenFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "typeAsPayload";
+
+	/**
+	 * Creates a new TypeAsPayloadTokenFilterFactory
+	 */
+	public TypeAsPayloadTokenFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TypeAsPayloadTokenFilter create(TokenStream input) {
+		return new TypeAsPayloadTokenFilter(input);
+	}
 }
 

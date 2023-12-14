@@ -21,19 +21,23 @@ import java.util.Map;
 
 import org.apache.lucene.analysis.TokenStream;
 
-/** Fake token filter factory for tests. */
+/**
+ * Fake token filter factory for tests.
+ */
 public class MockNameMismatchedFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "mock";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "mock";
 
-  public MockNameMismatchedFilterFactory(Map<String, String> args) {
-    super(args);
-  }
+	public MockNameMismatchedFilterFactory(Map<String, String> args) {
+		super(args);
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return input;
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return input;
+	}
 
 }

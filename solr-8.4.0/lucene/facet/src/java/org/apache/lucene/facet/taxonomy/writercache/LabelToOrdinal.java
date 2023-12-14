@@ -19,49 +19,55 @@ package org.apache.lucene.facet.taxonomy.writercache;
 import org.apache.lucene.facet.taxonomy.FacetLabel;
 
 /**
- * Abstract class for storing Label-&gt;Ordinal mappings in a taxonomy. 
- * 
+ * Abstract class for storing Label-&gt;Ordinal mappings in a taxonomy.
+ *
  * @lucene.experimental
  */
 public abstract class LabelToOrdinal {
 
-  /** How many ordinals we've seen. */
-  protected int counter;
+	/**
+	 * How many ordinals we've seen.
+	 */
+	protected int counter;
 
-  /** Returned by {@link #getOrdinal} when the label isn't
-   *  recognized. */
-  public static final int INVALID_ORDINAL = -2;
+	/**
+	 * Returned by {@link #getOrdinal} when the label isn't
+	 * recognized.
+	 */
+	public static final int INVALID_ORDINAL = -2;
 
-  /** Default constructor. */
-  public LabelToOrdinal() {
-  }
+	/**
+	 * Default constructor.
+	 */
+	public LabelToOrdinal() {
+	}
 
-  /**
-   * return the maximal Ordinal assigned so far
-   */
-  public int getMaxOrdinal() {
-    return this.counter;
-  }
+	/**
+	 * return the maximal Ordinal assigned so far
+	 */
+	public int getMaxOrdinal() {
+		return this.counter;
+	}
 
-  /**
-   * Returns the next unassigned ordinal. The default behavior of this method
-   * is to simply increment a counter.
-   */
-  public int getNextOrdinal() {
-    return this.counter++;
-  }
+	/**
+	 * Returns the next unassigned ordinal. The default behavior of this method
+	 * is to simply increment a counter.
+	 */
+	public int getNextOrdinal() {
+		return this.counter++;
+	}
 
-  /**
-   * Adds a new label if it is not yet in the table.
-   * Throws an {@link IllegalArgumentException} if the same label with
-   * a different ordinal was previously added to this table.
-   */
-  public abstract void addLabel(FacetLabel label, int ordinal);
+	/**
+	 * Adds a new label if it is not yet in the table.
+	 * Throws an {@link IllegalArgumentException} if the same label with
+	 * a different ordinal was previously added to this table.
+	 */
+	public abstract void addLabel(FacetLabel label, int ordinal);
 
-  /**
-   * Returns the ordinal assigned to the given label, 
-   * or {@link #INVALID_ORDINAL} if the label cannot be found in this table.
-   */
-  public abstract int getOrdinal(FacetLabel label);
+	/**
+	 * Returns the ordinal assigned to the given label,
+	 * or {@link #INVALID_ORDINAL} if the label cannot be found in this table.
+	 */
+	public abstract int getOrdinal(FacetLabel label);
 
 }

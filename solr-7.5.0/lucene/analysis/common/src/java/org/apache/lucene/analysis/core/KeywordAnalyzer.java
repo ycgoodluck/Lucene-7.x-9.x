@@ -24,11 +24,11 @@ import org.apache.lucene.analysis.Analyzer;
  * for data like zip codes, ids, and some product names.
  */
 public final class KeywordAnalyzer extends Analyzer {
-  public KeywordAnalyzer() {
-  }
+	public KeywordAnalyzer() {
+	}
 
-  @Override
-  protected TokenStreamComponents createComponents(final String fieldName) {
-    return new TokenStreamComponents(new KeywordTokenizer());
-  }
+	@Override
+	protected TokenStreamComponents createComponents(final String fieldName) {
+		return new TokenStreamComponents(new KeywordTokenizer());
+	}
 }

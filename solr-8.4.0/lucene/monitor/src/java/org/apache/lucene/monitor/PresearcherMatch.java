@@ -22,24 +22,24 @@ package org.apache.lucene.monitor;
  */
 public class PresearcherMatch<T extends QueryMatch> {
 
-  /**
-   * The presearcher hits
-   */
-  public final String presearcherMatches;
+	/**
+	 * The presearcher hits
+	 */
+	public final String presearcherMatches;
 
-  /**
-   * The QueryMatch
-   */
-  public final T queryMatch;
+	/**
+	 * The QueryMatch
+	 */
+	public final T queryMatch;
 
-  /**
-   * The query id
-   */
-  public final String queryId;
+	/**
+	 * The query id
+	 */
+	public final String queryId;
 
-  PresearcherMatch(String id, String presearcherMatches, T queryMatch) {
-    this.presearcherMatches = presearcherMatches;
-    this.queryMatch = queryMatch;
-    this.queryId = id;
-  }
+	PresearcherMatch(String id, String presearcherMatches, T queryMatch) {
+		this.presearcherMatches = presearcherMatches;
+		this.queryMatch = queryMatch;
+		this.queryId = id;
+	}
 }

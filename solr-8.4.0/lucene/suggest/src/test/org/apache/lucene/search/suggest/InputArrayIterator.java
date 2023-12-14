@@ -27,69 +27,70 @@ import org.apache.lucene.util.BytesRefBuilder;
  * A {@link InputIterator} over a sequence of {@link Input}s.
  */
 public final class InputArrayIterator implements InputIterator {
-  private final Iterator<Input> i;
-  private final boolean hasPayloads;
-  private final boolean hasContexts;
-  private boolean first;
-  private Input current;
-  private final BytesRefBuilder spare = new BytesRefBuilder();
+	private final Iterator<Input> i;
+	private final boolean hasPayloads;
+	private final boolean hasContexts;
+	private boolean first;
+	private Input current;
+	private final BytesRefBuilder spare = new BytesRefBuilder();
 
-  public InputArrayIterator(Iterator<Input> i) {
-    this.i = i;
-    if (i.hasNext()) {
-      current = i.next();
-      first = true;
-      this.hasPayloads = current.hasPayloads;
-      this.hasContexts = current.hasContexts;
-    } else {
-      this.hasPayloads = false;
-      this.hasContexts = false;
-    }
-  }
+	public InputArrayIterator(Iterator<Input> i) {
+		this.i = i;
+		if (i.hasNext()) {
+			current = i.next();
+			first = true;
+			this.hasPayloads = current.hasPayloads;
+			this.hasContexts = current.hasContexts;
+		} else {
+			this.hasPayloads = false;
+			this.hasContexts = false;
+		}
+	}
 
-  public InputArrayIterator(Input[] i) {
-    this(Arrays.asList(i));
-  }
-  public InputArrayIterator(Iterable<Input> i) {
-    this(i.iterator());
-  }
-  
-  @Override
-  public long weight() {
-    return current.v;
-  }
+	public InputArrayIterator(Input[] i) {
+		this(Arrays.asList(i));
+	}
 
-  @Override
-  public BytesRef next() {
-    if (i.hasNext() || (first && current!=null)) {
-      if (first) {
-        first = false;
-      } else {
-        current = i.next();
-      }
-      spare.copyBytes(current.term);
-      return spare.get();
-    }
-    return null;
-  }
+	public InputArrayIterator(Iterable<Input> i) {
+		this(i.iterator());
+	}
 
-  @Override
-  public BytesRef payload() {
-    return current.payload;
-  }
+	@Override
+	public long weight() {
+		return current.v;
+	}
 
-  @Override
-  public boolean hasPayloads() {
-    return hasPayloads;
-  }
+	@Override
+	public BytesRef next() {
+		if (i.hasNext() || (first && current != null)) {
+			if (first) {
+				first = false;
+			} else {
+				current = i.next();
+			}
+			spare.copyBytes(current.term);
+			return spare.get();
+		}
+		return null;
+	}
 
-  @Override
-  public Set<BytesRef> contexts() {
-    return current.contexts;
-  }
+	@Override
+	public BytesRef payload() {
+		return current.payload;
+	}
 
-  @Override
-  public boolean hasContexts() {
-    return hasContexts;
-  }
+	@Override
+	public boolean hasPayloads() {
+		return hasPayloads;
+	}
+
+	@Override
+	public Set<BytesRef> contexts() {
+		return current.contexts;
+	}
+
+	@Override
+	public boolean hasContexts() {
+		return hasContexts;
+	}
 }

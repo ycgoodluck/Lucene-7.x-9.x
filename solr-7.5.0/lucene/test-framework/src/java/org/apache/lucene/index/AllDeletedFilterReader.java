@@ -22,31 +22,31 @@ import org.apache.lucene.util.Bits;
  * Filters the incoming reader and makes all documents appear deleted.
  */
 public class AllDeletedFilterReader extends FilterLeafReader {
-  final Bits liveDocs;
-  
-  public AllDeletedFilterReader(LeafReader in) {
-    super(in);
-    liveDocs = new Bits.MatchNoBits(in.maxDoc());
-    assert maxDoc() == 0 || hasDeletions();
-  }
+	final Bits liveDocs;
 
-  @Override
-  public Bits getLiveDocs() {
-    return liveDocs;
-  }
+	public AllDeletedFilterReader(LeafReader in) {
+		super(in);
+		liveDocs = new Bits.MatchNoBits(in.maxDoc());
+		assert maxDoc() == 0 || hasDeletions();
+	}
 
-  @Override
-  public int numDocs() {
-    return 0;
-  }
+	@Override
+	public Bits getLiveDocs() {
+		return liveDocs;
+	}
 
-  @Override
-  public CacheHelper getCoreCacheHelper() {
-    return in.getCoreCacheHelper();
-  }
+	@Override
+	public int numDocs() {
+		return 0;
+	}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    return null;
-  }
+	@Override
+	public CacheHelper getCoreCacheHelper() {
+		return in.getCoreCacheHelper();
+	}
+
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		return null;
+	}
 }

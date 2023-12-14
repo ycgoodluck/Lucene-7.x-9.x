@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 package org.apache.lucene.search.highlight;
+
 /**
  * Utility class to record Positions Spans
+ *
  * @lucene.internal
  */
 public class PositionSpan {
-  int start;
-  int end;
+	int start;
+	int end;
 
-  public PositionSpan(int start, int end) {
-    this.start = start;
-    this.end = end;
-  }
+	public PositionSpan(int start, int end) {
+		this.start = start;
+		this.end = end;
+	}
 }

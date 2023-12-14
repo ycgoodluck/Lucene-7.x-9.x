@@ -26,7 +26,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
 
 /**
- * A {@link TokenFilter} that applies {@link GalicianMinimalStemmer} to stem 
+ * A {@link TokenFilter} that applies {@link GalicianMinimalStemmer} to stem
  * Galician words.
  * <p>
  * To prevent terms from being stemmed use an instance of
@@ -35,24 +35,24 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
  * </p>
  */
 public final class GalicianMinimalStemFilter extends TokenFilter {
-  private final GalicianMinimalStemmer stemmer = new GalicianMinimalStemmer();
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+	private final GalicianMinimalStemmer stemmer = new GalicianMinimalStemmer();
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
 
-  public GalicianMinimalStemFilter(TokenStream input) {
-    super(input);
-  }
-  
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if (!keywordAttr.isKeyword()) {
-        final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
-        termAtt.setLength(newlen);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	public GalicianMinimalStemFilter(TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
+				termAtt.setLength(newlen);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

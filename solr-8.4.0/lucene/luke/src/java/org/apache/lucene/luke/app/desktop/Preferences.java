@@ -21,49 +21,53 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.List;
 
-/** Preference */
+/**
+ * Preference
+ */
 public interface Preferences {
 
-  List<String> getHistory();
+	List<String> getHistory();
 
-  void addHistory(String indexPath) throws IOException;
+	void addHistory(String indexPath) throws IOException;
 
-  boolean isReadOnly();
+	boolean isReadOnly();
 
-  String getDirImpl();
+	String getDirImpl();
 
-  boolean isNoReader();
+	boolean isNoReader();
 
-  boolean isUseCompound();
+	boolean isUseCompound();
 
-  boolean isKeepAllCommits();
+	boolean isKeepAllCommits();
 
-  void setIndexOpenerPrefs(boolean readOnly, String dirImpl, boolean noReader, boolean useCompound, boolean keepAllCommits) throws IOException;
+	void setIndexOpenerPrefs(boolean readOnly, String dirImpl, boolean noReader, boolean useCompound, boolean keepAllCommits) throws IOException;
 
-  ColorTheme getColorTheme();
+	ColorTheme getColorTheme();
 
-  void setColorTheme(ColorTheme theme) throws IOException;
+	void setColorTheme(ColorTheme theme) throws IOException;
 
-  /** color themes */
-  enum ColorTheme {
+	/**
+	 * color themes
+	 */
+	enum ColorTheme {
 
-    /* Gray theme */
-    GRAY(Color.decode("#e6e6e6")),
-    /* Classic theme */
-    CLASSIC(Color.decode("#ece9d0")),
-    /* Sandstone theme */
-    SANDSTONE(Color.decode("#ddd9d4")),
-    /* Navy theme */
-    NAVY(Color.decode("#e6e6ff"));
+		/* Gray theme */
+		GRAY(Color.decode("#e6e6e6")),
+		/* Classic theme */
+		CLASSIC(Color.decode("#ece9d0")),
+		/* Sandstone theme */
+		SANDSTONE(Color.decode("#ddd9d4")),
+		/* Navy theme */
+		NAVY(Color.decode("#e6e6ff"));
 
-    private Color backgroundColor;
+		private Color backgroundColor;
 
-    ColorTheme(Color backgroundColor) {
-      this.backgroundColor = backgroundColor;
-    }
+		ColorTheme(Color backgroundColor) {
+			this.backgroundColor = backgroundColor;
+		}
 
-    public Color getBackgroundColor() {
-      return backgroundColor;
-    }
-  }
+		public Color getBackgroundColor() {
+			return backgroundColor;
+		}
+	}
 }

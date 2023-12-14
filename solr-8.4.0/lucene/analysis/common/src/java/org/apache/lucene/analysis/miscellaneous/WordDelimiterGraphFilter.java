@@ -13,7 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ 
+ */
 package org.apache.lucene.analysis.miscellaneous;
 
 import java.io.IOException;
@@ -62,7 +62,7 @@ import org.apache.lucene.util.RamUsageEstimator;
  * </ul>
  * </li>
  * </ul>
- * 
+ * <p>
  * The <b>GENERATE...</b> options affect how incoming tokens are broken into parts, and the
  * various <b>CATENATE_...</b> parameters affect how those parts are combined.
  *
@@ -97,409 +97,411 @@ import org.apache.lucene.util.RamUsageEstimator;
  */
 
 public final class WordDelimiterGraphFilter extends TokenFilter {
-  
-  /**
-   * Causes parts of words to be generated:
-   * <p>
-   * "PowerShot" =&gt; "Power" "Shot"
-   */
-  public static final int GENERATE_WORD_PARTS = 1;
 
-  /**
-   * Causes number subwords to be generated:
-   * <p>
-   * "500-42" =&gt; "500" "42"
-   */
-  public static final int GENERATE_NUMBER_PARTS = 2;
+	/**
+	 * Causes parts of words to be generated:
+	 * <p>
+	 * "PowerShot" =&gt; "Power" "Shot"
+	 */
+	public static final int GENERATE_WORD_PARTS = 1;
 
-  /**
-   * Causes maximum runs of word parts to be catenated:
-   * <p>
-   * "wi-fi" =&gt; "wifi"
-   */
-  public static final int CATENATE_WORDS = 4;
+	/**
+	 * Causes number subwords to be generated:
+	 * <p>
+	 * "500-42" =&gt; "500" "42"
+	 */
+	public static final int GENERATE_NUMBER_PARTS = 2;
 
-  /**
-   * Causes maximum runs of number parts to be catenated:
-   * <p>
-   * "500-42" =&gt; "50042"
-   */
-  public static final int CATENATE_NUMBERS = 8;
+	/**
+	 * Causes maximum runs of word parts to be catenated:
+	 * <p>
+	 * "wi-fi" =&gt; "wifi"
+	 */
+	public static final int CATENATE_WORDS = 4;
 
-  /**
-   * Causes all subword parts to be catenated:
-   * <p>
-   * "wi-fi-4000" =&gt; "wifi4000"
-   */
-  public static final int CATENATE_ALL = 16;
+	/**
+	 * Causes maximum runs of number parts to be catenated:
+	 * <p>
+	 * "500-42" =&gt; "50042"
+	 */
+	public static final int CATENATE_NUMBERS = 8;
 
-  /**
-   * Causes original words are preserved and added to the subword list (Defaults to false)
-   * <p>
-   * "500-42" =&gt; "500" "42" "500-42"
-   */
-  public static final int PRESERVE_ORIGINAL = 32;
+	/**
+	 * Causes all subword parts to be catenated:
+	 * <p>
+	 * "wi-fi-4000" =&gt; "wifi4000"
+	 */
+	public static final int CATENATE_ALL = 16;
 
-  /**
-   * Causes lowercase -&gt; uppercase transition to start a new subword.
-   */
-  public static final int SPLIT_ON_CASE_CHANGE = 64;
+	/**
+	 * Causes original words are preserved and added to the subword list (Defaults to false)
+	 * <p>
+	 * "500-42" =&gt; "500" "42" "500-42"
+	 */
+	public static final int PRESERVE_ORIGINAL = 32;
 
-  /**
-   * If not set, causes numeric changes to be ignored (subwords will only be generated
-   * given SUBWORD_DELIM tokens).
-   */
-  public static final int SPLIT_ON_NUMERICS = 128;
+	/**
+	 * Causes lowercase -&gt; uppercase transition to start a new subword.
+	 */
+	public static final int SPLIT_ON_CASE_CHANGE = 64;
 
-  /**
-   * Causes trailing "'s" to be removed for each subword
-   * <p>
-   * "O'Neil's" =&gt; "O", "Neil"
-   */
-  public static final int STEM_ENGLISH_POSSESSIVE = 256;
+	/**
+	 * If not set, causes numeric changes to be ignored (subwords will only be generated
+	 * given SUBWORD_DELIM tokens).
+	 */
+	public static final int SPLIT_ON_NUMERICS = 128;
 
-  /**
-   * Suppresses processing terms with {@link KeywordAttribute#isKeyword()}=true.
-   */
-  public static final int IGNORE_KEYWORDS = 512;
+	/**
+	 * Causes trailing "'s" to be removed for each subword
+	 * <p>
+	 * "O'Neil's" =&gt; "O", "Neil"
+	 */
+	public static final int STEM_ENGLISH_POSSESSIVE = 256;
 
-  /**
-   * If not null is the set of tokens to protect from being delimited
-   *
-   */
-  final CharArraySet protWords;
+	/**
+	 * Suppresses processing terms with {@link KeywordAttribute#isKeyword()}=true.
+	 */
+	public static final int IGNORE_KEYWORDS = 512;
 
-  private final int flags;
+	/**
+	 * If not null is the set of tokens to protect from being delimited
+	 */
+	final CharArraySet protWords;
 
-  // packs start pos, end pos, start part, end part (= slice of the term text) for each buffered part:
-  private int[] bufferedParts = new int[16];
-  private int bufferedLen;
-  private int bufferedPos;
+	private final int flags;
 
-  // holds text for each buffered part, or null if it's a simple slice of the original term
-  private char[][] bufferedTermParts = new char[4][];
-  
-  private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttribute = addAttribute(KeywordAttribute.class);;
-  private final OffsetAttribute offsetAttribute = addAttribute(OffsetAttribute.class);
-  private final PositionIncrementAttribute posIncAttribute = addAttribute(PositionIncrementAttribute.class);
-  private final PositionLengthAttribute posLenAttribute = addAttribute(PositionLengthAttribute.class);
+	// packs start pos, end pos, start part, end part (= slice of the term text) for each buffered part:
+	private int[] bufferedParts = new int[16];
+	private int bufferedLen;
+	private int bufferedPos;
 
-  // used for iterating word delimiter breaks
-  private final WordDelimiterIterator iterator;
+	// holds text for each buffered part, or null if it's a simple slice of the original term
+	private char[][] bufferedTermParts = new char[4][];
 
-  // used for concatenating runs of similar typed subwords (word,number)
-  private final WordDelimiterConcatenation concat = new WordDelimiterConcatenation();
+	private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttribute = addAttribute(KeywordAttribute.class);
+	;
+	private final OffsetAttribute offsetAttribute = addAttribute(OffsetAttribute.class);
+	private final PositionIncrementAttribute posIncAttribute = addAttribute(PositionIncrementAttribute.class);
+	private final PositionLengthAttribute posLenAttribute = addAttribute(PositionLengthAttribute.class);
 
-  private final boolean adjustInternalOffsets;
+	// used for iterating word delimiter breaks
+	private final WordDelimiterIterator iterator;
 
-  // number of subwords last output by concat.
-  private int lastConcatCount;
+	// used for concatenating runs of similar typed subwords (word,number)
+	private final WordDelimiterConcatenation concat = new WordDelimiterConcatenation();
 
-  // used for catenate all
-  private final WordDelimiterConcatenation concatAll = new WordDelimiterConcatenation();
+	private final boolean adjustInternalOffsets;
 
-  // used for accumulating position increment gaps so that we preserve incoming holes:
-  private int accumPosInc;
+	// number of subwords last output by concat.
+	private int lastConcatCount;
 
-  private char[] savedTermBuffer = new char[16];
-  private int savedTermLength;
-  private int savedStartOffset;
-  private int savedEndOffset;
-  private AttributeSource.State savedState;
-  private int lastStartOffset;
-  private boolean adjustingOffsets;
+	// used for catenate all
+	private final WordDelimiterConcatenation concatAll = new WordDelimiterConcatenation();
 
-  private int wordPos;
+	// used for accumulating position increment gaps so that we preserve incoming holes:
+	private int accumPosInc;
 
-  /**
-   * Creates a new WordDelimiterGraphFilter
-   *
-   * @param in TokenStream to be filtered
-   * @param adjustInternalOffsets if the offsets of partial terms should be adjusted
-   * @param charTypeTable table containing character types
-   * @param configurationFlags Flags configuring the filter
-   * @param protWords If not null is the set of tokens to protect from being delimited
-   */
-  public WordDelimiterGraphFilter(TokenStream in, boolean adjustInternalOffsets, byte[] charTypeTable, int configurationFlags, CharArraySet protWords) {
-    super(in);
-    if ((configurationFlags &
-        ~(GENERATE_WORD_PARTS |
-          GENERATE_NUMBER_PARTS |
-          CATENATE_WORDS |
-          CATENATE_NUMBERS |
-          CATENATE_ALL |
-          PRESERVE_ORIGINAL |
-          SPLIT_ON_CASE_CHANGE |
-          SPLIT_ON_NUMERICS |
-          STEM_ENGLISH_POSSESSIVE |
-          IGNORE_KEYWORDS)) != 0) {
-      throw new IllegalArgumentException("flags contains unrecognized flag: " + configurationFlags);
-    }
-    this.flags = configurationFlags;
-    this.protWords = protWords;
-    this.iterator = new WordDelimiterIterator(
-        charTypeTable, has(SPLIT_ON_CASE_CHANGE), has(SPLIT_ON_NUMERICS), has(STEM_ENGLISH_POSSESSIVE));
-    this.adjustInternalOffsets = adjustInternalOffsets;
-  }
+	private char[] savedTermBuffer = new char[16];
+	private int savedTermLength;
+	private int savedStartOffset;
+	private int savedEndOffset;
+	private AttributeSource.State savedState;
+	private int lastStartOffset;
+	private boolean adjustingOffsets;
 
-  /**
-   * Creates a new WordDelimiterGraphFilter using {@link WordDelimiterIterator#DEFAULT_WORD_DELIM_TABLE}
-   * as its charTypeTable
-   *
-   * @param in TokenStream to be filtered
-   * @param configurationFlags Flags configuring the filter
-   * @param protWords If not null is the set of tokens to protect from being delimited
-   */
-  public WordDelimiterGraphFilter(TokenStream in, int configurationFlags, CharArraySet protWords) {
-    this(in, false, WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, configurationFlags, protWords);
-  }
+	private int wordPos;
 
-  /** Iterates all words parts and concatenations, buffering up the term parts we should return. */
-  private void bufferWordParts() throws IOException {
+	/**
+	 * Creates a new WordDelimiterGraphFilter
+	 *
+	 * @param in                    TokenStream to be filtered
+	 * @param adjustInternalOffsets if the offsets of partial terms should be adjusted
+	 * @param charTypeTable         table containing character types
+	 * @param configurationFlags    Flags configuring the filter
+	 * @param protWords             If not null is the set of tokens to protect from being delimited
+	 */
+	public WordDelimiterGraphFilter(TokenStream in, boolean adjustInternalOffsets, byte[] charTypeTable, int configurationFlags, CharArraySet protWords) {
+		super(in);
+		if ((configurationFlags &
+			~(GENERATE_WORD_PARTS |
+				GENERATE_NUMBER_PARTS |
+				CATENATE_WORDS |
+				CATENATE_NUMBERS |
+				CATENATE_ALL |
+				PRESERVE_ORIGINAL |
+				SPLIT_ON_CASE_CHANGE |
+				SPLIT_ON_NUMERICS |
+				STEM_ENGLISH_POSSESSIVE |
+				IGNORE_KEYWORDS)) != 0) {
+			throw new IllegalArgumentException("flags contains unrecognized flag: " + configurationFlags);
+		}
+		this.flags = configurationFlags;
+		this.protWords = protWords;
+		this.iterator = new WordDelimiterIterator(
+			charTypeTable, has(SPLIT_ON_CASE_CHANGE), has(SPLIT_ON_NUMERICS), has(STEM_ENGLISH_POSSESSIVE));
+		this.adjustInternalOffsets = adjustInternalOffsets;
+	}
 
-    saveState();
+	/**
+	 * Creates a new WordDelimiterGraphFilter using {@link WordDelimiterIterator#DEFAULT_WORD_DELIM_TABLE}
+	 * as its charTypeTable
+	 *
+	 * @param in                 TokenStream to be filtered
+	 * @param configurationFlags Flags configuring the filter
+	 * @param protWords          If not null is the set of tokens to protect from being delimited
+	 */
+	public WordDelimiterGraphFilter(TokenStream in, int configurationFlags, CharArraySet protWords) {
+		this(in, false, WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, configurationFlags, protWords);
+	}
 
-    // if length by start + end offsets doesn't match the term's text then set offsets for all our word parts/concats to the incoming
-    // offsets.  this can happen if WDGF is applied to an injected synonym, or to a stem'd form, etc:
-    adjustingOffsets = adjustInternalOffsets && savedEndOffset - savedStartOffset == savedTermLength;
+	/**
+	 * Iterates all words parts and concatenations, buffering up the term parts we should return.
+	 */
+	private void bufferWordParts() throws IOException {
 
-    bufferedLen = 0;
-    lastConcatCount = 0;
-    wordPos = 0;
+		saveState();
 
-    if (has(PRESERVE_ORIGINAL)) {
-      // add the original token now so that it is always emitted first
-      // we will edit the term length after all other parts have been buffered
-      buffer(0, 1, 0, savedTermLength);
-    }
+		// if length by start + end offsets doesn't match the term's text then set offsets for all our word parts/concats to the incoming
+		// offsets.  this can happen if WDGF is applied to an injected synonym, or to a stem'd form, etc:
+		adjustingOffsets = adjustInternalOffsets && savedEndOffset - savedStartOffset == savedTermLength;
 
-    if (iterator.isSingleWord()) {
-      buffer(wordPos, wordPos+1, iterator.current, iterator.end);
-      wordPos++;
-      iterator.next();
-    } else {
+		bufferedLen = 0;
+		lastConcatCount = 0;
+		wordPos = 0;
 
-      // iterate all words parts, possibly buffering them, building up concatenations and possibly buffering them too:
-      while (iterator.end != WordDelimiterIterator.DONE) {
-        int wordType = iterator.type();
-      
-        // do we already have queued up incompatible concatenations?
-        if (concat.isNotEmpty() && (concat.type & wordType) == 0) {
-          flushConcatenation(concat);
-        }
+		if (has(PRESERVE_ORIGINAL)) {
+			// add the original token now so that it is always emitted first
+			// we will edit the term length after all other parts have been buffered
+			buffer(0, 1, 0, savedTermLength);
+		}
 
-        // add subwords depending upon options
-        if (shouldConcatenate(wordType)) {
-          concatenate(concat);
-        }
-      
-        // add all subwords (catenateAll)
-        if (has(CATENATE_ALL)) {
-          concatenate(concatAll);
-        }
-      
-        // if we should output the word or number part
-        if (shouldGenerateParts(wordType)) {
-          buffer(wordPos, wordPos+1, iterator.current, iterator.end);
-          wordPos++;
-        }
-        iterator.next();
-      }
+		if (iterator.isSingleWord()) {
+			buffer(wordPos, wordPos + 1, iterator.current, iterator.end);
+			wordPos++;
+			iterator.next();
+		} else {
 
-      if (concat.isNotEmpty()) {
-        // flush final concatenation
-        flushConcatenation(concat);
-      }
-        
-      if (concatAll.isNotEmpty()) {
-        // only if we haven't output this same combo above, e.g. PowerShot with CATENATE_WORDS:
-        if (concatAll.subwordCount > lastConcatCount) {
-          if (wordPos == concatAll.startPos) {
-            // we are not generating parts, so we must advance wordPos now
-            wordPos++;
-          }
-          concatAll.write();
-        }
-        concatAll.clear();
-      }
-    }
+			// iterate all words parts, possibly buffering them, building up concatenations and possibly buffering them too:
+			while (iterator.end != WordDelimiterIterator.DONE) {
+				int wordType = iterator.type();
 
-    if (has(PRESERVE_ORIGINAL)) {
-      // we now know how many tokens need to be injected, so we can set the original
-      // token's position length
-      if (wordPos == 0) {
-        // can happen w/ strange flag combos and inputs :)
-        wordPos++;
-      }
-      bufferedParts[1] = wordPos;
-    }
-            
-    sorter.sort(has(PRESERVE_ORIGINAL) ? 1 : 0, bufferedLen);
-    wordPos = 0;
+				// do we already have queued up incompatible concatenations?
+				if (concat.isNotEmpty() && (concat.type & wordType) == 0) {
+					flushConcatenation(concat);
+				}
 
-    // set back to 0 for iterating from the buffer
-    bufferedPos = 0;
-  }
+				// add subwords depending upon options
+				if (shouldConcatenate(wordType)) {
+					concatenate(concat);
+				}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    while (true) {
-      if (savedState == null) {
+				// add all subwords (catenateAll)
+				if (has(CATENATE_ALL)) {
+					concatenate(concatAll);
+				}
 
-        // process a new input token
-        if (input.incrementToken() == false) {
-          return false;
-        }
-        if (has(IGNORE_KEYWORDS) && keywordAttribute.isKeyword()) {
-            return true;
-        }
-        int termLength = termAttribute.length();
-        char[] termBuffer = termAttribute.buffer();
+				// if we should output the word or number part
+				if (shouldGenerateParts(wordType)) {
+					buffer(wordPos, wordPos + 1, iterator.current, iterator.end);
+					wordPos++;
+				}
+				iterator.next();
+			}
 
-        accumPosInc += posIncAttribute.getPositionIncrement();
+			if (concat.isNotEmpty()) {
+				// flush final concatenation
+				flushConcatenation(concat);
+			}
 
-        // iterate & cache all word parts up front:
-        iterator.setText(termBuffer, termLength);
-        iterator.next();
-        
-        // word of no delimiters, or protected word: just return it
-        if ((iterator.current == 0 && iterator.end == termLength) ||
-            (protWords != null && protWords.contains(termBuffer, 0, termLength))) {
-          posIncAttribute.setPositionIncrement(accumPosInc);
-          accumPosInc = 0;
-          return true;
-        }
-        
-        // word of simply delimiters: swallow this token, creating a hole, and move on to next token
-        if (iterator.end == WordDelimiterIterator.DONE) {
-          if (has(PRESERVE_ORIGINAL) == false) {
-            continue;
-          } else {
-            accumPosInc = 0;
-            return true;
-          }
-        }
+			if (concatAll.isNotEmpty()) {
+				// only if we haven't output this same combo above, e.g. PowerShot with CATENATE_WORDS:
+				if (concatAll.subwordCount > lastConcatCount) {
+					if (wordPos == concatAll.startPos) {
+						// we are not generating parts, so we must advance wordPos now
+						wordPos++;
+					}
+					concatAll.write();
+				}
+				concatAll.clear();
+			}
+		}
 
-        // otherwise, we have delimiters, process & buffer all parts:
-        bufferWordParts();
-      }
+		if (has(PRESERVE_ORIGINAL)) {
+			// we now know how many tokens need to be injected, so we can set the original
+			// token's position length
+			if (wordPos == 0) {
+				// can happen w/ strange flag combos and inputs :)
+				wordPos++;
+			}
+			bufferedParts[1] = wordPos;
+		}
 
-      if (bufferedPos < bufferedLen) {
-        clearAttributes();
-        restoreState(savedState);
+		sorter.sort(has(PRESERVE_ORIGINAL) ? 1 : 0, bufferedLen);
+		wordPos = 0;
 
-        char[] termPart = bufferedTermParts[bufferedPos];
-        int startPos = bufferedParts[4*bufferedPos];
-        int endPos = bufferedParts[4*bufferedPos+1];
-        int startPart = bufferedParts[4*bufferedPos+2];
-        int endPart = bufferedParts[4*bufferedPos+3];
-        bufferedPos++;
+		// set back to 0 for iterating from the buffer
+		bufferedPos = 0;
+	}
 
-        int startOffset;
-        int endOffset;
+	@Override
+	public boolean incrementToken() throws IOException {
+		while (true) {
+			if (savedState == null) {
 
-        if (adjustingOffsets == false) {
-          startOffset = savedStartOffset;
-          endOffset = savedEndOffset;
-        } else {
-          startOffset = savedStartOffset + startPart;
-          endOffset = savedStartOffset + endPart;
-        }
+				// process a new input token
+				if (input.incrementToken() == false) {
+					return false;
+				}
+				if (has(IGNORE_KEYWORDS) && keywordAttribute.isKeyword()) {
+					return true;
+				}
+				int termLength = termAttribute.length();
+				char[] termBuffer = termAttribute.buffer();
 
-        // never let offsets go backwards:
-        startOffset = Math.max(startOffset, lastStartOffset);
-        endOffset = Math.max(endOffset, lastStartOffset);
+				accumPosInc += posIncAttribute.getPositionIncrement();
 
-        offsetAttribute.setOffset(startOffset, endOffset);
-        lastStartOffset = startOffset;
+				// iterate & cache all word parts up front:
+				iterator.setText(termBuffer, termLength);
+				iterator.next();
 
-        if (termPart == null) {
-          termAttribute.copyBuffer(savedTermBuffer, startPart, endPart - startPart);
-        } else {
-          termAttribute.copyBuffer(termPart, 0, termPart.length);
-        }
+				// word of no delimiters, or protected word: just return it
+				if ((iterator.current == 0 && iterator.end == termLength) ||
+					(protWords != null && protWords.contains(termBuffer, 0, termLength))) {
+					posIncAttribute.setPositionIncrement(accumPosInc);
+					accumPosInc = 0;
+					return true;
+				}
 
-        posIncAttribute.setPositionIncrement(accumPosInc + startPos - wordPos);
-        accumPosInc = 0;
-        posLenAttribute.setPositionLength(endPos - startPos);
-        wordPos = startPos;
-        return true;
-      }
-        
-      // no saved concatenations, on to the next input word
-      savedState = null;
-    }
-  }
+				// word of simply delimiters: swallow this token, creating a hole, and move on to next token
+				if (iterator.end == WordDelimiterIterator.DONE) {
+					if (has(PRESERVE_ORIGINAL) == false) {
+						continue;
+					} else {
+						accumPosInc = 0;
+						return true;
+					}
+				}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    accumPosInc = 0;
-    savedState = null;
-    lastStartOffset = 0;
-    concat.clear();
-    concatAll.clear();
-  }
+				// otherwise, we have delimiters, process & buffer all parts:
+				bufferWordParts();
+			}
 
-  // ================================================= Helper Methods ================================================
+			if (bufferedPos < bufferedLen) {
+				clearAttributes();
+				restoreState(savedState);
 
-  private class PositionSorter extends InPlaceMergeSorter {
-    @Override
-    protected int compare(int i, int j) {
-      // smaller start position
-      int iPosStart = bufferedParts[4*i];
-      int jPosStart = bufferedParts[4*j];
-      int cmp = Integer.compare(iPosStart, jPosStart);
-      if (cmp != 0) {
-        return cmp;
-      }
+				char[] termPart = bufferedTermParts[bufferedPos];
+				int startPos = bufferedParts[4 * bufferedPos];
+				int endPos = bufferedParts[4 * bufferedPos + 1];
+				int startPart = bufferedParts[4 * bufferedPos + 2];
+				int endPart = bufferedParts[4 * bufferedPos + 3];
+				bufferedPos++;
 
-      // longest pos length:
-      int iPosEnd = bufferedParts[4*i+1];
-      int jPosEnd = bufferedParts[4*j+1];
-      cmp = Integer.compare(jPosEnd, iPosEnd);
-      if (cmp != 0) {
-        return cmp;
-      }
+				int startOffset;
+				int endOffset;
 
-      // smaller start offset
-      int iOff = bufferedParts[4*i + 2];
-      int jOff = bufferedParts[4*j + 2];
-      return Integer.compare(iOff, jOff);
-    }
+				if (adjustingOffsets == false) {
+					startOffset = savedStartOffset;
+					endOffset = savedEndOffset;
+				} else {
+					startOffset = savedStartOffset + startPart;
+					endOffset = savedStartOffset + endPart;
+				}
 
-    @Override
-    protected void swap(int i, int j) {
-      int iOffset = 4*i;
-      int jOffset = 4*j;
-      for(int x=0;x<4;x++) {
-        int tmp = bufferedParts[iOffset+x];
-        bufferedParts[iOffset+x] = bufferedParts[jOffset+x];
-        bufferedParts[jOffset+x] = tmp;
-      }
+				// never let offsets go backwards:
+				startOffset = Math.max(startOffset, lastStartOffset);
+				endOffset = Math.max(endOffset, lastStartOffset);
 
-      char[] tmp2 = bufferedTermParts[i];
-      bufferedTermParts[i] = bufferedTermParts[j];
-      bufferedTermParts[j] = tmp2;
-    }
-  }
-  
-  final PositionSorter sorter = new PositionSorter();
+				offsetAttribute.setOffset(startOffset, endOffset);
+				lastStartOffset = startOffset;
 
-  /** 
-   * startPos, endPos -> graph start/end position
-   * startPart, endPart -> slice of the original term for this part
-   */
+				if (termPart == null) {
+					termAttribute.copyBuffer(savedTermBuffer, startPart, endPart - startPart);
+				} else {
+					termAttribute.copyBuffer(termPart, 0, termPart.length);
+				}
 
-  void buffer(int startPos, int endPos, int startPart, int endPart) {
-    buffer(null, startPos, endPos, startPart, endPart);
-  }
+				posIncAttribute.setPositionIncrement(accumPosInc + startPos - wordPos);
+				accumPosInc = 0;
+				posLenAttribute.setPositionLength(endPos - startPos);
+				wordPos = startPos;
+				return true;
+			}
 
-  /** 
-   * a null termPart means it's a simple slice of the original term
-   */
-  void buffer(char[] termPart, int startPos, int endPos, int startPart, int endPart) {
+			// no saved concatenations, on to the next input word
+			savedState = null;
+		}
+	}
+
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		accumPosInc = 0;
+		savedState = null;
+		lastStartOffset = 0;
+		concat.clear();
+		concatAll.clear();
+	}
+
+	// ================================================= Helper Methods ================================================
+
+	private class PositionSorter extends InPlaceMergeSorter {
+		@Override
+		protected int compare(int i, int j) {
+			// smaller start position
+			int iPosStart = bufferedParts[4 * i];
+			int jPosStart = bufferedParts[4 * j];
+			int cmp = Integer.compare(iPosStart, jPosStart);
+			if (cmp != 0) {
+				return cmp;
+			}
+
+			// longest pos length:
+			int iPosEnd = bufferedParts[4 * i + 1];
+			int jPosEnd = bufferedParts[4 * j + 1];
+			cmp = Integer.compare(jPosEnd, iPosEnd);
+			if (cmp != 0) {
+				return cmp;
+			}
+
+			// smaller start offset
+			int iOff = bufferedParts[4 * i + 2];
+			int jOff = bufferedParts[4 * j + 2];
+			return Integer.compare(iOff, jOff);
+		}
+
+		@Override
+		protected void swap(int i, int j) {
+			int iOffset = 4 * i;
+			int jOffset = 4 * j;
+			for (int x = 0; x < 4; x++) {
+				int tmp = bufferedParts[iOffset + x];
+				bufferedParts[iOffset + x] = bufferedParts[jOffset + x];
+				bufferedParts[jOffset + x] = tmp;
+			}
+
+			char[] tmp2 = bufferedTermParts[i];
+			bufferedTermParts[i] = bufferedTermParts[j];
+			bufferedTermParts[j] = tmp2;
+		}
+	}
+
+	final PositionSorter sorter = new PositionSorter();
+
+	/**
+	 * startPos, endPos -> graph start/end position
+	 * startPart, endPart -> slice of the original term for this part
+	 */
+
+	void buffer(int startPos, int endPos, int startPart, int endPart) {
+		buffer(null, startPos, endPos, startPart, endPart);
+	}
+
+	/**
+	 * a null termPart means it's a simple slice of the original term
+	 */
+	void buffer(char[] termPart, int startPos, int endPos, int startPart, int endPart) {
     /*
     System.out.println("buffer: pos=" + startPos + "-" + endPos + " part=" + startPart + "-" + endPart);
     if (termPart != null) {
@@ -508,229 +510,231 @@ public final class WordDelimiterGraphFilter extends TokenFilter {
       System.out.println("  term=" + new String(savedTermBuffer, startPart, endPart-startPart));
     }
     */
-    assert endPos > startPos: "startPos=" + startPos + " endPos=" + endPos;
-    assert endPart > startPart || (endPart == 0 && startPart == 0 && savedTermLength == 0): "startPart=" + startPart + " endPart=" + endPart;
-    if ((bufferedLen+1)*4 > bufferedParts.length) {
-      bufferedParts = ArrayUtil.grow(bufferedParts, (bufferedLen+1)*4);
-    }
-    if (bufferedTermParts.length == bufferedLen) {
-      int newSize = ArrayUtil.oversize(bufferedLen+1, RamUsageEstimator.NUM_BYTES_OBJECT_REF);
-      char[][] newArray = new char[newSize][];
-      System.arraycopy(bufferedTermParts, 0, newArray, 0, bufferedTermParts.length);
-      bufferedTermParts = newArray;
-    }
-    bufferedTermParts[bufferedLen] = termPart;
-    bufferedParts[bufferedLen*4] = startPos;
-    bufferedParts[bufferedLen*4+1] = endPos;
-    bufferedParts[bufferedLen*4+2] = startPart;
-    bufferedParts[bufferedLen*4+3] = endPart;
-    bufferedLen++;
-  }
-  
-  /**
-   * Saves the existing attribute states
-   */
-  private void saveState() {
-    savedTermLength = termAttribute.length();
-    savedStartOffset = offsetAttribute.startOffset();
-    savedEndOffset = offsetAttribute.endOffset();
-    savedState = captureState();
+		assert endPos > startPos : "startPos=" + startPos + " endPos=" + endPos;
+		assert endPart > startPart || (endPart == 0 && startPart == 0 && savedTermLength == 0) : "startPart=" + startPart + " endPart=" + endPart;
+		if ((bufferedLen + 1) * 4 > bufferedParts.length) {
+			bufferedParts = ArrayUtil.grow(bufferedParts, (bufferedLen + 1) * 4);
+		}
+		if (bufferedTermParts.length == bufferedLen) {
+			int newSize = ArrayUtil.oversize(bufferedLen + 1, RamUsageEstimator.NUM_BYTES_OBJECT_REF);
+			char[][] newArray = new char[newSize][];
+			System.arraycopy(bufferedTermParts, 0, newArray, 0, bufferedTermParts.length);
+			bufferedTermParts = newArray;
+		}
+		bufferedTermParts[bufferedLen] = termPart;
+		bufferedParts[bufferedLen * 4] = startPos;
+		bufferedParts[bufferedLen * 4 + 1] = endPos;
+		bufferedParts[bufferedLen * 4 + 2] = startPart;
+		bufferedParts[bufferedLen * 4 + 3] = endPart;
+		bufferedLen++;
+	}
 
-    if (savedTermBuffer.length < savedTermLength) {
-      savedTermBuffer = new char[ArrayUtil.oversize(savedTermLength, Character.BYTES)];
-    }
+	/**
+	 * Saves the existing attribute states
+	 */
+	private void saveState() {
+		savedTermLength = termAttribute.length();
+		savedStartOffset = offsetAttribute.startOffset();
+		savedEndOffset = offsetAttribute.endOffset();
+		savedState = captureState();
 
-    System.arraycopy(termAttribute.buffer(), 0, savedTermBuffer, 0, savedTermLength);
-  }
+		if (savedTermBuffer.length < savedTermLength) {
+			savedTermBuffer = new char[ArrayUtil.oversize(savedTermLength, Character.BYTES)];
+		}
 
-  /**
-   * Flushes the given WordDelimiterConcatenation by either writing its concat and then clearing, or just clearing.
-   *
-   * @param concat WordDelimiterConcatenation that will be flushed
-   */
-  private void flushConcatenation(WordDelimiterConcatenation concat) {
-    if (wordPos == concat.startPos) {
-      // we are not generating parts, so we must advance wordPos now
-      wordPos++;
-    }
-    lastConcatCount = concat.subwordCount;
-    if (concat.subwordCount != 1 || shouldGenerateParts(concat.type) == false) {
-      concat.write();
-    }
-    concat.clear();
-  }
+		System.arraycopy(termAttribute.buffer(), 0, savedTermBuffer, 0, savedTermLength);
+	}
 
-  /**
-   * Determines whether to concatenate a word or number if the current word is the given type
-   *
-   * @param wordType Type of the current word used to determine if it should be concatenated
-   * @return {@code true} if concatenation should occur, {@code false} otherwise
-   */
-  private boolean shouldConcatenate(int wordType) {
-    return (has(CATENATE_WORDS) && WordDelimiterIterator.isAlpha(wordType)) || (has(CATENATE_NUMBERS) && WordDelimiterIterator.isDigit(wordType));
-  }
+	/**
+	 * Flushes the given WordDelimiterConcatenation by either writing its concat and then clearing, or just clearing.
+	 *
+	 * @param concat WordDelimiterConcatenation that will be flushed
+	 */
+	private void flushConcatenation(WordDelimiterConcatenation concat) {
+		if (wordPos == concat.startPos) {
+			// we are not generating parts, so we must advance wordPos now
+			wordPos++;
+		}
+		lastConcatCount = concat.subwordCount;
+		if (concat.subwordCount != 1 || shouldGenerateParts(concat.type) == false) {
+			concat.write();
+		}
+		concat.clear();
+	}
 
-  /**
-   * Determines whether a word/number part should be generated for a word of the given type
-   *
-   * @param wordType Type of the word used to determine if a word/number part should be generated
-   * @return {@code true} if a word/number part should be generated, {@code false} otherwise
-   */
-  private boolean shouldGenerateParts(int wordType) {
-    return (has(GENERATE_WORD_PARTS) && WordDelimiterIterator.isAlpha(wordType)) || (has(GENERATE_NUMBER_PARTS) && WordDelimiterIterator.isDigit(wordType));
-  }
+	/**
+	 * Determines whether to concatenate a word or number if the current word is the given type
+	 *
+	 * @param wordType Type of the current word used to determine if it should be concatenated
+	 * @return {@code true} if concatenation should occur, {@code false} otherwise
+	 */
+	private boolean shouldConcatenate(int wordType) {
+		return (has(CATENATE_WORDS) && WordDelimiterIterator.isAlpha(wordType)) || (has(CATENATE_NUMBERS) && WordDelimiterIterator.isDigit(wordType));
+	}
 
-  /**
-   * Concatenates the saved buffer to the given WordDelimiterConcatenation
-   *
-   * @param concatenation WordDelimiterConcatenation to concatenate the buffer to
-   */
-  private void concatenate(WordDelimiterConcatenation concatenation) {
-    if (concatenation.isEmpty()) {
-      concatenation.type = iterator.type();
-      concatenation.startPart = iterator.current;
-      concatenation.startPos = wordPos;
-    }
-    concatenation.append(savedTermBuffer, iterator.current, iterator.end - iterator.current);
-    concatenation.endPart = iterator.end;
-  }
+	/**
+	 * Determines whether a word/number part should be generated for a word of the given type
+	 *
+	 * @param wordType Type of the word used to determine if a word/number part should be generated
+	 * @return {@code true} if a word/number part should be generated, {@code false} otherwise
+	 */
+	private boolean shouldGenerateParts(int wordType) {
+		return (has(GENERATE_WORD_PARTS) && WordDelimiterIterator.isAlpha(wordType)) || (has(GENERATE_NUMBER_PARTS) && WordDelimiterIterator.isDigit(wordType));
+	}
 
-  /**
-   * Determines whether the given flag is set
-   *
-   * @param flag Flag to see if set
-   * @return {@code true} if flag is set
-   */
-  private boolean has(int flag) {
-    return (flags & flag) != 0;
-  }
+	/**
+	 * Concatenates the saved buffer to the given WordDelimiterConcatenation
+	 *
+	 * @param concatenation WordDelimiterConcatenation to concatenate the buffer to
+	 */
+	private void concatenate(WordDelimiterConcatenation concatenation) {
+		if (concatenation.isEmpty()) {
+			concatenation.type = iterator.type();
+			concatenation.startPart = iterator.current;
+			concatenation.startPos = wordPos;
+		}
+		concatenation.append(savedTermBuffer, iterator.current, iterator.end - iterator.current);
+		concatenation.endPart = iterator.end;
+	}
 
-  // ================================================= Inner Classes =================================================
+	/**
+	 * Determines whether the given flag is set
+	 *
+	 * @param flag Flag to see if set
+	 * @return {@code true} if flag is set
+	 */
+	private boolean has(int flag) {
+		return (flags & flag) != 0;
+	}
 
-  /**
-   * A WDF concatenated 'run'
-   */
-  final class WordDelimiterConcatenation {
-    final StringBuilder buffer = new StringBuilder();
-    int startPart;
-    int endPart;
-    int startPos;
-    int type;
-    int subwordCount;
+	// ================================================= Inner Classes =================================================
 
-    /**
-     * Appends the given text of the given length, to the concetenation at the given offset
-     *
-     * @param text Text to append
-     * @param offset Offset in the concetenation to add the text
-     * @param length Length of the text to append
-     */
-    void append(char text[], int offset, int length) {
-      buffer.append(text, offset, length);
-      subwordCount++;
-    }
+	/**
+	 * A WDF concatenated 'run'
+	 */
+	final class WordDelimiterConcatenation {
+		final StringBuilder buffer = new StringBuilder();
+		int startPart;
+		int endPart;
+		int startPos;
+		int type;
+		int subwordCount;
 
-    /**
-     * Writes the concatenation to part buffer
-     */
-    void write() {
-      char[] termPart = new char[buffer.length()];
-      buffer.getChars(0, buffer.length(), termPart, 0);
-      buffer(termPart, startPos, wordPos, startPart, endPart);
-    }
+		/**
+		 * Appends the given text of the given length, to the concetenation at the given offset
+		 *
+		 * @param text   Text to append
+		 * @param offset Offset in the concetenation to add the text
+		 * @param length Length of the text to append
+		 */
+		void append(char text[], int offset, int length) {
+			buffer.append(text, offset, length);
+			subwordCount++;
+		}
 
-    /**
-     * Determines if the concatenation is empty
-     *
-     * @return {@code true} if the concatenation is empty, {@code false} otherwise
-     */
-    boolean isEmpty() {
-      return buffer.length() == 0;
-    }
+		/**
+		 * Writes the concatenation to part buffer
+		 */
+		void write() {
+			char[] termPart = new char[buffer.length()];
+			buffer.getChars(0, buffer.length(), termPart, 0);
+			buffer(termPart, startPos, wordPos, startPart, endPart);
+		}
 
-    boolean isNotEmpty() {
-      return isEmpty() == false;
-    }
+		/**
+		 * Determines if the concatenation is empty
+		 *
+		 * @return {@code true} if the concatenation is empty, {@code false} otherwise
+		 */
+		boolean isEmpty() {
+			return buffer.length() == 0;
+		}
 
-    /**
-     * Clears the concatenation and resets its state
-     */
-    void clear() {
-      buffer.setLength(0);
-      startPart = endPart = type = subwordCount = 0;
-    }
-  }
+		boolean isNotEmpty() {
+			return isEmpty() == false;
+		}
 
-  /** Returns string representation of configuration flags */
-  public static String flagsToString(int flags) {
-    StringBuilder b = new StringBuilder();
-    if ((flags & GENERATE_WORD_PARTS) != 0) {
-      b.append("GENERATE_WORD_PARTS");
-    }
-    if ((flags & GENERATE_NUMBER_PARTS) != 0) {
-      if (b.length() > 0) {
-        b.append(" | ");
-      }
-      b.append("GENERATE_NUMBER_PARTS");
-    }
-    if ((flags & CATENATE_WORDS) != 0) {
-      if (b.length() > 0) {
-        b.append(" | ");
-      }
-      b.append("CATENATE_WORDS");
-    }
-    if ((flags & CATENATE_NUMBERS) != 0) {
-      if (b.length() > 0) {
-        b.append(" | ");
-      }
-      b.append("CATENATE_NUMBERS");
-    }
-    if ((flags & CATENATE_ALL) != 0) {
-      if (b.length() > 0) {
-        b.append(" | ");
-      }
-      b.append("CATENATE_ALL");
-    }
-    if ((flags & PRESERVE_ORIGINAL) != 0) {
-      if (b.length() > 0) {
-        b.append(" | ");
-      }
-      b.append("PRESERVE_ORIGINAL");
-    }
-    if ((flags & SPLIT_ON_CASE_CHANGE) != 0) {
-      if (b.length() > 0) {
-        b.append(" | ");
-      }
-      b.append("SPLIT_ON_CASE_CHANGE");
-    }
-    if ((flags & SPLIT_ON_NUMERICS) != 0) {
-      if (b.length() > 0) {
-        b.append(" | ");
-      }
-      b.append("SPLIT_ON_NUMERICS");
-    }
-    if ((flags & STEM_ENGLISH_POSSESSIVE) != 0) {
-      if (b.length() > 0) {
-        b.append(" | ");
-      }
-      b.append("STEM_ENGLISH_POSSESSIVE");
-    }
+		/**
+		 * Clears the concatenation and resets its state
+		 */
+		void clear() {
+			buffer.setLength(0);
+			startPart = endPart = type = subwordCount = 0;
+		}
+	}
 
-    return b.toString();
-  }
+	/**
+	 * Returns string representation of configuration flags
+	 */
+	public static String flagsToString(int flags) {
+		StringBuilder b = new StringBuilder();
+		if ((flags & GENERATE_WORD_PARTS) != 0) {
+			b.append("GENERATE_WORD_PARTS");
+		}
+		if ((flags & GENERATE_NUMBER_PARTS) != 0) {
+			if (b.length() > 0) {
+				b.append(" | ");
+			}
+			b.append("GENERATE_NUMBER_PARTS");
+		}
+		if ((flags & CATENATE_WORDS) != 0) {
+			if (b.length() > 0) {
+				b.append(" | ");
+			}
+			b.append("CATENATE_WORDS");
+		}
+		if ((flags & CATENATE_NUMBERS) != 0) {
+			if (b.length() > 0) {
+				b.append(" | ");
+			}
+			b.append("CATENATE_NUMBERS");
+		}
+		if ((flags & CATENATE_ALL) != 0) {
+			if (b.length() > 0) {
+				b.append(" | ");
+			}
+			b.append("CATENATE_ALL");
+		}
+		if ((flags & PRESERVE_ORIGINAL) != 0) {
+			if (b.length() > 0) {
+				b.append(" | ");
+			}
+			b.append("PRESERVE_ORIGINAL");
+		}
+		if ((flags & SPLIT_ON_CASE_CHANGE) != 0) {
+			if (b.length() > 0) {
+				b.append(" | ");
+			}
+			b.append("SPLIT_ON_CASE_CHANGE");
+		}
+		if ((flags & SPLIT_ON_NUMERICS) != 0) {
+			if (b.length() > 0) {
+				b.append(" | ");
+			}
+			b.append("SPLIT_ON_NUMERICS");
+		}
+		if ((flags & STEM_ENGLISH_POSSESSIVE) != 0) {
+			if (b.length() > 0) {
+				b.append(" | ");
+			}
+			b.append("STEM_ENGLISH_POSSESSIVE");
+		}
 
-  @Override
-  public String toString() {
-    StringBuilder b = new StringBuilder();
-    b.append("WordDelimiterGraphFilter(flags=");
-    b.append(flagsToString(flags));
-    b.append(')');
-    return b.toString();
-  }
-  
-  // questions:
-  // negative numbers?  -42 indexed as just 42?
-  // dollar sign?  $42
-  // percent sign?  33%
-  // downsides:  if source text is "powershot" then a query of "PowerShot" won't match!
+		return b.toString();
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append("WordDelimiterGraphFilter(flags=");
+		b.append(flagsToString(flags));
+		b.append(')');
+		return b.toString();
+	}
+
+	// questions:
+	// negative numbers?  -42 indexed as just 42?
+	// dollar sign?  $42
+	// percent sign?  33%
+	// downsides:  if source text is "powershot" then a query of "PowerShot" won't match!
 }

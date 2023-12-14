@@ -24,63 +24,63 @@ import java.util.Objects;
 
 class NotContainingIntervalsSource extends DifferenceIntervalsSource {
 
-  static IntervalsSource build(IntervalsSource minuend, IntervalsSource subtrahend) {
-    return Intervals.or(Disjunctions.pullUp(minuend, s -> new NotContainingIntervalsSource(s, subtrahend)));
-  }
+	static IntervalsSource build(IntervalsSource minuend, IntervalsSource subtrahend) {
+		return Intervals.or(Disjunctions.pullUp(minuend, s -> new NotContainingIntervalsSource(s, subtrahend)));
+	}
 
-  private NotContainingIntervalsSource(IntervalsSource minuend, IntervalsSource subtrahend) {
-    super(minuend, subtrahend);
-  }
+	private NotContainingIntervalsSource(IntervalsSource minuend, IntervalsSource subtrahend) {
+		super(minuend, subtrahend);
+	}
 
-  @Override
-  protected IntervalIterator combine(IntervalIterator minuend, IntervalIterator subtrahend) {
-    return new NotContainingIterator(minuend, subtrahend);
-  }
+	@Override
+	protected IntervalIterator combine(IntervalIterator minuend, IntervalIterator subtrahend) {
+		return new NotContainingIterator(minuend, subtrahend);
+	}
 
-  @Override
-  public Collection<IntervalsSource> pullUpDisjunctions() {
-    return Collections.singletonList(this);
-  }
+	@Override
+	public Collection<IntervalsSource> pullUpDisjunctions() {
+		return Collections.singletonList(this);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(minuend, subtrahend);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(minuend, subtrahend);
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    if (other instanceof NotContainingIntervalsSource == false) return false;
-    NotContainingIntervalsSource o = (NotContainingIntervalsSource) other;
-    return Objects.equals(this.minuend, o.minuend) && Objects.equals(this.subtrahend, o.subtrahend);
-  }
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof NotContainingIntervalsSource == false) return false;
+		NotContainingIntervalsSource o = (NotContainingIntervalsSource) other;
+		return Objects.equals(this.minuend, o.minuend) && Objects.equals(this.subtrahend, o.subtrahend);
+	}
 
-  @Override
-  public String toString() {
-    return "NOT_CONTAINING(" + minuend + "," + subtrahend + ")";
-  }
+	@Override
+	public String toString() {
+		return "NOT_CONTAINING(" + minuend + "," + subtrahend + ")";
+	}
 
-  private static class NotContainingIterator extends RelativeIterator {
+	private static class NotContainingIterator extends RelativeIterator {
 
-    private NotContainingIterator(IntervalIterator minuend, IntervalIterator subtrahend) {
-      super(minuend, subtrahend);
-    }
+		private NotContainingIterator(IntervalIterator minuend, IntervalIterator subtrahend) {
+			super(minuend, subtrahend);
+		}
 
-    @Override
-    public int nextInterval() throws IOException {
-      if (bpos == false)
-        return a.nextInterval();
-      while (a.nextInterval() != NO_MORE_INTERVALS) {
-        while (b.start() < a.start() && b.end() < a.end()) {
-          if (b.nextInterval() == NO_MORE_INTERVALS) {
-            bpos = false;
-            return a.start();
-          }
-        }
-        if (b.start() > a.end())
-          return a.start();
-      }
-      return NO_MORE_INTERVALS;
-    }
+		@Override
+		public int nextInterval() throws IOException {
+			if (bpos == false)
+				return a.nextInterval();
+			while (a.nextInterval() != NO_MORE_INTERVALS) {
+				while (b.start() < a.start() && b.end() < a.end()) {
+					if (b.nextInterval() == NO_MORE_INTERVALS) {
+						bpos = false;
+						return a.start();
+					}
+				}
+				if (b.start() > a.end())
+					return a.start();
+			}
+			return NO_MORE_INTERVALS;
+		}
 
-  }
+	}
 }

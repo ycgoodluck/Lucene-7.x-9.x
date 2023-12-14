@@ -24,10 +24,10 @@ import org.apache.lucene.index.BasePointsFormatTestCase;
  * Tests SimpleText's point format
  */
 public class TestSimpleTextPointsFormat extends BasePointsFormatTestCase {
-  private final Codec codec = new SimpleTextCodec();
+	private final Codec codec = new SimpleTextCodec();
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

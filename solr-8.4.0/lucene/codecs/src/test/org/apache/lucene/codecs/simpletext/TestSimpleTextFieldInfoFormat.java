@@ -24,10 +24,10 @@ import org.apache.lucene.index.BaseFieldInfoFormatTestCase;
  * Tests SimpleTextFieldInfoFormat
  */
 public class TestSimpleTextFieldInfoFormat extends BaseFieldInfoFormatTestCase {
-  private final Codec codec = new SimpleTextCodec();
+	private final Codec codec = new SimpleTextCodec();
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

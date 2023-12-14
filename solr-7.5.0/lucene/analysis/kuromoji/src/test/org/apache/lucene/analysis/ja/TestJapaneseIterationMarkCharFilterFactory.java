@@ -33,69 +33,71 @@ import java.util.Map;
  */
 public class TestJapaneseIterationMarkCharFilterFactory extends BaseTokenStreamTestCase {
 
-  public void testIterationMarksWithKeywordTokenizer() throws IOException {
-    final String text = "時々馬鹿々々しいところゞゝゝミスヾ";
-    JapaneseIterationMarkCharFilterFactory filterFactory = new JapaneseIterationMarkCharFilterFactory(new HashMap<String,String>());
-    CharFilter filter = filterFactory.create(new StringReader(text));
-    TokenStream tokenStream = new MockTokenizer(MockTokenizer.KEYWORD, false);
-    ((Tokenizer)tokenStream).setReader(filter);
-    assertTokenStreamContents(tokenStream, new String[]{"時時馬鹿馬鹿しいところどころミスズ"});
-  }
+	public void testIterationMarksWithKeywordTokenizer() throws IOException {
+		final String text = "時々馬鹿々々しいところゞゝゝミスヾ";
+		JapaneseIterationMarkCharFilterFactory filterFactory = new JapaneseIterationMarkCharFilterFactory(new HashMap<String, String>());
+		CharFilter filter = filterFactory.create(new StringReader(text));
+		TokenStream tokenStream = new MockTokenizer(MockTokenizer.KEYWORD, false);
+		((Tokenizer) tokenStream).setReader(filter);
+		assertTokenStreamContents(tokenStream, new String[]{"時時馬鹿馬鹿しいところどころミスズ"});
+	}
 
-  public void testIterationMarksWithJapaneseTokenizer() throws IOException {
-    JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String,String>());
-    tokenizerFactory.inform(new StringMockResourceLoader(""));
+	public void testIterationMarksWithJapaneseTokenizer() throws IOException {
+		JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String, String>());
+		tokenizerFactory.inform(new StringMockResourceLoader(""));
 
-    JapaneseIterationMarkCharFilterFactory filterFactory = new JapaneseIterationMarkCharFilterFactory(new HashMap<String,String>());
-    CharFilter filter = filterFactory.create(
-        new StringReader("時々馬鹿々々しいところゞゝゝミスヾ")
-    );
-    TokenStream tokenStream = tokenizerFactory.create(newAttributeFactory());
-    ((Tokenizer)tokenStream).setReader(filter);
-    assertTokenStreamContents(tokenStream, new String[]{"時時", "馬鹿馬鹿しい", "ところどころ", "ミ", "スズ"});
-  }
+		JapaneseIterationMarkCharFilterFactory filterFactory = new JapaneseIterationMarkCharFilterFactory(new HashMap<String, String>());
+		CharFilter filter = filterFactory.create(
+			new StringReader("時々馬鹿々々しいところゞゝゝミスヾ")
+		);
+		TokenStream tokenStream = tokenizerFactory.create(newAttributeFactory());
+		((Tokenizer) tokenStream).setReader(filter);
+		assertTokenStreamContents(tokenStream, new String[]{"時時", "馬鹿馬鹿しい", "ところどころ", "ミ", "スズ"});
+	}
 
-  public void testKanjiOnlyIterationMarksWithJapaneseTokenizer() throws IOException {
-    JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String,String>());
-    tokenizerFactory.inform(new StringMockResourceLoader(""));
+	public void testKanjiOnlyIterationMarksWithJapaneseTokenizer() throws IOException {
+		JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String, String>());
+		tokenizerFactory.inform(new StringMockResourceLoader(""));
 
-    Map<String, String> filterArgs = new HashMap<>();
-    filterArgs.put("normalizeKanji", "true");
-    filterArgs.put("normalizeKana", "false");
-    JapaneseIterationMarkCharFilterFactory filterFactory = new JapaneseIterationMarkCharFilterFactory(filterArgs);
-    
-    CharFilter filter = filterFactory.create(
-        new StringReader("時々馬鹿々々しいところゞゝゝミスヾ")
-    );
-    TokenStream tokenStream = tokenizerFactory.create(newAttributeFactory());
-    ((Tokenizer)tokenStream).setReader(filter);
-    assertTokenStreamContents(tokenStream, new String[]{"時時", "馬鹿馬鹿しい", "ところ", "ゞ", "ゝ", "ゝ", "ミス", "ヾ"});
-  }
+		Map<String, String> filterArgs = new HashMap<>();
+		filterArgs.put("normalizeKanji", "true");
+		filterArgs.put("normalizeKana", "false");
+		JapaneseIterationMarkCharFilterFactory filterFactory = new JapaneseIterationMarkCharFilterFactory(filterArgs);
 
-  public void testKanaOnlyIterationMarksWithJapaneseTokenizer() throws IOException {
-    JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String,String>());
-    tokenizerFactory.inform(new StringMockResourceLoader(""));
+		CharFilter filter = filterFactory.create(
+			new StringReader("時々馬鹿々々しいところゞゝゝミスヾ")
+		);
+		TokenStream tokenStream = tokenizerFactory.create(newAttributeFactory());
+		((Tokenizer) tokenStream).setReader(filter);
+		assertTokenStreamContents(tokenStream, new String[]{"時時", "馬鹿馬鹿しい", "ところ", "ゞ", "ゝ", "ゝ", "ミス", "ヾ"});
+	}
 
-    Map<String, String> filterArgs = new HashMap<>();
-    filterArgs.put("normalizeKanji", "false");
-    filterArgs.put("normalizeKana", "true");
-    JapaneseIterationMarkCharFilterFactory filterFactory = new JapaneseIterationMarkCharFilterFactory(filterArgs);
+	public void testKanaOnlyIterationMarksWithJapaneseTokenizer() throws IOException {
+		JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String, String>());
+		tokenizerFactory.inform(new StringMockResourceLoader(""));
 
-    CharFilter filter = filterFactory.create(
-        new StringReader("時々馬鹿々々しいところゞゝゝミスヾ")
-    );
-    TokenStream tokenStream = tokenizerFactory.create(newAttributeFactory());
-    ((Tokenizer)tokenStream).setReader(filter);
-    assertTokenStreamContents(tokenStream, new String[]{"時々", "馬鹿", "々", "々", "しい", "ところどころ", "ミ", "スズ"});
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new JapaneseIterationMarkCharFilterFactory(new HashMap<String,String>() {{
-        put("bogusArg", "bogusValue");
-      }});
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+		Map<String, String> filterArgs = new HashMap<>();
+		filterArgs.put("normalizeKanji", "false");
+		filterArgs.put("normalizeKana", "true");
+		JapaneseIterationMarkCharFilterFactory filterFactory = new JapaneseIterationMarkCharFilterFactory(filterArgs);
+
+		CharFilter filter = filterFactory.create(
+			new StringReader("時々馬鹿々々しいところゞゝゝミスヾ")
+		);
+		TokenStream tokenStream = tokenizerFactory.create(newAttributeFactory());
+		((Tokenizer) tokenStream).setReader(filter);
+		assertTokenStreamContents(tokenStream, new String[]{"時々", "馬鹿", "々", "々", "しい", "ところどころ", "ミ", "スズ"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new JapaneseIterationMarkCharFilterFactory(new HashMap<String, String>() {{
+				put("bogusArg", "bogusValue");
+			}});
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

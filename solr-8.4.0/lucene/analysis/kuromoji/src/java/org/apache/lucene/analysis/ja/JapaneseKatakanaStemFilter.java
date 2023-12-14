@@ -42,57 +42,57 @@ import java.io.IOException;
  */
 
 public final class JapaneseKatakanaStemFilter extends TokenFilter {
-  public final static int DEFAULT_MINIMUM_LENGTH = 4;
-  private final static char HIRAGANA_KATAKANA_PROLONGED_SOUND_MARK = '\u30fc';
+	public final static int DEFAULT_MINIMUM_LENGTH = 4;
+	private final static char HIRAGANA_KATAKANA_PROLONGED_SOUND_MARK = '\u30fc';
 
-  private final CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
-  private final int minimumKatakanaLength;
+	private final CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+	private final int minimumKatakanaLength;
 
-  public JapaneseKatakanaStemFilter(TokenStream input, int minimumLength) {
-    super(input);
-    this.minimumKatakanaLength = minimumLength;
-  }
+	public JapaneseKatakanaStemFilter(TokenStream input, int minimumLength) {
+		super(input);
+		this.minimumKatakanaLength = minimumLength;
+	}
 
-  public JapaneseKatakanaStemFilter(TokenStream input) {
-    this(input, DEFAULT_MINIMUM_LENGTH);
-  }
+	public JapaneseKatakanaStemFilter(TokenStream input) {
+		this(input, DEFAULT_MINIMUM_LENGTH);
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if (!keywordAttr.isKeyword()) {
-        termAttr.setLength(stem(termAttr.buffer(), termAttr.length()));
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				termAttr.setLength(stem(termAttr.buffer(), termAttr.length()));
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-  private int stem(char[] term, int length) {
-    if (length < minimumKatakanaLength) {
-      return length;
-    }
+	private int stem(char[] term, int length) {
+		if (length < minimumKatakanaLength) {
+			return length;
+		}
 
-    if (! isKatakana(term, length)) {
-      return length;
-    }
+		if (!isKatakana(term, length)) {
+			return length;
+		}
 
-    if (term[length - 1] == HIRAGANA_KATAKANA_PROLONGED_SOUND_MARK) {
-      return length - 1;
-    }
+		if (term[length - 1] == HIRAGANA_KATAKANA_PROLONGED_SOUND_MARK) {
+			return length - 1;
+		}
 
-    return length;
-  }
+		return length;
+	}
 
-  private boolean isKatakana(char[] term, int length) {
-    for (int i = 0; i < length; i++) {
-      // NOTE: Test only identifies full-width characters -- half-widths are supported
-      if (Character.UnicodeBlock.of(term[i]) != Character.UnicodeBlock.KATAKANA) {
-        return false;
-      }
-    }
-    return true;
-  }
+	private boolean isKatakana(char[] term, int length) {
+		for (int i = 0; i < length; i++) {
+			// NOTE: Test only identifies full-width characters -- half-widths are supported
+			if (Character.UnicodeBlock.of(term[i]) != Character.UnicodeBlock.KATAKANA) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

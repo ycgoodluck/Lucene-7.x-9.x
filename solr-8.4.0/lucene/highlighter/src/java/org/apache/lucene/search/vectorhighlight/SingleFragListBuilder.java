@@ -34,25 +34,25 @@ import org.apache.lucene.search.vectorhighlight.FieldPhraseList.WeightedPhraseIn
  */
 public class SingleFragListBuilder implements FragListBuilder {
 
-  @Override
-  public FieldFragList createFieldFragList(FieldPhraseList fieldPhraseList,
-      int fragCharSize) {
+	@Override
+	public FieldFragList createFieldFragList(FieldPhraseList fieldPhraseList,
+																					 int fragCharSize) {
 
-    FieldFragList ffl = new SimpleFieldFragList( fragCharSize );
+		FieldFragList ffl = new SimpleFieldFragList(fragCharSize);
 
-    List<WeightedPhraseInfo> wpil = new ArrayList<>();
-    Iterator<WeightedPhraseInfo> ite = fieldPhraseList.phraseList.iterator();
-    WeightedPhraseInfo phraseInfo = null;
-    while( true ){
-      if( !ite.hasNext() ) break;
-      phraseInfo = ite.next();
-      if( phraseInfo == null ) break;
+		List<WeightedPhraseInfo> wpil = new ArrayList<>();
+		Iterator<WeightedPhraseInfo> ite = fieldPhraseList.phraseList.iterator();
+		WeightedPhraseInfo phraseInfo = null;
+		while (true) {
+			if (!ite.hasNext()) break;
+			phraseInfo = ite.next();
+			if (phraseInfo == null) break;
 
-      wpil.add( phraseInfo );
-    }
-    if( wpil.size() > 0 )
-      ffl.add( 0, Integer.MAX_VALUE, wpil );
-    return ffl;
-  }
+			wpil.add(phraseInfo);
+		}
+		if (wpil.size() > 0)
+			ffl.add(0, Integer.MAX_VALUE, wpil);
+		return ffl;
+	}
 
 }

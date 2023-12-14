@@ -25,34 +25,34 @@ import java.nio.file.Path;
  * A {@link Closeable} that attempts to remove a given file/folder.
  */
 final class RemoveUponClose implements Closeable {
-  private final Path path;
-  private final TestRuleMarkFailure failureMarker;
-  private final String creationStack;
+	private final Path path;
+	private final TestRuleMarkFailure failureMarker;
+	private final String creationStack;
 
-  public RemoveUponClose(Path path, TestRuleMarkFailure failureMarker) {
-    this.path = path;
-    this.failureMarker = failureMarker;
+	public RemoveUponClose(Path path, TestRuleMarkFailure failureMarker) {
+		this.path = path;
+		this.failureMarker = failureMarker;
 
-    StringBuilder b = new StringBuilder();
-    for (StackTraceElement e : Thread.currentThread().getStackTrace()) {
-      b.append('\t').append(e.toString()).append('\n');
-    }
-    creationStack = b.toString();
-  }
+		StringBuilder b = new StringBuilder();
+		for (StackTraceElement e : Thread.currentThread().getStackTrace()) {
+			b.append('\t').append(e.toString()).append('\n');
+		}
+		creationStack = b.toString();
+	}
 
-  @Override
-  public void close() throws IOException {
-    // only if there were no other test failures.
-    if (failureMarker.wasSuccessful()) {
-      if (Files.exists(path)) {
-        try {
-          IOUtils.rm(path);
-        } catch (IOException e) {
-          throw new IOException(
-              "Could not remove temporary location '" 
-                  + path.toAbsolutePath() + "', created at stack trace:\n" + creationStack, e);
-        }
-      }
-    }
-  }
+	@Override
+	public void close() throws IOException {
+		// only if there were no other test failures.
+		if (failureMarker.wasSuccessful()) {
+			if (Files.exists(path)) {
+				try {
+					IOUtils.rm(path);
+				} catch (IOException e) {
+					throw new IOException(
+						"Could not remove temporary location '"
+							+ path.toAbsolutePath() + "', created at stack trace:\n" + creationStack, e);
+				}
+			}
+		}
+	}
 }

@@ -24,24 +24,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-/** Simple implementation of {@link IniFileWriter} */
+/**
+ * Simple implementation of {@link IniFileWriter}
+ */
 public class SimpleIniFileWriter implements IniFileWriter {
 
-  @Override
-  public void writeSections(Path path, Map<String, OptionMap> sections) throws IOException {
-    try (BufferedWriter w = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
-      for (Map.Entry<String, OptionMap> section : sections.entrySet()) {
-        w.write("[" + section.getKey() + "]");
-        w.newLine();
+	@Override
+	public void writeSections(Path path, Map<String, OptionMap> sections) throws IOException {
+		try (BufferedWriter w = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+			for (Map.Entry<String, OptionMap> section : sections.entrySet()) {
+				w.write("[" + section.getKey() + "]");
+				w.newLine();
 
-        for (Map.Entry<String, String> option : section.getValue().entrySet()) {
-          w.write(option.getKey() + " = " + option.getValue());
-          w.newLine();
-        }
+				for (Map.Entry<String, String> option : section.getValue().entrySet()) {
+					w.write(option.getKey() + " = " + option.getValue());
+					w.newLine();
+				}
 
-        w.newLine();
-      }
-      w.flush();
-    }
-  }
+				w.newLine();
+			}
+			w.flush();
+		}
+	}
 }

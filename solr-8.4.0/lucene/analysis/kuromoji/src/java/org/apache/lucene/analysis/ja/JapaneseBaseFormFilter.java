@@ -37,26 +37,26 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
  * </p>
  */
 public final class JapaneseBaseFormFilter extends TokenFilter {
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final BaseFormAttribute basicFormAtt = addAttribute(BaseFormAttribute.class);
-  private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final BaseFormAttribute basicFormAtt = addAttribute(BaseFormAttribute.class);
+	private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
 
-  public JapaneseBaseFormFilter(TokenStream input) {
-    super(input);
-  }
+	public JapaneseBaseFormFilter(TokenStream input) {
+		super(input);
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if (!keywordAtt.isKeyword()) {
-        String baseForm = basicFormAtt.getBaseForm();
-        if (baseForm != null) {
-          termAtt.setEmpty().append(baseForm);
-        }
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAtt.isKeyword()) {
+				String baseForm = basicFormAtt.getBaseForm();
+				if (baseForm != null) {
+					termAtt.setEmpty().append(baseForm);
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

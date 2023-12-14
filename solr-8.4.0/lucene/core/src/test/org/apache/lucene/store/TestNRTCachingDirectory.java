@@ -39,101 +39,101 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestNRTCachingDirectory extends BaseDirectoryTestCase {
 
-  // TODO: RAMDir used here, because it's still too slow to use e.g. SimpleFS
-  // for the threads tests... maybe because of the synchronization in listAll?
-  // would be good to investigate further...
-  @Override
-  protected Directory getDirectory(Path path) throws IOException {
-    return new NRTCachingDirectory(new RAMDirectory(),
-                                   .1 + 2.0*random().nextDouble(),
-                                   .1 + 5.0*random().nextDouble());
-  }
+	// TODO: RAMDir used here, because it's still too slow to use e.g. SimpleFS
+	// for the threads tests... maybe because of the synchronization in listAll?
+	// would be good to investigate further...
+	@Override
+	protected Directory getDirectory(Path path) throws IOException {
+		return new NRTCachingDirectory(new RAMDirectory(),
+			.1 + 2.0 * random().nextDouble(),
+			.1 + 5.0 * random().nextDouble());
+	}
 
-  public void testNRTAndCommit() throws Exception {
-    Directory dir = newDirectory();
-    NRTCachingDirectory cachedDir = new NRTCachingDirectory(dir, 2.0, 25.0);
-    MockAnalyzer analyzer = new MockAnalyzer(random());
-    analyzer.setMaxTokenLength(TestUtil.nextInt(random(), 1, IndexWriter.MAX_TERM_LENGTH));
-    IndexWriterConfig conf = newIndexWriterConfig(analyzer);
-    RandomIndexWriter w = new RandomIndexWriter(random(), cachedDir, conf);
-    final LineFileDocs docs = new LineFileDocs(random());
-    final int numDocs = TestUtil.nextInt(random(), 100, 400);
+	public void testNRTAndCommit() throws Exception {
+		Directory dir = newDirectory();
+		NRTCachingDirectory cachedDir = new NRTCachingDirectory(dir, 2.0, 25.0);
+		MockAnalyzer analyzer = new MockAnalyzer(random());
+		analyzer.setMaxTokenLength(TestUtil.nextInt(random(), 1, IndexWriter.MAX_TERM_LENGTH));
+		IndexWriterConfig conf = newIndexWriterConfig(analyzer);
+		RandomIndexWriter w = new RandomIndexWriter(random(), cachedDir, conf);
+		final LineFileDocs docs = new LineFileDocs(random());
+		final int numDocs = TestUtil.nextInt(random(), 100, 400);
 
-    if (VERBOSE) {
-      System.out.println("TEST: numDocs=" + numDocs);
-    }
+		if (VERBOSE) {
+			System.out.println("TEST: numDocs=" + numDocs);
+		}
 
-    final List<BytesRef> ids = new ArrayList<>();
-    DirectoryReader r = null;
-    for(int docCount=0;docCount<numDocs;docCount++) {
-      final Document doc = docs.nextDoc();
-      ids.add(new BytesRef(doc.get("docid")));
-      w.addDocument(doc);
-      if (random().nextInt(20) == 17) {
-        if (r == null) {
-          r = DirectoryReader.open(w.w);
-        } else {
-          final DirectoryReader r2 = DirectoryReader.openIfChanged(r);
-          if (r2 != null) {
-            r.close();
-            r = r2;
-          }
-        }
-        assertEquals(1+docCount, r.numDocs());
-        final IndexSearcher s = newSearcher(r);
-        // Just make sure search can run; we can't assert
-        // totHits since it could be 0
-        TopDocs hits = s.search(new TermQuery(new Term("body", "the")), 10);
-        // System.out.println("tot hits " + hits.totalHits);
-      }
-    }
+		final List<BytesRef> ids = new ArrayList<>();
+		DirectoryReader r = null;
+		for (int docCount = 0; docCount < numDocs; docCount++) {
+			final Document doc = docs.nextDoc();
+			ids.add(new BytesRef(doc.get("docid")));
+			w.addDocument(doc);
+			if (random().nextInt(20) == 17) {
+				if (r == null) {
+					r = DirectoryReader.open(w.w);
+				} else {
+					final DirectoryReader r2 = DirectoryReader.openIfChanged(r);
+					if (r2 != null) {
+						r.close();
+						r = r2;
+					}
+				}
+				assertEquals(1 + docCount, r.numDocs());
+				final IndexSearcher s = newSearcher(r);
+				// Just make sure search can run; we can't assert
+				// totHits since it could be 0
+				TopDocs hits = s.search(new TermQuery(new Term("body", "the")), 10);
+				// System.out.println("tot hits " + hits.totalHits);
+			}
+		}
 
-    if (r != null) {
-      r.close();
-    }
+		if (r != null) {
+			r.close();
+		}
 
-    // Close should force cache to clear since all files are sync'd
-    w.close();
+		// Close should force cache to clear since all files are sync'd
+		w.close();
 
-    final String[] cachedFiles = cachedDir.listCachedFiles();
-    for(String file : cachedFiles) {
-      System.out.println("FAIL: cached file " + file + " remains after sync");
-    }
-    assertEquals(0, cachedFiles.length);
-    
-    r = DirectoryReader.open(dir);
-    for(BytesRef id : ids) {
-      assertEquals(1, r.docFreq(new Term("docid", id)));
-    }
-    r.close();
-    cachedDir.close();
-    docs.close();
-  }
+		final String[] cachedFiles = cachedDir.listCachedFiles();
+		for (String file : cachedFiles) {
+			System.out.println("FAIL: cached file " + file + " remains after sync");
+		}
+		assertEquals(0, cachedFiles.length);
 
-  // NOTE: not a test; just here to make sure the code frag
-  // in the javadocs is correct!
-  public void verifyCompiles() throws Exception {
-    Analyzer analyzer = null;
+		r = DirectoryReader.open(dir);
+		for (BytesRef id : ids) {
+			assertEquals(1, r.docFreq(new Term("docid", id)));
+		}
+		r.close();
+		cachedDir.close();
+		docs.close();
+	}
 
-    Directory fsDir = FSDirectory.open(createTempDir("verify"));
-    NRTCachingDirectory cachedFSDir = new NRTCachingDirectory(fsDir, 2.0, 25.0);
-    IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-    IndexWriter writer = new IndexWriter(cachedFSDir, conf);
-    writer.close();
-    cachedFSDir.close();
-  }
+	// NOTE: not a test; just here to make sure the code frag
+	// in the javadocs is correct!
+	public void verifyCompiles() throws Exception {
+		Analyzer analyzer = null;
 
-  public void testCreateTempOutputSameName() throws Exception {
+		Directory fsDir = FSDirectory.open(createTempDir("verify"));
+		NRTCachingDirectory cachedFSDir = new NRTCachingDirectory(fsDir, 2.0, 25.0);
+		IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+		IndexWriter writer = new IndexWriter(cachedFSDir, conf);
+		writer.close();
+		cachedFSDir.close();
+	}
 
-    Directory fsDir = FSDirectory.open(createTempDir("verify"));
-    NRTCachingDirectory nrtDir = new NRTCachingDirectory(fsDir, 2.0, 25.0);
-    String name = "foo_bar_0.tmp";
-    nrtDir.createOutput(name, IOContext.DEFAULT).close();
+	public void testCreateTempOutputSameName() throws Exception {
 
-    IndexOutput out = nrtDir.createTempOutput("foo", "bar", IOContext.DEFAULT);
-    assertFalse(name.equals(out.getName()));
-    out.close();
-    nrtDir.close();
-    fsDir.close();
-  }
+		Directory fsDir = FSDirectory.open(createTempDir("verify"));
+		NRTCachingDirectory nrtDir = new NRTCachingDirectory(fsDir, 2.0, 25.0);
+		String name = "foo_bar_0.tmp";
+		nrtDir.createOutput(name, IOContext.DEFAULT).close();
+
+		IndexOutput out = nrtDir.createTempOutput("foo", "bar", IOContext.DEFAULT);
+		assertFalse(name.equals(out.getName()));
+		out.close();
+		nrtDir.close();
+		fsDir.close();
+	}
 }

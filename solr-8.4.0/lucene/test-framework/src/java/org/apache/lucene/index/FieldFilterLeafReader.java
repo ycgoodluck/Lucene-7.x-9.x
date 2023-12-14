@@ -28,160 +28,160 @@ import org.apache.lucene.util.FilterIterator;
  * of fields from the underlying wrapped reader.
  */
 public final class FieldFilterLeafReader extends FilterLeafReader {
-  
-  private final Set<String> fields;
-  private final boolean negate;
-  private final FieldInfos fieldInfos;
 
-  public FieldFilterLeafReader(LeafReader in, Set<String> fields, boolean negate) {
-    super(in);
-    this.fields = fields;
-    this.negate = negate;
-    ArrayList<FieldInfo> filteredInfos = new ArrayList<>();
-    for (FieldInfo fi : in.getFieldInfos()) {
-      if (hasField(fi.name)) {
-        filteredInfos.add(fi);
-      }
-    }
-    fieldInfos = new FieldInfos(filteredInfos.toArray(new FieldInfo[filteredInfos.size()]));
-  }
-  
-  boolean hasField(String field) {
-    return negate ^ fields.contains(field);
-  }
+	private final Set<String> fields;
+	private final boolean negate;
+	private final FieldInfos fieldInfos;
 
-  @Override
-  public FieldInfos getFieldInfos() {
-    return fieldInfos;
-  }
+	public FieldFilterLeafReader(LeafReader in, Set<String> fields, boolean negate) {
+		super(in);
+		this.fields = fields;
+		this.negate = negate;
+		ArrayList<FieldInfo> filteredInfos = new ArrayList<>();
+		for (FieldInfo fi : in.getFieldInfos()) {
+			if (hasField(fi.name)) {
+				filteredInfos.add(fi);
+			}
+		}
+		fieldInfos = new FieldInfos(filteredInfos.toArray(new FieldInfo[filteredInfos.size()]));
+	}
 
-  @Override
-  public Fields getTermVectors(int docID) throws IOException {
-    Fields f = super.getTermVectors(docID);
-    if (f == null) {
-      return null;
-    }
-    f = new FieldFilterFields(f);
-    // we need to check for emptyness, so we can return
-    // null:
-    return f.iterator().hasNext() ? f : null;
-  }
+	boolean hasField(String field) {
+		return negate ^ fields.contains(field);
+	}
 
-  @Override
-  public void document(final int docID, final StoredFieldVisitor visitor) throws IOException {
-    super.document(docID, new StoredFieldVisitor() {
-      @Override
-      public void binaryField(FieldInfo fieldInfo, byte[] value) throws IOException {
-        visitor.binaryField(fieldInfo, value);
-      }
+	@Override
+	public FieldInfos getFieldInfos() {
+		return fieldInfos;
+	}
 
-      @Override
-      public void stringField(FieldInfo fieldInfo, byte[] value) throws IOException {
-        visitor.stringField(fieldInfo, value);
-      }
+	@Override
+	public Fields getTermVectors(int docID) throws IOException {
+		Fields f = super.getTermVectors(docID);
+		if (f == null) {
+			return null;
+		}
+		f = new FieldFilterFields(f);
+		// we need to check for emptyness, so we can return
+		// null:
+		return f.iterator().hasNext() ? f : null;
+	}
 
-      @Override
-      public void intField(FieldInfo fieldInfo, int value) throws IOException {
-        visitor.intField(fieldInfo, value);
-      }
+	@Override
+	public void document(final int docID, final StoredFieldVisitor visitor) throws IOException {
+		super.document(docID, new StoredFieldVisitor() {
+			@Override
+			public void binaryField(FieldInfo fieldInfo, byte[] value) throws IOException {
+				visitor.binaryField(fieldInfo, value);
+			}
 
-      @Override
-      public void longField(FieldInfo fieldInfo, long value) throws IOException {
-        visitor.longField(fieldInfo, value);
-      }
+			@Override
+			public void stringField(FieldInfo fieldInfo, byte[] value) throws IOException {
+				visitor.stringField(fieldInfo, value);
+			}
 
-      @Override
-      public void floatField(FieldInfo fieldInfo, float value) throws IOException {
-        visitor.floatField(fieldInfo, value);
-      }
+			@Override
+			public void intField(FieldInfo fieldInfo, int value) throws IOException {
+				visitor.intField(fieldInfo, value);
+			}
 
-      @Override
-      public void doubleField(FieldInfo fieldInfo, double value) throws IOException {
-        visitor.doubleField(fieldInfo, value);
-      }
+			@Override
+			public void longField(FieldInfo fieldInfo, long value) throws IOException {
+				visitor.longField(fieldInfo, value);
+			}
 
-      @Override
-      public Status needsField(FieldInfo fieldInfo) throws IOException {
-        return hasField(fieldInfo.name) ? visitor.needsField(fieldInfo) : Status.NO;
-      }
-    });
-  }
+			@Override
+			public void floatField(FieldInfo fieldInfo, float value) throws IOException {
+				visitor.floatField(fieldInfo, value);
+			}
 
-  @Override
-  public Terms terms(String field) throws IOException {
-    return hasField(field) ? super.terms(field) : null;
-  }
+			@Override
+			public void doubleField(FieldInfo fieldInfo, double value) throws IOException {
+				visitor.doubleField(fieldInfo, value);
+			}
 
-  @Override
-  public BinaryDocValues getBinaryDocValues(String field) throws IOException {
-    return hasField(field) ? super.getBinaryDocValues(field) : null;
-  }
+			@Override
+			public Status needsField(FieldInfo fieldInfo) throws IOException {
+				return hasField(fieldInfo.name) ? visitor.needsField(fieldInfo) : Status.NO;
+			}
+		});
+	}
 
-  @Override
-  public SortedDocValues getSortedDocValues(String field) throws IOException {
-    return hasField(field) ? super.getSortedDocValues(field) : null;
-  }
-  
-  @Override
-  public SortedNumericDocValues getSortedNumericDocValues(String field) throws IOException {
-    return hasField(field) ? super.getSortedNumericDocValues(field) : null;
-  }
-  
-  @Override
-  public SortedSetDocValues getSortedSetDocValues(String field) throws IOException {
-    return hasField(field) ? super.getSortedSetDocValues(field) : null;
-  }
+	@Override
+	public Terms terms(String field) throws IOException {
+		return hasField(field) ? super.terms(field) : null;
+	}
 
-  @Override
-  public NumericDocValues getNormValues(String field) throws IOException {
-    return hasField(field) ? super.getNormValues(field) : null;
-  }
+	@Override
+	public BinaryDocValues getBinaryDocValues(String field) throws IOException {
+		return hasField(field) ? super.getBinaryDocValues(field) : null;
+	}
 
-  @Override
-  public String toString() {
-    final StringBuilder sb = new StringBuilder("FieldFilterLeafReader(reader=");
-    sb.append(in).append(", fields=");
-    if (negate) sb.append('!');
-    return sb.append(fields).append(')').toString();
-  }
+	@Override
+	public SortedDocValues getSortedDocValues(String field) throws IOException {
+		return hasField(field) ? super.getSortedDocValues(field) : null;
+	}
 
-  private class FieldFilterFields extends FilterFields {
+	@Override
+	public SortedNumericDocValues getSortedNumericDocValues(String field) throws IOException {
+		return hasField(field) ? super.getSortedNumericDocValues(field) : null;
+	}
 
-    public FieldFilterFields(Fields in) {
-      super(in);
-    }
+	@Override
+	public SortedSetDocValues getSortedSetDocValues(String field) throws IOException {
+		return hasField(field) ? super.getSortedSetDocValues(field) : null;
+	}
 
-    @Override
-    public int size() {
-      // this information is not cheap, return -1 like MultiFields does:
-      return -1;
-    }
+	@Override
+	public NumericDocValues getNormValues(String field) throws IOException {
+		return hasField(field) ? super.getNormValues(field) : null;
+	}
 
-    @Override
-    public Iterator<String> iterator() {
-      return new FilterIterator<String, String>(super.iterator()) {
-        @Override
-        protected boolean predicateFunction(String field) {
-          return hasField(field);
-        }
-      };
-    }
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("FieldFilterLeafReader(reader=");
+		sb.append(in).append(", fields=");
+		if (negate) sb.append('!');
+		return sb.append(fields).append(')').toString();
+	}
 
-    @Override
-    public Terms terms(String field) throws IOException {
-      return hasField(field) ? super.terms(field) : null;
-    }
-    
-  }
+	private class FieldFilterFields extends FilterFields {
 
-  @Override
-  public CacheHelper getCoreCacheHelper() {
-    return null;
-  }
+		public FieldFilterFields(Fields in) {
+			super(in);
+		}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    return null;
-  }
+		@Override
+		public int size() {
+			// this information is not cheap, return -1 like MultiFields does:
+			return -1;
+		}
+
+		@Override
+		public Iterator<String> iterator() {
+			return new FilterIterator<String, String>(super.iterator()) {
+				@Override
+				protected boolean predicateFunction(String field) {
+					return hasField(field);
+				}
+			};
+		}
+
+		@Override
+		public Terms terms(String field) throws IOException {
+			return hasField(field) ? super.terms(field) : null;
+		}
+
+	}
+
+	@Override
+	public CacheHelper getCoreCacheHelper() {
+		return null;
+	}
+
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		return null;
+	}
 
 }

@@ -25,24 +25,24 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IOContext;
 
 class CrankySegmentInfoFormat extends SegmentInfoFormat {
-  final SegmentInfoFormat delegate;
-  final Random random;
-  
-  CrankySegmentInfoFormat(SegmentInfoFormat delegate, Random random) {
-    this.delegate = delegate;
-    this.random = random;
-  }
-  
-  @Override
-  public SegmentInfo read(Directory directory, String segmentName, byte[] segmentID, IOContext context) throws IOException {
-    return delegate.read(directory, segmentName, segmentID, context);
-  }
+	final SegmentInfoFormat delegate;
+	final Random random;
 
-  @Override
-  public void write(Directory dir, SegmentInfo info, IOContext ioContext) throws IOException {
-    if (random.nextInt(100) == 0) {
-      throw new IOException("Fake IOException from SegmentInfoFormat.write()");
-    }
-    delegate.write(dir, info, ioContext);
-  }
+	CrankySegmentInfoFormat(SegmentInfoFormat delegate, Random random) {
+		this.delegate = delegate;
+		this.random = random;
+	}
+
+	@Override
+	public SegmentInfo read(Directory directory, String segmentName, byte[] segmentID, IOContext context) throws IOException {
+		return delegate.read(directory, segmentName, segmentID, context);
+	}
+
+	@Override
+	public void write(Directory dir, SegmentInfo info, IOContext ioContext) throws IOException {
+		if (random.nextInt(100) == 0) {
+			throw new IOException("Fake IOException from SegmentInfoFormat.write()");
+		}
+		delegate.write(dir, info, ioContext);
+	}
 }

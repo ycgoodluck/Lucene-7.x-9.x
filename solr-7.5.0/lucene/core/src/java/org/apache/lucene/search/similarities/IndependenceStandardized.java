@@ -21,25 +21,27 @@ package org.apache.lucene.search.similarities;
  * Standardized measure of distance from independence
  * <p>
  * Described as:
- * "good at tasks that require high recall and high precision, especially 
- *  against short queries composed of a few words as in the case of Internet 
- *  searches"
+ * "good at tasks that require high recall and high precision, especially
+ * against short queries composed of a few words as in the case of Internet
+ * searches"
+ *
  * @lucene.experimental
  */
 public class IndependenceStandardized extends Independence {
 
-  /**
-   * Sole constructor.
-   */
-  public IndependenceStandardized() {}
-  
-  @Override
-  public float score(float freq, float expected) {
-    return (freq - expected) / (float) Math.sqrt(expected);
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public IndependenceStandardized() {
+	}
 
-  @Override
-  public String toString() {
-    return "Standardized";
-  }
+	@Override
+	public float score(float freq, float expected) {
+		return (freq - expected) / (float) Math.sqrt(expected);
+	}
+
+	@Override
+	public String toString() {
+		return "Standardized";
+	}
 }

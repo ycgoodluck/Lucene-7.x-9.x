@@ -27,42 +27,42 @@ import org.apache.lucene.luke.models.util.IndexUtils;
  */
 public final class Commit {
 
-  private long generation;
+	private long generation;
 
-  private boolean isDeleted;
+	private boolean isDeleted;
 
-  private int segCount;
+	private int segCount;
 
-  private String userData;
+	private String userData;
 
-  static Commit of(IndexCommit ic) {
-    Commit commit = new Commit();
-    commit.generation = ic.getGeneration();
-    commit.isDeleted = ic.isDeleted();
-    commit.segCount = ic.getSegmentCount();
-    try {
-      commit.userData = IndexUtils.getCommitUserData(ic);
-    } catch (IOException e) {
-    }
-    return commit;
-  }
+	static Commit of(IndexCommit ic) {
+		Commit commit = new Commit();
+		commit.generation = ic.getGeneration();
+		commit.isDeleted = ic.isDeleted();
+		commit.segCount = ic.getSegmentCount();
+		try {
+			commit.userData = IndexUtils.getCommitUserData(ic);
+		} catch (IOException e) {
+		}
+		return commit;
+	}
 
-  public long getGeneration() {
-    return generation;
-  }
+	public long getGeneration() {
+		return generation;
+	}
 
-  public boolean isDeleted() {
-    return isDeleted;
-  }
+	public boolean isDeleted() {
+		return isDeleted;
+	}
 
-  public int getSegCount() {
-    return segCount;
-  }
+	public int getSegCount() {
+		return segCount;
+	}
 
-  public String getUserData() {
-    return userData;
-  }
+	public String getUserData() {
+		return userData;
+	}
 
-  private Commit() {
-  }
+	private Commit() {
+	}
 }

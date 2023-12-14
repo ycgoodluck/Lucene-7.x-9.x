@@ -76,384 +76,394 @@ import org.apache.lucene.util.IOUtils;
  */
 public class PerfRunData implements Closeable {
 
-  private Points points;
-  
-  // objects used during performance test run
-  // directory, analyzer, docMaker - created at startup.
-  // reader, writer, searcher - maintained by basic tasks. 
-  private Directory directory;
-  private Map<String,AnalyzerFactory> analyzerFactories = new HashMap<>();
-  private Analyzer analyzer;
-  private DocMaker docMaker;
-  private ContentSource contentSource;
-  private FacetSource facetSource;
-  private Locale locale;
+	private Points points;
 
-  private Directory taxonomyDir;
-  private TaxonomyWriter taxonomyWriter;
-  private TaxonomyReader taxonomyReader;
-  
-  // we use separate (identical) instances for each "read" task type, so each can iterate the quries separately.
-  private HashMap<Class<? extends ReadTask>,QueryMaker> readTaskQueryMaker;
-  private Class<? extends QueryMaker> qmkrClass;
+	// objects used during performance test run
+	// directory, analyzer, docMaker - created at startup.
+	// reader, writer, searcher - maintained by basic tasks.
+	private Directory directory;
+	private Map<String, AnalyzerFactory> analyzerFactories = new HashMap<>();
+	private Analyzer analyzer;
+	private DocMaker docMaker;
+	private ContentSource contentSource;
+	private FacetSource facetSource;
+	private Locale locale;
 
-  private DirectoryReader indexReader;
-  private IndexSearcher indexSearcher;
-  private IndexWriter indexWriter;
-  private Config config;
-  private long startTimeMillis;
+	private Directory taxonomyDir;
+	private TaxonomyWriter taxonomyWriter;
+	private TaxonomyReader taxonomyReader;
 
-  private final HashMap<String, Object> perfObjects = new HashMap<>();
-  
-  // constructor
-  public PerfRunData (Config config) throws Exception {
-    this.config = config;
-    // analyzer (default is standard analyzer)
-    analyzer = NewAnalyzerTask.createAnalyzer(config.get("analyzer",
-        "org.apache.lucene.analysis.standard.StandardAnalyzer"));
+	// we use separate (identical) instances for each "read" task type, so each can iterate the quries separately.
+	private HashMap<Class<? extends ReadTask>, QueryMaker> readTaskQueryMaker;
+	private Class<? extends QueryMaker> qmkrClass;
 
-    // content source
-    String sourceClass = config.get("content.source", "org.apache.lucene.benchmark.byTask.feeds.SingleDocSource");
-    contentSource = Class.forName(sourceClass).asSubclass(ContentSource.class).newInstance();
-    contentSource.setConfig(config);
+	private DirectoryReader indexReader;
+	private IndexSearcher indexSearcher;
+	private IndexWriter indexWriter;
+	private Config config;
+	private long startTimeMillis;
 
-    // doc maker
-    docMaker = Class.forName(config.get("doc.maker",
-        "org.apache.lucene.benchmark.byTask.feeds.DocMaker")).asSubclass(DocMaker.class).newInstance();
-    docMaker.setConfig(config, contentSource);
-    // facet source
-    facetSource = Class.forName(config.get("facet.source",
-        "org.apache.lucene.benchmark.byTask.feeds.RandomFacetSource")).asSubclass(FacetSource.class).newInstance();
-    facetSource.setConfig(config);
-    // query makers
-    readTaskQueryMaker = new HashMap<>();
-    qmkrClass = Class.forName(config.get("query.maker","org.apache.lucene.benchmark.byTask.feeds.SimpleQueryMaker")).asSubclass(QueryMaker.class);
+	private final HashMap<String, Object> perfObjects = new HashMap<>();
 
-    // index stuff
-    reinit(false);
-    
-    // statistic points
-    points = new Points(config);
-    
-    if (Boolean.valueOf(config.get("log.queries","false")).booleanValue()) {
-      System.out.println("------------> queries:");
-      System.out.println(getQueryMaker(new SearchTask(this)).printQueries());
-    }
-  }
-  
-  @Override
-  public void close() throws IOException {
-    if (indexWriter != null) {
-      indexWriter.close();
-    }
-    IOUtils.close(indexReader, directory, 
-                  taxonomyWriter, taxonomyReader, taxonomyDir, 
-                  docMaker, facetSource, contentSource);
-    
-    // close all perf objects that are closeable.
-    ArrayList<Closeable> perfObjectsToClose = new ArrayList<>();
-    for (Object obj : perfObjects.values()) {
-      if (obj instanceof Closeable) {
-        perfObjectsToClose.add((Closeable) obj);
-      }
-    }
-    IOUtils.close(perfObjectsToClose);
-  }
+	// constructor
+	public PerfRunData(Config config) throws Exception {
+		this.config = config;
+		// analyzer (default is standard analyzer)
+		analyzer = NewAnalyzerTask.createAnalyzer(config.get("analyzer",
+			"org.apache.lucene.analysis.standard.StandardAnalyzer"));
 
-  // clean old stuff, reopen 
-  public void reinit(boolean eraseIndex) throws Exception {
+		// content source
+		String sourceClass = config.get("content.source", "org.apache.lucene.benchmark.byTask.feeds.SingleDocSource");
+		contentSource = Class.forName(sourceClass).asSubclass(ContentSource.class).newInstance();
+		contentSource.setConfig(config);
 
-    // cleanup index
-    if (indexWriter != null) {
-      indexWriter.close();
-    }
-    IOUtils.close(indexReader, directory);
-    indexWriter = null;
-    indexReader = null;
+		// doc maker
+		docMaker = Class.forName(config.get("doc.maker",
+			"org.apache.lucene.benchmark.byTask.feeds.DocMaker")).asSubclass(DocMaker.class).newInstance();
+		docMaker.setConfig(config, contentSource);
+		// facet source
+		facetSource = Class.forName(config.get("facet.source",
+			"org.apache.lucene.benchmark.byTask.feeds.RandomFacetSource")).asSubclass(FacetSource.class).newInstance();
+		facetSource.setConfig(config);
+		// query makers
+		readTaskQueryMaker = new HashMap<>();
+		qmkrClass = Class.forName(config.get("query.maker", "org.apache.lucene.benchmark.byTask.feeds.SimpleQueryMaker")).asSubclass(QueryMaker.class);
 
-    IOUtils.close(taxonomyWriter, taxonomyReader, taxonomyDir);
-    taxonomyWriter = null;
-    taxonomyReader = null;
-    
-    // directory (default is ram-dir).
-    directory = createDirectory(eraseIndex, "index", "directory");
-    taxonomyDir = createDirectory(eraseIndex, "taxo", "taxonomy.directory");
+		// index stuff
+		reinit(false);
 
-    // inputs
-    resetInputs();
-    
-    // release unused stuff
-    System.runFinalization();
-    System.gc();
+		// statistic points
+		points = new Points(config);
 
-    // Re-init clock
-    setStartTimeMillis();
-  }
+		if (Boolean.valueOf(config.get("log.queries", "false")).booleanValue()) {
+			System.out.println("------------> queries:");
+			System.out.println(getQueryMaker(new SearchTask(this)).printQueries());
+		}
+	}
 
-  private Directory createDirectory(boolean eraseIndex, String dirName,
-      String dirParam) throws IOException {
-    if ("FSDirectory".equals(config.get(dirParam,"RAMDirectory"))) {
-      Path workDir = Paths.get(config.get("work.dir","work"));
-      Path indexDir = workDir.resolve(dirName);
-      if (eraseIndex && Files.exists(indexDir)) {
-        IOUtils.rm(indexDir);
-      }
-      Files.createDirectories(indexDir);
-      return FSDirectory.open(indexDir);
-    } 
+	@Override
+	public void close() throws IOException {
+		if (indexWriter != null) {
+			indexWriter.close();
+		}
+		IOUtils.close(indexReader, directory,
+			taxonomyWriter, taxonomyReader, taxonomyDir,
+			docMaker, facetSource, contentSource);
 
-    return new RAMDirectory();
-  }
-  
-  /** Returns an object that was previously set by {@link #setPerfObject(String, Object)}. */
-  public synchronized Object getPerfObject(String key) {
-    return perfObjects.get(key);
-  }
-  
-  /**
-   * Sets an object that is required by {@link PerfTask}s, keyed by the given
-   * {@code key}. If the object implements {@link Closeable}, it will be closed
-   * by {@link #close()}.
-   */
-  public synchronized void setPerfObject(String key, Object obj) {
-    perfObjects.put(key, obj);
-  }
-  
-  public long setStartTimeMillis() {
-    startTimeMillis = System.currentTimeMillis();
-    return startTimeMillis;
-  }
+		// close all perf objects that are closeable.
+		ArrayList<Closeable> perfObjectsToClose = new ArrayList<>();
+		for (Object obj : perfObjects.values()) {
+			if (obj instanceof Closeable) {
+				perfObjectsToClose.add((Closeable) obj);
+			}
+		}
+		IOUtils.close(perfObjectsToClose);
+	}
 
-  /**
-   * @return Start time in milliseconds
-   */
-  public long getStartTimeMillis() {
-    return startTimeMillis;
-  }
+	// clean old stuff, reopen
+	public void reinit(boolean eraseIndex) throws Exception {
 
-  /**
-   * @return Returns the points.
-   */
-  public Points getPoints() {
-    return points;
-  }
+		// cleanup index
+		if (indexWriter != null) {
+			indexWriter.close();
+		}
+		IOUtils.close(indexReader, directory);
+		indexWriter = null;
+		indexReader = null;
 
-  /**
-   * @return Returns the directory.
-   */
-  public Directory getDirectory() {
-    return directory;
-  }
+		IOUtils.close(taxonomyWriter, taxonomyReader, taxonomyDir);
+		taxonomyWriter = null;
+		taxonomyReader = null;
 
-  /**
-   * @param directory The directory to set.
-   */
-  public void setDirectory(Directory directory) {
-    this.directory = directory;
-  }
+		// directory (default is ram-dir).
+		directory = createDirectory(eraseIndex, "index", "directory");
+		taxonomyDir = createDirectory(eraseIndex, "taxo", "taxonomy.directory");
 
-  /**
-   * @return Returns the taxonomy directory
-   */
-  public Directory getTaxonomyDir() {
-    return taxonomyDir;
-  }
-  
-  /**
-   * Set the taxonomy reader. Takes ownership of that taxonomy reader, that is,
-   * internally performs taxoReader.incRef() (If caller no longer needs that 
-   * reader it should decRef()/close() it after calling this method, otherwise, 
-   * the reader will remain open). 
-   * @param taxoReader The taxonomy reader to set.
-   */
-  public synchronized void setTaxonomyReader(TaxonomyReader taxoReader) throws IOException {
-    if (taxoReader == this.taxonomyReader) {
-      return;
-    }
-    if (taxonomyReader != null) {
-      taxonomyReader.decRef();
-    }
-    
-    if (taxoReader != null) {
-      taxoReader.incRef();
-    }
-    this.taxonomyReader = taxoReader;
-  }
-  
-  /**
-   * @return Returns the taxonomyReader.  NOTE: this returns a
-   * reference.  You must call TaxonomyReader.decRef() when
-   * you're done.
-   */
-  public synchronized TaxonomyReader getTaxonomyReader() {
-    if (taxonomyReader != null) {
-      taxonomyReader.incRef();
-    }
-    return taxonomyReader;
-  }
-  
-  /**
-   * @param taxoWriter The taxonomy writer to set.
-   */
-  public void setTaxonomyWriter(TaxonomyWriter taxoWriter) {
-    this.taxonomyWriter = taxoWriter;
-  }
-  
-  public TaxonomyWriter getTaxonomyWriter() {
-    return taxonomyWriter;
-  }
-  
-  /**
-   * @return Returns the indexReader.  NOTE: this returns a
-   * reference.  You must call IndexReader.decRef() when
-   * you're done.
-   */
-  public synchronized DirectoryReader getIndexReader() {
-    if (indexReader != null) {
-      indexReader.incRef();
-    }
-    return indexReader;
-  }
+		// inputs
+		resetInputs();
 
-  /**
-   * @return Returns the indexSearcher.  NOTE: this returns
-   * a reference to the underlying IndexReader.  You must
-   * call IndexReader.decRef() when you're done.
-   */
-  public synchronized IndexSearcher getIndexSearcher() {
-    if (indexReader != null) {
-      indexReader.incRef();
-    }
-    return indexSearcher;
-  }
+		// release unused stuff
+		System.runFinalization();
+		System.gc();
 
-  /**
-   * Set the index reader. Takes ownership of that index reader, that is,
-   * internally performs indexReader.incRef() (If caller no longer needs that 
-   * reader it should decRef()/close() it after calling this method, otherwise, 
-   * the reader will remain open). 
-   * @param indexReader The indexReader to set.
-   */
-  public synchronized void setIndexReader(DirectoryReader indexReader) throws IOException {
-    if (indexReader == this.indexReader) {
-      return;
-    }
-    
-    if (this.indexReader != null) {
-      // Release current IR
-      this.indexReader.decRef();
-    }
+		// Re-init clock
+		setStartTimeMillis();
+	}
 
-    this.indexReader = indexReader;
-    if (indexReader != null) {
-      // Hold reference to new IR
-      indexReader.incRef();
-      indexSearcher = new IndexSearcher(indexReader);
-      // TODO Some day we should make the query cache in this module configurable and control clearing the cache
-      indexSearcher.setQueryCache(null);
-    } else {
-      indexSearcher = null;
-    }
-  }
+	private Directory createDirectory(boolean eraseIndex, String dirName,
+																		String dirParam) throws IOException {
+		if ("FSDirectory".equals(config.get(dirParam, "RAMDirectory"))) {
+			Path workDir = Paths.get(config.get("work.dir", "work"));
+			Path indexDir = workDir.resolve(dirName);
+			if (eraseIndex && Files.exists(indexDir)) {
+				IOUtils.rm(indexDir);
+			}
+			Files.createDirectories(indexDir);
+			return FSDirectory.open(indexDir);
+		}
 
-  /**
-   * @return Returns the indexWriter.
-   */
-  public IndexWriter getIndexWriter() {
-    return indexWriter;
-  }
+		return new RAMDirectory();
+	}
 
-  /**
-   * @param indexWriter The indexWriter to set.
-   */
-  public void setIndexWriter(IndexWriter indexWriter) {
-    this.indexWriter = indexWriter;
-  }
+	/**
+	 * Returns an object that was previously set by {@link #setPerfObject(String, Object)}.
+	 */
+	public synchronized Object getPerfObject(String key) {
+		return perfObjects.get(key);
+	}
 
-  /**
-   * @return Returns the analyzer.
-   */
-  public Analyzer getAnalyzer() {
-    return analyzer;
-  }
+	/**
+	 * Sets an object that is required by {@link PerfTask}s, keyed by the given
+	 * {@code key}. If the object implements {@link Closeable}, it will be closed
+	 * by {@link #close()}.
+	 */
+	public synchronized void setPerfObject(String key, Object obj) {
+		perfObjects.put(key, obj);
+	}
+
+	public long setStartTimeMillis() {
+		startTimeMillis = System.currentTimeMillis();
+		return startTimeMillis;
+	}
+
+	/**
+	 * @return Start time in milliseconds
+	 */
+	public long getStartTimeMillis() {
+		return startTimeMillis;
+	}
+
+	/**
+	 * @return Returns the points.
+	 */
+	public Points getPoints() {
+		return points;
+	}
+
+	/**
+	 * @return Returns the directory.
+	 */
+	public Directory getDirectory() {
+		return directory;
+	}
+
+	/**
+	 * @param directory The directory to set.
+	 */
+	public void setDirectory(Directory directory) {
+		this.directory = directory;
+	}
+
+	/**
+	 * @return Returns the taxonomy directory
+	 */
+	public Directory getTaxonomyDir() {
+		return taxonomyDir;
+	}
+
+	/**
+	 * Set the taxonomy reader. Takes ownership of that taxonomy reader, that is,
+	 * internally performs taxoReader.incRef() (If caller no longer needs that
+	 * reader it should decRef()/close() it after calling this method, otherwise,
+	 * the reader will remain open).
+	 *
+	 * @param taxoReader The taxonomy reader to set.
+	 */
+	public synchronized void setTaxonomyReader(TaxonomyReader taxoReader) throws IOException {
+		if (taxoReader == this.taxonomyReader) {
+			return;
+		}
+		if (taxonomyReader != null) {
+			taxonomyReader.decRef();
+		}
+
+		if (taxoReader != null) {
+			taxoReader.incRef();
+		}
+		this.taxonomyReader = taxoReader;
+	}
+
+	/**
+	 * @return Returns the taxonomyReader.  NOTE: this returns a
+	 * reference.  You must call TaxonomyReader.decRef() when
+	 * you're done.
+	 */
+	public synchronized TaxonomyReader getTaxonomyReader() {
+		if (taxonomyReader != null) {
+			taxonomyReader.incRef();
+		}
+		return taxonomyReader;
+	}
+
+	/**
+	 * @param taxoWriter The taxonomy writer to set.
+	 */
+	public void setTaxonomyWriter(TaxonomyWriter taxoWriter) {
+		this.taxonomyWriter = taxoWriter;
+	}
+
+	public TaxonomyWriter getTaxonomyWriter() {
+		return taxonomyWriter;
+	}
+
+	/**
+	 * @return Returns the indexReader.  NOTE: this returns a
+	 * reference.  You must call IndexReader.decRef() when
+	 * you're done.
+	 */
+	public synchronized DirectoryReader getIndexReader() {
+		if (indexReader != null) {
+			indexReader.incRef();
+		}
+		return indexReader;
+	}
+
+	/**
+	 * @return Returns the indexSearcher.  NOTE: this returns
+	 * a reference to the underlying IndexReader.  You must
+	 * call IndexReader.decRef() when you're done.
+	 */
+	public synchronized IndexSearcher getIndexSearcher() {
+		if (indexReader != null) {
+			indexReader.incRef();
+		}
+		return indexSearcher;
+	}
+
+	/**
+	 * Set the index reader. Takes ownership of that index reader, that is,
+	 * internally performs indexReader.incRef() (If caller no longer needs that
+	 * reader it should decRef()/close() it after calling this method, otherwise,
+	 * the reader will remain open).
+	 *
+	 * @param indexReader The indexReader to set.
+	 */
+	public synchronized void setIndexReader(DirectoryReader indexReader) throws IOException {
+		if (indexReader == this.indexReader) {
+			return;
+		}
+
+		if (this.indexReader != null) {
+			// Release current IR
+			this.indexReader.decRef();
+		}
+
+		this.indexReader = indexReader;
+		if (indexReader != null) {
+			// Hold reference to new IR
+			indexReader.incRef();
+			indexSearcher = new IndexSearcher(indexReader);
+			// TODO Some day we should make the query cache in this module configurable and control clearing the cache
+			indexSearcher.setQueryCache(null);
+		} else {
+			indexSearcher = null;
+		}
+	}
+
+	/**
+	 * @return Returns the indexWriter.
+	 */
+	public IndexWriter getIndexWriter() {
+		return indexWriter;
+	}
+
+	/**
+	 * @param indexWriter The indexWriter to set.
+	 */
+	public void setIndexWriter(IndexWriter indexWriter) {
+		this.indexWriter = indexWriter;
+	}
+
+	/**
+	 * @return Returns the analyzer.
+	 */
+	public Analyzer getAnalyzer() {
+		return analyzer;
+	}
 
 
-  public void setAnalyzer(Analyzer analyzer) {
-    this.analyzer = analyzer;
-  }
+	public void setAnalyzer(Analyzer analyzer) {
+		this.analyzer = analyzer;
+	}
 
-  /** Returns the ContentSource. */
-  public ContentSource getContentSource() {
-    return contentSource;
-  }
-  
-  /** Returns the DocMaker. */
-  public DocMaker getDocMaker() {
-    return docMaker;
-  }
+	/**
+	 * Returns the ContentSource.
+	 */
+	public ContentSource getContentSource() {
+		return contentSource;
+	}
 
-  /** Returns the facet source. */
-  public FacetSource getFacetSource() {
-    return facetSource;
-  }
+	/**
+	 * Returns the DocMaker.
+	 */
+	public DocMaker getDocMaker() {
+		return docMaker;
+	}
 
-  /**
-   * @return the locale
-   */
-  public Locale getLocale() {
-    return locale;
-  }
+	/**
+	 * Returns the facet source.
+	 */
+	public FacetSource getFacetSource() {
+		return facetSource;
+	}
 
-  /**
-   * @param locale the locale to set
-   */
-  public void setLocale(Locale locale) {
-    this.locale = locale;
-  }
+	/**
+	 * @return the locale
+	 */
+	public Locale getLocale() {
+		return locale;
+	}
 
-  /**
-   * @return Returns the config.
-   */
-  public Config getConfig() {
-    return config;
-  }
+	/**
+	 * @param locale the locale to set
+	 */
+	public void setLocale(Locale locale) {
+		this.locale = locale;
+	}
 
-  public void resetInputs() throws IOException {
-    contentSource.resetInputs();
-    docMaker.resetInputs();
-    facetSource.resetInputs();
-    for (final QueryMaker queryMaker : readTaskQueryMaker.values()) {
-      try {
-        queryMaker.resetInputs();
-      } catch (IOException e) {
-        throw e;
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
+	/**
+	 * @return Returns the config.
+	 */
+	public Config getConfig() {
+		return config;
+	}
 
-  /**
-   * @return Returns the queryMaker by read task type (class)
-   */
-  synchronized public QueryMaker getQueryMaker(ReadTask readTask) {
-    // mapping the query maker by task class allows extending/adding new search/read tasks
-    // without needing to modify this class.
-    Class<? extends ReadTask> readTaskClass = readTask.getClass();
-    QueryMaker qm = readTaskQueryMaker.get(readTaskClass);
-    if (qm == null) {
-      try {
-        qm = qmkrClass.newInstance();
-        qm.setConfig(config);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-      readTaskQueryMaker.put(readTaskClass,qm);
-    }
-    return qm;
-  }
+	public void resetInputs() throws IOException {
+		contentSource.resetInputs();
+		docMaker.resetInputs();
+		facetSource.resetInputs();
+		for (final QueryMaker queryMaker : readTaskQueryMaker.values()) {
+			try {
+				queryMaker.resetInputs();
+			} catch (IOException e) {
+				throw e;
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 
-  public Map<String,AnalyzerFactory> getAnalyzerFactories() {
-    return analyzerFactories;
-  }
+	/**
+	 * @return Returns the queryMaker by read task type (class)
+	 */
+	synchronized public QueryMaker getQueryMaker(ReadTask readTask) {
+		// mapping the query maker by task class allows extending/adding new search/read tasks
+		// without needing to modify this class.
+		Class<? extends ReadTask> readTaskClass = readTask.getClass();
+		QueryMaker qm = readTaskQueryMaker.get(readTaskClass);
+		if (qm == null) {
+			try {
+				qm = qmkrClass.newInstance();
+				qm.setConfig(config);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			readTaskQueryMaker.put(readTaskClass, qm);
+		}
+		return qm;
+	}
+
+	public Map<String, AnalyzerFactory> getAnalyzerFactories() {
+		return analyzerFactories;
+	}
 }

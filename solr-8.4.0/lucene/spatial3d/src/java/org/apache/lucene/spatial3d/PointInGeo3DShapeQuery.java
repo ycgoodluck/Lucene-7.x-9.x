@@ -37,56 +37,60 @@ import org.apache.lucene.util.Accountable;
 import org.apache.lucene.util.DocIdSetBuilder;
 import org.apache.lucene.util.RamUsageEstimator;
 
-/** Finds all previously indexed points that fall within the specified polygon.
+/**
+ * Finds all previously indexed points that fall within the specified polygon.
  *
  * <p>The field must be indexed using {@link Geo3DPoint}.
  *
- * @lucene.experimental */
+ * @lucene.experimental
+ */
 
 final class PointInGeo3DShapeQuery extends Query implements Accountable {
-  private static final long BASE_RAM_BYTES = RamUsageEstimator.shallowSizeOfInstance(PointInGeo3DShapeQuery.class);
+	private static final long BASE_RAM_BYTES = RamUsageEstimator.shallowSizeOfInstance(PointInGeo3DShapeQuery.class);
 
-  final String field;
-  final GeoShape shape;
-  final XYZBounds shapeBounds;
+	final String field;
+	final GeoShape shape;
+	final XYZBounds shapeBounds;
 
-  /** The lats/lons must be clockwise or counter-clockwise. */
-  public PointInGeo3DShapeQuery(String field, GeoShape shape) {
-    this.field = field;
-    this.shape = shape;
-    this.shapeBounds = new XYZBounds();
-    shape.getBounds(shapeBounds);
+	/**
+	 * The lats/lons must be clockwise or counter-clockwise.
+	 */
+	public PointInGeo3DShapeQuery(String field, GeoShape shape) {
+		this.field = field;
+		this.shape = shape;
+		this.shapeBounds = new XYZBounds();
+		shape.getBounds(shapeBounds);
 
-    if (shape instanceof BasePlanetObject) {
-      BasePlanetObject planetObject = (BasePlanetObject) shape;
-      if (planetObject.getPlanetModel().equals(PlanetModel.WGS84) == false) {
-        throw new IllegalArgumentException("this qurey requires PlanetModel.WGS84, but got: " + planetObject.getPlanetModel());
-      }
-    }
-  }
+		if (shape instanceof BasePlanetObject) {
+			BasePlanetObject planetObject = (BasePlanetObject) shape;
+			if (planetObject.getPlanetModel().equals(PlanetModel.WGS84) == false) {
+				throw new IllegalArgumentException("this qurey requires PlanetModel.WGS84, but got: " + planetObject.getPlanetModel());
+			}
+		}
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    if (visitor.acceptField(field)) {
-      visitor.visitLeaf(this);
-    }
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		if (visitor.acceptField(field)) {
+			visitor.visitLeaf(this);
+		}
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
 
-    // I don't use RandomAccessWeight here: it's no good to approximate with "match all docs"; this is an inverted structure and should be
-    // used in the first pass:
+		// I don't use RandomAccessWeight here: it's no good to approximate with "match all docs"; this is an inverted structure and should be
+		// used in the first pass:
 
-    return new ConstantScoreWeight(this, boost) {
+		return new ConstantScoreWeight(this, boost) {
 
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        LeafReader reader = context.reader();
-        PointValues values = reader.getPointValues(field);
-        if (values == null) {
-          return null;
-        }
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				LeafReader reader = context.reader();
+				PointValues values = reader.getPointValues(field);
+				if (values == null) {
+					return null;
+				}
 
         /*
         XYZBounds bounds = new XYZBounds();
@@ -110,68 +114,68 @@ final class PointInGeo3DShapeQuery extends Query implements Accountable {
         assert xyzSolid.getRelationship(shape) == GeoArea.WITHIN || xyzSolid.getRelationship(shape) == GeoArea.OVERLAPS: "expected WITHIN (1) or OVERLAPS (2) but got " + xyzSolid.getRelationship(shape) + "; shape="+shape+"; XYZSolid="+xyzSolid;
         */
 
-        DocIdSetBuilder result = new DocIdSetBuilder(reader.maxDoc(), values, field);
+				DocIdSetBuilder result = new DocIdSetBuilder(reader.maxDoc(), values, field);
 
-        values.intersect(new PointInShapeIntersectVisitor(result, shape, shapeBounds));
+				values.intersect(new PointInShapeIntersectVisitor(result, shape, shapeBounds));
 
-        return new ConstantScoreScorer(this, score(), scoreMode, result.build().iterator());
-      }
+				return new ConstantScoreScorer(this, score(), scoreMode, result.build().iterator());
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return true;
-      }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return true;
+			}
 
-    };
-  }
+		};
+	}
 
-  public String getField() {
-    return field;
-  }
+	public String getField() {
+		return field;
+	}
 
-  public GeoShape getShape() {
-    return shape;
-  }
+	public GeoShape getShape() {
+		return shape;
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
-  
-  private boolean equalsTo(PointInGeo3DShapeQuery other) {
-    return field.equals(other.field) &&
-           shape.equals(other.shape);
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
 
-  @Override
-  public int hashCode() {
-    int result = classHash();
-    result = 31 * result + field.hashCode();
-    result = 31 * result + shape.hashCode();
-    return result;
-  }
+	private boolean equalsTo(PointInGeo3DShapeQuery other) {
+		return field.equals(other.field) &&
+			shape.equals(other.shape);
+	}
 
-  @Override
-  public String toString(String field) {
-    final StringBuilder sb = new StringBuilder();
-    sb.append(getClass().getSimpleName());
-    sb.append(':');
-    if (this.field.equals(field) == false) {
-      sb.append(" field=");
-      sb.append(this.field);
-      sb.append(':');
-    }
-    sb.append(" Shape: ");
-    sb.append(shape);
-    return sb.toString();
-  }
+	@Override
+	public int hashCode() {
+		int result = classHash();
+		result = 31 * result + field.hashCode();
+		result = 31 * result + shape.hashCode();
+		return result;
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return BASE_RAM_BYTES +
-        RamUsageEstimator.sizeOfObject(field) +
-        RamUsageEstimator.sizeOfObject(shape) +
-        RamUsageEstimator.sizeOfObject(shapeBounds);
-  }
+	@Override
+	public String toString(String field) {
+		final StringBuilder sb = new StringBuilder();
+		sb.append(getClass().getSimpleName());
+		sb.append(':');
+		if (this.field.equals(field) == false) {
+			sb.append(" field=");
+			sb.append(this.field);
+			sb.append(':');
+		}
+		sb.append(" Shape: ");
+		sb.append(shape);
+		return sb.toString();
+	}
+
+	@Override
+	public long ramBytesUsed() {
+		return BASE_RAM_BYTES +
+			RamUsageEstimator.sizeOfObject(field) +
+			RamUsageEstimator.sizeOfObject(shape) +
+			RamUsageEstimator.sizeOfObject(shapeBounds);
+	}
 }

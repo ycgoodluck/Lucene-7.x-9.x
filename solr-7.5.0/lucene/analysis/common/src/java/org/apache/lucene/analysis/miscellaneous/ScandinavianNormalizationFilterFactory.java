@@ -33,25 +33,26 @@ import java.util.Map;
  *     &lt;filter class="solr.ScandinavianNormalizationFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 4.4.0
  */
 public class ScandinavianNormalizationFilterFactory extends TokenFilterFactory
-    implements MultiTermAwareComponent {
+	implements MultiTermAwareComponent {
 
-  public ScandinavianNormalizationFilterFactory(Map<String, String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	public ScandinavianNormalizationFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public ScandinavianNormalizationFilter create(TokenStream input) {
-    return new ScandinavianNormalizationFilter(input);
-  }
+	@Override
+	public ScandinavianNormalizationFilter create(TokenStream input) {
+		return new ScandinavianNormalizationFilter(input);
+	}
 
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

@@ -34,26 +34,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.LowerCaseFilterFactory"/&gt;
  *     &lt;filter class="solr.GermanNormalizationFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
- * &lt;/fieldType&gt;</pre> 
+ * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.6.0
  */
 public class GermanNormalizationFilterFactory extends TokenFilterFactory implements MultiTermAwareComponent {
 
-  /** Creates a new GermanNormalizationFilterFactory */
-  public GermanNormalizationFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new GermanNormalizationFilter(input);
-  }
-  
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	/**
+	 * Creates a new GermanNormalizationFilterFactory
+	 */
+	public GermanNormalizationFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new GermanNormalizationFilter(input);
+	}
+
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

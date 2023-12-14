@@ -31,28 +31,28 @@ import java.util.Map;
  * excluding deletions.
  */
 public class NumDocsValueSource extends ValueSource {
-  public String name() {
-    return "numdocs";
-  }
+	public String name() {
+		return "numdocs";
+	}
 
-  @Override
-  public String description() {
-    return name() + "()";
-  }
+	@Override
+	public String description() {
+		return name() + "()";
+	}
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    // Searcher has no numdocs so we must use the reader instead
-    return new ConstIntDocValues(ReaderUtil.getTopLevelContext(readerContext).reader().numDocs(), this);
-  }
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+		// Searcher has no numdocs so we must use the reader instead
+		return new ConstIntDocValues(ReaderUtil.getTopLevelContext(readerContext).reader().numDocs(), this);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    return this.getClass() == o.getClass();
-  }
+	@Override
+	public boolean equals(Object o) {
+		return this.getClass() == o.getClass();
+	}
 
-  @Override
-  public int hashCode() {
-    return this.getClass().hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return this.getClass().hashCode();
+	}
 }

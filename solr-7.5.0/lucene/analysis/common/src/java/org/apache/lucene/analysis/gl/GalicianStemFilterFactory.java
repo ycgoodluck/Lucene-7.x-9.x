@@ -24,7 +24,7 @@ import org.apache.lucene.analysis.gl.GalicianStemFilter;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link GalicianStemFilter}. 
+ * Factory for {@link GalicianStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_glstem" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -33,20 +33,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.GalicianStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class GalicianStemFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new GalicianStemFilterFactory */
-  public GalicianStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new GalicianStemFilter(input);
-  }
+
+	/**
+	 * Creates a new GalicianStemFilterFactory
+	 */
+	public GalicianStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new GalicianStemFilter(input);
+	}
 }

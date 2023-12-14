@@ -23,82 +23,82 @@ import org.apache.lucene.util.packed.PackedInts.Reader;
 
 class DeltaPackedLongValues extends PackedLongValues {
 
-  private static final long BASE_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(DeltaPackedLongValues.class);
+	private static final long BASE_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(DeltaPackedLongValues.class);
 
-  final long[] mins;
+	final long[] mins;
 
-  DeltaPackedLongValues(int pageShift, int pageMask, Reader[] values, long[] mins, long size, long ramBytesUsed) {
-    super(pageShift, pageMask, values, size, ramBytesUsed);
-    assert values.length == mins.length;
-    this.mins = mins;
-  }
+	DeltaPackedLongValues(int pageShift, int pageMask, Reader[] values, long[] mins, long size, long ramBytesUsed) {
+		super(pageShift, pageMask, values, size, ramBytesUsed);
+		assert values.length == mins.length;
+		this.mins = mins;
+	}
 
-  @Override
-  long get(int block, int element) {
-    return mins[block] + values[block].get(element);
-  }
+	@Override
+	long get(int block, int element) {
+		return mins[block] + values[block].get(element);
+	}
 
-  @Override
-  int decodeBlock(int block, long[] dest) {
-    final int count = super.decodeBlock(block, dest);
-    final long min = mins[block];
-    for (int i = 0; i < count; ++i) {
-      dest[i] += min;
-    }
-    return count;
-  }
+	@Override
+	int decodeBlock(int block, long[] dest) {
+		final int count = super.decodeBlock(block, dest);
+		final long min = mins[block];
+		for (int i = 0; i < count; ++i) {
+			dest[i] += min;
+		}
+		return count;
+	}
 
-  static class Builder extends PackedLongValues.Builder {
+	static class Builder extends PackedLongValues.Builder {
 
-    private static final long BASE_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(Builder.class);
+		private static final long BASE_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(Builder.class);
 
-    long[] mins;
+		long[] mins;
 
-    Builder(int pageSize, float acceptableOverheadRatio) {
-      super(pageSize, acceptableOverheadRatio);
-      mins = new long[values.length];
-      ramBytesUsed += RamUsageEstimator.sizeOf(mins);
-    }
+		Builder(int pageSize, float acceptableOverheadRatio) {
+			super(pageSize, acceptableOverheadRatio);
+			mins = new long[values.length];
+			ramBytesUsed += RamUsageEstimator.sizeOf(mins);
+		}
 
-    @Override
-    long baseRamBytesUsed() {
-      return BASE_RAM_BYTES_USED;
-    }
+		@Override
+		long baseRamBytesUsed() {
+			return BASE_RAM_BYTES_USED;
+		}
 
-    @Override
-    public DeltaPackedLongValues build() {
-      finish();
-      pending = null;
-      final PackedInts.Reader[] values = ArrayUtil.copyOfSubArray(this.values, 0, valuesOff);
-      final long[] mins = ArrayUtil.copyOfSubArray(this.mins, 0, valuesOff);
-      final long ramBytesUsed = DeltaPackedLongValues.BASE_RAM_BYTES_USED
-          + RamUsageEstimator.sizeOf(values) + RamUsageEstimator.sizeOf(mins);
-      return new DeltaPackedLongValues(pageShift, pageMask, values, mins, size, ramBytesUsed);
-    }
+		@Override
+		public DeltaPackedLongValues build() {
+			finish();
+			pending = null;
+			final PackedInts.Reader[] values = ArrayUtil.copyOfSubArray(this.values, 0, valuesOff);
+			final long[] mins = ArrayUtil.copyOfSubArray(this.mins, 0, valuesOff);
+			final long ramBytesUsed = DeltaPackedLongValues.BASE_RAM_BYTES_USED
+				+ RamUsageEstimator.sizeOf(values) + RamUsageEstimator.sizeOf(mins);
+			return new DeltaPackedLongValues(pageShift, pageMask, values, mins, size, ramBytesUsed);
+		}
 
-    @Override
-    void pack(long[] values, int numValues, int block, float acceptableOverheadRatio) {
-      long min = values[0];
-      // 找到最小值
-      for (int i = 1; i < numValues; ++i) {
-        min = Math.min(min, values[i]);
-      }
-      // values[]数组中每个元素跟最小值min计算delta
-      for (int i = 0; i < numValues; ++i) {
-        values[i] -= min;
-      }
-      super.pack(values, numValues, block, acceptableOverheadRatio);
-      mins[block] = min;
-    }
+		@Override
+		void pack(long[] values, int numValues, int block, float acceptableOverheadRatio) {
+			long min = values[0];
+			// 找到最小值
+			for (int i = 1; i < numValues; ++i) {
+				min = Math.min(min, values[i]);
+			}
+			// values[]数组中每个元素跟最小值min计算delta
+			for (int i = 0; i < numValues; ++i) {
+				values[i] -= min;
+			}
+			super.pack(values, numValues, block, acceptableOverheadRatio);
+			mins[block] = min;
+		}
 
-    @Override
-    void grow(int newBlockCount) {
-      super.grow(newBlockCount);
-      ramBytesUsed -= RamUsageEstimator.sizeOf(mins);
-      mins = ArrayUtil.growExact(mins, newBlockCount);
-      ramBytesUsed += RamUsageEstimator.sizeOf(mins);
-    }
+		@Override
+		void grow(int newBlockCount) {
+			super.grow(newBlockCount);
+			ramBytesUsed -= RamUsageEstimator.sizeOf(mins);
+			mins = ArrayUtil.growExact(mins, newBlockCount);
+			ramBytesUsed += RamUsageEstimator.sizeOf(mins);
+		}
 
-  }
+	}
 
 }

@@ -24,35 +24,35 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestAnalyzerWrapper extends LuceneTestCase {
 
-  public void testSourceDelegation() throws IOException {
+	public void testSourceDelegation() throws IOException {
 
-    AtomicBoolean sourceCalled = new AtomicBoolean(false);
+		AtomicBoolean sourceCalled = new AtomicBoolean(false);
 
-    Analyzer analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        return new TokenStreamComponents(r -> {
-          sourceCalled.set(true);
-        }, new CannedTokenStream());
-      }
-    };
+		Analyzer analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				return new TokenStreamComponents(r -> {
+					sourceCalled.set(true);
+				}, new CannedTokenStream());
+			}
+		};
 
-    Analyzer wrapped = new AnalyzerWrapper(analyzer.getReuseStrategy()) {
-      @Override
-      protected Analyzer getWrappedAnalyzer(String fieldName) {
-        return analyzer;
-      }
+		Analyzer wrapped = new AnalyzerWrapper(analyzer.getReuseStrategy()) {
+			@Override
+			protected Analyzer getWrappedAnalyzer(String fieldName) {
+				return analyzer;
+			}
 
-      @Override
-      protected TokenStreamComponents wrapComponents(String fieldName, TokenStreamComponents components) {
-        return new TokenStreamComponents(components.getSource(), new LowerCaseFilter(components.getTokenStream()));
-      }
-    };
+			@Override
+			protected TokenStreamComponents wrapComponents(String fieldName, TokenStreamComponents components) {
+				return new TokenStreamComponents(components.getSource(), new LowerCaseFilter(components.getTokenStream()));
+			}
+		};
 
-    try (TokenStream ts = wrapped.tokenStream("", "text")) {
-      assertTrue(sourceCalled.get());
-    }
+		try (TokenStream ts = wrapped.tokenStream("", "text")) {
+			assertTrue(sourceCalled.get());
+		}
 
-  }
+	}
 
 }

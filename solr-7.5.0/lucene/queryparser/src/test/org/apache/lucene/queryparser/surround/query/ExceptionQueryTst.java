@@ -21,45 +21,45 @@ import org.apache.lucene.queryparser.surround.parser.QueryParser;
 
 
 public class ExceptionQueryTst {
-  private String queryText;
-  private boolean verbose;
-  
-  public ExceptionQueryTst(String queryText, boolean verbose) {
-    this.queryText = queryText;
-    this.verbose = verbose;
-  }
+	private String queryText;
+	private boolean verbose;
 
-  public void doTest(StringBuilder failQueries) {
-    boolean pass = false;
-    SrndQuery lq = null;
-    try {
-      lq = QueryParser.parse(queryText);
-      if (verbose) {
-        System.out.println("Query: " + queryText + "\nParsed as: " + lq.toString());
-      }
-    } catch (ParseException e) {
-      if (verbose) {
-        System.out.println("Parse exception for query:\n"
-                            + queryText + "\n"
-                            + e.getMessage());
-      }
-      pass = true;
-    }
-    if (! pass) {
-      failQueries.append(queryText);
-      failQueries.append("\nParsed as: ");
-      failQueries.append(lq.toString());
-      failQueries.append("\n");
-    }
-  }
-  
-  public static String getFailQueries(String[] exceptionQueries, boolean verbose) {
-    StringBuilder failQueries = new StringBuilder();
-    for (int i = 0; i < exceptionQueries.length; i++ ) {
-      new ExceptionQueryTst( exceptionQueries[i], verbose).doTest(failQueries);
-    }
-    return failQueries.toString();
-  }
+	public ExceptionQueryTst(String queryText, boolean verbose) {
+		this.queryText = queryText;
+		this.verbose = verbose;
+	}
+
+	public void doTest(StringBuilder failQueries) {
+		boolean pass = false;
+		SrndQuery lq = null;
+		try {
+			lq = QueryParser.parse(queryText);
+			if (verbose) {
+				System.out.println("Query: " + queryText + "\nParsed as: " + lq.toString());
+			}
+		} catch (ParseException e) {
+			if (verbose) {
+				System.out.println("Parse exception for query:\n"
+					+ queryText + "\n"
+					+ e.getMessage());
+			}
+			pass = true;
+		}
+		if (!pass) {
+			failQueries.append(queryText);
+			failQueries.append("\nParsed as: ");
+			failQueries.append(lq.toString());
+			failQueries.append("\n");
+		}
+	}
+
+	public static String getFailQueries(String[] exceptionQueries, boolean verbose) {
+		StringBuilder failQueries = new StringBuilder();
+		for (int i = 0; i < exceptionQueries.length; i++) {
+			new ExceptionQueryTst(exceptionQueries[i], verbose).doTest(failQueries);
+		}
+		return failQueries.toString();
+	}
 }
 
 

@@ -39,140 +39,140 @@ import org.apache.lucene.util.BytesRef;
 
 public abstract class PresearcherTestBase extends MonitorTestBase {
 
-  public Monitor newMonitor() throws IOException {
-    return new Monitor(WHITESPACE, createPresearcher());
-  }
+	public Monitor newMonitor() throws IOException {
+		return new Monitor(WHITESPACE, createPresearcher());
+	}
 
-  protected abstract Presearcher createPresearcher();
+	protected abstract Presearcher createPresearcher();
 
-  static final String TEXTFIELD = FIELD;
-  static final Analyzer WHITESPACE = new WhitespaceAnalyzer();
+	static final String TEXTFIELD = FIELD;
+	static final Analyzer WHITESPACE = new WhitespaceAnalyzer();
 
-  public static Document buildDoc(String field, String text) {
-    Document doc = new Document();
-    doc.add(newTextField(field, text, Field.Store.NO));
-    return doc;
-  }
+	public static Document buildDoc(String field, String text) {
+		Document doc = new Document();
+		doc.add(newTextField(field, text, Field.Store.NO));
+		return doc;
+	}
 
-  public void testNullFieldHandling() throws IOException {
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", parse("field_1:test")));
+	public void testNullFieldHandling() throws IOException {
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(new MonitorQuery("1", parse("field_1:test")));
 
-      assertEquals(0,
-          monitor.match(buildDoc("field_2", "test"), QueryMatch.SIMPLE_MATCHER).getMatchCount());
-    }
+			assertEquals(0,
+				monitor.match(buildDoc("field_2", "test"), QueryMatch.SIMPLE_MATCHER).getMatchCount());
+		}
 
-  }
+	}
 
-  public void testEmptyMonitorHandling() throws IOException {
-    try (Monitor monitor = newMonitor()) {
-      MatchingQueries<QueryMatch> matches = monitor.match(buildDoc("field_2", "test"), QueryMatch.SIMPLE_MATCHER);
-      assertEquals(0, matches.getMatchCount());
-      assertEquals(0, matches.getQueriesRun());
-    }
-  }
+	public void testEmptyMonitorHandling() throws IOException {
+		try (Monitor monitor = newMonitor()) {
+			MatchingQueries<QueryMatch> matches = monitor.match(buildDoc("field_2", "test"), QueryMatch.SIMPLE_MATCHER);
+			assertEquals(0, matches.getMatchCount());
+			assertEquals(0, matches.getQueriesRun());
+		}
+	}
 
-  public void testMatchAllQueryHandling() throws IOException {
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", new MatchAllDocsQuery()));
-      assertEquals(1,
-          monitor.match(buildDoc("f", "wibble"), QueryMatch.SIMPLE_MATCHER).getMatchCount());
-    }
-  }
+	public void testMatchAllQueryHandling() throws IOException {
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(new MonitorQuery("1", new MatchAllDocsQuery()));
+			assertEquals(1,
+				monitor.match(buildDoc("f", "wibble"), QueryMatch.SIMPLE_MATCHER).getMatchCount());
+		}
+	}
 
-  public void testNegativeQueryHandling() throws IOException {
-    Query q = new BooleanQuery.Builder()
-        .add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
-        .add(new TermQuery(new Term("f", "foo")), BooleanClause.Occur.MUST_NOT)
-        .build();
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", q));
+	public void testNegativeQueryHandling() throws IOException {
+		Query q = new BooleanQuery.Builder()
+			.add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
+			.add(new TermQuery(new Term("f", "foo")), BooleanClause.Occur.MUST_NOT)
+			.build();
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(new MonitorQuery("1", q));
 
-      MultiMatchingQueries<QueryMatch> matches = monitor.match(new Document[]{
-          buildDoc("f", "bar"), buildDoc("f", "foo")
-      }, QueryMatch.SIMPLE_MATCHER);
-      assertEquals(1, matches.getMatchCount(0));
-      assertEquals(0, matches.getMatchCount(1));
-    }
-  }
+			MultiMatchingQueries<QueryMatch> matches = monitor.match(new Document[]{
+				buildDoc("f", "bar"), buildDoc("f", "foo")
+			}, QueryMatch.SIMPLE_MATCHER);
+			assertEquals(1, matches.getMatchCount(0));
+			assertEquals(0, matches.getMatchCount(1));
+		}
+	}
 
-  public void testAnyTokenHandling() throws IOException {
+	public void testAnyTokenHandling() throws IOException {
 
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", new MatchAllDocsQuery()));
-      MatchingQueries<QueryMatch> matches = monitor.match(buildDoc("f", "wibble"), QueryMatch.SIMPLE_MATCHER);
-      assertEquals(1, matches.getMatchCount());
-      assertEquals(1, matches.getQueriesRun());
-    }
-  }
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(new MonitorQuery("1", new MatchAllDocsQuery()));
+			MatchingQueries<QueryMatch> matches = monitor.match(buildDoc("f", "wibble"), QueryMatch.SIMPLE_MATCHER);
+			assertEquals(1, matches.getMatchCount());
+			assertEquals(1, matches.getQueriesRun());
+		}
+	}
 
-  private static final BytesRef NON_STRING_TERM = new BytesRef(new byte[]{60, 8, 0, 0, 0, 9});
+	private static final BytesRef NON_STRING_TERM = new BytesRef(new byte[]{60, 8, 0, 0, 0, 9});
 
-  static class BytesRefAttribute extends AttributeImpl implements TermToBytesRefAttribute {
+	static class BytesRefAttribute extends AttributeImpl implements TermToBytesRefAttribute {
 
-    @Override
-    public BytesRef getBytesRef() {
-      return NON_STRING_TERM;
-    }
+		@Override
+		public BytesRef getBytesRef() {
+			return NON_STRING_TERM;
+		}
 
-    @Override
-    public void clear() {
+		@Override
+		public void clear() {
 
-    }
+		}
 
-    @Override
-    public void reflectWith(AttributeReflector attributeReflector) {
+		@Override
+		public void reflectWith(AttributeReflector attributeReflector) {
 
-    }
+		}
 
-    @Override
-    public void copyTo(AttributeImpl attribute) {
+		@Override
+		public void copyTo(AttributeImpl attribute) {
 
-    }
-  }
+		}
+	}
 
-  static final class NonStringTokenStream extends TokenStream {
+	static final class NonStringTokenStream extends TokenStream {
 
-    final TermToBytesRefAttribute att;
-    boolean done = false;
+		final TermToBytesRefAttribute att;
+		boolean done = false;
 
-    NonStringTokenStream() {
-      addAttributeImpl(new BytesRefAttribute());
-      this.att = addAttribute(TermToBytesRefAttribute.class);
-    }
+		NonStringTokenStream() {
+			addAttributeImpl(new BytesRefAttribute());
+			this.att = addAttribute(TermToBytesRefAttribute.class);
+		}
 
-    @Override
-    public boolean incrementToken() {
-      if (done)
-        return false;
-      return done = true;
-    }
-  }
+		@Override
+		public boolean incrementToken() {
+			if (done)
+				return false;
+			return done = true;
+		}
+	}
 
-  public void testNonStringTermHandling() throws IOException {
+	public void testNonStringTermHandling() throws IOException {
 
-    FieldType ft = new FieldType();
-    ft.setTokenized(true);
-    ft.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		FieldType ft = new FieldType();
+		ft.setTokenized(true);
+		ft.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
 
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", new TermQuery(new Term("f", NON_STRING_TERM))));
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(new MonitorQuery("1", new TermQuery(new Term("f", NON_STRING_TERM))));
 
-      Document doc = new Document();
-      doc.add(new Field("f", new NonStringTokenStream(), ft));
-      MatchingQueries<QueryMatch> m = monitor.match(doc, QueryMatch.SIMPLE_MATCHER);
-      assertEquals(1, m.getMatchCount());
-      assertEquals(1, m.getQueriesRun());
-    }
+			Document doc = new Document();
+			doc.add(new Field("f", new NonStringTokenStream(), ft));
+			MatchingQueries<QueryMatch> m = monitor.match(doc, QueryMatch.SIMPLE_MATCHER);
+			assertEquals(1, m.getMatchCount());
+			assertEquals(1, m.getQueriesRun());
+		}
 
-  }
+	}
 
-  public static BooleanClause must(Query q) {
-    return new BooleanClause(q, BooleanClause.Occur.MUST);
-  }
+	public static BooleanClause must(Query q) {
+		return new BooleanClause(q, BooleanClause.Occur.MUST);
+	}
 
-  public static BooleanClause should(Query q) {
-    return new BooleanClause(q, BooleanClause.Occur.SHOULD);
-  }
+	public static BooleanClause should(Query q) {
+		return new BooleanClause(q, BooleanClause.Occur.SHOULD);
+	}
 
 }

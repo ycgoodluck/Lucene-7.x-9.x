@@ -21,13 +21,13 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestByteArrayDataInput extends LuceneTestCase {
 
-  public void testBasic() throws Exception {
-    byte[] bytes = new byte[] {1, 65};
-    ByteArrayDataInput in = new ByteArrayDataInput(bytes);
-    assertEquals("A", in.readString());
+	public void testBasic() throws Exception {
+		byte[] bytes = new byte[]{1, 65};
+		ByteArrayDataInput in = new ByteArrayDataInput(bytes);
+		assertEquals("A", in.readString());
 
-    bytes = new byte[] {1, 1, 65};
-    in.reset(bytes, 1, 2);
-    assertEquals("A", in.readString());
-  }
+		bytes = new byte[]{1, 1, 65};
+		in.reset(bytes, 1, 2);
+		assertEquals("A", in.readString());
+	}
 }

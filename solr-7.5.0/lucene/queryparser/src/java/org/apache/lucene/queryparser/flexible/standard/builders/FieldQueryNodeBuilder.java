@@ -27,17 +27,17 @@ import org.apache.lucene.search.TermQuery;
  */
 public class FieldQueryNodeBuilder implements StandardQueryBuilder {
 
-  public FieldQueryNodeBuilder() {
-    // empty constructor
-  }
+	public FieldQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public TermQuery build(QueryNode queryNode) throws QueryNodeException {
-    FieldQueryNode fieldNode = (FieldQueryNode) queryNode;
+	@Override
+	public TermQuery build(QueryNode queryNode) throws QueryNodeException {
+		FieldQueryNode fieldNode = (FieldQueryNode) queryNode;
 
-    return new TermQuery(new Term(fieldNode.getFieldAsString(), fieldNode
-        .getTextAsString()));
+		return new TermQuery(new Term(fieldNode.getFieldAsString(), fieldNode
+			.getTextAsString()));
 
-  }
+	}
 
 }

@@ -17,7 +17,6 @@
 package org.apache.lucene.index;
 
 
-
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.Collection;
@@ -36,77 +35,77 @@ import org.apache.lucene.util.LuceneTestCase;
 /**
  * Test class to illustrate using IndexDeletionPolicy to provide multi-level rollback capability.
  * This test case creates an index of records 1 to 100, introducing a commit point every 10 records.
- * 
+ * <p>
  * A "keep all" deletion policy is used to ensure we keep all commit points for testing purposes
  */
 
 public class TestTransactionRollback extends LuceneTestCase {
 
-  private static final String FIELD_RECORD_ID = "record_id";
-  private Directory dir;
+	private static final String FIELD_RECORD_ID = "record_id";
+	private Directory dir;
 
-  //Rolls back index to a chosen ID
-  private void rollBackLast(int id) throws Exception {
+	//Rolls back index to a chosen ID
+	private void rollBackLast(int id) throws Exception {
 
-    // System.out.println("Attempting to rollback to "+id);
-    String ids="-"+id;
-    IndexCommit last=null;
-    Collection<IndexCommit> commits = DirectoryReader.listCommits(dir);
-    for (Iterator<IndexCommit> iterator = commits.iterator(); iterator.hasNext();) {
-      IndexCommit commit =  iterator.next();
-      Map<String,String> ud=commit.getUserData();
-      if (ud.size() > 0) {
-        if (ud.get("index").endsWith(ids)) {
-          last = commit;
-        }
-      }
-    }
+		// System.out.println("Attempting to rollback to "+id);
+		String ids = "-" + id;
+		IndexCommit last = null;
+		Collection<IndexCommit> commits = DirectoryReader.listCommits(dir);
+		for (Iterator<IndexCommit> iterator = commits.iterator(); iterator.hasNext(); ) {
+			IndexCommit commit = iterator.next();
+			Map<String, String> ud = commit.getUserData();
+			if (ud.size() > 0) {
+				if (ud.get("index").endsWith(ids)) {
+					last = commit;
+				}
+			}
+		}
 
-    if (last==null) {
-      throw new RuntimeException("Couldn't find commit point "+id);
-    }
+		if (last == null) {
+			throw new RuntimeException("Couldn't find commit point " + id);
+		}
 
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                           .setIndexDeletionPolicy(new RollbackDeletionPolicy(id))
-                                           .setIndexCommit(last));
-    Map<String,String> data = new HashMap<>();
-    data.put("index", "Rolled back to 1-"+id);
-    w.setLiveCommitData(data.entrySet());
-    w.close();
-  }
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setIndexDeletionPolicy(new RollbackDeletionPolicy(id))
+			.setIndexCommit(last));
+		Map<String, String> data = new HashMap<>();
+		data.put("index", "Rolled back to 1-" + id);
+		w.setLiveCommitData(data.entrySet());
+		w.close();
+	}
 
-  public void testRepeatedRollBacks() throws Exception {
+	public void testRepeatedRollBacks() throws Exception {
 
-    int expectedLastRecordId = 100;
-    while (expectedLastRecordId>10) {
-      expectedLastRecordId -= 10;
-      rollBackLast(expectedLastRecordId);
-      
-      BitSet expecteds = new BitSet(100);
-      expecteds.set(1, (expectedLastRecordId+1), true);
-      checkExpecteds(expecteds);
-    }
-  }
+		int expectedLastRecordId = 100;
+		while (expectedLastRecordId > 10) {
+			expectedLastRecordId -= 10;
+			rollBackLast(expectedLastRecordId);
 
-  private void checkExpecteds(BitSet expecteds) throws Exception {
-    IndexReader r = DirectoryReader.open(dir);
+			BitSet expecteds = new BitSet(100);
+			expecteds.set(1, (expectedLastRecordId + 1), true);
+			checkExpecteds(expecteds);
+		}
+	}
 
-    //Perhaps not the most efficient approach but meets our
-    //needs here.
-    final Bits liveDocs = MultiBits.getLiveDocs(r);
-    for (int i = 0; i < r.maxDoc(); i++) {
-      if (liveDocs == null || liveDocs.get(i)) {
-        String sval=r.document(i).get(FIELD_RECORD_ID);
-        if(sval!=null) {
-          int val=Integer.parseInt(sval);
-          assertTrue("Did not expect document #"+val, expecteds.get(val));
-          expecteds.set(val,false);
-        }
-      }
-    }
-    r.close();
-    assertEquals("Should have 0 docs remaining ", 0 ,expecteds.cardinality());
-  }
+	private void checkExpecteds(BitSet expecteds) throws Exception {
+		IndexReader r = DirectoryReader.open(dir);
+
+		//Perhaps not the most efficient approach but meets our
+		//needs here.
+		final Bits liveDocs = MultiBits.getLiveDocs(r);
+		for (int i = 0; i < r.maxDoc(); i++) {
+			if (liveDocs == null || liveDocs.get(i)) {
+				String sval = r.document(i).get(FIELD_RECORD_ID);
+				if (sval != null) {
+					int val = Integer.parseInt(sval);
+					assertTrue("Did not expect document #" + val, expecteds.get(val));
+					expecteds.set(val, false);
+				}
+			}
+		}
+		r.close();
+		assertEquals("Should have 0 docs remaining ", 0, expecteds.cardinality());
+	}
 
   /*
   private void showAvailableCommitPoints() throws Exception {
@@ -124,62 +123,62 @@ public class TestTransactionRollback extends LuceneTestCase {
   }
   */
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    dir = newDirectory();
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		dir = newDirectory();
 
-    //Build index, of records 1 to 100, committing after each batch of 10
-    IndexDeletionPolicy sdp=new KeepAllDeletionPolicy();
-    IndexWriter w=new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                          .setIndexDeletionPolicy(sdp));
+		//Build index, of records 1 to 100, committing after each batch of 10
+		IndexDeletionPolicy sdp = new KeepAllDeletionPolicy();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setIndexDeletionPolicy(sdp));
 
-    for(int currentRecordId=1;currentRecordId<=100;currentRecordId++) {
-      Document doc=new Document();
-      doc.add(newTextField(FIELD_RECORD_ID, ""+currentRecordId, Field.Store.YES));
-      w.addDocument(doc);
+		for (int currentRecordId = 1; currentRecordId <= 100; currentRecordId++) {
+			Document doc = new Document();
+			doc.add(newTextField(FIELD_RECORD_ID, "" + currentRecordId, Field.Store.YES));
+			w.addDocument(doc);
 
-      if (currentRecordId%10 == 0) {
-        Map<String,String> data = new HashMap<>();
-        data.put("index", "records 1-"+currentRecordId);
-        w.setLiveCommitData(data.entrySet());
-        w.commit();
-      }
-    }
+			if (currentRecordId % 10 == 0) {
+				Map<String, String> data = new HashMap<>();
+				data.put("index", "records 1-" + currentRecordId);
+				w.setLiveCommitData(data.entrySet());
+				w.commit();
+			}
+		}
 
-    w.close();
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    dir.close();
-    super.tearDown();
-  }
+		w.close();
+	}
 
-  // Rolls back to previous commit point
-  static class RollbackDeletionPolicy extends IndexDeletionPolicy {
-    private int rollbackPoint;
+	@Override
+	public void tearDown() throws Exception {
+		dir.close();
+		super.tearDown();
+	}
 
-    public RollbackDeletionPolicy(int rollbackPoint) {
-      this.rollbackPoint = rollbackPoint;
-    }
+	// Rolls back to previous commit point
+	static class RollbackDeletionPolicy extends IndexDeletionPolicy {
+		private int rollbackPoint;
 
-    @Override
-    public void onCommit(List<? extends IndexCommit> commits) throws IOException {
-    }
+		public RollbackDeletionPolicy(int rollbackPoint) {
+			this.rollbackPoint = rollbackPoint;
+		}
 
-    @Override
-    public void onInit(List<? extends IndexCommit> commits) throws IOException {
-      for (final IndexCommit commit : commits) {
-        Map<String,String> userData=commit.getUserData();
-        if (userData.size() > 0) {
-          // Label for a commit point is "Records 1-30"
-          // This code reads the last id ("30" in this example) and deletes it
-          // if it is after the desired rollback point
-          String x = userData.get("index");
-          String lastVal = x.substring(x.lastIndexOf("-")+1);
-          int last = Integer.parseInt(lastVal);
-          if (last>rollbackPoint) {
+		@Override
+		public void onCommit(List<? extends IndexCommit> commits) throws IOException {
+		}
+
+		@Override
+		public void onInit(List<? extends IndexCommit> commits) throws IOException {
+			for (final IndexCommit commit : commits) {
+				Map<String, String> userData = commit.getUserData();
+				if (userData.size() > 0) {
+					// Label for a commit point is "Records 1-30"
+					// This code reads the last id ("30" in this example) and deletes it
+					// if it is after the desired rollback point
+					String x = userData.get("index");
+					String lastVal = x.substring(x.lastIndexOf("-") + 1);
+					int last = Integer.parseInt(lastVal);
+					if (last > rollbackPoint) {
             /*
             System.out.print("\tRolling back commit point:" +
                              " UserData="+commit.getUserData() +")  ("+(commits.size()-1)+" commit points left) files=");
@@ -190,42 +189,46 @@ public class TestTransactionRollback extends LuceneTestCase {
             System.out.println();
             */
 
-            commit.delete();
-          }
-        }
-      }
-    }
-  }
+						commit.delete();
+					}
+				}
+			}
+		}
+	}
 
-  static class DeleteLastCommitPolicy extends IndexDeletionPolicy {
+	static class DeleteLastCommitPolicy extends IndexDeletionPolicy {
 
-    @Override
-    public void onCommit(List<? extends IndexCommit> commits) throws IOException {}
+		@Override
+		public void onCommit(List<? extends IndexCommit> commits) throws IOException {
+		}
 
-    @Override
-    public void onInit(List<? extends IndexCommit> commits) throws IOException {
-      commits.get(commits.size()-1).delete();
-    }
-  }
+		@Override
+		public void onInit(List<? extends IndexCommit> commits) throws IOException {
+			commits.get(commits.size() - 1).delete();
+		}
+	}
 
-  public void testRollbackDeletionPolicy() throws Exception {
+	public void testRollbackDeletionPolicy() throws Exception {
 
-    for(int i=0;i<2;i++) {
-      // Unless you specify a prior commit point, rollback
-      // should not work:
-      new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-          .setIndexDeletionPolicy(new DeleteLastCommitPolicy())).close();
-      IndexReader r = DirectoryReader.open(dir);
-      assertEquals(100, r.numDocs());
-      r.close();
-    }
-  }
+		for (int i = 0; i < 2; i++) {
+			// Unless you specify a prior commit point, rollback
+			// should not work:
+			new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+				.setIndexDeletionPolicy(new DeleteLastCommitPolicy())).close();
+			IndexReader r = DirectoryReader.open(dir);
+			assertEquals(100, r.numDocs());
+			r.close();
+		}
+	}
 
-  // Keeps all commit points (used to build index)
-  static class KeepAllDeletionPolicy extends IndexDeletionPolicy {
-    @Override
-    public void onCommit(List<? extends IndexCommit> commits) throws IOException {}
-    @Override
-    public void onInit(List<? extends IndexCommit> commits) throws IOException {}
-  }
+	// Keeps all commit points (used to build index)
+	static class KeepAllDeletionPolicy extends IndexDeletionPolicy {
+		@Override
+		public void onCommit(List<? extends IndexCommit> commits) throws IOException {
+		}
+
+		@Override
+		public void onInit(List<? extends IndexCommit> commits) throws IOException {
+		}
+	}
 }

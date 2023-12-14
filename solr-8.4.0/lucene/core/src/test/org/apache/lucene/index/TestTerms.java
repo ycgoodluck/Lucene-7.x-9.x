@@ -27,59 +27,59 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestTerms extends LuceneTestCase {
 
-  public void testTermMinMaxBasic() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
-    Document doc = new Document();
-    doc.add(newTextField("field", "a b c cc ddd", Field.Store.NO));
-    w.addDocument(doc);
-    IndexReader r = w.getReader();
-    Terms terms = MultiTerms.getTerms(r, "field");
-    assertEquals(new BytesRef("a"), terms.getMin());
-    assertEquals(new BytesRef("ddd"), terms.getMax());
-    r.close();
-    w.close();
-    dir.close();
-  }
+	public void testTermMinMaxBasic() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+		Document doc = new Document();
+		doc.add(newTextField("field", "a b c cc ddd", Field.Store.NO));
+		w.addDocument(doc);
+		IndexReader r = w.getReader();
+		Terms terms = MultiTerms.getTerms(r, "field");
+		assertEquals(new BytesRef("a"), terms.getMin());
+		assertEquals(new BytesRef("ddd"), terms.getMax());
+		r.close();
+		w.close();
+		dir.close();
+	}
 
-  public void testTermMinMaxRandom() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
-    int numDocs = atLeast(100);
-    BytesRef minTerm = null;
-    BytesRef maxTerm = null;
-    for(int i=0;i<numDocs;i++ ){
-      Document doc = new Document();
-      Field field = new TextField("field", "", Field.Store.NO);
-      doc.add(field);
-      //System.out.println("  doc " + i);
-      CannedBinaryTokenStream.BinaryToken[] tokens = new CannedBinaryTokenStream.BinaryToken[atLeast(10)];
-      for(int j=0;j<tokens.length;j++) {
-        byte[] bytes = new byte[TestUtil.nextInt(random(), 1, 20)];
-        random().nextBytes(bytes);
-        BytesRef tokenBytes = new BytesRef(bytes);
-        //System.out.println("    token " + tokenBytes);
-        if (minTerm == null || tokenBytes.compareTo(minTerm) < 0) {
-          //System.out.println("      ** new min");
-          minTerm = tokenBytes;
-        }
-        if (maxTerm == null || tokenBytes.compareTo(maxTerm) > 0) {
-          //System.out.println("      ** new max");
-          maxTerm = tokenBytes;
-        }
-        tokens[j] = new CannedBinaryTokenStream.BinaryToken(tokenBytes);
-      }
-      field.setTokenStream(new CannedBinaryTokenStream(tokens));
-      w.addDocument(doc);
-    }
+	public void testTermMinMaxRandom() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+		int numDocs = atLeast(100);
+		BytesRef minTerm = null;
+		BytesRef maxTerm = null;
+		for (int i = 0; i < numDocs; i++) {
+			Document doc = new Document();
+			Field field = new TextField("field", "", Field.Store.NO);
+			doc.add(field);
+			//System.out.println("  doc " + i);
+			CannedBinaryTokenStream.BinaryToken[] tokens = new CannedBinaryTokenStream.BinaryToken[atLeast(10)];
+			for (int j = 0; j < tokens.length; j++) {
+				byte[] bytes = new byte[TestUtil.nextInt(random(), 1, 20)];
+				random().nextBytes(bytes);
+				BytesRef tokenBytes = new BytesRef(bytes);
+				//System.out.println("    token " + tokenBytes);
+				if (minTerm == null || tokenBytes.compareTo(minTerm) < 0) {
+					//System.out.println("      ** new min");
+					minTerm = tokenBytes;
+				}
+				if (maxTerm == null || tokenBytes.compareTo(maxTerm) > 0) {
+					//System.out.println("      ** new max");
+					maxTerm = tokenBytes;
+				}
+				tokens[j] = new CannedBinaryTokenStream.BinaryToken(tokenBytes);
+			}
+			field.setTokenStream(new CannedBinaryTokenStream(tokens));
+			w.addDocument(doc);
+		}
 
-    IndexReader r = w.getReader();
-    Terms terms = MultiTerms.getTerms(r, "field");
-    assertEquals(minTerm, terms.getMin());
-    assertEquals(maxTerm, terms.getMax());
-    
-    r.close();
-    w.close();
-    dir.close();
-  }
+		IndexReader r = w.getReader();
+		Terms terms = MultiTerms.getTerms(r, "field");
+		assertEquals(minTerm, terms.getMin());
+		assertEquals(maxTerm, terms.getMax());
+
+		r.close();
+		w.close();
+		dir.close();
+	}
 }

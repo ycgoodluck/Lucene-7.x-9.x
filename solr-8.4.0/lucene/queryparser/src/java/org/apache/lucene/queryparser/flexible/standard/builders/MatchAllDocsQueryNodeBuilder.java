@@ -30,23 +30,23 @@ import org.apache.lucene.search.MatchAllDocsQuery;
  */
 public class MatchAllDocsQueryNodeBuilder implements StandardQueryBuilder {
 
-  public MatchAllDocsQueryNodeBuilder() {
-    // empty constructor
-  }
+	public MatchAllDocsQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public MatchAllDocsQuery build(QueryNode queryNode) throws QueryNodeException {
+	@Override
+	public MatchAllDocsQuery build(QueryNode queryNode) throws QueryNodeException {
 
-    // validates node
-    if (!(queryNode instanceof MatchAllDocsQueryNode)) {
-      throw new QueryNodeException(new MessageImpl(
-          QueryParserMessages.LUCENE_QUERY_CONVERSION_ERROR, queryNode
-              .toQueryString(new EscapeQuerySyntaxImpl()), queryNode.getClass()
-              .getName()));
-    }
+		// validates node
+		if (!(queryNode instanceof MatchAllDocsQueryNode)) {
+			throw new QueryNodeException(new MessageImpl(
+				QueryParserMessages.LUCENE_QUERY_CONVERSION_ERROR, queryNode
+				.toQueryString(new EscapeQuerySyntaxImpl()), queryNode.getClass()
+				.getName()));
+		}
 
-    return new MatchAllDocsQuery();
+		return new MatchAllDocsQuery();
 
-  }
+	}
 
 }

@@ -28,42 +28,42 @@ import org.apache.lucene.util.OfflineSorter;
 import org.junit.Test;
 
 public class BytesRefSortersTest extends LuceneTestCase {
-  @Test
-  public void testExternalRefSorter() throws Exception {
-    Directory tempDir = newDirectory();
-    ExternalRefSorter s = new ExternalRefSorter(new OfflineSorter(tempDir, "temp"));
-    check(s);
-    IOUtils.close(s, tempDir);
-  }
+	@Test
+	public void testExternalRefSorter() throws Exception {
+		Directory tempDir = newDirectory();
+		ExternalRefSorter s = new ExternalRefSorter(new OfflineSorter(tempDir, "temp"));
+		check(s);
+		IOUtils.close(s, tempDir);
+	}
 
-  @Test
-  public void testInMemorySorter() throws Exception {
-    check(new InMemorySorter(Comparator.naturalOrder()));
-  }
+	@Test
+	public void testInMemorySorter() throws Exception {
+		check(new InMemorySorter(Comparator.naturalOrder()));
+	}
 
-  private void check(BytesRefSorter sorter) throws Exception {
-    for (int i = 0; i < 100; i++) {
-      byte [] current = new byte [random().nextInt(256)];
-      random().nextBytes(current);
-      sorter.add(new BytesRef(current));
-    }
+	private void check(BytesRefSorter sorter) throws Exception {
+		for (int i = 0; i < 100; i++) {
+			byte[] current = new byte[random().nextInt(256)];
+			random().nextBytes(current);
+			sorter.add(new BytesRef(current));
+		}
 
-    // Create two iterators and check that they're aligned with each other.
-    BytesRefIterator i1 = sorter.iterator();
-    BytesRefIterator i2 = sorter.iterator();
-    
-    // Verify sorter contract.
-    expectThrows(IllegalStateException.class, () -> {
-      sorter.add(new BytesRef(new byte [1]));
-    });
+		// Create two iterators and check that they're aligned with each other.
+		BytesRefIterator i1 = sorter.iterator();
+		BytesRefIterator i2 = sorter.iterator();
 
-    while (true) {
-      BytesRef spare1 = i1.next();
-      BytesRef spare2 = i2.next();
-      assertEquals(spare1, spare2);
-      if (spare1 == null) {
-        break;
-      }
-    }
-  }  
+		// Verify sorter contract.
+		expectThrows(IllegalStateException.class, () -> {
+			sorter.add(new BytesRef(new byte[1]));
+		});
+
+		while (true) {
+			BytesRef spare1 = i1.next();
+			BytesRef spare2 = i2.next();
+			assertEquals(spare1, spare2);
+			if (spare1 == null) {
+				break;
+			}
+		}
+	}
 }

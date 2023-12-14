@@ -28,36 +28,36 @@ import java.util.Arrays;
 
 public class TestNoMergeScheduler extends LuceneTestCase {
 
-  @Test
-  public void testNoMergeScheduler() throws Exception {
-    MergeScheduler ms = NoMergeScheduler.INSTANCE;
-    ms.close();
-    ms.merge(null, RandomPicks.randomFrom(random(), MergeTrigger.values()), random().nextBoolean());
-  }
+	@Test
+	public void testNoMergeScheduler() throws Exception {
+		MergeScheduler ms = NoMergeScheduler.INSTANCE;
+		ms.close();
+		ms.merge(null, RandomPicks.randomFrom(random(), MergeTrigger.values()), random().nextBoolean());
+	}
 
-  @Test
-  public void testFinalSingleton() throws Exception {
-    assertTrue(Modifier.isFinal(NoMergeScheduler.class.getModifiers()));
-    Constructor<?>[] ctors = NoMergeScheduler.class.getDeclaredConstructors();
-    assertEquals("expected 1 private ctor only: " + Arrays.toString(ctors), 1, ctors.length);
-    assertTrue("that 1 should be private: " + ctors[0], Modifier.isPrivate(ctors[0].getModifiers()));
-  }
+	@Test
+	public void testFinalSingleton() throws Exception {
+		assertTrue(Modifier.isFinal(NoMergeScheduler.class.getModifiers()));
+		Constructor<?>[] ctors = NoMergeScheduler.class.getDeclaredConstructors();
+		assertEquals("expected 1 private ctor only: " + Arrays.toString(ctors), 1, ctors.length);
+		assertTrue("that 1 should be private: " + ctors[0], Modifier.isPrivate(ctors[0].getModifiers()));
+	}
 
-  @Test
-  public void testMethodsOverridden() throws Exception {
-    // Ensures that all methods of MergeScheduler are overridden. That's
-    // important to ensure that NoMergeScheduler overrides everything, so that
-    // no unexpected behavior/error occurs
-    for (Method m : NoMergeScheduler.class.getMethods()) {
-      // getDeclaredMethods() returns just those methods that are declared on
-      // NoMergeScheduler. getMethods() returns those that are visible in that
-      // context, including ones from Object. So just filter out Object. If in
-      // the future MergeScheduler will extend a different class than Object,
-      // this will need to change.
-      if (m.getDeclaringClass() != Object.class) {
-        assertTrue(m + " is not overridden !", m.getDeclaringClass() == NoMergeScheduler.class);
-      }
-    }
-  }
+	@Test
+	public void testMethodsOverridden() throws Exception {
+		// Ensures that all methods of MergeScheduler are overridden. That's
+		// important to ensure that NoMergeScheduler overrides everything, so that
+		// no unexpected behavior/error occurs
+		for (Method m : NoMergeScheduler.class.getMethods()) {
+			// getDeclaredMethods() returns just those methods that are declared on
+			// NoMergeScheduler. getMethods() returns those that are visible in that
+			// context, including ones from Object. So just filter out Object. If in
+			// the future MergeScheduler will extend a different class than Object,
+			// this will need to change.
+			if (m.getDeclaringClass() != Object.class) {
+				assertTrue(m + " is not overridden !", m.getDeclaringClass() == NoMergeScheduler.class);
+			}
+		}
+	}
 
 }

@@ -17,15 +17,17 @@
 
 package org.apache.lucene.luke.app.desktop.components;
 
-/** Operator for the Documents tab */
+/**
+ * Operator for the Documents tab
+ */
 public interface DocumentsTabOperator extends ComponentOperatorRegistry.ComponentOperator {
-  void browseTerm(String field, String term);
+	void browseTerm(String field, String term);
 
-  void displayLatestDoc();
+	void displayLatestDoc();
 
-  void displayDoc(int donid);
+	void displayDoc(int donid);
 
-  void seekNextTerm();
+	void seekNextTerm();
 
-  void showFirstTermDoc();
+	void showFirstTermDoc();
 }

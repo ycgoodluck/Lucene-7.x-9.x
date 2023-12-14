@@ -21,58 +21,58 @@ import org.junit.BeforeClass;
 
 public class TestCaseInsensitive extends StemmerTestBase {
 
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init(true, "simple.aff", "mixedcase.dic");
-  }
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init(true, "simple.aff", "mixedcase.dic");
+	}
 
-  public void testCaseInsensitivity() {
-    assertStemsTo("lucene", "lucene", "lucen");
-    assertStemsTo("LuCeNe", "lucene", "lucen");
-    assertStemsTo("mahoute", "mahout");
-    assertStemsTo("MaHoUte", "mahout");
-  }
+	public void testCaseInsensitivity() {
+		assertStemsTo("lucene", "lucene", "lucen");
+		assertStemsTo("LuCeNe", "lucene", "lucen");
+		assertStemsTo("mahoute", "mahout");
+		assertStemsTo("MaHoUte", "mahout");
+	}
 
-  public void testSimplePrefix() {
-    assertStemsTo("solr", "olr");
-  }
+	public void testSimplePrefix() {
+		assertStemsTo("solr", "olr");
+	}
 
-  public void testRecursiveSuffix() {
-    // we should not recurse here! as the suffix has no continuation!
-    assertStemsTo("abcd");
-  }
+	public void testRecursiveSuffix() {
+		// we should not recurse here! as the suffix has no continuation!
+		assertStemsTo("abcd");
+	}
 
-  // all forms unmunched from dictionary
-  public void testAllStems() {
-    assertStemsTo("ab", "ab");
-    assertStemsTo("abc", "ab");
-    assertStemsTo("apach", "apach");
-    assertStemsTo("apache", "apach");
-    assertStemsTo("foo", "foo", "foo");
-    assertStemsTo("food", "foo");
-    assertStemsTo("foos", "foo");
-    assertStemsTo("lucen", "lucen");
-    assertStemsTo("lucene", "lucen", "lucene");
-    assertStemsTo("mahout", "mahout");
-    assertStemsTo("mahoute", "mahout");
-    assertStemsTo("moo", "moo");
-    assertStemsTo("mood", "moo");
-    assertStemsTo("olr", "olr");
-    assertStemsTo("solr", "olr");
-  }
-  
-  // some bogus stuff that should not stem (empty lists)!
-  public void testBogusStems() {    
-    assertStemsTo("abs");
-    assertStemsTo("abe");
-    assertStemsTo("sab");
-    assertStemsTo("sapach");
-    assertStemsTo("sapache");
-    assertStemsTo("apachee");
-    assertStemsTo("sfoo");
-    assertStemsTo("sfoos");
-    assertStemsTo("fooss");
-    assertStemsTo("lucenee");
-    assertStemsTo("solre");
-  }
+	// all forms unmunched from dictionary
+	public void testAllStems() {
+		assertStemsTo("ab", "ab");
+		assertStemsTo("abc", "ab");
+		assertStemsTo("apach", "apach");
+		assertStemsTo("apache", "apach");
+		assertStemsTo("foo", "foo", "foo");
+		assertStemsTo("food", "foo");
+		assertStemsTo("foos", "foo");
+		assertStemsTo("lucen", "lucen");
+		assertStemsTo("lucene", "lucen", "lucene");
+		assertStemsTo("mahout", "mahout");
+		assertStemsTo("mahoute", "mahout");
+		assertStemsTo("moo", "moo");
+		assertStemsTo("mood", "moo");
+		assertStemsTo("olr", "olr");
+		assertStemsTo("solr", "olr");
+	}
+
+	// some bogus stuff that should not stem (empty lists)!
+	public void testBogusStems() {
+		assertStemsTo("abs");
+		assertStemsTo("abe");
+		assertStemsTo("sab");
+		assertStemsTo("sapach");
+		assertStemsTo("sapache");
+		assertStemsTo("apachee");
+		assertStemsTo("sfoo");
+		assertStemsTo("sfoos");
+		assertStemsTo("fooss");
+		assertStemsTo("lucenee");
+		assertStemsTo("solre");
+	}
 }

@@ -23,68 +23,70 @@ import org.apache.lucene.util.BytesRef;
 
 class SingleDocsEnum extends PostingsEnum {
 
-  private int doc;
-  private int singleDocID;
+	private int doc;
+	private int singleDocID;
 
-  /** For reuse */
-  public void reset(int singleDocID) {
-    doc = -1;
-    this.singleDocID = singleDocID;
-  }
+	/**
+	 * For reuse
+	 */
+	public void reset(int singleDocID) {
+		doc = -1;
+		this.singleDocID = singleDocID;
+	}
 
-  @Override
-  public int nextDoc() {
-    if (doc == -1) {
-      doc = singleDocID;
-    } else {
-      doc = NO_MORE_DOCS;
-    }
-    
-    return doc;
-  }
+	@Override
+	public int nextDoc() {
+		if (doc == -1) {
+			doc = singleDocID;
+		} else {
+			doc = NO_MORE_DOCS;
+		}
 
-  @Override
-  public int docID() {
-    return doc;
-  }
+		return doc;
+	}
 
-  @Override
-  public int advance(int target) {
-    if (doc == -1 && target <= singleDocID) {
-      doc = singleDocID;
-    } else {
-      doc = NO_MORE_DOCS;
-    }
-    return doc;
-  }
+	@Override
+	public int docID() {
+		return doc;
+	}
 
-  @Override
-  public long cost() {
-    return 1;
-  }
+	@Override
+	public int advance(int target) {
+		if (doc == -1 && target <= singleDocID) {
+			doc = singleDocID;
+		} else {
+			doc = NO_MORE_DOCS;
+		}
+		return doc;
+	}
 
-  @Override
-  public int freq() {
-    return 1;
-  }
+	@Override
+	public long cost() {
+		return 1;
+	}
 
-  @Override
-  public int nextPosition() throws IOException {
-    return -1;
-  }
+	@Override
+	public int freq() {
+		return 1;
+	}
 
-  @Override
-  public int startOffset() throws IOException {
-    return -1;
-  }
+	@Override
+	public int nextPosition() throws IOException {
+		return -1;
+	}
 
-  @Override
-  public int endOffset() throws IOException {
-    return -1;
-  }
+	@Override
+	public int startOffset() throws IOException {
+		return -1;
+	}
 
-  @Override
-  public BytesRef getPayload() throws IOException {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public int endOffset() throws IOException {
+		return -1;
+	}
+
+	@Override
+	public BytesRef getPayload() throws IOException {
+		throw new UnsupportedOperationException();
+	}
 }

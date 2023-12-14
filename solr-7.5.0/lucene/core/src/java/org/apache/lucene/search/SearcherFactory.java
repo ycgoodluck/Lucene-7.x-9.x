@@ -27,15 +27,15 @@ import org.apache.lucene.search.similarities.Similarity; // javadocs
 
 /**
  * Factory class used by {@link SearcherManager} to
- * create new IndexSearchers. The default implementation just creates 
+ * create new IndexSearchers. The default implementation just creates
  * an IndexSearcher with no custom behavior:
- * 
+ *
  * <pre class="prettyprint">
  *   public IndexSearcher newSearcher(IndexReader r) throws IOException {
  *     return new IndexSearcher(r);
  *   }
  * </pre>
- * 
+ * <p>
  * You can pass your own factory instead if you want custom behavior, such as:
  * <ul>
  *   <li>Setting a custom scoring model: {@link IndexSearcher#setSimilarity(Similarity)}
@@ -45,19 +45,21 @@ import org.apache.lucene.search.similarities.Similarity; // javadocs
  *       you may want to also {@link IndexWriterConfig#setMergedSegmentWarmer(IndexWriter.IndexReaderWarmer)} to warm
  *       newly merged segments in the background, outside of the reopen path.
  * </ul>
+ *
  * @lucene.experimental
  */
 public class SearcherFactory {
-  /** 
-   * Returns a new IndexSearcher over the given reader.
-   * @param reader the reader to create a new searcher for
-   * @param previousReader the reader previously used to create a new searcher.
-   *                       This can be <code>null</code> if unknown or if the given reader is the initially opened reader.
-   *                       If this reader is non-null it can be used to find newly opened segments compared to the new reader to warm
-   *                       the searcher up before returning.
-   */
-  public IndexSearcher newSearcher(IndexReader reader, IndexReader previousReader) throws IOException {
-    return new IndexSearcher(reader);
-  }
+	/**
+	 * Returns a new IndexSearcher over the given reader.
+	 *
+	 * @param reader         the reader to create a new searcher for
+	 * @param previousReader the reader previously used to create a new searcher.
+	 *                       This can be <code>null</code> if unknown or if the given reader is the initially opened reader.
+	 *                       If this reader is non-null it can be used to find newly opened segments compared to the new reader to warm
+	 *                       the searcher up before returning.
+	 */
+	public IndexSearcher newSearcher(IndexReader reader, IndexReader previousReader) throws IOException {
+		return new IndexSearcher(reader);
+	}
 
 }

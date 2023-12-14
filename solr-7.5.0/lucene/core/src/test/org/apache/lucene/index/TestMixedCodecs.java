@@ -30,61 +30,61 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestMixedCodecs extends LuceneTestCase {
 
-  public void test() throws Exception {
+	public void test() throws Exception {
 
-    final int NUM_DOCS = atLeast(1000);
+		final int NUM_DOCS = atLeast(1000);
 
-    final Directory dir = newDirectory();
-    RandomIndexWriter w = null;
+		final Directory dir = newDirectory();
+		RandomIndexWriter w = null;
 
-    int docsLeftInThisSegment = 0;
-    
-    int docUpto = 0;
-    while (docUpto < NUM_DOCS) {
-      if (VERBOSE) {
-        System.out.println("TEST: " + docUpto + " of " + NUM_DOCS);
-      }
-      if (docsLeftInThisSegment == 0) {
-        final IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()));
-        if (random().nextBoolean()) {
-          // Make sure we aggressively mix in SimpleText
-          // since it has different impls for all codec
-          // formats...
-          iwc.setCodec(Codec.forName("SimpleText"));
-        }
-        if (w != null) {
-          w.close();
-        }
-        w = new RandomIndexWriter(random(), dir, iwc);
-        docsLeftInThisSegment = TestUtil.nextInt(random(), 10, 100);
-      }
-      final Document doc = new Document();
-      doc.add(newStringField("id", String.valueOf(docUpto), Field.Store.YES));
-      w.addDocument(doc);
-      docUpto++;
-      docsLeftInThisSegment--;
-    }
+		int docsLeftInThisSegment = 0;
 
-    if (VERBOSE) {
-      System.out.println("\nTEST: now delete...");
-    }
+		int docUpto = 0;
+		while (docUpto < NUM_DOCS) {
+			if (VERBOSE) {
+				System.out.println("TEST: " + docUpto + " of " + NUM_DOCS);
+			}
+			if (docsLeftInThisSegment == 0) {
+				final IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()));
+				if (random().nextBoolean()) {
+					// Make sure we aggressively mix in SimpleText
+					// since it has different impls for all codec
+					// formats...
+					iwc.setCodec(Codec.forName("SimpleText"));
+				}
+				if (w != null) {
+					w.close();
+				}
+				w = new RandomIndexWriter(random(), dir, iwc);
+				docsLeftInThisSegment = TestUtil.nextInt(random(), 10, 100);
+			}
+			final Document doc = new Document();
+			doc.add(newStringField("id", String.valueOf(docUpto), Field.Store.YES));
+			w.addDocument(doc);
+			docUpto++;
+			docsLeftInThisSegment--;
+		}
 
-    // Random delete half the docs:
-    final Set<Integer> deleted = new HashSet<>();
-    while(deleted.size() < NUM_DOCS/2) {
-      final Integer toDelete = random().nextInt(NUM_DOCS);
-      if (!deleted.contains(toDelete)) {
-        deleted.add(toDelete);
-        w.deleteDocuments(new Term("id", String.valueOf(toDelete)));
-        if (random().nextInt(17) == 6) {
-          final IndexReader r = w.getReader();
-          assertEquals(NUM_DOCS - deleted.size(), r.numDocs());
-          r.close();
-        }
-      }
-    }
+		if (VERBOSE) {
+			System.out.println("\nTEST: now delete...");
+		}
 
-    w.close();
-    dir.close();
-  }
+		// Random delete half the docs:
+		final Set<Integer> deleted = new HashSet<>();
+		while (deleted.size() < NUM_DOCS / 2) {
+			final Integer toDelete = random().nextInt(NUM_DOCS);
+			if (!deleted.contains(toDelete)) {
+				deleted.add(toDelete);
+				w.deleteDocuments(new Term("id", String.valueOf(toDelete)));
+				if (random().nextInt(17) == 6) {
+					final IndexReader r = w.getReader();
+					assertEquals(NUM_DOCS - deleted.size(), r.numDocs());
+					r.close();
+				}
+			}
+		}
+
+		w.close();
+		dir.close();
+	}
 }

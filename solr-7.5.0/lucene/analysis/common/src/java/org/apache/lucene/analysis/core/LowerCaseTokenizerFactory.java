@@ -45,31 +45,31 @@ import static org.apache.lucene.analysis.standard.StandardTokenizer.MAX_TOKEN_LE
  * </ul>
  */
 public class LowerCaseTokenizerFactory extends TokenizerFactory implements MultiTermAwareComponent {
-  private final int maxTokenLen;
+	private final int maxTokenLen;
 
-  /**
-   * Creates a new LowerCaseTokenizerFactory
-   */
-  public LowerCaseTokenizerFactory(Map<String, String> args) {
-    super(args);
-    maxTokenLen = getInt(args, "maxTokenLen", CharTokenizer.DEFAULT_MAX_WORD_LEN);
-    if (maxTokenLen > MAX_TOKEN_LENGTH_LIMIT || maxTokenLen <= 0) {
-      throw new IllegalArgumentException("maxTokenLen must be greater than 0 and less than " + MAX_TOKEN_LENGTH_LIMIT + " passed: " + maxTokenLen);
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new LowerCaseTokenizerFactory
+	 */
+	public LowerCaseTokenizerFactory(Map<String, String> args) {
+		super(args);
+		maxTokenLen = getInt(args, "maxTokenLen", CharTokenizer.DEFAULT_MAX_WORD_LEN);
+		if (maxTokenLen > MAX_TOKEN_LENGTH_LIMIT || maxTokenLen <= 0) {
+			throw new IllegalArgumentException("maxTokenLen must be greater than 0 and less than " + MAX_TOKEN_LENGTH_LIMIT + " passed: " + maxTokenLen);
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public LowerCaseTokenizer create(AttributeFactory factory) {
-    return new LowerCaseTokenizer(factory, maxTokenLen);
-  }
+	@Override
+	public LowerCaseTokenizer create(AttributeFactory factory) {
+		return new LowerCaseTokenizer(factory, maxTokenLen);
+	}
 
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    Map<String,String> map = new HashMap<>(getOriginalArgs());
-    map.remove("maxTokenLen"); //removing "maxTokenLen" argument for LowerCaseFilterFactory init
-    return new LowerCaseFilterFactory(map);
-  }
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		Map<String, String> map = new HashMap<>(getOriginalArgs());
+		map.remove("maxTokenLen"); //removing "maxTokenLen" argument for LowerCaseFilterFactory init
+		return new LowerCaseFilterFactory(map);
+	}
 }

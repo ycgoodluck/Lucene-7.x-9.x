@@ -22,17 +22,17 @@ import java.net.URLClassLoader;
 
 public class TestSPIClassIterator extends LuceneTestCase {
 
-  public void testParentChild() throws Exception {
-    final ClassLoader parent = getClass().getClassLoader();
-    final ClassLoader child = URLClassLoader.newInstance(new URL[0], parent);
-    assertTrue(checkNoPerms(parent, parent));
-    assertTrue(checkNoPerms(child, child));
-    assertTrue(checkNoPerms(parent, child));
-    assertFalse(checkNoPerms(child, parent));
-  }
-  
-  private boolean checkNoPerms(ClassLoader parent, ClassLoader child) throws Exception {
-    return runWithRestrictedPermissions(() -> SPIClassIterator.isParentClassLoader(parent, child));
-  }
-  
+	public void testParentChild() throws Exception {
+		final ClassLoader parent = getClass().getClassLoader();
+		final ClassLoader child = URLClassLoader.newInstance(new URL[0], parent);
+		assertTrue(checkNoPerms(parent, parent));
+		assertTrue(checkNoPerms(child, child));
+		assertTrue(checkNoPerms(parent, child));
+		assertFalse(checkNoPerms(child, parent));
+	}
+
+	private boolean checkNoPerms(ClassLoader parent, ClassLoader child) throws Exception {
+		return runWithRestrictedPermissions(() -> SPIClassIterator.isParentClassLoader(parent, child));
+	}
+
 }

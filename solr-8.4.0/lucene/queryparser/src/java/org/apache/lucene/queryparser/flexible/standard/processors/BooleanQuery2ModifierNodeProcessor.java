@@ -56,146 +56,146 @@ import org.apache.lucene.queryparser.flexible.standard.parser.StandardSyntaxPars
  * which direct parent is also a {@link BooleanQueryNode} is removed (to ignore
  * the rules of precedence).
  * </p>
- * 
+ *
  * @see ConfigurationKeys#DEFAULT_OPERATOR
  * @see BooleanModifiersQueryNodeProcessor
  */
 public class BooleanQuery2ModifierNodeProcessor implements QueryNodeProcessor {
-  final static String TAG_REMOVE = "remove";
-  final static String TAG_MODIFIER = "wrapWithModifier";
-  final static String TAG_BOOLEAN_ROOT = "booleanRoot";
-  
-  QueryConfigHandler queryConfigHandler;
-  
-  private final ArrayList<QueryNode> childrenBuffer = new ArrayList<>();
-  
-  private Boolean usingAnd = false;
-  
-  public BooleanQuery2ModifierNodeProcessor() {
-    // empty constructor
-  }
-  
-  @Override
-  public QueryNode process(QueryNode queryTree) throws QueryNodeException {
-    Operator op = getQueryConfigHandler().get(
-        ConfigurationKeys.DEFAULT_OPERATOR);
-    
-    if (op == null) {
-      throw new IllegalArgumentException(
-          "StandardQueryConfigHandler.ConfigurationKeys.DEFAULT_OPERATOR should be set on the QueryConfigHandler");
-    }
-    
-    this.usingAnd = StandardQueryConfigHandler.Operator.AND == op;
-    
-    return processIteration(queryTree);
-    
-  }
-  
-  protected void processChildren(QueryNode queryTree) throws QueryNodeException {
-    List<QueryNode> children = queryTree.getChildren();
-    if (children != null && children.size() > 0) {
-      for (QueryNode child : children) {
-        child = processIteration(child);
-      }
-    }
-  }
-  
-  private QueryNode processIteration(QueryNode queryTree)
-      throws QueryNodeException {
-    queryTree = preProcessNode(queryTree);
-    
-    processChildren(queryTree);
-    
-    queryTree = postProcessNode(queryTree);
-    
-    return queryTree;
-    
-  }
-  
-  protected void fillChildrenBufferAndApplyModifiery(QueryNode parent) {
-    for (QueryNode node : parent.getChildren()) {
-      if (node.containsTag(TAG_REMOVE)) {
-        fillChildrenBufferAndApplyModifiery(node);
-      } else if (node.containsTag(TAG_MODIFIER)) {
-        childrenBuffer.add(applyModifier(node,
-            (Modifier) node.getTag(TAG_MODIFIER)));
-      } else {
-        childrenBuffer.add(node);
-      }
-    }
-  }
-  
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
-    if (node.containsTag(TAG_BOOLEAN_ROOT)) {
-      this.childrenBuffer.clear();
-      fillChildrenBufferAndApplyModifiery(node);
-      node.set(childrenBuffer);
-    }
-    return node;
-    
-  }
-  
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
-    QueryNode parent = node.getParent();
-    if (node instanceof BooleanQueryNode) {
-      if (parent instanceof BooleanQueryNode) {
-        node.setTag(TAG_REMOVE, Boolean.TRUE); // no precedence
-      } else {
-        node.setTag(TAG_BOOLEAN_ROOT, Boolean.TRUE);
-      }
-    } else if (parent instanceof BooleanQueryNode) {
-      if ((parent instanceof AndQueryNode)
-          || (usingAnd && isDefaultBooleanQueryNode(parent))) {
-        tagModifierButDoNotOverride(node, ModifierQueryNode.Modifier.MOD_REQ);
-      }
-    }
-    return node;
-  }
-  
-  protected boolean isDefaultBooleanQueryNode(QueryNode toTest) {
-    return toTest != null && BooleanQueryNode.class.equals(toTest.getClass());
-  }
-  
-  private QueryNode applyModifier(QueryNode node, Modifier mod) {
-    
-    // check if modifier is not already defined and is default
-    if (!(node instanceof ModifierQueryNode)) {
-      return new BooleanModifierNode(node, mod);
-      
-    } else {
-      ModifierQueryNode modNode = (ModifierQueryNode) node;
-      
-      if (modNode.getModifier() == Modifier.MOD_NONE) {
-        return new ModifierQueryNode(modNode.getChild(), mod);
-      }
-      
-    }
-    
-    return node;
-    
-  }
-  
-  protected void tagModifierButDoNotOverride(QueryNode node, Modifier mod) {
-    if (node instanceof ModifierQueryNode) {
-      ModifierQueryNode modNode = (ModifierQueryNode) node;
-      if (modNode.getModifier() == Modifier.MOD_NONE) {
-        node.setTag(TAG_MODIFIER, mod);
-      }
-    } else {
-      node.setTag(TAG_MODIFIER, ModifierQueryNode.Modifier.MOD_REQ);
-    }
-  }
-  
-  @Override
-  public void setQueryConfigHandler(QueryConfigHandler queryConfigHandler) {
-    this.queryConfigHandler = queryConfigHandler;
-    
-  }
-  
-  @Override
-  public QueryConfigHandler getQueryConfigHandler() {
-    return queryConfigHandler;
-  }
-  
+	final static String TAG_REMOVE = "remove";
+	final static String TAG_MODIFIER = "wrapWithModifier";
+	final static String TAG_BOOLEAN_ROOT = "booleanRoot";
+
+	QueryConfigHandler queryConfigHandler;
+
+	private final ArrayList<QueryNode> childrenBuffer = new ArrayList<>();
+
+	private Boolean usingAnd = false;
+
+	public BooleanQuery2ModifierNodeProcessor() {
+		// empty constructor
+	}
+
+	@Override
+	public QueryNode process(QueryNode queryTree) throws QueryNodeException {
+		Operator op = getQueryConfigHandler().get(
+			ConfigurationKeys.DEFAULT_OPERATOR);
+
+		if (op == null) {
+			throw new IllegalArgumentException(
+				"StandardQueryConfigHandler.ConfigurationKeys.DEFAULT_OPERATOR should be set on the QueryConfigHandler");
+		}
+
+		this.usingAnd = StandardQueryConfigHandler.Operator.AND == op;
+
+		return processIteration(queryTree);
+
+	}
+
+	protected void processChildren(QueryNode queryTree) throws QueryNodeException {
+		List<QueryNode> children = queryTree.getChildren();
+		if (children != null && children.size() > 0) {
+			for (QueryNode child : children) {
+				child = processIteration(child);
+			}
+		}
+	}
+
+	private QueryNode processIteration(QueryNode queryTree)
+		throws QueryNodeException {
+		queryTree = preProcessNode(queryTree);
+
+		processChildren(queryTree);
+
+		queryTree = postProcessNode(queryTree);
+
+		return queryTree;
+
+	}
+
+	protected void fillChildrenBufferAndApplyModifiery(QueryNode parent) {
+		for (QueryNode node : parent.getChildren()) {
+			if (node.containsTag(TAG_REMOVE)) {
+				fillChildrenBufferAndApplyModifiery(node);
+			} else if (node.containsTag(TAG_MODIFIER)) {
+				childrenBuffer.add(applyModifier(node,
+					(Modifier) node.getTag(TAG_MODIFIER)));
+			} else {
+				childrenBuffer.add(node);
+			}
+		}
+	}
+
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+		if (node.containsTag(TAG_BOOLEAN_ROOT)) {
+			this.childrenBuffer.clear();
+			fillChildrenBufferAndApplyModifiery(node);
+			node.set(childrenBuffer);
+		}
+		return node;
+
+	}
+
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+		QueryNode parent = node.getParent();
+		if (node instanceof BooleanQueryNode) {
+			if (parent instanceof BooleanQueryNode) {
+				node.setTag(TAG_REMOVE, Boolean.TRUE); // no precedence
+			} else {
+				node.setTag(TAG_BOOLEAN_ROOT, Boolean.TRUE);
+			}
+		} else if (parent instanceof BooleanQueryNode) {
+			if ((parent instanceof AndQueryNode)
+				|| (usingAnd && isDefaultBooleanQueryNode(parent))) {
+				tagModifierButDoNotOverride(node, ModifierQueryNode.Modifier.MOD_REQ);
+			}
+		}
+		return node;
+	}
+
+	protected boolean isDefaultBooleanQueryNode(QueryNode toTest) {
+		return toTest != null && BooleanQueryNode.class.equals(toTest.getClass());
+	}
+
+	private QueryNode applyModifier(QueryNode node, Modifier mod) {
+
+		// check if modifier is not already defined and is default
+		if (!(node instanceof ModifierQueryNode)) {
+			return new BooleanModifierNode(node, mod);
+
+		} else {
+			ModifierQueryNode modNode = (ModifierQueryNode) node;
+
+			if (modNode.getModifier() == Modifier.MOD_NONE) {
+				return new ModifierQueryNode(modNode.getChild(), mod);
+			}
+
+		}
+
+		return node;
+
+	}
+
+	protected void tagModifierButDoNotOverride(QueryNode node, Modifier mod) {
+		if (node instanceof ModifierQueryNode) {
+			ModifierQueryNode modNode = (ModifierQueryNode) node;
+			if (modNode.getModifier() == Modifier.MOD_NONE) {
+				node.setTag(TAG_MODIFIER, mod);
+			}
+		} else {
+			node.setTag(TAG_MODIFIER, ModifierQueryNode.Modifier.MOD_REQ);
+		}
+	}
+
+	@Override
+	public void setQueryConfigHandler(QueryConfigHandler queryConfigHandler) {
+		this.queryConfigHandler = queryConfigHandler;
+
+	}
+
+	@Override
+	public QueryConfigHandler getQueryConfigHandler() {
+		return queryConfigHandler;
+	}
+
 }
 

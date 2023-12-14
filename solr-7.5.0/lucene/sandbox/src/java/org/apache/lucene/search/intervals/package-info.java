@@ -17,11 +17,11 @@
 
 /**
  * <h2>Intervals queries</h2>
- *
+ * <p>
  * This package contains experimental classes to search over intervals within fields
  *
  * <h2>IntervalsSource</h2>
- *
+ * <p>
  * The {@link org.apache.lucene.search.intervals.IntervalsSource} class can be used to construct proximity
  * relationships between terms and intervals.  They can be built using static methods
  * in the {@link org.apache.lucene.search.intervals.Intervals} class
@@ -59,7 +59,7 @@
  * </ul>
  *
  * <h2>IntervalQuery</h2>
- *
+ * <p>
  * An {@link org.apache.lucene.search.intervals.IntervalQuery} takes a field name and an {@link org.apache.lucene.search.intervals.IntervalsSource},
  * and matches all documents that contain intervals defined by the source in that field.
  */

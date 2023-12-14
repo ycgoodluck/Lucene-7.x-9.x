@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** UI parts embedded in tabs */
+/**
+ * UI parts embedded in tabs
+ */
 package org.apache.lucene.luke.app.desktop.components.fragments;

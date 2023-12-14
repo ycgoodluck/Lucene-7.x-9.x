@@ -29,106 +29,108 @@ import org.apache.lucene.queryparser.surround.parser.QueryParser;
 import org.junit.Assert;
 
 public class BooleanQueryTst {
-  String queryText;
-  final int[] expectedDocNrs;
-  SingleFieldTestDb dBase;
-  String fieldName;
-  Assert testCase;
-  BasicQueryFactory qf;
-  boolean verbose = true;
+	String queryText;
+	final int[] expectedDocNrs;
+	SingleFieldTestDb dBase;
+	String fieldName;
+	Assert testCase;
+	BasicQueryFactory qf;
+	boolean verbose = true;
 
-  public BooleanQueryTst(
-      String queryText,
-      int[] expectedDocNrs,
-      SingleFieldTestDb dBase,
-      String fieldName,
-      Assert testCase,
-      BasicQueryFactory qf) {
-    this.queryText = queryText;
-    this.expectedDocNrs = expectedDocNrs;
-    this.dBase = dBase;
-    this.fieldName = fieldName;
-    this.testCase = testCase;
-    this.qf = qf;
-  }
-  
-  public void setVerbose(boolean verbose) {this.verbose = verbose;}
+	public BooleanQueryTst(
+		String queryText,
+		int[] expectedDocNrs,
+		SingleFieldTestDb dBase,
+		String fieldName,
+		Assert testCase,
+		BasicQueryFactory qf) {
+		this.queryText = queryText;
+		this.expectedDocNrs = expectedDocNrs;
+		this.dBase = dBase;
+		this.fieldName = fieldName;
+		this.testCase = testCase;
+		this.qf = qf;
+	}
 
-  class TestCollector extends SimpleCollector { // FIXME: use check hits from Lucene tests
-    int totalMatched;
-    boolean[] encountered;
-    private Scorer scorer = null;
-    private int docBase = 0;
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
 
-    TestCollector() {
-      totalMatched = 0;
-      encountered = new boolean[expectedDocNrs.length];
-    }
+	class TestCollector extends SimpleCollector { // FIXME: use check hits from Lucene tests
+		int totalMatched;
+		boolean[] encountered;
+		private Scorer scorer = null;
+		private int docBase = 0;
 
-    @Override
-    public void setScorer(Scorer scorer) throws IOException {
-      this.scorer = scorer;
-    }
+		TestCollector() {
+			totalMatched = 0;
+			encountered = new boolean[expectedDocNrs.length];
+		}
 
-    @Override
-    protected void doSetNextReader(LeafReaderContext context) throws IOException {
-      docBase = context.docBase;
-    }
-    
-    @Override
-    public void collect(int docNr) throws IOException {
-      float score = scorer.score();
-      docNr += docBase;
-      /* System.out.println(docNr + " '" + dBase.getDocs()[docNr] + "': " + score); */
-      Assert.assertTrue(queryText + ": positive score", score > 0.0);
-      Assert.assertTrue(queryText + ": too many hits", totalMatched < expectedDocNrs.length);
-      int i;
-      for (i = 0; i < expectedDocNrs.length; i++) {
-        if ((! encountered[i]) && (expectedDocNrs[i] == docNr)) {
-          encountered[i] = true;
-          break;
-        }
-      }
-      if (i == expectedDocNrs.length) {
-        Assert.assertTrue(queryText + ": doc nr for hit not expected: " + docNr, false);
-      }
-      totalMatched++;
-    }
-    
-    @Override
-    public boolean needsScores() {
-      return true;
-    }
+		@Override
+		public void setScorer(Scorer scorer) throws IOException {
+			this.scorer = scorer;
+		}
 
-    void checkNrHits() {
-      Assert.assertEquals(queryText + ": nr of hits", expectedDocNrs.length, totalMatched);
-    }
-  }
+		@Override
+		protected void doSetNextReader(LeafReaderContext context) throws IOException {
+			docBase = context.docBase;
+		}
 
-  public void doTest() throws Exception {
+		@Override
+		public void collect(int docNr) throws IOException {
+			float score = scorer.score();
+			docNr += docBase;
+			/* System.out.println(docNr + " '" + dBase.getDocs()[docNr] + "': " + score); */
+			Assert.assertTrue(queryText + ": positive score", score > 0.0);
+			Assert.assertTrue(queryText + ": too many hits", totalMatched < expectedDocNrs.length);
+			int i;
+			for (i = 0; i < expectedDocNrs.length; i++) {
+				if ((!encountered[i]) && (expectedDocNrs[i] == docNr)) {
+					encountered[i] = true;
+					break;
+				}
+			}
+			if (i == expectedDocNrs.length) {
+				Assert.assertTrue(queryText + ": doc nr for hit not expected: " + docNr, false);
+			}
+			totalMatched++;
+		}
 
-    if (verbose) {    
-        System.out.println("");
-        System.out.println("Query: " + queryText);
-    }
-    
-    SrndQuery lq = QueryParser.parse(queryText);
-    
-    /* if (verbose) System.out.println("Srnd: " + lq.toString()); */
-    
-    Query query = lq.makeLuceneQueryField(fieldName, qf);
-    /* if (verbose) System.out.println("Lucene: " + query.toString()); */
+		@Override
+		public boolean needsScores() {
+			return true;
+		}
 
-    TestCollector tc = new TestCollector();
-    IndexReader reader = DirectoryReader.open(dBase.getDb());
-    IndexSearcher searcher = new IndexSearcher(reader);
-    try {
-      searcher.search(query, tc);
-    } finally {
-      reader.close();
-    }
-    tc.checkNrHits();
-  }
+		void checkNrHits() {
+			Assert.assertEquals(queryText + ": nr of hits", expectedDocNrs.length, totalMatched);
+		}
+	}
+
+	public void doTest() throws Exception {
+
+		if (verbose) {
+			System.out.println("");
+			System.out.println("Query: " + queryText);
+		}
+
+		SrndQuery lq = QueryParser.parse(queryText);
+
+		/* if (verbose) System.out.println("Srnd: " + lq.toString()); */
+
+		Query query = lq.makeLuceneQueryField(fieldName, qf);
+		/* if (verbose) System.out.println("Lucene: " + query.toString()); */
+
+		TestCollector tc = new TestCollector();
+		IndexReader reader = DirectoryReader.open(dBase.getDb());
+		IndexSearcher searcher = new IndexSearcher(reader);
+		try {
+			searcher.search(query, tc);
+		} finally {
+			reader.close();
+		}
+		tc.checkNrHits();
+	}
 }
 
 

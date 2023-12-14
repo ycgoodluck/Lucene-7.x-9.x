@@ -22,9 +22,9 @@ import org.apache.lucene.index.BaseTermVectorsFormatTestCase;
 
 public class TestSimpleTextTermVectorsFormat extends BaseTermVectorsFormatTestCase {
 
-  @Override
-  protected Codec getCodec() {
-    return new SimpleTextCodec();
-  }
-  
+	@Override
+	protected Codec getCodec() {
+		return new SimpleTextCodec();
+	}
+
 }

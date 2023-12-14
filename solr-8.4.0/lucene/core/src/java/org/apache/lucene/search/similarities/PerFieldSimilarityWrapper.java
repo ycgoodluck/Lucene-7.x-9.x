@@ -26,30 +26,31 @@ import org.apache.lucene.search.TermStatistics;
  * <p>
  * Subclasses should implement {@link #get(String)} to return an appropriate
  * Similarity (for example, using field-specific parameter values) for the field.
- * 
+ *
  * @lucene.experimental
  */
 public abstract class PerFieldSimilarityWrapper extends Similarity {
-  
-  /**
-   * Sole constructor. (For invocation by subclass 
-   * constructors, typically implicit.)
-   */
-  public PerFieldSimilarityWrapper() {}
 
-  @Override
-  public final long computeNorm(FieldInvertState state) {
-    return get(state.getName()).computeNorm(state);
-  }
+	/**
+	 * Sole constructor. (For invocation by subclass
+	 * constructors, typically implicit.)
+	 */
+	public PerFieldSimilarityWrapper() {
+	}
 
-  @Override
-  public final SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-    return get(collectionStats.field()).scorer(boost, collectionStats, termStats);
-  }
-  
-  /** 
-   * Returns a {@link Similarity} for scoring a field.
-   */
-  public abstract Similarity get(String name);
+	@Override
+	public final long computeNorm(FieldInvertState state) {
+		return get(state.getName()).computeNorm(state);
+	}
+
+	@Override
+	public final SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+		return get(collectionStats.field()).scorer(boost, collectionStats, termStats);
+	}
+
+	/**
+	 * Returns a {@link Similarity} for scoring a field.
+	 */
+	public abstract Similarity get(String name);
 
 }

@@ -30,98 +30,104 @@ import org.junit.Assume;
 
 /**
  * subclass of TestSimpleExplanations that adds a lot of filler docs which will be ignored at query time.
- * These filler docs will either all be empty in which case the queries will be unmodified, or they will 
- * all use terms from same set of source data as our regular docs (to emphasis the DocFreq factor in scoring), 
+ * These filler docs will either all be empty in which case the queries will be unmodified, or they will
+ * all use terms from same set of source data as our regular docs (to emphasis the DocFreq factor in scoring),
  * in which case the queries will be wrapped so they can be excluded.
  */
 @Slow // can this be sped up to be non-slow? filler docs make it quite a bit slower and many test methods...
 public class TestSimpleExplanationsWithFillerDocs extends TestSimpleExplanations {
 
-  /** num of empty docs injected between every doc in the index */
-  private static final int NUM_FILLER_DOCS = BooleanScorer.SIZE;
-  /** num of empty docs injected prior to the first doc in the (main) index */
-  private static int PRE_FILLER_DOCS;
-  /** 
-   * If non-null then the filler docs are not empty, and need to be filtered out from queries 
-   * using this as both field name &amp; field value 
-   */
-  public static String EXTRA = null;
+	/**
+	 * num of empty docs injected between every doc in the index
+	 */
+	private static final int NUM_FILLER_DOCS = BooleanScorer.SIZE;
+	/**
+	 * num of empty docs injected prior to the first doc in the (main) index
+	 */
+	private static int PRE_FILLER_DOCS;
+	/**
+	 * If non-null then the filler docs are not empty, and need to be filtered out from queries
+	 * using this as both field name &amp; field value
+	 */
+	public static String EXTRA = null;
 
-  private static final Document EMPTY_DOC = new Document();
-  
-  /**
-   * Replaces the index created by our superclass with a new one that includes a lot of docs filler docs.
-   * {@link #qtest} will account for these extra filler docs.
-   * @see #qtest
-   */
-  @BeforeClass
-  public static void replaceIndex() throws Exception {
-    EXTRA = random().nextBoolean() ? null : "extra";
-    PRE_FILLER_DOCS = TestUtil.nextInt(random(), 0, (NUM_FILLER_DOCS / 2));
+	private static final Document EMPTY_DOC = new Document();
 
-    // free up what our super class created that we won't be using
-    reader.close();
-    directory.close();
-    
-    directory = newDirectory();
-    try (RandomIndexWriter writer = new RandomIndexWriter(random(), directory, newIndexWriterConfig(analyzer).setMergePolicy(newLogMergePolicy()))) {
+	/**
+	 * Replaces the index created by our superclass with a new one that includes a lot of docs filler docs.
+	 * {@link #qtest} will account for these extra filler docs.
+	 *
+	 * @see #qtest
+	 */
+	@BeforeClass
+	public static void replaceIndex() throws Exception {
+		EXTRA = random().nextBoolean() ? null : "extra";
+		PRE_FILLER_DOCS = TestUtil.nextInt(random(), 0, (NUM_FILLER_DOCS / 2));
 
-      for (int filler = 0; filler < PRE_FILLER_DOCS; filler++) {
-        writer.addDocument(makeFillerDoc());
-      }
-      for (int i = 0; i < docFields.length; i++) {
-        writer.addDocument(createDoc(i));
-        
-        for (int filler = 0; filler < NUM_FILLER_DOCS; filler++) {
-          writer.addDocument(makeFillerDoc());
-        }
-      }
-      reader = writer.getReader();
-      searcher = newSearcher(reader);
-    }
-  }
+		// free up what our super class created that we won't be using
+		reader.close();
+		directory.close();
 
-  private static Document makeFillerDoc() {
-    if (null == EXTRA) {
-      return EMPTY_DOC;
-    }
-    Document doc = createDoc(TestUtil.nextInt(random(), 0, docFields.length-1));
-    doc.add(newStringField(EXTRA, EXTRA, Field.Store.NO));
-    return doc;
-  }
+		directory = newDirectory();
+		try (RandomIndexWriter writer = new RandomIndexWriter(random(), directory, newIndexWriterConfig(analyzer).setMergePolicy(newLogMergePolicy()))) {
 
-  /**
-   * Adjusts <code>expDocNrs</code> based on the filler docs injected in the index, 
-   * and if neccessary wraps the <code>q</code> in a BooleanQuery that will filter out all 
-   * filler docs using the {@link #EXTRA} field.
-   * 
-   * @see #replaceIndex
-   */
-  @Override
-  public void qtest(Query q, int[] expDocNrs) throws Exception {
+			for (int filler = 0; filler < PRE_FILLER_DOCS; filler++) {
+				writer.addDocument(makeFillerDoc());
+			}
+			for (int i = 0; i < docFields.length; i++) {
+				writer.addDocument(createDoc(i));
 
-    expDocNrs = ArrayUtil.copyOfSubArray(expDocNrs, 0, expDocNrs.length);
-    for (int i=0; i < expDocNrs.length; i++) {
-      expDocNrs[i] = PRE_FILLER_DOCS + ((NUM_FILLER_DOCS + 1) * expDocNrs[i]);
-    }
+				for (int filler = 0; filler < NUM_FILLER_DOCS; filler++) {
+					writer.addDocument(makeFillerDoc());
+				}
+			}
+			reader = writer.getReader();
+			searcher = newSearcher(reader);
+		}
+	}
 
-    if (null != EXTRA) {
-      BooleanQuery.Builder builder = new BooleanQuery.Builder();
-      builder.add(new BooleanClause(q, BooleanClause.Occur.MUST));
-      builder.add(new BooleanClause(new TermQuery(new Term(EXTRA, EXTRA)), BooleanClause.Occur.MUST_NOT));
-      q = builder.build();
-    }
-    super.qtest(q, expDocNrs);
-  }
+	private static Document makeFillerDoc() {
+		if (null == EXTRA) {
+			return EMPTY_DOC;
+		}
+		Document doc = createDoc(TestUtil.nextInt(random(), 0, docFields.length - 1));
+		doc.add(newStringField(EXTRA, EXTRA, Field.Store.NO));
+		return doc;
+	}
 
-  public void testMA1() throws Exception {
-    Assume.assumeNotNull("test is not viable with empty filler docs", EXTRA);
-    super.testMA1();
-  }
-  public void testMA2() throws Exception {
-    Assume.assumeNotNull("test is not viable with empty filler docs", EXTRA);
-    super.testMA2();
-  }
+	/**
+	 * Adjusts <code>expDocNrs</code> based on the filler docs injected in the index,
+	 * and if neccessary wraps the <code>q</code> in a BooleanQuery that will filter out all
+	 * filler docs using the {@link #EXTRA} field.
+	 *
+	 * @see #replaceIndex
+	 */
+	@Override
+	public void qtest(Query q, int[] expDocNrs) throws Exception {
 
-  
+		expDocNrs = ArrayUtil.copyOfSubArray(expDocNrs, 0, expDocNrs.length);
+		for (int i = 0; i < expDocNrs.length; i++) {
+			expDocNrs[i] = PRE_FILLER_DOCS + ((NUM_FILLER_DOCS + 1) * expDocNrs[i]);
+		}
+
+		if (null != EXTRA) {
+			BooleanQuery.Builder builder = new BooleanQuery.Builder();
+			builder.add(new BooleanClause(q, BooleanClause.Occur.MUST));
+			builder.add(new BooleanClause(new TermQuery(new Term(EXTRA, EXTRA)), BooleanClause.Occur.MUST_NOT));
+			q = builder.build();
+		}
+		super.qtest(q, expDocNrs);
+	}
+
+	public void testMA1() throws Exception {
+		Assume.assumeNotNull("test is not viable with empty filler docs", EXTRA);
+		super.testMA1();
+	}
+
+	public void testMA2() throws Exception {
+		Assume.assumeNotNull("test is not viable with empty filler docs", EXTRA);
+		super.testMA2();
+	}
+
+
 }

@@ -36,67 +36,71 @@ import org.apache.lucene.util.automaton.CharacterRunAutomaton;
  * </ul>
  */
 public final class MockTokenFilter extends TokenFilter {
-  /** Empty set of stopwords */
-  public static final CharacterRunAutomaton EMPTY_STOPSET =
-    new CharacterRunAutomaton(makeEmpty());
-  
-  /** Set of common english stopwords */
-  public static final CharacterRunAutomaton ENGLISH_STOPSET = 
-    new CharacterRunAutomaton(Operations.union(Arrays.asList(
-      makeString("a"), makeString("an"), makeString("and"), makeString("are"),
-      makeString("as"), makeString("at"), makeString("be"), makeString("but"), 
-      makeString("by"), makeString("for"), makeString("if"), makeString("in"), 
-      makeString("into"), makeString("is"), makeString("it"), makeString("no"),
-      makeString("not"), makeString("of"), makeString("on"), makeString("or"), 
-      makeString("such"), makeString("that"), makeString("the"), makeString("their"), 
-      makeString("then"), makeString("there"), makeString("these"), makeString("they"), 
-      makeString("this"), makeString("to"), makeString("was"), makeString("will"), 
-      makeString("with"))));
-  
-  private final CharacterRunAutomaton filter;
+	/**
+	 * Empty set of stopwords
+	 */
+	public static final CharacterRunAutomaton EMPTY_STOPSET =
+		new CharacterRunAutomaton(makeEmpty());
 
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
-  private int skippedPositions;
+	/**
+	 * Set of common english stopwords
+	 */
+	public static final CharacterRunAutomaton ENGLISH_STOPSET =
+		new CharacterRunAutomaton(Operations.union(Arrays.asList(
+			makeString("a"), makeString("an"), makeString("and"), makeString("are"),
+			makeString("as"), makeString("at"), makeString("be"), makeString("but"),
+			makeString("by"), makeString("for"), makeString("if"), makeString("in"),
+			makeString("into"), makeString("is"), makeString("it"), makeString("no"),
+			makeString("not"), makeString("of"), makeString("on"), makeString("or"),
+			makeString("such"), makeString("that"), makeString("the"), makeString("their"),
+			makeString("then"), makeString("there"), makeString("these"), makeString("they"),
+			makeString("this"), makeString("to"), makeString("was"), makeString("will"),
+			makeString("with"))));
 
-  /**
-   * Create a new MockTokenFilter.
-   * 
-   * @param input TokenStream to filter
-   * @param filter DFA representing the terms that should be removed.
-   */
-  public MockTokenFilter(TokenStream input, CharacterRunAutomaton filter) {
-    super(input);
-    this.filter = filter;
-  }
-  
-  @Override
-  public boolean incrementToken() throws IOException {
-    // TODO: fix me when posInc=false, to work like FilteringTokenFilter in that case and not return
-    // initial token with posInc=0 ever
-    
-    // return the first non-stop word found
-    skippedPositions = 0;
-    while (input.incrementToken()) {
-      if (!filter.run(termAtt.buffer(), 0, termAtt.length())) {
-        posIncrAtt.setPositionIncrement(posIncrAtt.getPositionIncrement() + skippedPositions);
-        return true;
-      }
-      skippedPositions += posIncrAtt.getPositionIncrement();
-    }
-    // reached EOS -- return false
-    return false;
-  }
+	private final CharacterRunAutomaton filter;
 
-  @Override
-  public void end() throws IOException {
-    super.end();
-    posIncrAtt.setPositionIncrement(posIncrAtt.getPositionIncrement() + skippedPositions);
-  }
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
+	private int skippedPositions;
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    skippedPositions = 0;
-  }
+	/**
+	 * Create a new MockTokenFilter.
+	 *
+	 * @param input  TokenStream to filter
+	 * @param filter DFA representing the terms that should be removed.
+	 */
+	public MockTokenFilter(TokenStream input, CharacterRunAutomaton filter) {
+		super(input);
+		this.filter = filter;
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		// TODO: fix me when posInc=false, to work like FilteringTokenFilter in that case and not return
+		// initial token with posInc=0 ever
+
+		// return the first non-stop word found
+		skippedPositions = 0;
+		while (input.incrementToken()) {
+			if (!filter.run(termAtt.buffer(), 0, termAtt.length())) {
+				posIncrAtt.setPositionIncrement(posIncrAtt.getPositionIncrement() + skippedPositions);
+				return true;
+			}
+			skippedPositions += posIncrAtt.getPositionIncrement();
+		}
+		// reached EOS -- return false
+		return false;
+	}
+
+	@Override
+	public void end() throws IOException {
+		super.end();
+		posIncrAtt.setPositionIncrement(posIncrAtt.getPositionIncrement() + skippedPositions);
+	}
+
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		skippedPositions = 0;
+	}
 }

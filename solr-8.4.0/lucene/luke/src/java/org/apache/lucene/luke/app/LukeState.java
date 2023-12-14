@@ -26,32 +26,32 @@ import org.apache.lucene.store.Directory;
  */
 public interface LukeState {
 
-  String getIndexPath();
+	String getIndexPath();
 
-  String getDirImpl();
+	String getDirImpl();
 
-  default Directory getDirectory() {
-    throw new UnsupportedOperationException();
-  }
+	default Directory getDirectory() {
+		throw new UnsupportedOperationException();
+	}
 
-  default IndexReader getIndexReader() {
-    throw new UnsupportedOperationException();
-  }
+	default IndexReader getIndexReader() {
+		throw new UnsupportedOperationException();
+	}
 
-  default boolean readOnly() {
-    throw new UnsupportedOperationException();
-  }
+	default boolean readOnly() {
+		throw new UnsupportedOperationException();
+	}
 
-  default boolean useCompound() {
-    throw new UnsupportedOperationException();
-  }
+	default boolean useCompound() {
+		throw new UnsupportedOperationException();
+	}
 
-  default boolean keepAllCommits() {
-    throw new UnsupportedOperationException();
-  }
+	default boolean keepAllCommits() {
+		throw new UnsupportedOperationException();
+	}
 
-  default boolean hasDirectoryReader() {
-    return getIndexReader() instanceof DirectoryReader;
-  }
+	default boolean hasDirectoryReader() {
+		return getIndexReader() instanceof DirectoryReader;
+	}
 
 }

@@ -30,65 +30,65 @@ import org.locationtech.spatial4j.context.SpatialContextFactory;
  */
 public class Geo3dSpatialContextFactory extends SpatialContextFactory {
 
-  /**
-   * The default planet model
-   */
-  private static final PlanetModel DEFAULT_PLANET_MODEL = PlanetModel.SPHERE;
+	/**
+	 * The default planet model
+	 */
+	private static final PlanetModel DEFAULT_PLANET_MODEL = PlanetModel.SPHERE;
 
-  /**
-   * The planet model
-   */
-  public PlanetModel planetModel;
+	/**
+	 * The planet model
+	 */
+	public PlanetModel planetModel;
 
-  /**
-   * Empty Constructor.
-   */
-  public Geo3dSpatialContextFactory() {
-    this.binaryCodecClass = Geo3dBinaryCodec.class;
-    this.shapeFactoryClass = Geo3dShapeFactory.class;
-  }
+	/**
+	 * Empty Constructor.
+	 */
+	public Geo3dSpatialContextFactory() {
+		this.binaryCodecClass = Geo3dBinaryCodec.class;
+		this.shapeFactoryClass = Geo3dShapeFactory.class;
+	}
 
-  @Override
-  public SpatialContext newSpatialContext() {
-    if (planetModel == null) {
-      planetModel = DEFAULT_PLANET_MODEL;
-    }
-    if (distCalc == null) {
-      this.distCalc = new Geo3dDistanceCalculator(planetModel);
-    }
-    return new SpatialContext(this);
-  }
+	@Override
+	public SpatialContext newSpatialContext() {
+		if (planetModel == null) {
+			planetModel = DEFAULT_PLANET_MODEL;
+		}
+		if (distCalc == null) {
+			this.distCalc = new Geo3dDistanceCalculator(planetModel);
+		}
+		return new SpatialContext(this);
+	}
 
-  @Override
-  protected void init(Map<String, String> args, ClassLoader classLoader) {
-    initPlanetModel(args);
-    super.init(args, classLoader);
-  }
+	@Override
+	protected void init(Map<String, String> args, ClassLoader classLoader) {
+		initPlanetModel(args);
+		super.init(args, classLoader);
+	}
 
-  protected void initPlanetModel(Map<String, String> args) {
-    String planetModel = args.get("planetModel");
-    if (planetModel != null) {
-      if (planetModel.equalsIgnoreCase("sphere")) {
-        this.planetModel = PlanetModel.SPHERE;
-      } else if (planetModel.equalsIgnoreCase("wgs84")) {
-        this.planetModel = PlanetModel.WGS84;
-      } else {
-        throw new RuntimeException("Unknown planet model: " + planetModel);
-      }
-    } else {
-      this.planetModel = DEFAULT_PLANET_MODEL;
-    }
-  }
+	protected void initPlanetModel(Map<String, String> args) {
+		String planetModel = args.get("planetModel");
+		if (planetModel != null) {
+			if (planetModel.equalsIgnoreCase("sphere")) {
+				this.planetModel = PlanetModel.SPHERE;
+			} else if (planetModel.equalsIgnoreCase("wgs84")) {
+				this.planetModel = PlanetModel.WGS84;
+			} else {
+				throw new RuntimeException("Unknown planet model: " + planetModel);
+			}
+		} else {
+			this.planetModel = DEFAULT_PLANET_MODEL;
+		}
+	}
 
-  @Override
-  protected void initCalculator() {
-    String calcStr = this.args.get("distCalculator");
-    if (calcStr == null) {
-      return;
-    } else if (calcStr.equals("geo3d")) {
-      this.distCalc = new Geo3dDistanceCalculator(planetModel);
-    } else {
-      super.initCalculator(); // some other distance calculator
-    }
-  }
+	@Override
+	protected void initCalculator() {
+		String calcStr = this.args.get("distCalculator");
+		if (calcStr == null) {
+			return;
+		} else if (calcStr.equals("geo3d")) {
+			this.distCalc = new Geo3dDistanceCalculator(planetModel);
+		} else {
+			super.initCalculator(); // some other distance calculator
+		}
+	}
 }

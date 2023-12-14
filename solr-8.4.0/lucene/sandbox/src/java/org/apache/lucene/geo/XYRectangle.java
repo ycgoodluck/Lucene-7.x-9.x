@@ -16,69 +16,81 @@
  */
 package org.apache.lucene.geo;
 
-/** Represents a x/y cartesian rectangle. */
+/**
+ * Represents a x/y cartesian rectangle.
+ */
 public class XYRectangle {
-  /** minimum x value */
-  public final double minX;
-  /** minimum y value */
-  public final double maxX;
-  /** maximum x value */
-  public final double minY;
-  /** maximum y value */
-  public final double maxY;
+	/**
+	 * minimum x value
+	 */
+	public final double minX;
+	/**
+	 * minimum y value
+	 */
+	public final double maxX;
+	/**
+	 * maximum x value
+	 */
+	public final double minY;
+	/**
+	 * maximum y value
+	 */
+	public final double maxY;
 
-  /** Constructs a bounding box by first validating the provided x and y coordinates */
-  public XYRectangle(double minX, double maxX, double minY, double maxY) {
-    this.minX = minX;
-    this.maxX = maxX;
-    this.minY = minY;
-    this.maxY = maxY;
-    assert minX <= maxX;
-    assert minY <= maxY;
-  }
+	/**
+	 * Constructs a bounding box by first validating the provided x and y coordinates
+	 */
+	public XYRectangle(double minX, double maxX, double minY, double maxY) {
+		this.minX = minX;
+		this.maxX = maxX;
+		this.minY = minY;
+		this.maxY = maxY;
+		assert minX <= maxX;
+		assert minY <= maxY;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 
-    XYRectangle rectangle = (XYRectangle) o;
+		XYRectangle rectangle = (XYRectangle) o;
 
-    if (Double.compare(rectangle.minX, minX) != 0) return false;
-    if (Double.compare(rectangle.minY, minY) != 0) return false;
-    if (Double.compare(rectangle.maxX, maxX) != 0) return false;
-    return Double.compare(rectangle.maxY, maxY) == 0;
+		if (Double.compare(rectangle.minX, minX) != 0) return false;
+		if (Double.compare(rectangle.minY, minY) != 0) return false;
+		if (Double.compare(rectangle.maxX, maxX) != 0) return false;
+		return Double.compare(rectangle.maxY, maxY) == 0;
 
-  }
+	}
 
-  @Override
-  public int hashCode() {
-    int result;
-    long temp;
-    temp = Double.doubleToLongBits(minX);
-    result = (int) (temp ^ (temp >>> 32));
-    temp = Double.doubleToLongBits(minY);
-    result = 31 * result + (int) (temp ^ (temp >>> 32));
-    temp = Double.doubleToLongBits(maxX);
-    result = 31 * result + (int) (temp ^ (temp >>> 32));
-    temp = Double.doubleToLongBits(maxY);
-    result = 31 * result + (int) (temp ^ (temp >>> 32));
-    return result;
-  }
+	@Override
+	public int hashCode() {
+		int result;
+		long temp;
+		temp = Double.doubleToLongBits(minX);
+		result = (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(minY);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(maxX);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(maxY);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
 
-  @Override
-  public String toString() {
-    StringBuilder b = new StringBuilder();
-    b.append("XYRectangle(x=");
-    b.append(minX);
-    b.append(" TO ");
-    b.append(maxX);
-    b.append(" y=");
-    b.append(minY);
-    b.append(" TO ");
-    b.append(maxY);
-    b.append(")");
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append("XYRectangle(x=");
+		b.append(minX);
+		b.append(" TO ");
+		b.append(maxX);
+		b.append(" y=");
+		b.append(minY);
+		b.append(" TO ");
+		b.append(maxY);
+		b.append(")");
 
-    return b.toString();
-  }
+		return b.toString();
+	}
 }

@@ -29,82 +29,83 @@ import java.io.IOException;
 
 public class TestMultiPhraseQueryParsing extends LuceneTestCase {
 
-  private static class TokenAndPos {
-      public final String token;
-      public final int pos;
-      public TokenAndPos(String token, int pos) {
-        this.token = token;
-        this.pos = pos;
-      }
-    }
+	private static class TokenAndPos {
+		public final String token;
+		public final int pos;
 
-  private static class CannedAnalyzer extends Analyzer {
-    private final TokenAndPos[] tokens;
+		public TokenAndPos(String token, int pos) {
+			this.token = token;
+			this.pos = pos;
+		}
+	}
 
-    public CannedAnalyzer(TokenAndPos[] tokens) {
-      this.tokens = tokens;
-    }
+	private static class CannedAnalyzer extends Analyzer {
+		private final TokenAndPos[] tokens;
 
-    @Override
-    public TokenStreamComponents createComponents(String fieldName) {
-      return new TokenStreamComponents(new CannedTokenizer(tokens));
-    }
-  }
+		public CannedAnalyzer(TokenAndPos[] tokens) {
+			this.tokens = tokens;
+		}
 
-  private static class CannedTokenizer extends Tokenizer {
-    private final TokenAndPos[] tokens;
-    private int upto = 0;
-    private int lastPos = 0;
-    private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-    private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
+		@Override
+		public TokenStreamComponents createComponents(String fieldName) {
+			return new TokenStreamComponents(new CannedTokenizer(tokens));
+		}
+	}
 
-    public CannedTokenizer(TokenAndPos[] tokens) {
-      super();
-      this.tokens = tokens;
-    }
+	private static class CannedTokenizer extends Tokenizer {
+		private final TokenAndPos[] tokens;
+		private int upto = 0;
+		private int lastPos = 0;
+		private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+		private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
 
-    @Override
-    public final boolean incrementToken() {
-      clearAttributes();
-      if (upto < tokens.length) {
-        final TokenAndPos token = tokens[upto++];
-        termAtt.setEmpty();
-        termAtt.append(token.token);
-        posIncrAtt.setPositionIncrement(token.pos - lastPos);
-        lastPos = token.pos;
-        return true;
-      } else {
-        return false;
-      }
-    }
+		public CannedTokenizer(TokenAndPos[] tokens) {
+			super();
+			this.tokens = tokens;
+		}
 
-    @Override
-    public void reset() throws IOException {
-      super.reset();
-      this.upto = 0;
-      this.lastPos = 0;
-    }
-  }
+		@Override
+		public final boolean incrementToken() {
+			clearAttributes();
+			if (upto < tokens.length) {
+				final TokenAndPos token = tokens[upto++];
+				termAtt.setEmpty();
+				termAtt.append(token.token);
+				posIncrAtt.setPositionIncrement(token.pos - lastPos);
+				lastPos = token.pos;
+				return true;
+			} else {
+				return false;
+			}
+		}
 
-  public void testMultiPhraseQueryParsing() throws Exception {
-    TokenAndPos[] INCR_0_QUERY_TOKENS_AND = new TokenAndPos[]{
-        new TokenAndPos("a", 0),
-        new TokenAndPos("1", 0),
-        new TokenAndPos("b", 1),
-        new TokenAndPos("1", 1),
-        new TokenAndPos("c", 2)
-    };
+		@Override
+		public void reset() throws IOException {
+			super.reset();
+			this.upto = 0;
+			this.lastPos = 0;
+		}
+	}
 
-    QueryParser qp = new QueryParser("field", new CannedAnalyzer(INCR_0_QUERY_TOKENS_AND));
-    Query q = qp.parse("\"this text is acually ignored\"");
-    assertTrue("wrong query type!", q instanceof MultiPhraseQuery);
+	public void testMultiPhraseQueryParsing() throws Exception {
+		TokenAndPos[] INCR_0_QUERY_TOKENS_AND = new TokenAndPos[]{
+			new TokenAndPos("a", 0),
+			new TokenAndPos("1", 0),
+			new TokenAndPos("b", 1),
+			new TokenAndPos("1", 1),
+			new TokenAndPos("c", 2)
+		};
 
-    MultiPhraseQuery.Builder multiPhraseQueryBuilder = new MultiPhraseQuery.Builder();
-    multiPhraseQueryBuilder.add(new Term[]{ new Term("field", "a"), new Term("field", "1") }, -1);
-    multiPhraseQueryBuilder.add(new Term[]{ new Term("field", "b"), new Term("field", "1") }, 0);
-    multiPhraseQueryBuilder.add(new Term[]{ new Term("field", "c") }, 1);
+		QueryParser qp = new QueryParser("field", new CannedAnalyzer(INCR_0_QUERY_TOKENS_AND));
+		Query q = qp.parse("\"this text is acually ignored\"");
+		assertTrue("wrong query type!", q instanceof MultiPhraseQuery);
 
-    assertEquals(multiPhraseQueryBuilder.build(), q);
-  }
+		MultiPhraseQuery.Builder multiPhraseQueryBuilder = new MultiPhraseQuery.Builder();
+		multiPhraseQueryBuilder.add(new Term[]{new Term("field", "a"), new Term("field", "1")}, -1);
+		multiPhraseQueryBuilder.add(new Term[]{new Term("field", "b"), new Term("field", "1")}, 0);
+		multiPhraseQueryBuilder.add(new Term[]{new Term("field", "c")}, 1);
+
+		assertEquals(multiPhraseQueryBuilder.build(), q);
+	}
 
 }

@@ -28,7 +28,7 @@ import org.apache.lucene.queryparser.flexible.core.config.QueryConfigHandler;
  * {@link ConfigurationKeys#BOOST} to the
  * equivalent {@link FieldConfig} based on a defined map: fieldName -&gt; boostValue stored in
  * {@link ConfigurationKeys#FIELD_BOOST_MAP}.
- * 
+ *
  * @see ConfigurationKeys#FIELD_BOOST_MAP
  * @see ConfigurationKeys#BOOST
  * @see FieldConfig
@@ -36,24 +36,24 @@ import org.apache.lucene.queryparser.flexible.core.config.QueryConfigHandler;
  */
 public class FieldBoostMapFCListener implements FieldConfigListener {
 
-  private QueryConfigHandler config = null;
-  
-  public FieldBoostMapFCListener(QueryConfigHandler config) {
-    this.config = config;
-  }
+	private QueryConfigHandler config = null;
 
-  @Override
-  public void buildFieldConfig(FieldConfig fieldConfig) {
-    Map<String, Float> fieldBoostMap = this.config.get(ConfigurationKeys.FIELD_BOOST_MAP);
-    
-    if (fieldBoostMap != null) {
-      Float boost = fieldBoostMap.get(fieldConfig.getField());
+	public FieldBoostMapFCListener(QueryConfigHandler config) {
+		this.config = config;
+	}
 
-      if (boost != null) {
-        fieldConfig.set(ConfigurationKeys.BOOST, boost);
-      }
+	@Override
+	public void buildFieldConfig(FieldConfig fieldConfig) {
+		Map<String, Float> fieldBoostMap = this.config.get(ConfigurationKeys.FIELD_BOOST_MAP);
 
-    }
-  }
+		if (fieldBoostMap != null) {
+			Float boost = fieldBoostMap.get(fieldConfig.getField());
+
+			if (boost != null) {
+				fieldConfig.set(ConfigurationKeys.BOOST, boost);
+			}
+
+		}
+	}
 
 }

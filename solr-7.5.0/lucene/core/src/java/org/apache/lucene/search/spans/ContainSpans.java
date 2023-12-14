@@ -22,40 +22,40 @@ import java.util.Arrays;
 import java.util.Objects;
 
 abstract class ContainSpans extends ConjunctionSpans {
-  Spans sourceSpans;
-  Spans bigSpans;
-  Spans littleSpans;
+	Spans sourceSpans;
+	Spans bigSpans;
+	Spans littleSpans;
 
-  ContainSpans(Spans bigSpans, Spans littleSpans, Spans sourceSpans) {
-    super(Arrays.asList(bigSpans, littleSpans));
-    this.bigSpans = Objects.requireNonNull(bigSpans);
-    this.littleSpans = Objects.requireNonNull(littleSpans);
-    this.sourceSpans = Objects.requireNonNull(sourceSpans);
-  }
+	ContainSpans(Spans bigSpans, Spans littleSpans, Spans sourceSpans) {
+		super(Arrays.asList(bigSpans, littleSpans));
+		this.bigSpans = Objects.requireNonNull(bigSpans);
+		this.littleSpans = Objects.requireNonNull(littleSpans);
+		this.sourceSpans = Objects.requireNonNull(sourceSpans);
+	}
 
-  @Override
-  public int startPosition() { 
-    return atFirstInCurrentDoc ? -1
-            : oneExhaustedInCurrentDoc ? NO_MORE_POSITIONS
-            : sourceSpans.startPosition(); 
-  }
+	@Override
+	public int startPosition() {
+		return atFirstInCurrentDoc ? -1
+			: oneExhaustedInCurrentDoc ? NO_MORE_POSITIONS
+			: sourceSpans.startPosition();
+	}
 
-  @Override
-  public int endPosition() { 
-    return atFirstInCurrentDoc ? -1
-            : oneExhaustedInCurrentDoc ? NO_MORE_POSITIONS
-            : sourceSpans.endPosition(); 
-  }
+	@Override
+	public int endPosition() {
+		return atFirstInCurrentDoc ? -1
+			: oneExhaustedInCurrentDoc ? NO_MORE_POSITIONS
+			: sourceSpans.endPosition();
+	}
 
-  @Override
-  public int width() {
-    return sourceSpans.width();
-  }
+	@Override
+	public int width() {
+		return sourceSpans.width();
+	}
 
-  @Override
-  public void collect(SpanCollector collector) throws IOException {
-    bigSpans.collect(collector);
-    littleSpans.collect(collector);
-  }
+	@Override
+	public void collect(SpanCollector collector) throws IOException {
+		bigSpans.collect(collector);
+		littleSpans.collect(collector);
+	}
 
 }

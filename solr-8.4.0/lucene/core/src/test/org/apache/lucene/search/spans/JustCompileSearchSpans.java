@@ -32,93 +32,93 @@ import org.apache.lucene.search.ScoreMode;
  */
 final class JustCompileSearchSpans {
 
-  private static final String UNSUPPORTED_MSG = "unsupported: used for back-compat testing only !";
+	private static final String UNSUPPORTED_MSG = "unsupported: used for back-compat testing only !";
 
-  static final class JustCompileSpans extends Spans {
+	static final class JustCompileSpans extends Spans {
 
-    @Override
-    public int docID() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int docID() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int nextDoc() throws IOException {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int nextDoc() throws IOException {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int advance(int target) throws IOException {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int advance(int target) throws IOException {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int startPosition() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int startPosition() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int endPosition() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int endPosition() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int width() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int width() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public void collect(SpanCollector collector) throws IOException {
+		@Override
+		public void collect(SpanCollector collector) throws IOException {
 
-    }
+		}
 
-    @Override
-    public int nextStartPosition() throws IOException {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int nextStartPosition() throws IOException {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public long cost() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public long cost() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public float positionsCost() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
-  }
+		@Override
+		public float positionsCost() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
+	}
 
-  static final class JustCompileSpanQuery extends SpanQuery {
+	static final class JustCompileSpanQuery extends SpanQuery {
 
-    @Override
-    public String getField() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public String getField() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public SpanWeight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public SpanWeight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public void visit(QueryVisitor visitor) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public void visit(QueryVisitor visitor) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public String toString(String field) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public String toString(String field) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public boolean equals(Object o) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public boolean equals(Object o) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int hashCode() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int hashCode() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-  }
+	}
 
 }

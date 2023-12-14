@@ -58,111 +58,111 @@ package org.egothor.stemmer;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestStemmer extends LuceneTestCase {
-  
-  public void testTrie() {
-    Trie t = new Trie(true);
-    
-    String keys[] = {"a", "ba", "bb", "c"};
-    String vals[] = {"1", "2", "2", "4"};
-    
-    for (int i = 0; i < keys.length; i++) {
-      t.add(keys[i], vals[i]);
-    }
-    
-    assertEquals(0, t.root);
-    assertEquals(2, t.rows.size());
-    assertEquals(3, t.cmds.size());   
-    assertTrieContents(t, keys, vals);
-  }
-  
-  public void testTrieBackwards() {
-    Trie t = new Trie(false);
-    
-    String keys[] = {"a", "ba", "bb", "c"};
-    String vals[] = {"1", "2", "2", "4"};
-    
-    for (int i = 0; i < keys.length; i++) {
-      t.add(keys[i], vals[i]);
-    }
-       
-    assertTrieContents(t, keys, vals);
-  }
-  
-  public void testMultiTrie() {
-    Trie t = new MultiTrie(true);
-    
-    String keys[] = {"a", "ba", "bb", "c"};
-    String vals[] = {"1", "2", "2", "4"};
-    
-    for (int i = 0; i < keys.length; i++) {
-      t.add(keys[i], vals[i]);
-    }
-    
-    assertTrieContents(t, keys, vals);   
-  }
-  
-  public void testMultiTrieBackwards() {
-    Trie t = new MultiTrie(false);
-    
-    String keys[] = {"a", "ba", "bb", "c"};
-    String vals[] = {"1", "2", "2", "4"};
-    
-    for (int i = 0; i < keys.length; i++) {
-      t.add(keys[i], vals[i]);
-    }
-    
-    assertTrieContents(t, keys, vals);   
-  }
-  
-  public void testMultiTrie2() {
-    Trie t = new MultiTrie2(true);
-    
-    String keys[] = {"a", "ba", "bb", "c"};
-    /* 
-     * short vals won't work, see line 155 for example
-     * the IOOBE is caught (wierd), but shouldnt affect patch cmds?
-     */
-    String vals[] = {"1111", "2222", "2223", "4444"};
-    
-    for (int i = 0; i < keys.length; i++) {
-      t.add(keys[i], vals[i]);
-    }
-    
-    assertTrieContents(t, keys, vals);   
-  }
-  
-  public void testMultiTrie2Backwards() {
-    Trie t = new MultiTrie2(false);
-    
-    String keys[] = {"a", "ba", "bb", "c"};
-    /* 
-     * short vals won't work, see line 155 for example
-     * the IOOBE is caught (wierd), but shouldnt affect patch cmds?
-     */
-    String vals[] = {"1111", "2222", "2223", "4444"};
-    
-    for (int i = 0; i < keys.length; i++) {
-      t.add(keys[i], vals[i]);
-    }
-    
-    assertTrieContents(t, keys, vals);   
-  }
- 
-  private static void assertTrieContents(Trie trie, String keys[], String vals[]) {
-    Trie[] tries = new Trie[] {
-        trie,
-        trie.reduce(new Optimizer()),
-        trie.reduce(new Optimizer2()),
-        trie.reduce(new Gener()),
-        trie.reduce(new Lift(true)),
-        trie.reduce(new Lift(false))
-    };
-    
-    for (Trie t : tries) {
-      for (int i = 0; i < keys.length; i++) {
-        assertEquals(vals[i], t.getFully(keys[i]).toString());
-        assertEquals(vals[i], t.getLastOnPath(keys[i]).toString());
-      }
-    }
-  }
+
+	public void testTrie() {
+		Trie t = new Trie(true);
+
+		String keys[] = {"a", "ba", "bb", "c"};
+		String vals[] = {"1", "2", "2", "4"};
+
+		for (int i = 0; i < keys.length; i++) {
+			t.add(keys[i], vals[i]);
+		}
+
+		assertEquals(0, t.root);
+		assertEquals(2, t.rows.size());
+		assertEquals(3, t.cmds.size());
+		assertTrieContents(t, keys, vals);
+	}
+
+	public void testTrieBackwards() {
+		Trie t = new Trie(false);
+
+		String keys[] = {"a", "ba", "bb", "c"};
+		String vals[] = {"1", "2", "2", "4"};
+
+		for (int i = 0; i < keys.length; i++) {
+			t.add(keys[i], vals[i]);
+		}
+
+		assertTrieContents(t, keys, vals);
+	}
+
+	public void testMultiTrie() {
+		Trie t = new MultiTrie(true);
+
+		String keys[] = {"a", "ba", "bb", "c"};
+		String vals[] = {"1", "2", "2", "4"};
+
+		for (int i = 0; i < keys.length; i++) {
+			t.add(keys[i], vals[i]);
+		}
+
+		assertTrieContents(t, keys, vals);
+	}
+
+	public void testMultiTrieBackwards() {
+		Trie t = new MultiTrie(false);
+
+		String keys[] = {"a", "ba", "bb", "c"};
+		String vals[] = {"1", "2", "2", "4"};
+
+		for (int i = 0; i < keys.length; i++) {
+			t.add(keys[i], vals[i]);
+		}
+
+		assertTrieContents(t, keys, vals);
+	}
+
+	public void testMultiTrie2() {
+		Trie t = new MultiTrie2(true);
+
+		String keys[] = {"a", "ba", "bb", "c"};
+		/*
+		 * short vals won't work, see line 155 for example
+		 * the IOOBE is caught (wierd), but shouldnt affect patch cmds?
+		 */
+		String vals[] = {"1111", "2222", "2223", "4444"};
+
+		for (int i = 0; i < keys.length; i++) {
+			t.add(keys[i], vals[i]);
+		}
+
+		assertTrieContents(t, keys, vals);
+	}
+
+	public void testMultiTrie2Backwards() {
+		Trie t = new MultiTrie2(false);
+
+		String keys[] = {"a", "ba", "bb", "c"};
+		/*
+		 * short vals won't work, see line 155 for example
+		 * the IOOBE is caught (wierd), but shouldnt affect patch cmds?
+		 */
+		String vals[] = {"1111", "2222", "2223", "4444"};
+
+		for (int i = 0; i < keys.length; i++) {
+			t.add(keys[i], vals[i]);
+		}
+
+		assertTrieContents(t, keys, vals);
+	}
+
+	private static void assertTrieContents(Trie trie, String keys[], String vals[]) {
+		Trie[] tries = new Trie[]{
+			trie,
+			trie.reduce(new Optimizer()),
+			trie.reduce(new Optimizer2()),
+			trie.reduce(new Gener()),
+			trie.reduce(new Lift(true)),
+			trie.reduce(new Lift(false))
+		};
+
+		for (Trie t : tries) {
+			for (int i = 0; i < keys.length; i++) {
+				assertEquals(vals[i], t.getFully(keys[i]).toString());
+				assertEquals(vals[i], t.getLastOnPath(keys[i]).toString());
+			}
+		}
+	}
 }

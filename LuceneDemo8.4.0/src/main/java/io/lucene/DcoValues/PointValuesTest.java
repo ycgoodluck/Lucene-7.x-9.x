@@ -23,88 +23,88 @@ import java.util.Random;
  * @date 2020/3/29 10:04 上午
  */
 public class PointValuesTest {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private Analyzer analyzer = new WhitespaceAnalyzer();
-    private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-    private IndexWriter indexWriter;
+	private Analyzer analyzer = new WhitespaceAnalyzer();
+	private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private IndexWriter indexWriter;
 
-    public void doSearch() throws Exception {
-        conf.setUseCompoundFile(false);
-        indexWriter = new IndexWriter(directory, conf);
+	public void doSearch() throws Exception {
+		conf.setUseCompoundFile(false);
+		indexWriter = new IndexWriter(directory, conf);
 
-        Random random = new Random();
-        Document doc;
-        // 文档0
-        doc = new Document();
-        doc.add(new IntPoint("book", 1, 1));
-        indexWriter.addDocument(doc);
-        // 文档1
-        doc = new Document();
-        doc.add(new IntPoint("book", 100, 100));
-        indexWriter.addDocument(doc);
+		Random random = new Random();
+		Document doc;
+		// 文档0
+		doc = new Document();
+		doc.add(new IntPoint("book", 1, 1));
+		indexWriter.addDocument(doc);
+		// 文档1
+		doc = new Document();
+		doc.add(new IntPoint("book", 100, 100));
+		indexWriter.addDocument(doc);
 //        // 文档2
 //        doc = new Document();
 //        doc.add(new TextField("abc", "edd", Field.Store.YES ));
 //        indexWriter.addDocument(doc);
-        int count = 0 ;
-        int a,b,c;
-        while (count++ < 4096){
-            doc = new Document();
-            a = random.nextInt(100);
-            a = a == 0 ? a + 1 : a;
+		int count = 0;
+		int a, b, c;
+		while (count++ < 4096) {
+			doc = new Document();
+			a = random.nextInt(100);
+			a = a == 0 ? a + 1 : a;
 //            b = random.nextInt(100);
 //            b = b == 0 ? b + 1 : b;
-            c = random.nextInt(80);
-            c = c == 0 ? c + 1 : c;
+			c = random.nextInt(80);
+			c = c == 0 ? c + 1 : c;
 //            doc.add(new IntPoint("book", a , b, c));
-            doc.add(new IntPoint("book", a, c));
-            indexWriter.addDocument(doc);
+			doc.add(new IntPoint("book", a, c));
+			indexWriter.addDocument(doc);
 
 
-        }
+		}
 
 
-        indexWriter.commit();
+		indexWriter.commit();
 
-        DirectoryReader reader = DirectoryReader.open(indexWriter);
-        IndexSearcher searcher = new IndexSearcher(reader);
+		DirectoryReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
 
 //        int [] lowValue = {1, 1};
 //        int [] upValue = {100, 100};
-        int [] lowValue = {-1, -1};
-        int [] upValue = {60, 60};
-        Query query = IntPoint.newRangeQuery("book", lowValue, upValue);
+		int[] lowValue = {-1, -1};
+		int[] upValue = {60, 60};
+		Query query = IntPoint.newRangeQuery("book", lowValue, upValue);
 
 
-        // 返回Top5的结果
-        int resultTopN = 5;
+		// 返回Top5的结果
+		int resultTopN = 5;
 
-        ScoreDoc[] scoreDocs = searcher.search(query, resultTopN).scoreDocs;
+		ScoreDoc[] scoreDocs = searcher.search(query, resultTopN).scoreDocs;
 
-        System.out.println("Total Result Number: "+scoreDocs.length+"");
-        for (int i = 0; i < scoreDocs.length; i++) {
-            ScoreDoc scoreDoc = scoreDocs[i];
-            // 输出满足查询条件的 文档号
-            System.out.println("result"+i+": 文档"+scoreDoc.doc+"");
-        }
+		System.out.println("Total Result Number: " + scoreDocs.length + "");
+		for (int i = 0; i < scoreDocs.length; i++) {
+			ScoreDoc scoreDoc = scoreDocs[i];
+			// 输出满足查询条件的 文档号
+			System.out.println("result" + i + ": 文档" + scoreDoc.doc + "");
+		}
 
-    }
+	}
 
-    public static void main(String[] args) throws Exception{
-        PointValuesTest test = new PointValuesTest();
-        test.doSearch();
+	public static void main(String[] args) throws Exception {
+		PointValuesTest test = new PointValuesTest();
+		test.doSearch();
 //    byte[] packed = new byte[100];
 //    IntPoint.encodeDimension(256, packed, 0);
 //    System.out.println(packed);
-    }
+	}
 }

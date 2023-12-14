@@ -69,35 +69,35 @@ import org.w3c.dom.Element;
  */
 public class PointRangeQueryBuilder implements QueryBuilder {
 
-  @Override
-  public Query getQuery(Element e) throws ParserException {
-    String field = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
-    final String lowerTerm = DOMUtils.getAttribute(e, "lowerTerm", null);
-    final String upperTerm = DOMUtils.getAttribute(e, "upperTerm", null);
+	@Override
+	public Query getQuery(Element e) throws ParserException {
+		String field = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
+		final String lowerTerm = DOMUtils.getAttribute(e, "lowerTerm", null);
+		final String upperTerm = DOMUtils.getAttribute(e, "upperTerm", null);
 
-    String type = DOMUtils.getAttribute(e, "type", "int");
-    try {
-      if (type.equalsIgnoreCase("int")) {
-        return IntPoint.newRangeQuery(field,
-            (lowerTerm == null ? Integer.MIN_VALUE : Integer.parseInt(lowerTerm)),
-            (upperTerm == null ? Integer.MAX_VALUE : Integer.parseInt(upperTerm)));
-      } else if (type.equalsIgnoreCase("long")) {
-        return LongPoint.newRangeQuery(field,
-            (lowerTerm == null ? Long.MIN_VALUE : Long.parseLong(lowerTerm)),
-            (upperTerm == null ? Long.MAX_VALUE : Long.parseLong(upperTerm)));
-      } else if (type.equalsIgnoreCase("double")) {
-        return DoublePoint.newRangeQuery(field,
-            (lowerTerm == null ? Double.NEGATIVE_INFINITY : Double.parseDouble(lowerTerm)),
-            (upperTerm == null ? Double.POSITIVE_INFINITY : Double.parseDouble(upperTerm)));
-      } else if (type.equalsIgnoreCase("float")) {
-        return FloatPoint.newRangeQuery(field,
-            (lowerTerm == null ? Float.NEGATIVE_INFINITY : Float.parseFloat(lowerTerm)),
-            (upperTerm == null ? Float.POSITIVE_INFINITY : Float.parseFloat(upperTerm)));
-      } else {
-        throw new ParserException("type attribute must be one of: [long, int, double, float]");
-      }
-    } catch (NumberFormatException nfe) {
-      throw new ParserException("Could not parse lowerTerm or upperTerm into a number", nfe);
-    }
-  }
+		String type = DOMUtils.getAttribute(e, "type", "int");
+		try {
+			if (type.equalsIgnoreCase("int")) {
+				return IntPoint.newRangeQuery(field,
+					(lowerTerm == null ? Integer.MIN_VALUE : Integer.parseInt(lowerTerm)),
+					(upperTerm == null ? Integer.MAX_VALUE : Integer.parseInt(upperTerm)));
+			} else if (type.equalsIgnoreCase("long")) {
+				return LongPoint.newRangeQuery(field,
+					(lowerTerm == null ? Long.MIN_VALUE : Long.parseLong(lowerTerm)),
+					(upperTerm == null ? Long.MAX_VALUE : Long.parseLong(upperTerm)));
+			} else if (type.equalsIgnoreCase("double")) {
+				return DoublePoint.newRangeQuery(field,
+					(lowerTerm == null ? Double.NEGATIVE_INFINITY : Double.parseDouble(lowerTerm)),
+					(upperTerm == null ? Double.POSITIVE_INFINITY : Double.parseDouble(upperTerm)));
+			} else if (type.equalsIgnoreCase("float")) {
+				return FloatPoint.newRangeQuery(field,
+					(lowerTerm == null ? Float.NEGATIVE_INFINITY : Float.parseFloat(lowerTerm)),
+					(upperTerm == null ? Float.POSITIVE_INFINITY : Float.parseFloat(upperTerm)));
+			} else {
+				throw new ParserException("type attribute must be one of: [long, int, double, float]");
+			}
+		} catch (NumberFormatException nfe) {
+			throw new ParserException("Could not parse lowerTerm or upperTerm into a number", nfe);
+		}
+	}
 }

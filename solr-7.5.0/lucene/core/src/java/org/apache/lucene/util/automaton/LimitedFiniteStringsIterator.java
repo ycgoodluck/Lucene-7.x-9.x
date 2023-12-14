@@ -33,51 +33,51 @@ import org.apache.lucene.util.IntsRef;
  * @lucene.experimental
  */
 public class LimitedFiniteStringsIterator extends FiniteStringsIterator {
-  /**
-   * Maximum number of finite strings to create.
-   */
-  private int limit = Integer.MAX_VALUE;
+	/**
+	 * Maximum number of finite strings to create.
+	 */
+	private int limit = Integer.MAX_VALUE;
 
-  /**
-   * Number of generated finite strings.
-   */
-  private int count = 0;
+	/**
+	 * Number of generated finite strings.
+	 */
+	private int count = 0;
 
-  /**
-   * Constructor.
-   *
-   * @param a Automaton to create finite string from.
-   * @param limit Maximum number of finite strings to create, or -1 for infinite.
-   */
-  public LimitedFiniteStringsIterator(Automaton a, int limit) {
-    super(a);
+	/**
+	 * Constructor.
+	 *
+	 * @param a     Automaton to create finite string from.
+	 * @param limit Maximum number of finite strings to create, or -1 for infinite.
+	 */
+	public LimitedFiniteStringsIterator(Automaton a, int limit) {
+		super(a);
 
-    if (limit != -1 && limit <= 0) {
-      throw new IllegalArgumentException("limit must be -1 (which means no limit), or > 0; got: " + limit);
-    }
+		if (limit != -1 && limit <= 0) {
+			throw new IllegalArgumentException("limit must be -1 (which means no limit), or > 0; got: " + limit);
+		}
 
-    this.limit = limit > 0? limit : Integer.MAX_VALUE;
-  }
+		this.limit = limit > 0 ? limit : Integer.MAX_VALUE;
+	}
 
-  @Override
-  public IntsRef next() {
-    if (count >= limit) {
-      // Abort on limit.
-      return null;
-    }
+	@Override
+	public IntsRef next() {
+		if (count >= limit) {
+			// Abort on limit.
+			return null;
+		}
 
-    IntsRef result = super.next();
-    if (result != null) {
-      count++;
-    }
+		IntsRef result = super.next();
+		if (result != null) {
+			count++;
+		}
 
-    return result;
-  }
+		return result;
+	}
 
-  /**
-   * Number of iterated finite strings.
-   */
-  public int size() {
-    return count;
-  }
+	/**
+	 * Number of iterated finite strings.
+	 */
+	public int size() {
+		return count;
+	}
 }

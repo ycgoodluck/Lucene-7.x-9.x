@@ -57,319 +57,320 @@ import org.apache.lucene.util.IOUtils;
 
 public class BlockTermsWriter extends FieldsConsumer implements Closeable {
 
-  final static String CODEC_NAME = "BlockTermsWriter";
+	final static String CODEC_NAME = "BlockTermsWriter";
 
-  // Initial format
-  public static final int VERSION_START = 4;
-  public static final int VERSION_CURRENT = VERSION_START;
+	// Initial format
+	public static final int VERSION_START = 4;
+	public static final int VERSION_CURRENT = VERSION_START;
 
-  /** Extension of terms file */
-  static final String TERMS_EXTENSION = "tib";
+	/**
+	 * Extension of terms file
+	 */
+	static final String TERMS_EXTENSION = "tib";
 
-  protected IndexOutput out;
-  final PostingsWriterBase postingsWriter;
-  final FieldInfos fieldInfos;
-  FieldInfo currentField;
-  private final TermsIndexWriterBase termsIndexWriter;
-  private final int maxDoc;
+	protected IndexOutput out;
+	final PostingsWriterBase postingsWriter;
+	final FieldInfos fieldInfos;
+	FieldInfo currentField;
+	private final TermsIndexWriterBase termsIndexWriter;
+	private final int maxDoc;
 
-  private static class FieldMetaData {
-    public final FieldInfo fieldInfo;
-    public final long numTerms;
-    public final long termsStartPointer;
-    public final long sumTotalTermFreq;
-    public final long sumDocFreq;
-    public final int docCount;
-    public final int longsSize;
+	private static class FieldMetaData {
+		public final FieldInfo fieldInfo;
+		public final long numTerms;
+		public final long termsStartPointer;
+		public final long sumTotalTermFreq;
+		public final long sumDocFreq;
+		public final int docCount;
+		public final int longsSize;
 
-    public FieldMetaData(FieldInfo fieldInfo, long numTerms, long termsStartPointer, long sumTotalTermFreq, long sumDocFreq, int docCount, int longsSize) {
-      assert numTerms > 0;
-      this.fieldInfo = fieldInfo;
-      this.termsStartPointer = termsStartPointer;
-      this.numTerms = numTerms;
-      this.sumTotalTermFreq = sumTotalTermFreq;
-      this.sumDocFreq = sumDocFreq;
-      this.docCount = docCount;
-      this.longsSize = longsSize;
-    }
-  }
+		public FieldMetaData(FieldInfo fieldInfo, long numTerms, long termsStartPointer, long sumTotalTermFreq, long sumDocFreq, int docCount, int longsSize) {
+			assert numTerms > 0;
+			this.fieldInfo = fieldInfo;
+			this.termsStartPointer = termsStartPointer;
+			this.numTerms = numTerms;
+			this.sumTotalTermFreq = sumTotalTermFreq;
+			this.sumDocFreq = sumDocFreq;
+			this.docCount = docCount;
+			this.longsSize = longsSize;
+		}
+	}
 
-  private final List<FieldMetaData> fields = new ArrayList<>();
+	private final List<FieldMetaData> fields = new ArrayList<>();
 
-  // private final String segment;
+	// private final String segment;
 
-  public BlockTermsWriter(TermsIndexWriterBase termsIndexWriter,
-      SegmentWriteState state, PostingsWriterBase postingsWriter)
-      throws IOException {
-    final String termsFileName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, TERMS_EXTENSION);
-    this.termsIndexWriter = termsIndexWriter;
-    maxDoc = state.segmentInfo.maxDoc();
-    out = state.directory.createOutput(termsFileName, state.context);
-    boolean success = false;
-    try {
-      fieldInfos = state.fieldInfos;
-      CodecUtil.writeIndexHeader(out, CODEC_NAME, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
-      currentField = null;
-      this.postingsWriter = postingsWriter;
-      // segment = state.segmentName;
-      
-      //System.out.println("BTW.init seg=" + state.segmentName);
-      
-      postingsWriter.init(out, state); // have consumer write its format/header
-      success = true;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(out);
-      }
-    }
-  }
+	public BlockTermsWriter(TermsIndexWriterBase termsIndexWriter,
+													SegmentWriteState state, PostingsWriterBase postingsWriter)
+		throws IOException {
+		final String termsFileName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, TERMS_EXTENSION);
+		this.termsIndexWriter = termsIndexWriter;
+		maxDoc = state.segmentInfo.maxDoc();
+		out = state.directory.createOutput(termsFileName, state.context);
+		boolean success = false;
+		try {
+			fieldInfos = state.fieldInfos;
+			CodecUtil.writeIndexHeader(out, CODEC_NAME, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
+			currentField = null;
+			this.postingsWriter = postingsWriter;
+			// segment = state.segmentName;
 
-  @Override
-  public void write(Fields fields) throws IOException {
+			//System.out.println("BTW.init seg=" + state.segmentName);
 
-    for(String field : fields) {
+			postingsWriter.init(out, state); // have consumer write its format/header
+			success = true;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(out);
+			}
+		}
+	}
 
-      Terms terms = fields.terms(field);
-      if (terms == null) {
-        continue;
-      }
+	@Override
+	public void write(Fields fields) throws IOException {
 
-      TermsEnum termsEnum = terms.iterator();
+		for (String field : fields) {
 
-      TermsWriter termsWriter = addField(fieldInfos.fieldInfo(field));
+			Terms terms = fields.terms(field);
+			if (terms == null) {
+				continue;
+			}
 
-      while (true) {
-        BytesRef term = termsEnum.next();
-        if (term == null) {
-          break;
-        }
+			TermsEnum termsEnum = terms.iterator();
 
-        termsWriter.write(term, termsEnum);
-      }
+			TermsWriter termsWriter = addField(fieldInfos.fieldInfo(field));
 
-      termsWriter.finish();
-    }
-  }
+			while (true) {
+				BytesRef term = termsEnum.next();
+				if (term == null) {
+					break;
+				}
 
-  private TermsWriter addField(FieldInfo field) throws IOException {
-    //System.out.println("\nBTW.addField seg=" + segment + " field=" + field.name);
-    assert currentField == null || currentField.name.compareTo(field.name) < 0;
-    currentField = field;
-    TermsIndexWriterBase.FieldWriter fieldIndexWriter = termsIndexWriter.addField(field, out.getFilePointer());
-    return new TermsWriter(fieldIndexWriter, field, postingsWriter);
-  }
+				termsWriter.write(term, termsEnum);
+			}
 
-  @Override
-  public void close() throws IOException {
-    if (out != null) {
-      try {
-        final long dirStart = out.getFilePointer();
-        
-        out.writeVInt(fields.size());
-        for(FieldMetaData field : fields) {
-          out.writeVInt(field.fieldInfo.number);
-          out.writeVLong(field.numTerms);
-          out.writeVLong(field.termsStartPointer);
-          if (field.fieldInfo.getIndexOptions() != IndexOptions.DOCS) {
-            out.writeVLong(field.sumTotalTermFreq);
-          }
-          out.writeVLong(field.sumDocFreq);
-          out.writeVInt(field.docCount);
-          out.writeVInt(field.longsSize);
-        }
-        writeTrailer(dirStart);
-        CodecUtil.writeFooter(out);
-      } finally {
-        IOUtils.close(out, postingsWriter, termsIndexWriter);
-        out = null;
-      }
-    }
-  }
+			termsWriter.finish();
+		}
+	}
 
-  private void writeTrailer(long dirStart) throws IOException {
-    out.writeLong(dirStart);    
-  }
-  
-  private static class TermEntry {
-    public final BytesRefBuilder term = new BytesRefBuilder();
-    public BlockTermState state;
-  }
+	private TermsWriter addField(FieldInfo field) throws IOException {
+		//System.out.println("\nBTW.addField seg=" + segment + " field=" + field.name);
+		assert currentField == null || currentField.name.compareTo(field.name) < 0;
+		currentField = field;
+		TermsIndexWriterBase.FieldWriter fieldIndexWriter = termsIndexWriter.addField(field, out.getFilePointer());
+		return new TermsWriter(fieldIndexWriter, field, postingsWriter);
+	}
 
-  class TermsWriter {
-    private final FieldInfo fieldInfo;
-    private final PostingsWriterBase postingsWriter;
-    private final long termsStartPointer;
-    private long numTerms;
-    private final TermsIndexWriterBase.FieldWriter fieldIndexWriter;
-    private final FixedBitSet docsSeen;
-    long sumTotalTermFreq;
-    long sumDocFreq;
-    int docCount;
-    int longsSize;
+	@Override
+	public void close() throws IOException {
+		if (out != null) {
+			try {
+				final long dirStart = out.getFilePointer();
 
-    private TermEntry[] pendingTerms;
+				out.writeVInt(fields.size());
+				for (FieldMetaData field : fields) {
+					out.writeVInt(field.fieldInfo.number);
+					out.writeVLong(field.numTerms);
+					out.writeVLong(field.termsStartPointer);
+					if (field.fieldInfo.getIndexOptions() != IndexOptions.DOCS) {
+						out.writeVLong(field.sumTotalTermFreq);
+					}
+					out.writeVLong(field.sumDocFreq);
+					out.writeVInt(field.docCount);
+					out.writeVInt(field.longsSize);
+				}
+				writeTrailer(dirStart);
+				CodecUtil.writeFooter(out);
+			} finally {
+				IOUtils.close(out, postingsWriter, termsIndexWriter);
+				out = null;
+			}
+		}
+	}
 
-    private int pendingCount;
+	private void writeTrailer(long dirStart) throws IOException {
+		out.writeLong(dirStart);
+	}
 
-    TermsWriter(
-        TermsIndexWriterBase.FieldWriter fieldIndexWriter,
-        FieldInfo fieldInfo,
-        PostingsWriterBase postingsWriter) 
-    {
-      this.fieldInfo = fieldInfo;
-      this.fieldIndexWriter = fieldIndexWriter;
-      this.docsSeen = new FixedBitSet(maxDoc);
-      pendingTerms = new TermEntry[32];
-      for(int i=0;i<pendingTerms.length;i++) {
-        pendingTerms[i] = new TermEntry();
-      }
-      termsStartPointer = out.getFilePointer();
-      this.postingsWriter = postingsWriter;
-      this.longsSize = postingsWriter.setField(fieldInfo);
-    }
-    
-    private final BytesRefBuilder lastPrevTerm = new BytesRefBuilder();
+	private static class TermEntry {
+		public final BytesRefBuilder term = new BytesRefBuilder();
+		public BlockTermState state;
+	}
 
-    void write(BytesRef text, TermsEnum termsEnum) throws IOException {
+	class TermsWriter {
+		private final FieldInfo fieldInfo;
+		private final PostingsWriterBase postingsWriter;
+		private final long termsStartPointer;
+		private long numTerms;
+		private final TermsIndexWriterBase.FieldWriter fieldIndexWriter;
+		private final FixedBitSet docsSeen;
+		long sumTotalTermFreq;
+		long sumDocFreq;
+		int docCount;
+		int longsSize;
 
-      BlockTermState state = postingsWriter.writeTerm(text, termsEnum, docsSeen);
-      if (state == null) {
-        // No docs for this term:
-        return;
-      }
-      sumDocFreq += state.docFreq;
-      sumTotalTermFreq += state.totalTermFreq;
+		private TermEntry[] pendingTerms;
 
-      assert state.docFreq > 0;
-      //System.out.println("BTW: finishTerm term=" + fieldInfo.name + ":" + text.utf8ToString() + " " + text + " seg=" + segment + " df=" + stats.docFreq);
+		private int pendingCount;
 
-      TermStats stats = new TermStats(state.docFreq, state.totalTermFreq);
-      final boolean isIndexTerm = fieldIndexWriter.checkIndexTerm(text, stats);
+		TermsWriter(
+			TermsIndexWriterBase.FieldWriter fieldIndexWriter,
+			FieldInfo fieldInfo,
+			PostingsWriterBase postingsWriter) {
+			this.fieldInfo = fieldInfo;
+			this.fieldIndexWriter = fieldIndexWriter;
+			this.docsSeen = new FixedBitSet(maxDoc);
+			pendingTerms = new TermEntry[32];
+			for (int i = 0; i < pendingTerms.length; i++) {
+				pendingTerms[i] = new TermEntry();
+			}
+			termsStartPointer = out.getFilePointer();
+			this.postingsWriter = postingsWriter;
+			this.longsSize = postingsWriter.setField(fieldInfo);
+		}
 
-      if (isIndexTerm) {
-        if (pendingCount > 0) {
-          // Instead of writing each term, live, we gather terms
-          // in RAM in a pending buffer, and then write the
-          // entire block in between index terms:
-          flushBlock();
-        }
-        fieldIndexWriter.add(text, stats, out.getFilePointer());
-        //System.out.println("  index term!");
-      }
+		private final BytesRefBuilder lastPrevTerm = new BytesRefBuilder();
 
-      pendingTerms = ArrayUtil.grow(pendingTerms, pendingCount + 1);
-      for (int i = pendingCount; i < pendingTerms.length; i++) {
-        pendingTerms[i] = new TermEntry();
-      }
-      final TermEntry te = pendingTerms[pendingCount];
-      te.term.copyBytes(text);
-      te.state = state;
+		void write(BytesRef text, TermsEnum termsEnum) throws IOException {
 
-      pendingCount++;
-      numTerms++;
-    }
+			BlockTermState state = postingsWriter.writeTerm(text, termsEnum, docsSeen);
+			if (state == null) {
+				// No docs for this term:
+				return;
+			}
+			sumDocFreq += state.docFreq;
+			sumTotalTermFreq += state.totalTermFreq;
 
-    // Finishes all terms in this field
-    void finish() throws IOException {
-      if (pendingCount > 0) {
-        flushBlock();
-      }
-      // EOF marker:
-      out.writeVInt(0);
+			assert state.docFreq > 0;
+			//System.out.println("BTW: finishTerm term=" + fieldInfo.name + ":" + text.utf8ToString() + " " + text + " seg=" + segment + " df=" + stats.docFreq);
 
-      fieldIndexWriter.finish(out.getFilePointer());
-      if (numTerms > 0) {
-        fields.add(new FieldMetaData(fieldInfo,
-                                     numTerms,
-                                     termsStartPointer,
-                                     fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0 ? sumTotalTermFreq : -1,
-                                     sumDocFreq,
-                                     docsSeen.cardinality(),
-                                     longsSize));
-      }
-    }
+			TermStats stats = new TermStats(state.docFreq, state.totalTermFreq);
+			final boolean isIndexTerm = fieldIndexWriter.checkIndexTerm(text, stats);
 
-    private int sharedPrefix(BytesRef term1, BytesRef term2) {
-      assert term1.offset == 0;
-      assert term2.offset == 0;
-      int pos1 = 0;
-      int pos1End = pos1 + Math.min(term1.length, term2.length);
-      int pos2 = 0;
-      while(pos1 < pos1End) {
-        if (term1.bytes[pos1] != term2.bytes[pos2]) {
-          return pos1;
-        }
-        pos1++;
-        pos2++;
-      }
-      return pos1;
-    }
+			if (isIndexTerm) {
+				if (pendingCount > 0) {
+					// Instead of writing each term, live, we gather terms
+					// in RAM in a pending buffer, and then write the
+					// entire block in between index terms:
+					flushBlock();
+				}
+				fieldIndexWriter.add(text, stats, out.getFilePointer());
+				//System.out.println("  index term!");
+			}
 
-    private final RAMOutputStream bytesWriter = new RAMOutputStream();
-    private final RAMOutputStream bufferWriter = new RAMOutputStream();
+			pendingTerms = ArrayUtil.grow(pendingTerms, pendingCount + 1);
+			for (int i = pendingCount; i < pendingTerms.length; i++) {
+				pendingTerms[i] = new TermEntry();
+			}
+			final TermEntry te = pendingTerms[pendingCount];
+			te.term.copyBytes(text);
+			te.state = state;
 
-    private void flushBlock() throws IOException {
-      //System.out.println("BTW.flushBlock seg=" + segment + " pendingCount=" + pendingCount + " fp=" + out.getFilePointer());
+			pendingCount++;
+			numTerms++;
+		}
 
-      // First pass: compute common prefix for all terms
-      // in the block, against term before first term in
-      // this block:
-      int commonPrefix = sharedPrefix(lastPrevTerm.get(), pendingTerms[0].term.get());
-      for(int termCount=1;termCount<pendingCount;termCount++) {
-        commonPrefix = Math.min(commonPrefix,
-                                sharedPrefix(lastPrevTerm.get(),
-                                             pendingTerms[termCount].term.get()));
-      }        
+		// Finishes all terms in this field
+		void finish() throws IOException {
+			if (pendingCount > 0) {
+				flushBlock();
+			}
+			// EOF marker:
+			out.writeVInt(0);
 
-      out.writeVInt(pendingCount);
-      out.writeVInt(commonPrefix);
+			fieldIndexWriter.finish(out.getFilePointer());
+			if (numTerms > 0) {
+				fields.add(new FieldMetaData(fieldInfo,
+					numTerms,
+					termsStartPointer,
+					fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0 ? sumTotalTermFreq : -1,
+					sumDocFreq,
+					docsSeen.cardinality(),
+					longsSize));
+			}
+		}
 
-      // 2nd pass: write suffixes, as separate byte[] blob
-      for(int termCount=0;termCount<pendingCount;termCount++) {
-        final int suffix = pendingTerms[termCount].term.length() - commonPrefix;
-        // TODO: cutover to better intblock codec, instead
-        // of interleaving here:
-        bytesWriter.writeVInt(suffix);
-        bytesWriter.writeBytes(pendingTerms[termCount].term.bytes(), commonPrefix, suffix);
-      }
-      out.writeVInt((int) bytesWriter.getFilePointer());
-      bytesWriter.writeTo(out);
-      bytesWriter.reset();
+		private int sharedPrefix(BytesRef term1, BytesRef term2) {
+			assert term1.offset == 0;
+			assert term2.offset == 0;
+			int pos1 = 0;
+			int pos1End = pos1 + Math.min(term1.length, term2.length);
+			int pos2 = 0;
+			while (pos1 < pos1End) {
+				if (term1.bytes[pos1] != term2.bytes[pos2]) {
+					return pos1;
+				}
+				pos1++;
+				pos2++;
+			}
+			return pos1;
+		}
 
-      // 3rd pass: write the freqs as byte[] blob
-      // TODO: cutover to better intblock codec.  simple64?
-      // write prefix, suffix first:
-      for(int termCount=0;termCount<pendingCount;termCount++) {
-        final BlockTermState state = pendingTerms[termCount].state;
-        assert state != null;
-        bytesWriter.writeVInt(state.docFreq);
-        if (fieldInfo.getIndexOptions() != IndexOptions.DOCS) {
-          bytesWriter.writeVLong(state.totalTermFreq-state.docFreq);
-        }
-      }
-      out.writeVInt((int) bytesWriter.getFilePointer());
-      bytesWriter.writeTo(out);
-      bytesWriter.reset();
+		private final RAMOutputStream bytesWriter = new RAMOutputStream();
+		private final RAMOutputStream bufferWriter = new RAMOutputStream();
 
-      // 4th pass: write the metadata 
-      long[] longs = new long[longsSize];
-      boolean absolute = true;
-      for(int termCount=0;termCount<pendingCount;termCount++) {
-        final BlockTermState state = pendingTerms[termCount].state;
-        postingsWriter.encodeTerm(longs, bufferWriter, fieldInfo, state, absolute);
-        for (int i = 0; i < longsSize; i++) {
-          bytesWriter.writeVLong(longs[i]);
-        }
-        bufferWriter.writeTo(bytesWriter);
-        bufferWriter.reset();
-        absolute = false;
-      }
-      out.writeVInt((int) bytesWriter.getFilePointer());
-      bytesWriter.writeTo(out);
-      bytesWriter.reset();
+		private void flushBlock() throws IOException {
+			//System.out.println("BTW.flushBlock seg=" + segment + " pendingCount=" + pendingCount + " fp=" + out.getFilePointer());
 
-      lastPrevTerm.copyBytes(pendingTerms[pendingCount-1].term);
-      pendingCount = 0;
-    }
-  }
+			// First pass: compute common prefix for all terms
+			// in the block, against term before first term in
+			// this block:
+			int commonPrefix = sharedPrefix(lastPrevTerm.get(), pendingTerms[0].term.get());
+			for (int termCount = 1; termCount < pendingCount; termCount++) {
+				commonPrefix = Math.min(commonPrefix,
+					sharedPrefix(lastPrevTerm.get(),
+						pendingTerms[termCount].term.get()));
+			}
+
+			out.writeVInt(pendingCount);
+			out.writeVInt(commonPrefix);
+
+			// 2nd pass: write suffixes, as separate byte[] blob
+			for (int termCount = 0; termCount < pendingCount; termCount++) {
+				final int suffix = pendingTerms[termCount].term.length() - commonPrefix;
+				// TODO: cutover to better intblock codec, instead
+				// of interleaving here:
+				bytesWriter.writeVInt(suffix);
+				bytesWriter.writeBytes(pendingTerms[termCount].term.bytes(), commonPrefix, suffix);
+			}
+			out.writeVInt((int) bytesWriter.getFilePointer());
+			bytesWriter.writeTo(out);
+			bytesWriter.reset();
+
+			// 3rd pass: write the freqs as byte[] blob
+			// TODO: cutover to better intblock codec.  simple64?
+			// write prefix, suffix first:
+			for (int termCount = 0; termCount < pendingCount; termCount++) {
+				final BlockTermState state = pendingTerms[termCount].state;
+				assert state != null;
+				bytesWriter.writeVInt(state.docFreq);
+				if (fieldInfo.getIndexOptions() != IndexOptions.DOCS) {
+					bytesWriter.writeVLong(state.totalTermFreq - state.docFreq);
+				}
+			}
+			out.writeVInt((int) bytesWriter.getFilePointer());
+			bytesWriter.writeTo(out);
+			bytesWriter.reset();
+
+			// 4th pass: write the metadata
+			long[] longs = new long[longsSize];
+			boolean absolute = true;
+			for (int termCount = 0; termCount < pendingCount; termCount++) {
+				final BlockTermState state = pendingTerms[termCount].state;
+				postingsWriter.encodeTerm(longs, bufferWriter, fieldInfo, state, absolute);
+				for (int i = 0; i < longsSize; i++) {
+					bytesWriter.writeVLong(longs[i]);
+				}
+				bufferWriter.writeTo(bytesWriter);
+				bufferWriter.reset();
+				absolute = false;
+			}
+			out.writeVInt((int) bytesWriter.getFilePointer());
+			bytesWriter.writeTo(out);
+			bytesWriter.reset();
+
+			lastPrevTerm.copyBytes(pendingTerms[pendingCount - 1].term);
+			pendingCount = 0;
+		}
+	}
 }

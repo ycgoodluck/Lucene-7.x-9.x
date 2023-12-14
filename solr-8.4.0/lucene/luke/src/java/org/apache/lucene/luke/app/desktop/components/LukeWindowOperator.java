@@ -19,7 +19,9 @@ package org.apache.lucene.luke.app.desktop.components;
 
 import org.apache.lucene.luke.app.desktop.Preferences;
 
-/** Operator for the root window */
+/**
+ * Operator for the root window
+ */
 public interface LukeWindowOperator extends ComponentOperatorRegistry.ComponentOperator {
-  void setColorTheme(Preferences.ColorTheme theme);
+	void setColorTheme(Preferences.ColorTheme theme);
 }

@@ -28,68 +28,68 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestEarlyTermination extends LuceneTestCase {
 
-  Directory dir;
-  RandomIndexWriter writer;
+	Directory dir;
+	RandomIndexWriter writer;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    dir = newDirectory();
-    writer = new RandomIndexWriter(random(), dir);
-    final int numDocs = atLeast(100);
-    for (int i = 0; i < numDocs; i++) {
-      writer.addDocument(new Document());
-      if (rarely()) {
-        writer.commit();
-      }
-    }
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		dir = newDirectory();
+		writer = new RandomIndexWriter(random(), dir);
+		final int numDocs = atLeast(100);
+		for (int i = 0; i < numDocs; i++) {
+			writer.addDocument(new Document());
+			if (rarely()) {
+				writer.commit();
+			}
+		}
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    super.tearDown();
-    writer.close();
-    dir.close();
-  }
+	@Override
+	public void tearDown() throws Exception {
+		super.tearDown();
+		writer.close();
+		dir.close();
+	}
 
-  public void testEarlyTermination() throws IOException {
-    final int iters = atLeast(5);
-    final IndexReader reader = writer.getReader();
+	public void testEarlyTermination() throws IOException {
+		final int iters = atLeast(5);
+		final IndexReader reader = writer.getReader();
 
-    for (int i = 0; i < iters; ++i) {
-      final IndexSearcher searcher = newSearcher(reader);
-      final Collector collector = new SimpleCollector() {
+		for (int i = 0; i < iters; ++i) {
+			final IndexSearcher searcher = newSearcher(reader);
+			final Collector collector = new SimpleCollector() {
 
-        boolean collectionTerminated = true;
+				boolean collectionTerminated = true;
 
-        @Override
-        public void collect(int doc) throws IOException {
-          assertFalse(collectionTerminated);
-          if (rarely()) {
-            collectionTerminated = true;
-            throw new CollectionTerminatedException();
-          }
-        }
+				@Override
+				public void collect(int doc) throws IOException {
+					assertFalse(collectionTerminated);
+					if (rarely()) {
+						collectionTerminated = true;
+						throw new CollectionTerminatedException();
+					}
+				}
 
-        @Override
-        protected void doSetNextReader(LeafReaderContext context) throws IOException {
-          if (random().nextBoolean()) {
-            collectionTerminated = true;
-            throw new CollectionTerminatedException();
-          } else {
-            collectionTerminated = false;
-          }
-        }
-        
-        @Override
-        public ScoreMode scoreMode() {
-          return ScoreMode.COMPLETE_NO_SCORES;
-        }
-      };
+				@Override
+				protected void doSetNextReader(LeafReaderContext context) throws IOException {
+					if (random().nextBoolean()) {
+						collectionTerminated = true;
+						throw new CollectionTerminatedException();
+					} else {
+						collectionTerminated = false;
+					}
+				}
 
-      searcher.search(new MatchAllDocsQuery(), collector);
-    }
-    reader.close();
-  }
+				@Override
+				public ScoreMode scoreMode() {
+					return ScoreMode.COMPLETE_NO_SCORES;
+				}
+			};
+
+			searcher.search(new MatchAllDocsQuery(), collector);
+		}
+		reader.close();
+	}
 
 }

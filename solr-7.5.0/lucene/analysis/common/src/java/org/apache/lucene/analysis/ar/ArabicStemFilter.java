@@ -32,27 +32,29 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  * {@link SetKeywordMarkerFilter} or a custom {@link TokenFilter} that sets
  * the {@link KeywordAttribute} before this {@link TokenStream}.
  * </p>
- * @see SetKeywordMarkerFilter */
+ *
+ * @see SetKeywordMarkerFilter
+ */
 
 public final class ArabicStemFilter extends TokenFilter {
-  private final ArabicStemmer stemmer = new ArabicStemmer();
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
-  
-  public ArabicStemFilter(TokenStream input) {
-    super(input);
-  }
+	private final ArabicStemmer stemmer = new ArabicStemmer();
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if(!keywordAttr.isKeyword()) {
-        final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
-        termAtt.setLength(newlen);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	public ArabicStemFilter(TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
+				termAtt.setLength(newlen);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

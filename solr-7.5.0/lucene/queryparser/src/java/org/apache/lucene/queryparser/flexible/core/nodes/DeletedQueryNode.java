@@ -27,26 +27,26 @@ import org.apache.lucene.queryparser.flexible.core.processors.RemoveDeletedQuery
  */
 public class DeletedQueryNode extends QueryNodeImpl {
 
-  public DeletedQueryNode() {
-    // empty constructor
-  }
+	public DeletedQueryNode() {
+		// empty constructor
+	}
 
-  @Override
-  public CharSequence toQueryString(EscapeQuerySyntax escaper) {
-    return "[DELETEDCHILD]";
-  }
+	@Override
+	public CharSequence toQueryString(EscapeQuerySyntax escaper) {
+		return "[DELETEDCHILD]";
+	}
 
-  @Override
-  public String toString() {
-    return "<deleted/>";
-  }
+	@Override
+	public String toString() {
+		return "<deleted/>";
+	}
 
-  @Override
-  public QueryNode cloneTree() throws CloneNotSupportedException {
-    DeletedQueryNode clone = (DeletedQueryNode) super.cloneTree();
+	@Override
+	public QueryNode cloneTree() throws CloneNotSupportedException {
+		DeletedQueryNode clone = (DeletedQueryNode) super.cloneTree();
 
-    return clone;
+		return clone;
 
-  }
+	}
 
 }

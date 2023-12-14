@@ -39,101 +39,102 @@ import org.apache.lucene.util.TestUtil;
  * Tests the maxTermFrequency statistic in FieldInvertState
  */
 public class TestMaxTermFrequency extends LuceneTestCase {
-  Directory dir;
-  IndexReader reader;
-  /* expected maxTermFrequency values for our documents */
-  ArrayList<Integer> expected = new ArrayList<>();
+	Directory dir;
+	IndexReader reader;
+	/* expected maxTermFrequency values for our documents */
+	ArrayList<Integer> expected = new ArrayList<>();
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    dir = newDirectory();
-    IndexWriterConfig config = newIndexWriterConfig(new MockAnalyzer(random(), MockTokenizer.SIMPLE, true))
-                                 .setMergePolicy(newLogMergePolicy());
-    config.setSimilarity(new TestSimilarity());
-    RandomIndexWriter writer = new RandomIndexWriter(random(), dir, config);
-    Document doc = new Document();
-    Field foo = newTextField("foo", "", Field.Store.NO);
-    doc.add(foo);
-    for (int i = 0; i < 100; i++) {
-      foo.setStringValue(addValue());
-      writer.addDocument(doc);
-    }
-    reader = writer.getReader();
-    writer.close();
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		dir = newDirectory();
+		IndexWriterConfig config = newIndexWriterConfig(new MockAnalyzer(random(), MockTokenizer.SIMPLE, true))
+			.setMergePolicy(newLogMergePolicy());
+		config.setSimilarity(new TestSimilarity());
+		RandomIndexWriter writer = new RandomIndexWriter(random(), dir, config);
+		Document doc = new Document();
+		Field foo = newTextField("foo", "", Field.Store.NO);
+		doc.add(foo);
+		for (int i = 0; i < 100; i++) {
+			foo.setStringValue(addValue());
+			writer.addDocument(doc);
+		}
+		reader = writer.getReader();
+		writer.close();
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    reader.close();
-    dir.close();
-    super.tearDown();
-  }
+	@Override
+	public void tearDown() throws Exception {
+		reader.close();
+		dir.close();
+		super.tearDown();
+	}
 
-  public void test() throws Exception {
-    NumericDocValues fooNorms = MultiDocValues.getNormValues(reader, "foo");
-    for (int i = 0; i < reader.maxDoc(); i++) {
-      assertEquals(i, fooNorms.nextDoc());
-      assertEquals(expected.get(i).intValue(), fooNorms.longValue() & 0xff);
-    }
-  }
+	public void test() throws Exception {
+		NumericDocValues fooNorms = MultiDocValues.getNormValues(reader, "foo");
+		for (int i = 0; i < reader.maxDoc(); i++) {
+			assertEquals(i, fooNorms.nextDoc());
+			assertEquals(expected.get(i).intValue(), fooNorms.longValue() & 0xff);
+		}
+	}
 
-  /**
-   * Makes a bunch of single-char tokens (the max freq will at most be 255).
-   * shuffles them around, and returns the whole list with Arrays.toString().
-   * This works fine because we use lettertokenizer.
-   * puts the max-frequency term into expected, to be checked against the norm.
-   */
-  private String addValue() {
-    List<String> terms = new ArrayList<>();
-    int maxCeiling = TestUtil.nextInt(random(), 0, 255);
-    int max = 0;
-    for (char ch = 'a'; ch <= 'z'; ch++) {
-      int num = TestUtil.nextInt(random(), 0, maxCeiling);
-      for (int i = 0; i < num; i++)
-        terms.add(Character.toString(ch));
-      max = Math.max(max, num);
-    }
-    expected.add(max);
-    Collections.shuffle(terms, random());
-    return Arrays.toString(terms.toArray(new String[terms.size()]));
-  }
+	/**
+	 * Makes a bunch of single-char tokens (the max freq will at most be 255).
+	 * shuffles them around, and returns the whole list with Arrays.toString().
+	 * This works fine because we use lettertokenizer.
+	 * puts the max-frequency term into expected, to be checked against the norm.
+	 */
+	private String addValue() {
+		List<String> terms = new ArrayList<>();
+		int maxCeiling = TestUtil.nextInt(random(), 0, 255);
+		int max = 0;
+		for (char ch = 'a'; ch <= 'z'; ch++) {
+			int num = TestUtil.nextInt(random(), 0, maxCeiling);
+			for (int i = 0; i < num; i++)
+				terms.add(Character.toString(ch));
+			max = Math.max(max, num);
+		}
+		expected.add(max);
+		Collections.shuffle(terms, random());
+		return Arrays.toString(terms.toArray(new String[terms.size()]));
+	}
 
-  /**
-   * Simple similarity that encodes maxTermFrequency directly as a byte
-   */
-  static class TestSimilarity extends Similarity {
+	/**
+	 * Simple similarity that encodes maxTermFrequency directly as a byte
+	 */
+	static class TestSimilarity extends Similarity {
 
-    @Override
-    public long computeNorm(FieldInvertState state) {
-      return state.getMaxTermFrequency();
-    }
+		@Override
+		public long computeNorm(FieldInvertState state) {
+			return state.getMaxTermFrequency();
+		}
 
-    @Override
-    public SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-      return new SimWeight() {};
-    }
+		@Override
+		public SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+			return new SimWeight() {
+			};
+		}
 
-    @Override
-    public SimScorer simScorer(SimWeight weight, LeafReaderContext context) throws IOException {
-      return new SimScorer() {
+		@Override
+		public SimScorer simScorer(SimWeight weight, LeafReaderContext context) throws IOException {
+			return new SimScorer() {
 
-        @Override
-        public float score(int doc, float freq) throws IOException {
-          return 0;
-        }
+				@Override
+				public float score(int doc, float freq) throws IOException {
+					return 0;
+				}
 
-        @Override
-        public float computeSlopFactor(int distance) {
-          return 0;
-        }
+				@Override
+				public float computeSlopFactor(int distance) {
+					return 0;
+				}
 
-        @Override
-        public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
-          return 0;
-        }
-      };
-    }
+				@Override
+				public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
+					return 0;
+				}
+			};
+		}
 
-  }
+	}
 }

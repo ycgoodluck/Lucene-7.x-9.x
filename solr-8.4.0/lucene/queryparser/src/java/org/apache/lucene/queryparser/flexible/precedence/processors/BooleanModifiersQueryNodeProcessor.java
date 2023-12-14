@@ -34,101 +34,101 @@ import org.apache.lucene.queryparser.flexible.core.nodes.ModifierQueryNode.Modif
  * </p>
  * <p>
  * It walks through the query node tree looking for {@link BooleanQueryNode}s. If an {@link AndQueryNode} is found,
- * every child, which is not a {@link ModifierQueryNode} or the {@link ModifierQueryNode} 
+ * every child, which is not a {@link ModifierQueryNode} or the {@link ModifierQueryNode}
  * is {@link Modifier#MOD_NONE}, becomes a {@link Modifier#MOD_REQ}. For any other
  * {@link BooleanQueryNode} which is not an {@link OrQueryNode}, it checks the default operator is {@link Operator#AND},
  * if it is, the same operation when an {@link AndQueryNode} is found is applied to it.
  * </p>
- * 
+ *
  * @see ConfigurationKeys#DEFAULT_OPERATOR
  * @see PrecedenceQueryParser#setDefaultOperator
  */
 public class BooleanModifiersQueryNodeProcessor extends QueryNodeProcessorImpl {
 
-  private ArrayList<QueryNode> childrenBuffer = new ArrayList<>();
+	private ArrayList<QueryNode> childrenBuffer = new ArrayList<>();
 
-  private Boolean usingAnd = false;
+	private Boolean usingAnd = false;
 
-  public BooleanModifiersQueryNodeProcessor() {
-    // empty constructor
-  }
+	public BooleanModifiersQueryNodeProcessor() {
+		// empty constructor
+	}
 
-  @Override
-  public QueryNode process(QueryNode queryTree) throws QueryNodeException {
-    Operator op = getQueryConfigHandler().get(ConfigurationKeys.DEFAULT_OPERATOR);
-    
-    if (op == null) {
-      throw new IllegalArgumentException(
-          "StandardQueryConfigHandler.ConfigurationKeys.DEFAULT_OPERATOR should be set on the QueryConfigHandler");
-    }
+	@Override
+	public QueryNode process(QueryNode queryTree) throws QueryNodeException {
+		Operator op = getQueryConfigHandler().get(ConfigurationKeys.DEFAULT_OPERATOR);
 
-    this.usingAnd = StandardQueryConfigHandler.Operator.AND == op;
+		if (op == null) {
+			throw new IllegalArgumentException(
+				"StandardQueryConfigHandler.ConfigurationKeys.DEFAULT_OPERATOR should be set on the QueryConfigHandler");
+		}
 
-    return super.process(queryTree);
+		this.usingAnd = StandardQueryConfigHandler.Operator.AND == op;
 
-  }
+		return super.process(queryTree);
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	}
 
-    if (node instanceof AndQueryNode) {
-      this.childrenBuffer.clear();
-      List<QueryNode> children = node.getChildren();
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-      for (QueryNode child : children) {
-        this.childrenBuffer.add(applyModifier(child, ModifierQueryNode.Modifier.MOD_REQ));
-      }
+		if (node instanceof AndQueryNode) {
+			this.childrenBuffer.clear();
+			List<QueryNode> children = node.getChildren();
 
-      node.set(this.childrenBuffer);
+			for (QueryNode child : children) {
+				this.childrenBuffer.add(applyModifier(child, ModifierQueryNode.Modifier.MOD_REQ));
+			}
 
-    } else if (this.usingAnd && node instanceof BooleanQueryNode
-        && !(node instanceof OrQueryNode)) {
+			node.set(this.childrenBuffer);
 
-      this.childrenBuffer.clear();
-      List<QueryNode> children = node.getChildren();
+		} else if (this.usingAnd && node instanceof BooleanQueryNode
+			&& !(node instanceof OrQueryNode)) {
 
-      for (QueryNode child : children) {
-        this.childrenBuffer.add(applyModifier(child, ModifierQueryNode.Modifier.MOD_REQ));
-      }
+			this.childrenBuffer.clear();
+			List<QueryNode> children = node.getChildren();
 
-      node.set(this.childrenBuffer);
+			for (QueryNode child : children) {
+				this.childrenBuffer.add(applyModifier(child, ModifierQueryNode.Modifier.MOD_REQ));
+			}
 
-    }
+			node.set(this.childrenBuffer);
 
-    return node;
+		}
 
-  }
+		return node;
 
-  private QueryNode applyModifier(QueryNode node, ModifierQueryNode.Modifier mod) {
+	}
 
-    // check if modifier is not already defined and is default
-    if (!(node instanceof ModifierQueryNode)) {
-      return new ModifierQueryNode(node, mod);
+	private QueryNode applyModifier(QueryNode node, ModifierQueryNode.Modifier mod) {
 
-    } else {
-      ModifierQueryNode modNode = (ModifierQueryNode) node;
+		// check if modifier is not already defined and is default
+		if (!(node instanceof ModifierQueryNode)) {
+			return new ModifierQueryNode(node, mod);
 
-      if (modNode.getModifier() == ModifierQueryNode.Modifier.MOD_NONE) {
-        return new ModifierQueryNode(modNode.getChild(), mod);
-      }
+		} else {
+			ModifierQueryNode modNode = (ModifierQueryNode) node;
 
-    }
+			if (modNode.getModifier() == ModifierQueryNode.Modifier.MOD_NONE) {
+				return new ModifierQueryNode(modNode.getChild(), mod);
+			}
 
-    return node;
+		}
 
-  }
+		return node;
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
-    return node;
-  }
+	}
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+		return node;
+	}
 
-    return children;
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
 
-  }
+		return children;
+
+	}
 
 }

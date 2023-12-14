@@ -28,29 +28,30 @@ import com.ibm.icu.text.RawCollationKey;
  * text as a binary Unicode collation key instead of as UTF-8 bytes.
  */
 public class ICUCollatedTermAttributeImpl extends CharTermAttributeImpl {
-  private final Collator collator;
-  private final RawCollationKey key = new RawCollationKey();
+	private final Collator collator;
+	private final RawCollationKey key = new RawCollationKey();
 
-  /**
-   * Create a new ICUCollatedTermAttributeImpl
-   * @param collator Collation key generator
-   */
-  public ICUCollatedTermAttributeImpl(Collator collator) {
-    // clone the collator: see http://userguide.icu-project.org/collation/architecture
-    try {
-      this.collator = (Collator) collator.clone();
-    } catch (CloneNotSupportedException e) {
-      throw new RuntimeException(e);
-    }
-  }
+	/**
+	 * Create a new ICUCollatedTermAttributeImpl
+	 *
+	 * @param collator Collation key generator
+	 */
+	public ICUCollatedTermAttributeImpl(Collator collator) {
+		// clone the collator: see http://userguide.icu-project.org/collation/architecture
+		try {
+			this.collator = (Collator) collator.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-  @Override
-  public BytesRef getBytesRef() {
-    collator.getRawCollationKey(toString(), key);
-    final BytesRef ref = this.builder.get();
-    ref.bytes = key.bytes;
-    ref.offset = 0;
-    ref.length = key.size;
-    return ref;
-  }
+	@Override
+	public BytesRef getBytesRef() {
+		collator.getRawCollationKey(toString(), key);
+		final BytesRef ref = this.builder.get();
+		ref.bytes = key.bytes;
+		ref.offset = 0;
+		ref.length = key.size;
+		return ref;
+	}
 }

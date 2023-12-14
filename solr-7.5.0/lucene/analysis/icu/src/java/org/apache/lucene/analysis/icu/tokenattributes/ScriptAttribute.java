@@ -23,29 +23,37 @@ import com.ibm.icu.lang.UScript; // javadoc @link
 
 /**
  * This attribute stores the UTR #24 script value for a token of text.
+ *
  * @lucene.experimental
  */
 public interface ScriptAttribute extends Attribute {
-  /**
-   * Get the numeric code for this script value.
-   * This is the constant value from {@link UScript}.
-   * @return numeric code
-   */
-  public int getCode();
-  /**
-   * Set the numeric code for this script value.
-   * This is the constant value from {@link UScript}.
-   * @param code numeric code
-   */
-  public void setCode(int code);
-  /**
-   * Get the full name.
-   * @return UTR #24 full name.
-   */
-  public String getName();
-  /**
-   * Get the abbreviated name.
-   * @return UTR #24 abbreviated name.
-   */
-  public String getShortName();
+	/**
+	 * Get the numeric code for this script value.
+	 * This is the constant value from {@link UScript}.
+	 *
+	 * @return numeric code
+	 */
+	public int getCode();
+
+	/**
+	 * Set the numeric code for this script value.
+	 * This is the constant value from {@link UScript}.
+	 *
+	 * @param code numeric code
+	 */
+	public void setCode(int code);
+
+	/**
+	 * Get the full name.
+	 *
+	 * @return UTR #24 full name.
+	 */
+	public String getName();
+
+	/**
+	 * Get the abbreviated name.
+	 *
+	 * @return UTR #24 abbreviated name.
+	 */
+	public String getShortName();
 }

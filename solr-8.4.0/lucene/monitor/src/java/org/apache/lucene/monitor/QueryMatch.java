@@ -33,52 +33,52 @@ import org.apache.lucene.search.ScoreMode;
  */
 public class QueryMatch {
 
-  private final String queryId;
+	private final String queryId;
 
-  public static final MatcherFactory<QueryMatch> SIMPLE_MATCHER =
-      searcher -> new CollectingMatcher<QueryMatch>(searcher, ScoreMode.COMPLETE_NO_SCORES) {
-    @Override
-    public QueryMatch resolve(QueryMatch match1, QueryMatch match2) {
-      return match1;
-    }
+	public static final MatcherFactory<QueryMatch> SIMPLE_MATCHER =
+		searcher -> new CollectingMatcher<QueryMatch>(searcher, ScoreMode.COMPLETE_NO_SCORES) {
+			@Override
+			public QueryMatch resolve(QueryMatch match1, QueryMatch match2) {
+				return match1;
+			}
 
-    @Override
-    protected QueryMatch doMatch(String queryId, int doc, Scorable scorer) {
-      return new QueryMatch(queryId);
-    }
-  };
+			@Override
+			protected QueryMatch doMatch(String queryId, int doc, Scorable scorer) {
+				return new QueryMatch(queryId);
+			}
+		};
 
-  /**
-   * Creates a new QueryMatch for a specific query and document
-   *
-   * @param queryId the query id
-   */
-  public QueryMatch(String queryId) {
-    this.queryId = Objects.requireNonNull(queryId);
-  }
+	/**
+	 * Creates a new QueryMatch for a specific query and document
+	 *
+	 * @param queryId the query id
+	 */
+	public QueryMatch(String queryId) {
+		this.queryId = Objects.requireNonNull(queryId);
+	}
 
-  /**
-   * @return the queryid of this match
-   */
-  public String getQueryId() {
-    return queryId;
-  }
+	/**
+	 * @return the queryid of this match
+	 */
+	public String getQueryId() {
+		return queryId;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof QueryMatch)) return false;
-    QueryMatch that = (QueryMatch) o;
-    return Objects.equals(queryId, that.queryId);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof QueryMatch)) return false;
+		QueryMatch that = (QueryMatch) o;
+		return Objects.equals(queryId, that.queryId);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(queryId);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(queryId);
+	}
 
-  @Override
-  public String toString() {
-    return "Match(query=" + queryId + ")";
-  }
+	@Override
+	public String toString() {
+		return "Match(query=" + queryId + ")";
+	}
 }

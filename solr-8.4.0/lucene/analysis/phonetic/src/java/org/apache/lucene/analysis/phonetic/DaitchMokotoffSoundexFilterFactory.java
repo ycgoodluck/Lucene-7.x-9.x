@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
  * Factory for {@link DaitchMokotoffSoundexFilter}.
- *
+ * <p>
  * Create tokens based on Daitch–Mokotoff Soundex phonetic filter.
  * <p>
  * This takes one optional argument:
@@ -39,34 +39,39 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @see DaitchMokotoffSoundexFilter
- *
  * @lucene.experimental
- * @since 5.0.0
  * @lucene.spi {@value #NAME}
+ * @see DaitchMokotoffSoundexFilter
+ * @since 5.0.0
  */
 public class DaitchMokotoffSoundexFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "daitchMokotoffSoundex";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "daitchMokotoffSoundex";
 
-  /** parameter name: true if encoded tokens should be added as synonyms */
-  public static final String INJECT = "inject"; // boolean
+	/**
+	 * parameter name: true if encoded tokens should be added as synonyms
+	 */
+	public static final String INJECT = "inject"; // boolean
 
-  final boolean inject; //accessed by the test
+	final boolean inject; //accessed by the test
 
-  /** Creates a new PhoneticFilterFactory */
-  public DaitchMokotoffSoundexFilterFactory(Map<String,String> args) {
-    super(args);
-    inject = getBoolean(args, INJECT, true);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new PhoneticFilterFactory
+	 */
+	public DaitchMokotoffSoundexFilterFactory(Map<String, String> args) {
+		super(args);
+		inject = getBoolean(args, INJECT, true);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public DaitchMokotoffSoundexFilter create(TokenStream input) {
-    return new DaitchMokotoffSoundexFilter(input, inject);
-  }
+	@Override
+	public DaitchMokotoffSoundexFilter create(TokenStream input) {
+		return new DaitchMokotoffSoundexFilter(input, inject);
+	}
 
 }

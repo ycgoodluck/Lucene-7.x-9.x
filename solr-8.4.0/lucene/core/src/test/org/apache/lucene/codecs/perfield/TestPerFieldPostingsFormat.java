@@ -29,18 +29,18 @@ import org.apache.lucene.index.RandomCodec;
  */
 public class TestPerFieldPostingsFormat extends BasePostingsFormatTestCase {
 
-  @Override
-  protected Codec getCodec() {
-    return new RandomCodec(new Random(random().nextLong()), Collections.<String>emptySet());
-  }
+	@Override
+	protected Codec getCodec() {
+		return new RandomCodec(new Random(random().nextLong()), Collections.<String>emptySet());
+	}
 
-  @Override
-  public void testMergeStability() throws Exception {
-    assumeTrue("The MockRandom PF randomizes content on the fly, so we can't check it", false);
-  }
+	@Override
+	public void testMergeStability() throws Exception {
+		assumeTrue("The MockRandom PF randomizes content on the fly, so we can't check it", false);
+	}
 
-  @Override
-  public void testPostingsEnumReuse() throws Exception {
-    assumeTrue("The MockRandom PF randomizes content on the fly, so we can't check it", false);
-  }
+	@Override
+	public void testPostingsEnumReuse() throws Exception {
+		assumeTrue("The MockRandom PF randomizes content on the fly, so we can't check it", false);
+	}
 }

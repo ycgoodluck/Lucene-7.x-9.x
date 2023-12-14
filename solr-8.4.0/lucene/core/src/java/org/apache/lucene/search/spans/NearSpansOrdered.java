@@ -38,117 +38,117 @@ import java.util.List;
  * matches twice:
  * <pre>t1 t2 .. t3      </pre>
  * <pre>      t1 .. t2 t3</pre>
- *
+ * <p>
  * Expert:
  * Only public for subclassing.  Most implementations should not need this class
  */
 public class NearSpansOrdered extends ConjunctionSpans {
 
-  protected int matchStart = -1;
-  protected int matchEnd = -1;
-  protected int matchWidth = -1;
+	protected int matchStart = -1;
+	protected int matchEnd = -1;
+	protected int matchWidth = -1;
 
-  private final int allowedSlop;
+	private final int allowedSlop;
 
-  public NearSpansOrdered(int allowedSlop, List<Spans> subSpans) throws IOException {
-    super(subSpans);
-    this.atFirstInCurrentDoc = true; // -1 startPosition/endPosition also at doc -1
-    this.allowedSlop = allowedSlop;
-  }
+	public NearSpansOrdered(int allowedSlop, List<Spans> subSpans) throws IOException {
+		super(subSpans);
+		this.atFirstInCurrentDoc = true; // -1 startPosition/endPosition also at doc -1
+		this.allowedSlop = allowedSlop;
+	}
 
-  @Override
-  boolean twoPhaseCurrentDocMatches() throws IOException {
-    assert unpositioned();
-    oneExhaustedInCurrentDoc = false;
-    while (subSpans[0].nextStartPosition() != NO_MORE_POSITIONS && !oneExhaustedInCurrentDoc) {
-      if (stretchToOrder() && matchWidth <= allowedSlop) {
-        return atFirstInCurrentDoc = true;
-      }
-    }
-    return false;
-  }
+	@Override
+	boolean twoPhaseCurrentDocMatches() throws IOException {
+		assert unpositioned();
+		oneExhaustedInCurrentDoc = false;
+		while (subSpans[0].nextStartPosition() != NO_MORE_POSITIONS && !oneExhaustedInCurrentDoc) {
+			if (stretchToOrder() && matchWidth <= allowedSlop) {
+				return atFirstInCurrentDoc = true;
+			}
+		}
+		return false;
+	}
 
-  private boolean unpositioned() {
-    for (Spans span : subSpans) {
-      if (span.startPosition() != -1)
-        return false;
-    }
-    return true;
-  }
+	private boolean unpositioned() {
+		for (Spans span : subSpans) {
+			if (span.startPosition() != -1)
+				return false;
+		}
+		return true;
+	}
 
-  @Override
-  public int nextStartPosition() throws IOException {
-    if (atFirstInCurrentDoc) {
-      atFirstInCurrentDoc = false;
-      return matchStart;
-    }
-    oneExhaustedInCurrentDoc = false;
-    while (subSpans[0].nextStartPosition() != NO_MORE_POSITIONS && !oneExhaustedInCurrentDoc) {
-      if (stretchToOrder() && matchWidth <= allowedSlop) {
-        return matchStart;
-      }
-    }
-    return matchStart = matchEnd = NO_MORE_POSITIONS;
-  }
+	@Override
+	public int nextStartPosition() throws IOException {
+		if (atFirstInCurrentDoc) {
+			atFirstInCurrentDoc = false;
+			return matchStart;
+		}
+		oneExhaustedInCurrentDoc = false;
+		while (subSpans[0].nextStartPosition() != NO_MORE_POSITIONS && !oneExhaustedInCurrentDoc) {
+			if (stretchToOrder() && matchWidth <= allowedSlop) {
+				return matchStart;
+			}
+		}
+		return matchStart = matchEnd = NO_MORE_POSITIONS;
+	}
 
-  /**
-   * Order the subSpans within the same document by using nextStartPosition on all subSpans
-   * after the first as little as necessary.
-   * Return true when the subSpans could be ordered in this way,
-   * otherwise at least one is exhausted in the current doc.
-   */
-  private boolean stretchToOrder() throws IOException {
-    Spans prevSpans = subSpans[0];
-    matchStart = prevSpans.startPosition();
-    assert prevSpans.startPosition() != NO_MORE_POSITIONS : "prevSpans no start position "+prevSpans;
-    assert prevSpans.endPosition() != NO_MORE_POSITIONS;
-    matchWidth = 0;
-    for (int i = 1; i < subSpans.length; i++) {
-      Spans spans = subSpans[i];
-      assert spans.startPosition() != NO_MORE_POSITIONS;
-      assert spans.endPosition() != NO_MORE_POSITIONS;
-      if (advancePosition(spans, prevSpans.endPosition()) == NO_MORE_POSITIONS) {
-        oneExhaustedInCurrentDoc = true;
-        return false;
-      }
-      matchWidth += (spans.startPosition() - prevSpans.endPosition());
-      prevSpans = spans;
-    }
-    matchEnd = subSpans[subSpans.length - 1].endPosition();
-    return true; // all subSpans ordered and non overlapping
-  }
+	/**
+	 * Order the subSpans within the same document by using nextStartPosition on all subSpans
+	 * after the first as little as necessary.
+	 * Return true when the subSpans could be ordered in this way,
+	 * otherwise at least one is exhausted in the current doc.
+	 */
+	private boolean stretchToOrder() throws IOException {
+		Spans prevSpans = subSpans[0];
+		matchStart = prevSpans.startPosition();
+		assert prevSpans.startPosition() != NO_MORE_POSITIONS : "prevSpans no start position " + prevSpans;
+		assert prevSpans.endPosition() != NO_MORE_POSITIONS;
+		matchWidth = 0;
+		for (int i = 1; i < subSpans.length; i++) {
+			Spans spans = subSpans[i];
+			assert spans.startPosition() != NO_MORE_POSITIONS;
+			assert spans.endPosition() != NO_MORE_POSITIONS;
+			if (advancePosition(spans, prevSpans.endPosition()) == NO_MORE_POSITIONS) {
+				oneExhaustedInCurrentDoc = true;
+				return false;
+			}
+			matchWidth += (spans.startPosition() - prevSpans.endPosition());
+			prevSpans = spans;
+		}
+		matchEnd = subSpans[subSpans.length - 1].endPosition();
+		return true; // all subSpans ordered and non overlapping
+	}
 
-  private static int advancePosition(Spans spans, int position) throws IOException {
-    if (spans instanceof SpanNearQuery.GapSpans) {
-      return ((SpanNearQuery.GapSpans)spans).skipToPosition(position);
-    }
-    while (spans.startPosition() < position) {
-      spans.nextStartPosition();
-    }
-    return spans.startPosition();
-  }
+	private static int advancePosition(Spans spans, int position) throws IOException {
+		if (spans instanceof SpanNearQuery.GapSpans) {
+			return ((SpanNearQuery.GapSpans) spans).skipToPosition(position);
+		}
+		while (spans.startPosition() < position) {
+			spans.nextStartPosition();
+		}
+		return spans.startPosition();
+	}
 
-  @Override
-  public int startPosition() {
-    return atFirstInCurrentDoc ? -1 : matchStart;
-  }
+	@Override
+	public int startPosition() {
+		return atFirstInCurrentDoc ? -1 : matchStart;
+	}
 
-  @Override
-  public int endPosition() {
-    return atFirstInCurrentDoc ? -1 : matchEnd;
-  }
+	@Override
+	public int endPosition() {
+		return atFirstInCurrentDoc ? -1 : matchEnd;
+	}
 
-  @Override
-  public int width() {
-    return matchWidth;
-  }
+	@Override
+	public int width() {
+		return matchWidth;
+	}
 
-  @Override
-  public void collect(SpanCollector collector) throws IOException {
-    for (Spans span : subSpans) {
-      span.collect(collector);
-    }
-  }
+	@Override
+	public void collect(SpanCollector collector) throws IOException {
+		for (Spans span : subSpans) {
+			span.collect(collector);
+		}
+	}
 
 }
 

@@ -19,12 +19,14 @@ package org.apache.lucene.codecs.asserting;
 import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.index.BaseDocValuesFormatTestCase;
 
-/** Test AssertingDocValuesFormat directly */
+/**
+ * Test AssertingDocValuesFormat directly
+ */
 public class TestAssertingDocValuesFormat extends BaseDocValuesFormatTestCase {
-  private final Codec codec = new AssertingCodec();
-  
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	private final Codec codec = new AssertingCodec();
+
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

@@ -27,73 +27,73 @@ import org.apache.lucene.search.similarities.Similarity;
 
 class IntervalScorer extends Scorer {
 
-  private final IntervalIterator intervals;
-  private final Similarity.SimScorer simScorer;
-  private final float boost;
-  private final int minExtent;
+	private final IntervalIterator intervals;
+	private final Similarity.SimScorer simScorer;
+	private final float boost;
+	private final int minExtent;
 
-  private float freq;
-  private int lastScoredDoc = -1;
+	private float freq;
+	private int lastScoredDoc = -1;
 
-  IntervalScorer(Weight weight, IntervalIterator intervals, int minExtent, float boost, IntervalScoreFunction scoreFunction) {
-    super(weight);
-    this.intervals = intervals;
-    this.minExtent = minExtent;
-    this.boost = boost;
-    this.simScorer = scoreFunction.scorer(boost);
-  }
+	IntervalScorer(Weight weight, IntervalIterator intervals, int minExtent, float boost, IntervalScoreFunction scoreFunction) {
+		super(weight);
+		this.intervals = intervals;
+		this.minExtent = minExtent;
+		this.boost = boost;
+		this.simScorer = scoreFunction.scorer(boost);
+	}
 
-  @Override
-  public int docID() {
-    return intervals.docID();
-  }
+	@Override
+	public int docID() {
+		return intervals.docID();
+	}
 
-  @Override
-  public float score() throws IOException {
-    ensureFreq();
-    return simScorer.score(freq, 1);
-  }
+	@Override
+	public float score() throws IOException {
+		ensureFreq();
+		return simScorer.score(freq, 1);
+	}
 
-  float freq() throws IOException {
-    ensureFreq();
-    return freq;
-  }
+	float freq() throws IOException {
+		ensureFreq();
+		return freq;
+	}
 
-  private void ensureFreq() throws IOException {
-    if (lastScoredDoc != docID()) {
-      lastScoredDoc = docID();
-      freq = 0;
-      do {
-        int length = (intervals.end() - intervals.start() + 1);
-        freq += 1.0 / Math.max(length - minExtent + 1, 1);
-      }
-      while (intervals.nextInterval() != IntervalIterator.NO_MORE_INTERVALS);
-    }
-  }
+	private void ensureFreq() throws IOException {
+		if (lastScoredDoc != docID()) {
+			lastScoredDoc = docID();
+			freq = 0;
+			do {
+				int length = (intervals.end() - intervals.start() + 1);
+				freq += 1.0 / Math.max(length - minExtent + 1, 1);
+			}
+			while (intervals.nextInterval() != IntervalIterator.NO_MORE_INTERVALS);
+		}
+	}
 
-  @Override
-  public DocIdSetIterator iterator() {
-    return TwoPhaseIterator.asDocIdSetIterator(twoPhaseIterator());
-  }
+	@Override
+	public DocIdSetIterator iterator() {
+		return TwoPhaseIterator.asDocIdSetIterator(twoPhaseIterator());
+	}
 
-  @Override
-  public TwoPhaseIterator twoPhaseIterator() {
-    return new TwoPhaseIterator(intervals) {
-      @Override
-      public boolean matches() throws IOException {
-        return intervals.nextInterval() != IntervalIterator.NO_MORE_INTERVALS;
-      }
+	@Override
+	public TwoPhaseIterator twoPhaseIterator() {
+		return new TwoPhaseIterator(intervals) {
+			@Override
+			public boolean matches() throws IOException {
+				return intervals.nextInterval() != IntervalIterator.NO_MORE_INTERVALS;
+			}
 
-      @Override
-      public float matchCost() {
-        return intervals.matchCost();
-      }
-    };
-  }
+			@Override
+			public float matchCost() {
+				return intervals.matchCost();
+			}
+		};
+	}
 
-  @Override
-  public float getMaxScore(int upTo) {
-    return boost;
-  }
+	@Override
+	public float getMaxScore(int upTo) {
+		return boost;
+	}
 
 }

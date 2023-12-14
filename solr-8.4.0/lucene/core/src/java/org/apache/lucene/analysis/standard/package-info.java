@@ -17,10 +17,10 @@
 
 /**
  * Fast, general-purpose grammar-based tokenizer {@link org.apache.lucene.analysis.standard.StandardTokenizer}
- * implements the Word Break rules from the Unicode Text Segmentation algorithm, as specified in 
+ * implements the Word Break rules from the Unicode Text Segmentation algorithm, as specified in
  * <a href="http://unicode.org/reports/tr29/">Unicode Standard Annex #29</a>.
  * Unlike <code>UAX29URLEmailTokenizer</code> from the analysis module, URLs and email addresses are
- * <b>not</b> tokenized as single tokens, but are instead split up into 
+ * <b>not</b> tokenized as single tokens, but are instead split up into
  * tokens according to the UAX#29 word break rules.
  * <br>
  * {@link org.apache.lucene.analysis.standard.StandardAnalyzer StandardAnalyzer} includes

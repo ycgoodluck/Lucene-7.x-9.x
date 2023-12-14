@@ -33,43 +33,43 @@ import org.apache.lucene.util.LuceneTestCase;
  * Test indexing and searching some byte[] terms
  */
 public class TestBinaryTerms extends LuceneTestCase {
-  public void testBinary() throws IOException {    
-    Directory dir = newDirectory();
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
-    BytesRef bytes = new BytesRef(2);
-    
-    for (int i = 0; i < 256; i++) {
-      bytes.bytes[0] = (byte) i;
-      bytes.bytes[1] = (byte) (255 - i);
-      bytes.length = 2;
-      Document doc = new Document();
-      FieldType customType = new FieldType();
-      customType.setStored(true);
-      doc.add(newField("id", "" + i, customType));
-      doc.add(newStringField("bytes", bytes, Field.Store.NO));
-      iw.addDocument(doc);
-    }
-    
-    IndexReader ir = iw.getReader();
-    iw.close();
-    
-    IndexSearcher is = newSearcher(ir);
-    
-    for (int i = 0; i < 256; i++) {
-      bytes.bytes[0] = (byte) i;
-      bytes.bytes[1] = (byte) (255 - i);
-      bytes.length = 2;
-      TopDocs docs = is.search(new TermQuery(new Term("bytes", bytes)), 5);
-      assertEquals(1, docs.totalHits.value);
-      assertEquals("" + i, is.doc(docs.scoreDocs[0].doc).get("id"));
-    }
-    
-    ir.close();
-    dir.close();
-  }
-  
-  public void testToString() {
-    Term term = new Term("foo", new BytesRef(new byte[] { (byte) 0xff, (byte) 0xfe }));
-    assertEquals("foo:[ff fe]", term.toString());
-  }
+	public void testBinary() throws IOException {
+		Directory dir = newDirectory();
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
+		BytesRef bytes = new BytesRef(2);
+
+		for (int i = 0; i < 256; i++) {
+			bytes.bytes[0] = (byte) i;
+			bytes.bytes[1] = (byte) (255 - i);
+			bytes.length = 2;
+			Document doc = new Document();
+			FieldType customType = new FieldType();
+			customType.setStored(true);
+			doc.add(newField("id", "" + i, customType));
+			doc.add(newStringField("bytes", bytes, Field.Store.NO));
+			iw.addDocument(doc);
+		}
+
+		IndexReader ir = iw.getReader();
+		iw.close();
+
+		IndexSearcher is = newSearcher(ir);
+
+		for (int i = 0; i < 256; i++) {
+			bytes.bytes[0] = (byte) i;
+			bytes.bytes[1] = (byte) (255 - i);
+			bytes.length = 2;
+			TopDocs docs = is.search(new TermQuery(new Term("bytes", bytes)), 5);
+			assertEquals(1, docs.totalHits.value);
+			assertEquals("" + i, is.doc(docs.scoreDocs[0].doc).get("id"));
+		}
+
+		ir.close();
+		dir.close();
+	}
+
+	public void testToString() {
+		Term term = new Term("foo", new BytesRef(new byte[]{(byte) 0xff, (byte) 0xfe}));
+		assertEquals("foo:[ff fe]", term.toString());
+	}
 }

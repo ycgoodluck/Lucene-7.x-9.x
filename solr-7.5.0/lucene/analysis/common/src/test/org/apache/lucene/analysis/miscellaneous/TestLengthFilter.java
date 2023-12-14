@@ -28,32 +28,32 @@ import org.junit.Test;
 
 public class TestLengthFilter extends BaseTokenStreamTestCase {
 
-  public void testFilterWithPosIncr() throws Exception {
-    TokenStream stream = whitespaceMockTokenizer("short toolong evenmuchlongertext a ab toolong foo");
-    LengthFilter filter = new LengthFilter(stream, 2, 6);
-    assertTokenStreamContents(filter,
-      new String[]{"short", "ab", "foo"},
-      new int[]{1, 4, 2}
-    );
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new LengthFilter(tokenizer, 0, 5));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	public void testFilterWithPosIncr() throws Exception {
+		TokenStream stream = whitespaceMockTokenizer("short toolong evenmuchlongertext a ab toolong foo");
+		LengthFilter filter = new LengthFilter(stream, 2, 6);
+		assertTokenStreamContents(filter,
+			new String[]{"short", "ab", "foo"},
+			new int[]{1, 4, 2}
+		);
+	}
 
-  /**
-   * checking the validity of constructor arguments
-   */
-  @Test(expected = IllegalArgumentException.class)
-  public void testIllegalArguments() throws Exception {
-    new LengthFilter(whitespaceMockTokenizer("accept only valid arguments"), -4, -1);
-  }
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new LengthFilter(tokenizer, 0, 5));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
+
+	/**
+	 * checking the validity of constructor arguments
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArguments() throws Exception {
+		new LengthFilter(whitespaceMockTokenizer("accept only valid arguments"), -4, -1);
+	}
 }

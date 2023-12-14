@@ -28,50 +28,52 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  */
 public class TestTypeTokenFilterFactory extends BaseTokenStreamFactoryTestCase {
 
-  public void testInform() throws Exception {
-    TypeTokenFilterFactory factory = (TypeTokenFilterFactory) tokenFilterFactory("Type",
-        "types", "stoptypes-1.txt");
-    Set<String> types = factory.getStopTypes();
-    assertTrue("types is null and it shouldn't be", types != null);
-    assertTrue("types Size: " + types.size() + " is not: " + 2, types.size() == 2);
+	public void testInform() throws Exception {
+		TypeTokenFilterFactory factory = (TypeTokenFilterFactory) tokenFilterFactory("Type",
+			"types", "stoptypes-1.txt");
+		Set<String> types = factory.getStopTypes();
+		assertTrue("types is null and it shouldn't be", types != null);
+		assertTrue("types Size: " + types.size() + " is not: " + 2, types.size() == 2);
 
-    factory = (TypeTokenFilterFactory) tokenFilterFactory("Type",
-        "types", "stoptypes-1.txt, stoptypes-2.txt",
-        "useWhitelist", "true");
-    types = factory.getStopTypes();
-    assertTrue("types is null and it shouldn't be", types != null);
-    assertTrue("types Size: " + types.size() + " is not: " + 4, types.size() == 4);
-  }
+		factory = (TypeTokenFilterFactory) tokenFilterFactory("Type",
+			"types", "stoptypes-1.txt, stoptypes-2.txt",
+			"useWhitelist", "true");
+		types = factory.getStopTypes();
+		assertTrue("types is null and it shouldn't be", types != null);
+		assertTrue("types Size: " + types.size() + " is not: " + 4, types.size() == 4);
+	}
 
-  public void testCreationWithBlackList() throws Exception {
-    TokenFilterFactory factory = tokenFilterFactory("Type",
-        "types", "stoptypes-1.txt, stoptypes-2.txt");
-    CannedTokenStream input = new CannedTokenStream();
-    factory.create(input);
-  }
-  
-  public void testCreationWithWhiteList() throws Exception {
-    TokenFilterFactory factory = tokenFilterFactory("Type",
-        "types", "stoptypes-1.txt, stoptypes-2.txt",
-        "useWhitelist", "true");
-    CannedTokenStream input = new CannedTokenStream();
-    factory.create(input);
-  }
+	public void testCreationWithBlackList() throws Exception {
+		TokenFilterFactory factory = tokenFilterFactory("Type",
+			"types", "stoptypes-1.txt, stoptypes-2.txt");
+		CannedTokenStream input = new CannedTokenStream();
+		factory.create(input);
+	}
 
-  public void testMissingTypesParameter() throws Exception {
-    // not supplying 'types' parameter should cause an IllegalArgumentException
-    expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("Type");
-    });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("Type", 
-          "types", "stoptypes-1.txt", 
-          "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testCreationWithWhiteList() throws Exception {
+		TokenFilterFactory factory = tokenFilterFactory("Type",
+			"types", "stoptypes-1.txt, stoptypes-2.txt",
+			"useWhitelist", "true");
+		CannedTokenStream input = new CannedTokenStream();
+		factory.create(input);
+	}
+
+	public void testMissingTypesParameter() throws Exception {
+		// not supplying 'types' parameter should cause an IllegalArgumentException
+		expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("Type");
+		});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("Type",
+				"types", "stoptypes-1.txt",
+				"bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

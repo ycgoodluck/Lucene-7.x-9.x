@@ -23,16 +23,16 @@ import org.apache.lucene.codecs.lucene53.Lucene53RWNormsFormat;
 
 public class Lucene60RWCodec extends Lucene60Codec {
 
-  private final SegmentInfoFormat segmentInfoFormat = new Lucene50RWSegmentInfoFormat();
-  private final NormsFormat normsFormat = new Lucene53RWNormsFormat();
+	private final SegmentInfoFormat segmentInfoFormat = new Lucene50RWSegmentInfoFormat();
+	private final NormsFormat normsFormat = new Lucene53RWNormsFormat();
 
-  @Override
-  public SegmentInfoFormat segmentInfoFormat() {
-    return segmentInfoFormat;
-  }
+	@Override
+	public SegmentInfoFormat segmentInfoFormat() {
+		return segmentInfoFormat;
+	}
 
-  @Override
-  public NormsFormat normsFormat() {
-    return normsFormat;
-  }
+	@Override
+	public NormsFormat normsFormat() {
+		return normsFormat;
+	}
 }

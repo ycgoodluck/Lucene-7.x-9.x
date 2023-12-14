@@ -23,24 +23,24 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 
 public class TestCodecReported extends WithNestedTests {
-  public TestCodecReported() {
-    super(true);
-  }
-  
-  public static class Nested1 extends WithNestedTests.AbstractNestedTest {
-    public static String codecName;
+	public TestCodecReported() {
+		super(true);
+	}
 
-    public void testDummy() {
-      codecName = Codec.getDefault().getName();
-      fail();
-    }
-  }
+	public static class Nested1 extends WithNestedTests.AbstractNestedTest {
+		public static String codecName;
 
-  @Test
-  public void testCorrectCodecReported() {
-    Result r = JUnitCore.runClasses(Nested1.class);
-    Assert.assertEquals(1, r.getFailureCount());
-    Assert.assertTrue(super.getSysErr(),
-        super.getSysErr().contains("codec=" + Nested1.codecName));
-  }
+		public void testDummy() {
+			codecName = Codec.getDefault().getName();
+			fail();
+		}
+	}
+
+	@Test
+	public void testCorrectCodecReported() {
+		Result r = JUnitCore.runClasses(Nested1.class);
+		Assert.assertEquals(1, r.getFailureCount());
+		Assert.assertTrue(super.getSysErr(),
+			super.getSysErr().contains("codec=" + Nested1.codecName));
+	}
 }

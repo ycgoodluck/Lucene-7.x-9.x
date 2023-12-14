@@ -27,40 +27,42 @@ import java.util.Comparator;
  *
  * @see org.apache.lucene.search.spell.SuggestWordScoreComparator
  * @see org.apache.lucene.search.spell.SuggestWordFrequencyComparator
- *
  */
 public final class SuggestWordQueue extends PriorityQueue<SuggestWord> {
-  /**
-   * Default comparator: score then frequency.
-   * @see SuggestWordScoreComparator
-   */
-  public static final Comparator<SuggestWord> DEFAULT_COMPARATOR = new SuggestWordScoreComparator();
+	/**
+	 * Default comparator: score then frequency.
+	 *
+	 * @see SuggestWordScoreComparator
+	 */
+	public static final Comparator<SuggestWord> DEFAULT_COMPARATOR = new SuggestWordScoreComparator();
 
 
-  private Comparator<SuggestWord> comparator;
+	private Comparator<SuggestWord> comparator;
 
-  /**
-   * Use the {@link #DEFAULT_COMPARATOR}
-   * @param size The size of the queue
-   */
-  public SuggestWordQueue (int size) {
-    super(size);
-    comparator = DEFAULT_COMPARATOR;
-  }
+	/**
+	 * Use the {@link #DEFAULT_COMPARATOR}
+	 *
+	 * @param size The size of the queue
+	 */
+	public SuggestWordQueue(int size) {
+		super(size);
+		comparator = DEFAULT_COMPARATOR;
+	}
 
-  /**
-   * Specify the size of the queue and the comparator to use for sorting.
-   * @param size The size
-   * @param comparator The comparator.
-   */
-  public SuggestWordQueue(int size, Comparator<SuggestWord> comparator){
-    super(size);
-    this.comparator = comparator;
-  }
+	/**
+	 * Specify the size of the queue and the comparator to use for sorting.
+	 *
+	 * @param size       The size
+	 * @param comparator The comparator.
+	 */
+	public SuggestWordQueue(int size, Comparator<SuggestWord> comparator) {
+		super(size);
+		this.comparator = comparator;
+	}
 
-  @Override
-  protected final boolean lessThan (SuggestWord wa, SuggestWord wb) {
-    int val = comparator.compare(wa, wb);
-    return val < 0;
-  }
+	@Override
+	protected final boolean lessThan(SuggestWord wa, SuggestWord wb) {
+		int val = comparator.compare(wa, wb);
+		return val < 0;
+	}
 }

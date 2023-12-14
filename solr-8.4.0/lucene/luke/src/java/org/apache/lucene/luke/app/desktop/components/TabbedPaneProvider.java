@@ -31,107 +31,111 @@ import org.apache.lucene.luke.app.desktop.MessageBroker;
 import org.apache.lucene.luke.app.desktop.util.FontUtils;
 import org.apache.lucene.luke.app.desktop.util.TabUtils;
 
-/** Provider of the Tabbed pane */
+/**
+ * Provider of the Tabbed pane
+ */
 public final class TabbedPaneProvider implements TabSwitcherProxy.TabSwitcher {
 
-  private final MessageBroker messageBroker;
+	private final MessageBroker messageBroker;
 
-  private final JTabbedPane tabbedPane = new JTabbedPane();
+	private final JTabbedPane tabbedPane = new JTabbedPane();
 
-  private final JPanel overviewPanel;
+	private final JPanel overviewPanel;
 
-  private final JPanel documentsPanel;
+	private final JPanel documentsPanel;
 
-  private final JPanel searchPanel;
+	private final JPanel searchPanel;
 
-  private final JPanel analysisPanel;
+	private final JPanel analysisPanel;
 
-  private final JPanel commitsPanel;
+	private final JPanel commitsPanel;
 
-  private final JPanel logsPanel;
+	private final JPanel logsPanel;
 
-  public TabbedPaneProvider(JTextArea logTextArea) throws IOException {
-    this.overviewPanel = new OverviewPanelProvider().get();
-    this.documentsPanel = new DocumentsPanelProvider().get();
-    this.searchPanel = new SearchPanelProvider().get();
-    this.analysisPanel = new AnalysisPanelProvider().get();
-    this.commitsPanel = new CommitsPanelProvider().get();
-    this.logsPanel = new LogsPanelProvider(logTextArea).get();
+	public TabbedPaneProvider(JTextArea logTextArea) throws IOException {
+		this.overviewPanel = new OverviewPanelProvider().get();
+		this.documentsPanel = new DocumentsPanelProvider().get();
+		this.searchPanel = new SearchPanelProvider().get();
+		this.analysisPanel = new AnalysisPanelProvider().get();
+		this.commitsPanel = new CommitsPanelProvider().get();
+		this.logsPanel = new LogsPanelProvider(logTextArea).get();
 
-    this.messageBroker = MessageBroker.getInstance();
+		this.messageBroker = MessageBroker.getInstance();
 
-    TabSwitcherProxy.getInstance().set(this);
+		TabSwitcherProxy.getInstance().set(this);
 
-    Observer observer = new Observer();
-    IndexHandler.getInstance().addObserver(observer);
-    DirectoryHandler.getInstance().addObserver(observer);
-  }
+		Observer observer = new Observer();
+		IndexHandler.getInstance().addObserver(observer);
+		DirectoryHandler.getInstance().addObserver(observer);
+	}
 
-  public JTabbedPane get() {
-    tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe009;", "Overview"), overviewPanel);
-    tabbedPane.addTab(FontUtils.elegantIconHtml("&#x69;", "Documents"), documentsPanel);
-    tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe101;", "Search"), searchPanel);
-    tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe104;", "Analysis"), analysisPanel);
-    tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe0ea;", "Commits"), commitsPanel);
-    tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe058;", "Logs"), logsPanel);
+	public JTabbedPane get() {
+		tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe009;", "Overview"), overviewPanel);
+		tabbedPane.addTab(FontUtils.elegantIconHtml("&#x69;", "Documents"), documentsPanel);
+		tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe101;", "Search"), searchPanel);
+		tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe104;", "Analysis"), analysisPanel);
+		tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe0ea;", "Commits"), commitsPanel);
+		tabbedPane.addTab(FontUtils.elegantIconHtml("&#xe058;", "Logs"), logsPanel);
 
-    TabUtils.forceTransparent(tabbedPane);
+		TabUtils.forceTransparent(tabbedPane);
 
-    return tabbedPane;
-  }
+		return tabbedPane;
+	}
 
-  public void switchTab(Tab tab) {
-    tabbedPane.setSelectedIndex(tab.index());
-    tabbedPane.setVisible(false);
-    tabbedPane.setVisible(true);
-    messageBroker.clearStatusMessage();
-  }
+	public void switchTab(Tab tab) {
+		tabbedPane.setSelectedIndex(tab.index());
+		tabbedPane.setVisible(false);
+		tabbedPane.setVisible(true);
+		messageBroker.clearStatusMessage();
+	}
 
-  private class Observer implements IndexObserver, DirectoryObserver {
+	private class Observer implements IndexObserver, DirectoryObserver {
 
-    @Override
-    public void openDirectory(LukeState state) {
-      tabbedPane.setEnabledAt(Tab.COMMITS.index(), true);
-    }
+		@Override
+		public void openDirectory(LukeState state) {
+			tabbedPane.setEnabledAt(Tab.COMMITS.index(), true);
+		}
 
-    @Override
-    public void closeDirectory() {
-      tabbedPane.setEnabledAt(Tab.OVERVIEW.index(), false);
-      tabbedPane.setEnabledAt(Tab.DOCUMENTS.index(), false);
-      tabbedPane.setEnabledAt(Tab.SEARCH.index(), false);
-      tabbedPane.setEnabledAt(Tab.COMMITS.index(), false);
-    }
+		@Override
+		public void closeDirectory() {
+			tabbedPane.setEnabledAt(Tab.OVERVIEW.index(), false);
+			tabbedPane.setEnabledAt(Tab.DOCUMENTS.index(), false);
+			tabbedPane.setEnabledAt(Tab.SEARCH.index(), false);
+			tabbedPane.setEnabledAt(Tab.COMMITS.index(), false);
+		}
 
-    @Override
-    public void openIndex(LukeState state) {
-      tabbedPane.setEnabledAt(Tab.OVERVIEW.index(), true);
-      tabbedPane.setEnabledAt(Tab.DOCUMENTS.index(), true);
-      tabbedPane.setEnabledAt(Tab.SEARCH.index(), true);
-      tabbedPane.setEnabledAt(Tab.COMMITS.index(), true);
-    }
+		@Override
+		public void openIndex(LukeState state) {
+			tabbedPane.setEnabledAt(Tab.OVERVIEW.index(), true);
+			tabbedPane.setEnabledAt(Tab.DOCUMENTS.index(), true);
+			tabbedPane.setEnabledAt(Tab.SEARCH.index(), true);
+			tabbedPane.setEnabledAt(Tab.COMMITS.index(), true);
+		}
 
-    @Override
-    public void closeIndex() {
-      tabbedPane.setEnabledAt(Tab.OVERVIEW.index(), false);
-      tabbedPane.setEnabledAt(Tab.DOCUMENTS.index(), false);
-      tabbedPane.setEnabledAt(Tab.SEARCH.index(), false);
-      tabbedPane.setEnabledAt(Tab.COMMITS.index(), false);
-    }
-  }
+		@Override
+		public void closeIndex() {
+			tabbedPane.setEnabledAt(Tab.OVERVIEW.index(), false);
+			tabbedPane.setEnabledAt(Tab.DOCUMENTS.index(), false);
+			tabbedPane.setEnabledAt(Tab.SEARCH.index(), false);
+			tabbedPane.setEnabledAt(Tab.COMMITS.index(), false);
+		}
+	}
 
-  /** tabs in the main frame */
-  public enum Tab {
-    OVERVIEW(0), DOCUMENTS(1), SEARCH(2), ANALYZER(3), COMMITS(4);
+	/**
+	 * tabs in the main frame
+	 */
+	public enum Tab {
+		OVERVIEW(0), DOCUMENTS(1), SEARCH(2), ANALYZER(3), COMMITS(4);
 
-    private int tabIdx;
+		private int tabIdx;
 
-    Tab(int tabIdx) {
-      this.tabIdx = tabIdx;
-    }
+		Tab(int tabIdx) {
+			this.tabIdx = tabIdx;
+		}
 
-    int index() {
-      return tabIdx;
-    }
-  }
+		int index() {
+			return tabIdx;
+		}
+	}
 
 }

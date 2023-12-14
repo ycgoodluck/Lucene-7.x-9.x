@@ -27,76 +27,78 @@ import org.apache.lucene.search.DoubleValues;
 import org.apache.lucene.search.DoubleValuesSource;
 import org.apache.lucene.util.IntsRef;
 
-/** Aggregates sum of values from {@link
- *  DoubleValues#doubleValue()}, for each facet label.
+/**
+ * Aggregates sum of values from {@link
+ * DoubleValues#doubleValue()}, for each facet label.
  *
- *  @lucene.experimental */
+ * @lucene.experimental
+ */
 public class TaxonomyFacetSumValueSource extends FloatTaxonomyFacets {
-  private final OrdinalsReader ordinalsReader;
+	private final OrdinalsReader ordinalsReader;
 
-  /**
-   * Aggreggates double facet values from the provided
-   * {@link DoubleValuesSource}, pulling ordinals using {@link
-   * DocValuesOrdinalsReader} against the default indexed
-   * facet field {@link FacetsConfig#DEFAULT_INDEX_FIELD_NAME}.
-   */
-   public TaxonomyFacetSumValueSource(TaxonomyReader taxoReader, FacetsConfig config,
-                                     FacetsCollector fc, DoubleValuesSource valueSource) throws IOException {
-    this(new DocValuesOrdinalsReader(FacetsConfig.DEFAULT_INDEX_FIELD_NAME), taxoReader, config, fc, valueSource);
-   }
+	/**
+	 * Aggreggates double facet values from the provided
+	 * {@link DoubleValuesSource}, pulling ordinals using {@link
+	 * DocValuesOrdinalsReader} against the default indexed
+	 * facet field {@link FacetsConfig#DEFAULT_INDEX_FIELD_NAME}.
+	 */
+	public TaxonomyFacetSumValueSource(TaxonomyReader taxoReader, FacetsConfig config,
+																		 FacetsCollector fc, DoubleValuesSource valueSource) throws IOException {
+		this(new DocValuesOrdinalsReader(FacetsConfig.DEFAULT_INDEX_FIELD_NAME), taxoReader, config, fc, valueSource);
+	}
 
-  /**
-   * Aggreggates float facet values from the provided
-   *  {@link DoubleValuesSource}, and pulls ordinals from the
-   *  provided {@link OrdinalsReader}.
-   */
-  public TaxonomyFacetSumValueSource(OrdinalsReader ordinalsReader, TaxonomyReader taxoReader,
-                                     FacetsConfig config, FacetsCollector fc, DoubleValuesSource vs) throws IOException {
-    super(ordinalsReader.getIndexFieldName(), taxoReader, config);
-    this.ordinalsReader = ordinalsReader;
-    sumValues(fc.getMatchingDocs(), fc.getKeepScores(), vs);
-  }
+	/**
+	 * Aggreggates float facet values from the provided
+	 * {@link DoubleValuesSource}, and pulls ordinals from the
+	 * provided {@link OrdinalsReader}.
+	 */
+	public TaxonomyFacetSumValueSource(OrdinalsReader ordinalsReader, TaxonomyReader taxoReader,
+																		 FacetsConfig config, FacetsCollector fc, DoubleValuesSource vs) throws IOException {
+		super(ordinalsReader.getIndexFieldName(), taxoReader, config);
+		this.ordinalsReader = ordinalsReader;
+		sumValues(fc.getMatchingDocs(), fc.getKeepScores(), vs);
+	}
 
-  private static DoubleValues scores(MatchingDocs hits) {
-    return new DoubleValues() {
+	private static DoubleValues scores(MatchingDocs hits) {
+		return new DoubleValues() {
 
-      int index = -1;
+			int index = -1;
 
-      @Override
-      public double doubleValue() throws IOException {
-        return hits.scores[index];
-      }
+			@Override
+			public double doubleValue() throws IOException {
+				return hits.scores[index];
+			}
 
-      @Override
-      public boolean advanceExact(int doc) throws IOException {
-        index++;
-        return true;
-      }
-    };
-  }
+			@Override
+			public boolean advanceExact(int doc) throws IOException {
+				index++;
+				return true;
+			}
+		};
+	}
 
-  private void sumValues(List<MatchingDocs> matchingDocs, boolean keepScores, DoubleValuesSource valueSource) throws IOException {
+	private void sumValues(List<MatchingDocs> matchingDocs, boolean keepScores, DoubleValuesSource valueSource) throws IOException {
 
-    IntsRef scratch = new IntsRef();
-    for(MatchingDocs hits : matchingDocs) {
-      OrdinalsReader.OrdinalsSegmentReader ords = ordinalsReader.getReader(hits.context);
-      DoubleValues scores = keepScores ? scores(hits) : null;
-      DoubleValues functionValues = valueSource.getValues(hits.context, scores);
-      DocIdSetIterator docs = hits.bits.iterator();
-      
-      int doc;
-      while ((doc = docs.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
-        ords.get(doc, scratch);
-        if (functionValues.advanceExact(doc)) {
-          float value = (float) functionValues.doubleValue();
-          for (int i = 0; i < scratch.length; i++) {
-            values[scratch.ints[i]] += value;
-          }
-        }
-      }
-    }
+		IntsRef scratch = new IntsRef();
+		for (MatchingDocs hits : matchingDocs) {
+			OrdinalsReader.OrdinalsSegmentReader ords = ordinalsReader.getReader(hits.context);
+			DoubleValues scores = keepScores ? scores(hits) : null;
+			DoubleValues functionValues = valueSource.getValues(hits.context, scores);
+			DocIdSetIterator docs = hits.bits.iterator();
 
-    rollup();
-  }
-  
+			int doc;
+			while ((doc = docs.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
+				ords.get(doc, scratch);
+				if (functionValues.advanceExact(doc)) {
+					float value = (float) functionValues.doubleValue();
+					for (int i = 0; i < scratch.length; i++) {
+						values[scratch.ints[i]] += value;
+					}
+				}
+			}
+		}
+
+		rollup();
+	}
+
 }

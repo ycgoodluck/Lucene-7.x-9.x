@@ -68,261 +68,268 @@ import org.apache.lucene.util.IOUtils;
 
 public class NRTCachingDirectory extends FilterDirectory implements Accountable {
 
-  private final RAMDirectory cache = new RAMDirectory();
+	private final RAMDirectory cache = new RAMDirectory();
 
 
-  private final long maxMergeSizeBytes;
-  private final long maxCachedBytes;
+	private final long maxMergeSizeBytes;
+	private final long maxCachedBytes;
 
-  private static final boolean VERBOSE = false;
+	private static final boolean VERBOSE = false;
 
-  /**
-   *  We will cache a newly created output if 1) it's a
-   *  flush or a merge and the estimated size of the merged segment is 
-   *  {@code <= maxMergeSizeMB}, and 2) the total cached bytes is 
-   *  {@code <= maxCachedMB} */
-  public NRTCachingDirectory(Directory delegate, double maxMergeSizeMB, double maxCachedMB) {
-    super(delegate);
-    maxMergeSizeBytes = (long) (maxMergeSizeMB*1024*1024);
-    maxCachedBytes = (long) (maxCachedMB*1024*1024);
-  }
+	/**
+	 * We will cache a newly created output if 1) it's a
+	 * flush or a merge and the estimated size of the merged segment is
+	 * {@code <= maxMergeSizeMB}, and 2) the total cached bytes is
+	 * {@code <= maxCachedMB}
+	 */
+	public NRTCachingDirectory(Directory delegate, double maxMergeSizeMB, double maxCachedMB) {
+		super(delegate);
+		maxMergeSizeBytes = (long) (maxMergeSizeMB * 1024 * 1024);
+		maxCachedBytes = (long) (maxCachedMB * 1024 * 1024);
+	}
 
 
-  @Override
-  public String toString() {
-    return "NRTCachingDirectory(" + in + "; maxCacheMB=" + (maxCachedBytes/1024/1024.) + " maxMergeSizeMB=" + (maxMergeSizeBytes/1024/1024.) + ")";
-  }
+	@Override
+	public String toString() {
+		return "NRTCachingDirectory(" + in + "; maxCacheMB=" + (maxCachedBytes / 1024 / 1024.) + " maxMergeSizeMB=" + (maxMergeSizeBytes / 1024 / 1024.) + ")";
+	}
 
-  @Override
-  public synchronized String[] listAll() throws IOException {
-    final Set<String> files = new HashSet<>();
-    for(String f : cache.listAll()) {
-      files.add(f);
-    }
-    for(String f : in.listAll()) {
-      files.add(f);
-    }
-    String[] result = files.toArray(new String[files.size()]);
-    Arrays.sort(result);
-    return result;
-  }
+	@Override
+	public synchronized String[] listAll() throws IOException {
+		final Set<String> files = new HashSet<>();
+		for (String f : cache.listAll()) {
+			files.add(f);
+		}
+		for (String f : in.listAll()) {
+			files.add(f);
+		}
+		String[] result = files.toArray(new String[files.size()]);
+		Arrays.sort(result);
+		return result;
+	}
 
-  @Override
-  public synchronized void deleteFile(String name) throws IOException {
-    if (VERBOSE) {
-      System.out.println("nrtdir.deleteFile name=" + name);
-    }
-    if (cache.fileNameExists(name)) {
-      cache.deleteFile(name);
-    } else {
-      in.deleteFile(name);
-    }
-  }
+	@Override
+	public synchronized void deleteFile(String name) throws IOException {
+		if (VERBOSE) {
+			System.out.println("nrtdir.deleteFile name=" + name);
+		}
+		if (cache.fileNameExists(name)) {
+			cache.deleteFile(name);
+		} else {
+			in.deleteFile(name);
+		}
+	}
 
-  @Override
-  public synchronized long fileLength(String name) throws IOException {
-    if (cache.fileNameExists(name)) {
-      return cache.fileLength(name);
-    } else {
-      return in.fileLength(name);
-    }
-  }
+	@Override
+	public synchronized long fileLength(String name) throws IOException {
+		if (cache.fileNameExists(name)) {
+			return cache.fileLength(name);
+		} else {
+			return in.fileLength(name);
+		}
+	}
 
-  public String[] listCachedFiles() {
-    return cache.listAll();
-  }
+	public String[] listCachedFiles() {
+		return cache.listAll();
+	}
 
-  @Override
-  public IndexOutput createOutput(String name, IOContext context) throws IOException {
-    if (VERBOSE) {
-      System.out.println("nrtdir.createOutput name=" + name);
-    }
-    if (doCacheWrite(name, context)) {
-      if (VERBOSE) {
-        System.out.println("  to cache");
-      }
-      return cache.createOutput(name, context);
-    } else {
-      return in.createOutput(name, context);
-    }
-  }
+	@Override
+	public IndexOutput createOutput(String name, IOContext context) throws IOException {
+		if (VERBOSE) {
+			System.out.println("nrtdir.createOutput name=" + name);
+		}
+		if (doCacheWrite(name, context)) {
+			if (VERBOSE) {
+				System.out.println("  to cache");
+			}
+			return cache.createOutput(name, context);
+		} else {
+			return in.createOutput(name, context);
+		}
+	}
 
-  @Override
-  public void sync(Collection<String> fileNames) throws IOException {
-    if (VERBOSE) {
-      System.out.println("nrtdir.sync files=" + fileNames);
-    }
-    for(String fileName : fileNames) {
-      unCache(fileName);
-    }
-    in.sync(fileNames);
-  }
+	@Override
+	public void sync(Collection<String> fileNames) throws IOException {
+		if (VERBOSE) {
+			System.out.println("nrtdir.sync files=" + fileNames);
+		}
+		for (String fileName : fileNames) {
+			unCache(fileName);
+		}
+		in.sync(fileNames);
+	}
 
-  @Override
-  public void rename(String source, String dest) throws IOException {
-    unCache(source);
-    if (cache.fileNameExists(dest)) {
-      throw new IllegalArgumentException("target file " + dest + " already exists");
-    }
-    in.rename(source, dest);
-  }
+	@Override
+	public void rename(String source, String dest) throws IOException {
+		unCache(source);
+		if (cache.fileNameExists(dest)) {
+			throw new IllegalArgumentException("target file " + dest + " already exists");
+		}
+		in.rename(source, dest);
+	}
 
-  @Override
-  public synchronized IndexInput openInput(String name, IOContext context) throws IOException {
-    if (VERBOSE) {
-      System.out.println("nrtdir.openInput name=" + name);
-    }
-    if (cache.fileNameExists(name)) {
-      if (VERBOSE) {
-        System.out.println("  from cache");
-      }
-      return cache.openInput(name, context);
-    } else {
-      return in.openInput(name, context);
-    }
-  }
-  
-  /** Close this directory, which flushes any cached files
-   *  to the delegate and then closes the delegate. */
-  @Override
-  public void close() throws IOException {
-    // NOTE: technically we shouldn't have to do this, ie,
-    // IndexWriter should have sync'd all files, but we do
-    // it for defensive reasons... or in case the app is
-    // doing something custom (creating outputs directly w/o
-    // using IndexWriter):
-    boolean success = false;
-    try {
-      if (cache.isOpen) {
-        for(String fileName : cache.listAll()) {
-          unCache(fileName);
-        }
-      }
-      success = true;
-    } finally {
-      if (success) {
-        IOUtils.close(cache, in);
-      } else {
-        IOUtils.closeWhileHandlingException(cache, in);
-      }
-    }
-  }
+	@Override
+	public synchronized IndexInput openInput(String name, IOContext context) throws IOException {
+		if (VERBOSE) {
+			System.out.println("nrtdir.openInput name=" + name);
+		}
+		if (cache.fileNameExists(name)) {
+			if (VERBOSE) {
+				System.out.println("  from cache");
+			}
+			return cache.openInput(name, context);
+		} else {
+			return in.openInput(name, context);
+		}
+	}
 
-  /** Subclass can override this to customize logic; return
-   *  true if this file should be written to the RAMDirectory. */
-  protected boolean doCacheWrite(String name, IOContext context) {
-    //System.out.println(Thread.currentThread().getName() + ": CACHE check merge=" + merge + " size=" + (merge==null ? 0 : merge.estimatedMergeBytes));
+	/**
+	 * Close this directory, which flushes any cached files
+	 * to the delegate and then closes the delegate.
+	 */
+	@Override
+	public void close() throws IOException {
+		// NOTE: technically we shouldn't have to do this, ie,
+		// IndexWriter should have sync'd all files, but we do
+		// it for defensive reasons... or in case the app is
+		// doing something custom (creating outputs directly w/o
+		// using IndexWriter):
+		boolean success = false;
+		try {
+			if (cache.isOpen) {
+				for (String fileName : cache.listAll()) {
+					unCache(fileName);
+				}
+			}
+			success = true;
+		} finally {
+			if (success) {
+				IOUtils.close(cache, in);
+			} else {
+				IOUtils.closeWhileHandlingException(cache, in);
+			}
+		}
+	}
 
-    long bytes = 0;
-    if (context.mergeInfo != null) {
-      bytes = context.mergeInfo.estimatedMergeBytes;
-    } else if (context.flushInfo != null) {
-      bytes = context.flushInfo.estimatedSegmentSize;
-    }
+	/**
+	 * Subclass can override this to customize logic; return
+	 * true if this file should be written to the RAMDirectory.
+	 */
+	protected boolean doCacheWrite(String name, IOContext context) {
+		//System.out.println(Thread.currentThread().getName() + ": CACHE check merge=" + merge + " size=" + (merge==null ? 0 : merge.estimatedMergeBytes));
 
-    return (bytes <= maxMergeSizeBytes) && (bytes + cache.ramBytesUsed()) <= maxCachedBytes;
-  }
+		long bytes = 0;
+		if (context.mergeInfo != null) {
+			bytes = context.mergeInfo.estimatedMergeBytes;
+		} else if (context.flushInfo != null) {
+			bytes = context.flushInfo.estimatedSegmentSize;
+		}
 
-  @Override
-  public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) throws IOException {
-    if (VERBOSE) {
-      System.out.println("nrtdir.createTempOutput prefix=" + prefix + " suffix=" + suffix);
-    }
-    Set<String> toDelete = new HashSet<>();
+		return (bytes <= maxMergeSizeBytes) && (bytes + cache.ramBytesUsed()) <= maxCachedBytes;
+	}
 
-    // This is very ugly/messy/dangerous (can in some disastrous case maybe create too many temp files), but I don't know of a cleaner way:
-    boolean success = false;
+	@Override
+	public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) throws IOException {
+		if (VERBOSE) {
+			System.out.println("nrtdir.createTempOutput prefix=" + prefix + " suffix=" + suffix);
+		}
+		Set<String> toDelete = new HashSet<>();
 
-    Directory first;
-    Directory second;
-    if (doCacheWrite(prefix, context)) {
-      first = cache;
-      second = in;
-    } else {
-      first = in;
-      second = cache;
-    }
+		// This is very ugly/messy/dangerous (can in some disastrous case maybe create too many temp files), but I don't know of a cleaner way:
+		boolean success = false;
 
-    IndexOutput out = null;
-    try {
-      while (true) {
-        out = first.createTempOutput(prefix, suffix, context);
-        String name = out.getName();
-        toDelete.add(name);
-        if (slowFileExists(second, name)) {
-          out.close();
-        } else {
-          toDelete.remove(name);
-          success = true;
-          break;
-        }
-      }
-    } finally {
-      if (success) {
-        IOUtils.deleteFiles(first, toDelete);
-      } else {
-        IOUtils.closeWhileHandlingException(out);
-        IOUtils.deleteFilesIgnoringExceptions(first, toDelete);
-      }
-    }
+		Directory first;
+		Directory second;
+		if (doCacheWrite(prefix, context)) {
+			first = cache;
+			second = in;
+		} else {
+			first = in;
+			second = cache;
+		}
 
-    return out;
-  }
+		IndexOutput out = null;
+		try {
+			while (true) {
+				out = first.createTempOutput(prefix, suffix, context);
+				String name = out.getName();
+				toDelete.add(name);
+				if (slowFileExists(second, name)) {
+					out.close();
+				} else {
+					toDelete.remove(name);
+					success = true;
+					break;
+				}
+			}
+		} finally {
+			if (success) {
+				IOUtils.deleteFiles(first, toDelete);
+			} else {
+				IOUtils.closeWhileHandlingException(out);
+				IOUtils.deleteFilesIgnoringExceptions(first, toDelete);
+			}
+		}
 
-  /** Returns true if the file exists
-   *  (can be opened), false if it cannot be opened, and
-   *  (unlike Java's File.exists) throws IOException if
-   *  there's some unexpected error. */
-  static boolean slowFileExists(Directory dir, String fileName) throws IOException {
-    try {
-      dir.openInput(fileName, IOContext.DEFAULT).close();
-      return true;
-    } catch (NoSuchFileException | FileNotFoundException e) {
-      return false;
-    }
-  }
+		return out;
+	}
 
-  private final Object uncacheLock = new Object();
+	/**
+	 * Returns true if the file exists
+	 * (can be opened), false if it cannot be opened, and
+	 * (unlike Java's File.exists) throws IOException if
+	 * there's some unexpected error.
+	 */
+	static boolean slowFileExists(Directory dir, String fileName) throws IOException {
+		try {
+			dir.openInput(fileName, IOContext.DEFAULT).close();
+			return true;
+		} catch (NoSuchFileException | FileNotFoundException e) {
+			return false;
+		}
+	}
 
-  private void unCache(String fileName) throws IOException {
-    // Only let one thread uncache at a time; this only
-    // happens during commit() or close():
-    synchronized(uncacheLock) {
-      if (VERBOSE) {
-        System.out.println("nrtdir.unCache name=" + fileName);
-      }
-      if (!cache.fileNameExists(fileName)) {
-        // Another thread beat us...
-        return;
-      }
-      assert slowFileExists(in, fileName) == false: "fileName=" + fileName + " exists both in cache and in delegate";
+	private final Object uncacheLock = new Object();
 
-      final IOContext context = IOContext.DEFAULT;
-      final IndexOutput out = in.createOutput(fileName, context);
-      IndexInput in = null;
-      try {
-        in = cache.openInput(fileName, context);
-        out.copyBytes(in, in.length());
-      } finally {
-        IOUtils.close(in, out);
-      }
+	private void unCache(String fileName) throws IOException {
+		// Only let one thread uncache at a time; this only
+		// happens during commit() or close():
+		synchronized (uncacheLock) {
+			if (VERBOSE) {
+				System.out.println("nrtdir.unCache name=" + fileName);
+			}
+			if (!cache.fileNameExists(fileName)) {
+				// Another thread beat us...
+				return;
+			}
+			assert slowFileExists(in, fileName) == false : "fileName=" + fileName + " exists both in cache and in delegate";
 
-      // Lock order: uncacheLock -> this
-      synchronized(this) {
-        // Must sync here because other sync methods have
-        // if (cache.fileNameExists(name)) { ... } else { ... }:
-        cache.deleteFile(fileName);
-      }
-    }
-  }
+			final IOContext context = IOContext.DEFAULT;
+			final IndexOutput out = in.createOutput(fileName, context);
+			IndexInput in = null;
+			try {
+				in = cache.openInput(fileName, context);
+				out.copyBytes(in, in.length());
+			} finally {
+				IOUtils.close(in, out);
+			}
 
-  @Override
-  public long ramBytesUsed() {
-    return cache.ramBytesUsed();
-  }
-  
-  @Override
-  public Collection<Accountable> getChildResources() {
-    return Collections.singleton(Accountables.namedAccountable("cache", cache));
-  }
+			// Lock order: uncacheLock -> this
+			synchronized (this) {
+				// Must sync here because other sync methods have
+				// if (cache.fileNameExists(name)) { ... } else { ... }:
+				cache.deleteFile(fileName);
+			}
+		}
+	}
+
+	@Override
+	public long ramBytesUsed() {
+		return cache.ramBytesUsed();
+	}
+
+	@Override
+	public Collection<Accountable> getChildResources() {
+		return Collections.singleton(Accountables.namedAccountable("cache", cache));
+	}
 }

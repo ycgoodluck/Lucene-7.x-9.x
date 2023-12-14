@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Utilities for reflections */
+/**
+ * Utilities for reflections
+ */
 package org.apache.lucene.luke.util.reflection;

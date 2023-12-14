@@ -22,29 +22,29 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestSpanBoostQuery extends LuceneTestCase {
 
-  public void testEquals() {
-    final float boost = random().nextFloat() * 3 - 1;
-    SpanTermQuery q = new SpanTermQuery(new Term("foo", "bar"));
-    SpanBoostQuery q1 = new SpanBoostQuery(q, boost);
-    SpanBoostQuery q2 = new SpanBoostQuery(q, boost);
-    assertEquals(q1, q2);
-    assertEquals(q1.getBoost(), q2.getBoost(), 0f);
- 
-    float boost2 = boost;
-    while (boost == boost2) {
-      boost2 = random().nextFloat() * 3 - 1;
-    }
-    SpanBoostQuery q3 = new SpanBoostQuery(q, boost2);
-    assertFalse(q1.equals(q3));
-    assertFalse(q1.hashCode() == q3.hashCode());
-  }
+	public void testEquals() {
+		final float boost = random().nextFloat() * 3 - 1;
+		SpanTermQuery q = new SpanTermQuery(new Term("foo", "bar"));
+		SpanBoostQuery q1 = new SpanBoostQuery(q, boost);
+		SpanBoostQuery q2 = new SpanBoostQuery(q, boost);
+		assertEquals(q1, q2);
+		assertEquals(q1.getBoost(), q2.getBoost(), 0f);
 
-  public void testToString() {
-    assertEquals("(foo:bar)^2.0", new SpanBoostQuery(new SpanTermQuery(new Term("foo", "bar")), 2).toString());
-    SpanOrQuery bq = new SpanOrQuery(
-        new SpanTermQuery(new Term("foo", "bar")),
-        new SpanTermQuery(new Term("foo", "baz")));
-    assertEquals("(spanOr([foo:bar, foo:baz]))^2.0", new SpanBoostQuery(bq, 2).toString());
-  }
+		float boost2 = boost;
+		while (boost == boost2) {
+			boost2 = random().nextFloat() * 3 - 1;
+		}
+		SpanBoostQuery q3 = new SpanBoostQuery(q, boost2);
+		assertFalse(q1.equals(q3));
+		assertFalse(q1.hashCode() == q3.hashCode());
+	}
+
+	public void testToString() {
+		assertEquals("(foo:bar)^2.0", new SpanBoostQuery(new SpanTermQuery(new Term("foo", "bar")), 2).toString());
+		SpanOrQuery bq = new SpanOrQuery(
+			new SpanTermQuery(new Term("foo", "bar")),
+			new SpanTermQuery(new Term("foo", "baz")));
+		assertEquals("(spanOr([foo:bar, foo:baz]))^2.0", new SpanBoostQuery(bq, 2).toString());
+	}
 
 }

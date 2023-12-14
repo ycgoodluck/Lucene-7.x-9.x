@@ -26,7 +26,7 @@ import org.apache.lucene.analysis.util.MultiTermAwareComponent;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link UpperCaseFilter}. 
+ * Factory for {@link UpperCaseFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_uppercase" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -34,30 +34,33 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.UpperCaseFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * 
+ *
  * <p><b>NOTE:</b> In Unicode, this transformation may lose information when the
  * upper case character represents more than one lower case character. Use this filter
- * when you require uppercase tokens.  Use the {@link LowerCaseFilterFactory} for 
+ * when you require uppercase tokens.  Use the {@link LowerCaseFilterFactory} for
  * general search matching
+ *
  * @since 4.7.0
  */
 public class UpperCaseFilterFactory extends TokenFilterFactory implements MultiTermAwareComponent {
-  
-  /** Creates a new UpperCaseFilterFactory */
-  public UpperCaseFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
 
-  @Override
-  public UpperCaseFilter create(TokenStream input) {
-    return new UpperCaseFilter(input);
-  }
+	/**
+	 * Creates a new UpperCaseFilterFactory
+	 */
+	public UpperCaseFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	@Override
+	public UpperCaseFilter create(TokenStream input) {
+		return new UpperCaseFilter(input);
+	}
+
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Models and APIs for the Analysis tab */
+/**
+ * Models and APIs for the Analysis tab
+ */
 package org.apache.lucene.luke.models.analysis;

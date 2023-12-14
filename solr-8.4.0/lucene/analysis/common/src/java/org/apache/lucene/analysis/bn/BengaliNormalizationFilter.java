@@ -34,26 +34,27 @@ import java.io.IOException;
  * {@link SetKeywordMarkerFilter} or a custom {@link TokenFilter} that sets
  * the {@link KeywordAttribute} before this {@link TokenStream}.
  * </p>
+ *
  * @see BengaliNormalizer
  */
 public final class BengaliNormalizationFilter extends TokenFilter {
 
-  private final BengaliNormalizer normalizer = new BengaliNormalizer();
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
-  
-  public BengaliNormalizationFilter(TokenStream input) {
-    super(input);
-  }
+	private final BengaliNormalizer normalizer = new BengaliNormalizer();
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if (!keywordAtt.isKeyword())
-        termAtt.setLength(normalizer.normalize(termAtt.buffer(), 
-            termAtt.length()));
-      return true;
-    } 
-    return false;
-  }
+	public BengaliNormalizationFilter(TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAtt.isKeyword())
+				termAtt.setLength(normalizer.normalize(termAtt.buffer(),
+					termAtt.length()));
+			return true;
+		}
+		return false;
+	}
 }

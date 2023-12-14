@@ -30,84 +30,87 @@ import org.apache.lucene.util.BytesRef;
  */
 public final class SlowImpactsEnum extends ImpactsEnum {
 
-  private static final Impacts DUMMY_IMPACTS = new Impacts() {
+	private static final Impacts DUMMY_IMPACTS = new Impacts() {
 
-    private final List<Impact> impacts = Collections.singletonList(new Impact(Integer.MAX_VALUE, 1L));
+		private final List<Impact> impacts = Collections.singletonList(new Impact(Integer.MAX_VALUE, 1L));
 
-    @Override
-    public int numLevels() {
-      return 1;
-    }
+		@Override
+		public int numLevels() {
+			return 1;
+		}
 
-    @Override
-    public int getDocIdUpTo(int level) {
-      return DocIdSetIterator.NO_MORE_DOCS;
-    }
+		@Override
+		public int getDocIdUpTo(int level) {
+			return DocIdSetIterator.NO_MORE_DOCS;
+		}
 
-    @Override
-    public List<Impact> getImpacts(int level) {
-      return impacts;
-    }
+		@Override
+		public List<Impact> getImpacts(int level) {
+			return impacts;
+		}
 
-  };
+	};
 
-  private final PostingsEnum delegate;
+	private final PostingsEnum delegate;
 
-  /** Wrap the given {@link PostingsEnum}. */
-  public SlowImpactsEnum(PostingsEnum delegate) {
-    this.delegate = delegate;
-  }
+	/**
+	 * Wrap the given {@link PostingsEnum}.
+	 */
+	public SlowImpactsEnum(PostingsEnum delegate) {
+		this.delegate = delegate;
+	}
 
-  @Override
-  public int nextDoc() throws IOException {
-    return delegate.nextDoc();
-  }
+	@Override
+	public int nextDoc() throws IOException {
+		return delegate.nextDoc();
+	}
 
-  @Override
-  public int docID() {
-    return delegate.docID();
-  }
+	@Override
+	public int docID() {
+		return delegate.docID();
+	}
 
-  @Override
-  public long cost() {
-    return delegate.cost();
-  }
+	@Override
+	public long cost() {
+		return delegate.cost();
+	}
 
-  @Override
-  public int advance(int target) throws IOException {
-    return delegate.advance(target);
-  }
+	@Override
+	public int advance(int target) throws IOException {
+		return delegate.advance(target);
+	}
 
-  @Override
-  public int startOffset() throws IOException {
-    return delegate.startOffset();
-  }
+	@Override
+	public int startOffset() throws IOException {
+		return delegate.startOffset();
+	}
 
-  @Override
-  public int nextPosition() throws IOException {
-    return delegate.nextPosition();
-  }
+	@Override
+	public int nextPosition() throws IOException {
+		return delegate.nextPosition();
+	}
 
-  @Override
-  public BytesRef getPayload() throws IOException {
-    return delegate.getPayload();
-  }
+	@Override
+	public BytesRef getPayload() throws IOException {
+		return delegate.getPayload();
+	}
 
-  @Override
-  public int freq() throws IOException {
-    return delegate.freq();
-  }
+	@Override
+	public int freq() throws IOException {
+		return delegate.freq();
+	}
 
-  @Override
-  public int endOffset() throws IOException {
-    return delegate.endOffset();
-  }
+	@Override
+	public int endOffset() throws IOException {
+		return delegate.endOffset();
+	}
 
-  @Override
-  public void advanceShallow(int target) {}
+	@Override
+	public void advanceShallow(int target) {
+	}
 
-  @Override
-  public Impacts getImpacts() {
-    return DUMMY_IMPACTS;
-  }
+	@Override
+	public Impacts getImpacts() {
+		return DUMMY_IMPACTS;
+	}
 }

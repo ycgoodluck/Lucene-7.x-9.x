@@ -35,91 +35,91 @@ import org.apache.lucene.util.mutable.MutableValueFloat;
  */
 public class FloatFieldSource extends FieldCacheSource {
 
-  public FloatFieldSource(String field) {
-    super(field);
-  }
+	public FloatFieldSource(String field) {
+		super(field);
+	}
 
-  @Override
-  public String description() {
-    return "float(" + field + ')';
-  }
+	@Override
+	public String description() {
+		return "float(" + field + ')';
+	}
 
-  @Override
-  public SortField getSortField(boolean reverse) {
-    return new SortField(field, Type.FLOAT, reverse);
-  }
-  
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+	@Override
+	public SortField getSortField(boolean reverse) {
+		return new SortField(field, Type.FLOAT, reverse);
+	}
 
-    final NumericDocValues arr = getNumericDocValues(context, readerContext);
-    
-    return new FloatDocValues(this) {
-      int lastDocID;
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
 
-      private float getValueForDoc(int doc) throws IOException {
-        if (doc < lastDocID) {
-          throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
-        }
-        lastDocID = doc;
-        int curDocID = arr.docID();
-        if (doc > curDocID) {
-          curDocID = arr.advance(doc);
-        }
-        if (doc == curDocID) {
-          return Float.intBitsToFloat((int)arr.longValue());
-        } else {
-          return 0f;
-        }
-      }
-      
-      @Override
-      public float floatVal(int doc) throws IOException {
-        return getValueForDoc(doc);
-      }
+		final NumericDocValues arr = getNumericDocValues(context, readerContext);
 
-      @Override
-      public boolean exists(int doc) throws IOException {
-        getValueForDoc(doc);
-        return arr.docID() == doc;
-      }
+		return new FloatDocValues(this) {
+			int lastDocID;
 
-      @Override
-      public ValueFiller getValueFiller() {
-        return new ValueFiller() {
-          private final MutableValueFloat mval = new MutableValueFloat();
+			private float getValueForDoc(int doc) throws IOException {
+				if (doc < lastDocID) {
+					throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
+				}
+				lastDocID = doc;
+				int curDocID = arr.docID();
+				if (doc > curDocID) {
+					curDocID = arr.advance(doc);
+				}
+				if (doc == curDocID) {
+					return Float.intBitsToFloat((int) arr.longValue());
+				} else {
+					return 0f;
+				}
+			}
 
-          @Override
-          public MutableValue getValue() {
-            return mval;
-          }
+			@Override
+			public float floatVal(int doc) throws IOException {
+				return getValueForDoc(doc);
+			}
 
-          @Override
-          public void fillValue(int doc) throws IOException {
-            mval.value = floatVal(doc);
-            mval.exists = arr.docID() == doc;
-          }
-        };
-      }
+			@Override
+			public boolean exists(int doc) throws IOException {
+				getValueForDoc(doc);
+				return arr.docID() == doc;
+			}
 
-    };
-  }
+			@Override
+			public ValueFiller getValueFiller() {
+				return new ValueFiller() {
+					private final MutableValueFloat mval = new MutableValueFloat();
 
-  protected NumericDocValues getNumericDocValues(Map context, LeafReaderContext readerContext) throws IOException {
-    return DocValues.getNumeric(readerContext.reader(), field);
-  }
+					@Override
+					public MutableValue getValue() {
+						return mval;
+					}
 
-  @Override
-  public boolean equals(Object o) {
-    if (o.getClass() !=  FloatFieldSource.class) return false;
-    FloatFieldSource other = (FloatFieldSource)o;
-    return super.equals(other);
-  }
+					@Override
+					public void fillValue(int doc) throws IOException {
+						mval.value = floatVal(doc);
+						mval.exists = arr.docID() == doc;
+					}
+				};
+			}
 
-  @Override
-  public int hashCode() {
-    int h = Float.class.hashCode();
-    h += super.hashCode();
-    return h;
-  }
+		};
+	}
+
+	protected NumericDocValues getNumericDocValues(Map context, LeafReaderContext readerContext) throws IOException {
+		return DocValues.getNumeric(readerContext.reader(), field);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o.getClass() != FloatFieldSource.class) return false;
+		FloatFieldSource other = (FloatFieldSource) o;
+		return super.equals(other);
+	}
+
+	@Override
+	public int hashCode() {
+		int h = Float.class.hashCode();
+		h += super.hashCode();
+		return h;
+	}
 }

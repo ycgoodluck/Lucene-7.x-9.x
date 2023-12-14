@@ -29,75 +29,75 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
  */
 final public class TrivialLookaheadFilter extends LookaheadTokenFilter<TestPosition> {
 
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
-  private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
+	private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
 
-  private int insertUpto;
+	private int insertUpto;
 
-  protected TrivialLookaheadFilter(TokenStream input) {
-    super(input);
-  }
+	protected TrivialLookaheadFilter(TokenStream input) {
+		super(input);
+	}
 
-  @Override
-  protected TestPosition newPosition() {
-    return new TestPosition();
-  }
+	@Override
+	protected TestPosition newPosition() {
+		return new TestPosition();
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    // At the outset, getMaxPos is -1. So we'll peek. When we reach the end of the sentence and go to the
-    // first token of the next sentence, maxPos will be the prev sentence's end token, and we'll go again.
-    if (positions.getMaxPos() < outputPos) {
-      peekSentence();
-    }
+	@Override
+	public boolean incrementToken() throws IOException {
+		// At the outset, getMaxPos is -1. So we'll peek. When we reach the end of the sentence and go to the
+		// first token of the next sentence, maxPos will be the prev sentence's end token, and we'll go again.
+		if (positions.getMaxPos() < outputPos) {
+			peekSentence();
+		}
 
-    return nextToken();
-  }
+		return nextToken();
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    insertUpto = -1;
-  }
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		insertUpto = -1;
+	}
 
-  @Override
-  protected void afterPosition() throws IOException {
-    if (insertUpto < outputPos) {
-      insertToken();
-      // replace term with 'improved' term.
-      clearAttributes();
-      termAtt.setEmpty();
-      posIncAtt.setPositionIncrement(0);
-      termAtt.append(positions.get(outputPos).getFact());
-      offsetAtt.setOffset(positions.get(outputPos).startOffset,
-                          positions.get(outputPos+1).endOffset);
-      insertUpto = outputPos;
-    }
-  }
+	@Override
+	protected void afterPosition() throws IOException {
+		if (insertUpto < outputPos) {
+			insertToken();
+			// replace term with 'improved' term.
+			clearAttributes();
+			termAtt.setEmpty();
+			posIncAtt.setPositionIncrement(0);
+			termAtt.append(positions.get(outputPos).getFact());
+			offsetAtt.setOffset(positions.get(outputPos).startOffset,
+				positions.get(outputPos + 1).endOffset);
+			insertUpto = outputPos;
+		}
+	}
 
-  private void peekSentence() throws IOException {
-    List<String> facts = new ArrayList<>();
-    boolean haveSentence = false;
-    do {
-      if (peekToken()) {
+	private void peekSentence() throws IOException {
+		List<String> facts = new ArrayList<>();
+		boolean haveSentence = false;
+		do {
+			if (peekToken()) {
 
-        String term = new String(termAtt.buffer(), 0, termAtt.length());
-        facts.add(term + "-huh?");
-        if (".".equals(term)) {
-          haveSentence = true;
-        }
+				String term = new String(termAtt.buffer(), 0, termAtt.length());
+				facts.add(term + "-huh?");
+				if (".".equals(term)) {
+					haveSentence = true;
+				}
 
-      } else {
-        haveSentence = true;
-      }
+			} else {
+				haveSentence = true;
+			}
 
-    } while (!haveSentence);
+		} while (!haveSentence);
 
-    // attach the (now disambiguated) analyzed tokens to the positions.
-    for (int x = 0; x < facts.size(); x++) {
-      // sentenceTokens is just relative to sentence, positions is absolute.
-      positions.get(outputPos + x).setFact(facts.get(x));
-    }
-  }
+		// attach the (now disambiguated) analyzed tokens to the positions.
+		for (int x = 0; x < facts.size(); x++) {
+			// sentenceTokens is just relative to sentence, positions is absolute.
+			positions.get(outputPos + x).setFact(facts.get(x));
+		}
+	}
 }

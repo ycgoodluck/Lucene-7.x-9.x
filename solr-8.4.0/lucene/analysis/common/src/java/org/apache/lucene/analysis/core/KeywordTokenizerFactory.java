@@ -24,45 +24,49 @@ import java.util.Map;
 import static org.apache.lucene.analysis.standard.StandardTokenizer.MAX_TOKEN_LENGTH_LIMIT;
 
 /**
- * Factory for {@link KeywordTokenizer}. 
+ * Factory for {@link KeywordTokenizer}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_keyword" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
  *     &lt;tokenizer class="solr.KeywordTokenizerFactory" maxTokenLen="256"/&gt;
  *   &lt;/analyzer&gt;
- * &lt;/fieldType&gt;</pre> 
- *
+ * &lt;/fieldType&gt;</pre>
+ * <p>
  * Options:
  * <ul>
- *   <li>maxTokenLen: max token length, should be greater than 0 and less than 
+ *   <li>maxTokenLen: max token length, should be greater than 0 and less than
  *        MAX_TOKEN_LENGTH_LIMIT (1024*1024). It is rare to need to change this
  *      else {@link KeywordTokenizer}::DEFAULT_BUFFER_SIZE</li>
  * </ul>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class KeywordTokenizerFactory extends TokenizerFactory {
 
-  /** SPI name */
-  public static final String NAME = "keyword";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "keyword";
 
-  private final int maxTokenLen;
-  
-  /** Creates a new KeywordTokenizerFactory */
-  public KeywordTokenizerFactory(Map<String,String> args) {
-    super(args);
-    maxTokenLen = getInt(args, "maxTokenLen", KeywordTokenizer.DEFAULT_BUFFER_SIZE);
-    if (maxTokenLen > MAX_TOKEN_LENGTH_LIMIT || maxTokenLen <= 0) {
-      throw new IllegalArgumentException("maxTokenLen must be greater than 0 and less than " + MAX_TOKEN_LENGTH_LIMIT + " passed: " + maxTokenLen);
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public KeywordTokenizer create(AttributeFactory factory) {
-    return new KeywordTokenizer(factory, maxTokenLen);
-  }
+	private final int maxTokenLen;
+
+	/**
+	 * Creates a new KeywordTokenizerFactory
+	 */
+	public KeywordTokenizerFactory(Map<String, String> args) {
+		super(args);
+		maxTokenLen = getInt(args, "maxTokenLen", KeywordTokenizer.DEFAULT_BUFFER_SIZE);
+		if (maxTokenLen > MAX_TOKEN_LENGTH_LIMIT || maxTokenLen <= 0) {
+			throw new IllegalArgumentException("maxTokenLen must be greater than 0 and less than " + MAX_TOKEN_LENGTH_LIMIT + " passed: " + maxTokenLen);
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public KeywordTokenizer create(AttributeFactory factory) {
+		return new KeywordTokenizer(factory, maxTokenLen);
+	}
 }

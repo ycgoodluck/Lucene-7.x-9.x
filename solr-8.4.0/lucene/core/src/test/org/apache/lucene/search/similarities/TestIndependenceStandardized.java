@@ -20,9 +20,9 @@ import java.util.Random;
 
 public class TestIndependenceStandardized extends BaseSimilarityTestCase {
 
-  @Override
-  protected final Similarity getSimilarity(Random random) {
-    return new DFISimilarity(new IndependenceStandardized());
-  }
+	@Override
+	protected final Similarity getSimilarity(Random random) {
+		return new DFISimilarity(new IndependenceStandardized());
+	}
 
 }

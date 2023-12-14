@@ -22,20 +22,22 @@ package org.apache.lucene.search;
  */
 
 public class TotalHitCountCollector extends SimpleCollector {
-  private int totalHits;
+	private int totalHits;
 
-  /** Returns how many hits matched the search. */
-  public int getTotalHits() {
-    return totalHits;
-  }
+	/**
+	 * Returns how many hits matched the search.
+	 */
+	public int getTotalHits() {
+		return totalHits;
+	}
 
-  @Override
-  public void collect(int doc) {
-    totalHits++;
-  }
+	@Override
+	public void collect(int doc) {
+		totalHits++;
+	}
 
-  @Override
-  public ScoreMode scoreMode() {
-    return ScoreMode.COMPLETE_NO_SCORES;
-  }
+	@Override
+	public ScoreMode scoreMode() {
+		return ScoreMode.COMPLETE_NO_SCORES;
+	}
 }

@@ -27,6 +27,7 @@ import org.apache.lucene.util.Attribute;
  * and will be null.
  */
 public interface BaseFormAttribute extends Attribute {
-  public String getBaseForm();
-  public void setToken(Token token);
+	public String getBaseForm();
+
+	public void setToken(Token token);
 }

@@ -26,10 +26,10 @@ import org.apache.lucene.util.TestUtil;
  */
 public class TestSTUniformSplitPostingFormat extends TestUniformSplitPostingFormat {
 
-  private final Codec codec = TestUtil.alwaysPostingsFormat(new STUniformSplitRot13PostingsFormat());
+	private final Codec codec = TestUtil.alwaysPostingsFormat(new STUniformSplitRot13PostingsFormat());
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

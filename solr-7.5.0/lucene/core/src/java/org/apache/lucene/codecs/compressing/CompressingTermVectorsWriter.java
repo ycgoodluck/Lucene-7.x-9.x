@@ -51,855 +51,871 @@ import org.apache.lucene.util.packed.PackedInts;
 
 /**
  * {@link TermVectorsWriter} for {@link CompressingTermVectorsFormat}.
+ *
  * @lucene.experimental
  */
 public final class CompressingTermVectorsWriter extends TermVectorsWriter {
 
-  // hard limit on the maximum number of documents per chunk
-  static final int MAX_DOCUMENTS_PER_CHUNK = 128;
+	// hard limit on the maximum number of documents per chunk
+	static final int MAX_DOCUMENTS_PER_CHUNK = 128;
 
-  static final String VECTORS_EXTENSION = "tvd";
-  static final String VECTORS_INDEX_EXTENSION = "tvx";
+	static final String VECTORS_EXTENSION = "tvd";
+	static final String VECTORS_INDEX_EXTENSION = "tvx";
 
-  static final String CODEC_SFX_IDX = "Index";
-  static final String CODEC_SFX_DAT = "Data";
+	static final String CODEC_SFX_IDX = "Index";
+	static final String CODEC_SFX_DAT = "Data";
 
-  static final int VERSION_START = 1;
-  static final int VERSION_CURRENT = VERSION_START;
+	static final int VERSION_START = 1;
+	static final int VERSION_CURRENT = VERSION_START;
 
-  static final int PACKED_BLOCK_SIZE = 64;
+	static final int PACKED_BLOCK_SIZE = 64;
 
-  static final int POSITIONS = 0x01;
-  static final int   OFFSETS = 0x02;
-  static final int  PAYLOADS = 0x04;
-  static final int FLAGS_BITS = PackedInts.bitsRequired(POSITIONS | OFFSETS | PAYLOADS);
+	static final int POSITIONS = 0x01;
+	static final int OFFSETS = 0x02;
+	static final int PAYLOADS = 0x04;
+	static final int FLAGS_BITS = PackedInts.bitsRequired(POSITIONS | OFFSETS | PAYLOADS);
 
-  private final String segment;
-  private CompressingStoredFieldsIndexWriter indexWriter;
-  private IndexOutput vectorsStream;
+	private final String segment;
+	private CompressingStoredFieldsIndexWriter indexWriter;
+	private IndexOutput vectorsStream;
 
-  private final CompressionMode compressionMode;
-  private final Compressor compressor;
-  private final int chunkSize;
-  
-  private long numChunks; // number of compressed blocks written
-  private long numDirtyChunks; // number of incomplete compressed blocks written
+	private final CompressionMode compressionMode;
+	private final Compressor compressor;
+	private final int chunkSize;
 
-  /** a pending doc */
-  private class DocData {
-    final int numFields;
-    final Deque<FieldData> fields;
-    final int posStart, offStart, payStart;
-    DocData(int numFields, int posStart, int offStart, int payStart) {
-      this.numFields = numFields;
-      this.fields = new ArrayDeque<>(numFields);
-      this.posStart = posStart;
-      this.offStart = offStart;
-      this.payStart = payStart;
-    }
-    FieldData addField(int fieldNum, int numTerms, boolean positions, boolean offsets, boolean payloads) {
-      final FieldData field;
-      if (fields.isEmpty()) {
-        field = new FieldData(fieldNum, numTerms, positions, offsets, payloads, posStart, offStart, payStart);
-      } else {
-        final FieldData last = fields.getLast();
-        final int posStart = last.posStart + (last.hasPositions ? last.totalPositions : 0);
-        final int offStart = last.offStart + (last.hasOffsets ? last.totalPositions : 0);
-        final int payStart = last.payStart + (last.hasPayloads ? last.totalPositions : 0);
-        field = new FieldData(fieldNum, numTerms, positions, offsets, payloads, posStart, offStart, payStart);
-      }
-      fields.add(field);
-      return field;
-    }
-  }
+	private long numChunks; // number of compressed blocks written
+	private long numDirtyChunks; // number of incomplete compressed blocks written
 
-  private DocData addDocData(int numVectorFields) {
-    FieldData last = null;
-    for (Iterator<DocData> it = pendingDocs.descendingIterator(); it.hasNext(); ) {
-      final DocData doc = it.next();
-      if (!doc.fields.isEmpty()) {
-        last = doc.fields.getLast();
-        break;
-      }
-    }
-    final DocData doc;
-    if (last == null) {
-      doc = new DocData(numVectorFields, 0, 0, 0);
-    } else {
-      final int posStart = last.posStart + (last.hasPositions ? last.totalPositions : 0);
-      final int offStart = last.offStart + (last.hasOffsets ? last.totalPositions : 0);
-      final int payStart = last.payStart + (last.hasPayloads ? last.totalPositions : 0);
-      doc = new DocData(numVectorFields, posStart, offStart, payStart);
-    }
-    pendingDocs.add(doc);
-    return doc;
-  }
+	/**
+	 * a pending doc
+	 */
+	private class DocData {
+		final int numFields;
+		final Deque<FieldData> fields;
+		final int posStart, offStart, payStart;
 
-  /** a pending field */
-  private class FieldData {
-    final boolean hasPositions, hasOffsets, hasPayloads;
-    final int fieldNum, flags, numTerms;
-    // freqs[] 记录term的词频
-    final int[] freqs, prefixLengths, suffixLengths;
-    final int posStart, offStart, payStart;
-    int totalPositions;
-    int ord;
-    FieldData(int fieldNum, int numTerms, boolean positions, boolean offsets, boolean payloads,
-        int posStart, int offStart, int payStart) {
-      this.fieldNum = fieldNum;
-      this.numTerms = numTerms;
-      this.hasPositions = positions;
-      this.hasOffsets = offsets;
-      this.hasPayloads = payloads;
-      this.flags = (positions ? POSITIONS : 0) | (offsets ? OFFSETS : 0) | (payloads ? PAYLOADS : 0);
-      this.freqs = new int[numTerms];
-      this.prefixLengths = new int[numTerms];
-      this.suffixLengths = new int[numTerms];
-      this.posStart = posStart;
-      this.offStart = offStart;
-      this.payStart = payStart;
-      totalPositions = 0;
-      ord = 0;
-    }
-    void addTerm(int freq, int prefixLength, int suffixLength) {
-      freqs[ord] = freq;
-      prefixLengths[ord] = prefixLength;
-      suffixLengths[ord] = suffixLength;
-      ++ord;
-    }
-    void addPosition(int position, int startOffset, int length, int payloadLength) {
-      if (hasPositions) {
-        if (posStart + totalPositions == positionsBuf.length) {
-          positionsBuf = ArrayUtil.grow(positionsBuf);
-        }
-        positionsBuf[posStart + totalPositions] = position;
-      }
-      if (hasOffsets) {
-        if (offStart + totalPositions == startOffsetsBuf.length) {
-          final int newLength = ArrayUtil.oversize(offStart + totalPositions, 4);
-          startOffsetsBuf = ArrayUtil.growExact(startOffsetsBuf, newLength);
-          lengthsBuf = ArrayUtil.growExact(lengthsBuf, newLength);
-        }
-        startOffsetsBuf[offStart + totalPositions] = startOffset;
-        lengthsBuf[offStart + totalPositions] = length;
-      }
-      if (hasPayloads) {
-        if (payStart + totalPositions == payloadLengthsBuf.length) {
-          payloadLengthsBuf = ArrayUtil.grow(payloadLengthsBuf);
-        }
-        payloadLengthsBuf[payStart + totalPositions] = payloadLength;
-      }
-      ++totalPositions;
-    }
-  }
+		DocData(int numFields, int posStart, int offStart, int payStart) {
+			this.numFields = numFields;
+			this.fields = new ArrayDeque<>(numFields);
+			this.posStart = posStart;
+			this.offStart = offStart;
+			this.payStart = payStart;
+		}
 
-  private int numDocs; // total number of docs seen
-  private final Deque<DocData> pendingDocs; // pending docs
-  private DocData curDoc; // current document
-  private FieldData curField; // current field
-  private final BytesRef lastTerm;
-  private int[] positionsBuf, startOffsetsBuf, lengthsBuf, payloadLengthsBuf;
-  private final GrowableByteArrayDataOutput termSuffixes; // buffered term suffixes
-  private final GrowableByteArrayDataOutput payloadBytes; // buffered term payloads
-  private final BlockPackedWriter writer;
+		FieldData addField(int fieldNum, int numTerms, boolean positions, boolean offsets, boolean payloads) {
+			final FieldData field;
+			if (fields.isEmpty()) {
+				field = new FieldData(fieldNum, numTerms, positions, offsets, payloads, posStart, offStart, payStart);
+			} else {
+				final FieldData last = fields.getLast();
+				final int posStart = last.posStart + (last.hasPositions ? last.totalPositions : 0);
+				final int offStart = last.offStart + (last.hasOffsets ? last.totalPositions : 0);
+				final int payStart = last.payStart + (last.hasPayloads ? last.totalPositions : 0);
+				field = new FieldData(fieldNum, numTerms, positions, offsets, payloads, posStart, offStart, payStart);
+			}
+			fields.add(field);
+			return field;
+		}
+	}
 
-  /** Sole constructor. */
-  public CompressingTermVectorsWriter(Directory directory, SegmentInfo si, String segmentSuffix, IOContext context,
-      String formatName, CompressionMode compressionMode, int chunkSize, int blockSize) throws IOException {
-    assert directory != null;
-    this.segment = si.name;
-    this.compressionMode = compressionMode;
-    this.compressor = compressionMode.newCompressor();
-    this.chunkSize = chunkSize;
+	private DocData addDocData(int numVectorFields) {
+		FieldData last = null;
+		for (Iterator<DocData> it = pendingDocs.descendingIterator(); it.hasNext(); ) {
+			final DocData doc = it.next();
+			if (!doc.fields.isEmpty()) {
+				last = doc.fields.getLast();
+				break;
+			}
+		}
+		final DocData doc;
+		if (last == null) {
+			doc = new DocData(numVectorFields, 0, 0, 0);
+		} else {
+			final int posStart = last.posStart + (last.hasPositions ? last.totalPositions : 0);
+			final int offStart = last.offStart + (last.hasOffsets ? last.totalPositions : 0);
+			final int payStart = last.payStart + (last.hasPayloads ? last.totalPositions : 0);
+			doc = new DocData(numVectorFields, posStart, offStart, payStart);
+		}
+		pendingDocs.add(doc);
+		return doc;
+	}
 
-    numDocs = 0;
-    pendingDocs = new ArrayDeque<>();
-    termSuffixes = new GrowableByteArrayDataOutput(ArrayUtil.oversize(chunkSize, 1));
-    payloadBytes = new GrowableByteArrayDataOutput(ArrayUtil.oversize(1, 1));
-    lastTerm = new BytesRef(ArrayUtil.oversize(30, 1));
+	/**
+	 * a pending field
+	 */
+	private class FieldData {
+		final boolean hasPositions, hasOffsets, hasPayloads;
+		final int fieldNum, flags, numTerms;
+		// freqs[] 记录term的词频
+		final int[] freqs, prefixLengths, suffixLengths;
+		final int posStart, offStart, payStart;
+		int totalPositions;
+		int ord;
 
-    boolean success = false;
-    IndexOutput indexStream = directory.createOutput(IndexFileNames.segmentFileName(segment, segmentSuffix, VECTORS_INDEX_EXTENSION), 
-                                                                     context);
-    try {
-      vectorsStream = directory.createOutput(IndexFileNames.segmentFileName(segment, segmentSuffix, VECTORS_EXTENSION),
-                                                     context);
+		FieldData(int fieldNum, int numTerms, boolean positions, boolean offsets, boolean payloads,
+							int posStart, int offStart, int payStart) {
+			this.fieldNum = fieldNum;
+			this.numTerms = numTerms;
+			this.hasPositions = positions;
+			this.hasOffsets = offsets;
+			this.hasPayloads = payloads;
+			this.flags = (positions ? POSITIONS : 0) | (offsets ? OFFSETS : 0) | (payloads ? PAYLOADS : 0);
+			this.freqs = new int[numTerms];
+			this.prefixLengths = new int[numTerms];
+			this.suffixLengths = new int[numTerms];
+			this.posStart = posStart;
+			this.offStart = offStart;
+			this.payStart = payStart;
+			totalPositions = 0;
+			ord = 0;
+		}
 
-      final String codecNameIdx = formatName + CODEC_SFX_IDX;
-      final String codecNameDat = formatName + CODEC_SFX_DAT;
-      CodecUtil.writeIndexHeader(indexStream, codecNameIdx, VERSION_CURRENT, si.getId(), segmentSuffix);
-      CodecUtil.writeIndexHeader(vectorsStream, codecNameDat, VERSION_CURRENT, si.getId(), segmentSuffix);
-      assert CodecUtil.indexHeaderLength(codecNameDat, segmentSuffix) == vectorsStream.getFilePointer();
-      assert CodecUtil.indexHeaderLength(codecNameIdx, segmentSuffix) == indexStream.getFilePointer();
+		void addTerm(int freq, int prefixLength, int suffixLength) {
+			freqs[ord] = freq;
+			prefixLengths[ord] = prefixLength;
+			suffixLengths[ord] = suffixLength;
+			++ord;
+		}
 
-      indexWriter = new CompressingStoredFieldsIndexWriter(indexStream, blockSize);
-      indexStream = null;
+		void addPosition(int position, int startOffset, int length, int payloadLength) {
+			if (hasPositions) {
+				if (posStart + totalPositions == positionsBuf.length) {
+					positionsBuf = ArrayUtil.grow(positionsBuf);
+				}
+				positionsBuf[posStart + totalPositions] = position;
+			}
+			if (hasOffsets) {
+				if (offStart + totalPositions == startOffsetsBuf.length) {
+					final int newLength = ArrayUtil.oversize(offStart + totalPositions, 4);
+					startOffsetsBuf = ArrayUtil.growExact(startOffsetsBuf, newLength);
+					lengthsBuf = ArrayUtil.growExact(lengthsBuf, newLength);
+				}
+				startOffsetsBuf[offStart + totalPositions] = startOffset;
+				lengthsBuf[offStart + totalPositions] = length;
+			}
+			if (hasPayloads) {
+				if (payStart + totalPositions == payloadLengthsBuf.length) {
+					payloadLengthsBuf = ArrayUtil.grow(payloadLengthsBuf);
+				}
+				payloadLengthsBuf[payStart + totalPositions] = payloadLength;
+			}
+			++totalPositions;
+		}
+	}
 
-      vectorsStream.writeVInt(PackedInts.VERSION_CURRENT);
-      vectorsStream.writeVInt(chunkSize);
-      writer = new BlockPackedWriter(vectorsStream, PACKED_BLOCK_SIZE);
+	private int numDocs; // total number of docs seen
+	private final Deque<DocData> pendingDocs; // pending docs
+	private DocData curDoc; // current document
+	private FieldData curField; // current field
+	private final BytesRef lastTerm;
+	private int[] positionsBuf, startOffsetsBuf, lengthsBuf, payloadLengthsBuf;
+	private final GrowableByteArrayDataOutput termSuffixes; // buffered term suffixes
+	private final GrowableByteArrayDataOutput payloadBytes; // buffered term payloads
+	private final BlockPackedWriter writer;
 
-      positionsBuf = new int[1024];
-      startOffsetsBuf = new int[1024];
-      lengthsBuf = new int[1024];
-      payloadLengthsBuf = new int[1024];
+	/**
+	 * Sole constructor.
+	 */
+	public CompressingTermVectorsWriter(Directory directory, SegmentInfo si, String segmentSuffix, IOContext context,
+																			String formatName, CompressionMode compressionMode, int chunkSize, int blockSize) throws IOException {
+		assert directory != null;
+		this.segment = si.name;
+		this.compressionMode = compressionMode;
+		this.compressor = compressionMode.newCompressor();
+		this.chunkSize = chunkSize;
 
-      success = true;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(vectorsStream, indexStream, indexWriter);
-      }
-    }
-  }
+		numDocs = 0;
+		pendingDocs = new ArrayDeque<>();
+		termSuffixes = new GrowableByteArrayDataOutput(ArrayUtil.oversize(chunkSize, 1));
+		payloadBytes = new GrowableByteArrayDataOutput(ArrayUtil.oversize(1, 1));
+		lastTerm = new BytesRef(ArrayUtil.oversize(30, 1));
 
-  @Override
-  public void close() throws IOException {
-    try {
-      IOUtils.close(vectorsStream, indexWriter);
-    } finally {
-      vectorsStream = null;
-      indexWriter = null;
-    }
-  }
+		boolean success = false;
+		IndexOutput indexStream = directory.createOutput(IndexFileNames.segmentFileName(segment, segmentSuffix, VECTORS_INDEX_EXTENSION),
+			context);
+		try {
+			vectorsStream = directory.createOutput(IndexFileNames.segmentFileName(segment, segmentSuffix, VECTORS_EXTENSION),
+				context);
 
-  @Override
-  public void startDocument(int numVectorFields) throws IOException {
-    // numVectorFields为需要存储词向量的域的个数
-    curDoc = addDocData(numVectorFields);
-  }
+			final String codecNameIdx = formatName + CODEC_SFX_IDX;
+			final String codecNameDat = formatName + CODEC_SFX_DAT;
+			CodecUtil.writeIndexHeader(indexStream, codecNameIdx, VERSION_CURRENT, si.getId(), segmentSuffix);
+			CodecUtil.writeIndexHeader(vectorsStream, codecNameDat, VERSION_CURRENT, si.getId(), segmentSuffix);
+			assert CodecUtil.indexHeaderLength(codecNameDat, segmentSuffix) == vectorsStream.getFilePointer();
+			assert CodecUtil.indexHeaderLength(codecNameIdx, segmentSuffix) == indexStream.getFilePointer();
 
-  @Override
-  public void finishDocument() throws IOException {
-    // append the payload bytes of the doc after its terms
-    termSuffixes.writeBytes(payloadBytes.getBytes(), payloadBytes.getPosition());
-    payloadBytes.reset();
-    ++numDocs;
-    if (triggerFlush()) {
-      flush();
-    }
-    curDoc = null;
-  }
+			indexWriter = new CompressingStoredFieldsIndexWriter(indexStream, blockSize);
+			indexStream = null;
 
-  @Override
-  public void startField(FieldInfo info, int numTerms, boolean positions,
-      boolean offsets, boolean payloads) throws IOException {
-    curField = curDoc.addField(info.number, numTerms, positions, offsets, payloads);
-    lastTerm.length = 0;
-  }
+			vectorsStream.writeVInt(PackedInts.VERSION_CURRENT);
+			vectorsStream.writeVInt(chunkSize);
+			writer = new BlockPackedWriter(vectorsStream, PACKED_BLOCK_SIZE);
 
-  @Override
-  public void finishField() throws IOException {
-    curField = null;
-  }
+			positionsBuf = new int[1024];
+			startOffsetsBuf = new int[1024];
+			lengthsBuf = new int[1024];
+			payloadLengthsBuf = new int[1024];
 
-  @Override
-  public void startTerm(BytesRef term, int freq) throws IOException {
-    assert freq >= 1;
-    final int prefix;
-    if (lastTerm.length == 0) {
-      // no previous term: no bytes to write
-      prefix = 0;
-    } else {
-      prefix = StringHelper.bytesDifference(lastTerm, term);
-    }
-    curField.addTerm(freq, prefix, term.length - prefix);
-    // 前缀存储term值
-    termSuffixes.writeBytes(term.bytes, term.offset + prefix, term.length - prefix);
-    // copy last term
-    if (lastTerm.bytes.length < term.length) {
-      lastTerm.bytes = new byte[ArrayUtil.oversize(term.length, 1)];
-    }
-    lastTerm.offset = 0;
-    lastTerm.length = term.length;
-    // 更新lastTerm
-    System.arraycopy(term.bytes, term.offset, lastTerm.bytes, 0, term.length);
-  }
+			success = true;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(vectorsStream, indexStream, indexWriter);
+			}
+		}
+	}
 
-  @Override
-  public void addPosition(int position, int startOffset, int endOffset,
-      BytesRef payload) throws IOException {
-    assert curField.flags != 0;
-    curField.addPosition(position, startOffset, endOffset - startOffset, payload == null ? 0 : payload.length);
-    if (curField.hasPayloads && payload != null) {
-      payloadBytes.writeBytes(payload.bytes, payload.offset, payload.length);
-    }
-  }
+	@Override
+	public void close() throws IOException {
+		try {
+			IOUtils.close(vectorsStream, indexWriter);
+		} finally {
+			vectorsStream = null;
+			indexWriter = null;
+		}
+	}
 
-  // 生成一个chunk的条件是 域值长度达到4096，或者文档个数达到128个
-  private boolean triggerFlush() {
-    return termSuffixes.getPosition() >= chunkSize
-        || pendingDocs.size() >= MAX_DOCUMENTS_PER_CHUNK;
-  }
+	@Override
+	public void startDocument(int numVectorFields) throws IOException {
+		// numVectorFields为需要存储词向量的域的个数
+		curDoc = addDocData(numVectorFields);
+	}
 
-  private void flush() throws IOException {
-    // 一个chunk中的文档个数
-    final int chunkDocs = pendingDocs.size();
-    assert chunkDocs > 0 : chunkDocs;
+	@Override
+	public void finishDocument() throws IOException {
+		// append the payload bytes of the doc after its terms
+		termSuffixes.writeBytes(payloadBytes.getBytes(), payloadBytes.getPosition());
+		payloadBytes.reset();
+		++numDocs;
+		if (triggerFlush()) {
+			flush();
+		}
+		curDoc = null;
+	}
 
-    // write the index file
-    indexWriter.writeIndex(chunkDocs, vectorsStream.getFilePointer());
+	@Override
+	public void startField(FieldInfo info, int numTerms, boolean positions,
+												 boolean offsets, boolean payloads) throws IOException {
+		curField = curDoc.addField(info.number, numTerms, positions, offsets, payloads);
+		lastTerm.length = 0;
+	}
 
-    final int docBase = numDocs - chunkDocs;
-    vectorsStream.writeVInt(docBase);
-    vectorsStream.writeVInt(chunkDocs);
+	@Override
+	public void finishField() throws IOException {
+		curField = null;
+	}
 
-    // total number of fields of the chunk
-    // 记录chunk中每一篇文档中包含的存储域的个数
-    final int totalFields = flushNumFields(chunkDocs);
+	@Override
+	public void startTerm(BytesRef term, int freq) throws IOException {
+		assert freq >= 1;
+		final int prefix;
+		if (lastTerm.length == 0) {
+			// no previous term: no bytes to write
+			prefix = 0;
+		} else {
+			prefix = StringHelper.bytesDifference(lastTerm, term);
+		}
+		curField.addTerm(freq, prefix, term.length - prefix);
+		// 前缀存储term值
+		termSuffixes.writeBytes(term.bytes, term.offset + prefix, term.length - prefix);
+		// copy last term
+		if (lastTerm.bytes.length < term.length) {
+			lastTerm.bytes = new byte[ArrayUtil.oversize(term.length, 1)];
+		}
+		lastTerm.offset = 0;
+		lastTerm.length = term.length;
+		// 更新lastTerm
+		System.arraycopy(term.bytes, term.offset, lastTerm.bytes, 0, term.length);
+	}
 
-    if (totalFields > 0) {
-      // unique field numbers (sorted)
-      // 记录所有的域的编号
-      final int[] fieldNums = flushFieldNums();
-      // offsets in the array of unique field numbers
-      // 记录每一篇文档中每一个存储域的域的编号，但实际存储的一个fieldNums[]数组的下标值
-      // 通过下标值可以找到真正的域的编号
-      flushFields(totalFields, fieldNums);
-      // flags (does the field have positions, offsets, payloads?)
-      // 记录域的flag信息，flag描述了一个域是否记录positions, offsets, payloads?
-      flushFlags(totalFields, fieldNums);
-      // number of terms of each field
-      // 记录每一篇文档中的每一个域包含的term个数(域值在分词后的token个数)
-      flushNumTerms(totalFields);
-      // prefix and suffix lengths for each field
-      // 记录每一篇文档中的每一个域的term的长度
-      flushTermLengths();
-      // term freqs - 1 (because termFreq is always >=1) for each term
-      // 记录每一篇文档中的每一个域的term的词频
-      flushTermFreqs();
-      // positions for all terms, when enabled
-      // 记录每一篇文档中的每一个域的term的位置信息
-      flushPositions();
-      // offsets for all terms, when enabled
-      // 记录每一篇文档中的每一个域的term的offset信息
-      flushOffsets(fieldNums);
-      // payload lengths for all terms, when enabled
-      // 记录每一篇文档中的每一个域的term的payload信息
-      flushPayloadLengths();
+	@Override
+	public void addPosition(int position, int startOffset, int endOffset,
+													BytesRef payload) throws IOException {
+		assert curField.flags != 0;
+		curField.addPosition(position, startOffset, endOffset - startOffset, payload == null ? 0 : payload.length);
+		if (curField.hasPayloads && payload != null) {
+			payloadBytes.writeBytes(payload.bytes, payload.offset, payload.length);
+		}
+	}
 
-      // compress terms and payloads and write them to the output
-      compressor.compress(termSuffixes.getBytes(), 0, termSuffixes.getPosition(), vectorsStream);
-    }
+	// 生成一个chunk的条件是 域值长度达到4096，或者文档个数达到128个
+	private boolean triggerFlush() {
+		return termSuffixes.getPosition() >= chunkSize
+			|| pendingDocs.size() >= MAX_DOCUMENTS_PER_CHUNK;
+	}
 
-    // reset
-    pendingDocs.clear();
-    curDoc = null;
-    curField = null;
-    termSuffixes.reset();
-    numChunks++;
-  }
+	private void flush() throws IOException {
+		// 一个chunk中的文档个数
+		final int chunkDocs = pendingDocs.size();
+		assert chunkDocs > 0 : chunkDocs;
 
-  private int flushNumFields(int chunkDocs) throws IOException {
-    // 当前chunk中只有一篇文档
-    if (chunkDocs == 1) {
-      final int numFields = pendingDocs.getFirst().numFields;
-      vectorsStream.writeVInt(numFields);
-      return numFields;
-    } else {
-      writer.reset(vectorsStream);
-      int totalFields = 0;
-      // 记录每一篇文档中的存储域的个数
-      for (DocData dd : pendingDocs) {
-        writer.add(dd.numFields);
-        totalFields += dd.numFields;
-      }
-      writer.finish();
-      return totalFields;
-    }
-  }
+		// write the index file
+		indexWriter.writeIndex(chunkDocs, vectorsStream.getFilePointer());
 
-  /** Returns a sorted array containing unique field numbers */
-  private int[] flushFieldNums() throws IOException {
-    // 存储所有的域的编号
-    SortedSet<Integer> fieldNums = new TreeSet<>();
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        fieldNums.add(fd.fieldNum);
-      }
-    }
+		final int docBase = numDocs - chunkDocs;
+		vectorsStream.writeVInt(docBase);
+		vectorsStream.writeVInt(chunkDocs);
 
-    // 当前chunk中域名的种类
-    final int numDistinctFields = fieldNums.size();
-    assert numDistinctFields > 0;
-    // 获取最大的域的编号，根据这个编号来获得存储所有编号需要的固定bit位个数
-    final int bitsRequired = PackedInts.bitsRequired(fieldNums.last());
-    // 域的编号是int类型, 所以左移5位, 因为token用一个字节存储，所以numDistinctFields≤7的情况下可以跟bitsRequired一起存储
-    final int token = (Math.min(numDistinctFields - 1, 0x07) << 5) | bitsRequired;
-    vectorsStream.writeByte((byte) token);
-    // if语句为真，那么需要另外存储numDistinctFields,因为可能token无法表示所有的numDistinctFields值 ，如果if语句为假，那么numDistinctFields可以通过token获得
-    if (numDistinctFields - 1 >= 0x07) {
-      vectorsStream.writeVInt(numDistinctFields - 1 - 0x07);
-    }
-    // 使用PackedInts存储当前chunk中所有的域的编号
-    final PackedInts.Writer writer = PackedInts.getWriterNoHeader(vectorsStream, PackedInts.Format.PACKED, fieldNums.size(), bitsRequired, 1);
-    for (Integer fieldNum : fieldNums) {
-      writer.add(fieldNum);
-    }
-    writer.finish();
+		// total number of fields of the chunk
+		// 记录chunk中每一篇文档中包含的存储域的个数
+		final int totalFields = flushNumFields(chunkDocs);
 
-    int[] fns = new int[fieldNums.size()];
-    int i = 0;
-    for (Integer key : fieldNums) {
-      fns[i++] = key;
-    }
-    return fns;
-  }
+		if (totalFields > 0) {
+			// unique field numbers (sorted)
+			// 记录所有的域的编号
+			final int[] fieldNums = flushFieldNums();
+			// offsets in the array of unique field numbers
+			// 记录每一篇文档中每一个存储域的域的编号，但实际存储的一个fieldNums[]数组的下标值
+			// 通过下标值可以找到真正的域的编号
+			flushFields(totalFields, fieldNums);
+			// flags (does the field have positions, offsets, payloads?)
+			// 记录域的flag信息，flag描述了一个域是否记录positions, offsets, payloads?
+			flushFlags(totalFields, fieldNums);
+			// number of terms of each field
+			// 记录每一篇文档中的每一个域包含的term个数(域值在分词后的token个数)
+			flushNumTerms(totalFields);
+			// prefix and suffix lengths for each field
+			// 记录每一篇文档中的每一个域的term的长度
+			flushTermLengths();
+			// term freqs - 1 (because termFreq is always >=1) for each term
+			// 记录每一篇文档中的每一个域的term的词频
+			flushTermFreqs();
+			// positions for all terms, when enabled
+			// 记录每一篇文档中的每一个域的term的位置信息
+			flushPositions();
+			// offsets for all terms, when enabled
+			// 记录每一篇文档中的每一个域的term的offset信息
+			flushOffsets(fieldNums);
+			// payload lengths for all terms, when enabled
+			// 记录每一篇文档中的每一个域的term的payload信息
+			flushPayloadLengths();
 
-  private void flushFields(int totalFields, int[] fieldNums) throws IOException {
-    final PackedInts.Writer writer = PackedInts.getWriterNoHeader(vectorsStream, PackedInts.Format.PACKED, totalFields, PackedInts.bitsRequired(fieldNums.length - 1), 1);
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        final int fieldNumIndex = Arrays.binarySearch(fieldNums, fd.fieldNum);
-        assert fieldNumIndex >= 0;
-        writer.add(fieldNumIndex);
-      }
-    }
-    writer.finish();
-  }
+			// compress terms and payloads and write them to the output
+			compressor.compress(termSuffixes.getBytes(), 0, termSuffixes.getPosition(), vectorsStream);
+		}
 
-  private void flushFlags(int totalFields, int[] fieldNums) throws IOException {
-    // check if fields always have the same flags
-    // 检查不同文档中的同一个域的flag是否相同，flag描述了当前域是否记录position、offset、payload信息
-    boolean nonChangingFlags = true;
-    int[] fieldFlags = new int[fieldNums.length];
-    Arrays.fill(fieldFlags, -1);
-    outer:
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        final int fieldNumOff = Arrays.binarySearch(fieldNums, fd.fieldNum);
-        assert fieldNumOff >= 0;
-        if (fieldFlags[fieldNumOff] == -1) {
-          fieldFlags[fieldNumOff] = fd.flags;
-        } else if (fieldFlags[fieldNumOff] != fd.flags) {
-          nonChangingFlags = false;
-          break outer;
-        }
-      }
-    }
+		// reset
+		pendingDocs.clear();
+		curDoc = null;
+		curField = null;
+		termSuffixes.reset();
+		numChunks++;
+	}
 
-    // if语句为真：不同的文档中的相同域具有相同的flag
-    if (nonChangingFlags) {
-      // write one flag per field num
-      vectorsStream.writeVInt(0);
-      final PackedInts.Writer writer = PackedInts.getWriterNoHeader(vectorsStream, PackedInts.Format.PACKED, fieldFlags.length, FLAGS_BITS, 1);
-      // 将每种域的flag记录下来
-      for (int flags : fieldFlags) {
-        assert flags >= 0;
-        writer.add(flags);
-      }
-      assert writer.ord() == fieldFlags.length - 1;
-      writer.finish();
-    } else {
-      // write one flag for every field instance
-      // if语句为真：不同的文档中的相同域不都有相同的flag
-      vectorsStream.writeVInt(1);
-      final PackedInts.Writer writer = PackedInts.getWriterNoHeader(vectorsStream, PackedInts.Format.PACKED, totalFields, FLAGS_BITS, 1);
-      // 将记录所有域的flag
-      for (DocData dd : pendingDocs) {
-        for (FieldData fd : dd.fields) {
-          writer.add(fd.flags);
-        }
-      }
-      assert writer.ord() == totalFields - 1;
-      writer.finish();
-    }
-  }
+	private int flushNumFields(int chunkDocs) throws IOException {
+		// 当前chunk中只有一篇文档
+		if (chunkDocs == 1) {
+			final int numFields = pendingDocs.getFirst().numFields;
+			vectorsStream.writeVInt(numFields);
+			return numFields;
+		} else {
+			writer.reset(vectorsStream);
+			int totalFields = 0;
+			// 记录每一篇文档中的存储域的个数
+			for (DocData dd : pendingDocs) {
+				writer.add(dd.numFields);
+				totalFields += dd.numFields;
+			}
+			writer.finish();
+			return totalFields;
+		}
+	}
 
-  private void flushNumTerms(int totalFields) throws IOException {
-    int maxNumTerms = 0;
-    // 统计出所有域中包含term最多的term个数
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        maxNumTerms |= fd.numTerms;
-      }
-    }
-    final int bitsRequired = PackedInts.bitsRequired(maxNumTerms);
-    vectorsStream.writeVInt(bitsRequired);
-    final PackedInts.Writer writer = PackedInts.getWriterNoHeader(
-        vectorsStream, PackedInts.Format.PACKED, totalFields, bitsRequired, 1);
-    // 将每篇文档中的每一个存储域包含的term个数记录下来
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        writer.add(fd.numTerms);
-      }
-    }
-    assert writer.ord() == totalFields - 1;
-    writer.finish();
-  }
+	/**
+	 * Returns a sorted array containing unique field numbers
+	 */
+	private int[] flushFieldNums() throws IOException {
+		// 存储所有的域的编号
+		SortedSet<Integer> fieldNums = new TreeSet<>();
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				fieldNums.add(fd.fieldNum);
+			}
+		}
 
-  private void flushTermLengths() throws IOException {
-    // 一个term的长度等于 prefixLengths跟suffixLengths的和
-    writer.reset(vectorsStream);
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        for (int i = 0; i < fd.numTerms; ++i) {
-          writer.add(fd.prefixLengths[i]);
-        }
-      }
-    }
-    writer.finish();
-    writer.reset(vectorsStream);
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        for (int i = 0; i < fd.numTerms; ++i) {
-          writer.add(fd.suffixLengths[i]);
-        }
-      }
-    }
-    writer.finish();
-  }
+		// 当前chunk中域名的种类
+		final int numDistinctFields = fieldNums.size();
+		assert numDistinctFields > 0;
+		// 获取最大的域的编号，根据这个编号来获得存储所有编号需要的固定bit位个数
+		final int bitsRequired = PackedInts.bitsRequired(fieldNums.last());
+		// 域的编号是int类型, 所以左移5位, 因为token用一个字节存储，所以numDistinctFields≤7的情况下可以跟bitsRequired一起存储
+		final int token = (Math.min(numDistinctFields - 1, 0x07) << 5) | bitsRequired;
+		vectorsStream.writeByte((byte) token);
+		// if语句为真，那么需要另外存储numDistinctFields,因为可能token无法表示所有的numDistinctFields值 ，如果if语句为假，那么numDistinctFields可以通过token获得
+		if (numDistinctFields - 1 >= 0x07) {
+			vectorsStream.writeVInt(numDistinctFields - 1 - 0x07);
+		}
+		// 使用PackedInts存储当前chunk中所有的域的编号
+		final PackedInts.Writer writer = PackedInts.getWriterNoHeader(vectorsStream, PackedInts.Format.PACKED, fieldNums.size(), bitsRequired, 1);
+		for (Integer fieldNum : fieldNums) {
+			writer.add(fieldNum);
+		}
+		writer.finish();
 
-  private void flushTermFreqs() throws IOException {
-    writer.reset(vectorsStream);
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        for (int i = 0; i < fd.numTerms; ++i) {
-          writer.add(fd.freqs[i] - 1);
-        }
-      }
-    }
-    writer.finish();
-  }
+		int[] fns = new int[fieldNums.size()];
+		int i = 0;
+		for (Integer key : fieldNums) {
+			fns[i++] = key;
+		}
+		return fns;
+	}
 
-  private void flushPositions() throws IOException {
-    writer.reset(vectorsStream);
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        if (fd.hasPositions) {
-          int pos = 0;
-          for (int i = 0; i < fd.numTerms; ++i) {
-            int previousPosition = 0;
-            for (int j = 0; j < fd.freqs[i]; ++j) {
-              final int position = positionsBuf[fd .posStart + pos++];
-              // 存储一个term的所有位置值，差值存储
-              writer.add(position - previousPosition);
-              previousPosition = position;
-            }
-          }
-          assert pos == fd.totalPositions;
-        }
-      }
-    }
-    writer.finish();
-  }
+	private void flushFields(int totalFields, int[] fieldNums) throws IOException {
+		final PackedInts.Writer writer = PackedInts.getWriterNoHeader(vectorsStream, PackedInts.Format.PACKED, totalFields, PackedInts.bitsRequired(fieldNums.length - 1), 1);
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				final int fieldNumIndex = Arrays.binarySearch(fieldNums, fd.fieldNum);
+				assert fieldNumIndex >= 0;
+				writer.add(fieldNumIndex);
+			}
+		}
+		writer.finish();
+	}
 
-  private void flushOffsets(int[] fieldNums) throws IOException {
-    boolean hasOffsets = false;
-    long[] sumPos = new long[fieldNums.length];
-    long[] sumOffsets = new long[fieldNums.length];
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        hasOffsets |= fd.hasOffsets;
-        if (fd.hasOffsets && fd.hasPositions) {
-          final int fieldNumOff = Arrays.binarySearch(fieldNums, fd.fieldNum);
-          int pos = 0;
-          for (int i = 0; i < fd.numTerms; ++i) {
-            int previousPos = 0;
-            int previousOff = 0;
-            for (int j = 0; j < fd.freqs[i]; ++j) {
-              final int position = positionsBuf[fd.posStart + pos];
-              final int startOffset = startOffsetsBuf[fd.offStart + pos];
-              sumPos[fieldNumOff] += position - previousPos;
-              sumOffsets[fieldNumOff] += startOffset - previousOff;
-              previousPos = position;
-              previousOff = startOffset;
-              ++pos;
-            }
-          }
-          assert pos == fd.totalPositions;
-        }
-      }
-    }
+	private void flushFlags(int totalFields, int[] fieldNums) throws IOException {
+		// check if fields always have the same flags
+		// 检查不同文档中的同一个域的flag是否相同，flag描述了当前域是否记录position、offset、payload信息
+		boolean nonChangingFlags = true;
+		int[] fieldFlags = new int[fieldNums.length];
+		Arrays.fill(fieldFlags, -1);
+		outer:
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				final int fieldNumOff = Arrays.binarySearch(fieldNums, fd.fieldNum);
+				assert fieldNumOff >= 0;
+				if (fieldFlags[fieldNumOff] == -1) {
+					fieldFlags[fieldNumOff] = fd.flags;
+				} else if (fieldFlags[fieldNumOff] != fd.flags) {
+					nonChangingFlags = false;
+					break outer;
+				}
+			}
+		}
 
-    if (!hasOffsets) {
-      // nothing to do
-      return;
-    }
+		// if语句为真：不同的文档中的相同域具有相同的flag
+		if (nonChangingFlags) {
+			// write one flag per field num
+			vectorsStream.writeVInt(0);
+			final PackedInts.Writer writer = PackedInts.getWriterNoHeader(vectorsStream, PackedInts.Format.PACKED, fieldFlags.length, FLAGS_BITS, 1);
+			// 将每种域的flag记录下来
+			for (int flags : fieldFlags) {
+				assert flags >= 0;
+				writer.add(flags);
+			}
+			assert writer.ord() == fieldFlags.length - 1;
+			writer.finish();
+		} else {
+			// write one flag for every field instance
+			// if语句为真：不同的文档中的相同域不都有相同的flag
+			vectorsStream.writeVInt(1);
+			final PackedInts.Writer writer = PackedInts.getWriterNoHeader(vectorsStream, PackedInts.Format.PACKED, totalFields, FLAGS_BITS, 1);
+			// 将记录所有域的flag
+			for (DocData dd : pendingDocs) {
+				for (FieldData fd : dd.fields) {
+					writer.add(fd.flags);
+				}
+			}
+			assert writer.ord() == totalFields - 1;
+			writer.finish();
+		}
+	}
 
-    final float[] charsPerTerm = new float[fieldNums.length];
-    for (int i = 0; i < fieldNums.length; ++i) {
-      // 计算每个域的每一个term平均占用多少个字节
-      charsPerTerm[i] = (sumPos[i] <= 0 || sumOffsets[i] <= 0) ? 0 : (float) ((double) sumOffsets[i] / sumPos[i]);
-    }
+	private void flushNumTerms(int totalFields) throws IOException {
+		int maxNumTerms = 0;
+		// 统计出所有域中包含term最多的term个数
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				maxNumTerms |= fd.numTerms;
+			}
+		}
+		final int bitsRequired = PackedInts.bitsRequired(maxNumTerms);
+		vectorsStream.writeVInt(bitsRequired);
+		final PackedInts.Writer writer = PackedInts.getWriterNoHeader(
+			vectorsStream, PackedInts.Format.PACKED, totalFields, bitsRequired, 1);
+		// 将每篇文档中的每一个存储域包含的term个数记录下来
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				writer.add(fd.numTerms);
+			}
+		}
+		assert writer.ord() == totalFields - 1;
+		writer.finish();
+	}
 
-    // start offsets
-    for (int i = 0; i < fieldNums.length; ++i) {
-      vectorsStream.writeInt(Float.floatToRawIntBits(charsPerTerm[i]));
-    }
+	private void flushTermLengths() throws IOException {
+		// 一个term的长度等于 prefixLengths跟suffixLengths的和
+		writer.reset(vectorsStream);
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				for (int i = 0; i < fd.numTerms; ++i) {
+					writer.add(fd.prefixLengths[i]);
+				}
+			}
+		}
+		writer.finish();
+		writer.reset(vectorsStream);
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				for (int i = 0; i < fd.numTerms; ++i) {
+					writer.add(fd.suffixLengths[i]);
+				}
+			}
+		}
+		writer.finish();
+	}
 
-    writer.reset(vectorsStream);
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        if ((fd.flags & OFFSETS) != 0) {
-          final int fieldNumOff = Arrays.binarySearch(fieldNums, fd.fieldNum);
-          final float cpt = charsPerTerm[fieldNumOff];
-          int pos = 0;
-          for (int i = 0; i < fd.numTerms; ++i) {
-            int previousPos = 0;
-            int previousOff = 0;
-            for (int j = 0; j < fd.freqs[i]; ++j) {
-              final int position = fd.hasPositions ? positionsBuf[fd.posStart + pos] : 0;
-              final int startOffset = startOffsetsBuf[fd.offStart + pos];
-              writer.add(startOffset - previousOff - (int) (cpt * (position - previousPos)));
-              previousPos = position;
-              previousOff = startOffset;
-              ++pos;
-            }
-          }
-        }
-      }
-    }
-    writer.finish();
+	private void flushTermFreqs() throws IOException {
+		writer.reset(vectorsStream);
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				for (int i = 0; i < fd.numTerms; ++i) {
+					writer.add(fd.freqs[i] - 1);
+				}
+			}
+		}
+		writer.finish();
+	}
 
-    // lengths
-    writer.reset(vectorsStream);
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        if ((fd.flags & OFFSETS) != 0) {
-          int pos = 0;
-          for (int i = 0; i < fd.numTerms; ++i) {
-            for (int j = 0; j < fd.freqs[i]; ++j) {
-              writer.add(lengthsBuf[fd.offStart + pos++] - fd.prefixLengths[i] - fd.suffixLengths[i]);
-            }
-          }
-          assert pos == fd.totalPositions;
-        }
-      }
-    }
-    writer.finish();
-  }
+	private void flushPositions() throws IOException {
+		writer.reset(vectorsStream);
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				if (fd.hasPositions) {
+					int pos = 0;
+					for (int i = 0; i < fd.numTerms; ++i) {
+						int previousPosition = 0;
+						for (int j = 0; j < fd.freqs[i]; ++j) {
+							final int position = positionsBuf[fd.posStart + pos++];
+							// 存储一个term的所有位置值，差值存储
+							writer.add(position - previousPosition);
+							previousPosition = position;
+						}
+					}
+					assert pos == fd.totalPositions;
+				}
+			}
+		}
+		writer.finish();
+	}
 
-  private void flushPayloadLengths() throws IOException {
-    writer.reset(vectorsStream);
-    for (DocData dd : pendingDocs) {
-      for (FieldData fd : dd.fields) {
-        if (fd.hasPayloads) {
-          for (int i = 0; i < fd.totalPositions; ++i) {
-            writer.add(payloadLengthsBuf[fd.payStart + i]);
-          }
-        }
-      }
-    }
-    writer.finish();
-  }
+	private void flushOffsets(int[] fieldNums) throws IOException {
+		boolean hasOffsets = false;
+		long[] sumPos = new long[fieldNums.length];
+		long[] sumOffsets = new long[fieldNums.length];
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				hasOffsets |= fd.hasOffsets;
+				if (fd.hasOffsets && fd.hasPositions) {
+					final int fieldNumOff = Arrays.binarySearch(fieldNums, fd.fieldNum);
+					int pos = 0;
+					for (int i = 0; i < fd.numTerms; ++i) {
+						int previousPos = 0;
+						int previousOff = 0;
+						for (int j = 0; j < fd.freqs[i]; ++j) {
+							final int position = positionsBuf[fd.posStart + pos];
+							final int startOffset = startOffsetsBuf[fd.offStart + pos];
+							sumPos[fieldNumOff] += position - previousPos;
+							sumOffsets[fieldNumOff] += startOffset - previousOff;
+							previousPos = position;
+							previousOff = startOffset;
+							++pos;
+						}
+					}
+					assert pos == fd.totalPositions;
+				}
+			}
+		}
 
-  @Override
-  public void finish(FieldInfos fis, int numDocs) throws IOException {
-    if (!pendingDocs.isEmpty()) {
-      flush();
-      numDirtyChunks++; // incomplete: we had to force this flush
-    }
-    if (numDocs != this.numDocs) {
-      throw new RuntimeException("Wrote " + this.numDocs + " docs, finish called with numDocs=" + numDocs);
-    }
-    indexWriter.finish(numDocs, vectorsStream.getFilePointer());
-    vectorsStream.writeVLong(numChunks);
-    vectorsStream.writeVLong(numDirtyChunks);
-    CodecUtil.writeFooter(vectorsStream);
-  }
+		if (!hasOffsets) {
+			// nothing to do
+			return;
+		}
 
-  @Override
-  public void addProx(int numProx, DataInput positions, DataInput offsets)
-      throws IOException {
-    assert (curField.hasPositions) == (positions != null);
-    assert (curField.hasOffsets) == (offsets != null);
+		final float[] charsPerTerm = new float[fieldNums.length];
+		for (int i = 0; i < fieldNums.length; ++i) {
+			// 计算每个域的每一个term平均占用多少个字节
+			charsPerTerm[i] = (sumPos[i] <= 0 || sumOffsets[i] <= 0) ? 0 : (float) ((double) sumOffsets[i] / sumPos[i]);
+		}
 
-    // 读取 位置&&payload信息
-    if (curField.hasPositions) {
-      final int posStart = curField.posStart + curField.totalPositions;
-      if (posStart + numProx > positionsBuf.length) {
-        positionsBuf = ArrayUtil.grow(positionsBuf, posStart + numProx);
-      }
-      int position = 0;
-      if (curField.hasPayloads) {
-        final int payStart = curField.payStart + curField.totalPositions;
-        if (payStart + numProx > payloadLengthsBuf.length) {
-          payloadLengthsBuf = ArrayUtil.grow(payloadLengthsBuf, payStart + numProx);
-        }
-        // numProx描述了term的位置值，即当前文档中包含了多少个当前term
-        // for循环里面就是读取倒排表的过程了
-        for (int i = 0; i < numProx; ++i) {
-          final int code = positions.readVInt();
-          // if语句为真，说明当前position带有payload
-          if ((code & 1) != 0) {
-            // This position has a payload
-            final int payloadLength = positions.readVInt();
-            payloadLengthsBuf[payStart + i] = payloadLength;
-            payloadBytes.copyBytes(positions, payloadLength);
-          } else {
-            payloadLengthsBuf[payStart + i] = 0;
-          }
-          // 获得真正的位置值
-          position += code >>> 1;
-          positionsBuf[posStart + i] = position;
-        }
-      } else {
-        for (int i = 0; i < numProx; ++i) {
-          position += (positions.readVInt() >>> 1);
-          positionsBuf[posStart + i] = position;
-        }
-      }
-    }
+		// start offsets
+		for (int i = 0; i < fieldNums.length; ++i) {
+			vectorsStream.writeInt(Float.floatToRawIntBits(charsPerTerm[i]));
+		}
 
-    // 读取offset信息
-    // 如果了解倒排表是怎么生成的，那么下面的逻辑一目了然，所以我就注释啦
-    if (curField.hasOffsets) {
-      final int offStart = curField.offStart + curField.totalPositions;
-      if (offStart + numProx > startOffsetsBuf.length) {
-        final int newLength = ArrayUtil.oversize(offStart + numProx, 4);
-        startOffsetsBuf = ArrayUtil.growExact(startOffsetsBuf, newLength);
-        lengthsBuf = ArrayUtil.growExact(lengthsBuf, newLength);
-      }
-      int lastOffset = 0, startOffset, endOffset;
-      for (int i = 0; i < numProx; ++i) {
-        startOffset = lastOffset + offsets.readVInt();
-        endOffset = startOffset + offsets.readVInt();
-        lastOffset = endOffset;
-        startOffsetsBuf[offStart + i] = startOffset;
-        lengthsBuf[offStart + i] = endOffset - startOffset;
-      }
-    }
+		writer.reset(vectorsStream);
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				if ((fd.flags & OFFSETS) != 0) {
+					final int fieldNumOff = Arrays.binarySearch(fieldNums, fd.fieldNum);
+					final float cpt = charsPerTerm[fieldNumOff];
+					int pos = 0;
+					for (int i = 0; i < fd.numTerms; ++i) {
+						int previousPos = 0;
+						int previousOff = 0;
+						for (int j = 0; j < fd.freqs[i]; ++j) {
+							final int position = fd.hasPositions ? positionsBuf[fd.posStart + pos] : 0;
+							final int startOffset = startOffsetsBuf[fd.offStart + pos];
+							writer.add(startOffset - previousOff - (int) (cpt * (position - previousPos)));
+							previousPos = position;
+							previousOff = startOffset;
+							++pos;
+						}
+					}
+				}
+			}
+		}
+		writer.finish();
 
-    curField.totalPositions += numProx;
-  }
-  
-  // bulk merge is scary: its caused corruption bugs in the past.
-  // we try to be extra safe with this impl, but add an escape hatch to
-  // have a workaround for undiscovered bugs.
-  static final String BULK_MERGE_ENABLED_SYSPROP = CompressingTermVectorsWriter.class.getName() + ".enableBulkMerge";
-  static final boolean BULK_MERGE_ENABLED;
-  static {
-    boolean v = true;
-    try {
-      v = Boolean.parseBoolean(System.getProperty(BULK_MERGE_ENABLED_SYSPROP, "true"));
-    } catch (SecurityException ignored) {}
-    BULK_MERGE_ENABLED = v;
-  }
+		// lengths
+		writer.reset(vectorsStream);
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				if ((fd.flags & OFFSETS) != 0) {
+					int pos = 0;
+					for (int i = 0; i < fd.numTerms; ++i) {
+						for (int j = 0; j < fd.freqs[i]; ++j) {
+							writer.add(lengthsBuf[fd.offStart + pos++] - fd.prefixLengths[i] - fd.suffixLengths[i]);
+						}
+					}
+					assert pos == fd.totalPositions;
+				}
+			}
+		}
+		writer.finish();
+	}
 
-  @Override
-  public int merge(MergeState mergeState) throws IOException {
-    if (mergeState.needsIndexSort) {
-      // TODO: can we gain back some optos even if index is sorted?  E.g. if sort results in large chunks of contiguous docs from one sub
-      // being copied over...?
-      return super.merge(mergeState);
-    }
-    int docCount = 0;
-    int numReaders = mergeState.maxDocs.length;
+	private void flushPayloadLengths() throws IOException {
+		writer.reset(vectorsStream);
+		for (DocData dd : pendingDocs) {
+			for (FieldData fd : dd.fields) {
+				if (fd.hasPayloads) {
+					for (int i = 0; i < fd.totalPositions; ++i) {
+						writer.add(payloadLengthsBuf[fd.payStart + i]);
+					}
+				}
+			}
+		}
+		writer.finish();
+	}
 
-    MatchingReaders matching = new MatchingReaders(mergeState);
-    
-    for (int readerIndex=0;readerIndex<numReaders;readerIndex++) {
-      CompressingTermVectorsReader matchingVectorsReader = null;
-      final TermVectorsReader vectorsReader = mergeState.termVectorsReaders[readerIndex];
-      if (matching.matchingReaders[readerIndex]) {
-        // we can only bulk-copy if the matching reader is also a CompressingTermVectorsReader
-        if (vectorsReader != null && vectorsReader instanceof CompressingTermVectorsReader) {
-          matchingVectorsReader = (CompressingTermVectorsReader) vectorsReader;
-        }
-      }
+	@Override
+	public void finish(FieldInfos fis, int numDocs) throws IOException {
+		if (!pendingDocs.isEmpty()) {
+			flush();
+			numDirtyChunks++; // incomplete: we had to force this flush
+		}
+		if (numDocs != this.numDocs) {
+			throw new RuntimeException("Wrote " + this.numDocs + " docs, finish called with numDocs=" + numDocs);
+		}
+		indexWriter.finish(numDocs, vectorsStream.getFilePointer());
+		vectorsStream.writeVLong(numChunks);
+		vectorsStream.writeVLong(numDirtyChunks);
+		CodecUtil.writeFooter(vectorsStream);
+	}
 
-      final int maxDoc = mergeState.maxDocs[readerIndex];
-      final Bits liveDocs = mergeState.liveDocs[readerIndex];
-      
-      if (matchingVectorsReader != null &&
-          matchingVectorsReader.getCompressionMode() == compressionMode &&
-          matchingVectorsReader.getChunkSize() == chunkSize &&
-          matchingVectorsReader.getVersion() == VERSION_CURRENT && 
-          matchingVectorsReader.getPackedIntsVersion() == PackedInts.VERSION_CURRENT &&
-          BULK_MERGE_ENABLED &&
-          liveDocs == null &&
-          !tooDirty(matchingVectorsReader)) {
-        // optimized merge, raw byte copy
-        // its not worth fine-graining this if there are deletions.
-        
-        matchingVectorsReader.checkIntegrity();
-        
-        // flush any pending chunks
-        if (!pendingDocs.isEmpty()) {
-          flush();
-          numDirtyChunks++; // incomplete: we had to force this flush
-        }
-        
-        // iterate over each chunk. we use the vectors index to find chunk boundaries,
-        // read the docstart + doccount from the chunk header (we write a new header, since doc numbers will change),
-        // and just copy the bytes directly.
-        IndexInput rawDocs = matchingVectorsReader.getVectorsStream();
-        CompressingStoredFieldsIndexReader index = matchingVectorsReader.getIndexReader();
-        rawDocs.seek(index.getStartPointer(0));
-        int docID = 0;
-        while (docID < maxDoc) {
-          // read header
-          int base = rawDocs.readVInt();
-          if (base != docID) {
-            throw new CorruptIndexException("invalid state: base=" + base + ", docID=" + docID, rawDocs);
-          }
-          int bufferedDocs = rawDocs.readVInt();
-          
-          // write a new index entry and new header for this chunk.
-          indexWriter.writeIndex(bufferedDocs, vectorsStream.getFilePointer());
-          vectorsStream.writeVInt(docCount); // rebase
-          vectorsStream.writeVInt(bufferedDocs);
-          docID += bufferedDocs;
-          docCount += bufferedDocs;
-          numDocs += bufferedDocs;
-          
-          if (docID > maxDoc) {
-            throw new CorruptIndexException("invalid state: base=" + base + ", count=" + bufferedDocs + ", maxDoc=" + maxDoc, rawDocs);
-          }
-          
-          // copy bytes until the next chunk boundary (or end of chunk data).
-          // using the stored fields index for this isn't the most efficient, but fast enough
-          // and is a source of redundancy for detecting bad things.
-          final long end;
-          if (docID == maxDoc) {
-            end = matchingVectorsReader.getMaxPointer();
-          } else {
-            end = index.getStartPointer(docID);
-          }
-          vectorsStream.copyBytes(rawDocs, end - rawDocs.getFilePointer());
-        }
-               
-        if (rawDocs.getFilePointer() != matchingVectorsReader.getMaxPointer()) {
-          throw new CorruptIndexException("invalid state: pos=" + rawDocs.getFilePointer() + ", max=" + matchingVectorsReader.getMaxPointer(), rawDocs);
-        }
-        
-        // since we bulk merged all chunks, we inherit any dirty ones from this segment.
-        numChunks += matchingVectorsReader.getNumChunks();
-        numDirtyChunks += matchingVectorsReader.getNumDirtyChunks();
-      } else {        
-        // naive merge...
-        if (vectorsReader != null) {
-          vectorsReader.checkIntegrity();
-        }
-        for (int i = 0; i < maxDoc; i++) {
-          if (liveDocs != null && liveDocs.get(i) == false) {
-            continue;
-          }
-          Fields vectors;
-          if (vectorsReader == null) {
-            vectors = null;
-          } else {
-            vectors = vectorsReader.get(i);
-          }
-          addAllDocVectors(vectors, mergeState);
-          ++docCount;
-        }
-      }
-    }
-    finish(mergeState.mergeFieldInfos, docCount);
-    return docCount;
-  }
+	@Override
+	public void addProx(int numProx, DataInput positions, DataInput offsets)
+		throws IOException {
+		assert (curField.hasPositions) == (positions != null);
+		assert (curField.hasOffsets) == (offsets != null);
 
-  /** 
-   * Returns true if we should recompress this reader, even though we could bulk merge compressed data 
-   * <p>
-   * The last chunk written for a segment is typically incomplete, so without recompressing,
-   * in some worst-case situations (e.g. frequent reopen with tiny flushes), over time the 
-   * compression ratio can degrade. This is a safety switch.
-   */
-  boolean tooDirty(CompressingTermVectorsReader candidate) {
-    // more than 1% dirty, or more than hard limit of 1024 dirty chunks
-    return candidate.getNumDirtyChunks() > 1024 || 
-           candidate.getNumDirtyChunks() * 100 > candidate.getNumChunks();
-  }
+		// 读取 位置&&payload信息
+		if (curField.hasPositions) {
+			final int posStart = curField.posStart + curField.totalPositions;
+			if (posStart + numProx > positionsBuf.length) {
+				positionsBuf = ArrayUtil.grow(positionsBuf, posStart + numProx);
+			}
+			int position = 0;
+			if (curField.hasPayloads) {
+				final int payStart = curField.payStart + curField.totalPositions;
+				if (payStart + numProx > payloadLengthsBuf.length) {
+					payloadLengthsBuf = ArrayUtil.grow(payloadLengthsBuf, payStart + numProx);
+				}
+				// numProx描述了term的位置值，即当前文档中包含了多少个当前term
+				// for循环里面就是读取倒排表的过程了
+				for (int i = 0; i < numProx; ++i) {
+					final int code = positions.readVInt();
+					// if语句为真，说明当前position带有payload
+					if ((code & 1) != 0) {
+						// This position has a payload
+						final int payloadLength = positions.readVInt();
+						payloadLengthsBuf[payStart + i] = payloadLength;
+						payloadBytes.copyBytes(positions, payloadLength);
+					} else {
+						payloadLengthsBuf[payStart + i] = 0;
+					}
+					// 获得真正的位置值
+					position += code >>> 1;
+					positionsBuf[posStart + i] = position;
+				}
+			} else {
+				for (int i = 0; i < numProx; ++i) {
+					position += (positions.readVInt() >>> 1);
+					positionsBuf[posStart + i] = position;
+				}
+			}
+		}
+
+		// 读取offset信息
+		// 如果了解倒排表是怎么生成的，那么下面的逻辑一目了然，所以我就注释啦
+		if (curField.hasOffsets) {
+			final int offStart = curField.offStart + curField.totalPositions;
+			if (offStart + numProx > startOffsetsBuf.length) {
+				final int newLength = ArrayUtil.oversize(offStart + numProx, 4);
+				startOffsetsBuf = ArrayUtil.growExact(startOffsetsBuf, newLength);
+				lengthsBuf = ArrayUtil.growExact(lengthsBuf, newLength);
+			}
+			int lastOffset = 0, startOffset, endOffset;
+			for (int i = 0; i < numProx; ++i) {
+				startOffset = lastOffset + offsets.readVInt();
+				endOffset = startOffset + offsets.readVInt();
+				lastOffset = endOffset;
+				startOffsetsBuf[offStart + i] = startOffset;
+				lengthsBuf[offStart + i] = endOffset - startOffset;
+			}
+		}
+
+		curField.totalPositions += numProx;
+	}
+
+	// bulk merge is scary: its caused corruption bugs in the past.
+	// we try to be extra safe with this impl, but add an escape hatch to
+	// have a workaround for undiscovered bugs.
+	static final String BULK_MERGE_ENABLED_SYSPROP = CompressingTermVectorsWriter.class.getName() + ".enableBulkMerge";
+	static final boolean BULK_MERGE_ENABLED;
+
+	static {
+		boolean v = true;
+		try {
+			v = Boolean.parseBoolean(System.getProperty(BULK_MERGE_ENABLED_SYSPROP, "true"));
+		} catch (SecurityException ignored) {
+		}
+		BULK_MERGE_ENABLED = v;
+	}
+
+	@Override
+	public int merge(MergeState mergeState) throws IOException {
+		if (mergeState.needsIndexSort) {
+			// TODO: can we gain back some optos even if index is sorted?  E.g. if sort results in large chunks of contiguous docs from one sub
+			// being copied over...?
+			return super.merge(mergeState);
+		}
+		int docCount = 0;
+		int numReaders = mergeState.maxDocs.length;
+
+		MatchingReaders matching = new MatchingReaders(mergeState);
+
+		for (int readerIndex = 0; readerIndex < numReaders; readerIndex++) {
+			CompressingTermVectorsReader matchingVectorsReader = null;
+			final TermVectorsReader vectorsReader = mergeState.termVectorsReaders[readerIndex];
+			if (matching.matchingReaders[readerIndex]) {
+				// we can only bulk-copy if the matching reader is also a CompressingTermVectorsReader
+				if (vectorsReader != null && vectorsReader instanceof CompressingTermVectorsReader) {
+					matchingVectorsReader = (CompressingTermVectorsReader) vectorsReader;
+				}
+			}
+
+			final int maxDoc = mergeState.maxDocs[readerIndex];
+			final Bits liveDocs = mergeState.liveDocs[readerIndex];
+
+			if (matchingVectorsReader != null &&
+				matchingVectorsReader.getCompressionMode() == compressionMode &&
+				matchingVectorsReader.getChunkSize() == chunkSize &&
+				matchingVectorsReader.getVersion() == VERSION_CURRENT &&
+				matchingVectorsReader.getPackedIntsVersion() == PackedInts.VERSION_CURRENT &&
+				BULK_MERGE_ENABLED &&
+				liveDocs == null &&
+				!tooDirty(matchingVectorsReader)) {
+				// optimized merge, raw byte copy
+				// its not worth fine-graining this if there are deletions.
+
+				matchingVectorsReader.checkIntegrity();
+
+				// flush any pending chunks
+				if (!pendingDocs.isEmpty()) {
+					flush();
+					numDirtyChunks++; // incomplete: we had to force this flush
+				}
+
+				// iterate over each chunk. we use the vectors index to find chunk boundaries,
+				// read the docstart + doccount from the chunk header (we write a new header, since doc numbers will change),
+				// and just copy the bytes directly.
+				IndexInput rawDocs = matchingVectorsReader.getVectorsStream();
+				CompressingStoredFieldsIndexReader index = matchingVectorsReader.getIndexReader();
+				rawDocs.seek(index.getStartPointer(0));
+				int docID = 0;
+				while (docID < maxDoc) {
+					// read header
+					int base = rawDocs.readVInt();
+					if (base != docID) {
+						throw new CorruptIndexException("invalid state: base=" + base + ", docID=" + docID, rawDocs);
+					}
+					int bufferedDocs = rawDocs.readVInt();
+
+					// write a new index entry and new header for this chunk.
+					indexWriter.writeIndex(bufferedDocs, vectorsStream.getFilePointer());
+					vectorsStream.writeVInt(docCount); // rebase
+					vectorsStream.writeVInt(bufferedDocs);
+					docID += bufferedDocs;
+					docCount += bufferedDocs;
+					numDocs += bufferedDocs;
+
+					if (docID > maxDoc) {
+						throw new CorruptIndexException("invalid state: base=" + base + ", count=" + bufferedDocs + ", maxDoc=" + maxDoc, rawDocs);
+					}
+
+					// copy bytes until the next chunk boundary (or end of chunk data).
+					// using the stored fields index for this isn't the most efficient, but fast enough
+					// and is a source of redundancy for detecting bad things.
+					final long end;
+					if (docID == maxDoc) {
+						end = matchingVectorsReader.getMaxPointer();
+					} else {
+						end = index.getStartPointer(docID);
+					}
+					vectorsStream.copyBytes(rawDocs, end - rawDocs.getFilePointer());
+				}
+
+				if (rawDocs.getFilePointer() != matchingVectorsReader.getMaxPointer()) {
+					throw new CorruptIndexException("invalid state: pos=" + rawDocs.getFilePointer() + ", max=" + matchingVectorsReader.getMaxPointer(), rawDocs);
+				}
+
+				// since we bulk merged all chunks, we inherit any dirty ones from this segment.
+				numChunks += matchingVectorsReader.getNumChunks();
+				numDirtyChunks += matchingVectorsReader.getNumDirtyChunks();
+			} else {
+				// naive merge...
+				if (vectorsReader != null) {
+					vectorsReader.checkIntegrity();
+				}
+				for (int i = 0; i < maxDoc; i++) {
+					if (liveDocs != null && liveDocs.get(i) == false) {
+						continue;
+					}
+					Fields vectors;
+					if (vectorsReader == null) {
+						vectors = null;
+					} else {
+						vectors = vectorsReader.get(i);
+					}
+					addAllDocVectors(vectors, mergeState);
+					++docCount;
+				}
+			}
+		}
+		finish(mergeState.mergeFieldInfos, docCount);
+		return docCount;
+	}
+
+	/**
+	 * Returns true if we should recompress this reader, even though we could bulk merge compressed data
+	 * <p>
+	 * The last chunk written for a segment is typically incomplete, so without recompressing,
+	 * in some worst-case situations (e.g. frequent reopen with tiny flushes), over time the
+	 * compression ratio can degrade. This is a safety switch.
+	 */
+	boolean tooDirty(CompressingTermVectorsReader candidate) {
+		// more than 1% dirty, or more than hard limit of 1024 dirty chunks
+		return candidate.getNumDirtyChunks() > 1024 ||
+			candidate.getNumDirtyChunks() * 100 > candidate.getNumChunks();
+	}
 }

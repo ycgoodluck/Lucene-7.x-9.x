@@ -25,66 +25,66 @@ import java.util.Objects;
 
 class ContainingIntervalsSource extends ConjunctionIntervalsSource {
 
-  private final IntervalsSource big;
-  private final IntervalsSource small;
+	private final IntervalsSource big;
+	private final IntervalsSource small;
 
-  static IntervalsSource build(IntervalsSource big, IntervalsSource small) {
-    return Intervals.or(Disjunctions.pullUp(big, s -> new ContainingIntervalsSource(s, small)));
-  }
+	static IntervalsSource build(IntervalsSource big, IntervalsSource small) {
+		return Intervals.or(Disjunctions.pullUp(big, s -> new ContainingIntervalsSource(s, small)));
+	}
 
-  private ContainingIntervalsSource(IntervalsSource big, IntervalsSource small) {
-    super(Arrays.asList(big, small), false);
-    this.big = big;
-    this.small = small;
-  }
+	private ContainingIntervalsSource(IntervalsSource big, IntervalsSource small) {
+		super(Arrays.asList(big, small), false);
+		this.big = big;
+		this.small = small;
+	}
 
-  @Override
-  protected IntervalIterator combine(List<IntervalIterator> iterators) {
-    assert iterators.size() == 2;
-    IntervalIterator a = iterators.get(0);
-    IntervalIterator b = iterators.get(1);
-    return new FilteringIntervalIterator(a, b) {
-      @Override
-      public int nextInterval() throws IOException {
-        if (bpos == false)
-          return IntervalIterator.NO_MORE_INTERVALS;
-        while (a.nextInterval() != IntervalIterator.NO_MORE_INTERVALS) {
-          while (b.start() < a.start() && b.end() < a.end()) {
-            if (b.nextInterval() == IntervalIterator.NO_MORE_INTERVALS)
-              return IntervalIterator.NO_MORE_INTERVALS;
-          }
-          if (a.start() <= b.start() && a.end() >= b.end())
-            return a.start();
-        }
-        return IntervalIterator.NO_MORE_INTERVALS;
-      }
-    };
-  }
+	@Override
+	protected IntervalIterator combine(List<IntervalIterator> iterators) {
+		assert iterators.size() == 2;
+		IntervalIterator a = iterators.get(0);
+		IntervalIterator b = iterators.get(1);
+		return new FilteringIntervalIterator(a, b) {
+			@Override
+			public int nextInterval() throws IOException {
+				if (bpos == false)
+					return IntervalIterator.NO_MORE_INTERVALS;
+				while (a.nextInterval() != IntervalIterator.NO_MORE_INTERVALS) {
+					while (b.start() < a.start() && b.end() < a.end()) {
+						if (b.nextInterval() == IntervalIterator.NO_MORE_INTERVALS)
+							return IntervalIterator.NO_MORE_INTERVALS;
+					}
+					if (a.start() <= b.start() && a.end() >= b.end())
+						return a.start();
+				}
+				return IntervalIterator.NO_MORE_INTERVALS;
+			}
+		};
+	}
 
-  @Override
-  public int minExtent() {
-    return big.minExtent();
-  }
+	@Override
+	public int minExtent() {
+		return big.minExtent();
+	}
 
-  @Override
-  public Collection<IntervalsSource> pullUpDisjunctions() {
-    return Disjunctions.pullUp(big, s -> new ContainingIntervalsSource(s, small));
-  }
+	@Override
+	public Collection<IntervalsSource> pullUpDisjunctions() {
+		return Disjunctions.pullUp(big, s -> new ContainingIntervalsSource(s, small));
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.subSources);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.subSources);
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    if (other instanceof ContainingIntervalsSource == false) return false;
-    ConjunctionIntervalsSource o = (ContainingIntervalsSource) other;
-    return Objects.equals(this.subSources, o.subSources);
-  }
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof ContainingIntervalsSource == false) return false;
+		ConjunctionIntervalsSource o = (ContainingIntervalsSource) other;
+		return Objects.equals(this.subSources, o.subSources);
+	}
 
-  @Override
-  public String toString() {
-    return "CONTAINING(" + big + "," + small + ")";
-  }
+	@Override
+	public String toString() {
+		return "CONTAINING(" + big + "," + small + ")";
+	}
 }

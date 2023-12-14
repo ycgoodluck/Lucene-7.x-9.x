@@ -25,51 +25,51 @@ import org.apache.lucene.benchmark.byTask.PerfRunData;
  * This is useful with background tasks to control how long
  * the tasks run.
  *
- *<p>You can specify h, m, or s (hours, minutes, seconds) as
- *the trailing time unit.  No unit is interpreted as
- *seconds.</p>
+ * <p>You can specify h, m, or s (hours, minutes, seconds) as
+ * the trailing time unit.  No unit is interpreted as
+ * seconds.</p>
  */
 public class WaitTask extends PerfTask {
 
-  private double waitTimeSec;
+	private double waitTimeSec;
 
-  public WaitTask(PerfRunData runData) {
-    super(runData);
-  }
+	public WaitTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  public void setParams(String params) {
-    super.setParams(params);
-    if (params != null) {
-      int multiplier;
-      if (params.endsWith("s")) {
-        multiplier = 1;
-        params = params.substring(0, params.length()-1);
-      } else if (params.endsWith("m")) {
-        multiplier = 60;
-        params = params.substring(0, params.length()-1);
-      } else if (params.endsWith("h")) {
-        multiplier = 3600;
-        params = params.substring(0, params.length()-1);
-      } else {
-        // Assume seconds
-        multiplier = 1;
-      }
+	@Override
+	public void setParams(String params) {
+		super.setParams(params);
+		if (params != null) {
+			int multiplier;
+			if (params.endsWith("s")) {
+				multiplier = 1;
+				params = params.substring(0, params.length() - 1);
+			} else if (params.endsWith("m")) {
+				multiplier = 60;
+				params = params.substring(0, params.length() - 1);
+			} else if (params.endsWith("h")) {
+				multiplier = 3600;
+				params = params.substring(0, params.length() - 1);
+			} else {
+				// Assume seconds
+				multiplier = 1;
+			}
 
-      waitTimeSec = Double.parseDouble(params) * multiplier;
-    } else {
-      throw new IllegalArgumentException("you must specify the wait time, eg: 10.0s, 4.5m, 2h");
-    }
-  }
+			waitTimeSec = Double.parseDouble(params) * multiplier;
+		} else {
+			throw new IllegalArgumentException("you must specify the wait time, eg: 10.0s, 4.5m, 2h");
+		}
+	}
 
-  @Override
-  public int doLogic() throws Exception {
-    Thread.sleep((long) (1000*waitTimeSec));
-    return 0;
-  }
+	@Override
+	public int doLogic() throws Exception {
+		Thread.sleep((long) (1000 * waitTimeSec));
+		return 0;
+	}
 
-  @Override
-  public boolean supportsParams() {
-    return true;
-  }
+	@Override
+	public boolean supportsParams() {
+		return true;
+	}
 }

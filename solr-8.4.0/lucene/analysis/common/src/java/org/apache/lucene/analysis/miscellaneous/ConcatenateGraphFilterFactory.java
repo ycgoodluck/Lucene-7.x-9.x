@@ -49,53 +49,56 @@ import org.apache.lucene.util.automaton.TooComplexToDeterminizeException;
  *                            machine.
  *                            </li>
  * </ul>
+ *
+ * @lucene.spi {@value #NAME}
  * @see ConcatenateGraphFilter
  * @since 7.4.0
- * @lucene.spi {@value #NAME}
  */
 public class ConcatenateGraphFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "concatenateGraph";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "concatenateGraph";
 
-  private Character tokenSeparator;
-  private boolean preservePositionIncrements;
-  private int maxGraphExpansions;
+	private Character tokenSeparator;
+	private boolean preservePositionIncrements;
+	private int maxGraphExpansions;
 
-  public ConcatenateGraphFilterFactory(Map<String, String> args) {
-    super(args);
-    Version luceneMatchVersion = getLuceneMatchVersion();
-    if (luceneMatchVersion.onOrAfter(Version.LUCENE_8_4_0)) {
-      tokenSeparator = getCharacter(args, "tokenSeparator", ConcatenateGraphFilter.DEFAULT_TOKEN_SEPARATOR);
-    } else {
-      boolean preserveSep = getBoolean(args, "preserveSep", ConcatenateGraphFilter.DEFAULT_PRESERVE_SEP);
-      tokenSeparator = (preserveSep) ? ConcatenateGraphFilter.DEFAULT_TOKEN_SEPARATOR : null;
-    }
-    preservePositionIncrements = getBoolean(args, "preservePositionIncrements", ConcatenateGraphFilter.DEFAULT_PRESERVE_POSITION_INCREMENTS);
-    maxGraphExpansions = getInt(args, "maxGraphExpansions", ConcatenateGraphFilter.DEFAULT_MAX_GRAPH_EXPANSIONS);
+	public ConcatenateGraphFilterFactory(Map<String, String> args) {
+		super(args);
+		Version luceneMatchVersion = getLuceneMatchVersion();
+		if (luceneMatchVersion.onOrAfter(Version.LUCENE_8_4_0)) {
+			tokenSeparator = getCharacter(args, "tokenSeparator", ConcatenateGraphFilter.DEFAULT_TOKEN_SEPARATOR);
+		} else {
+			boolean preserveSep = getBoolean(args, "preserveSep", ConcatenateGraphFilter.DEFAULT_PRESERVE_SEP);
+			tokenSeparator = (preserveSep) ? ConcatenateGraphFilter.DEFAULT_TOKEN_SEPARATOR : null;
+		}
+		preservePositionIncrements = getBoolean(args, "preservePositionIncrements", ConcatenateGraphFilter.DEFAULT_PRESERVE_POSITION_INCREMENTS);
+		maxGraphExpansions = getInt(args, "maxGraphExpansions", ConcatenateGraphFilter.DEFAULT_MAX_GRAPH_EXPANSIONS);
 
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new ConcatenateGraphFilter(input, tokenSeparator, preservePositionIncrements, maxGraphExpansions);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new ConcatenateGraphFilter(input, tokenSeparator, preservePositionIncrements, maxGraphExpansions);
+	}
 
-  protected Character getCharacter(Map<String,String> args, String name, Character defaultVal) {
-    String s = args.remove(name);
-    if (s == null) {
-      return defaultVal;
-    } else if (s.length() == 0) {
-      return null;
-    } else {
-      if (s.length() != 1) {
-        throw new IllegalArgumentException(name + " should be a char. \"" + s + "\" is invalid");
-      } else {
-        return s.charAt(0);
-      }
-    }
-  }
+	protected Character getCharacter(Map<String, String> args, String name, Character defaultVal) {
+		String s = args.remove(name);
+		if (s == null) {
+			return defaultVal;
+		} else if (s.length() == 0) {
+			return null;
+		} else {
+			if (s.length() != 1) {
+				throw new IllegalArgumentException(name + " should be a char. \"" + s + "\" is invalid");
+			} else {
+				return s.charAt(0);
+			}
+		}
+	}
 }

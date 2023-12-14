@@ -40,33 +40,33 @@ import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.TestUtil;
 
 public class TestKeywordAnalyzer extends BaseTokenStreamTestCase {
-  
-  private Directory directory;
-  private IndexReader reader;
-  private Analyzer analyzer;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    directory = newDirectory();
-    analyzer = new SimpleAnalyzer();
-    IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(analyzer));
+	private Directory directory;
+	private IndexReader reader;
+	private Analyzer analyzer;
 
-    Document doc = new Document();
-    doc.add(new StringField("partnum", "Q36", Field.Store.YES));
-    doc.add(new TextField("description", "Illidium Space Modulator", Field.Store.YES));
-    writer.addDocument(doc);
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		directory = newDirectory();
+		analyzer = new SimpleAnalyzer();
+		IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(analyzer));
 
-    writer.close();
+		Document doc = new Document();
+		doc.add(new StringField("partnum", "Q36", Field.Store.YES));
+		doc.add(new TextField("description", "Illidium Space Modulator", Field.Store.YES));
+		writer.addDocument(doc);
 
-    reader = DirectoryReader.open(directory);
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    IOUtils.close(analyzer, reader, directory);
-    super.tearDown();
-  }
+		writer.close();
+
+		reader = DirectoryReader.open(directory);
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		IOUtils.close(analyzer, reader, directory);
+		super.tearDown();
+	}
 
   /*
   public void testPerFieldAnalyzer() throws Exception {
@@ -83,54 +83,56 @@ public class TestKeywordAnalyzer extends BaseTokenStreamTestCase {
   }
   */
 
-  public void testMutipleDocument() throws Exception {
-    RAMDirectory dir = new RAMDirectory();
-    Analyzer analyzer = new KeywordAnalyzer();
-    IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(analyzer));
-    Document doc = new Document();
-    doc.add(new TextField("partnum", "Q36", Field.Store.YES));
-    writer.addDocument(doc);
-    doc = new Document();
-    doc.add(new TextField("partnum", "Q37", Field.Store.YES));
-    writer.addDocument(doc);
-    writer.close();
+	public void testMutipleDocument() throws Exception {
+		RAMDirectory dir = new RAMDirectory();
+		Analyzer analyzer = new KeywordAnalyzer();
+		IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(analyzer));
+		Document doc = new Document();
+		doc.add(new TextField("partnum", "Q36", Field.Store.YES));
+		writer.addDocument(doc);
+		doc = new Document();
+		doc.add(new TextField("partnum", "Q37", Field.Store.YES));
+		writer.addDocument(doc);
+		writer.close();
 
-    IndexReader reader = DirectoryReader.open(dir);
-    PostingsEnum td = TestUtil.docs(random(),
-        reader,
-        "partnum",
-        new BytesRef("Q36"),
-        null,
-        0);
-    assertTrue(td.nextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-    td = TestUtil.docs(random(),
-        reader,
-        "partnum",
-        new BytesRef("Q37"),
-        null,
-        0);
-    assertTrue(td.nextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-    analyzer.close();
-  }
+		IndexReader reader = DirectoryReader.open(dir);
+		PostingsEnum td = TestUtil.docs(random(),
+			reader,
+			"partnum",
+			new BytesRef("Q36"),
+			null,
+			0);
+		assertTrue(td.nextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+		td = TestUtil.docs(random(),
+			reader,
+			"partnum",
+			new BytesRef("Q37"),
+			null,
+			0);
+		assertTrue(td.nextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+		analyzer.close();
+	}
 
-  // LUCENE-1441
-  public void testOffsets() throws Exception {
-    try (Analyzer analyzer = new KeywordAnalyzer();
-         TokenStream stream = analyzer.tokenStream("field", new StringReader("abcd"))) {
-      OffsetAttribute offsetAtt = stream.addAttribute(OffsetAttribute.class);
-      stream.reset();
-      assertTrue(stream.incrementToken());
-      assertEquals(0, offsetAtt.startOffset());
-      assertEquals(4, offsetAtt.endOffset());
-      assertFalse(stream.incrementToken());
-      stream.end();
-    }
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer analyzer = new KeywordAnalyzer();
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-    analyzer.close();
-  }
+	// LUCENE-1441
+	public void testOffsets() throws Exception {
+		try (Analyzer analyzer = new KeywordAnalyzer();
+				 TokenStream stream = analyzer.tokenStream("field", new StringReader("abcd"))) {
+			OffsetAttribute offsetAtt = stream.addAttribute(OffsetAttribute.class);
+			stream.reset();
+			assertTrue(stream.incrementToken());
+			assertEquals(0, offsetAtt.startOffset());
+			assertEquals(4, offsetAtt.endOffset());
+			assertFalse(stream.incrementToken());
+			stream.end();
+		}
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer analyzer = new KeywordAnalyzer();
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+		analyzer.close();
+	}
 }

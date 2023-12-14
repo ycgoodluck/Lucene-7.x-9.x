@@ -43,89 +43,89 @@ import org.apache.lucene.util.automaton.CharacterRunAutomaton;
  */
 public class MemoryIndexOffsetStrategy extends AnalysisOffsetStrategy {
 
-  private final MemoryIndex memoryIndex;
-  private final LeafReader memIndexLeafReader;
-  private final CharacterRunAutomaton preMemIndexFilterAutomaton;
+	private final MemoryIndex memoryIndex;
+	private final LeafReader memIndexLeafReader;
+	private final CharacterRunAutomaton preMemIndexFilterAutomaton;
 
-  public MemoryIndexOffsetStrategy(UHComponents components, Analyzer analyzer,
-                                   Function<Query, Collection<Query>> multiTermQueryRewrite) {
-    super(components, analyzer);
-    boolean storePayloads = components.getPhraseHelper().hasPositionSensitivity(); // might be needed
-    memoryIndex = new MemoryIndex(true, storePayloads);//true==store offsets
-    memIndexLeafReader = (LeafReader) memoryIndex.createSearcher().getIndexReader(); // appears to be re-usable
-    // preFilter for MemoryIndex
-    preMemIndexFilterAutomaton = buildCombinedAutomaton(components, multiTermQueryRewrite);
-  }
+	public MemoryIndexOffsetStrategy(UHComponents components, Analyzer analyzer,
+																	 Function<Query, Collection<Query>> multiTermQueryRewrite) {
+		super(components, analyzer);
+		boolean storePayloads = components.getPhraseHelper().hasPositionSensitivity(); // might be needed
+		memoryIndex = new MemoryIndex(true, storePayloads);//true==store offsets
+		memIndexLeafReader = (LeafReader) memoryIndex.createSearcher().getIndexReader(); // appears to be re-usable
+		// preFilter for MemoryIndex
+		preMemIndexFilterAutomaton = buildCombinedAutomaton(components, multiTermQueryRewrite);
+	}
 
-  /**
-   * Build one {@link CharacterRunAutomaton} matching any term the query might match.
-   */
-  private static CharacterRunAutomaton buildCombinedAutomaton(UHComponents components,
-                                                              Function<Query, Collection<Query>> multiTermQueryRewrite) {
-    List<CharacterRunAutomaton> allAutomata = new ArrayList<>();
-    if (components.getTerms().length > 0) {
-      allAutomata.add(new CharacterRunAutomaton(Automata.makeStringUnion(Arrays.asList(components.getTerms()))));
-    }
-    Collections.addAll(allAutomata, components.getAutomata());
-    for (SpanQuery spanQuery : components.getPhraseHelper().getSpanQueries()) {
-      Collections.addAll(allAutomata,
-          MultiTermHighlighting.extractAutomata(spanQuery, components.getFieldMatcher(), true, multiTermQueryRewrite));//true==lookInSpan
-    }
+	/**
+	 * Build one {@link CharacterRunAutomaton} matching any term the query might match.
+	 */
+	private static CharacterRunAutomaton buildCombinedAutomaton(UHComponents components,
+																															Function<Query, Collection<Query>> multiTermQueryRewrite) {
+		List<CharacterRunAutomaton> allAutomata = new ArrayList<>();
+		if (components.getTerms().length > 0) {
+			allAutomata.add(new CharacterRunAutomaton(Automata.makeStringUnion(Arrays.asList(components.getTerms()))));
+		}
+		Collections.addAll(allAutomata, components.getAutomata());
+		for (SpanQuery spanQuery : components.getPhraseHelper().getSpanQueries()) {
+			Collections.addAll(allAutomata,
+				MultiTermHighlighting.extractAutomata(spanQuery, components.getFieldMatcher(), true, multiTermQueryRewrite));//true==lookInSpan
+		}
 
-    if (allAutomata.size() == 1) {
-      return allAutomata.get(0);
-    }
-    //TODO it'd be nice if we could get at the underlying Automaton in CharacterRunAutomaton so that we
-    //  could union them all. But it's not exposed, and sometimes the automaton is byte (not char) oriented
+		if (allAutomata.size() == 1) {
+			return allAutomata.get(0);
+		}
+		//TODO it'd be nice if we could get at the underlying Automaton in CharacterRunAutomaton so that we
+		//  could union them all. But it's not exposed, and sometimes the automaton is byte (not char) oriented
 
-    // Return an aggregate CharacterRunAutomaton of others
-    return new CharacterRunAutomaton(Automata.makeEmpty()) {// the makeEmpty() is bogus; won't be used
-      @Override
-      public boolean run(char[] chars, int offset, int length) {
-        for (int i = 0; i < allAutomata.size(); i++) {// don't use foreach to avoid Iterator allocation
-          if (allAutomata.get(i).run(chars, offset, length)) {
-            return true;
-          }
-        }
-        return false;
-      }
-    };
-  }
+		// Return an aggregate CharacterRunAutomaton of others
+		return new CharacterRunAutomaton(Automata.makeEmpty()) {// the makeEmpty() is bogus; won't be used
+			@Override
+			public boolean run(char[] chars, int offset, int length) {
+				for (int i = 0; i < allAutomata.size(); i++) {// don't use foreach to avoid Iterator allocation
+					if (allAutomata.get(i).run(chars, offset, length)) {
+						return true;
+					}
+				}
+				return false;
+			}
+		};
+	}
 
-  @Override
-  public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
-    // note: don't need LimitTokenOffsetFilter since content is already truncated to maxLength
-    TokenStream tokenStream = tokenStream(content);
+	@Override
+	public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
+		// note: don't need LimitTokenOffsetFilter since content is already truncated to maxLength
+		TokenStream tokenStream = tokenStream(content);
 
-    // Filter the tokenStream to applicable terms
-    tokenStream = newKeepWordFilter(tokenStream, preMemIndexFilterAutomaton);
-    memoryIndex.reset();
-    memoryIndex.addField(getField(), tokenStream);//note: calls tokenStream.reset() & close()
+		// Filter the tokenStream to applicable terms
+		tokenStream = newKeepWordFilter(tokenStream, preMemIndexFilterAutomaton);
+		memoryIndex.reset();
+		memoryIndex.addField(getField(), tokenStream);//note: calls tokenStream.reset() & close()
 
-    if (reader == null) {
-      return createOffsetsEnumFromReader(memIndexLeafReader, 0);
-    } else {
-      return createOffsetsEnumFromReader(
-          new OverlaySingleDocTermsLeafReader(
-              reader,
-              memIndexLeafReader,
-              getField(),
-              docId),
-          docId);
-    }
-  }
+		if (reader == null) {
+			return createOffsetsEnumFromReader(memIndexLeafReader, 0);
+		} else {
+			return createOffsetsEnumFromReader(
+				new OverlaySingleDocTermsLeafReader(
+					reader,
+					memIndexLeafReader,
+					getField(),
+					docId),
+				docId);
+		}
+	}
 
-  private static FilteringTokenFilter newKeepWordFilter(final TokenStream tokenStream,
-                                                        final CharacterRunAutomaton charRunAutomaton) {
-    // it'd be nice to use KeepWordFilter but it demands a CharArraySet. TODO File JIRA? Need a new interface?
-    return new FilteringTokenFilter(tokenStream) {
-      final CharTermAttribute charAtt = addAttribute(CharTermAttribute.class);
+	private static FilteringTokenFilter newKeepWordFilter(final TokenStream tokenStream,
+																												final CharacterRunAutomaton charRunAutomaton) {
+		// it'd be nice to use KeepWordFilter but it demands a CharArraySet. TODO File JIRA? Need a new interface?
+		return new FilteringTokenFilter(tokenStream) {
+			final CharTermAttribute charAtt = addAttribute(CharTermAttribute.class);
 
-      @Override
-      protected boolean accept() throws IOException {
-        return charRunAutomaton.run(charAtt.buffer(), 0, charAtt.length());
-      }
-    };
-  }
+			@Override
+			protected boolean accept() throws IOException {
+				return charRunAutomaton.run(charAtt.buffer(), 0, charAtt.length());
+			}
+		};
+	}
 
 }

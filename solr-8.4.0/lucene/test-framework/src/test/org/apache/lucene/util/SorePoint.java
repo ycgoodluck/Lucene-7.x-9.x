@@ -21,12 +21,12 @@ package org.apache.lucene.util;
  * an assumption or error.
  */
 public enum SorePoint {
-  // STATIC_INITIALIZER, // I assume this will result in JUnit failure to load a suite.
-  BEFORE_CLASS,
-  INITIALIZER,
-  RULE,
-  BEFORE,
-  TEST,
-  AFTER,
-  AFTER_CLASS
+	// STATIC_INITIALIZER, // I assume this will result in JUnit failure to load a suite.
+	BEFORE_CLASS,
+	INITIALIZER,
+	RULE,
+	BEFORE,
+	TEST,
+	AFTER,
+	AFTER_CLASS
 }

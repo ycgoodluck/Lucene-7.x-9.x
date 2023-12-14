@@ -27,17 +27,19 @@ import org.apache.lucene.util.BytesRef;
  * text as UTF-16 bytes instead of as UTF-8 bytes.
  */
 public class MockUTF16TermAttributeImpl extends CharTermAttributeImpl {
-  
-  /** Factory that returns an instance of this class for CharTermAttribute */
-  public static final AttributeFactory UTF16_TERM_ATTRIBUTE_FACTORY =
-      AttributeFactory.getStaticImplementation(AttributeFactory.DEFAULT_ATTRIBUTE_FACTORY, MockUTF16TermAttributeImpl.class);
-  
-  @Override
-  public BytesRef getBytesRef() {
-    final BytesRef ref = this.builder.get();
-    ref.bytes = toString().getBytes(StandardCharsets.UTF_16LE);
-    ref.offset = 0;
-    ref.length = ref.bytes.length;
-    return ref;
-  }
+
+	/**
+	 * Factory that returns an instance of this class for CharTermAttribute
+	 */
+	public static final AttributeFactory UTF16_TERM_ATTRIBUTE_FACTORY =
+		AttributeFactory.getStaticImplementation(AttributeFactory.DEFAULT_ATTRIBUTE_FACTORY, MockUTF16TermAttributeImpl.class);
+
+	@Override
+	public BytesRef getBytesRef() {
+		final BytesRef ref = this.builder.get();
+		ref.bytes = toString().getBytes(StandardCharsets.UTF_16LE);
+		ref.offset = 0;
+		ref.length = ref.bytes.length;
+		return ref;
+	}
 }

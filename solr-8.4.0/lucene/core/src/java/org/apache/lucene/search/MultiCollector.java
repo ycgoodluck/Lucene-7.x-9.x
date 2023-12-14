@@ -32,171 +32,172 @@ import org.apache.lucene.index.LeafReaderContext;
  */
 public class MultiCollector implements Collector {
 
-  /** See {@link #wrap(Iterable)}. */
-  public static Collector wrap(Collector... collectors) {
-    return wrap(Arrays.asList(collectors));
-  }
+	/**
+	 * See {@link #wrap(Iterable)}.
+	 */
+	public static Collector wrap(Collector... collectors) {
+		return wrap(Arrays.asList(collectors));
+	}
 
-  /**
-   * Wraps a list of {@link Collector}s with a {@link MultiCollector}. This
-   * method works as follows:
-   * <ul>
-   * <li>Filters out the <code>null</code> collectors, so they are not used
-   * during search time.
-   * <li>If the input contains 1 real collector (i.e. non-<code>null</code> ),
-   * it is returned.
-   * <li>Otherwise the method returns a {@link MultiCollector} which wraps the
-   * non-<code>null</code> ones.
-   * </ul>
-   * 
-   * @throws IllegalArgumentException
-   *           if either 0 collectors were input, or all collectors are
-   *           <code>null</code>.
-   */
-  public static Collector wrap(Iterable<? extends Collector> collectors) {
-    // For the user's convenience, we allow null collectors to be passed.
-    // However, to improve performance, these null collectors are found
-    // and dropped from the array we save for actual collection time.
-    int n = 0;
-    for (Collector c : collectors) {
-      if (c != null) {
-        n++;
-      }
-    }
+	/**
+	 * Wraps a list of {@link Collector}s with a {@link MultiCollector}. This
+	 * method works as follows:
+	 * <ul>
+	 * <li>Filters out the <code>null</code> collectors, so they are not used
+	 * during search time.
+	 * <li>If the input contains 1 real collector (i.e. non-<code>null</code> ),
+	 * it is returned.
+	 * <li>Otherwise the method returns a {@link MultiCollector} which wraps the
+	 * non-<code>null</code> ones.
+	 * </ul>
+	 *
+	 * @throws IllegalArgumentException if either 0 collectors were input, or all collectors are
+	 *                                  <code>null</code>.
+	 */
+	public static Collector wrap(Iterable<? extends Collector> collectors) {
+		// For the user's convenience, we allow null collectors to be passed.
+		// However, to improve performance, these null collectors are found
+		// and dropped from the array we save for actual collection time.
+		int n = 0;
+		for (Collector c : collectors) {
+			if (c != null) {
+				n++;
+			}
+		}
 
-    if (n == 0) {
-      throw new IllegalArgumentException("At least 1 collector must not be null");
-    } else if (n == 1) {
-      // only 1 Collector - return it.
-      Collector col = null;
-      for (Collector c : collectors) {
-        if (c != null) {
-          col = c;
-          break;
-        }
-      }
-      return col;
-    } else {
-      Collector[] colls = new Collector[n];
-      n = 0;
-      for (Collector c : collectors) {
-        if (c != null) {
-          colls[n++] = c;
-        }
-      }
-      return new MultiCollector(colls);
-    }
-  }
-  
-  private final boolean cacheScores;
-  private final Collector[] collectors;
+		if (n == 0) {
+			throw new IllegalArgumentException("At least 1 collector must not be null");
+		} else if (n == 1) {
+			// only 1 Collector - return it.
+			Collector col = null;
+			for (Collector c : collectors) {
+				if (c != null) {
+					col = c;
+					break;
+				}
+			}
+			return col;
+		} else {
+			Collector[] colls = new Collector[n];
+			n = 0;
+			for (Collector c : collectors) {
+				if (c != null) {
+					colls[n++] = c;
+				}
+			}
+			return new MultiCollector(colls);
+		}
+	}
 
-  private MultiCollector(Collector... collectors) {
-    this.collectors = collectors;
-    int numNeedsScores = 0;
-    for (Collector collector : collectors) {
-      if (collector.scoreMode().needsScores()) {
-        numNeedsScores += 1;
-      }
-    }
-    this.cacheScores = numNeedsScores >= 2;
-  }
+	private final boolean cacheScores;
+	private final Collector[] collectors;
 
-  @Override
-  public ScoreMode scoreMode() {
-    ScoreMode scoreMode = null;
-    for (Collector collector : collectors) {
-      if (scoreMode == null) {
-        scoreMode = collector.scoreMode();
-      } else if (scoreMode != collector.scoreMode()) {
-        return ScoreMode.COMPLETE;
-      }
-    }
-    return scoreMode;
-  }
+	private MultiCollector(Collector... collectors) {
+		this.collectors = collectors;
+		int numNeedsScores = 0;
+		for (Collector collector : collectors) {
+			if (collector.scoreMode().needsScores()) {
+				numNeedsScores += 1;
+			}
+		}
+		this.cacheScores = numNeedsScores >= 2;
+	}
 
-  @Override
-  public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
-    final List<LeafCollector> leafCollectors = new ArrayList<>();
-    for (Collector collector : collectors) {
-      final LeafCollector leafCollector;
-      try {
-        leafCollector = collector.getLeafCollector(context);
-      } catch (CollectionTerminatedException e) {
-        // this leaf collector does not need this segment
-        continue;
-      }
-      leafCollectors.add(leafCollector);
-    }
-    switch (leafCollectors.size()) {
-      case 0:
-        throw new CollectionTerminatedException();
-      case 1:
-        return leafCollectors.get(0);
-      default:
-        return new MultiLeafCollector(leafCollectors, cacheScores);
-    }
-  }
+	@Override
+	public ScoreMode scoreMode() {
+		ScoreMode scoreMode = null;
+		for (Collector collector : collectors) {
+			if (scoreMode == null) {
+				scoreMode = collector.scoreMode();
+			} else if (scoreMode != collector.scoreMode()) {
+				return ScoreMode.COMPLETE;
+			}
+		}
+		return scoreMode;
+	}
 
-  private static class MultiLeafCollector implements LeafCollector {
+	@Override
+	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
+		final List<LeafCollector> leafCollectors = new ArrayList<>();
+		for (Collector collector : collectors) {
+			final LeafCollector leafCollector;
+			try {
+				leafCollector = collector.getLeafCollector(context);
+			} catch (CollectionTerminatedException e) {
+				// this leaf collector does not need this segment
+				continue;
+			}
+			leafCollectors.add(leafCollector);
+		}
+		switch (leafCollectors.size()) {
+			case 0:
+				throw new CollectionTerminatedException();
+			case 1:
+				return leafCollectors.get(0);
+			default:
+				return new MultiLeafCollector(leafCollectors, cacheScores);
+		}
+	}
 
-    private final boolean cacheScores;
-    private final LeafCollector[] collectors;
-    private int numCollectors;
+	private static class MultiLeafCollector implements LeafCollector {
 
-    private MultiLeafCollector(List<LeafCollector> collectors, boolean cacheScores) {
-      this.collectors = collectors.toArray(new LeafCollector[collectors.size()]);
-      this.cacheScores = cacheScores;
-      this.numCollectors = this.collectors.length;
-    }
+		private final boolean cacheScores;
+		private final LeafCollector[] collectors;
+		private int numCollectors;
 
-    @Override
-    public void setScorer(Scorable scorer) throws IOException {
-      if (cacheScores) {
-        scorer = new ScoreCachingWrappingScorer(scorer);
-      }
-      scorer = new FilterScorable(scorer) {
-        @Override
-        public void setMinCompetitiveScore(float minScore) {
-          // Ignore calls to setMinCompetitiveScore so that if we wrap two
-          // collectors and one of them wants to skip low-scoring hits, then
-          // the other collector still sees all hits. We could try to reconcile
-          // min scores and take the maximum min score across collectors, but
-          // this is very unlikely to be helpful in practice.
-        }
+		private MultiLeafCollector(List<LeafCollector> collectors, boolean cacheScores) {
+			this.collectors = collectors.toArray(new LeafCollector[collectors.size()]);
+			this.cacheScores = cacheScores;
+			this.numCollectors = this.collectors.length;
+		}
 
-      };
-      for (int i = 0; i < numCollectors; ++i) {
-        final LeafCollector c = collectors[i];
-        c.setScorer(scorer);
-      }
-    }
+		@Override
+		public void setScorer(Scorable scorer) throws IOException {
+			if (cacheScores) {
+				scorer = new ScoreCachingWrappingScorer(scorer);
+			}
+			scorer = new FilterScorable(scorer) {
+				@Override
+				public void setMinCompetitiveScore(float minScore) {
+					// Ignore calls to setMinCompetitiveScore so that if we wrap two
+					// collectors and one of them wants to skip low-scoring hits, then
+					// the other collector still sees all hits. We could try to reconcile
+					// min scores and take the maximum min score across collectors, but
+					// this is very unlikely to be helpful in practice.
+				}
 
-    private void removeCollector(int i) {
-      System.arraycopy(collectors, i + 1, collectors, i, numCollectors - i - 1);
-      --numCollectors;
-      collectors[numCollectors] = null;
-    }
+			};
+			for (int i = 0; i < numCollectors; ++i) {
+				final LeafCollector c = collectors[i];
+				c.setScorer(scorer);
+			}
+		}
 
-    @Override
-    public void collect(int doc) throws IOException {
-      final LeafCollector[] collectors = this.collectors;
-      int numCollectors = this.numCollectors;
-      for (int i = 0; i < numCollectors; ) {
-        final LeafCollector collector = collectors[i];
-        try {
-          collector.collect(doc);
-          ++i;
-        } catch (CollectionTerminatedException e) {
-          removeCollector(i);
-          numCollectors = this.numCollectors;
-          if (numCollectors == 0) {
-            throw new CollectionTerminatedException();
-          }
-        }
-      }
-    }
+		private void removeCollector(int i) {
+			System.arraycopy(collectors, i + 1, collectors, i, numCollectors - i - 1);
+			--numCollectors;
+			collectors[numCollectors] = null;
+		}
 
-  }
+		@Override
+		public void collect(int doc) throws IOException {
+			final LeafCollector[] collectors = this.collectors;
+			int numCollectors = this.numCollectors;
+			for (int i = 0; i < numCollectors; ) {
+				final LeafCollector collector = collectors[i];
+				try {
+					collector.collect(doc);
+					++i;
+				} catch (CollectionTerminatedException e) {
+					removeCollector(i);
+					numCollectors = this.numCollectors;
+					if (numCollectors == 0) {
+						throw new CollectionTerminatedException();
+					}
+				}
+			}
+		}
+
+	}
 
 }

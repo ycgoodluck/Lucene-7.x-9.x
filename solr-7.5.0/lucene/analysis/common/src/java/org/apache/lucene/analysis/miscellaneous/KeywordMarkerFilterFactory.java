@@ -36,50 +36,53 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.KeywordMarkerFilterFactory" protected="protectedkeyword.txt" pattern="^.+er$" ignoreCase="false"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class KeywordMarkerFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
-  public static final String PROTECTED_TOKENS = "protected";
-  public static final String PATTERN = "pattern";
-  private final String wordFiles;
-  private final String stringPattern;
-  private final boolean ignoreCase;
-  private Pattern pattern;
-  private CharArraySet protectedWords;
-  
-  /** Creates a new KeywordMarkerFilterFactory */
-  public KeywordMarkerFilterFactory(Map<String,String> args) {
-    super(args);
-    wordFiles = get(args, PROTECTED_TOKENS);
-    stringPattern = get(args, PATTERN);
-    ignoreCase = getBoolean(args, "ignoreCase", false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    if (wordFiles != null) {  
-      protectedWords = getWordSet(loader, wordFiles, ignoreCase);
-    }
-    if (stringPattern != null) {
-      pattern = ignoreCase ? Pattern.compile(stringPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE) : Pattern.compile(stringPattern);
-    }
-  }
-  
-  public boolean isIgnoreCase() {
-    return ignoreCase;
-  }
+	public static final String PROTECTED_TOKENS = "protected";
+	public static final String PATTERN = "pattern";
+	private final String wordFiles;
+	private final String stringPattern;
+	private final boolean ignoreCase;
+	private Pattern pattern;
+	private CharArraySet protectedWords;
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    if (pattern != null) {
-      input = new PatternKeywordMarkerFilter(input, pattern);
-    }
-    if (protectedWords != null) {
-      input = new SetKeywordMarkerFilter(input, protectedWords);
-    }
-    return input;
-  }
+	/**
+	 * Creates a new KeywordMarkerFilterFactory
+	 */
+	public KeywordMarkerFilterFactory(Map<String, String> args) {
+		super(args);
+		wordFiles = get(args, PROTECTED_TOKENS);
+		stringPattern = get(args, PATTERN);
+		ignoreCase = getBoolean(args, "ignoreCase", false);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		if (wordFiles != null) {
+			protectedWords = getWordSet(loader, wordFiles, ignoreCase);
+		}
+		if (stringPattern != null) {
+			pattern = ignoreCase ? Pattern.compile(stringPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE) : Pattern.compile(stringPattern);
+		}
+	}
+
+	public boolean isIgnoreCase() {
+		return ignoreCase;
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		if (pattern != null) {
+			input = new PatternKeywordMarkerFilter(input, pattern);
+		}
+		if (protectedWords != null) {
+			input = new SetKeywordMarkerFilter(input, protectedWords);
+		}
+		return input;
+	}
 }

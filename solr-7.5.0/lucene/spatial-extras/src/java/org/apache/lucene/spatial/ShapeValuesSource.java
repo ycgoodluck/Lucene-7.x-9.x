@@ -27,9 +27,9 @@ import org.apache.lucene.search.SegmentCacheable;
  */
 public abstract class ShapeValuesSource implements SegmentCacheable {
 
-  /**
-   * Get a {@link ShapeValues} instance for the given leaf reader context
-   */
-  public abstract ShapeValues getValues(LeafReaderContext ctx) throws IOException;
+	/**
+	 * Get a {@link ShapeValues} instance for the given leaf reader context
+	 */
+	public abstract ShapeValues getValues(LeafReaderContext ctx) throws IOException;
 
 }

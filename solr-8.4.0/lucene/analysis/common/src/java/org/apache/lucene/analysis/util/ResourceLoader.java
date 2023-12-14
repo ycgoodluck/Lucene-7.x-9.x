@@ -25,20 +25,20 @@ import java.io.InputStream;
  */
 public interface ResourceLoader {
 
-  /**
-   * Opens a named resource
-   */
-  public InputStream openResource(String resource) throws IOException;
-  
-  
-  /**
-   * Finds class of the name and expected type
-   */
-  public <T> Class<? extends T> findClass(String cname, Class<T> expectedType);
-  
-  /**
-   * Creates an instance of the name and expected type
-   */
-  // TODO: fix exception handling
-  public <T> T newInstance(String cname, Class<T> expectedType);
+	/**
+	 * Opens a named resource
+	 */
+	public InputStream openResource(String resource) throws IOException;
+
+
+	/**
+	 * Finds class of the name and expected type
+	 */
+	public <T> Class<? extends T> findClass(String cname, Class<T> expectedType);
+
+	/**
+	 * Creates an instance of the name and expected type
+	 */
+	// TODO: fix exception handling
+	public <T> T newInstance(String cname, Class<T> expectedType);
 }

@@ -31,17 +31,19 @@ import org.apache.lucene.store.IOContext;
  * plain text stored fields format.
  * <p>
  * <b>FOR RECREATIONAL USE ONLY</b>
+ *
  * @lucene.experimental
  */
 public class SimpleTextStoredFieldsFormat extends StoredFieldsFormat {
 
-  @Override
-  public StoredFieldsReader fieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context) throws IOException {;
-    return new SimpleTextStoredFieldsReader(directory, si, fn, context);
-  }
+	@Override
+	public StoredFieldsReader fieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context) throws IOException {
+		;
+		return new SimpleTextStoredFieldsReader(directory, si, fn, context);
+	}
 
-  @Override
-  public StoredFieldsWriter fieldsWriter(Directory directory, SegmentInfo si, IOContext context) throws IOException {
-    return new SimpleTextStoredFieldsWriter(directory, si.name, context);
-  }
+	@Override
+	public StoredFieldsWriter fieldsWriter(Directory directory, SegmentInfo si, IOContext context) throws IOException {
+		return new SimpleTextStoredFieldsWriter(directory, si.name, context);
+	}
 }

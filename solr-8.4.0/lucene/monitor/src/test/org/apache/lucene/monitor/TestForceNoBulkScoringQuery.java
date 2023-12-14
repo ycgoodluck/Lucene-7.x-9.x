@@ -37,46 +37,46 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestForceNoBulkScoringQuery extends LuceneTestCase {
 
-  public void testEquality() {
+	public void testEquality() {
 
-    TermQuery tq1 = new TermQuery(new Term("f", "t"));
-    TermQuery tq2 = new TermQuery(new Term("f", "t2"));
-    TermQuery tq3 = new TermQuery(new Term("f", "t2"));
+		TermQuery tq1 = new TermQuery(new Term("f", "t"));
+		TermQuery tq2 = new TermQuery(new Term("f", "t2"));
+		TermQuery tq3 = new TermQuery(new Term("f", "t2"));
 
-    assertEquals(new ForceNoBulkScoringQuery(tq1), new ForceNoBulkScoringQuery(tq1));
-    assertNotEquals(new ForceNoBulkScoringQuery(tq1), new ForceNoBulkScoringQuery(tq2));
-    assertEquals(new ForceNoBulkScoringQuery(tq2), new ForceNoBulkScoringQuery(tq3));
+		assertEquals(new ForceNoBulkScoringQuery(tq1), new ForceNoBulkScoringQuery(tq1));
+		assertNotEquals(new ForceNoBulkScoringQuery(tq1), new ForceNoBulkScoringQuery(tq2));
+		assertEquals(new ForceNoBulkScoringQuery(tq2), new ForceNoBulkScoringQuery(tq3));
 
-    assertEquals(new ForceNoBulkScoringQuery(tq2).hashCode(), new ForceNoBulkScoringQuery(tq3).hashCode());
-  }
+		assertEquals(new ForceNoBulkScoringQuery(tq2).hashCode(), new ForceNoBulkScoringQuery(tq3).hashCode());
+	}
 
-  public void testRewrite() throws IOException {
+	public void testRewrite() throws IOException {
 
-    try (Directory dir = new ByteBuffersDirectory();
-         IndexWriter iw = new IndexWriter(dir, new IndexWriterConfig(new StandardAnalyzer()))) {
+		try (Directory dir = new ByteBuffersDirectory();
+				 IndexWriter iw = new IndexWriter(dir, new IndexWriterConfig(new StandardAnalyzer()))) {
 
-      Document doc = new Document();
-      doc.add(new TextField("field", "term1 term2 term3 term4", Field.Store.NO));
-      iw.addDocument(doc);
-      iw.commit();
+			Document doc = new Document();
+			doc.add(new TextField("field", "term1 term2 term3 term4", Field.Store.NO));
+			iw.addDocument(doc);
+			iw.commit();
 
-      IndexReader reader = DirectoryReader.open(dir);
+			IndexReader reader = DirectoryReader.open(dir);
 
-      PrefixQuery pq = new PrefixQuery(new Term("field", "term"));
-      ForceNoBulkScoringQuery q = new ForceNoBulkScoringQuery(pq);
+			PrefixQuery pq = new PrefixQuery(new Term("field", "term"));
+			ForceNoBulkScoringQuery q = new ForceNoBulkScoringQuery(pq);
 
-      assertEquals(q.getWrappedQuery(), pq);
+			assertEquals(q.getWrappedQuery(), pq);
 
-      Query rewritten = q.rewrite(reader);
-      assertTrue(rewritten instanceof ForceNoBulkScoringQuery);
+			Query rewritten = q.rewrite(reader);
+			assertTrue(rewritten instanceof ForceNoBulkScoringQuery);
 
-      Query inner = ((ForceNoBulkScoringQuery) rewritten).getWrappedQuery();
-      assertNotEquals(inner, pq);
-
-
-    }
+			Query inner = ((ForceNoBulkScoringQuery) rewritten).getWrappedQuery();
+			assertNotEquals(inner, pq);
 
 
-  }
+		}
+
+
+	}
 
 }

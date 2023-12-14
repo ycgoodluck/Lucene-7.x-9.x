@@ -20,67 +20,67 @@ import java.util.Arrays;
 
 public class TestIntroSelector extends LuceneTestCase {
 
-  public void testSelect() {
-    for (int iter = 0; iter < 100; ++iter) {
-      doTestSelect(false);
-    }
-  }
+	public void testSelect() {
+		for (int iter = 0; iter < 100; ++iter) {
+			doTestSelect(false);
+		}
+	}
 
-  public void testSlowSelect() {
-    for (int iter = 0; iter < 100; ++iter) {
-      doTestSelect(true);
-    }
-  }
+	public void testSlowSelect() {
+		for (int iter = 0; iter < 100; ++iter) {
+			doTestSelect(true);
+		}
+	}
 
-  private void doTestSelect(boolean slow) {
-    final int from = random().nextInt(5);
-    final int to = from + TestUtil.nextInt(random(), 1, 10000);
-    final int max = random().nextBoolean() ? random().nextInt(100) : random().nextInt(100000);
-    Integer[] arr = new Integer[to + random().nextInt(5)];
-    for (int i = 0; i < arr.length; ++i) {
-      arr[i] = TestUtil.nextInt(random(), 0, max);
-    }
-    final int k = TestUtil.nextInt(random(), from, to - 1);
+	private void doTestSelect(boolean slow) {
+		final int from = random().nextInt(5);
+		final int to = from + TestUtil.nextInt(random(), 1, 10000);
+		final int max = random().nextBoolean() ? random().nextInt(100) : random().nextInt(100000);
+		Integer[] arr = new Integer[to + random().nextInt(5)];
+		for (int i = 0; i < arr.length; ++i) {
+			arr[i] = TestUtil.nextInt(random(), 0, max);
+		}
+		final int k = TestUtil.nextInt(random(), from, to - 1);
 
-    Integer[] expected = arr.clone();
-    Arrays.sort(expected, from, to);
+		Integer[] expected = arr.clone();
+		Arrays.sort(expected, from, to);
 
-    Integer[] actual = arr.clone();
-    IntroSelector selector = new IntroSelector() {
+		Integer[] actual = arr.clone();
+		IntroSelector selector = new IntroSelector() {
 
-      Integer pivot;
+			Integer pivot;
 
-      @Override
-      protected void swap(int i, int j) {
-        ArrayUtil.swap(actual, i, j);
-      }
+			@Override
+			protected void swap(int i, int j) {
+				ArrayUtil.swap(actual, i, j);
+			}
 
-      @Override
-      protected void setPivot(int i) {
-        pivot = actual[i];
-      }
+			@Override
+			protected void setPivot(int i) {
+				pivot = actual[i];
+			}
 
-      @Override
-      protected int comparePivot(int j) {
-        return pivot.compareTo(actual[j]);
-      }
-    };
-    if (slow) {
-      selector.slowSelect(from, to, k);
-    } else {
-      selector.select(from, to, k);
-    }
+			@Override
+			protected int comparePivot(int j) {
+				return pivot.compareTo(actual[j]);
+			}
+		};
+		if (slow) {
+			selector.slowSelect(from, to, k);
+		} else {
+			selector.select(from, to, k);
+		}
 
-    assertEquals(expected[k], actual[k]);
-    for (int i = 0; i < actual.length; ++i) {
-      if (i < from || i >= to) {
-        assertSame(arr[i], actual[i]);
-      } else if (i <= k) {
-        assertTrue(actual[i].intValue() <= actual[k].intValue());
-      } else {
-        assertTrue(actual[i].intValue() >= actual[k].intValue());
-      }
-    }
-  }
+		assertEquals(expected[k], actual[k]);
+		for (int i = 0; i < actual.length; ++i) {
+			if (i < from || i >= to) {
+				assertSame(arr[i], actual[i]);
+			} else if (i <= k) {
+				assertTrue(actual[i].intValue() <= actual[k].intValue());
+			} else {
+				assertTrue(actual[i].intValue() >= actual[k].intValue());
+			}
+		}
+	}
 
 }

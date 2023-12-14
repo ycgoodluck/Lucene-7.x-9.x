@@ -23,18 +23,22 @@ import org.apache.lucene.analysis.MockTokenizer;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.util.AttributeFactory;
 
-/** Fake tokenizer factory for tests. */
+/**
+ * Fake tokenizer factory for tests.
+ */
 public class MockNameMismatchedTokenizerFactory extends TokenizerFactory {
 
-  /** SPI name */
-  public static final String NAME = "mock";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "mock";
 
-  public MockNameMismatchedTokenizerFactory(Map<String, String> args) {
-    super(args);
-  }
-  
-  @Override
-  public Tokenizer create(AttributeFactory factory) {
-    return new MockTokenizer();
-  }
+	public MockNameMismatchedTokenizerFactory(Map<String, String> args) {
+		super(args);
+	}
+
+	@Override
+	public Tokenizer create(AttributeFactory factory) {
+		return new MockTokenizer();
+	}
 }

@@ -42,7 +42,7 @@ import org.apache.lucene.search.similarities.Normalization.NoNormalization;
  * <p>The framework described in the paper has many similarities to the DFR
  * framework (see {@link DFRSimilarity}). It is possible that the two
  * Similarities will be merged at one point.</p>
- * <p>To construct an IBSimilarity, you must specify the implementations for 
+ * <p>To construct an IBSimilarity, you must specify the implementations for
  * all three components of the Information-Based model.
  * <ol>
  *     <li>{@link Distribution}: Probabilistic distribution used to
@@ -61,108 +61,116 @@ import org.apache.lucene.search.similarities.Normalization.NoNormalization;
  *                 average number of occurrences of w in the collection</li>
  *         </ul>
  *     </li>
- *     <li>{@link Normalization}: Term frequency normalization 
+ *     <li>{@link Normalization}: Term frequency normalization
  *         <blockquote>Any supported DFR normalization (listed in
  *                      {@link DFRSimilarity})</blockquote>
  *     </li>
  * </ol>
+ *
+ * @lucene.experimental
  * @see DFRSimilarity
- * @lucene.experimental 
  */
 public class IBSimilarity extends SimilarityBase {
-  /** The probabilistic distribution used to model term occurrence. */
-  protected final Distribution distribution;
-  /** The <em>lambda (&lambda;<sub>w</sub>)</em> parameter. */
-  protected final Lambda lambda;
-  /** The term frequency normalization. */
-  protected final Normalization normalization;
-  
-  /**
-   * Creates IBSimilarity from the three components.
-   * <p>
-   * Note that <code>null</code> values are not allowed:
-   * if you want no normalization, instead pass 
-   * {@link NoNormalization}.
-   * @param distribution probabilistic distribution modeling term occurrence
-   * @param lambda distribution's &lambda;<sub>w</sub> parameter
-   * @param normalization term frequency normalization
-   */
-  public IBSimilarity(Distribution distribution,
-                      Lambda lambda,
-                      Normalization normalization) {
-    this.distribution = distribution;
-    this.lambda = lambda;
-    this.normalization = normalization;
-  }
-  
-  @Override
-  protected double score(BasicStats stats, double freq, double docLen) {
-    return stats.getBoost() *
-        distribution.score(
-            stats,
-            normalization.tfn(stats, freq, docLen),
-            lambda.lambda(stats));
-  }
+	/**
+	 * The probabilistic distribution used to model term occurrence.
+	 */
+	protected final Distribution distribution;
+	/**
+	 * The <em>lambda (&lambda;<sub>w</sub>)</em> parameter.
+	 */
+	protected final Lambda lambda;
+	/**
+	 * The term frequency normalization.
+	 */
+	protected final Normalization normalization;
 
-  @Override
-  protected void explain(
-      List<Explanation> subs, BasicStats stats, double freq, double docLen) {
-    if (stats.getBoost() != 1.0d) {
-      subs.add(Explanation.match((float)stats.getBoost(), "boost, query boost"));
-    }
-    Explanation normExpl = normalization.explain(stats, freq, docLen);
-    Explanation lambdaExpl = lambda.explain(stats);
-    subs.add(normExpl);
-    subs.add(lambdaExpl);
-    subs.add(distribution.explain(stats, normExpl.getValue().floatValue(), lambdaExpl.getValue().floatValue()));
-  }
+	/**
+	 * Creates IBSimilarity from the three components.
+	 * <p>
+	 * Note that <code>null</code> values are not allowed:
+	 * if you want no normalization, instead pass
+	 * {@link NoNormalization}.
+	 *
+	 * @param distribution  probabilistic distribution modeling term occurrence
+	 * @param lambda        distribution's &lambda;<sub>w</sub> parameter
+	 * @param normalization term frequency normalization
+	 */
+	public IBSimilarity(Distribution distribution,
+											Lambda lambda,
+											Normalization normalization) {
+		this.distribution = distribution;
+		this.lambda = lambda;
+		this.normalization = normalization;
+	}
 
-  @Override
-  protected Explanation explain(
-      BasicStats stats, Explanation freq, double docLen) {
-    List<Explanation> subs = new ArrayList<>();
-    explain(subs, stats, freq.getValue().doubleValue(), docLen);
+	@Override
+	protected double score(BasicStats stats, double freq, double docLen) {
+		return stats.getBoost() *
+			distribution.score(
+				stats,
+				normalization.tfn(stats, freq, docLen),
+				lambda.lambda(stats));
+	}
 
-    return Explanation.match(
-        (float) score(stats, freq.getValue().doubleValue(), docLen),
-        "score(" + getClass().getSimpleName() + ", freq=" +
-            freq.getValue() +"), computed as boost * " +
-            "distribution.score(stats, normalization.tfn(stats, freq," +
-            " docLen), lambda.lambda(stats)) from:",
-        subs);
-  }
+	@Override
+	protected void explain(
+		List<Explanation> subs, BasicStats stats, double freq, double docLen) {
+		if (stats.getBoost() != 1.0d) {
+			subs.add(Explanation.match((float) stats.getBoost(), "boost, query boost"));
+		}
+		Explanation normExpl = normalization.explain(stats, freq, docLen);
+		Explanation lambdaExpl = lambda.explain(stats);
+		subs.add(normExpl);
+		subs.add(lambdaExpl);
+		subs.add(distribution.explain(stats, normExpl.getValue().floatValue(), lambdaExpl.getValue().floatValue()));
+	}
 
-  
-  /**
-   * The name of IB methods follow the pattern
-   * {@code IB <distribution> <lambda><normalization>}. The name of the
-   * distribution is the same as in the original paper; for the names of lambda
-   * parameters, refer to the javadoc of the {@link Lambda} classes.
-   */
-  @Override
-  public String toString() {
-    return "IB " + distribution.toString() + "-" + lambda.toString()
-                 + normalization.toString();
-  }
-  
-  /**
-   * Returns the distribution
-   */
-  public Distribution getDistribution() {
-    return distribution;
-  }
-  
-  /**
-   * Returns the distribution's lambda parameter
-   */
-  public Lambda getLambda() {
-    return lambda;
-  }
+	@Override
+	protected Explanation explain(
+		BasicStats stats, Explanation freq, double docLen) {
+		List<Explanation> subs = new ArrayList<>();
+		explain(subs, stats, freq.getValue().doubleValue(), docLen);
 
-  /**
-   * Returns the term frequency normalization
-   */
-  public Normalization getNormalization() {
-    return normalization;
-  }
+		return Explanation.match(
+			(float) score(stats, freq.getValue().doubleValue(), docLen),
+			"score(" + getClass().getSimpleName() + ", freq=" +
+				freq.getValue() + "), computed as boost * " +
+				"distribution.score(stats, normalization.tfn(stats, freq," +
+				" docLen), lambda.lambda(stats)) from:",
+			subs);
+	}
+
+
+	/**
+	 * The name of IB methods follow the pattern
+	 * {@code IB <distribution> <lambda><normalization>}. The name of the
+	 * distribution is the same as in the original paper; for the names of lambda
+	 * parameters, refer to the javadoc of the {@link Lambda} classes.
+	 */
+	@Override
+	public String toString() {
+		return "IB " + distribution.toString() + "-" + lambda.toString()
+			+ normalization.toString();
+	}
+
+	/**
+	 * Returns the distribution
+	 */
+	public Distribution getDistribution() {
+		return distribution;
+	}
+
+	/**
+	 * Returns the distribution's lambda parameter
+	 */
+	public Lambda getLambda() {
+		return lambda;
+	}
+
+	/**
+	 * Returns the term frequency normalization
+	 */
+	public Normalization getNormalization() {
+		return normalization;
+	}
 }

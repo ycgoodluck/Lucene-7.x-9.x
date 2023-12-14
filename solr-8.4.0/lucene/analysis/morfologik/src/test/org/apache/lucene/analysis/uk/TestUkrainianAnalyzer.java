@@ -28,52 +28,56 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 
 public class TestUkrainianAnalyzer extends BaseTokenStreamTestCase {
 
-  /** Check that UkrainianAnalyzer doesn't discard any numbers */
-  public void testDigitsInUkrainianCharset() throws IOException {
-    UkrainianMorfologikAnalyzer ra = new UkrainianMorfologikAnalyzer();
-    assertAnalyzesTo(ra, "text 1000", new String[] { "text", "1000" });
-    ra.close();
-  }
+	/**
+	 * Check that UkrainianAnalyzer doesn't discard any numbers
+	 */
+	public void testDigitsInUkrainianCharset() throws IOException {
+		UkrainianMorfologikAnalyzer ra = new UkrainianMorfologikAnalyzer();
+		assertAnalyzesTo(ra, "text 1000", new String[]{"text", "1000"});
+		ra.close();
+	}
 
-  public void testReusableTokenStream() throws Exception {
-    Analyzer a = new UkrainianMorfologikAnalyzer();
-    assertAnalyzesTo(a, "Ця п'єса, у свою чергу, рухається по емоційно-напруженому колу за ритм-енд-блюзом.",
-                     new String[] { "п'єса", "черга", "рухатися", "емоційно", "напружений", "кола", "коло", "кіл", "ритм", "енд", "блюз" });
-    a.close();
-  }
+	public void testReusableTokenStream() throws Exception {
+		Analyzer a = new UkrainianMorfologikAnalyzer();
+		assertAnalyzesTo(a, "Ця п'єса, у свою чергу, рухається по емоційно-напруженому колу за ритм-енд-блюзом.",
+			new String[]{"п'єса", "черга", "рухатися", "емоційно", "напружений", "кола", "коло", "кіл", "ритм", "енд", "блюз"});
+		a.close();
+	}
 
-  public void testSpecialCharsTokenStream() throws Exception {
-    Analyzer a = new UkrainianMorfologikAnalyzer();
-    assertAnalyzesTo(a, "м'яса м'я\u0301са м\u02BCяса м\u2019яса м\u2018яса м`яса",
-                     new String[] { "м'ясо", "м'ясо", "м'ясо", "м'ясо", "м'ясо", "м'ясо"});
-    a.close();
-  }
+	public void testSpecialCharsTokenStream() throws Exception {
+		Analyzer a = new UkrainianMorfologikAnalyzer();
+		assertAnalyzesTo(a, "м'яса м'я\u0301са м\u02BCяса м\u2019яса м\u2018яса м`яса",
+			new String[]{"м'ясо", "м'ясо", "м'ясо", "м'ясо", "м'ясо", "м'ясо"});
+		a.close();
+	}
 
-  public void testCapsTokenStream() throws Exception {
-    Analyzer a = new UkrainianMorfologikAnalyzer();
-    assertAnalyzesTo(a, "Цих Чайковського і Ґете.",
-                     new String[] { "Чайковське", "Чайковський", "Гете" });
-    a.close();
-  }
+	public void testCapsTokenStream() throws Exception {
+		Analyzer a = new UkrainianMorfologikAnalyzer();
+		assertAnalyzesTo(a, "Цих Чайковського і Ґете.",
+			new String[]{"Чайковське", "Чайковський", "Гете"});
+		a.close();
+	}
 
-  public void testCharNormalization() throws Exception {
-    Analyzer a = new UkrainianMorfologikAnalyzer();
-    assertAnalyzesTo(a, "Ґюмрі та Гюмрі.",
-                     new String[] { "Гюмрі", "Гюмрі" });
-    a.close();
-  }
-  
-  public void testSampleSentence() throws Exception {
-    Analyzer a = new UkrainianMorfologikAnalyzer();
-    assertAnalyzesTo(a, "Це — проект генерування словника з тегами частин мови для української мови.",
-                     new String[] { "проект", "генерування", "словник", "тег", "частина", "мова", "українська", "український", "Українська", "мова" });
-    a.close();
-  }
+	public void testCharNormalization() throws Exception {
+		Analyzer a = new UkrainianMorfologikAnalyzer();
+		assertAnalyzesTo(a, "Ґюмрі та Гюмрі.",
+			new String[]{"Гюмрі", "Гюмрі"});
+		a.close();
+	}
 
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer analyzer = new UkrainianMorfologikAnalyzer();
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-    analyzer.close();
-  }
+	public void testSampleSentence() throws Exception {
+		Analyzer a = new UkrainianMorfologikAnalyzer();
+		assertAnalyzesTo(a, "Це — проект генерування словника з тегами частин мови для української мови.",
+			new String[]{"проект", "генерування", "словник", "тег", "частина", "мова", "українська", "український", "Українська", "мова"});
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer analyzer = new UkrainianMorfologikAnalyzer();
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+		analyzer.close();
+	}
 }

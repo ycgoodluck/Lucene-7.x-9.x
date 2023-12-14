@@ -39,8 +39,8 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
  * Factory for {@link PhoneticFilter}.
- * 
- * Create tokens based on phonetic encoders from 
+ * <p>
+ * Create tokens based on phonetic encoders from
  * <a href="http://commons.apache.org/codec/api-release/org/apache/commons/codec/language/package-summary.html">Apache Commons Codec</a>.
  * <p>
  * This takes one required argument, "encoder", and the rest are optional:
@@ -60,103 +60,113 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.PhoneticFilterFactory" encoder="DoubleMetaphone" inject="true"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * 
+ *
  * @see PhoneticFilter
  */
 public class PhoneticFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
-  /** parameter name: either a short name or a full class name */
-  public static final String ENCODER = "encoder";
-  /** parameter name: true if encoded tokens should be added as synonyms */
-  public static final String INJECT = "inject"; // boolean
-  /** parameter name: restricts the length of the phonetic code */
-  public static final String MAX_CODE_LENGTH = "maxCodeLength";
-  private static final String PACKAGE_CONTAINING_ENCODERS = "org.apache.commons.codec.language.";
+	/**
+	 * parameter name: either a short name or a full class name
+	 */
+	public static final String ENCODER = "encoder";
+	/**
+	 * parameter name: true if encoded tokens should be added as synonyms
+	 */
+	public static final String INJECT = "inject"; // boolean
+	/**
+	 * parameter name: restricts the length of the phonetic code
+	 */
+	public static final String MAX_CODE_LENGTH = "maxCodeLength";
+	private static final String PACKAGE_CONTAINING_ENCODERS = "org.apache.commons.codec.language.";
 
-  //Effectively constants; uppercase keys
-  private static final Map<String, Class<? extends Encoder>> registry = new HashMap<>(6);
+	//Effectively constants; uppercase keys
+	private static final Map<String, Class<? extends Encoder>> registry = new HashMap<>(6);
 
-  static {
-    registry.put("DoubleMetaphone".toUpperCase(Locale.ROOT), DoubleMetaphone.class);
-    registry.put("Metaphone".toUpperCase(Locale.ROOT), Metaphone.class);
-    registry.put("Soundex".toUpperCase(Locale.ROOT), Soundex.class);
-    registry.put("RefinedSoundex".toUpperCase(Locale.ROOT), RefinedSoundex.class);
-    registry.put("Caverphone".toUpperCase(Locale.ROOT), Caverphone2.class);
-    registry.put("ColognePhonetic".toUpperCase(Locale.ROOT), ColognePhonetic.class);
-    registry.put("Nysiis".toUpperCase(Locale.ROOT), Nysiis.class);
-  }
+	static {
+		registry.put("DoubleMetaphone".toUpperCase(Locale.ROOT), DoubleMetaphone.class);
+		registry.put("Metaphone".toUpperCase(Locale.ROOT), Metaphone.class);
+		registry.put("Soundex".toUpperCase(Locale.ROOT), Soundex.class);
+		registry.put("RefinedSoundex".toUpperCase(Locale.ROOT), RefinedSoundex.class);
+		registry.put("Caverphone".toUpperCase(Locale.ROOT), Caverphone2.class);
+		registry.put("ColognePhonetic".toUpperCase(Locale.ROOT), ColognePhonetic.class);
+		registry.put("Nysiis".toUpperCase(Locale.ROOT), Nysiis.class);
+	}
 
-  final boolean inject; //accessed by the test
-  private final String name;
-  private final Integer maxCodeLength;
-  private Class<? extends Encoder> clazz = null;
-  private Method setMaxCodeLenMethod = null;
-  
-  /** Creates a new PhoneticFilterFactory */
-  public PhoneticFilterFactory(Map<String,String> args) {
-    super(args);
-    inject = getBoolean(args, INJECT, true);
-    name = require(args, ENCODER);
-    String v = get(args, MAX_CODE_LENGTH);
-    if (v != null) {
-      maxCodeLength = Integer.valueOf(v);
-    } else {
-      maxCodeLength = null;
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	final boolean inject; //accessed by the test
+	private final String name;
+	private final Integer maxCodeLength;
+	private Class<? extends Encoder> clazz = null;
+	private Method setMaxCodeLenMethod = null;
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    clazz = registry.get(name.toUpperCase(Locale.ROOT));
-    if( clazz == null ) {
-      clazz = resolveEncoder(name, loader);
-    }
+	/**
+	 * Creates a new PhoneticFilterFactory
+	 */
+	public PhoneticFilterFactory(Map<String, String> args) {
+		super(args);
+		inject = getBoolean(args, INJECT, true);
+		name = require(args, ENCODER);
+		String v = get(args, MAX_CODE_LENGTH);
+		if (v != null) {
+			maxCodeLength = Integer.valueOf(v);
+		} else {
+			maxCodeLength = null;
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-    if (maxCodeLength != null) {
-      try {
-        setMaxCodeLenMethod = clazz.getMethod("setMaxCodeLen", int.class);
-      } catch (Exception e) {
-        throw new IllegalArgumentException("Encoder " + name + " / " + clazz + " does not support " + MAX_CODE_LENGTH, e);
-      }
-    }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		clazz = registry.get(name.toUpperCase(Locale.ROOT));
+		if (clazz == null) {
+			clazz = resolveEncoder(name, loader);
+		}
 
-    getEncoder();//trigger initialization for potential problems to be thrown now
-  }
+		if (maxCodeLength != null) {
+			try {
+				setMaxCodeLenMethod = clazz.getMethod("setMaxCodeLen", int.class);
+			} catch (Exception e) {
+				throw new IllegalArgumentException("Encoder " + name + " / " + clazz + " does not support " + MAX_CODE_LENGTH, e);
+			}
+		}
 
-  private Class<? extends Encoder> resolveEncoder(String name, ResourceLoader loader) {
-    String lookupName = name;
-    if (name.indexOf('.') == -1) {
-      lookupName = PACKAGE_CONTAINING_ENCODERS + name;
-    }
-    try {
-      return loader.newInstance(lookupName, Encoder.class).getClass();
-    } catch (RuntimeException e) {
-      throw new IllegalArgumentException("Error loading encoder '" + name + "': must be full class name or one of " + registry.keySet(), e);
-    }
-  }
+		getEncoder();//trigger initialization for potential problems to be thrown now
+	}
 
-  /** Must be thread-safe. */
-  protected Encoder getEncoder() {
-    // Unfortunately, Commons-Codec doesn't offer any thread-safe guarantees so we must play it safe and instantiate
-    // every time.  A simple benchmark showed this as negligible.
-    try {
-      Encoder encoder = clazz.newInstance();
-      // Try to set the maxCodeLength
-      if(maxCodeLength != null && setMaxCodeLenMethod != null) {
-        setMaxCodeLenMethod.invoke(encoder, maxCodeLength);
-      }
-      return encoder;
-    } catch (Exception e) {
-      final Throwable t = (e instanceof InvocationTargetException) ? e.getCause() : e;
-      throw new IllegalArgumentException("Error initializing encoder: " + name + " / " + clazz, t);
-    }
-  }
+	private Class<? extends Encoder> resolveEncoder(String name, ResourceLoader loader) {
+		String lookupName = name;
+		if (name.indexOf('.') == -1) {
+			lookupName = PACKAGE_CONTAINING_ENCODERS + name;
+		}
+		try {
+			return loader.newInstance(lookupName, Encoder.class).getClass();
+		} catch (RuntimeException e) {
+			throw new IllegalArgumentException("Error loading encoder '" + name + "': must be full class name or one of " + registry.keySet(), e);
+		}
+	}
 
-  @Override
-  public PhoneticFilter create(TokenStream input) {
-    return new PhoneticFilter(input, getEncoder(), inject);
-  }
+	/**
+	 * Must be thread-safe.
+	 */
+	protected Encoder getEncoder() {
+		// Unfortunately, Commons-Codec doesn't offer any thread-safe guarantees so we must play it safe and instantiate
+		// every time.  A simple benchmark showed this as negligible.
+		try {
+			Encoder encoder = clazz.newInstance();
+			// Try to set the maxCodeLength
+			if (maxCodeLength != null && setMaxCodeLenMethod != null) {
+				setMaxCodeLenMethod.invoke(encoder, maxCodeLength);
+			}
+			return encoder;
+		} catch (Exception e) {
+			final Throwable t = (e instanceof InvocationTargetException) ? e.getCause() : e;
+			throw new IllegalArgumentException("Error initializing encoder: " + name + " / " + clazz, t);
+		}
+	}
+
+	@Override
+	public PhoneticFilter create(TokenStream input) {
+		return new PhoneticFilter(input, getEncoder(), inject);
+	}
 
 }

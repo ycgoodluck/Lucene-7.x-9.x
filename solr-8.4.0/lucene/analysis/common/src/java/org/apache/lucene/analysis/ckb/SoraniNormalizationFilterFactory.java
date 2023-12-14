@@ -31,29 +31,34 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.SoraniNormalizationFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 4.7.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 4.7.0
  */
 public class SoraniNormalizationFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "soraniNormalization";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "soraniNormalization";
 
-  /** Creates a new SoraniNormalizationFilterFactory */
-  public SoraniNormalizationFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new SoraniNormalizationFilterFactory
+	 */
+	public SoraniNormalizationFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new SoraniNormalizationFilter(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new SoraniNormalizationFilter(input);
+	}
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

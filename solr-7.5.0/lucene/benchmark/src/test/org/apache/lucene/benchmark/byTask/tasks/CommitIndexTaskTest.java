@@ -25,34 +25,36 @@ import org.apache.lucene.benchmark.byTask.utils.Config;
 import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.util.Version;
 
-/** Tests the functionality of {@link CreateIndexTask}. */
+/**
+ * Tests the functionality of {@link CreateIndexTask}.
+ */
 public class CommitIndexTaskTest extends BenchmarkTestCase {
 
-  private PerfRunData createPerfRunData() throws Exception {
-    Properties props = new Properties();
-    props.setProperty("writer.version", Version.LATEST.toString());
-    props.setProperty("print.props", "false"); // don't print anything
-    props.setProperty("directory", "RAMDirectory");
-    Config config = new Config(props);
-    return new PerfRunData(config);
-  }
+	private PerfRunData createPerfRunData() throws Exception {
+		Properties props = new Properties();
+		props.setProperty("writer.version", Version.LATEST.toString());
+		props.setProperty("print.props", "false"); // don't print anything
+		props.setProperty("directory", "RAMDirectory");
+		Config config = new Config(props);
+		return new PerfRunData(config);
+	}
 
-  public void testNoParams() throws Exception {
-    PerfRunData runData = createPerfRunData();
-    new CreateIndexTask(runData).doLogic();
-    new CommitIndexTask(runData).doLogic();
-    new CloseIndexTask(runData).doLogic();
-  }
-  
-  public void testCommitData() throws Exception {
-    PerfRunData runData = createPerfRunData();
-    new CreateIndexTask(runData).doLogic();
-    CommitIndexTask task = new CommitIndexTask(runData);
-    task.setParams("params");
-    task.doLogic();
-    SegmentInfos infos = SegmentInfos.readLatestCommit(runData.getDirectory());
-    assertEquals("params", infos.getUserData().get(OpenReaderTask.USER_DATA));
-    new CloseIndexTask(runData).doLogic();
-  }
+	public void testNoParams() throws Exception {
+		PerfRunData runData = createPerfRunData();
+		new CreateIndexTask(runData).doLogic();
+		new CommitIndexTask(runData).doLogic();
+		new CloseIndexTask(runData).doLogic();
+	}
+
+	public void testCommitData() throws Exception {
+		PerfRunData runData = createPerfRunData();
+		new CreateIndexTask(runData).doLogic();
+		CommitIndexTask task = new CommitIndexTask(runData);
+		task.setParams("params");
+		task.doLogic();
+		SegmentInfos infos = SegmentInfos.readLatestCommit(runData.getDirectory());
+		assertEquals("params", infos.getUserData().get(OpenReaderTask.USER_DATA));
+		new CloseIndexTask(runData).doLogic();
+	}
 
 }

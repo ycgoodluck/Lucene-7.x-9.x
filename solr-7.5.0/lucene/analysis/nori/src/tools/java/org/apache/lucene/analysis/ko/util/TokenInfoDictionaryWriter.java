@@ -25,25 +25,25 @@ import org.apache.lucene.analysis.ko.dict.TokenInfoDictionary;
 import org.apache.lucene.util.fst.FST;
 
 public class TokenInfoDictionaryWriter extends BinaryDictionaryWriter {
-  private FST<Long> fst;
+	private FST<Long> fst;
 
-  public TokenInfoDictionaryWriter(int size) {
-    super(TokenInfoDictionary.class, size);
-  }
-  
-  public void setFST(FST<Long> fst) {
-    this.fst = fst;
-  }
-  
-  @Override
-  public void write(String baseDir) throws IOException {
-    super.write(baseDir);
-    writeFST(getBaseFileName(baseDir) + TokenInfoDictionary.FST_FILENAME_SUFFIX);
-  }
-  
-  protected void writeFST(String filename) throws IOException {
-    Path p = Paths.get(filename);
-    Files.createDirectories(p.getParent());
-    fst.save(p);
-  }  
+	public TokenInfoDictionaryWriter(int size) {
+		super(TokenInfoDictionary.class, size);
+	}
+
+	public void setFST(FST<Long> fst) {
+		this.fst = fst;
+	}
+
+	@Override
+	public void write(String baseDir) throws IOException {
+		super.write(baseDir);
+		writeFST(getBaseFileName(baseDir) + TokenInfoDictionary.FST_FILENAME_SUFFIX);
+	}
+
+	protected void writeFST(String filename) throws IOException {
+		Path p = Paths.get(filename);
+		Files.createDirectories(p.getParent());
+		fst.save(p);
+	}
 }

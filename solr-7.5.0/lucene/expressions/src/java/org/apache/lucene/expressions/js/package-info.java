@@ -30,11 +30,11 @@
  * <li>Miscellaneous functions: <code>min, max</code></li>
  * <li>Arbitrary external variables - see {@link org.apache.lucene.expressions.Bindings}</li>
  * </ul>
- * 
+ *
  * <p>
  * JavaScript order of precedence rules apply for operators. Shortcut evaluation is used for logical operators—the second argument is only evaluated if the value of the expression cannot be determined after evaluating the first argument. For example, in the expression <code>a || b</code>, <code>b</code> is only evaluated if a is not true.
  * </p>
- * 
+ *
  * <p>
  * To compile an expression, use {@link org.apache.lucene.expressions.js.JavascriptCompiler}.
  * </p>

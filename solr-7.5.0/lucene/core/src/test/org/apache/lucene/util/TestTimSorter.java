@@ -20,12 +20,12 @@ import java.util.Comparator;
 
 public class TestTimSorter extends BaseSortTestCase {
 
-  public TestTimSorter() {
-    super(true);
-  }
+	public TestTimSorter() {
+		super(true);
+	}
 
-  @Override
-  public Sorter newSorter(Entry[] arr) {
-    return new ArrayTimSorter<>(arr, Comparator.naturalOrder(), TestUtil.nextInt(random(), 0, arr.length));
-  }
+	@Override
+	public Sorter newSorter(Entry[] arr) {
+		return new ArrayTimSorter<>(arr, Comparator.naturalOrder(), TestUtil.nextInt(random(), 0, arr.length));
+	}
 }

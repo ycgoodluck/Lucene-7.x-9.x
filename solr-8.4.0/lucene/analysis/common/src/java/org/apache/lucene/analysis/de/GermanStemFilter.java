@@ -26,7 +26,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
 
 /**
- * A {@link TokenFilter} that stems German words. 
+ * A {@link TokenFilter} that stems German words.
  * <p>
  * It supports a table of words that should
  * not be stemmed at all. The stemmer used can be changed at runtime after the
@@ -37,54 +37,53 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
  * {@link SetKeywordMarkerFilter} or a custom {@link TokenFilter} that sets
  * the {@link KeywordAttribute} before this {@link TokenStream}.
  * </p>
+ *
  * @see SetKeywordMarkerFilter
  */
-public final class GermanStemFilter extends TokenFilter
-{
-    /**
-     * The actual token in the input stream.
-     */
-    private GermanStemmer stemmer = new GermanStemmer();
+public final class GermanStemFilter extends TokenFilter {
+	/**
+	 * The actual token in the input stream.
+	 */
+	private GermanStemmer stemmer = new GermanStemmer();
 
-    private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-    private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
 
-    /**
-     * Creates a {@link GermanStemFilter} instance
-     * @param in the source {@link TokenStream} 
-     */
-    public GermanStemFilter( TokenStream in )
-    {
-      super(in);
-    }
+	/**
+	 * Creates a {@link GermanStemFilter} instance
+	 *
+	 * @param in the source {@link TokenStream}
+	 */
+	public GermanStemFilter(TokenStream in) {
+		super(in);
+	}
 
-    /**
-     * @return  Returns true for next token in the stream, or false at EOS
-     */
-    @Override
-    public boolean incrementToken() throws IOException {
-      if (input.incrementToken()) {
-        String term = termAtt.toString();
+	/**
+	 * @return Returns true for next token in the stream, or false at EOS
+	 */
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			String term = termAtt.toString();
 
-        if (!keywordAttr.isKeyword()) {
-          String s = stemmer.stem(term);
-          // If not stemmed, don't waste the time adjusting the token.
-          if ((s != null) && !s.equals(term))
-            termAtt.setEmpty().append(s);
-        }
-        return true;
-      } else {
-        return false;
-      }
-    }
+			if (!keywordAttr.isKeyword()) {
+				String s = stemmer.stem(term);
+				// If not stemmed, don't waste the time adjusting the token.
+				if ((s != null) && !s.equals(term))
+					termAtt.setEmpty().append(s);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    /**
-     * Set a alternative/custom {@link GermanStemmer} for this filter.
-     */
-    public void setStemmer( GermanStemmer stemmer )
-    {
-      if ( stemmer != null ) {
-        this.stemmer = stemmer;
-      }
-    }
+	/**
+	 * Set a alternative/custom {@link GermanStemmer} for this filter.
+	 */
+	public void setStemmer(GermanStemmer stemmer) {
+		if (stemmer != null) {
+			this.stemmer = stemmer;
+		}
+	}
 }

@@ -27,15 +27,15 @@ import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 @SuppressCodecs({"Direct"}) // it can be too much for these codecs
 public class TestDuelingCodecsAtNight extends TestDuelingCodecs {
 
-  // use a big number of documents
-  public void testBigEquals() throws Exception {
-    int numdocs = atLeast(2000);
-    createRandomIndex(numdocs, leftWriter, seed);
-    createRandomIndex(numdocs, rightWriter, seed);
+	// use a big number of documents
+	public void testBigEquals() throws Exception {
+		int numdocs = atLeast(2000);
+		createRandomIndex(numdocs, leftWriter, seed);
+		createRandomIndex(numdocs, rightWriter, seed);
 
-    leftReader = leftWriter.getReader();
-    rightReader = rightWriter.getReader();
-    
-    assertReaderEquals(info, leftReader, rightReader);
-  }
+		leftReader = leftWriter.getReader();
+		rightReader = rightWriter.getReader();
+
+		assertReaderEquals(info, leftReader, rightReader);
+	}
 }

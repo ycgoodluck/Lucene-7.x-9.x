@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link BrazilianStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_brstem" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -33,25 +33,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class BrazilianStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "brazilianStem";
-  
-  /** Creates a new BrazilianStemFilterFactory */
-  public BrazilianStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public BrazilianStemFilter create(TokenStream in) {
-    return new BrazilianStemFilter(in);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "brazilianStem";
+
+	/**
+	 * Creates a new BrazilianStemFilterFactory
+	 */
+	public BrazilianStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public BrazilianStemFilter create(TokenStream in) {
+		return new BrazilianStemFilter(in);
+	}
 }
 

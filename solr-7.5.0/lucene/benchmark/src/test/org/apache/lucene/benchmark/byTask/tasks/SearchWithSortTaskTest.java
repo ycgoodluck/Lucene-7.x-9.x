@@ -26,9 +26,9 @@ import java.util.Properties;
 
 public class SearchWithSortTaskTest extends BenchmarkTestCase {
 
-  public void testSetParams_docField() throws Exception {
-    SearchWithSortTask task = new SearchWithSortTask(new PerfRunData(new Config(new Properties())));
-    task.setParams("doc");
-    assertEquals(SortField.Type.DOC, task.getSort().getSort()[0].getType());
-  }
+	public void testSetParams_docField() throws Exception {
+		SearchWithSortTask task = new SearchWithSortTask(new PerfRunData(new Config(new Properties())));
+		task.setParams("doc");
+		assertEquals(SortField.Type.DOC, task.getSort().getSort()[0].getType());
+	}
 }

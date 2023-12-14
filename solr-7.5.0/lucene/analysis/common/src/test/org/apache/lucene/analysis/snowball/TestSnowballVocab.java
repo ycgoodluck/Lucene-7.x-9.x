@@ -32,49 +32,49 @@ import static org.apache.lucene.analysis.VocabularyAssert.*;
  */
 @Slow
 public class TestSnowballVocab extends LuceneTestCase {
-  /**
-   * Run all languages against their snowball vocabulary tests.
-   */
-  public void testStemmers() throws IOException {
-    assertCorrectOutput("Danish", "danish");
-    assertCorrectOutput("Dutch", "dutch");
-    assertCorrectOutput("English", "english");
-    assertCorrectOutput("Finnish", "finnish");
-    assertCorrectOutput("French", "french");
-    assertCorrectOutput("German", "german");
-    assertCorrectOutput("German2", "german2");
-    assertCorrectOutput("Hungarian", "hungarian");
-    assertCorrectOutput("Italian", "italian");
-    assertCorrectOutput("Kp", "kraaij_pohlmann");
-    assertCorrectOutput("Lovins", "lovins");
-    assertCorrectOutput("Norwegian", "norwegian");
-    assertCorrectOutput("Porter", "porter");
-    assertCorrectOutput("Portuguese", "portuguese");
-    assertCorrectOutput("Romanian", "romanian");
-    assertCorrectOutput("Russian", "russian");
-    assertCorrectOutput("Spanish", "spanish");
-    assertCorrectOutput("Swedish", "swedish");
-    assertCorrectOutput("Turkish", "turkish");
-  }
-    
-  /**
-   * For the supplied language, run the stemmer against all strings in voc.txt
-   * The output should be the same as the string in output.txt
-   */
-  private void assertCorrectOutput(final String snowballLanguage, String dataDirectory)
-      throws IOException {
-    if (VERBOSE) System.out.println("checking snowball language: " + snowballLanguage);
-    
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer t = new KeywordTokenizer();
-        return new TokenStreamComponents(t, new SnowballFilter(t, snowballLanguage));
-      }  
-    };
-    
-    assertVocabulary(a, getDataPath("TestSnowballVocabData.zip"), 
-        dataDirectory + "/voc.txt", dataDirectory + "/output.txt");
-    a.close();
-  }
+	/**
+	 * Run all languages against their snowball vocabulary tests.
+	 */
+	public void testStemmers() throws IOException {
+		assertCorrectOutput("Danish", "danish");
+		assertCorrectOutput("Dutch", "dutch");
+		assertCorrectOutput("English", "english");
+		assertCorrectOutput("Finnish", "finnish");
+		assertCorrectOutput("French", "french");
+		assertCorrectOutput("German", "german");
+		assertCorrectOutput("German2", "german2");
+		assertCorrectOutput("Hungarian", "hungarian");
+		assertCorrectOutput("Italian", "italian");
+		assertCorrectOutput("Kp", "kraaij_pohlmann");
+		assertCorrectOutput("Lovins", "lovins");
+		assertCorrectOutput("Norwegian", "norwegian");
+		assertCorrectOutput("Porter", "porter");
+		assertCorrectOutput("Portuguese", "portuguese");
+		assertCorrectOutput("Romanian", "romanian");
+		assertCorrectOutput("Russian", "russian");
+		assertCorrectOutput("Spanish", "spanish");
+		assertCorrectOutput("Swedish", "swedish");
+		assertCorrectOutput("Turkish", "turkish");
+	}
+
+	/**
+	 * For the supplied language, run the stemmer against all strings in voc.txt
+	 * The output should be the same as the string in output.txt
+	 */
+	private void assertCorrectOutput(final String snowballLanguage, String dataDirectory)
+		throws IOException {
+		if (VERBOSE) System.out.println("checking snowball language: " + snowballLanguage);
+
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer t = new KeywordTokenizer();
+				return new TokenStreamComponents(t, new SnowballFilter(t, snowballLanguage));
+			}
+		};
+
+		assertVocabulary(a, getDataPath("TestSnowballVocabData.zip"),
+			dataDirectory + "/voc.txt", dataDirectory + "/output.txt");
+		a.close();
+	}
 }

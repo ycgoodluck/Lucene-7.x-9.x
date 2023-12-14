@@ -34,47 +34,51 @@ import java.util.Map;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class DelimitedPayloadTokenFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
 
-  /** SPI name */
-  public static final String NAME = "delimitedPayload";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "delimitedPayload";
 
-  public static final String ENCODER_ATTR = "encoder";
-  public static final String DELIMITER_ATTR = "delimiter";
+	public static final String ENCODER_ATTR = "encoder";
+	public static final String DELIMITER_ATTR = "delimiter";
 
-  private final String encoderClass;
-  private final char delimiter;
+	private final String encoderClass;
+	private final char delimiter;
 
-  private PayloadEncoder encoder;
-  
-  /** Creates a new DelimitedPayloadTokenFilterFactory */
-  public DelimitedPayloadTokenFilterFactory(Map<String, String> args) {
-    super(args);
-    encoderClass = require(args, ENCODER_ATTR);
-    delimiter = getChar(args, DELIMITER_ATTR, '|');
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private PayloadEncoder encoder;
 
-  @Override
-  public DelimitedPayloadTokenFilter create(TokenStream input) {
-    return new DelimitedPayloadTokenFilter(input, delimiter, encoder);
-  }
+	/**
+	 * Creates a new DelimitedPayloadTokenFilterFactory
+	 */
+	public DelimitedPayloadTokenFilterFactory(Map<String, String> args) {
+		super(args);
+		encoderClass = require(args, ENCODER_ATTR);
+		delimiter = getChar(args, DELIMITER_ATTR, '|');
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public void inform(ResourceLoader loader) {
-    if (encoderClass.equals("float")){
-      encoder = new FloatEncoder();
-    } else if (encoderClass.equals("integer")){
-      encoder = new IntegerEncoder();
-    } else if (encoderClass.equals("identity")){
-      encoder = new IdentityEncoder();
-    } else {
-      encoder = loader.newInstance(encoderClass, PayloadEncoder.class);
-    }
-  }
+	@Override
+	public DelimitedPayloadTokenFilter create(TokenStream input) {
+		return new DelimitedPayloadTokenFilter(input, delimiter, encoder);
+	}
+
+	@Override
+	public void inform(ResourceLoader loader) {
+		if (encoderClass.equals("float")) {
+			encoder = new FloatEncoder();
+		} else if (encoderClass.equals("integer")) {
+			encoder = new IntegerEncoder();
+		} else if (encoderClass.equals("identity")) {
+			encoder = new IdentityEncoder();
+		} else {
+			encoder = loader.newInstance(encoderClass, PayloadEncoder.class);
+		}
+	}
 }

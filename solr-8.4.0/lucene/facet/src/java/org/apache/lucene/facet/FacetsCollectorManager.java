@@ -28,30 +28,33 @@ import java.util.List;
  */
 public class FacetsCollectorManager implements CollectorManager<FacetsCollector, FacetsCollector> {
 
-  /** Sole constructor. */
-  public FacetsCollectorManager() {
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public FacetsCollectorManager() {
+	}
 
-  @Override
-  public FacetsCollector newCollector() throws IOException {
-    return new FacetsCollector();
-  }
+	@Override
+	public FacetsCollector newCollector() throws IOException {
+		return new FacetsCollector();
+	}
 
-  @Override
-  public FacetsCollector reduce(Collection<FacetsCollector> collectors) throws IOException {
-    if (collectors == null || collectors.size() == 0) {
-      return new FacetsCollector();
-    } if (collectors.size() == 1) {
-      return collectors.iterator().next();
-    }
-    return new ReducedFacetsCollector(collectors);
-  }
+	@Override
+	public FacetsCollector reduce(Collection<FacetsCollector> collectors) throws IOException {
+		if (collectors == null || collectors.size() == 0) {
+			return new FacetsCollector();
+		}
+		if (collectors.size() == 1) {
+			return collectors.iterator().next();
+		}
+		return new ReducedFacetsCollector(collectors);
+	}
 
-  private static class ReducedFacetsCollector extends FacetsCollector {
+	private static class ReducedFacetsCollector extends FacetsCollector {
 
-    public ReducedFacetsCollector(final Collection<FacetsCollector> facetsCollectors) {
-      final List<MatchingDocs> matchingDocs = this.getMatchingDocs();
-      facetsCollectors.forEach(facetsCollector -> matchingDocs.addAll(facetsCollector.getMatchingDocs()));
-    }
-  }
+		public ReducedFacetsCollector(final Collection<FacetsCollector> facetsCollectors) {
+			final List<MatchingDocs> matchingDocs = this.getMatchingDocs();
+			facetsCollectors.forEach(facetsCollector -> matchingDocs.addAll(facetsCollector.getMatchingDocs()));
+		}
+	}
 }

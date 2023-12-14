@@ -31,20 +31,20 @@ import org.apache.lucene.store.Directory;
 
 public class TestFixBrokenOffsetsFilter extends BaseTokenStreamTestCase {
 
-  public void testBogusTermVectors() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-    ft.setStoreTermVectors(true);
-    ft.setStoreTermVectorOffsets(true);
-    Field field = new Field("foo", "", ft);
-    field.setTokenStream(new FixBrokenOffsetsFilter(new CannedTokenStream(
-        new Token("bar", 5, 10), new Token("bar", 1, 4)
-        )));
-    doc.add(field);
-    iw.addDocument(doc);
-    iw.close();
-    dir.close();
-  }
+	public void testBogusTermVectors() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
+		ft.setStoreTermVectors(true);
+		ft.setStoreTermVectorOffsets(true);
+		Field field = new Field("foo", "", ft);
+		field.setTokenStream(new FixBrokenOffsetsFilter(new CannedTokenStream(
+			new Token("bar", 5, 10), new Token("bar", 1, 4)
+		)));
+		doc.add(field);
+		iw.addDocument(doc);
+		iw.close();
+		dir.close();
+	}
 }

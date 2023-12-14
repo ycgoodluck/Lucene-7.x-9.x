@@ -106,210 +106,210 @@ import static org.apache.lucene.codecs.uniformsplit.UniformSplitPostingsFormat.V
  */
 public class UniformSplitTermsWriter extends FieldsConsumer {
 
-  /**
-   * Default value for the target block size (number of terms per block).
-   */
-  public static final int DEFAULT_TARGET_NUM_BLOCK_LINES = 32;
-  /**
-   * Default value for the maximum allowed delta variation of the block size (delta of the number of terms per block).
-   * The block size will be [target block size]+-[allowed delta].
-   */
-  public static final int DEFAULT_DELTA_NUM_LINES = (int) (DEFAULT_TARGET_NUM_BLOCK_LINES * 0.1);
-  /**
-   * Upper limit of the block size (maximum number of terms per block).
-   */
-  protected static final int MAX_NUM_BLOCK_LINES = 1_000;
+	/**
+	 * Default value for the target block size (number of terms per block).
+	 */
+	public static final int DEFAULT_TARGET_NUM_BLOCK_LINES = 32;
+	/**
+	 * Default value for the maximum allowed delta variation of the block size (delta of the number of terms per block).
+	 * The block size will be [target block size]+-[allowed delta].
+	 */
+	public static final int DEFAULT_DELTA_NUM_LINES = (int) (DEFAULT_TARGET_NUM_BLOCK_LINES * 0.1);
+	/**
+	 * Upper limit of the block size (maximum number of terms per block).
+	 */
+	protected static final int MAX_NUM_BLOCK_LINES = 1_000;
 
-  protected final FieldInfos fieldInfos;
-  protected final PostingsWriterBase postingsWriter;
-  protected final int maxDoc;
+	protected final FieldInfos fieldInfos;
+	protected final PostingsWriterBase postingsWriter;
+	protected final int maxDoc;
 
-  protected final int targetNumBlockLines;
-  protected final int deltaNumLines;
+	protected final int targetNumBlockLines;
+	protected final int deltaNumLines;
 
-  protected final BlockEncoder blockEncoder;
-  protected final IndexOutput blockOutput;
-  protected final IndexOutput dictionaryOutput;
+	protected final BlockEncoder blockEncoder;
+	protected final IndexOutput blockOutput;
+	protected final IndexOutput dictionaryOutput;
 
-  /**
-   * @param blockEncoder Optional block encoder, may be null if none.
-   *                     It can be used for compression or encryption.
-   */
-  public UniformSplitTermsWriter(PostingsWriterBase postingsWriter, SegmentWriteState state,
-                          BlockEncoder blockEncoder) throws IOException {
-    this(postingsWriter, state, DEFAULT_TARGET_NUM_BLOCK_LINES, DEFAULT_DELTA_NUM_LINES, blockEncoder);
-  }
+	/**
+	 * @param blockEncoder Optional block encoder, may be null if none.
+	 *                     It can be used for compression or encryption.
+	 */
+	public UniformSplitTermsWriter(PostingsWriterBase postingsWriter, SegmentWriteState state,
+																 BlockEncoder blockEncoder) throws IOException {
+		this(postingsWriter, state, DEFAULT_TARGET_NUM_BLOCK_LINES, DEFAULT_DELTA_NUM_LINES, blockEncoder);
+	}
 
-  /**
-   * @param blockEncoder Optional block encoder, may be null if none.
-   *                     It can be used for compression or encryption.
-   */
-  public UniformSplitTermsWriter(PostingsWriterBase postingsWriter, SegmentWriteState state,
-                          int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder) throws IOException {
-    this(postingsWriter, state, targetNumBlockLines, deltaNumLines, blockEncoder,
-        NAME, VERSION_CURRENT, TERMS_BLOCKS_EXTENSION, TERMS_DICTIONARY_EXTENSION);
-  }
+	/**
+	 * @param blockEncoder Optional block encoder, may be null if none.
+	 *                     It can be used for compression or encryption.
+	 */
+	public UniformSplitTermsWriter(PostingsWriterBase postingsWriter, SegmentWriteState state,
+																 int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder) throws IOException {
+		this(postingsWriter, state, targetNumBlockLines, deltaNumLines, blockEncoder,
+			NAME, VERSION_CURRENT, TERMS_BLOCKS_EXTENSION, TERMS_DICTIONARY_EXTENSION);
+	}
 
 
-  /**
-   * @param targetNumBlockLines Target number of lines per block.
-   *                            Must be strictly greater than 0.
-   *                            The parameters can be pre-validated with {@link #validateSettings(int, int)}.
-   *                            There is one term per block line, with its corresponding details ({@link org.apache.lucene.index.TermState}).
-   * @param deltaNumLines       Maximum allowed delta variation of the number of lines per block.
-   *                            Must be greater than or equal to 0 and strictly less than {@code targetNumBlockLines}.
-   *                            The block size will be {@code targetNumBlockLines}+-{@code deltaNumLines}.
-   *                            The block size must always be less than or equal to {@link #MAX_NUM_BLOCK_LINES}.
-   * @param blockEncoder        Optional block encoder, may be null if none.
-   *                            It can be used for compression or encryption.
-   */
-  protected UniformSplitTermsWriter(PostingsWriterBase postingsWriter, SegmentWriteState state,
-                          int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder,
-                          String codecName, int versionCurrent, String termsBlocksExtension, String dictionaryExtension) throws IOException {
-    validateSettings(targetNumBlockLines, deltaNumLines);
-    IndexOutput blockOutput = null;
-    IndexOutput dictionaryOutput = null;
-    boolean success = false;
-    try {
-      this.fieldInfos = state.fieldInfos;
-      this.postingsWriter = postingsWriter;
-      this.maxDoc = state.segmentInfo.maxDoc();
-      this.targetNumBlockLines = targetNumBlockLines;
-      this.deltaNumLines = deltaNumLines;
-      this.blockEncoder = blockEncoder;
+	/**
+	 * @param targetNumBlockLines Target number of lines per block.
+	 *                            Must be strictly greater than 0.
+	 *                            The parameters can be pre-validated with {@link #validateSettings(int, int)}.
+	 *                            There is one term per block line, with its corresponding details ({@link org.apache.lucene.index.TermState}).
+	 * @param deltaNumLines       Maximum allowed delta variation of the number of lines per block.
+	 *                            Must be greater than or equal to 0 and strictly less than {@code targetNumBlockLines}.
+	 *                            The block size will be {@code targetNumBlockLines}+-{@code deltaNumLines}.
+	 *                            The block size must always be less than or equal to {@link #MAX_NUM_BLOCK_LINES}.
+	 * @param blockEncoder        Optional block encoder, may be null if none.
+	 *                            It can be used for compression or encryption.
+	 */
+	protected UniformSplitTermsWriter(PostingsWriterBase postingsWriter, SegmentWriteState state,
+																		int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder,
+																		String codecName, int versionCurrent, String termsBlocksExtension, String dictionaryExtension) throws IOException {
+		validateSettings(targetNumBlockLines, deltaNumLines);
+		IndexOutput blockOutput = null;
+		IndexOutput dictionaryOutput = null;
+		boolean success = false;
+		try {
+			this.fieldInfos = state.fieldInfos;
+			this.postingsWriter = postingsWriter;
+			this.maxDoc = state.segmentInfo.maxDoc();
+			this.targetNumBlockLines = targetNumBlockLines;
+			this.deltaNumLines = deltaNumLines;
+			this.blockEncoder = blockEncoder;
 
-      String termsName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, termsBlocksExtension);
-      blockOutput = state.directory.createOutput(termsName, state.context);
-      CodecUtil.writeIndexHeader(blockOutput, codecName, versionCurrent, state.segmentInfo.getId(), state.segmentSuffix);
+			String termsName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, termsBlocksExtension);
+			blockOutput = state.directory.createOutput(termsName, state.context);
+			CodecUtil.writeIndexHeader(blockOutput, codecName, versionCurrent, state.segmentInfo.getId(), state.segmentSuffix);
 
-      String indexName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, dictionaryExtension);
-      dictionaryOutput = state.directory.createOutput(indexName, state.context);
-      CodecUtil.writeIndexHeader(dictionaryOutput, codecName, versionCurrent, state.segmentInfo.getId(), state.segmentSuffix);
+			String indexName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, dictionaryExtension);
+			dictionaryOutput = state.directory.createOutput(indexName, state.context);
+			CodecUtil.writeIndexHeader(dictionaryOutput, codecName, versionCurrent, state.segmentInfo.getId(), state.segmentSuffix);
 
-      postingsWriter.init(blockOutput, state);
+			postingsWriter.init(blockOutput, state);
 
-      this.blockOutput = blockOutput;
-      this.dictionaryOutput = dictionaryOutput;
-      success = true;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(blockOutput, dictionaryOutput);
-      }
-    }
-  }
+			this.blockOutput = blockOutput;
+			this.dictionaryOutput = dictionaryOutput;
+			success = true;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(blockOutput, dictionaryOutput);
+			}
+		}
+	}
 
-  /**
-   * Validates the {@link #UniformSplitTermsWriter(PostingsWriterBase, SegmentWriteState, int, int, BlockEncoder) constructor}
-   * settings.
-   *
-   * @param targetNumBlockLines Target number of lines per block.
-   *                            Must be strictly greater than 0.
-   * @param deltaNumLines       Maximum allowed delta variation of the number of lines per block.
-   *                            Must be greater than or equal to 0 and strictly less than {@code targetNumBlockLines}.
-   *                            Additionally, {@code targetNumBlockLines} + {@code deltaNumLines} must be less than
-   *                            or equal to {@link #MAX_NUM_BLOCK_LINES}.
-   */
-  protected static void validateSettings(int targetNumBlockLines, int deltaNumLines) {
-    if (targetNumBlockLines <= 0) {
-      throw new IllegalArgumentException("Invalid negative or nul targetNumBlockLines=" + targetNumBlockLines);
-    }
-    if (deltaNumLines < 0) {
-      throw new IllegalArgumentException("Invalid negative deltaNumLines=" + deltaNumLines);
-    }
-    if (deltaNumLines >= targetNumBlockLines) {
-      throw new IllegalArgumentException("Invalid too large deltaNumLines=" + deltaNumLines
-          + ", it must be < targetNumBlockLines=" + targetNumBlockLines);
-    }
-    if (targetNumBlockLines + deltaNumLines > UniformSplitTermsWriter.MAX_NUM_BLOCK_LINES) {
-      throw new IllegalArgumentException("Invalid (targetNumBlockLines + deltaNumLines)="
-          + (targetNumBlockLines + deltaNumLines) + ", it must be <= MAX_NUM_BLOCK_LINES="
-          + UniformSplitTermsWriter.MAX_NUM_BLOCK_LINES);
-    }
-  }
+	/**
+	 * Validates the {@link #UniformSplitTermsWriter(PostingsWriterBase, SegmentWriteState, int, int, BlockEncoder) constructor}
+	 * settings.
+	 *
+	 * @param targetNumBlockLines Target number of lines per block.
+	 *                            Must be strictly greater than 0.
+	 * @param deltaNumLines       Maximum allowed delta variation of the number of lines per block.
+	 *                            Must be greater than or equal to 0 and strictly less than {@code targetNumBlockLines}.
+	 *                            Additionally, {@code targetNumBlockLines} + {@code deltaNumLines} must be less than
+	 *                            or equal to {@link #MAX_NUM_BLOCK_LINES}.
+	 */
+	protected static void validateSettings(int targetNumBlockLines, int deltaNumLines) {
+		if (targetNumBlockLines <= 0) {
+			throw new IllegalArgumentException("Invalid negative or nul targetNumBlockLines=" + targetNumBlockLines);
+		}
+		if (deltaNumLines < 0) {
+			throw new IllegalArgumentException("Invalid negative deltaNumLines=" + deltaNumLines);
+		}
+		if (deltaNumLines >= targetNumBlockLines) {
+			throw new IllegalArgumentException("Invalid too large deltaNumLines=" + deltaNumLines
+				+ ", it must be < targetNumBlockLines=" + targetNumBlockLines);
+		}
+		if (targetNumBlockLines + deltaNumLines > UniformSplitTermsWriter.MAX_NUM_BLOCK_LINES) {
+			throw new IllegalArgumentException("Invalid (targetNumBlockLines + deltaNumLines)="
+				+ (targetNumBlockLines + deltaNumLines) + ", it must be <= MAX_NUM_BLOCK_LINES="
+				+ UniformSplitTermsWriter.MAX_NUM_BLOCK_LINES);
+		}
+	}
 
-  @Override
-  public void write(Fields fields, NormsProducer normsProducer) throws IOException {
-    BlockWriter blockWriter = new BlockWriter(blockOutput, targetNumBlockLines, deltaNumLines, blockEncoder);
-    ByteBuffersDataOutput fieldsOutput = new ByteBuffersDataOutput();
-    int fieldsNumber = 0;
-    for (String field : fields) {
-      Terms terms = fields.terms(field);
-      if (terms != null) {
-        TermsEnum termsEnum = terms.iterator();
-        FieldInfo fieldInfo = fieldInfos.fieldInfo(field);
-        fieldsNumber += writeFieldTerms(blockWriter, fieldsOutput, termsEnum, fieldInfo, normsProducer);
-      }
-    }
-    writeFieldsMetadata(fieldsNumber, fieldsOutput);
-    CodecUtil.writeFooter(dictionaryOutput);
-  }
+	@Override
+	public void write(Fields fields, NormsProducer normsProducer) throws IOException {
+		BlockWriter blockWriter = new BlockWriter(blockOutput, targetNumBlockLines, deltaNumLines, blockEncoder);
+		ByteBuffersDataOutput fieldsOutput = new ByteBuffersDataOutput();
+		int fieldsNumber = 0;
+		for (String field : fields) {
+			Terms terms = fields.terms(field);
+			if (terms != null) {
+				TermsEnum termsEnum = terms.iterator();
+				FieldInfo fieldInfo = fieldInfos.fieldInfo(field);
+				fieldsNumber += writeFieldTerms(blockWriter, fieldsOutput, termsEnum, fieldInfo, normsProducer);
+			}
+		}
+		writeFieldsMetadata(fieldsNumber, fieldsOutput);
+		CodecUtil.writeFooter(dictionaryOutput);
+	}
 
-  protected void writeFieldsMetadata(int fieldsNumber, ByteBuffersDataOutput fieldsOutput) throws IOException {
-    long fieldsStartPosition = blockOutput.getFilePointer();
-    blockOutput.writeVInt(fieldsNumber);
-    fieldsOutput.copyTo(blockOutput);
-    blockOutput.writeLong(fieldsStartPosition);
-    CodecUtil.writeFooter(blockOutput);
-  }
+	protected void writeFieldsMetadata(int fieldsNumber, ByteBuffersDataOutput fieldsOutput) throws IOException {
+		long fieldsStartPosition = blockOutput.getFilePointer();
+		blockOutput.writeVInt(fieldsNumber);
+		fieldsOutput.copyTo(blockOutput);
+		blockOutput.writeLong(fieldsStartPosition);
+		CodecUtil.writeFooter(blockOutput);
+	}
 
-  /**
-   * @return 1 if the field was written; 0 otherwise.
-   */
-  protected int writeFieldTerms(BlockWriter blockWriter, DataOutput fieldsOutput, TermsEnum termsEnum,
-                              FieldInfo fieldInfo, NormsProducer normsProducer) throws IOException {
+	/**
+	 * @return 1 if the field was written; 0 otherwise.
+	 */
+	protected int writeFieldTerms(BlockWriter blockWriter, DataOutput fieldsOutput, TermsEnum termsEnum,
+																FieldInfo fieldInfo, NormsProducer normsProducer) throws IOException {
 
-    FieldMetadata fieldMetadata = new FieldMetadata(fieldInfo, maxDoc);
-    fieldMetadata.setDictionaryStartFP(dictionaryOutput.getFilePointer());
+		FieldMetadata fieldMetadata = new FieldMetadata(fieldInfo, maxDoc);
+		fieldMetadata.setDictionaryStartFP(dictionaryOutput.getFilePointer());
 
-    postingsWriter.setField(fieldInfo);
-    blockWriter.setField(fieldMetadata);
-    IndexDictionary.Builder dictionaryBuilder = new FSTDictionary.Builder();
-    BytesRef lastTerm = null;
-    while (termsEnum.next() != null) {
-      BlockTermState blockTermState = writePostingLine(termsEnum, fieldMetadata, normsProducer);
-      if (blockTermState != null) {
-        lastTerm = BytesRef.deepCopyOf(termsEnum.term());
-        blockWriter.addLine(lastTerm, blockTermState, dictionaryBuilder);
-      }
-    }
+		postingsWriter.setField(fieldInfo);
+		blockWriter.setField(fieldMetadata);
+		IndexDictionary.Builder dictionaryBuilder = new FSTDictionary.Builder();
+		BytesRef lastTerm = null;
+		while (termsEnum.next() != null) {
+			BlockTermState blockTermState = writePostingLine(termsEnum, fieldMetadata, normsProducer);
+			if (blockTermState != null) {
+				lastTerm = BytesRef.deepCopyOf(termsEnum.term());
+				blockWriter.addLine(lastTerm, blockTermState, dictionaryBuilder);
+			}
+		}
 
-    // Flush remaining terms.
-    blockWriter.finishLastBlock(dictionaryBuilder);
+		// Flush remaining terms.
+		blockWriter.finishLastBlock(dictionaryBuilder);
 
-    if (fieldMetadata.getNumTerms() > 0) {
-      fieldMetadata.setLastTerm(lastTerm);
-      fieldMetadata.write(fieldsOutput);
-      writeDictionary(dictionaryBuilder);
-      return 1;
-    }
-    return 0;
-  }
+		if (fieldMetadata.getNumTerms() > 0) {
+			fieldMetadata.setLastTerm(lastTerm);
+			fieldMetadata.write(fieldsOutput);
+			writeDictionary(dictionaryBuilder);
+			return 1;
+		}
+		return 0;
+	}
 
-  /**
-   * Writes the posting values for the current term in the given {@link TermsEnum}
-   * and updates the {@link FieldMetadata} stats.
-   *
-   * @return the written {@link BlockTermState}; or null if none.
-   */
-  protected BlockTermState writePostingLine(TermsEnum termsEnum, FieldMetadata fieldMetadata, NormsProducer normsProducer) throws IOException {
-    BlockTermState state = postingsWriter.writeTerm(termsEnum.term(), termsEnum, fieldMetadata.getDocsSeen(), normsProducer);
-    if (state == null) {
-      // No doc for this term.
-      return null;
-    }
-    fieldMetadata.updateStats(state);
-    return state;
-  }
+	/**
+	 * Writes the posting values for the current term in the given {@link TermsEnum}
+	 * and updates the {@link FieldMetadata} stats.
+	 *
+	 * @return the written {@link BlockTermState}; or null if none.
+	 */
+	protected BlockTermState writePostingLine(TermsEnum termsEnum, FieldMetadata fieldMetadata, NormsProducer normsProducer) throws IOException {
+		BlockTermState state = postingsWriter.writeTerm(termsEnum.term(), termsEnum, fieldMetadata.getDocsSeen(), normsProducer);
+		if (state == null) {
+			// No doc for this term.
+			return null;
+		}
+		fieldMetadata.updateStats(state);
+		return state;
+	}
 
-  /**
-   * Writes the dictionary index (FST) to disk.
-   */
-  protected void writeDictionary(IndexDictionary.Builder dictionaryBuilder) throws IOException {
-    dictionaryBuilder.build().write(dictionaryOutput, blockEncoder);
-  }
+	/**
+	 * Writes the dictionary index (FST) to disk.
+	 */
+	protected void writeDictionary(IndexDictionary.Builder dictionaryBuilder) throws IOException {
+		dictionaryBuilder.build().write(dictionaryOutput, blockEncoder);
+	}
 
-  @Override
-  public void close() throws IOException {
-    IOUtils.close(blockOutput, dictionaryOutput, postingsWriter);
-  }
+	@Override
+	public void close() throws IOException {
+		IOUtils.close(blockOutput, dictionaryOutput, postingsWriter);
+	}
 }

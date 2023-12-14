@@ -21,25 +21,25 @@ package org.apache.lucene.search.spell;
  */
 public final class LevenshteinDistance implements StringDistance {
 
-    /**
-     * Optimized to run a bit faster than the static getDistance().
-     * In one benchmark times were 5.3sec using ctr vs 8.5sec w/ static method, thus 37% faster.
-     */
-    public LevenshteinDistance () {
-    }
+	/**
+	 * Optimized to run a bit faster than the static getDistance().
+	 * In one benchmark times were 5.3sec using ctr vs 8.5sec w/ static method, thus 37% faster.
+	 */
+	public LevenshteinDistance() {
+	}
 
 
-    //*****************************
-    // Compute Levenshtein distance: see org.apache.commons.lang.StringUtils#getLevenshteinDistance(String, String)
-    //*****************************
-    @Override
-    public float getDistance (String target, String other) {
-      char[] sa;
-      int n;
-      int p[]; //'previous' cost array, horizontally
-      int d[]; // cost array, horizontally
-      int _d[]; //placeholder to assist in swapping p and d
-      
+	//*****************************
+	// Compute Levenshtein distance: see org.apache.commons.lang.StringUtils#getLevenshteinDistance(String, String)
+	//*****************************
+	@Override
+	public float getDistance(String target, String other) {
+		char[] sa;
+		int n;
+		int p[]; //'previous' cost array, horizontally
+		int d[]; // cost array, horizontally
+		int _d[]; //placeholder to assist in swapping p and d
+
         /*
            The difference between this impl. and the previous is that, rather
            than creating and retaining a matrix of size s.length()+1 by t.length()+1,
@@ -57,69 +57,68 @@ public final class LevenshteinDistance implements StringDistance {
            cause an out of memory condition when calculating the LD over two very large strings.
          */
 
-        sa = target.toCharArray();
-        n = sa.length;
-        p = new int[n+1]; 
-        d = new int[n+1]; 
-      
-        final int m = other.length();
-        if (n == 0 || m == 0) {
-          if (n == m) {
-            return 1;
-          }
-          else {
-            return 0;
-          }
-        } 
+		sa = target.toCharArray();
+		n = sa.length;
+		p = new int[n + 1];
+		d = new int[n + 1];
+
+		final int m = other.length();
+		if (n == 0 || m == 0) {
+			if (n == m) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
 
 
-        // indexes into strings s and t
-        int i; // iterates through s
-        int j; // iterates through t
+		// indexes into strings s and t
+		int i; // iterates through s
+		int j; // iterates through t
 
-        char t_j; // jth character of t
+		char t_j; // jth character of t
 
-        int cost; // cost
+		int cost; // cost
 
-        for (i = 0; i<=n; i++) {
-            p[i] = i;
-        }
+		for (i = 0; i <= n; i++) {
+			p[i] = i;
+		}
 
-        for (j = 1; j<=m; j++) {
-            t_j = other.charAt(j-1);
-            d[0] = j;
+		for (j = 1; j <= m; j++) {
+			t_j = other.charAt(j - 1);
+			d[0] = j;
 
-            for (i=1; i<=n; i++) {
-                cost = sa[i-1]==t_j ? 0 : 1;
-                // minimum of cell to the left+1, to the top+1, diagonally left and up +cost
-                d[i] = Math.min(Math.min(d[i-1]+1, p[i]+1),  p[i-1]+cost);
-            }
+			for (i = 1; i <= n; i++) {
+				cost = sa[i - 1] == t_j ? 0 : 1;
+				// minimum of cell to the left+1, to the top+1, diagonally left and up +cost
+				d[i] = Math.min(Math.min(d[i - 1] + 1, p[i] + 1), p[i - 1] + cost);
+			}
 
-            // copy current distance counts to 'previous row' distance counts
-            _d = p;
-            p = d;
-            d = _d;
-        }
+			// copy current distance counts to 'previous row' distance counts
+			_d = p;
+			p = d;
+			d = _d;
+		}
 
-        // our last action in the above loop was to switch d and p, so p now
-        // actually has the most recent cost counts
-        return 1.0f - ((float) p[n] / Math.max(other.length(), sa.length));
-    }
+		// our last action in the above loop was to switch d and p, so p now
+		// actually has the most recent cost counts
+		return 1.0f - ((float) p[n] / Math.max(other.length(), sa.length));
+	}
 
-  @Override
-  public int hashCode() {
-    return 163 * getClass().hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return 163 * getClass().hashCode();
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (null == obj) return false;
-    return (getClass() == obj.getClass());
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (null == obj) return false;
+		return (getClass() == obj.getClass());
+	}
 
-  @Override
-  public String toString() {
-    return "levenshtein";
-  }
+	@Override
+	public String toString() {
+		return "levenshtein";
+	}
 }

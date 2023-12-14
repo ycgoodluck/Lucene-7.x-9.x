@@ -24,10 +24,10 @@ import org.apache.lucene.index.BaseDocValuesFormatTestCase;
  * Tests SimpleTextDocValuesFormat
  */
 public class TestSimpleTextDocValuesFormat extends BaseDocValuesFormatTestCase {
-  private final Codec codec = new SimpleTextCodec();
+	private final Codec codec = new SimpleTextCodec();
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

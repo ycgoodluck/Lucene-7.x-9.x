@@ -35,46 +35,54 @@ import org.apache.lucene.search.Explanation;
  * @lucene.experimental
  */
 public class LMJelinekMercerSimilarity extends LMSimilarity {
-  /** The &lambda; parameter. */
-  private final float lambda;
-  
-  /** Instantiates with the specified collectionModel and &lambda; parameter. */
-  public LMJelinekMercerSimilarity(
-      CollectionModel collectionModel, float lambda) {
-    super(collectionModel);
-    this.lambda = lambda;
-  }
+	/**
+	 * The &lambda; parameter.
+	 */
+	private final float lambda;
 
-  /** Instantiates with the specified &lambda; parameter. */
-  public LMJelinekMercerSimilarity(float lambda) {
-    this.lambda = lambda;
-  }
-  
-  @Override
-  protected float score(BasicStats stats, float freq, float docLen) {
-    return stats.getBoost() *
-        (float)Math.log(1 +
-            ((1 - lambda) * freq / docLen) /
-            (lambda * ((LMStats)stats).getCollectionProbability()));
-  }
-  
-  @Override
-  protected void explain(List<Explanation> subs, BasicStats stats, int doc,
-      float freq, float docLen) {
-    if (stats.getBoost() != 1.0f) {
-      subs.add(Explanation.match(stats.getBoost(), "boost"));
-    }
-    subs.add(Explanation.match(lambda, "lambda"));
-    super.explain(subs, stats, doc, freq, docLen);
-  }
+	/**
+	 * Instantiates with the specified collectionModel and &lambda; parameter.
+	 */
+	public LMJelinekMercerSimilarity(
+		CollectionModel collectionModel, float lambda) {
+		super(collectionModel);
+		this.lambda = lambda;
+	}
 
-  /** Returns the &lambda; parameter. */
-  public float getLambda() {
-    return lambda;
-  }
+	/**
+	 * Instantiates with the specified &lambda; parameter.
+	 */
+	public LMJelinekMercerSimilarity(float lambda) {
+		this.lambda = lambda;
+	}
 
-  @Override
-  public String getName() {
-    return String.format(Locale.ROOT, "Jelinek-Mercer(%f)", getLambda());
-  }
+	@Override
+	protected float score(BasicStats stats, float freq, float docLen) {
+		return stats.getBoost() *
+			(float) Math.log(1 +
+				((1 - lambda) * freq / docLen) /
+					(lambda * ((LMStats) stats).getCollectionProbability()));
+	}
+
+	@Override
+	protected void explain(List<Explanation> subs, BasicStats stats, int doc,
+												 float freq, float docLen) {
+		if (stats.getBoost() != 1.0f) {
+			subs.add(Explanation.match(stats.getBoost(), "boost"));
+		}
+		subs.add(Explanation.match(lambda, "lambda"));
+		super.explain(subs, stats, doc, freq, docLen);
+	}
+
+	/**
+	 * Returns the &lambda; parameter.
+	 */
+	public float getLambda() {
+		return lambda;
+	}
+
+	@Override
+	public String getName() {
+		return String.format(Locale.ROOT, "Jelinek-Mercer(%f)", getLambda());
+	}
 }

@@ -32,224 +32,235 @@ import org.apache.lucene.util.automaton.CompiledAutomaton;
  * @lucene.experimental
  */
 public final class MultiTerms extends Terms {
-  private final Terms[] subs;
-  private final ReaderSlice[] subSlices;
-  private final boolean hasFreqs;
-  private final boolean hasOffsets;
-  private final boolean hasPositions;
-  private final boolean hasPayloads;
+	private final Terms[] subs;
+	private final ReaderSlice[] subSlices;
+	private final boolean hasFreqs;
+	private final boolean hasOffsets;
+	private final boolean hasPositions;
+	private final boolean hasPayloads;
 
-  /**
-   * Sole constructor.  Use {@link #getTerms(IndexReader, String)} instead if possible.
-   *
-   * @param subs The {@link Terms} instances of all sub-readers. 
-   * @param subSlices A parallel array (matching {@code
-   *        subs}) describing the sub-reader slices.
-   * @lucene.internal
-   */
-  public MultiTerms(Terms[] subs, ReaderSlice[] subSlices) throws IOException { //TODO make private?
-    this.subs = subs;
-    this.subSlices = subSlices;
-    
-    assert subs.length > 0 : "inefficient: don't use MultiTerms over one sub";
-    boolean _hasFreqs = true;
-    boolean _hasOffsets = true;
-    boolean _hasPositions = true;
-    boolean _hasPayloads = false;
-    for(int i=0;i<subs.length;i++) {
-      _hasFreqs &= subs[i].hasFreqs();
-      _hasOffsets &= subs[i].hasOffsets();
-      _hasPositions &= subs[i].hasPositions();
-      _hasPayloads |= subs[i].hasPayloads();
-    }
+	/**
+	 * Sole constructor.  Use {@link #getTerms(IndexReader, String)} instead if possible.
+	 *
+	 * @param subs      The {@link Terms} instances of all sub-readers.
+	 * @param subSlices A parallel array (matching {@code
+	 *                  subs}) describing the sub-reader slices.
+	 * @lucene.internal
+	 */
+	public MultiTerms(Terms[] subs, ReaderSlice[] subSlices) throws IOException { //TODO make private?
+		this.subs = subs;
+		this.subSlices = subSlices;
 
-    hasFreqs = _hasFreqs;
-    hasOffsets = _hasOffsets;
-    hasPositions = _hasPositions;
-    hasPayloads = hasPositions && _hasPayloads; // if all subs have pos, and at least one has payloads.
-  }
+		assert subs.length > 0 : "inefficient: don't use MultiTerms over one sub";
+		boolean _hasFreqs = true;
+		boolean _hasOffsets = true;
+		boolean _hasPositions = true;
+		boolean _hasPayloads = false;
+		for (int i = 0; i < subs.length; i++) {
+			_hasFreqs &= subs[i].hasFreqs();
+			_hasOffsets &= subs[i].hasOffsets();
+			_hasPositions &= subs[i].hasPositions();
+			_hasPayloads |= subs[i].hasPayloads();
+		}
 
-  /** This method may return null if the field does not exist or if it has no terms. */
-  public static Terms getTerms(IndexReader r, String field) throws IOException {
-    final List<LeafReaderContext> leaves = r.leaves();
-    if (leaves.size() == 1) {
-      return leaves.get(0).reader().terms(field);
-    }
+		hasFreqs = _hasFreqs;
+		hasOffsets = _hasOffsets;
+		hasPositions = _hasPositions;
+		hasPayloads = hasPositions && _hasPayloads; // if all subs have pos, and at least one has payloads.
+	}
 
-    final List<Terms> termsPerLeaf = new ArrayList<>(leaves.size());
-    final List<ReaderSlice> slicePerLeaf = new ArrayList<>(leaves.size());
+	/**
+	 * This method may return null if the field does not exist or if it has no terms.
+	 */
+	public static Terms getTerms(IndexReader r, String field) throws IOException {
+		final List<LeafReaderContext> leaves = r.leaves();
+		if (leaves.size() == 1) {
+			return leaves.get(0).reader().terms(field);
+		}
 
-    for (int leafIdx = 0; leafIdx < leaves.size(); leafIdx++) {
-      LeafReaderContext ctx = leaves.get(leafIdx);
-      Terms subTerms = ctx.reader().terms(field);
-      if (subTerms != null) {
-        termsPerLeaf.add(subTerms);
-        slicePerLeaf.add(new ReaderSlice(ctx.docBase, r.maxDoc(), leafIdx));
-      }
-    }
+		final List<Terms> termsPerLeaf = new ArrayList<>(leaves.size());
+		final List<ReaderSlice> slicePerLeaf = new ArrayList<>(leaves.size());
 
-    if (termsPerLeaf.size() == 0) {
-      return null;
-    } else {
-      return new MultiTerms(termsPerLeaf.toArray(EMPTY_ARRAY),
-          slicePerLeaf.toArray(ReaderSlice.EMPTY_ARRAY));
-    }
-  }
+		for (int leafIdx = 0; leafIdx < leaves.size(); leafIdx++) {
+			LeafReaderContext ctx = leaves.get(leafIdx);
+			Terms subTerms = ctx.reader().terms(field);
+			if (subTerms != null) {
+				termsPerLeaf.add(subTerms);
+				slicePerLeaf.add(new ReaderSlice(ctx.docBase, r.maxDoc(), leafIdx));
+			}
+		}
 
-  /** Returns {@link PostingsEnum} for the specified
-   *  field and term.  This will return null if the field or
-   *  term does not exist or positions were not indexed.
-   *  @see #getTermPostingsEnum(IndexReader, String, BytesRef, int) */
-  public static PostingsEnum getTermPostingsEnum(IndexReader r, String field, BytesRef term) throws IOException {
-    return getTermPostingsEnum(r, field, term, PostingsEnum.ALL);
-  }
+		if (termsPerLeaf.size() == 0) {
+			return null;
+		} else {
+			return new MultiTerms(termsPerLeaf.toArray(EMPTY_ARRAY),
+				slicePerLeaf.toArray(ReaderSlice.EMPTY_ARRAY));
+		}
+	}
 
-  /** Returns {@link PostingsEnum} for the specified
-   *  field and term, with control over whether freqs, positions, offsets or payloads
-   *  are required.  Some codecs may be able to optimize
-   *  their implementation when offsets and/or payloads are not
-   *  required. This will return null if the field or term does not
-   *  exist. See {@link TermsEnum#postings(PostingsEnum,int)}. */
-  public static PostingsEnum getTermPostingsEnum(IndexReader r, String field, BytesRef term, int flags) throws IOException {
-    assert field != null;
-    assert term != null;
-    final Terms terms = getTerms(r, field);
-    if (terms != null) {
-      final TermsEnum termsEnum = terms.iterator();
-      if (termsEnum.seekExact(term)) {
-        return termsEnum.postings(null, flags);
-      }
-    }
-    return null;
-  }
+	/**
+	 * Returns {@link PostingsEnum} for the specified
+	 * field and term.  This will return null if the field or
+	 * term does not exist or positions were not indexed.
+	 *
+	 * @see #getTermPostingsEnum(IndexReader, String, BytesRef, int)
+	 */
+	public static PostingsEnum getTermPostingsEnum(IndexReader r, String field, BytesRef term) throws IOException {
+		return getTermPostingsEnum(r, field, term, PostingsEnum.ALL);
+	}
 
-  /** Expert: returns the Terms being merged. */
-  public Terms[] getSubTerms() {
-    return subs;
-  }
+	/**
+	 * Returns {@link PostingsEnum} for the specified
+	 * field and term, with control over whether freqs, positions, offsets or payloads
+	 * are required.  Some codecs may be able to optimize
+	 * their implementation when offsets and/or payloads are not
+	 * required. This will return null if the field or term does not
+	 * exist. See {@link TermsEnum#postings(PostingsEnum, int)}.
+	 */
+	public static PostingsEnum getTermPostingsEnum(IndexReader r, String field, BytesRef term, int flags) throws IOException {
+		assert field != null;
+		assert term != null;
+		final Terms terms = getTerms(r, field);
+		if (terms != null) {
+			final TermsEnum termsEnum = terms.iterator();
+			if (termsEnum.seekExact(term)) {
+				return termsEnum.postings(null, flags);
+			}
+		}
+		return null;
+	}
 
-  /** Expert: returns  pointers to the sub-readers corresponding to the Terms being merged. */
-  public ReaderSlice[] getSubSlices() {
-    return subSlices;
-  }
+	/**
+	 * Expert: returns the Terms being merged.
+	 */
+	public Terms[] getSubTerms() {
+		return subs;
+	}
 
-  @Override
-  public TermsEnum intersect(CompiledAutomaton compiled, BytesRef startTerm) throws IOException {
-    final List<MultiTermsEnum.TermsEnumIndex> termsEnums = new ArrayList<>();
-    for(int i=0;i<subs.length;i++) {
-      final TermsEnum termsEnum = subs[i].intersect(compiled, startTerm);
-      if (termsEnum != null) {
-        termsEnums.add(new MultiTermsEnum.TermsEnumIndex(termsEnum, i));
-      }
-    }
+	/**
+	 * Expert: returns  pointers to the sub-readers corresponding to the Terms being merged.
+	 */
+	public ReaderSlice[] getSubSlices() {
+		return subSlices;
+	}
 
-    if (termsEnums.size() > 0) {
-      return new MultiTermsEnum(subSlices).reset(termsEnums.toArray(MultiTermsEnum.TermsEnumIndex.EMPTY_ARRAY));
-    } else {
-      return TermsEnum.EMPTY;
-    }
-  }
-  
-  @Override
-  public BytesRef getMin() throws IOException {
-    BytesRef minTerm = null;
-    for(Terms terms : subs) {
-      BytesRef term = terms.getMin();
-      if (minTerm == null || term.compareTo(minTerm) < 0) {
-        minTerm = term;
-      }
-    }
+	@Override
+	public TermsEnum intersect(CompiledAutomaton compiled, BytesRef startTerm) throws IOException {
+		final List<MultiTermsEnum.TermsEnumIndex> termsEnums = new ArrayList<>();
+		for (int i = 0; i < subs.length; i++) {
+			final TermsEnum termsEnum = subs[i].intersect(compiled, startTerm);
+			if (termsEnum != null) {
+				termsEnums.add(new MultiTermsEnum.TermsEnumIndex(termsEnum, i));
+			}
+		}
 
-    return minTerm;
-  }
+		if (termsEnums.size() > 0) {
+			return new MultiTermsEnum(subSlices).reset(termsEnums.toArray(MultiTermsEnum.TermsEnumIndex.EMPTY_ARRAY));
+		} else {
+			return TermsEnum.EMPTY;
+		}
+	}
 
-  @Override
-  public BytesRef getMax() throws IOException {
-    BytesRef maxTerm = null;
-    for(Terms terms : subs) {
-      BytesRef term = terms.getMax();
-      if (maxTerm == null || term.compareTo(maxTerm) > 0) {
-        maxTerm = term;
-      }
-    }
+	@Override
+	public BytesRef getMin() throws IOException {
+		BytesRef minTerm = null;
+		for (Terms terms : subs) {
+			BytesRef term = terms.getMin();
+			if (minTerm == null || term.compareTo(minTerm) < 0) {
+				minTerm = term;
+			}
+		}
 
-    return maxTerm;
-  }
+		return minTerm;
+	}
 
-  @Override
-  public TermsEnum iterator() throws IOException {
+	@Override
+	public BytesRef getMax() throws IOException {
+		BytesRef maxTerm = null;
+		for (Terms terms : subs) {
+			BytesRef term = terms.getMax();
+			if (maxTerm == null || term.compareTo(maxTerm) > 0) {
+				maxTerm = term;
+			}
+		}
 
-    final List<MultiTermsEnum.TermsEnumIndex> termsEnums = new ArrayList<>();
-    for(int i=0;i<subs.length;i++) {
-      final TermsEnum termsEnum = subs[i].iterator();
-      if (termsEnum != null) {
-        termsEnums.add(new MultiTermsEnum.TermsEnumIndex(termsEnum, i));
-      }
-    }
+		return maxTerm;
+	}
 
-    if (termsEnums.size() > 0) {
-      return new MultiTermsEnum(subSlices).reset(termsEnums.toArray(MultiTermsEnum.TermsEnumIndex.EMPTY_ARRAY));
-    } else {
-      return TermsEnum.EMPTY;
-    }
-  }
+	@Override
+	public TermsEnum iterator() throws IOException {
 
-  @Override
-  public long size() {
-    return -1;
-  }
+		final List<MultiTermsEnum.TermsEnumIndex> termsEnums = new ArrayList<>();
+		for (int i = 0; i < subs.length; i++) {
+			final TermsEnum termsEnum = subs[i].iterator();
+			if (termsEnum != null) {
+				termsEnums.add(new MultiTermsEnum.TermsEnumIndex(termsEnum, i));
+			}
+		}
 
-  @Override
-  public long getSumTotalTermFreq() throws IOException {
-    long sum = 0;
-    for(Terms terms : subs) {
-      final long v = terms.getSumTotalTermFreq();
-      assert v != -1;
-      sum += v;
-    }
-    return sum;
-  }
-  
-  @Override
-  public long getSumDocFreq() throws IOException {
-    long sum = 0;
-    for(Terms terms : subs) {
-      final long v = terms.getSumDocFreq();
-      assert v != -1;
-      sum += v;
-    }
-    return sum;
-  }
-  
-  @Override
-  public int getDocCount() throws IOException {
-    int sum = 0;
-    for(Terms terms : subs) {
-      final int v = terms.getDocCount();
-      assert v != -1;
-      sum += v;
-    }
-    return sum;
-  }
+		if (termsEnums.size() > 0) {
+			return new MultiTermsEnum(subSlices).reset(termsEnums.toArray(MultiTermsEnum.TermsEnumIndex.EMPTY_ARRAY));
+		} else {
+			return TermsEnum.EMPTY;
+		}
+	}
 
-  @Override
-  public boolean hasFreqs() {
-    return hasFreqs;
-  }
+	@Override
+	public long size() {
+		return -1;
+	}
 
-  @Override
-  public boolean hasOffsets() {
-    return hasOffsets;
-  }
+	@Override
+	public long getSumTotalTermFreq() throws IOException {
+		long sum = 0;
+		for (Terms terms : subs) {
+			final long v = terms.getSumTotalTermFreq();
+			assert v != -1;
+			sum += v;
+		}
+		return sum;
+	}
 
-  @Override
-  public boolean hasPositions() {
-    return hasPositions;
-  }
-  
-  @Override
-  public boolean hasPayloads() {
-    return hasPayloads;
-  }
+	@Override
+	public long getSumDocFreq() throws IOException {
+		long sum = 0;
+		for (Terms terms : subs) {
+			final long v = terms.getSumDocFreq();
+			assert v != -1;
+			sum += v;
+		}
+		return sum;
+	}
+
+	@Override
+	public int getDocCount() throws IOException {
+		int sum = 0;
+		for (Terms terms : subs) {
+			final int v = terms.getDocCount();
+			assert v != -1;
+			sum += v;
+		}
+		return sum;
+	}
+
+	@Override
+	public boolean hasFreqs() {
+		return hasFreqs;
+	}
+
+	@Override
+	public boolean hasOffsets() {
+		return hasOffsets;
+	}
+
+	@Override
+	public boolean hasPositions() {
+		return hasPositions;
+	}
+
+	@Override
+	public boolean hasPayloads() {
+		return hasPayloads;
+	}
 }
 

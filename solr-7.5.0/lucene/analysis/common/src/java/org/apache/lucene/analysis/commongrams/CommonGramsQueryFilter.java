@@ -28,7 +28,7 @@ import static org.apache.lucene.analysis.commongrams.CommonGramsFilter.GRAM_TYPE
 /**
  * Wrap a CommonGramsFilter optimizing phrase queries by only returning single
  * words when they are not a member of a bigram.
- * 
+ * <p>
  * Example:
  * <ul>
  * <li>query input to CommonGramsFilter: "the rain in spain falls mainly"
@@ -45,85 +45,85 @@ import static org.apache.lucene.analysis.commongrams.CommonGramsFilter.GRAM_TYPE
  */
 public final class CommonGramsQueryFilter extends TokenFilter {
 
-  private final TypeAttribute typeAttribute = addAttribute(TypeAttribute.class);
-  private final PositionIncrementAttribute posIncAttribute = addAttribute(PositionIncrementAttribute.class);
-  private final PositionLengthAttribute posLengthAttribute = addAttribute(PositionLengthAttribute.class);
-  
-  private State previous;
-  private String previousType;
-  private boolean exhausted;
+	private final TypeAttribute typeAttribute = addAttribute(TypeAttribute.class);
+	private final PositionIncrementAttribute posIncAttribute = addAttribute(PositionIncrementAttribute.class);
+	private final PositionLengthAttribute posLengthAttribute = addAttribute(PositionLengthAttribute.class);
 
-  /**
-   * Constructs a new CommonGramsQueryFilter based on the provided CommomGramsFilter 
-   * 
-   * @param input CommonGramsFilter the QueryFilter will use
-   */
-  public CommonGramsQueryFilter(CommonGramsFilter input) {
-    super(input);
-  }
+	private State previous;
+	private String previousType;
+	private boolean exhausted;
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    previous = null;
-    previousType = null;
-    exhausted = false;
-  }
-  
-  /**
-   * Output bigrams whenever possible to optimize queries. Only output unigrams
-   * when they are not a member of a bigram. Example:
-   * <ul>
-   * <li>input: "the rain in spain falls mainly"
-   * <li>output:"the-rain", "rain-in" ,"in-spain", "falls", "mainly"
-   * </ul>
-   */
-  @Override
-  public boolean incrementToken() throws IOException {
-    while (!exhausted && input.incrementToken()) {
-      State current = captureState();
+	/**
+	 * Constructs a new CommonGramsQueryFilter based on the provided CommomGramsFilter
+	 *
+	 * @param input CommonGramsFilter the QueryFilter will use
+	 */
+	public CommonGramsQueryFilter(CommonGramsFilter input) {
+		super(input);
+	}
 
-      if (previous != null && !isGramType()) {
-        restoreState(previous);
-        previous = current;
-        previousType = typeAttribute.type();
-        
-        if (isGramType()) {
-          posIncAttribute.setPositionIncrement(1);
-          // We must set this back to 1 (from e.g. 2 or higher) otherwise the token graph is disconnected:
-          posLengthAttribute.setPositionLength(1);
-        }
-        return true;
-      }
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		previous = null;
+		previousType = null;
+		exhausted = false;
+	}
 
-      previous = current;
-    }
+	/**
+	 * Output bigrams whenever possible to optimize queries. Only output unigrams
+	 * when they are not a member of a bigram. Example:
+	 * <ul>
+	 * <li>input: "the rain in spain falls mainly"
+	 * <li>output:"the-rain", "rain-in" ,"in-spain", "falls", "mainly"
+	 * </ul>
+	 */
+	@Override
+	public boolean incrementToken() throws IOException {
+		while (!exhausted && input.incrementToken()) {
+			State current = captureState();
 
-    exhausted = true;
+			if (previous != null && !isGramType()) {
+				restoreState(previous);
+				previous = current;
+				previousType = typeAttribute.type();
 
-    if (previous == null || GRAM_TYPE.equals(previousType)) {
-      return false;
-    }
-    
-    restoreState(previous);
-    previous = null;
-    
-    if (isGramType()) {
-      posIncAttribute.setPositionIncrement(1);
-      // We must set this back to 1 (from e.g. 2 or higher) otherwise the token graph is disconnected:
-      posLengthAttribute.setPositionLength(1);
-    }
-    return true;
-  }
+				if (isGramType()) {
+					posIncAttribute.setPositionIncrement(1);
+					// We must set this back to 1 (from e.g. 2 or higher) otherwise the token graph is disconnected:
+					posLengthAttribute.setPositionLength(1);
+				}
+				return true;
+			}
 
-  // ================================================= Helper Methods ================================================
+			previous = current;
+		}
 
-  /**
-   * Convenience method to check if the current type is a gram type
-   * 
-   * @return {@code true} if the current type is a gram type, {@code false} otherwise
-   */
-  public boolean isGramType() {
-    return GRAM_TYPE.equals(typeAttribute.type());
-  }
+		exhausted = true;
+
+		if (previous == null || GRAM_TYPE.equals(previousType)) {
+			return false;
+		}
+
+		restoreState(previous);
+		previous = null;
+
+		if (isGramType()) {
+			posIncAttribute.setPositionIncrement(1);
+			// We must set this back to 1 (from e.g. 2 or higher) otherwise the token graph is disconnected:
+			posLengthAttribute.setPositionLength(1);
+		}
+		return true;
+	}
+
+	// ================================================= Helper Methods ================================================
+
+	/**
+	 * Convenience method to check if the current type is a gram type
+	 *
+	 * @return {@code true} if the current type is a gram type, {@code false} otherwise
+	 */
+	public boolean isGramType() {
+		return GRAM_TYPE.equals(typeAttribute.type());
+	}
 }

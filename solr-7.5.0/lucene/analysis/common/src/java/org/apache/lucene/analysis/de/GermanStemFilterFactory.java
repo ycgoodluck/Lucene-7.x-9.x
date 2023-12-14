@@ -23,8 +23,8 @@ import org.apache.lucene.analysis.de.GermanStemFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
- * Factory for {@link GermanStemFilter}. 
+/**
+ * Factory for {@link GermanStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_destem" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -35,18 +35,20 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class GermanStemFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new GermanStemFilterFactory */
-  public GermanStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public GermanStemFilter create(TokenStream in) {
-    return new GermanStemFilter(in);
-  }
+
+	/**
+	 * Creates a new GermanStemFilterFactory
+	 */
+	public GermanStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public GermanStemFilter create(TokenStream in) {
+		return new GermanStemFilter(in);
+	}
 }
 

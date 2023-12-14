@@ -37,45 +37,45 @@ import org.apache.lucene.util.Accountable;
  */
 public class DictionaryBrowserSupplier implements Supplier<IndexDictionary.Browser>, Accountable {
 
-  protected final IndexInput dictionaryInput;
-  protected final BlockDecoder blockDecoder;
+	protected final IndexInput dictionaryInput;
+	protected final BlockDecoder blockDecoder;
 
-  /**
-   * Lazy loaded immutable index dictionary (trie hold in RAM).
-   */
-  protected IndexDictionary dictionary;
+	/**
+	 * Lazy loaded immutable index dictionary (trie hold in RAM).
+	 */
+	protected IndexDictionary dictionary;
 
-  public DictionaryBrowserSupplier(IndexInput dictionaryInput, long startFilePointer, BlockDecoder blockDecoder) throws IOException {
-    this.dictionaryInput = dictionaryInput.clone();
-    this.dictionaryInput.seek(startFilePointer);
-    this.blockDecoder = blockDecoder;
-  }
+	public DictionaryBrowserSupplier(IndexInput dictionaryInput, long startFilePointer, BlockDecoder blockDecoder) throws IOException {
+		this.dictionaryInput = dictionaryInput.clone();
+		this.dictionaryInput.seek(startFilePointer);
+		this.blockDecoder = blockDecoder;
+	}
 
-  /**
-   * Gets or lazy loads the immutable {@link IndexDictionary} thread safely
-   * and creates a new {@link IndexDictionary.Browser}.
-   */
-  @Override
-  public IndexDictionary.Browser get() {
-    // This double-check idiom does not require the dictionary to be volatile
-    // because it is immutable. See section "Double-Checked Locking Immutable Objects"
-    // of https://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html.
-    if (dictionary == null) {
-      synchronized (this) {
-        try {
-          if (dictionary == null) {
-            dictionary = FSTDictionary.read(dictionaryInput, blockDecoder);
-          }
-        } catch (IOException e) {
-          throw new IllegalStateException(e);
-        }
-      }
-    }
-    return dictionary.browser();
-  }
+	/**
+	 * Gets or lazy loads the immutable {@link IndexDictionary} thread safely
+	 * and creates a new {@link IndexDictionary.Browser}.
+	 */
+	@Override
+	public IndexDictionary.Browser get() {
+		// This double-check idiom does not require the dictionary to be volatile
+		// because it is immutable. See section "Double-Checked Locking Immutable Objects"
+		// of https://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html.
+		if (dictionary == null) {
+			synchronized (this) {
+				try {
+					if (dictionary == null) {
+						dictionary = FSTDictionary.read(dictionaryInput, blockDecoder);
+					}
+				} catch (IOException e) {
+					throw new IllegalStateException(e);
+				}
+			}
+		}
+		return dictionary.browser();
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return dictionary == null ? 0 : dictionary.ramBytesUsed();
-  }
+	@Override
+	public long ramBytesUsed() {
+		return dictionary == null ? 0 : dictionary.ramBytesUsed();
+	}
 }

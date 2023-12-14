@@ -30,57 +30,57 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestSynonymQuery extends LuceneTestCase {
 
-  public void testEquals() {
-    QueryUtils.checkEqual(new SynonymQuery(), new SynonymQuery());
-    QueryUtils.checkEqual(new SynonymQuery(new Term("foo", "bar")), 
-                          new SynonymQuery(new Term("foo", "bar")));
-    
-    QueryUtils.checkEqual(new SynonymQuery(new Term("a", "a"), new Term("a", "b")), 
-                          new SynonymQuery(new Term("a", "b"), new Term("a", "a")));
-  }
-  
-  public void testBogusParams() {
-    expectThrows(IllegalArgumentException.class, () -> {
-      new SynonymQuery(new Term("field1", "a"), new Term("field2", "b"));
-    });
-  }
+	public void testEquals() {
+		QueryUtils.checkEqual(new SynonymQuery(), new SynonymQuery());
+		QueryUtils.checkEqual(new SynonymQuery(new Term("foo", "bar")),
+			new SynonymQuery(new Term("foo", "bar")));
 
-  public void testToString() {
-    assertEquals("Synonym()", new SynonymQuery().toString());
-    Term t1 = new Term("foo", "bar");
-    assertEquals("Synonym(foo:bar)", new SynonymQuery(t1).toString());
-    Term t2 = new Term("foo", "baz");
-    assertEquals("Synonym(foo:bar foo:baz)", new SynonymQuery(t1, t2).toString());
-  }
+		QueryUtils.checkEqual(new SynonymQuery(new Term("a", "a"), new Term("a", "b")),
+			new SynonymQuery(new Term("a", "b"), new Term("a", "a")));
+	}
 
-  public void testScores() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+	public void testBogusParams() {
+		expectThrows(IllegalArgumentException.class, () -> {
+			new SynonymQuery(new Term("field1", "a"), new Term("field2", "b"));
+		});
+	}
 
-    Document doc = new Document();
-    doc.add(new StringField("f", "a", Store.NO));
-    w.addDocument(doc);
+	public void testToString() {
+		assertEquals("Synonym()", new SynonymQuery().toString());
+		Term t1 = new Term("foo", "bar");
+		assertEquals("Synonym(foo:bar)", new SynonymQuery(t1).toString());
+		Term t2 = new Term("foo", "baz");
+		assertEquals("Synonym(foo:bar foo:baz)", new SynonymQuery(t1, t2).toString());
+	}
 
-    doc = new Document();
-    doc.add(new StringField("f", "b", Store.NO));
-    for (int i = 0; i < 10; ++i) {
-      w.addDocument(doc);
-    }
+	public void testScores() throws IOException {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
 
-    IndexReader reader = w.getReader();
-    IndexSearcher searcher = newSearcher(reader);
-    SynonymQuery query = new SynonymQuery(new Term("f", "a"), new Term("f", "b"));
+		Document doc = new Document();
+		doc.add(new StringField("f", "a", Store.NO));
+		w.addDocument(doc);
 
-    TopDocs topDocs = searcher.search(query, 20);
-    assertEquals(11, topDocs.totalHits);
-    // All docs must have the same score
-    for (int i = 0; i < topDocs.scoreDocs.length; ++i) {
-      assertEquals(topDocs.scoreDocs[0].score, topDocs.scoreDocs[i].score, 0.0f);
-    }
+		doc = new Document();
+		doc.add(new StringField("f", "b", Store.NO));
+		for (int i = 0; i < 10; ++i) {
+			w.addDocument(doc);
+		}
 
-    reader.close();
-    w.close();
-    dir.close();
-  }
+		IndexReader reader = w.getReader();
+		IndexSearcher searcher = newSearcher(reader);
+		SynonymQuery query = new SynonymQuery(new Term("f", "a"), new Term("f", "b"));
+
+		TopDocs topDocs = searcher.search(query, 20);
+		assertEquals(11, topDocs.totalHits);
+		// All docs must have the same score
+		for (int i = 0; i < topDocs.scoreDocs.length; ++i) {
+			assertEquals(topDocs.scoreDocs[0].score, topDocs.scoreDocs[i].score, 0.0f);
+		}
+
+		reader.close();
+		w.close();
+		dir.close();
+	}
 
 }

@@ -31,61 +31,61 @@ import org.apache.lucene.util.bkd.BKDWriter;
 
 public class TestLatLonPointQueries extends BaseGeoPointTestCase {
 
-  @Override
-  protected void addPointToDoc(String field, Document doc, double lat, double lon) {
-    doc.add(new LatLonPoint(field, lat, lon));
-  }
+	@Override
+	protected void addPointToDoc(String field, Document doc, double lat, double lon) {
+		doc.add(new LatLonPoint(field, lat, lon));
+	}
 
-  @Override
-  protected Query newRectQuery(String field, double minLat, double maxLat, double minLon, double maxLon) {
-    return LatLonPoint.newBoxQuery(field, minLat, maxLat, minLon, maxLon);
-  }
+	@Override
+	protected Query newRectQuery(String field, double minLat, double maxLat, double minLon, double maxLon) {
+		return LatLonPoint.newBoxQuery(field, minLat, maxLat, minLon, maxLon);
+	}
 
-  @Override
-  protected Query newDistanceQuery(String field, double centerLat, double centerLon, double radiusMeters) {
-    return LatLonPoint.newDistanceQuery(field, centerLat, centerLon, radiusMeters);
-  }
+	@Override
+	protected Query newDistanceQuery(String field, double centerLat, double centerLon, double radiusMeters) {
+		return LatLonPoint.newDistanceQuery(field, centerLat, centerLon, radiusMeters);
+	}
 
-  @Override
-  protected Query newPolygonQuery(String field, Polygon... polygons) {
-    return LatLonPoint.newPolygonQuery(field, polygons);
-  }
+	@Override
+	protected Query newPolygonQuery(String field, Polygon... polygons) {
+		return LatLonPoint.newPolygonQuery(field, polygons);
+	}
 
-  @Override
-  protected double quantizeLat(double latRaw) {
-    return GeoEncodingUtils.decodeLatitude(GeoEncodingUtils.encodeLatitude(latRaw));
-  }
+	@Override
+	protected double quantizeLat(double latRaw) {
+		return GeoEncodingUtils.decodeLatitude(GeoEncodingUtils.encodeLatitude(latRaw));
+	}
 
-  @Override
-  protected double quantizeLon(double lonRaw) {
-    return GeoEncodingUtils.decodeLongitude(GeoEncodingUtils.encodeLongitude(lonRaw));
-  }
+	@Override
+	protected double quantizeLon(double lonRaw) {
+		return GeoEncodingUtils.decodeLongitude(GeoEncodingUtils.encodeLongitude(lonRaw));
+	}
 
-  public void testDistanceQueryWithInvertedIntersection() throws IOException {
-    final int numMatchingDocs = atLeast(10 * BKDWriter.DEFAULT_MAX_POINTS_IN_LEAF_NODE);
+	public void testDistanceQueryWithInvertedIntersection() throws IOException {
+		final int numMatchingDocs = atLeast(10 * BKDWriter.DEFAULT_MAX_POINTS_IN_LEAF_NODE);
 
-    try (Directory dir = newDirectory()) {
+		try (Directory dir = newDirectory()) {
 
-      try (IndexWriter w = new IndexWriter(dir, newIndexWriterConfig())) {
-        for (int i = 0; i < numMatchingDocs; ++i) {
-          Document doc = new Document();
-          addPointToDoc("field", doc, 18.313694, -65.227444);
-          w.addDocument(doc);
-        }
+			try (IndexWriter w = new IndexWriter(dir, newIndexWriterConfig())) {
+				for (int i = 0; i < numMatchingDocs; ++i) {
+					Document doc = new Document();
+					addPointToDoc("field", doc, 18.313694, -65.227444);
+					w.addDocument(doc);
+				}
 
-        // Add a handful of docs that don't match
-        for (int i = 0; i < 11; ++i) {
-          Document doc = new Document();
-          addPointToDoc("field", doc, 10, -65.227444);
-          w.addDocument(doc);
-        }
-        w.forceMerge(1);
-      }
+				// Add a handful of docs that don't match
+				for (int i = 0; i < 11; ++i) {
+					Document doc = new Document();
+					addPointToDoc("field", doc, 10, -65.227444);
+					w.addDocument(doc);
+				}
+				w.forceMerge(1);
+			}
 
-      try (IndexReader r = DirectoryReader.open(dir)) {
-        IndexSearcher searcher = newSearcher(r);
-        assertEquals(numMatchingDocs, searcher.count(newDistanceQuery("field", 18, -65, 50_000)));
-      }
-    }
-  }
+			try (IndexReader r = DirectoryReader.open(dir)) {
+				IndexSearcher searcher = newSearcher(r);
+				assertEquals(numMatchingDocs, searcher.count(newDistanceQuery("field", 18, -65, 50_000)));
+			}
+		}
+	}
 }

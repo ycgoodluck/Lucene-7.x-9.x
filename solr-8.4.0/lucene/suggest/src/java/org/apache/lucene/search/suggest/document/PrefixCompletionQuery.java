@@ -36,62 +36,66 @@ import org.apache.lucene.search.suggest.BitsProducer;
  * <pre class="prettyprint">
  *  CompletionQuery query = new PrefixCompletionQuery(analyzer, new Term("suggest_field", "sugg"));
  * </pre>
+ *
  * @lucene.experimental
  */
 public class PrefixCompletionQuery extends CompletionQuery {
-  /** Used to analyze the term text */
-  protected final CompletionAnalyzer analyzer;
+	/**
+	 * Used to analyze the term text
+	 */
+	protected final CompletionAnalyzer analyzer;
 
-  /**
-   * Calls {@link PrefixCompletionQuery#PrefixCompletionQuery(Analyzer, Term, BitsProducer)}
-   * with no filter
-   */
-  public PrefixCompletionQuery(Analyzer analyzer, Term term) {
-    this(analyzer, term, null);
-  }
+	/**
+	 * Calls {@link PrefixCompletionQuery#PrefixCompletionQuery(Analyzer, Term, BitsProducer)}
+	 * with no filter
+	 */
+	public PrefixCompletionQuery(Analyzer analyzer, Term term) {
+		this(analyzer, term, null);
+	}
 
-  /**
-   * Constructs an analyzed prefix completion query
-   *
-   * @param analyzer used to analyze the provided {@link Term#text()}
-   * @param term query is run against {@link Term#field()} and {@link Term#text()}
-   *             is analyzed with <code>analyzer</code>
-   * @param filter used to query on a sub set of documents
-   */
-  public PrefixCompletionQuery(Analyzer analyzer, Term term, BitsProducer filter) {
-    super(term, filter);
-    if (!(analyzer instanceof CompletionAnalyzer)) {
-      this.analyzer = new CompletionAnalyzer(analyzer);
-    } else {
-      this.analyzer = (CompletionAnalyzer) analyzer;
-    }
-  }
+	/**
+	 * Constructs an analyzed prefix completion query
+	 *
+	 * @param analyzer used to analyze the provided {@link Term#text()}
+	 * @param term     query is run against {@link Term#field()} and {@link Term#text()}
+	 *                 is analyzed with <code>analyzer</code>
+	 * @param filter   used to query on a sub set of documents
+	 */
+	public PrefixCompletionQuery(Analyzer analyzer, Term term, BitsProducer filter) {
+		super(term, filter);
+		if (!(analyzer instanceof CompletionAnalyzer)) {
+			this.analyzer = new CompletionAnalyzer(analyzer);
+		} else {
+			this.analyzer = (CompletionAnalyzer) analyzer;
+		}
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    try (CompletionTokenStream stream = (CompletionTokenStream) analyzer.tokenStream(getField(), getTerm().text())) {
-      return new CompletionWeight(this, stream.toAutomaton());
-    }
-  }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		try (CompletionTokenStream stream = (CompletionTokenStream) analyzer.tokenStream(getField(), getTerm().text())) {
+			return new CompletionWeight(this, stream.toAutomaton());
+		}
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    visitor.visitLeaf(this);
-  }
-  /**
-   * Gets the analyzer used to analyze the prefix.
-   */
-  public Analyzer getAnalyzer() {
-    return analyzer;
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		visitor.visitLeaf(this);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    throw new UnsupportedOperationException();
-  }
+	/**
+	 * Gets the analyzer used to analyze the prefix.
+	 */
+	public Analyzer getAnalyzer() {
+		return analyzer;
+	}
 
-  @Override
-  public int hashCode() {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public boolean equals(Object o) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int hashCode() {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -22,8 +22,8 @@ import org.apache.lucene.index.BaseTermVectorsFormatTestCase;
 import org.apache.lucene.util.TestUtil;
 
 public class TestLucene50TermVectorsFormat extends BaseTermVectorsFormatTestCase {
-  @Override
-  protected Codec getCodec() {
-    return TestUtil.getDefaultCodec();
-  }
+	@Override
+	protected Codec getCodec() {
+		return TestUtil.getDefaultCodec();
+	}
 }

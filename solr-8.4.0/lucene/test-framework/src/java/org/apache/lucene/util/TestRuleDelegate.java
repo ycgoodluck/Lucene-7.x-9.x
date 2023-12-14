@@ -27,18 +27,18 @@ import org.junit.runners.model.Statement;
  * contained in a an {@link AtomicReference}.
  */
 final class TestRuleDelegate<T extends TestRule> implements TestRule {
-  private AtomicReference<T> delegate;
+	private AtomicReference<T> delegate;
 
-  private TestRuleDelegate(AtomicReference<T> delegate) {
-    this.delegate = delegate;
-  }
+	private TestRuleDelegate(AtomicReference<T> delegate) {
+		this.delegate = delegate;
+	}
 
-  @Override
-  public Statement apply(Statement s, Description d) {
-    return delegate.get().apply(s, d);
-  }
+	@Override
+	public Statement apply(Statement s, Description d) {
+		return delegate.get().apply(s, d);
+	}
 
-  static <T extends TestRule> TestRuleDelegate<T> of(AtomicReference<T> delegate) {
-    return new TestRuleDelegate<>(delegate);
-  }
+	static <T extends TestRule> TestRuleDelegate<T> of(AtomicReference<T> delegate) {
+		return new TestRuleDelegate<>(delegate);
+	}
 }

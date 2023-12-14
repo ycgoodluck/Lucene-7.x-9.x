@@ -27,34 +27,34 @@ import org.apache.lucene.util.BytesRef;
  */
 public class UnionFieldMetadataBuilder {
 
-  private long minStartBlockFP;
-  private long maxEndBlockFP;
-  private BytesRef maxLastTerm;
+	private long minStartBlockFP;
+	private long maxEndBlockFP;
+	private BytesRef maxLastTerm;
 
-  public UnionFieldMetadataBuilder() {
-    reset();
-  }
+	public UnionFieldMetadataBuilder() {
+		reset();
+	}
 
-  public UnionFieldMetadataBuilder reset() {
-    maxEndBlockFP = Long.MIN_VALUE;
-    minStartBlockFP = Long.MAX_VALUE;
-    maxLastTerm = null;
-    return this;
-  }
+	public UnionFieldMetadataBuilder reset() {
+		maxEndBlockFP = Long.MIN_VALUE;
+		minStartBlockFP = Long.MAX_VALUE;
+		maxLastTerm = null;
+		return this;
+	}
 
-  public UnionFieldMetadataBuilder addFieldMetadata(FieldMetadata fieldMetadata) {
-    minStartBlockFP = Math.min(minStartBlockFP, fieldMetadata.getFirstBlockStartFP());
-    maxEndBlockFP = Math.max(maxEndBlockFP, fieldMetadata.getLastBlockStartFP());
-    if (maxLastTerm == null || maxLastTerm.compareTo(fieldMetadata.getLastTerm()) < 0) {
-      maxLastTerm = fieldMetadata.getLastTerm();
-    }
-    return this;
-  }
+	public UnionFieldMetadataBuilder addFieldMetadata(FieldMetadata fieldMetadata) {
+		minStartBlockFP = Math.min(minStartBlockFP, fieldMetadata.getFirstBlockStartFP());
+		maxEndBlockFP = Math.max(maxEndBlockFP, fieldMetadata.getLastBlockStartFP());
+		if (maxLastTerm == null || maxLastTerm.compareTo(fieldMetadata.getLastTerm()) < 0) {
+			maxLastTerm = fieldMetadata.getLastTerm();
+		}
+		return this;
+	}
 
-  public FieldMetadata build() {
-    if (maxLastTerm == null) {
-      throw new IllegalStateException("no field metadata was provided");
-    }
-    return new FieldMetadata(null, 0, false, minStartBlockFP, maxEndBlockFP, maxLastTerm);
-  }
+	public FieldMetadata build() {
+		if (maxLastTerm == null) {
+			throw new IllegalStateException("no field metadata was provided");
+		}
+		return new FieldMetadata(null, 0, false, minStartBlockFP, maxEndBlockFP, maxLastTerm);
+	}
 }

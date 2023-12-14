@@ -27,152 +27,152 @@ import java.util.Map;
 /**
  * Assists in the further separation of concerns between the view and the Ivy resolve report. The view looks at the
  * IvyNode in a unique way that can lead to expensive operations if we do not achieve this separation.
- * 
- * This class is copied from org/apache/ivyde/eclipse/resolvevisualizer/model/IvyNodeElement.java at 
+ * <p>
+ * This class is copied from org/apache/ivyde/eclipse/resolvevisualizer/model/IvyNodeElement.java at
  * https://svn.apache.org/repos/asf/ant/ivy/ivyde/trunk/org.apache.ivyde.eclipse.resolvevisualizer/src/
- *
+ * <p>
  * Changes include: uncommenting generics and converting to diamond operators where appropriate;
  * removing unnecessary casts; removing javadoc tags with no description; and adding a hashCode() implementation.
  */
 public class IvyNodeElement {
-  private ModuleRevisionId moduleRevisionId;
-  private boolean evicted = false;
-  private int depth = Integer.MAX_VALUE / 10;
-  private Collection<IvyNodeElement> dependencies = new HashSet<>();
-  private Collection<IvyNodeElement> callers = new HashSet<>();
-  private Collection<IvyNodeElement> conflicts = new HashSet<>();
+	private ModuleRevisionId moduleRevisionId;
+	private boolean evicted = false;
+	private int depth = Integer.MAX_VALUE / 10;
+	private Collection<IvyNodeElement> dependencies = new HashSet<>();
+	private Collection<IvyNodeElement> callers = new HashSet<>();
+	private Collection<IvyNodeElement> conflicts = new HashSet<>();
 
-  /**
-   * The caller configurations that caused this node to be reached in the resolution, grouped by caller.
-   */
-  private Map<IvyNodeElement,String[]>callerConfigurationMap = new HashMap<>();
+	/**
+	 * The caller configurations that caused this node to be reached in the resolution, grouped by caller.
+	 */
+	private Map<IvyNodeElement, String[]> callerConfigurationMap = new HashMap<>();
 
-  /**
-   * We try to avoid building the list of this nodes deep dependencies by storing them in this cache by depth level.
-   */
-  private IvyNodeElement[] deepDependencyCache;
-  
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof IvyNodeElement) {
-      IvyNodeElement elem = (IvyNodeElement) obj;
-      if (elem.getOrganization().equals(getOrganization()) && elem.getName().equals(getName())
-          && elem.getRevision().equals(getRevision()))
-        return true;
-    }
-    return false;
-  }
-  
-  @Override
-  public int hashCode() {
-    int result = 1;
-    result = result * 31 + (null == getOrganization() ? 0 : getOrganization().hashCode());
-    result = result * 31 + (null == getName() ? 0 : getName().hashCode());
-    result = result * 31 + (null == getRevision() ? 0 : getRevision().hashCode());
-    return result;
-  }
+	/**
+	 * We try to avoid building the list of this nodes deep dependencies by storing them in this cache by depth level.
+	 */
+	private IvyNodeElement[] deepDependencyCache;
 
-  public IvyNodeElement[] getDependencies() {
-    return dependencies.toArray(new IvyNodeElement[dependencies.size()]);
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof IvyNodeElement) {
+			IvyNodeElement elem = (IvyNodeElement) obj;
+			if (elem.getOrganization().equals(getOrganization()) && elem.getName().equals(getName())
+				&& elem.getRevision().equals(getRevision()))
+				return true;
+		}
+		return false;
+	}
 
-  /**
-   * Recursive dependency retrieval
-   *
-   * @return The array of nodes that represents a node's immediate and transitive dependencies down to an arbitrary
-   *         depth.
-   */
-  public IvyNodeElement[] getDeepDependencies() {
-    if (deepDependencyCache == null) {
-      Collection<IvyNodeElement> deepDependencies = getDeepDependencies(this);
-      deepDependencyCache = deepDependencies.toArray(new IvyNodeElement[deepDependencies.size()]);
-    }
-    return deepDependencyCache;
-  }
+	@Override
+	public int hashCode() {
+		int result = 1;
+		result = result * 31 + (null == getOrganization() ? 0 : getOrganization().hashCode());
+		result = result * 31 + (null == getName() ? 0 : getName().hashCode());
+		result = result * 31 + (null == getRevision() ? 0 : getRevision().hashCode());
+		return result;
+	}
 
-  /**
-   * Recursive dependency retrieval
-   */
-  private Collection<IvyNodeElement> getDeepDependencies(IvyNodeElement node) {
-    Collection<IvyNodeElement> deepDependencies = new HashSet<>();
-    deepDependencies.add(node);
+	public IvyNodeElement[] getDependencies() {
+		return dependencies.toArray(new IvyNodeElement[dependencies.size()]);
+	}
 
-    IvyNodeElement[] directDependencies = node.getDependencies();
-    for (int i = 0; i < directDependencies.length; i++) {
-      deepDependencies.addAll(getDeepDependencies(directDependencies[i]));
-    }
+	/**
+	 * Recursive dependency retrieval
+	 *
+	 * @return The array of nodes that represents a node's immediate and transitive dependencies down to an arbitrary
+	 * depth.
+	 */
+	public IvyNodeElement[] getDeepDependencies() {
+		if (deepDependencyCache == null) {
+			Collection<IvyNodeElement> deepDependencies = getDeepDependencies(this);
+			deepDependencyCache = deepDependencies.toArray(new IvyNodeElement[deepDependencies.size()]);
+		}
+		return deepDependencyCache;
+	}
 
-    return deepDependencies;
-  }
+	/**
+	 * Recursive dependency retrieval
+	 */
+	private Collection<IvyNodeElement> getDeepDependencies(IvyNodeElement node) {
+		Collection<IvyNodeElement> deepDependencies = new HashSet<>();
+		deepDependencies.add(node);
 
-  /**
-   * @return An array of configurations by which this module was resolved
-   */
-  public String[] getCallerConfigurations(IvyNodeElement caller) {
-    return callerConfigurationMap.get(caller);
-  }
+		IvyNodeElement[] directDependencies = node.getDependencies();
+		for (int i = 0; i < directDependencies.length; i++) {
+			deepDependencies.addAll(getDeepDependencies(directDependencies[i]));
+		}
 
-  public void setCallerConfigurations(IvyNodeElement caller, String[] configurations) {
-    callerConfigurationMap.put(caller, configurations);
-  }
+		return deepDependencies;
+	}
 
-  public String getOrganization() {
-    return moduleRevisionId.getOrganisation();
-  }
+	/**
+	 * @return An array of configurations by which this module was resolved
+	 */
+	public String[] getCallerConfigurations(IvyNodeElement caller) {
+		return callerConfigurationMap.get(caller);
+	}
 
-  public String getName() {
-    return moduleRevisionId.getName();
-  }
+	public void setCallerConfigurations(IvyNodeElement caller, String[] configurations) {
+		callerConfigurationMap.put(caller, configurations);
+	}
 
-  public String getRevision() {
-    return moduleRevisionId.getRevision();
-  }
+	public String getOrganization() {
+		return moduleRevisionId.getOrganisation();
+	}
 
-  public boolean isEvicted() {
-    return evicted;
-  }
+	public String getName() {
+		return moduleRevisionId.getName();
+	}
 
-  public void setEvicted(boolean evicted) {
-    this.evicted = evicted;
-  }
+	public String getRevision() {
+		return moduleRevisionId.getRevision();
+	}
 
-  public int getDepth() {
-    return depth;
-  }
+	public boolean isEvicted() {
+		return evicted;
+	}
 
-  /**
-   * Set this node's depth and recursively update the node's children to relative to the new value.
-   */
-  public void setDepth(int depth) {
-    this.depth = depth;
-    for (Iterator<IvyNodeElement> iter = dependencies.iterator(); iter.hasNext();) {
-      IvyNodeElement dependency = iter.next();
-      dependency.setDepth(depth + 1);
-    }
-  }
+	public void setEvicted(boolean evicted) {
+		this.evicted = evicted;
+	}
 
-  public IvyNodeElement[] getConflicts() {
-    return conflicts.toArray(new IvyNodeElement[conflicts.size()]);
-  }
+	public int getDepth() {
+		return depth;
+	}
 
-  public void setConflicts(Collection<IvyNodeElement> conflicts) {
-    this.conflicts = conflicts;
-  }
+	/**
+	 * Set this node's depth and recursively update the node's children to relative to the new value.
+	 */
+	public void setDepth(int depth) {
+		this.depth = depth;
+		for (Iterator<IvyNodeElement> iter = dependencies.iterator(); iter.hasNext(); ) {
+			IvyNodeElement dependency = iter.next();
+			dependency.setDepth(depth + 1);
+		}
+	}
 
-  public ModuleRevisionId getModuleRevisionId() {
-    return moduleRevisionId;
-  }
+	public IvyNodeElement[] getConflicts() {
+		return conflicts.toArray(new IvyNodeElement[conflicts.size()]);
+	}
 
-  public void setModuleRevisionId(ModuleRevisionId moduleRevisionId) {
-    this.moduleRevisionId = moduleRevisionId;
-  }
+	public void setConflicts(Collection<IvyNodeElement> conflicts) {
+		this.conflicts = conflicts;
+	}
 
-  public void addCaller(IvyNodeElement caller) {
-    callers.add(caller);
-    caller.dependencies.add(this);
-  }
+	public ModuleRevisionId getModuleRevisionId() {
+		return moduleRevisionId;
+	}
 
-  public IvyNodeElement[] getCallers() {
-    return callers.toArray(new IvyNodeElement[callers.size()]);
-  }
+	public void setModuleRevisionId(ModuleRevisionId moduleRevisionId) {
+		this.moduleRevisionId = moduleRevisionId;
+	}
+
+	public void addCaller(IvyNodeElement caller) {
+		callers.add(caller);
+		caller.dependencies.add(this);
+	}
+
+	public IvyNodeElement[] getCallers() {
+		return callers.toArray(new IvyNodeElement[callers.size()]);
+	}
 }

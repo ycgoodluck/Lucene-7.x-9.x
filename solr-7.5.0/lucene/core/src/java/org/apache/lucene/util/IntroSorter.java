@@ -23,80 +23,84 @@ package org.apache.lucene.util;
  * falls back to heapsort. This prevents quicksort from running into its
  * worst-case quadratic runtime. Small arrays are sorted with
  * insertion sort.
+ *
  * @lucene.internal
  */
 public abstract class IntroSorter extends Sorter {
 
-  /** Create a new {@link IntroSorter}. */
-  public IntroSorter() {}
+	/**
+	 * Create a new {@link IntroSorter}.
+	 */
+	public IntroSorter() {
+	}
 
-  @Override
-  public final void sort(int from, int to) {
-    checkRange(from, to);
-    quicksort(from, to, 2 * MathUtil.log(to - from, 2));
-  }
+	@Override
+	public final void sort(int from, int to) {
+		checkRange(from, to);
+		quicksort(from, to, 2 * MathUtil.log(to - from, 2));
+	}
 
-  // 快排的递归层数超过BINARY_SORT_THRESHOLD, 就使用堆排序
-  // 为了消除最坏的情况下时间复杂度为n^2的快排
-  void quicksort(int from, int to, int maxDepth) {
-    if (to - from < BINARY_SORT_THRESHOLD) {
-      binarySort(from, to);
-      return;
-    } else if (--maxDepth < 0) {
-      heapSort(from, to);
-      return;
-    }
+	// 快排的递归层数超过BINARY_SORT_THRESHOLD, 就使用堆排序
+	// 为了消除最坏的情况下时间复杂度为n^2的快排
+	void quicksort(int from, int to, int maxDepth) {
+		if (to - from < BINARY_SORT_THRESHOLD) {
+			binarySort(from, to);
+			return;
+		} else if (--maxDepth < 0) {
+			heapSort(from, to);
+			return;
+		}
 
-    final int mid = (from + to) >>> 1;
+		final int mid = (from + to) >>> 1;
 
-    if (compare(from, mid) > 0) {
-      swap(from, mid);
-    }
+		if (compare(from, mid) > 0) {
+			swap(from, mid);
+		}
 
-    if (compare(mid, to - 1) > 0) {
-      swap(mid, to - 1);
-      if (compare(from, mid) > 0) {
-        swap(from, mid);
-      }
-    }
+		if (compare(mid, to - 1) > 0) {
+			swap(mid, to - 1);
+			if (compare(from, mid) > 0) {
+				swap(from, mid);
+			}
+		}
 
-    int left = from + 1;
-    int right = to - 2;
+		int left = from + 1;
+		int right = to - 2;
 
-    setPivot(mid);
-    for (;;) {
-      while (comparePivot(right) < 0) {
-        --right;
-      }
+		setPivot(mid);
+		for (; ; ) {
+			while (comparePivot(right) < 0) {
+				--right;
+			}
 
-      while (left < right && comparePivot(left) >= 0) {
-        ++left;
-      }
+			while (left < right && comparePivot(left) >= 0) {
+				++left;
+			}
 
-      if (left < right) {
-        swap(left, right);
-        --right;
-      } else {
-        break;
-      }
-    }
+			if (left < right) {
+				swap(left, right);
+				--right;
+			} else {
+				break;
+			}
+		}
 
-    quicksort(from, left + 1, maxDepth);
-    quicksort(left + 1, to, maxDepth);
-  }
+		quicksort(from, left + 1, maxDepth);
+		quicksort(left + 1, to, maxDepth);
+	}
 
-  // Don't rely on the slow default impl of setPivot/comparePivot since
-  // quicksort relies on these methods to be fast for good performance
+	// Don't rely on the slow default impl of setPivot/comparePivot since
+	// quicksort relies on these methods to be fast for good performance
 
-  @Override
-  protected abstract void setPivot(int i);
+	@Override
+	protected abstract void setPivot(int i);
 
-  @Override
-  protected abstract int comparePivot(int j);
+	@Override
+	protected abstract int comparePivot(int j);
 
-  @Override
-  protected int compare(int i, int j) {
-    setPivot(i);
-    return comparePivot(j);
-  }
+	@Override
+	protected int compare(int i, int j) {
+		setPivot(i);
+		return comparePivot(j);
+	}
 }

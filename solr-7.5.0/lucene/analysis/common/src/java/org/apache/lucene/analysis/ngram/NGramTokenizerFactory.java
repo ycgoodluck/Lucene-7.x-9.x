@@ -35,22 +35,26 @@ import java.util.Map;
  * &lt;/fieldType&gt;</pre>
  */
 public class NGramTokenizerFactory extends TokenizerFactory {
-  private final int maxGramSize;
-  private final int minGramSize;
+	private final int maxGramSize;
+	private final int minGramSize;
 
-  /** Creates a new NGramTokenizerFactory */
-  public NGramTokenizerFactory(Map<String, String> args) {
-    super(args);
-    minGramSize = getInt(args, "minGramSize", NGramTokenizer.DEFAULT_MIN_NGRAM_SIZE);
-    maxGramSize = getInt(args, "maxGramSize", NGramTokenizer.DEFAULT_MAX_NGRAM_SIZE);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  /** Creates the {@link TokenStream} of n-grams from the given {@link Reader} and {@link AttributeFactory}. */
-  @Override
-  public Tokenizer create(AttributeFactory factory) {
-    return new NGramTokenizer(factory, minGramSize, maxGramSize);
-  }
+	/**
+	 * Creates a new NGramTokenizerFactory
+	 */
+	public NGramTokenizerFactory(Map<String, String> args) {
+		super(args);
+		minGramSize = getInt(args, "minGramSize", NGramTokenizer.DEFAULT_MIN_NGRAM_SIZE);
+		maxGramSize = getInt(args, "maxGramSize", NGramTokenizer.DEFAULT_MAX_NGRAM_SIZE);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	/**
+	 * Creates the {@link TokenStream} of n-grams from the given {@link Reader} and {@link AttributeFactory}.
+	 */
+	@Override
+	public Tokenizer create(AttributeFactory factory) {
+		return new NGramTokenizer(factory, minGramSize, maxGramSize);
+	}
 }

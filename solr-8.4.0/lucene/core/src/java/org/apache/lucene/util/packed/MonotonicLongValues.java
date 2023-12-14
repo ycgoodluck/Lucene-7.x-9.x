@@ -25,79 +25,79 @@ import org.apache.lucene.util.packed.PackedInts.Reader;
 
 class MonotonicLongValues extends DeltaPackedLongValues {
 
-  private static final long BASE_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(MonotonicLongValues.class);
+	private static final long BASE_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(MonotonicLongValues.class);
 
-  final float[] averages;
+	final float[] averages;
 
-  MonotonicLongValues(int pageShift, int pageMask, Reader[] values, long[] mins, float[] averages, long size, long ramBytesUsed) {
-    super(pageShift, pageMask, values, mins, size, ramBytesUsed);
-    assert values.length == averages.length;
-    this.averages = averages;
-  }
+	MonotonicLongValues(int pageShift, int pageMask, Reader[] values, long[] mins, float[] averages, long size, long ramBytesUsed) {
+		super(pageShift, pageMask, values, mins, size, ramBytesUsed);
+		assert values.length == averages.length;
+		this.averages = averages;
+	}
 
-  @Override
-  long get(int block, int element) {
-    return expected(mins[block], averages[block], element) + values[block].get(element);
-  }
+	@Override
+	long get(int block, int element) {
+		return expected(mins[block], averages[block], element) + values[block].get(element);
+	}
 
-  @Override
-  int decodeBlock(int block, long[] dest) {
-    final int count = super.decodeBlock(block, dest);
-    final float average = averages[block];
-    for (int i = 0; i < count; ++i) {
-      dest[i] += expected(0, average, i);
-    }
-    return count;
-  }
+	@Override
+	int decodeBlock(int block, long[] dest) {
+		final int count = super.decodeBlock(block, dest);
+		final float average = averages[block];
+		for (int i = 0; i < count; ++i) {
+			dest[i] += expected(0, average, i);
+		}
+		return count;
+	}
 
-  static class Builder extends DeltaPackedLongValues.Builder {
+	static class Builder extends DeltaPackedLongValues.Builder {
 
-    private static final long BASE_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(Builder.class);
+		private static final long BASE_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(Builder.class);
 
-    float[] averages;
+		float[] averages;
 
-    Builder(int pageSize, float acceptableOverheadRatio) {
-      super(pageSize, acceptableOverheadRatio);
-      averages = new float[values.length];
-      ramBytesUsed += RamUsageEstimator.sizeOf(averages);
-    }
+		Builder(int pageSize, float acceptableOverheadRatio) {
+			super(pageSize, acceptableOverheadRatio);
+			averages = new float[values.length];
+			ramBytesUsed += RamUsageEstimator.sizeOf(averages);
+		}
 
-    @Override
-    long baseRamBytesUsed() {
-      return BASE_RAM_BYTES_USED;
-    }
+		@Override
+		long baseRamBytesUsed() {
+			return BASE_RAM_BYTES_USED;
+		}
 
-    @Override
-    public MonotonicLongValues build() {
-      finish();
-      pending = null;
-      final PackedInts.Reader[] values = ArrayUtil.copyOfSubArray(this.values, 0, valuesOff);
-      final long[] mins = ArrayUtil.copyOfSubArray(this.mins, 0, valuesOff);
-      final float[] averages = ArrayUtil.copyOfSubArray(this.averages, 0, valuesOff);
-      final long ramBytesUsed = MonotonicLongValues.BASE_RAM_BYTES_USED
-          + RamUsageEstimator.sizeOf(values) + RamUsageEstimator.sizeOf(mins)
-          + RamUsageEstimator.sizeOf(averages);
-      return new MonotonicLongValues(pageShift, pageMask, values, mins, averages, size, ramBytesUsed);
-    }
+		@Override
+		public MonotonicLongValues build() {
+			finish();
+			pending = null;
+			final PackedInts.Reader[] values = ArrayUtil.copyOfSubArray(this.values, 0, valuesOff);
+			final long[] mins = ArrayUtil.copyOfSubArray(this.mins, 0, valuesOff);
+			final float[] averages = ArrayUtil.copyOfSubArray(this.averages, 0, valuesOff);
+			final long ramBytesUsed = MonotonicLongValues.BASE_RAM_BYTES_USED
+				+ RamUsageEstimator.sizeOf(values) + RamUsageEstimator.sizeOf(mins)
+				+ RamUsageEstimator.sizeOf(averages);
+			return new MonotonicLongValues(pageShift, pageMask, values, mins, averages, size, ramBytesUsed);
+		}
 
-    @Override
-    void pack(long[] values, int numValues, int block, float acceptableOverheadRatio) {
-      final float average = numValues == 1 ? 0 : (float) (values[numValues - 1] - values[0]) / (numValues - 1);
-      for (int i = 0; i < numValues; ++i) {
-        values[i] -= expected(0, average, i);
-      }
-      super.pack(values, numValues, block, acceptableOverheadRatio);
-      averages[block] = average;
-    }
+		@Override
+		void pack(long[] values, int numValues, int block, float acceptableOverheadRatio) {
+			final float average = numValues == 1 ? 0 : (float) (values[numValues - 1] - values[0]) / (numValues - 1);
+			for (int i = 0; i < numValues; ++i) {
+				values[i] -= expected(0, average, i);
+			}
+			super.pack(values, numValues, block, acceptableOverheadRatio);
+			averages[block] = average;
+		}
 
-    @Override
-    void grow(int newBlockCount) {
-      super.grow(newBlockCount);
-      ramBytesUsed -= RamUsageEstimator.sizeOf(averages);
-      averages = ArrayUtil.growExact(averages, newBlockCount);
-      ramBytesUsed += RamUsageEstimator.sizeOf(averages);
-    }
+		@Override
+		void grow(int newBlockCount) {
+			super.grow(newBlockCount);
+			ramBytesUsed -= RamUsageEstimator.sizeOf(averages);
+			averages = ArrayUtil.growExact(averages, newBlockCount);
+			ramBytesUsed += RamUsageEstimator.sizeOf(averages);
+		}
 
-  }
+	}
 
 }

@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Models and APIs for various index manipulation */
+/**
+ * Models and APIs for various index manipulation
+ */
 package org.apache.lucene.luke.models.tools;

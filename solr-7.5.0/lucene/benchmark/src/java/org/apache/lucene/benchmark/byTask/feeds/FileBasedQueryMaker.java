@@ -34,69 +34,68 @@ import java.util.List;
 /**
  * Create queries from a FileReader.  One per line, pass them through the
  * QueryParser.  Lines beginning with # are treated as comments
- *
+ * <p>
  * File can be specified as a absolute, relative or resource.
  * Two properties can be set:
  * file.query.maker.file=&lt;Full path to file containing queries&gt;
  * <br>
  * file.query.maker.default.field=&lt;Name of default field - Default value is "body"&gt;
- *
+ * <p>
  * Example:
  * file.query.maker.file=c:/myqueries.txt
  * file.query.maker.default.field=body
  */
-public class FileBasedQueryMaker extends AbstractQueryMaker implements QueryMaker{
+public class FileBasedQueryMaker extends AbstractQueryMaker implements QueryMaker {
 
 
-  @Override
-  protected Query[] prepareQueries() throws Exception {
+	@Override
+	protected Query[] prepareQueries() throws Exception {
 
-    Analyzer anlzr = NewAnalyzerTask.createAnalyzer(config.get("analyzer",
-            "org.apache.lucene.analysis.standard.StandardAnalyzer"));
-    String defaultField = config.get("file.query.maker.default.field", DocMaker.BODY_FIELD);
-    QueryParser qp = new QueryParser(defaultField, anlzr);
-    qp.setAllowLeadingWildcard(true);
+		Analyzer anlzr = NewAnalyzerTask.createAnalyzer(config.get("analyzer",
+			"org.apache.lucene.analysis.standard.StandardAnalyzer"));
+		String defaultField = config.get("file.query.maker.default.field", DocMaker.BODY_FIELD);
+		QueryParser qp = new QueryParser(defaultField, anlzr);
+		qp.setAllowLeadingWildcard(true);
 
-    List<Query> qq = new ArrayList<>();
-    String fileName = config.get("file.query.maker.file", null);
-    if (fileName != null)
-    {
-      Path path = Paths.get(fileName);
-      Reader reader = null;
-      // note: we use a decoding reader, so if your queries are screwed up you know
-      if (Files.exists(path)) {
-        reader = Files.newBufferedReader(path, StandardCharsets.UTF_8);
-      } else {
-        //see if we can find it as a resource
-        InputStream asStream = FileBasedQueryMaker.class.getClassLoader().getResourceAsStream(fileName);
-        if (asStream != null) {
-          reader = IOUtils.getDecodingReader(asStream, StandardCharsets.UTF_8);
-        }
-      }
-      if (reader != null) {
-        try {
-          BufferedReader buffered = new BufferedReader(reader);
-          String line = null;
-          int lineNum = 0;
-          while ((line = buffered.readLine()) != null) {
-            line = line.trim();
-            if (line.length() != 0 && !line.startsWith("#")) {
-              try {
-                qq.add(qp.parse(line));
-              } catch (ParseException e) {
-                System.err.println("Exception: " + e.getMessage() + " occurred while parsing line: " + lineNum + " Text: " + line);
-              }
-            }
-            lineNum++;
-          }
-        } finally {
-          reader.close();
-        }
-      } else {
-        System.err.println("No Reader available for: " + fileName);
-      }
-      
-    }
-    return qq.toArray(new Query[qq.size()]) ;
-  }
+		List<Query> qq = new ArrayList<>();
+		String fileName = config.get("file.query.maker.file", null);
+		if (fileName != null) {
+			Path path = Paths.get(fileName);
+			Reader reader = null;
+			// note: we use a decoding reader, so if your queries are screwed up you know
+			if (Files.exists(path)) {
+				reader = Files.newBufferedReader(path, StandardCharsets.UTF_8);
+			} else {
+				//see if we can find it as a resource
+				InputStream asStream = FileBasedQueryMaker.class.getClassLoader().getResourceAsStream(fileName);
+				if (asStream != null) {
+					reader = IOUtils.getDecodingReader(asStream, StandardCharsets.UTF_8);
+				}
+			}
+			if (reader != null) {
+				try {
+					BufferedReader buffered = new BufferedReader(reader);
+					String line = null;
+					int lineNum = 0;
+					while ((line = buffered.readLine()) != null) {
+						line = line.trim();
+						if (line.length() != 0 && !line.startsWith("#")) {
+							try {
+								qq.add(qp.parse(line));
+							} catch (ParseException e) {
+								System.err.println("Exception: " + e.getMessage() + " occurred while parsing line: " + lineNum + " Text: " + line);
+							}
+						}
+						lineNum++;
+					}
+				} finally {
+					reader.close();
+				}
+			} else {
+				System.err.println("No Reader available for: " + fileName);
+			}
+
+		}
+		return qq.toArray(new Query[qq.size()]);
+	}
 }

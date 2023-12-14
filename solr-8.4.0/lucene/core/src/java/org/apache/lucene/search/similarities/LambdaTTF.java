@@ -21,36 +21,40 @@ import org.apache.lucene.search.Explanation;
 
 /**
  * Computes lambda as {@code totalTermFreq+1 / numberOfDocuments+1}.
+ *
  * @lucene.experimental
  */
-public class LambdaTTF extends Lambda {  
-  
-  /** Sole constructor: parameter-free */
-  public LambdaTTF() {}
+public class LambdaTTF extends Lambda {
 
-  @Override
-  public final float lambda(BasicStats stats) {
-    float lambda = (float) ((stats.getTotalTermFreq() + 1.0) / (stats.getNumberOfDocuments() + 1.0));
-    if (lambda == 1) {
-      // Distribution SPL cannot work with values of lambda that are equal to 1
-      lambda = Math.nextUp(lambda);
-    }
-    return lambda;
-  }
+	/**
+	 * Sole constructor: parameter-free
+	 */
+	public LambdaTTF() {
+	}
 
-  public final Explanation explain(BasicStats stats) {
-    return Explanation.match(
-        lambda(stats),
-        getClass().getSimpleName()
-            + ", computed as (F + 1) / (N + 1) from:",
-        Explanation.match(stats.getTotalTermFreq(),
-            "F, total number of occurrences of term across all documents"),
-        Explanation.match(stats.getNumberOfDocuments(),
-            "N, total number of documents with field"));
-  }
+	@Override
+	public final float lambda(BasicStats stats) {
+		float lambda = (float) ((stats.getTotalTermFreq() + 1.0) / (stats.getNumberOfDocuments() + 1.0));
+		if (lambda == 1) {
+			// Distribution SPL cannot work with values of lambda that are equal to 1
+			lambda = Math.nextUp(lambda);
+		}
+		return lambda;
+	}
 
-  @Override
-  public String toString() {
-    return "L";
-  }
+	public final Explanation explain(BasicStats stats) {
+		return Explanation.match(
+			lambda(stats),
+			getClass().getSimpleName()
+				+ ", computed as (F + 1) / (N + 1) from:",
+			Explanation.match(stats.getTotalTermFreq(),
+				"F, total number of occurrences of term across all documents"),
+			Explanation.match(stats.getNumberOfDocuments(),
+				"N, total number of documents with field"));
+	}
+
+	@Override
+	public String toString() {
+		return "L";
+	}
 }

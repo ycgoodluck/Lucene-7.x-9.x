@@ -33,214 +33,214 @@ import org.apache.lucene.util.PriorityQueue;
 
 /**
  * A {@link MatchesIterator} that combines matches from a set of sub-iterators
- *
+ * <p>
  * Matches are sorted by their start positions, and then by their end positions, so that
  * prefixes sort first.  Matches may overlap, or be duplicated if they appear in more
  * than one of the sub-iterators.
  */
 final class DisjunctionMatchesIterator implements MatchesIterator {
 
-  /**
-   * Create a {@link DisjunctionMatchesIterator} over a list of terms
-   *
-   * Only terms that have at least one match in the given document will be included
-   */
-  static MatchesIterator fromTerms(LeafReaderContext context, int doc, Query query, String field, List<Term> terms) throws IOException {
-    Objects.requireNonNull(field);
-    for (Term term : terms) {
-      if (Objects.equals(field, term.field()) == false) {
-        throw new IllegalArgumentException("Tried to generate iterator from terms in multiple fields: expected [" + field + "] but got [" + term.field() + "]");
-      }
-    }
-    return fromTermsEnum(context, doc, query, field, asBytesRefIterator(terms));
-  }
+	/**
+	 * Create a {@link DisjunctionMatchesIterator} over a list of terms
+	 * <p>
+	 * Only terms that have at least one match in the given document will be included
+	 */
+	static MatchesIterator fromTerms(LeafReaderContext context, int doc, Query query, String field, List<Term> terms) throws IOException {
+		Objects.requireNonNull(field);
+		for (Term term : terms) {
+			if (Objects.equals(field, term.field()) == false) {
+				throw new IllegalArgumentException("Tried to generate iterator from terms in multiple fields: expected [" + field + "] but got [" + term.field() + "]");
+			}
+		}
+		return fromTermsEnum(context, doc, query, field, asBytesRefIterator(terms));
+	}
 
-  private static BytesRefIterator asBytesRefIterator(List<Term> terms) {
-    return new BytesRefIterator() {
-      int i = 0;
-      @Override
-      public BytesRef next() {
-        if (i >= terms.size())
-          return null;
-        return terms.get(i++).bytes();
-      }
-    };
-  }
+	private static BytesRefIterator asBytesRefIterator(List<Term> terms) {
+		return new BytesRefIterator() {
+			int i = 0;
 
-  /**
-   * Create a {@link DisjunctionMatchesIterator} over a list of terms extracted from a {@link BytesRefIterator}
-   *
-   * Only terms that have at least one match in the given document will be included
-   */
-  static MatchesIterator fromTermsEnum(LeafReaderContext context, int doc, Query query, String field, BytesRefIterator terms) throws IOException {
-    Objects.requireNonNull(field);
-    Terms t = context.reader().terms(field);
-    if (t == null)
-      return null;
-    TermsEnum te = t.iterator();
-    PostingsEnum reuse = null;
-    for (BytesRef term = terms.next(); term != null; term = terms.next()) {
-      if (te.seekExact(term)) {
-        PostingsEnum pe = te.postings(reuse, PostingsEnum.OFFSETS);
-        if (pe.advance(doc) == doc) {
-          return new TermsEnumDisjunctionMatchesIterator(new TermMatchesIterator(query, pe), terms, te, doc, query);
-        }
-        else {
-          reuse = pe;
-        }
-      }
-    }
-    return null;
-  }
+			@Override
+			public BytesRef next() {
+				if (i >= terms.size())
+					return null;
+				return terms.get(i++).bytes();
+			}
+		};
+	}
 
-  // MatchesIterator over a set of terms that only loads the first matching term at construction,
-  // waiting until the iterator is actually used before it loads all other matching terms.
-  private static class TermsEnumDisjunctionMatchesIterator implements MatchesIterator {
+	/**
+	 * Create a {@link DisjunctionMatchesIterator} over a list of terms extracted from a {@link BytesRefIterator}
+	 * <p>
+	 * Only terms that have at least one match in the given document will be included
+	 */
+	static MatchesIterator fromTermsEnum(LeafReaderContext context, int doc, Query query, String field, BytesRefIterator terms) throws IOException {
+		Objects.requireNonNull(field);
+		Terms t = context.reader().terms(field);
+		if (t == null)
+			return null;
+		TermsEnum te = t.iterator();
+		PostingsEnum reuse = null;
+		for (BytesRef term = terms.next(); term != null; term = terms.next()) {
+			if (te.seekExact(term)) {
+				PostingsEnum pe = te.postings(reuse, PostingsEnum.OFFSETS);
+				if (pe.advance(doc) == doc) {
+					return new TermsEnumDisjunctionMatchesIterator(new TermMatchesIterator(query, pe), terms, te, doc, query);
+				} else {
+					reuse = pe;
+				}
+			}
+		}
+		return null;
+	}
 
-    private final MatchesIterator first;
-    private final BytesRefIterator terms;
-    private final TermsEnum te;
-    private final int doc;
-    private final Query query;
+	// MatchesIterator over a set of terms that only loads the first matching term at construction,
+	// waiting until the iterator is actually used before it loads all other matching terms.
+	private static class TermsEnumDisjunctionMatchesIterator implements MatchesIterator {
 
-    private MatchesIterator it = null;
+		private final MatchesIterator first;
+		private final BytesRefIterator terms;
+		private final TermsEnum te;
+		private final int doc;
+		private final Query query;
 
-    TermsEnumDisjunctionMatchesIterator(MatchesIterator first, BytesRefIterator terms, TermsEnum te, int doc, Query query) {
-      this.first = first;
-      this.terms = terms;
-      this.te = te;
-      this.doc = doc;
-      this.query = query;
-    }
+		private MatchesIterator it = null;
 
-    private void init() throws IOException {
-      List<MatchesIterator> mis = new ArrayList<>();
-      mis.add(first);
-      PostingsEnum reuse = null;
-      for (BytesRef term = terms.next(); term != null; term = terms.next()) {
-        if (te.seekExact(term)) {
-          PostingsEnum pe = te.postings(reuse, PostingsEnum.OFFSETS);
-          if (pe.advance(doc) == doc) {
-            mis.add(new TermMatchesIterator(query, pe));
-            reuse = null;
-          } else {
-            reuse = pe;
-          }
-        }
-      }
-      it = fromSubIterators(mis);
-    }
+		TermsEnumDisjunctionMatchesIterator(MatchesIterator first, BytesRefIterator terms, TermsEnum te, int doc, Query query) {
+			this.first = first;
+			this.terms = terms;
+			this.te = te;
+			this.doc = doc;
+			this.query = query;
+		}
 
-    @Override
-    public boolean next() throws IOException {
-      if (it == null) {
-        init();
-      }
-      assert it != null;
-      return it.next();
-    }
+		private void init() throws IOException {
+			List<MatchesIterator> mis = new ArrayList<>();
+			mis.add(first);
+			PostingsEnum reuse = null;
+			for (BytesRef term = terms.next(); term != null; term = terms.next()) {
+				if (te.seekExact(term)) {
+					PostingsEnum pe = te.postings(reuse, PostingsEnum.OFFSETS);
+					if (pe.advance(doc) == doc) {
+						mis.add(new TermMatchesIterator(query, pe));
+						reuse = null;
+					} else {
+						reuse = pe;
+					}
+				}
+			}
+			it = fromSubIterators(mis);
+		}
 
-    @Override
-    public int startPosition() {
-      return it.startPosition();
-    }
+		@Override
+		public boolean next() throws IOException {
+			if (it == null) {
+				init();
+			}
+			assert it != null;
+			return it.next();
+		}
 
-    @Override
-    public int endPosition() {
-      return it.endPosition();
-    }
+		@Override
+		public int startPosition() {
+			return it.startPosition();
+		}
 
-    @Override
-    public int startOffset() throws IOException {
-      return it.startOffset();
-    }
+		@Override
+		public int endPosition() {
+			return it.endPosition();
+		}
 
-    @Override
-    public int endOffset() throws IOException {
-      return it.endOffset();
-    }
+		@Override
+		public int startOffset() throws IOException {
+			return it.startOffset();
+		}
 
-    @Override
-    public MatchesIterator getSubMatches() throws IOException {
-      return it.getSubMatches();
-    }
+		@Override
+		public int endOffset() throws IOException {
+			return it.endOffset();
+		}
 
-    @Override
-    public Query getQuery() {
-      return it.getQuery();
-    }
-  }
+		@Override
+		public MatchesIterator getSubMatches() throws IOException {
+			return it.getSubMatches();
+		}
 
-  static MatchesIterator fromSubIterators(List<MatchesIterator> mis) throws IOException {
-    if (mis.size() == 0)
-      return null;
-    if (mis.size() == 1)
-      return mis.get(0);
-    return new DisjunctionMatchesIterator(mis);
-  }
+		@Override
+		public Query getQuery() {
+			return it.getQuery();
+		}
+	}
 
-  private final PriorityQueue<MatchesIterator> queue;
+	static MatchesIterator fromSubIterators(List<MatchesIterator> mis) throws IOException {
+		if (mis.size() == 0)
+			return null;
+		if (mis.size() == 1)
+			return mis.get(0);
+		return new DisjunctionMatchesIterator(mis);
+	}
 
-  private boolean started = false;
+	private final PriorityQueue<MatchesIterator> queue;
 
-  private DisjunctionMatchesIterator(List<MatchesIterator> matches) throws IOException {
-    queue = new PriorityQueue<MatchesIterator>(matches.size()){
-      @Override
-      protected boolean lessThan(MatchesIterator a, MatchesIterator b) {
-        return a.startPosition() < b.startPosition() ||
-            (a.startPosition() == b.startPosition() && a.endPosition() < b.endPosition()) ||
-            (a.startPosition() == b.startPosition() && a.endPosition() == b.endPosition());
-      }
-    };
-    for (MatchesIterator mi : matches) {
-      if (mi.next()) {
-        queue.add(mi);
-      }
-    }
-  }
+	private boolean started = false;
 
-  @Override
-  public boolean next() throws IOException {
-    if (started == false) {
-      return started = true;
-    }
-    if (queue.top().next() == false) {
-      queue.pop();
-    }
-    if (queue.size() > 0) {
-      queue.updateTop();
-      return true;
-    }
-    return false;
-  }
+	private DisjunctionMatchesIterator(List<MatchesIterator> matches) throws IOException {
+		queue = new PriorityQueue<MatchesIterator>(matches.size()) {
+			@Override
+			protected boolean lessThan(MatchesIterator a, MatchesIterator b) {
+				return a.startPosition() < b.startPosition() ||
+					(a.startPosition() == b.startPosition() && a.endPosition() < b.endPosition()) ||
+					(a.startPosition() == b.startPosition() && a.endPosition() == b.endPosition());
+			}
+		};
+		for (MatchesIterator mi : matches) {
+			if (mi.next()) {
+				queue.add(mi);
+			}
+		}
+	}
 
-  @Override
-  public int startPosition() {
-    return queue.top().startPosition();
-  }
+	@Override
+	public boolean next() throws IOException {
+		if (started == false) {
+			return started = true;
+		}
+		if (queue.top().next() == false) {
+			queue.pop();
+		}
+		if (queue.size() > 0) {
+			queue.updateTop();
+			return true;
+		}
+		return false;
+	}
 
-  @Override
-  public int endPosition() {
-    return queue.top().endPosition();
-  }
+	@Override
+	public int startPosition() {
+		return queue.top().startPosition();
+	}
 
-  @Override
-  public int startOffset() throws IOException {
-    return queue.top().startOffset();
-  }
+	@Override
+	public int endPosition() {
+		return queue.top().endPosition();
+	}
 
-  @Override
-  public int endOffset() throws IOException {
-    return queue.top().endOffset();
-  }
+	@Override
+	public int startOffset() throws IOException {
+		return queue.top().startOffset();
+	}
 
-  @Override
-  public MatchesIterator getSubMatches() throws IOException {
-    return queue.top().getSubMatches();
-  }
+	@Override
+	public int endOffset() throws IOException {
+		return queue.top().endOffset();
+	}
 
-  @Override
-  public Query getQuery() {
-    return queue.top().getQuery();
-  }
+	@Override
+	public MatchesIterator getSubMatches() throws IOException {
+		return queue.top().getSubMatches();
+	}
+
+	@Override
+	public Query getQuery() {
+		return queue.top().getQuery();
+	}
 }

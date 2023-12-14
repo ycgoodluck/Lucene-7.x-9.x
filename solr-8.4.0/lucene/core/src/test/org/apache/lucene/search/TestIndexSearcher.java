@@ -47,222 +47,224 @@ import org.apache.lucene.util.TestUtil;
 import org.junit.Test;
 
 public class TestIndexSearcher extends LuceneTestCase {
-  Directory dir;
-  IndexReader reader;
+	Directory dir;
+	IndexReader reader;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    dir = newDirectory();
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
-    for (int i = 0; i < 100; i++) {
-      Document doc = new Document();
-      doc.add(newStringField("field", Integer.toString(i), Field.Store.NO));
-      doc.add(newStringField("field2", Boolean.toString(i % 2 == 0), Field.Store.NO));
-      doc.add(new SortedDocValuesField("field2", new BytesRef(Boolean.toString(i % 2 == 0))));
-      iw.addDocument(doc);
-    }
-    reader = iw.getReader();
-    iw.close();
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		dir = newDirectory();
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
+		for (int i = 0; i < 100; i++) {
+			Document doc = new Document();
+			doc.add(newStringField("field", Integer.toString(i), Field.Store.NO));
+			doc.add(newStringField("field2", Boolean.toString(i % 2 == 0), Field.Store.NO));
+			doc.add(new SortedDocValuesField("field2", new BytesRef(Boolean.toString(i % 2 == 0))));
+			iw.addDocument(doc);
+		}
+		reader = iw.getReader();
+		iw.close();
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    super.tearDown();
-    reader.close();
-    dir.close();
-  }
+	@Override
+	public void tearDown() throws Exception {
+		super.tearDown();
+		reader.close();
+		dir.close();
+	}
 
-  // should not throw exception
-  public void testHugeN() throws Exception {
-    ExecutorService service = new ThreadPoolExecutor(4, 4, 0L, TimeUnit.MILLISECONDS,
-                                   new LinkedBlockingQueue<Runnable>(),
-                                   new NamedThreadFactory("TestIndexSearcher"));
+	// should not throw exception
+	public void testHugeN() throws Exception {
+		ExecutorService service = new ThreadPoolExecutor(4, 4, 0L, TimeUnit.MILLISECONDS,
+			new LinkedBlockingQueue<Runnable>(),
+			new NamedThreadFactory("TestIndexSearcher"));
 
-    IndexSearcher searchers[] = new IndexSearcher[] {
-        new IndexSearcher(reader),
-        new IndexSearcher(reader, service)
-    };
-    Query queries[] = new Query[] {
-        new MatchAllDocsQuery(),
-        new TermQuery(new Term("field", "1"))
-    };
-    Sort sorts[] = new Sort[] {
-        null,
-        new Sort(new SortField("field2", SortField.Type.STRING))
-    };
-    ScoreDoc afters[] = new ScoreDoc[] {
-        null,
-        new FieldDoc(0, 0f, new Object[] { new BytesRef("boo!") })
-    };
+		IndexSearcher searchers[] = new IndexSearcher[]{
+			new IndexSearcher(reader),
+			new IndexSearcher(reader, service)
+		};
+		Query queries[] = new Query[]{
+			new MatchAllDocsQuery(),
+			new TermQuery(new Term("field", "1"))
+		};
+		Sort sorts[] = new Sort[]{
+			null,
+			new Sort(new SortField("field2", SortField.Type.STRING))
+		};
+		ScoreDoc afters[] = new ScoreDoc[]{
+			null,
+			new FieldDoc(0, 0f, new Object[]{new BytesRef("boo!")})
+		};
 
-    for (IndexSearcher searcher : searchers) {
-      for (ScoreDoc after : afters) {
-        for (Query query : queries) {
-          for (Sort sort : sorts) {
-            searcher.search(query, Integer.MAX_VALUE);
-            searcher.searchAfter(after, query, Integer.MAX_VALUE);
-            if (sort != null) {
-              searcher.search(query, Integer.MAX_VALUE, sort);
-              searcher.search(query, Integer.MAX_VALUE, sort, true);
-              searcher.search(query, Integer.MAX_VALUE, sort, false);
-              searcher.searchAfter(after, query, Integer.MAX_VALUE, sort);
-              searcher.searchAfter(after, query, Integer.MAX_VALUE, sort, true);
-              searcher.searchAfter(after, query, Integer.MAX_VALUE, sort, false);
-            }
-          }
-        }
-      }
-    }
+		for (IndexSearcher searcher : searchers) {
+			for (ScoreDoc after : afters) {
+				for (Query query : queries) {
+					for (Sort sort : sorts) {
+						searcher.search(query, Integer.MAX_VALUE);
+						searcher.searchAfter(after, query, Integer.MAX_VALUE);
+						if (sort != null) {
+							searcher.search(query, Integer.MAX_VALUE, sort);
+							searcher.search(query, Integer.MAX_VALUE, sort, true);
+							searcher.search(query, Integer.MAX_VALUE, sort, false);
+							searcher.searchAfter(after, query, Integer.MAX_VALUE, sort);
+							searcher.searchAfter(after, query, Integer.MAX_VALUE, sort, true);
+							searcher.searchAfter(after, query, Integer.MAX_VALUE, sort, false);
+						}
+					}
+				}
+			}
+		}
 
-    TestUtil.shutdownExecutorService(service);
-  }
+		TestUtil.shutdownExecutorService(service);
+	}
 
-  @Test
-  public void testSearchAfterPassedMaxDoc() throws Exception {
-    // LUCENE-5128: ensure we get a meaningful message if searchAfter exceeds maxDoc
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
-    w.addDocument(new Document());
-    IndexReader r = w.getReader();
-    w.close();
+	@Test
+	public void testSearchAfterPassedMaxDoc() throws Exception {
+		// LUCENE-5128: ensure we get a meaningful message if searchAfter exceeds maxDoc
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+		w.addDocument(new Document());
+		IndexReader r = w.getReader();
+		w.close();
 
-    IndexSearcher s = new IndexSearcher(r);
-    expectThrows(IllegalArgumentException.class, () -> {
-      s.searchAfter(new ScoreDoc(r.maxDoc(), 0.54f), new MatchAllDocsQuery(), 10);
-    });
+		IndexSearcher s = new IndexSearcher(r);
+		expectThrows(IllegalArgumentException.class, () -> {
+			s.searchAfter(new ScoreDoc(r.maxDoc(), 0.54f), new MatchAllDocsQuery(), 10);
+		});
 
-    IOUtils.close(r, dir);
-  }
+		IOUtils.close(r, dir);
+	}
 
-  public void testCount() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
-    final int numDocs = atLeast(100);
-    for (int i = 0; i < numDocs; ++i) {
-      Document doc = new Document();
-      if (random().nextBoolean()) {
-        doc.add(new StringField("foo", "bar", Store.NO));
-      }
-      if (random().nextBoolean()) {
-        doc.add(new StringField("foo", "baz", Store.NO));
-      }
-      if (rarely()) {
-        doc.add(new StringField("delete", "yes", Store.NO));
-      }
-      w.addDocument(doc);
-    }
-    for (boolean delete : new boolean[] {false, true}) {
-      if (delete) {
-        w.deleteDocuments(new Term("delete", "yes"));
-      }
-      final IndexReader reader = w.getReader();
-      final IndexSearcher searcher = newSearcher(reader);
-      // Test multiple queries, some of them are optimized by IndexSearcher.count()
-      for (Query query : Arrays.asList(
-          new MatchAllDocsQuery(),
-          new MatchNoDocsQuery(),
-          new TermQuery(new Term("foo", "bar")),
-          new ConstantScoreQuery(new TermQuery(new Term("foo", "baz"))),
-          new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("foo", "bar")), Occur.SHOULD)
-            .add(new TermQuery(new Term("foo", "baz")), Occur.SHOULD)
-            .build()
-          )) {
-        assertEquals(searcher.count(query), searcher.search(query, 1).totalHits.value);
-      }
-      reader.close();
-    }
-    w.close();
-    dir.close();
-  }
+	public void testCount() throws IOException {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+		final int numDocs = atLeast(100);
+		for (int i = 0; i < numDocs; ++i) {
+			Document doc = new Document();
+			if (random().nextBoolean()) {
+				doc.add(new StringField("foo", "bar", Store.NO));
+			}
+			if (random().nextBoolean()) {
+				doc.add(new StringField("foo", "baz", Store.NO));
+			}
+			if (rarely()) {
+				doc.add(new StringField("delete", "yes", Store.NO));
+			}
+			w.addDocument(doc);
+		}
+		for (boolean delete : new boolean[]{false, true}) {
+			if (delete) {
+				w.deleteDocuments(new Term("delete", "yes"));
+			}
+			final IndexReader reader = w.getReader();
+			final IndexSearcher searcher = newSearcher(reader);
+			// Test multiple queries, some of them are optimized by IndexSearcher.count()
+			for (Query query : Arrays.asList(
+				new MatchAllDocsQuery(),
+				new MatchNoDocsQuery(),
+				new TermQuery(new Term("foo", "bar")),
+				new ConstantScoreQuery(new TermQuery(new Term("foo", "baz"))),
+				new BooleanQuery.Builder()
+					.add(new TermQuery(new Term("foo", "bar")), Occur.SHOULD)
+					.add(new TermQuery(new Term("foo", "baz")), Occur.SHOULD)
+					.build()
+			)) {
+				assertEquals(searcher.count(query), searcher.search(query, 1).totalHits.value);
+			}
+			reader.close();
+		}
+		w.close();
+		dir.close();
+	}
 
-  public void testGetQueryCache() throws IOException {
-    IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    assertEquals(IndexSearcher.getDefaultQueryCache(), searcher.getQueryCache());
-    QueryCache dummyCache = new QueryCache() {
-      @Override
-      public Weight doCache(Weight weight, QueryCachingPolicy policy) {
-        return weight;
-      }
-    };
-    searcher.setQueryCache(dummyCache);
-    assertEquals(dummyCache, searcher.getQueryCache());
+	public void testGetQueryCache() throws IOException {
+		IndexSearcher searcher = new IndexSearcher(new MultiReader());
+		assertEquals(IndexSearcher.getDefaultQueryCache(), searcher.getQueryCache());
+		QueryCache dummyCache = new QueryCache() {
+			@Override
+			public Weight doCache(Weight weight, QueryCachingPolicy policy) {
+				return weight;
+			}
+		};
+		searcher.setQueryCache(dummyCache);
+		assertEquals(dummyCache, searcher.getQueryCache());
 
-    IndexSearcher.setDefaultQueryCache(dummyCache);
-    searcher = new IndexSearcher(new MultiReader());
-    assertEquals(dummyCache, searcher.getQueryCache());
+		IndexSearcher.setDefaultQueryCache(dummyCache);
+		searcher = new IndexSearcher(new MultiReader());
+		assertEquals(dummyCache, searcher.getQueryCache());
 
-    searcher.setQueryCache(null);
-    assertNull(searcher.getQueryCache());
+		searcher.setQueryCache(null);
+		assertNull(searcher.getQueryCache());
 
-    IndexSearcher.setDefaultQueryCache(null);
-    searcher = new IndexSearcher(new MultiReader());
-    assertNull(searcher.getQueryCache());
-  }
+		IndexSearcher.setDefaultQueryCache(null);
+		searcher = new IndexSearcher(new MultiReader());
+		assertNull(searcher.getQueryCache());
+	}
 
-  public void testGetQueryCachingPolicy() throws IOException {
-    IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    assertEquals(IndexSearcher.getDefaultQueryCachingPolicy(), searcher.getQueryCachingPolicy());
-    QueryCachingPolicy dummyPolicy = new QueryCachingPolicy() {
-      @Override
-      public boolean shouldCache(Query query) throws IOException {
-        return false;
-      }
-      @Override
-      public void onUse(Query query) {}
-    };
-    searcher.setQueryCachingPolicy(dummyPolicy);
-    assertEquals(dummyPolicy, searcher.getQueryCachingPolicy());
+	public void testGetQueryCachingPolicy() throws IOException {
+		IndexSearcher searcher = new IndexSearcher(new MultiReader());
+		assertEquals(IndexSearcher.getDefaultQueryCachingPolicy(), searcher.getQueryCachingPolicy());
+		QueryCachingPolicy dummyPolicy = new QueryCachingPolicy() {
+			@Override
+			public boolean shouldCache(Query query) throws IOException {
+				return false;
+			}
 
-    IndexSearcher.setDefaultQueryCachingPolicy(dummyPolicy);
-    searcher = new IndexSearcher(new MultiReader());
-    assertEquals(dummyPolicy, searcher.getQueryCachingPolicy());
-  }
+			@Override
+			public void onUse(Query query) {
+			}
+		};
+		searcher.setQueryCachingPolicy(dummyPolicy);
+		assertEquals(dummyPolicy, searcher.getQueryCachingPolicy());
 
-  public void testGetSlices() throws Exception {
-    assertNull(new IndexSearcher(new MultiReader()).getSlices());
+		IndexSearcher.setDefaultQueryCachingPolicy(dummyPolicy);
+		searcher = new IndexSearcher(new MultiReader());
+		assertEquals(dummyPolicy, searcher.getQueryCachingPolicy());
+	}
 
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
-    w.addDocument(new Document());
-    IndexReader r = w.getReader();
-    w.close();
+	public void testGetSlices() throws Exception {
+		assertNull(new IndexSearcher(new MultiReader()).getSlices());
 
-    ExecutorService service = new ThreadPoolExecutor(4, 4, 0L, TimeUnit.MILLISECONDS,
-                                   new LinkedBlockingQueue<Runnable>(),
-                                   new NamedThreadFactory("TestIndexSearcher"));
-    IndexSearcher s = new IndexSearcher(r, service);
-    IndexSearcher.LeafSlice[] slices = s.getSlices();
-    assertNotNull(slices);
-    assertEquals(1, slices.length);
-    assertEquals(1, slices[0].leaves.length);
-    assertTrue(slices[0].leaves[0] == r.leaves().get(0));
-    service.shutdown();
-    IOUtils.close(r, dir);
-  }
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+		w.addDocument(new Document());
+		IndexReader r = w.getReader();
+		w.close();
 
-  public void testOneSegmentExecutesOnTheCallerThread() throws IOException {
-    List<LeafReaderContext> leaves = reader.leaves();
-    AtomicInteger numExecutions = new AtomicInteger(0);
-    IndexSearcher searcher = new IndexSearcher(reader, task -> {
-      numExecutions.incrementAndGet();
-      task.run();
-    }) {
-      @Override
-      protected LeafSlice[] slices(List<LeafReaderContext> leaves) {
-        ArrayList<LeafSlice> slices = new ArrayList<>();
-        for (LeafReaderContext ctx : leaves) {
-          slices.add(new LeafSlice(ctx));
-        }
-        return slices.toArray(new LeafSlice[0]);
-      }
-    };
-    searcher.search(new MatchAllDocsQuery(), 10);
-    if (leaves.size() <= 1) {
-      assertEquals(0, numExecutions.get());
-    } else {
-      assertEquals(leaves.size() - 1, numExecutions.get());
-    }
-  }
+		ExecutorService service = new ThreadPoolExecutor(4, 4, 0L, TimeUnit.MILLISECONDS,
+			new LinkedBlockingQueue<Runnable>(),
+			new NamedThreadFactory("TestIndexSearcher"));
+		IndexSearcher s = new IndexSearcher(r, service);
+		IndexSearcher.LeafSlice[] slices = s.getSlices();
+		assertNotNull(slices);
+		assertEquals(1, slices.length);
+		assertEquals(1, slices[0].leaves.length);
+		assertTrue(slices[0].leaves[0] == r.leaves().get(0));
+		service.shutdown();
+		IOUtils.close(r, dir);
+	}
+
+	public void testOneSegmentExecutesOnTheCallerThread() throws IOException {
+		List<LeafReaderContext> leaves = reader.leaves();
+		AtomicInteger numExecutions = new AtomicInteger(0);
+		IndexSearcher searcher = new IndexSearcher(reader, task -> {
+			numExecutions.incrementAndGet();
+			task.run();
+		}) {
+			@Override
+			protected LeafSlice[] slices(List<LeafReaderContext> leaves) {
+				ArrayList<LeafSlice> slices = new ArrayList<>();
+				for (LeafReaderContext ctx : leaves) {
+					slices.add(new LeafSlice(ctx));
+				}
+				return slices.toArray(new LeafSlice[0]);
+			}
+		};
+		searcher.search(new MatchAllDocsQuery(), 10);
+		if (leaves.size() <= 1) {
+			assertEquals(0, numExecutions.get());
+		} else {
+			assertEquals(leaves.size() - 1, numExecutions.get());
+		}
+	}
 }

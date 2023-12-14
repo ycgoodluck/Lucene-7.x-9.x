@@ -33,73 +33,83 @@ import org.apache.lucene.util.BytesRefIterator;
  */
 public interface InputIterator extends BytesRefIterator {
 
-  /** A term's weight, higher numbers mean better suggestions. */
-  public long weight();
-  
-  /** An arbitrary byte[] to record per suggestion.  See
-   *  {@link LookupResult#payload} to retrieve the payload
-   *  for each suggestion. */
-  public BytesRef payload();
+	/**
+	 * A term's weight, higher numbers mean better suggestions.
+	 */
+	public long weight();
 
-  /** Returns true if the iterator has payloads */
-  public boolean hasPayloads();
-  
-  /** 
-   * A term's contexts context can be used to filter suggestions.
-   * May return null, if suggest entries do not have any context
-   * */
-  public Set<BytesRef> contexts();
-  
-  /** Returns true if the iterator has contexts */
-  public boolean hasContexts();
-  
-  /** Singleton InputIterator that iterates over 0 BytesRefs. */
-  public static final InputIterator EMPTY = new InputIteratorWrapper(BytesRefIterator.EMPTY);
-  
-  /**
-   * Wraps a BytesRefIterator as a suggester InputIterator, with all weights
-   * set to <code>1</code> and carries no payload
-   */
-  public static class InputIteratorWrapper implements InputIterator {
-    private final BytesRefIterator wrapped;
-    
-    /** 
-     * Creates a new wrapper, wrapping the specified iterator and 
-     * specifying a weight value of <code>1</code> for all terms 
-     * and nullifies associated payloads.
-     */
-    public InputIteratorWrapper(BytesRefIterator wrapped) {
-      this.wrapped = wrapped;
-    }
+	/**
+	 * An arbitrary byte[] to record per suggestion.  See
+	 * {@link LookupResult#payload} to retrieve the payload
+	 * for each suggestion.
+	 */
+	public BytesRef payload();
 
-    @Override
-    public long weight() {
-      return 1;
-    }
+	/**
+	 * Returns true if the iterator has payloads
+	 */
+	public boolean hasPayloads();
 
-    @Override
-    public BytesRef next() throws IOException {
-      return wrapped.next();
-    }
+	/**
+	 * A term's contexts context can be used to filter suggestions.
+	 * May return null, if suggest entries do not have any context
+	 */
+	public Set<BytesRef> contexts();
 
-    @Override
-    public BytesRef payload() {
-      return null;
-    }
+	/**
+	 * Returns true if the iterator has contexts
+	 */
+	public boolean hasContexts();
 
-    @Override
-    public boolean hasPayloads() {
-      return false;
-    }
+	/**
+	 * Singleton InputIterator that iterates over 0 BytesRefs.
+	 */
+	public static final InputIterator EMPTY = new InputIteratorWrapper(BytesRefIterator.EMPTY);
 
-    @Override
-    public Set<BytesRef> contexts() {
-      return null;
-    }
+	/**
+	 * Wraps a BytesRefIterator as a suggester InputIterator, with all weights
+	 * set to <code>1</code> and carries no payload
+	 */
+	public static class InputIteratorWrapper implements InputIterator {
+		private final BytesRefIterator wrapped;
 
-    @Override
-    public boolean hasContexts() {
-      return false;
-    }
-  }
+		/**
+		 * Creates a new wrapper, wrapping the specified iterator and
+		 * specifying a weight value of <code>1</code> for all terms
+		 * and nullifies associated payloads.
+		 */
+		public InputIteratorWrapper(BytesRefIterator wrapped) {
+			this.wrapped = wrapped;
+		}
+
+		@Override
+		public long weight() {
+			return 1;
+		}
+
+		@Override
+		public BytesRef next() throws IOException {
+			return wrapped.next();
+		}
+
+		@Override
+		public BytesRef payload() {
+			return null;
+		}
+
+		@Override
+		public boolean hasPayloads() {
+			return false;
+		}
+
+		@Override
+		public Set<BytesRef> contexts() {
+			return null;
+		}
+
+		@Override
+		public boolean hasContexts() {
+			return false;
+		}
+	}
 }

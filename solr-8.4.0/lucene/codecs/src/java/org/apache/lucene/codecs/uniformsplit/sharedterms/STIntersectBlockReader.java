@@ -39,74 +39,74 @@ import org.apache.lucene.util.automaton.CompiledAutomaton;
  */
 public class STIntersectBlockReader extends IntersectBlockReader {
 
-  protected final FieldInfos fieldInfos;
+	protected final FieldInfos fieldInfos;
 
-  public STIntersectBlockReader(CompiledAutomaton compiled, BytesRef startTerm,
-                         DictionaryBrowserSupplier dictionaryBrowserSupplier, IndexInput blockInput, PostingsReaderBase postingsReader,
-                         FieldMetadata fieldMetadata, BlockDecoder blockDecoder, FieldInfos fieldInfos) throws IOException {
-    super(compiled, startTerm, dictionaryBrowserSupplier, blockInput, postingsReader, fieldMetadata, blockDecoder);
-    this.fieldInfos = fieldInfos;
-  }
+	public STIntersectBlockReader(CompiledAutomaton compiled, BytesRef startTerm,
+																DictionaryBrowserSupplier dictionaryBrowserSupplier, IndexInput blockInput, PostingsReaderBase postingsReader,
+																FieldMetadata fieldMetadata, BlockDecoder blockDecoder, FieldInfos fieldInfos) throws IOException {
+		super(compiled, startTerm, dictionaryBrowserSupplier, blockInput, postingsReader, fieldMetadata, blockDecoder);
+		this.fieldInfos = fieldInfos;
+	}
 
-  // ---------------------------------------------
-  // The methods below are duplicate from STBlockReader.
-  //
-  // This class inherits code from both IntersectBlockReader and STBlockReader.
-  // We choose to extend IntersectBlockReader because this is the one that
-  // runs the next(), reads the block lines and keeps the reader state.
-  // But we still need the STBlockReader logic to skip terms that do not occur
-  // in this TermsEnum field.
-  // So we end up having a couple of methods directly duplicate from STBlockReader.
-  // We tried various different approaches to avoid duplicating the code, but
-  // actually this becomes difficult to read and to understand. This is simpler
-  // to duplicate and explain it here.
-  // ---------------------------------------------
+	// ---------------------------------------------
+	// The methods below are duplicate from STBlockReader.
+	//
+	// This class inherits code from both IntersectBlockReader and STBlockReader.
+	// We choose to extend IntersectBlockReader because this is the one that
+	// runs the next(), reads the block lines and keeps the reader state.
+	// But we still need the STBlockReader logic to skip terms that do not occur
+	// in this TermsEnum field.
+	// So we end up having a couple of methods directly duplicate from STBlockReader.
+	// We tried various different approaches to avoid duplicating the code, but
+	// actually this becomes difficult to read and to understand. This is simpler
+	// to duplicate and explain it here.
+	// ---------------------------------------------
 
-  @Override
-  public BytesRef next() throws IOException {
-    BytesRef next = super.next();
-    if (next == null) {
-      return null;
-    }
-    // Check if the term occurs for the searched field.
-    while (!termOccursInField()) {
-      next = super.next();
-      if (next == null) {
-        // No more term.
-        return null;
-      }
-    }
-    // The term occurs for the searched field.
-    return next;
-  }
+	@Override
+	public BytesRef next() throws IOException {
+		BytesRef next = super.next();
+		if (next == null) {
+			return null;
+		}
+		// Check if the term occurs for the searched field.
+		while (!termOccursInField()) {
+			next = super.next();
+			if (next == null) {
+				// No more term.
+				return null;
+			}
+		}
+		// The term occurs for the searched field.
+		return next;
+	}
 
-  private boolean termOccursInField() throws IOException {
-    readTermStateIfNotRead();
-    return termState != null;
-  }
+	private boolean termOccursInField() throws IOException {
+		readTermStateIfNotRead();
+		return termState != null;
+	}
 
-  @Override
-  protected boolean nextBlockMatchingPrefix() throws IOException {
-    // block header maybe null if we are positioned outside the field block range
-    return super.nextBlockMatchingPrefix() && blockHeader != null;
-  }
+	@Override
+	protected boolean nextBlockMatchingPrefix() throws IOException {
+		// block header maybe null if we are positioned outside the field block range
+		return super.nextBlockMatchingPrefix() && blockHeader != null;
+	}
 
-  /**
-   * Reads the {@link BlockTermState} on the current line for the specific field
-   * corresponding this this reader.
-   * Changes the current {@link BlockTermState} to null if the term does not
-   * occur for the field.
-   */
-  @Override
-  protected BlockTermState readTermState() throws IOException {
-    termStatesReadBuffer.setPosition(blockFirstLineStart + blockHeader.getTermStatesBaseOffset() + blockLine.getTermStateRelativeOffset());
-    return STBlockLine.Serializer.readTermStateForField(
-        fieldMetadata.getFieldInfo().number,
-        termStatesReadBuffer,
-        termStateSerializer,
-        blockHeader,
-        fieldInfos,
-        scratchTermState
-    );
-  }
+	/**
+	 * Reads the {@link BlockTermState} on the current line for the specific field
+	 * corresponding this this reader.
+	 * Changes the current {@link BlockTermState} to null if the term does not
+	 * occur for the field.
+	 */
+	@Override
+	protected BlockTermState readTermState() throws IOException {
+		termStatesReadBuffer.setPosition(blockFirstLineStart + blockHeader.getTermStatesBaseOffset() + blockLine.getTermStateRelativeOffset());
+		return STBlockLine.Serializer.readTermStateForField(
+			fieldMetadata.getFieldInfo().number,
+			termStatesReadBuffer,
+			termStateSerializer,
+			blockHeader,
+			fieldInfos,
+			scratchTermState
+		);
+	}
 }

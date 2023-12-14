@@ -23,15 +23,17 @@ import org.apache.lucene.analysis.MockTokenizer;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.util.AttributeFactory;
 
-/** Fake tokenizer factory for tests. */
+/**
+ * Fake tokenizer factory for tests.
+ */
 public class MockNameLackingTokenizerFactory extends TokenizerFactory {
 
-  public MockNameLackingTokenizerFactory(Map<String, String> args) {
-    super(args);
-  }
+	public MockNameLackingTokenizerFactory(Map<String, String> args) {
+		super(args);
+	}
 
-  @Override
-  public Tokenizer create(AttributeFactory factory) {
-    return new MockTokenizer();
-  }
+	@Override
+	public Tokenizer create(AttributeFactory factory) {
+		return new MockTokenizer();
+	}
 }

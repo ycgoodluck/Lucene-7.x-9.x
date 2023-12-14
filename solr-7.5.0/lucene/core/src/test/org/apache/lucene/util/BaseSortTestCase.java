@@ -21,153 +21,154 @@ import java.util.Arrays;
 
 public abstract class BaseSortTestCase extends LuceneTestCase {
 
-  public static class Entry implements java.lang.Comparable<Entry> {
+	public static class Entry implements java.lang.Comparable<Entry> {
 
-    public final int value;
-    public final int ord;
+		public final int value;
+		public final int ord;
 
-    public Entry(int value, int ord) {
-      this.value = value;
-      this.ord = ord;
-    }
+		public Entry(int value, int ord) {
+			this.value = value;
+			this.ord = ord;
+		}
 
-    @Override
-    public int compareTo(Entry other) {
-      return value < other.value ? -1 : value == other.value ? 0 : 1;
-    }
+		@Override
+		public int compareTo(Entry other) {
+			return value < other.value ? -1 : value == other.value ? 0 : 1;
+		}
 
-  }
+	}
 
-  private final boolean stable;
+	private final boolean stable;
 
-  public BaseSortTestCase(boolean stable) {
-    this.stable = stable;
-  }
+	public BaseSortTestCase(boolean stable) {
+		this.stable = stable;
+	}
 
-  public abstract Sorter newSorter(Entry[] arr);
+	public abstract Sorter newSorter(Entry[] arr);
 
-  public void assertSorted(Entry[] original, Entry[] sorted) {
-    assertEquals(original.length, sorted.length);
-    Entry[] actuallySorted = ArrayUtil.copyOfSubArray(original, 0, original.length);
-    Arrays.sort(actuallySorted);
-    for (int i = 0; i < original.length; ++i) {
-      assertEquals(actuallySorted[i].value, sorted[i].value);
-      if (stable) {
-        assertEquals(actuallySorted[i].ord, sorted[i].ord);
-      }
-    }
-  }
+	public void assertSorted(Entry[] original, Entry[] sorted) {
+		assertEquals(original.length, sorted.length);
+		Entry[] actuallySorted = ArrayUtil.copyOfSubArray(original, 0, original.length);
+		Arrays.sort(actuallySorted);
+		for (int i = 0; i < original.length; ++i) {
+			assertEquals(actuallySorted[i].value, sorted[i].value);
+			if (stable) {
+				assertEquals(actuallySorted[i].ord, sorted[i].ord);
+			}
+		}
+	}
 
-  public void test(Entry[] arr) {
-    final int o = random().nextInt(1000);
-    final Entry[] toSort = new Entry[o + arr.length + random().nextInt(3)];
-    System.arraycopy(arr, 0, toSort, o, arr.length);
-    final Sorter sorter = newSorter(toSort);
-    sorter.sort(o, o + arr.length);
-    assertSorted(arr, ArrayUtil.copyOfSubArray(toSort, o, o + arr.length));
-  }
+	public void test(Entry[] arr) {
+		final int o = random().nextInt(1000);
+		final Entry[] toSort = new Entry[o + arr.length + random().nextInt(3)];
+		System.arraycopy(arr, 0, toSort, o, arr.length);
+		final Sorter sorter = newSorter(toSort);
+		sorter.sort(o, o + arr.length);
+		assertSorted(arr, ArrayUtil.copyOfSubArray(toSort, o, o + arr.length));
+	}
 
-  enum Strategy {
-    RANDOM {
-      @Override
-      public void set(Entry[] arr, int i) {
-        arr[i] = new Entry(random().nextInt(), i);
-      }
-    },
-    RANDOM_LOW_CARDINALITY {
-      @Override
-      public void set(Entry[] arr, int i) {
-        arr[i] = new Entry(random().nextInt(6), i);
-      }
-    },
-    ASCENDING {
-      @Override
-      public void set(Entry[] arr, int i) {
-        arr[i] = i == 0
-            ? new Entry(random().nextInt(6), 0)
-            : new Entry(arr[i - 1].value + random().nextInt(6), i);
-      }
-    },
-    DESCENDING {
-      @Override
-      public void set(Entry[] arr, int i) {
-        arr[i] = i == 0
-            ? new Entry(random().nextInt(6), 0)
-            : new Entry(arr[i - 1].value - random().nextInt(6), i);
-      }
-    },
-    STRICTLY_DESCENDING {
-      @Override
-      public void set(Entry[] arr, int i) {
-        arr[i] = i == 0
-            ? new Entry(random().nextInt(6), 0)
-            : new Entry(arr[i - 1].value - TestUtil.nextInt(random(), 1, 5), i);
-      }
-    },
-    ASCENDING_SEQUENCES {
-      @Override
-      public void set(Entry[] arr, int i) {
-        arr[i] = i == 0
-            ? new Entry(random().nextInt(6), 0)
-            : new Entry(rarely() ? random().nextInt(1000) : arr[i - 1].value + random().nextInt(6), i);
-      }
-    },
-    MOSTLY_ASCENDING {
-      @Override
-      public void set(Entry[] arr, int i) {
-        arr[i] = i == 0
-            ? new Entry(random().nextInt(6), 0)
-            : new Entry(arr[i - 1].value + TestUtil.nextInt(random(), -8, 10), i);
-      }
-    };
-    public abstract void set(Entry[] arr, int i);
-  }
+	enum Strategy {
+		RANDOM {
+			@Override
+			public void set(Entry[] arr, int i) {
+				arr[i] = new Entry(random().nextInt(), i);
+			}
+		},
+		RANDOM_LOW_CARDINALITY {
+			@Override
+			public void set(Entry[] arr, int i) {
+				arr[i] = new Entry(random().nextInt(6), i);
+			}
+		},
+		ASCENDING {
+			@Override
+			public void set(Entry[] arr, int i) {
+				arr[i] = i == 0
+					? new Entry(random().nextInt(6), 0)
+					: new Entry(arr[i - 1].value + random().nextInt(6), i);
+			}
+		},
+		DESCENDING {
+			@Override
+			public void set(Entry[] arr, int i) {
+				arr[i] = i == 0
+					? new Entry(random().nextInt(6), 0)
+					: new Entry(arr[i - 1].value - random().nextInt(6), i);
+			}
+		},
+		STRICTLY_DESCENDING {
+			@Override
+			public void set(Entry[] arr, int i) {
+				arr[i] = i == 0
+					? new Entry(random().nextInt(6), 0)
+					: new Entry(arr[i - 1].value - TestUtil.nextInt(random(), 1, 5), i);
+			}
+		},
+		ASCENDING_SEQUENCES {
+			@Override
+			public void set(Entry[] arr, int i) {
+				arr[i] = i == 0
+					? new Entry(random().nextInt(6), 0)
+					: new Entry(rarely() ? random().nextInt(1000) : arr[i - 1].value + random().nextInt(6), i);
+			}
+		},
+		MOSTLY_ASCENDING {
+			@Override
+			public void set(Entry[] arr, int i) {
+				arr[i] = i == 0
+					? new Entry(random().nextInt(6), 0)
+					: new Entry(arr[i - 1].value + TestUtil.nextInt(random(), -8, 10), i);
+			}
+		};
 
-  public void test(Strategy strategy, int length) {
-    final Entry[] arr = new Entry[length];
-    for (int i = 0; i < arr.length; ++i) {
-      strategy.set(arr, i);
-    }
-    test(arr);
-  }
+		public abstract void set(Entry[] arr, int i);
+	}
 
-  public void test(Strategy strategy) {
-    test(strategy, random().nextInt(20000));
-  }
+	public void test(Strategy strategy, int length) {
+		final Entry[] arr = new Entry[length];
+		for (int i = 0; i < arr.length; ++i) {
+			strategy.set(arr, i);
+		}
+		test(arr);
+	}
 
-  public void testEmpty() {
-    test(new Entry[0]);
-  }
+	public void test(Strategy strategy) {
+		test(strategy, random().nextInt(20000));
+	}
 
-  public void testOne() {
-    test(Strategy.RANDOM, 1);
-  }
+	public void testEmpty() {
+		test(new Entry[0]);
+	}
 
-  public void testTwo() {
-    test(Strategy.RANDOM_LOW_CARDINALITY, 2);
-  }
+	public void testOne() {
+		test(Strategy.RANDOM, 1);
+	}
 
-  public void testRandom() {
-    test(Strategy.RANDOM);
-  }
+	public void testTwo() {
+		test(Strategy.RANDOM_LOW_CARDINALITY, 2);
+	}
 
-  public void testRandomLowCardinality() {
-    test(Strategy.RANDOM_LOW_CARDINALITY);
-  }
+	public void testRandom() {
+		test(Strategy.RANDOM);
+	}
 
-  public void testAscending() {
-    test(Strategy.ASCENDING);
-  }
+	public void testRandomLowCardinality() {
+		test(Strategy.RANDOM_LOW_CARDINALITY);
+	}
 
-  public void testAscendingSequences() {
-    test(Strategy.ASCENDING_SEQUENCES);
-  }
+	public void testAscending() {
+		test(Strategy.ASCENDING);
+	}
 
-  public void testDescending() {
-    test(Strategy.DESCENDING);
-  }
+	public void testAscendingSequences() {
+		test(Strategy.ASCENDING_SEQUENCES);
+	}
 
-  public void testStrictlyDescending() {
-    test(Strategy.STRICTLY_DESCENDING);
-  }
+	public void testDescending() {
+		test(Strategy.DESCENDING);
+	}
+
+	public void testStrictlyDescending() {
+		test(Strategy.STRICTLY_DESCENDING);
+	}
 }

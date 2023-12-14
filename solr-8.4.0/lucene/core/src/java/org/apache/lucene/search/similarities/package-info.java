@@ -21,17 +21,17 @@
  * as the base for ranking functions. For searching, users can employ the models
  * already implemented or create their own by extending one of the classes in this
  * package.
- * 
+ *
  * <h2>Table Of Contents</h2>
  *     <ol>
  *         <li><a href="#sims">Summary of the Ranking Methods</a></li>
  *         <li><a href="#changingSimilarity">Changing the Similarity</a></li>
  *     </ol>
- * 
- * 
+ *
+ *
  * <a name="sims"></a>
  * <h2>Summary of the Ranking Methods</h2>
- * 
+ *
  * <p>{@link org.apache.lucene.search.similarities.BM25Similarity} is an optimized
  * implementation of the successful Okapi BM25 model.
  *
@@ -39,13 +39,13 @@
  * scoring function. It is based on the
  * <a href="http://en.wikipedia.org/wiki/Vector_Space_Model">Vector Space Model</a>. For more
  * information, see {@link org.apache.lucene.search.similarities.TFIDFSimilarity}.
- * 
+ *
  * <p>{@link org.apache.lucene.search.similarities.SimilarityBase} provides a basic
  * implementation of the Similarity contract and exposes a highly simplified
  * interface, which makes it an ideal starting point for new ranking functions.
  * Lucene ships the following methods built on
  * {@link org.apache.lucene.search.similarities.SimilarityBase}:
- * 
+ *
  * <a name="framework"></a>
  * <ul>
  *   <li>Amati and Rijsbergen's {@linkplain org.apache.lucene.search.similarities.DFRSimilarity DFR} framework;</li>
@@ -57,7 +57,7 @@
  *   in "IRRA at TREC 2012" (Dinçer).
  *   <li>
  * </ul>
- * 
+ * <p>
  * Since {@link org.apache.lucene.search.similarities.SimilarityBase} is not
  * optimized to the same extent as
  * {@link org.apache.lucene.search.similarities.ClassicSimilarity} and
@@ -65,23 +65,23 @@
  * performance is to be expected when using the methods listed above. However,
  * optimizations can always be implemented in subclasses; see
  * <a href="#changingSimilarity">below</a>.
- * 
+ *
  * <a name="changingSimilarity"></a>
  * <h2>Changing Similarity</h2>
- * 
+ *
  * <p>Chances are the available Similarities are sufficient for all
  *     your searching needs.
  *     However, in some applications it may be necessary to customize your <a
  *         href="Similarity.html">Similarity</a> implementation. For instance, some
  *     applications do not need to distinguish between shorter and longer documents
- *     and could set BM25's {@link org.apache.lucene.search.similarities.BM25Similarity#BM25Similarity(float,float) b}
+ *     and could set BM25's {@link org.apache.lucene.search.similarities.BM25Similarity#BM25Similarity(float, float) b}
  *     parameter to {@code 0}.
- * 
+ *
  * <p>To change {@link org.apache.lucene.search.similarities.Similarity}, one must do so for both indexing and
  *     searching, and the changes must happen before
  *     either of these actions take place. Although in theory there is nothing stopping you from changing mid-stream, it
  *     just isn't well-defined what is going to happen.
- * 
+ *
  * <p>To make this change, implement your own {@link org.apache.lucene.search.similarities.Similarity} (likely
  *     you'll want to simply subclass {@link org.apache.lucene.search.similarities.SimilarityBase}), and
  *     then register the new class by calling
@@ -89,7 +89,7 @@
  *     before indexing and
  *     {@link org.apache.lucene.search.IndexSearcher#setSimilarity(Similarity)}
  *     before searching.
- * 
+ *
  * <h3>Tuning {@linkplain org.apache.lucene.search.similarities.BM25Similarity}</h3>
  * <p>{@link org.apache.lucene.search.similarities.BM25Similarity} has
  * two parameters that may be tuned:
@@ -102,7 +102,7 @@
  *   <li><tt>b</tt>, which controls how much document length should normalize
  *   term frequency values and must be in {@code [0, 1]}. A value of {@code 0}
  *   disables length normalization completely. Default value is {@code 0.75}.</li>
- * </ul> 
+ * </ul>
  *
  * <h3>Extending {@linkplain org.apache.lucene.search.similarities.SimilarityBase}</h3>
  * <p>
@@ -112,7 +112,7 @@
  * implement the {@link org.apache.lucene.search.similarities.SimilarityBase#score(BasicStats, double, double)}
  * and {@link org.apache.lucene.search.similarities.SimilarityBase#toString()}
  * methods.
- * 
+ *
  * <p>Another option is to extend one of the <a href="#framework">frameworks</a>
  * based on {@link org.apache.lucene.search.similarities.SimilarityBase}. These
  * Similarities are implemented modularly, e.g.
@@ -123,6 +123,5 @@
  * {@link org.apache.lucene.search.similarities.Normalization}. Instead of
  * subclassing the Similarity, one can simply introduce a new basic model and tell
  * {@link org.apache.lucene.search.similarities.DFRSimilarity} to use it.
- * 
  */
 package org.apache.lucene.search.similarities;

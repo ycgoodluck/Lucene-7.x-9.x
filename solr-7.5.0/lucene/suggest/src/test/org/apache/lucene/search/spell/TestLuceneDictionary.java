@@ -38,157 +38,164 @@ import org.apache.lucene.util.LuceneTestCase;
  */
 public class TestLuceneDictionary extends LuceneTestCase {
 
-  private Directory store;
-  private Analyzer analyzer;
-  private IndexReader indexReader = null;
-  private LuceneDictionary ld;
-  private BytesRefIterator it;
-  private BytesRef spare = new BytesRef();
+	private Directory store;
+	private Analyzer analyzer;
+	private IndexReader indexReader = null;
+	private LuceneDictionary ld;
+	private BytesRefIterator it;
+	private BytesRef spare = new BytesRef();
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    store = newDirectory();
-    analyzer = new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false);
-    IndexWriter writer = new IndexWriter(store, newIndexWriterConfig(analyzer));
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		store = newDirectory();
+		analyzer = new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false);
+		IndexWriter writer = new IndexWriter(store, newIndexWriterConfig(analyzer));
 
-    Document doc;
+		Document doc;
 
-    doc = new  Document();
-    doc.add(newTextField("aaa", "foo", Field.Store.YES));
-    writer.addDocument(doc);
+		doc = new Document();
+		doc.add(newTextField("aaa", "foo", Field.Store.YES));
+		writer.addDocument(doc);
 
-    doc = new  Document();
-    doc.add(newTextField("aaa", "foo", Field.Store.YES));
-    writer.addDocument(doc);
+		doc = new Document();
+		doc.add(newTextField("aaa", "foo", Field.Store.YES));
+		writer.addDocument(doc);
 
-    doc = new  Document();
-    doc.add(newTextField("contents", "Tom", Field.Store.YES));
-    writer.addDocument(doc);
+		doc = new Document();
+		doc.add(newTextField("contents", "Tom", Field.Store.YES));
+		writer.addDocument(doc);
 
-    doc = new  Document();
-    doc.add(newTextField("contents", "Jerry", Field.Store.YES));
-    writer.addDocument(doc);
+		doc = new Document();
+		doc.add(newTextField("contents", "Jerry", Field.Store.YES));
+		writer.addDocument(doc);
 
-    doc = new Document();
-    doc.add(newTextField("zzz", "bar", Field.Store.YES));
-    writer.addDocument(doc);
+		doc = new Document();
+		doc.add(newTextField("zzz", "bar", Field.Store.YES));
+		writer.addDocument(doc);
 
-    writer.forceMerge(1);
-    writer.close();
-  }
+		writer.forceMerge(1);
+		writer.close();
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    if (indexReader != null)
-      indexReader.close();
-    store.close();
-    analyzer.close();
-    super.tearDown();
-  }
-  
-  public void testFieldNonExistent() throws IOException {
-    try {
-      indexReader = DirectoryReader.open(store);
+	@Override
+	public void tearDown() throws Exception {
+		if (indexReader != null)
+			indexReader.close();
+		store.close();
+		analyzer.close();
+		super.tearDown();
+	}
 
-      ld = new LuceneDictionary(indexReader, "nonexistent_field");
-      it = ld.getEntryIterator();
+	public void testFieldNonExistent() throws IOException {
+		try {
+			indexReader = DirectoryReader.open(store);
 
-      assertNull("More elements than expected", spare = it.next());
-    } finally {
-      if  (indexReader != null) { indexReader.close(); }
-    }
-  }
+			ld = new LuceneDictionary(indexReader, "nonexistent_field");
+			it = ld.getEntryIterator();
 
-  public void testFieldAaa() throws IOException {
-    try {
-      indexReader = DirectoryReader.open(store);
+			assertNull("More elements than expected", spare = it.next());
+		} finally {
+			if (indexReader != null) {
+				indexReader.close();
+			}
+		}
+	}
 
-      ld = new LuceneDictionary(indexReader, "aaa");
-      it = ld.getEntryIterator();
-      assertNotNull("First element doesn't exist.", spare = it.next());
-      assertTrue("First element isn't correct", spare.utf8ToString().equals("foo"));
-      assertNull("More elements than expected", it.next());
-    } finally {
-      if  (indexReader != null) { indexReader.close(); }
-    }
-  }
+	public void testFieldAaa() throws IOException {
+		try {
+			indexReader = DirectoryReader.open(store);
 
-  public void testFieldContents_1() throws IOException {
-    try {
-      indexReader = DirectoryReader.open(store);
+			ld = new LuceneDictionary(indexReader, "aaa");
+			it = ld.getEntryIterator();
+			assertNotNull("First element doesn't exist.", spare = it.next());
+			assertTrue("First element isn't correct", spare.utf8ToString().equals("foo"));
+			assertNull("More elements than expected", it.next());
+		} finally {
+			if (indexReader != null) {
+				indexReader.close();
+			}
+		}
+	}
 
-      ld = new LuceneDictionary(indexReader, "contents");
-      it = ld.getEntryIterator();
+	public void testFieldContents_1() throws IOException {
+		try {
+			indexReader = DirectoryReader.open(store);
 
-      assertNotNull("First element doesn't exist.", spare = it.next());
-      assertTrue("First element isn't correct", spare.utf8ToString().equals("Jerry"));
-      assertNotNull("Second element doesn't exist.", spare = it.next());
-      assertTrue("Second element isn't correct", spare.utf8ToString().equals("Tom"));
-      assertNull("More elements than expected", it.next());
+			ld = new LuceneDictionary(indexReader, "contents");
+			it = ld.getEntryIterator();
 
-      ld = new LuceneDictionary(indexReader, "contents");
-      it = ld.getEntryIterator();
+			assertNotNull("First element doesn't exist.", spare = it.next());
+			assertTrue("First element isn't correct", spare.utf8ToString().equals("Jerry"));
+			assertNotNull("Second element doesn't exist.", spare = it.next());
+			assertTrue("Second element isn't correct", spare.utf8ToString().equals("Tom"));
+			assertNull("More elements than expected", it.next());
 
-      int counter = 2;
-      while (it.next() != null) {
-        counter--;
-      }
+			ld = new LuceneDictionary(indexReader, "contents");
+			it = ld.getEntryIterator();
 
-      assertTrue("Number of words incorrect", counter == 0);
-    }
-    finally {
-      if  (indexReader != null) { indexReader.close(); }
-    }
-  }
+			int counter = 2;
+			while (it.next() != null) {
+				counter--;
+			}
 
-  public void testFieldContents_2() throws IOException {
-    try {
-      indexReader = DirectoryReader.open(store);
+			assertTrue("Number of words incorrect", counter == 0);
+		} finally {
+			if (indexReader != null) {
+				indexReader.close();
+			}
+		}
+	}
 
-      ld = new LuceneDictionary(indexReader, "contents");
-      it = ld.getEntryIterator();
+	public void testFieldContents_2() throws IOException {
+		try {
+			indexReader = DirectoryReader.open(store);
 
-      // just iterate through words
-      assertEquals("First element isn't correct", "Jerry", it.next().utf8ToString());
-      assertEquals("Second element isn't correct",  "Tom", it.next().utf8ToString());
-      assertNull("Nonexistent element is really null", it.next());
-    }
-    finally {
-      if  (indexReader != null) { indexReader.close(); }
-    }
-  }
+			ld = new LuceneDictionary(indexReader, "contents");
+			it = ld.getEntryIterator();
 
-  public void testFieldZzz() throws IOException {
-    try {
-      indexReader = DirectoryReader.open(store);
+			// just iterate through words
+			assertEquals("First element isn't correct", "Jerry", it.next().utf8ToString());
+			assertEquals("Second element isn't correct", "Tom", it.next().utf8ToString());
+			assertNull("Nonexistent element is really null", it.next());
+		} finally {
+			if (indexReader != null) {
+				indexReader.close();
+			}
+		}
+	}
 
-      ld = new LuceneDictionary(indexReader, "zzz");
-      it = ld.getEntryIterator();
+	public void testFieldZzz() throws IOException {
+		try {
+			indexReader = DirectoryReader.open(store);
 
-      assertNotNull("First element doesn't exist.", spare = it.next());
-      assertEquals("First element isn't correct", "bar", spare.utf8ToString());
-      assertNull("More elements than expected", it.next());
-    }
-    finally {
-      if  (indexReader != null) { indexReader.close(); }
-    }
-  }
-  
-  public void testSpellchecker() throws IOException {
-    Directory dir = newDirectory();
-    SpellChecker sc = new SpellChecker(dir);
-    indexReader = DirectoryReader.open(store);
-    sc.indexDictionary(new LuceneDictionary(indexReader, "contents"), newIndexWriterConfig(null), false);
-    String[] suggestions = sc.suggestSimilar("Tam", 1);
-    assertEquals(1, suggestions.length);
-    assertEquals("Tom", suggestions[0]);
-    suggestions = sc.suggestSimilar("Jarry", 1);
-    assertEquals(1, suggestions.length);
-    assertEquals("Jerry", suggestions[0]);
-    indexReader.close();
-    sc.close();
-    dir.close();
-  }
-  
+			ld = new LuceneDictionary(indexReader, "zzz");
+			it = ld.getEntryIterator();
+
+			assertNotNull("First element doesn't exist.", spare = it.next());
+			assertEquals("First element isn't correct", "bar", spare.utf8ToString());
+			assertNull("More elements than expected", it.next());
+		} finally {
+			if (indexReader != null) {
+				indexReader.close();
+			}
+		}
+	}
+
+	public void testSpellchecker() throws IOException {
+		Directory dir = newDirectory();
+		SpellChecker sc = new SpellChecker(dir);
+		indexReader = DirectoryReader.open(store);
+		sc.indexDictionary(new LuceneDictionary(indexReader, "contents"), newIndexWriterConfig(null), false);
+		String[] suggestions = sc.suggestSimilar("Tam", 1);
+		assertEquals(1, suggestions.length);
+		assertEquals("Tom", suggestions[0]);
+		suggestions = sc.suggestSimilar("Jarry", 1);
+		assertEquals(1, suggestions.length);
+		assertEquals("Jerry", suggestions[0]);
+		indexReader.close();
+		sc.close();
+		dir.close();
+	}
+
 }

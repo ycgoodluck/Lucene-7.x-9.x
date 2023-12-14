@@ -22,40 +22,39 @@ import org.apache.lucene.search.vectorhighlight.FieldFragList.WeightedFragInfo;
 
 /**
  * A simple implementation of FragmentsBuilder.
- *
  */
 public class SimpleFragmentsBuilder extends BaseFragmentsBuilder {
 
-  /**
-   * a constructor.
-   */
-  public SimpleFragmentsBuilder() {
-    super();
-  }
+	/**
+	 * a constructor.
+	 */
+	public SimpleFragmentsBuilder() {
+		super();
+	}
 
-  /**
-   * a constructor.
-   * 
-   * @param preTags array of pre-tags for markup terms.
-   * @param postTags array of post-tags for markup terms.
-   */
-  public SimpleFragmentsBuilder( String[] preTags, String[] postTags ) {
-    super( preTags, postTags );
-  }
+	/**
+	 * a constructor.
+	 *
+	 * @param preTags  array of pre-tags for markup terms.
+	 * @param postTags array of post-tags for markup terms.
+	 */
+	public SimpleFragmentsBuilder(String[] preTags, String[] postTags) {
+		super(preTags, postTags);
+	}
 
-  public SimpleFragmentsBuilder( BoundaryScanner bs ) {
-    super( bs );
-  }
+	public SimpleFragmentsBuilder(BoundaryScanner bs) {
+		super(bs);
+	}
 
-  public SimpleFragmentsBuilder( String[] preTags, String[] postTags, BoundaryScanner bs ) {
-    super( preTags, postTags, bs );
-  }
+	public SimpleFragmentsBuilder(String[] preTags, String[] postTags, BoundaryScanner bs) {
+		super(preTags, postTags, bs);
+	}
 
-  /**
-   * do nothing. return the source list.
-   */
-  @Override
-  public List<WeightedFragInfo> getWeightedFragInfoList( List<WeightedFragInfo> src ) {
-    return src;
-  }
+	/**
+	 * do nothing. return the source list.
+	 */
+	@Override
+	public List<WeightedFragInfo> getWeightedFragInfoList(List<WeightedFragInfo> src) {
+		return src;
+	}
 }

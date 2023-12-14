@@ -49,122 +49,122 @@ import org.apache.lucene.queryparser.flexible.standard.nodes.TermRangeQueryNode;
  * If a {@link ConfigurationKeys#DATE_RESOLUTION} is defined and the
  * {@link Resolution} is not <code>null</code> it will also be used to parse the
  * date value.
- * 
+ *
  * @see ConfigurationKeys#DATE_RESOLUTION
  * @see ConfigurationKeys#LOCALE
  * @see TermRangeQueryNode
  */
 public class TermRangeQueryNodeProcessor extends QueryNodeProcessorImpl {
-  
-  public TermRangeQueryNodeProcessor() {
-  // empty constructor
-  }
-  
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
-    
-    if (node instanceof TermRangeQueryNode) {
-      TermRangeQueryNode termRangeNode = (TermRangeQueryNode) node;
-      FieldQueryNode upper = termRangeNode.getUpperBound();
-      FieldQueryNode lower = termRangeNode.getLowerBound();
-      
-      DateTools.Resolution dateRes = null;
-      boolean inclusive = false;
-      Locale locale = getQueryConfigHandler().get(ConfigurationKeys.LOCALE);
-      
-      if (locale == null) {
-        locale = Locale.getDefault();
-      }
-      
-      TimeZone timeZone = getQueryConfigHandler().get(ConfigurationKeys.TIMEZONE);
-      
-      if (timeZone == null) {
-        timeZone = TimeZone.getDefault();
-      }
-      
-      CharSequence field = termRangeNode.getField();
-      String fieldStr = null;
-      
-      if (field != null) {
-        fieldStr = field.toString();
-      }
-      
-      FieldConfig fieldConfig = getQueryConfigHandler()
-          .getFieldConfig(fieldStr);
-      
-      if (fieldConfig != null) {
-        dateRes = fieldConfig.get(ConfigurationKeys.DATE_RESOLUTION);
-      }
-      
-      if (termRangeNode.isUpperInclusive()) {
-        inclusive = true;
-      }
-      
-      String part1 = lower.getTextAsString();
-      String part2 = upper.getTextAsString();
-      
-      try {
-        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT, locale);
-        df.setLenient(true);
-        
-        if (part1.length() > 0) {
-          Date d1 = df.parse(part1);
-          part1 = DateTools.dateToString(d1, dateRes);
-          lower.setText(part1);
-        }
-        
-        if (part2.length() > 0) {
-          Date d2 = df.parse(part2);
-          if (inclusive) {
-            // The user can only specify the date, not the time, so make sure
-            // the time is set to the latest possible time of that date to
-            // really
-            // include all documents:
-            Calendar cal = Calendar.getInstance(timeZone, locale);
-            cal.setTime(d2);
-            cal.set(Calendar.HOUR_OF_DAY, 23);
-            cal.set(Calendar.MINUTE, 59);
-            cal.set(Calendar.SECOND, 59);
-            cal.set(Calendar.MILLISECOND, 999);
-            d2 = cal.getTime();
-          }
-          
-          part2 = DateTools.dateToString(d2, dateRes);
-          upper.setText(part2);
-          
-        }
-        
-      } catch (Exception e) {
-        // not a date
-        Analyzer analyzer = getQueryConfigHandler().get(ConfigurationKeys.ANALYZER);
-        if (analyzer != null) {
-          // because we call utf8ToString, this will only work with the default TermToBytesRefAttribute
-          part1 = analyzer.normalize(lower.getFieldAsString(), part1).utf8ToString();
-          part2 = analyzer.normalize(lower.getFieldAsString(), part2).utf8ToString();
-          lower.setText(part1);
-          upper.setText(part2);
-        }
-      }
-      
-    }
-    
-    return node;
-    
-  }
-  
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
-    
-    return node;
-    
-  }
-  
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
-    
-    return children;
-    
-  }
-  
+
+	public TermRangeQueryNodeProcessor() {
+		// empty constructor
+	}
+
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+
+		if (node instanceof TermRangeQueryNode) {
+			TermRangeQueryNode termRangeNode = (TermRangeQueryNode) node;
+			FieldQueryNode upper = termRangeNode.getUpperBound();
+			FieldQueryNode lower = termRangeNode.getLowerBound();
+
+			DateTools.Resolution dateRes = null;
+			boolean inclusive = false;
+			Locale locale = getQueryConfigHandler().get(ConfigurationKeys.LOCALE);
+
+			if (locale == null) {
+				locale = Locale.getDefault();
+			}
+
+			TimeZone timeZone = getQueryConfigHandler().get(ConfigurationKeys.TIMEZONE);
+
+			if (timeZone == null) {
+				timeZone = TimeZone.getDefault();
+			}
+
+			CharSequence field = termRangeNode.getField();
+			String fieldStr = null;
+
+			if (field != null) {
+				fieldStr = field.toString();
+			}
+
+			FieldConfig fieldConfig = getQueryConfigHandler()
+				.getFieldConfig(fieldStr);
+
+			if (fieldConfig != null) {
+				dateRes = fieldConfig.get(ConfigurationKeys.DATE_RESOLUTION);
+			}
+
+			if (termRangeNode.isUpperInclusive()) {
+				inclusive = true;
+			}
+
+			String part1 = lower.getTextAsString();
+			String part2 = upper.getTextAsString();
+
+			try {
+				DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT, locale);
+				df.setLenient(true);
+
+				if (part1.length() > 0) {
+					Date d1 = df.parse(part1);
+					part1 = DateTools.dateToString(d1, dateRes);
+					lower.setText(part1);
+				}
+
+				if (part2.length() > 0) {
+					Date d2 = df.parse(part2);
+					if (inclusive) {
+						// The user can only specify the date, not the time, so make sure
+						// the time is set to the latest possible time of that date to
+						// really
+						// include all documents:
+						Calendar cal = Calendar.getInstance(timeZone, locale);
+						cal.setTime(d2);
+						cal.set(Calendar.HOUR_OF_DAY, 23);
+						cal.set(Calendar.MINUTE, 59);
+						cal.set(Calendar.SECOND, 59);
+						cal.set(Calendar.MILLISECOND, 999);
+						d2 = cal.getTime();
+					}
+
+					part2 = DateTools.dateToString(d2, dateRes);
+					upper.setText(part2);
+
+				}
+
+			} catch (Exception e) {
+				// not a date
+				Analyzer analyzer = getQueryConfigHandler().get(ConfigurationKeys.ANALYZER);
+				if (analyzer != null) {
+					// because we call utf8ToString, this will only work with the default TermToBytesRefAttribute
+					part1 = analyzer.normalize(lower.getFieldAsString(), part1).utf8ToString();
+					part2 = analyzer.normalize(lower.getFieldAsString(), part2).utf8ToString();
+					lower.setText(part1);
+					upper.setText(part2);
+				}
+			}
+
+		}
+
+		return node;
+
+	}
+
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+
+		return node;
+
+	}
+
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
+
+		return children;
+
+	}
+
 }

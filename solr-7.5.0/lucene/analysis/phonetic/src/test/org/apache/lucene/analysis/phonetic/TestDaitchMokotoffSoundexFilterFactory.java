@@ -28,36 +28,38 @@ import org.apache.lucene.analysis.Tokenizer;
 
 public class TestDaitchMokotoffSoundexFilterFactory extends BaseTokenStreamTestCase {
 
-  public void testDefaults() throws Exception {
-    DaitchMokotoffSoundexFilterFactory factory = new DaitchMokotoffSoundexFilterFactory(new HashMap<String, String>());
-    Tokenizer inputStream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    inputStream.setReader(new StringReader("international"));
+	public void testDefaults() throws Exception {
+		DaitchMokotoffSoundexFilterFactory factory = new DaitchMokotoffSoundexFilterFactory(new HashMap<String, String>());
+		Tokenizer inputStream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		inputStream.setReader(new StringReader("international"));
 
-    TokenStream filteredStream = factory.create(inputStream);
-    assertEquals(DaitchMokotoffSoundexFilter.class, filteredStream.getClass());
-    assertTokenStreamContents(filteredStream, new String[] { "international", "063963" });
-  }
+		TokenStream filteredStream = factory.create(inputStream);
+		assertEquals(DaitchMokotoffSoundexFilter.class, filteredStream.getClass());
+		assertTokenStreamContents(filteredStream, new String[]{"international", "063963"});
+	}
 
-  public void testSettingInject() throws Exception {
-    Map<String,String> parameters = new HashMap<>();
-    parameters.put("inject", "false");
-    DaitchMokotoffSoundexFilterFactory factory = new DaitchMokotoffSoundexFilterFactory(parameters);
+	public void testSettingInject() throws Exception {
+		Map<String, String> parameters = new HashMap<>();
+		parameters.put("inject", "false");
+		DaitchMokotoffSoundexFilterFactory factory = new DaitchMokotoffSoundexFilterFactory(parameters);
 
-    Tokenizer inputStream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    inputStream.setReader(new StringReader("international"));
+		Tokenizer inputStream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		inputStream.setReader(new StringReader("international"));
 
-    TokenStream filteredStream = factory.create(inputStream);
-    assertEquals(DaitchMokotoffSoundexFilter.class, filteredStream.getClass());
-    assertTokenStreamContents(filteredStream, new String[] { "063963" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new DaitchMokotoffSoundexFilterFactory(new HashMap<String,String>() {{
-        put("bogusArg", "bogusValue");
-      }});
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+		TokenStream filteredStream = factory.create(inputStream);
+		assertEquals(DaitchMokotoffSoundexFilter.class, filteredStream.getClass());
+		assertTokenStreamContents(filteredStream, new String[]{"063963"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new DaitchMokotoffSoundexFilterFactory(new HashMap<String, String>() {{
+				put("bogusArg", "bogusValue");
+			}});
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

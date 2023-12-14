@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-/** 
+
+/**
  * Additional queries (some may have caveats or limitations)
  */
 package org.apache.lucene.sandbox.queries;

@@ -38,124 +38,124 @@ import org.apache.lucene.search.TotalHits;
  */
 public final class SearchResults {
 
-  private TotalHits totalHits;
+	private TotalHits totalHits;
 
-  private int offset = 0;
+	private int offset = 0;
 
-  private List<Doc> hits = new ArrayList<>();
+	private List<Doc> hits = new ArrayList<>();
 
-  /**
-   * Creates a search result page for the given raw Lucene hits.
-   *
-   * @param totalHits - total number of hits for this query
-   * @param docs - array of hits
-   * @param offset - offset of the current page
-   * @param searcher - index searcher
-   * @param fieldsToLoad - fields to load
-   * @return the search result page
-   * @throws IOException - if there is a low level IO error.
-   */
-  static SearchResults of(TotalHits totalHits, ScoreDoc[] docs, int offset,
-                          IndexSearcher searcher, Set<String> fieldsToLoad)
-      throws IOException {
-    SearchResults res = new SearchResults();
+	/**
+	 * Creates a search result page for the given raw Lucene hits.
+	 *
+	 * @param totalHits    - total number of hits for this query
+	 * @param docs         - array of hits
+	 * @param offset       - offset of the current page
+	 * @param searcher     - index searcher
+	 * @param fieldsToLoad - fields to load
+	 * @return the search result page
+	 * @throws IOException - if there is a low level IO error.
+	 */
+	static SearchResults of(TotalHits totalHits, ScoreDoc[] docs, int offset,
+													IndexSearcher searcher, Set<String> fieldsToLoad)
+		throws IOException {
+		SearchResults res = new SearchResults();
 
-    res.totalHits = Objects.requireNonNull(totalHits);
-    Objects.requireNonNull(docs);
-    Objects.requireNonNull(searcher);
+		res.totalHits = Objects.requireNonNull(totalHits);
+		Objects.requireNonNull(docs);
+		Objects.requireNonNull(searcher);
 
-    for (ScoreDoc sd : docs) {
-      Document luceneDoc = (fieldsToLoad == null) ?
-          searcher.doc(sd.doc) : searcher.doc(sd.doc, fieldsToLoad);
-      res.hits.add(Doc.of(sd.doc, sd.score, luceneDoc));
-      res.offset = offset;
-    }
+		for (ScoreDoc sd : docs) {
+			Document luceneDoc = (fieldsToLoad == null) ?
+				searcher.doc(sd.doc) : searcher.doc(sd.doc, fieldsToLoad);
+			res.hits.add(Doc.of(sd.doc, sd.score, luceneDoc));
+			res.offset = offset;
+		}
 
-    return res;
-  }
+		return res;
+	}
 
-  /**
-   * Returns the total number of hits for this query.
-   */
-  public TotalHits getTotalHits() {
-    return totalHits;
-  }
+	/**
+	 * Returns the total number of hits for this query.
+	 */
+	public TotalHits getTotalHits() {
+		return totalHits;
+	}
 
-  /**
-   * Returns the offset of the current page.
-   */
-  public int getOffset() {
-    return offset;
-  }
+	/**
+	 * Returns the offset of the current page.
+	 */
+	public int getOffset() {
+		return offset;
+	}
 
-  /**
-   * Returns the documents of the current page.
-   */
-  public List<Doc> getHits() {
-    return Collections.unmodifiableList(hits);
-  }
+	/**
+	 * Returns the documents of the current page.
+	 */
+	public List<Doc> getHits() {
+		return Collections.unmodifiableList(hits);
+	}
 
-  /**
-   * Returns the size of the current page.
-   */
-  public int size() {
-    return hits.size();
-  }
+	/**
+	 * Returns the size of the current page.
+	 */
+	public int size() {
+		return hits.size();
+	}
 
-  private SearchResults() {
-  }
+	private SearchResults() {
+	}
 
-  /**
-   * Holder for a hit.
-   */
-  public static class Doc {
-    private int docId;
-    private float score;
-    private Map<String, String[]> fieldValues = new HashMap<>();
+	/**
+	 * Holder for a hit.
+	 */
+	public static class Doc {
+		private int docId;
+		private float score;
+		private Map<String, String[]> fieldValues = new HashMap<>();
 
-    /**
-     * Creates a hit.
-     *
-     * @param docId - document id
-     * @param score - score of this document for the query
-     * @param luceneDoc - raw Lucene document
-     * @return the hit
-     */
-    static Doc of(int docId, float score, Document luceneDoc) {
-      Objects.requireNonNull(luceneDoc);
+		/**
+		 * Creates a hit.
+		 *
+		 * @param docId     - document id
+		 * @param score     - score of this document for the query
+		 * @param luceneDoc - raw Lucene document
+		 * @return the hit
+		 */
+		static Doc of(int docId, float score, Document luceneDoc) {
+			Objects.requireNonNull(luceneDoc);
 
-      Doc doc = new Doc();
-      doc.docId = docId;
-      doc.score = score;
-      Set<String> fields = luceneDoc.getFields().stream().map(IndexableField::name).collect(Collectors.toSet());
-      for (String f : fields) {
-        doc.fieldValues.put(f, luceneDoc.getValues(f));
-      }
-      return doc;
-    }
+			Doc doc = new Doc();
+			doc.docId = docId;
+			doc.score = score;
+			Set<String> fields = luceneDoc.getFields().stream().map(IndexableField::name).collect(Collectors.toSet());
+			for (String f : fields) {
+				doc.fieldValues.put(f, luceneDoc.getValues(f));
+			}
+			return doc;
+		}
 
-    /**
-     * Returns the document id.
-     */
-    public int getDocId() {
-      return docId;
-    }
+		/**
+		 * Returns the document id.
+		 */
+		public int getDocId() {
+			return docId;
+		}
 
-    /**
-     * Returns the score of this document for the current query.
-     */
-    public float getScore() {
-      return score;
-    }
+		/**
+		 * Returns the score of this document for the current query.
+		 */
+		public float getScore() {
+			return score;
+		}
 
-    /**
-     * Returns the field data of this document.
-     */
-    public Map<String, String[]> getFieldValues() {
-      return Collections.unmodifiableMap(fieldValues);
-    }
+		/**
+		 * Returns the field data of this document.
+		 */
+		public Map<String, String[]> getFieldValues() {
+			return Collections.unmodifiableMap(fieldValues);
+		}
 
-    private Doc() {
-    }
-  }
+		private Doc() {
+		}
+	}
 }

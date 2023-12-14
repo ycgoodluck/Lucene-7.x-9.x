@@ -28,15 +28,15 @@ import org.w3c.dom.Element;
  */
 public class RangeQueryBuilder implements QueryBuilder {
 
-  @Override
-  public Query getQuery(Element e) throws ParserException {
-    String fieldName = DOMUtils.getAttributeWithInheritance(e, "fieldName");
+	@Override
+	public Query getQuery(Element e) throws ParserException {
+		String fieldName = DOMUtils.getAttributeWithInheritance(e, "fieldName");
 
-    String lowerTerm = e.getAttribute("lowerTerm");
-    String upperTerm = e.getAttribute("upperTerm");
-    boolean includeLower = DOMUtils.getAttribute(e, "includeLower", true);
-    boolean includeUpper = DOMUtils.getAttribute(e, "includeUpper", true);
-    return TermRangeQuery.newStringRange(fieldName, lowerTerm, upperTerm, includeLower, includeUpper);
-  }
+		String lowerTerm = e.getAttribute("lowerTerm");
+		String upperTerm = e.getAttribute("upperTerm");
+		boolean includeLower = DOMUtils.getAttribute(e, "includeLower", true);
+		boolean includeUpper = DOMUtils.getAttribute(e, "includeUpper", true);
+		return TermRangeQuery.newStringRange(fieldName, lowerTerm, upperTerm, includeLower, includeUpper);
+	}
 
 }

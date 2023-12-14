@@ -21,21 +21,23 @@ package org.apache.lucene.util;
  * ones. Eh, it is sometimes useful...
  *
  * <p>Pulled from <a href="http://www.javapuzzlers.com">Java Puzzlers</a>.</p>
+ *
  * @see <a href="http://www.amazon.com/Java-Puzzlers-Traps-Pitfalls-Corner/dp/032133678X">http://www.amazon.com/Java-Puzzlers-Traps-Pitfalls-Corner/dp/032133678X</a>
  */
 public final class Rethrow {
-  private Rethrow() {}
+	private Rethrow() {
+	}
 
-  /**
-   * Rethrows <code>t</code> (identical object).
-   */
-  public static void rethrow(Throwable t) {
-    Rethrow.<Error>rethrow0(t);
-  }
-  
-  @SuppressWarnings("unchecked")
-  private static <T extends Throwable> void rethrow0(Throwable t) throws T {
-    throw (T) t;
-  }
+	/**
+	 * Rethrows <code>t</code> (identical object).
+	 */
+	public static void rethrow(Throwable t) {
+		Rethrow.<Error>rethrow0(t);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T extends Throwable> void rethrow0(Throwable t) throws T {
+		throw (T) t;
+	}
 }
 

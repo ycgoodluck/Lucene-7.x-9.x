@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-/** 
+
+/**
  * Standard Lucene Query Node Builders.
- * 
+ *
  * <h2>Standard Lucene Query Node Builders</h2>
  * <p>
  * The package org.apache.lucene.queryparser.flexible.standard.builders contains all the builders needed

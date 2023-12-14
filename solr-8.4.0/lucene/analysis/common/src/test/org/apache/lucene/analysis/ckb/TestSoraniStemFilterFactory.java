@@ -29,20 +29,22 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Sorani stem factory is working.
  */
 public class TestSoraniStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("پیاوەکان");
-    TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("SoraniStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "پیاو" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {      
-      tokenFilterFactory("SoraniStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("پیاوەکان");
+		TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		((Tokenizer) stream).setReader(reader);
+		stream = tokenFilterFactory("SoraniStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"پیاو"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("SoraniStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

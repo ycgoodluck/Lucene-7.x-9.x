@@ -43,163 +43,166 @@ import org.apache.lucene.store.IOContext;
 import org.apache.lucene.util.CloseableThreadLocal;
 import org.apache.lucene.util.IOUtils;
 
-/** Holds core readers that are shared (unchanged) when
- * SegmentReader is cloned or reopened */
+/**
+ * Holds core readers that are shared (unchanged) when
+ * SegmentReader is cloned or reopened
+ */
 final class SegmentCoreReaders {
 
-  // Counts how many other readers share the core objects
-  // (freqStream, proxStream, tis, etc.) of this reader;
-  // when coreRef drops to 0, these core objects may be
-  // closed.  A given instance of SegmentReader may be
-  // closed, even though it shares core objects with other
-  // SegmentReaders:
-  private final AtomicInteger ref = new AtomicInteger(1);
-  
-  final FieldsProducer fields;
-  final NormsProducer normsProducer;
+	// Counts how many other readers share the core objects
+	// (freqStream, proxStream, tis, etc.) of this reader;
+	// when coreRef drops to 0, these core objects may be
+	// closed.  A given instance of SegmentReader may be
+	// closed, even though it shares core objects with other
+	// SegmentReaders:
+	private final AtomicInteger ref = new AtomicInteger(1);
 
-  final StoredFieldsReader fieldsReaderOrig;
-  final TermVectorsReader termVectorsReaderOrig;
-  final PointsReader pointsReader;
-  final Directory cfsReader;
-  final String segment;
-  /** 
-   * fieldinfos for this core: means gen=-1.
-   * this is the exact fieldinfos these codec components saw at write.
-   * in the case of DV updates, SR may hold a newer version. */
-  final FieldInfos coreFieldInfos;
+	final FieldsProducer fields;
+	final NormsProducer normsProducer;
 
-  // TODO: make a single thread local w/ a
-  // Thingy class holding fieldsReader, termVectorsReader,
-  // normsProducer
+	final StoredFieldsReader fieldsReaderOrig;
+	final TermVectorsReader termVectorsReaderOrig;
+	final PointsReader pointsReader;
+	final Directory cfsReader;
+	final String segment;
+	/**
+	 * fieldinfos for this core: means gen=-1.
+	 * this is the exact fieldinfos these codec components saw at write.
+	 * in the case of DV updates, SR may hold a newer version.
+	 */
+	final FieldInfos coreFieldInfos;
 
-  final CloseableThreadLocal<StoredFieldsReader> fieldsReaderLocal = new CloseableThreadLocal<StoredFieldsReader>() {
-    @Override
-    protected StoredFieldsReader initialValue() {
-      return fieldsReaderOrig.clone();
-    }
-  };
-  
-  final CloseableThreadLocal<TermVectorsReader> termVectorsLocal = new CloseableThreadLocal<TermVectorsReader>() {
-    @Override
-    protected TermVectorsReader initialValue() {
-      return (termVectorsReaderOrig == null) ? null : termVectorsReaderOrig.clone();
-    }
-  };
+	// TODO: make a single thread local w/ a
+	// Thingy class holding fieldsReader, termVectorsReader,
+	// normsProducer
 
-  private final Set<IndexReader.ClosedListener> coreClosedListeners = 
-      Collections.synchronizedSet(new LinkedHashSet<IndexReader.ClosedListener>());
-  
-  SegmentCoreReaders(Directory dir, SegmentCommitInfo si, boolean openedFromWriter, IOContext context, Map<String, String> readerAttributes) throws IOException {
+	final CloseableThreadLocal<StoredFieldsReader> fieldsReaderLocal = new CloseableThreadLocal<StoredFieldsReader>() {
+		@Override
+		protected StoredFieldsReader initialValue() {
+			return fieldsReaderOrig.clone();
+		}
+	};
 
-    final Codec codec = si.info.getCodec();
-    final Directory cfsDir; // confusing name: if (cfs) it's the cfsdir, otherwise it's the segment's directory.
-    boolean success = false;
-    
-    try {
-      if (si.info.getUseCompoundFile()) {
-        cfsDir = cfsReader = codec.compoundFormat().getCompoundReader(dir, si.info, context);
-      } else {
-        cfsReader = null;
-        cfsDir = dir;
-      }
+	final CloseableThreadLocal<TermVectorsReader> termVectorsLocal = new CloseableThreadLocal<TermVectorsReader>() {
+		@Override
+		protected TermVectorsReader initialValue() {
+			return (termVectorsReaderOrig == null) ? null : termVectorsReaderOrig.clone();
+		}
+	};
 
-      segment = si.info.name;
+	private final Set<IndexReader.ClosedListener> coreClosedListeners =
+		Collections.synchronizedSet(new LinkedHashSet<IndexReader.ClosedListener>());
 
-      coreFieldInfos = codec.fieldInfosFormat().read(cfsDir, si.info, "", context);
-      
-      final SegmentReadState segmentReadState = new SegmentReadState(cfsDir, si.info, coreFieldInfos, openedFromWriter, context, readerAttributes);
-      final PostingsFormat format = codec.postingsFormat();
-      // Ask codec for its Fields
-      fields = format.fieldsProducer(segmentReadState);
-      assert fields != null;
-      // ask codec for its Norms: 
-      // TODO: since we don't write any norms file if there are no norms,
-      // kinda jaky to assume the codec handles the case of no norms file at all gracefully?!
+	SegmentCoreReaders(Directory dir, SegmentCommitInfo si, boolean openedFromWriter, IOContext context, Map<String, String> readerAttributes) throws IOException {
 
-      if (coreFieldInfos.hasNorms()) {
-        normsProducer = codec.normsFormat().normsProducer(segmentReadState);
-        assert normsProducer != null;
-      } else {
-        normsProducer = null;
-      }
-  
-      fieldsReaderOrig = si.info.getCodec().storedFieldsFormat().fieldsReader(cfsDir, si.info, coreFieldInfos, context);
+		final Codec codec = si.info.getCodec();
+		final Directory cfsDir; // confusing name: if (cfs) it's the cfsdir, otherwise it's the segment's directory.
+		boolean success = false;
 
-      if (coreFieldInfos.hasVectors()) { // open term vector files only as needed
-        termVectorsReaderOrig = si.info.getCodec().termVectorsFormat().vectorsReader(cfsDir, si.info, coreFieldInfos, context);
-      } else {
-        termVectorsReaderOrig = null;
-      }
+		try {
+			if (si.info.getUseCompoundFile()) {
+				cfsDir = cfsReader = codec.compoundFormat().getCompoundReader(dir, si.info, context);
+			} else {
+				cfsReader = null;
+				cfsDir = dir;
+			}
 
-      if (coreFieldInfos.hasPointValues()) {
-        pointsReader = codec.pointsFormat().fieldsReader(segmentReadState);
-      } else {
-        pointsReader = null;
-      }
-      success = true;
-    } catch (EOFException | FileNotFoundException e) {
-      throw new CorruptIndexException("Problem reading index from " + dir, dir.toString(), e);
-    } catch (NoSuchFileException e) {
-      throw new CorruptIndexException("Problem reading index.", e.getFile(), e);
-    } finally {
-      if (!success) {
-        decRef();
-      }
-    }
-  }
-  
-  int getRefCount() {
-    return ref.get();
-  }
-  
-  void incRef() {
-    int count;
-    while ((count = ref.get()) > 0) {
-      if (ref.compareAndSet(count, count+1)) {
-        return;
-      }
-    }
-    throw new AlreadyClosedException("SegmentCoreReaders is already closed");
-  }
+			segment = si.info.name;
 
-  @SuppressWarnings("try")
-  void decRef() throws IOException {
-    if (ref.decrementAndGet() == 0) {
-      Throwable th = null;
-      try (Closeable finalizer = this::notifyCoreClosedListeners){
-        IOUtils.close(termVectorsLocal, fieldsReaderLocal, fields, termVectorsReaderOrig, fieldsReaderOrig,
-                      cfsReader, normsProducer, pointsReader);
-      }
-    }
-  }
+			coreFieldInfos = codec.fieldInfosFormat().read(cfsDir, si.info, "", context);
 
-  private final IndexReader.CacheHelper cacheHelper = new IndexReader.CacheHelper() {
-    private final IndexReader.CacheKey cacheKey = new IndexReader.CacheKey();
+			final SegmentReadState segmentReadState = new SegmentReadState(cfsDir, si.info, coreFieldInfos, openedFromWriter, context, readerAttributes);
+			final PostingsFormat format = codec.postingsFormat();
+			// Ask codec for its Fields
+			fields = format.fieldsProducer(segmentReadState);
+			assert fields != null;
+			// ask codec for its Norms:
+			// TODO: since we don't write any norms file if there are no norms,
+			// kinda jaky to assume the codec handles the case of no norms file at all gracefully?!
 
-    @Override
-    public CacheKey getKey() {
-      return cacheKey;
-    }
+			if (coreFieldInfos.hasNorms()) {
+				normsProducer = codec.normsFormat().normsProducer(segmentReadState);
+				assert normsProducer != null;
+			} else {
+				normsProducer = null;
+			}
 
-    @Override
-    public void addClosedListener(ClosedListener listener) {
-      coreClosedListeners.add(listener);
-    }
-  };
+			fieldsReaderOrig = si.info.getCodec().storedFieldsFormat().fieldsReader(cfsDir, si.info, coreFieldInfos, context);
 
-  IndexReader.CacheHelper getCacheHelper() {
-    return cacheHelper;
-  }
+			if (coreFieldInfos.hasVectors()) { // open term vector files only as needed
+				termVectorsReaderOrig = si.info.getCodec().termVectorsFormat().vectorsReader(cfsDir, si.info, coreFieldInfos, context);
+			} else {
+				termVectorsReaderOrig = null;
+			}
 
-  private void notifyCoreClosedListeners() throws IOException {
-    synchronized(coreClosedListeners) {
-      IOUtils.applyToAll(coreClosedListeners, l -> l.onClose(cacheHelper.getKey()));
-    }
-  }
+			if (coreFieldInfos.hasPointValues()) {
+				pointsReader = codec.pointsFormat().fieldsReader(segmentReadState);
+			} else {
+				pointsReader = null;
+			}
+			success = true;
+		} catch (EOFException | FileNotFoundException e) {
+			throw new CorruptIndexException("Problem reading index from " + dir, dir.toString(), e);
+		} catch (NoSuchFileException e) {
+			throw new CorruptIndexException("Problem reading index.", e.getFile(), e);
+		} finally {
+			if (!success) {
+				decRef();
+			}
+		}
+	}
 
-  @Override
-  public String toString() {
-    return "SegmentCoreReader(" + segment + ")";
-  }
+	int getRefCount() {
+		return ref.get();
+	}
+
+	void incRef() {
+		int count;
+		while ((count = ref.get()) > 0) {
+			if (ref.compareAndSet(count, count + 1)) {
+				return;
+			}
+		}
+		throw new AlreadyClosedException("SegmentCoreReaders is already closed");
+	}
+
+	@SuppressWarnings("try")
+	void decRef() throws IOException {
+		if (ref.decrementAndGet() == 0) {
+			Throwable th = null;
+			try (Closeable finalizer = this::notifyCoreClosedListeners) {
+				IOUtils.close(termVectorsLocal, fieldsReaderLocal, fields, termVectorsReaderOrig, fieldsReaderOrig,
+					cfsReader, normsProducer, pointsReader);
+			}
+		}
+	}
+
+	private final IndexReader.CacheHelper cacheHelper = new IndexReader.CacheHelper() {
+		private final IndexReader.CacheKey cacheKey = new IndexReader.CacheKey();
+
+		@Override
+		public CacheKey getKey() {
+			return cacheKey;
+		}
+
+		@Override
+		public void addClosedListener(ClosedListener listener) {
+			coreClosedListeners.add(listener);
+		}
+	};
+
+	IndexReader.CacheHelper getCacheHelper() {
+		return cacheHelper;
+	}
+
+	private void notifyCoreClosedListeners() throws IOException {
+		synchronized (coreClosedListeners) {
+			IOUtils.applyToAll(coreClosedListeners, l -> l.onClose(cacheHelper.getKey()));
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "SegmentCoreReader(" + segment + ")";
+	}
 }

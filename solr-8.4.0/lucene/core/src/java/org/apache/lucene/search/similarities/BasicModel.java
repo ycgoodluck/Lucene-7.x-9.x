@@ -24,34 +24,37 @@ import org.apache.lucene.search.Explanation;
  * implementations in the DFR framework. Basic models compute the
  * <em>informative content Inf<sub>1</sub> = -log<sub>2</sub>Prob<sub>1</sub>
  * </em>.
- * 
- * @see DFRSimilarity
+ *
  * @lucene.experimental
+ * @see DFRSimilarity
  */
 public abstract class BasicModel {
-  
-  /**
-   * Sole constructor. (For invocation by subclass 
-   * constructors, typically implicit.)
-   */
-  public BasicModel() {}
 
-  /** Returns the informative content score combined with the after effect, more specifically
-   * {@code informationContentScore * aeTimes1pTfn / (1 + tfn)}. This function must be
-   * non-decreasing with {@code tfn}. */
-  public abstract double score(BasicStats stats, double tfn, double aeTimes1pTfn);
-  
+	/**
+	 * Sole constructor. (For invocation by subclass
+	 * constructors, typically implicit.)
+	 */
+	public BasicModel() {
+	}
 
-  /**
-   * Returns an explanation for the score.
-   * Subclasses must override this method.
-   */
-  public abstract Explanation explain (BasicStats stats, double tfn, double aeTimes1pTfn);
+	/**
+	 * Returns the informative content score combined with the after effect, more specifically
+	 * {@code informationContentScore * aeTimes1pTfn / (1 + tfn)}. This function must be
+	 * non-decreasing with {@code tfn}.
+	 */
+	public abstract double score(BasicStats stats, double tfn, double aeTimes1pTfn);
 
-  /**
-   * Subclasses must override this method to return the code of the
-   * basic model formula. Refer to the original paper for the list. 
-   */
-  @Override
-  public abstract String toString();
+
+	/**
+	 * Returns an explanation for the score.
+	 * Subclasses must override this method.
+	 */
+	public abstract Explanation explain(BasicStats stats, double tfn, double aeTimes1pTfn);
+
+	/**
+	 * Subclasses must override this method to return the code of the
+	 * basic model formula. Refer to the original paper for the list.
+	 */
+	@Override
+	public abstract String toString();
 }

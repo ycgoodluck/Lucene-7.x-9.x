@@ -24,31 +24,36 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IOContext;
 
 /**
- * Expert: Controls the format of the 
+ * Expert: Controls the format of the
  * {@link SegmentInfo} (segment metadata file).
- * @see SegmentInfo
+ *
  * @lucene.experimental
+ * @see SegmentInfo
  */
 public abstract class SegmentInfoFormat {
-  /** Sole constructor. (For invocation by subclass 
-   *  constructors, typically implicit.) */
-  protected SegmentInfoFormat() {
-  }
+	/**
+	 * Sole constructor. (For invocation by subclass
+	 * constructors, typically implicit.)
+	 */
+	protected SegmentInfoFormat() {
+	}
 
-  /**
-   * Read {@link SegmentInfo} data from a directory.
-   * @param directory directory to read from
-   * @param segmentName name of the segment to read
-   * @param segmentID expected identifier for the segment
-   * @return infos instance to be populated with data
-   * @throws IOException If an I/O error occurs
-   */
-  public abstract SegmentInfo read(Directory directory, String segmentName, byte segmentID[], IOContext context) throws IOException;
+	/**
+	 * Read {@link SegmentInfo} data from a directory.
+	 *
+	 * @param directory   directory to read from
+	 * @param segmentName name of the segment to read
+	 * @param segmentID   expected identifier for the segment
+	 * @return infos instance to be populated with data
+	 * @throws IOException If an I/O error occurs
+	 */
+	public abstract SegmentInfo read(Directory directory, String segmentName, byte segmentID[], IOContext context) throws IOException;
 
-  /**
-   * Write {@link SegmentInfo} data.
-   * The codec must add its SegmentInfo filename(s) to {@code info} before doing i/o. 
-   * @throws IOException If an I/O error occurs
-   */
-  public abstract void write(Directory dir, SegmentInfo info, IOContext ioContext) throws IOException;
+	/**
+	 * Write {@link SegmentInfo} data.
+	 * The codec must add its SegmentInfo filename(s) to {@code info} before doing i/o.
+	 *
+	 * @throws IOException If an I/O error occurs
+	 */
+	public abstract void write(Directory dir, SegmentInfo info, IOContext ioContext) throws IOException;
 }

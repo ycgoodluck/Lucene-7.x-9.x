@@ -23,23 +23,23 @@ import org.apache.lucene.queryparser.flexible.core.config.QueryConfigHandler;
 /**
  * This query config handler only adds the {@link UniqueFieldAttribute} to it.<br>
  * <br>
- * 
+ * <p>
  * It does not return any configuration for a field in specific.
  */
 public class SpansQueryConfigHandler extends QueryConfigHandler {
-  
-  final public static ConfigurationKey<String> UNIQUE_FIELD = ConfigurationKey.newInstance();
-  
-  public SpansQueryConfigHandler() {
-    // empty constructor
-  }
 
-  @Override
-  public FieldConfig getFieldConfig(String fieldName) {
+	final public static ConfigurationKey<String> UNIQUE_FIELD = ConfigurationKey.newInstance();
 
-    // there is no field configuration, always return null
-    return null;
+	public SpansQueryConfigHandler() {
+		// empty constructor
+	}
 
-  }
+	@Override
+	public FieldConfig getFieldConfig(String fieldName) {
+
+		// there is no field configuration, always return null
+		return null;
+
+	}
 
 }

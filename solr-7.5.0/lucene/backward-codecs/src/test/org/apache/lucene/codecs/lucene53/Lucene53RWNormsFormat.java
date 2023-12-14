@@ -23,9 +23,9 @@ import org.apache.lucene.index.SegmentWriteState;
 
 public class Lucene53RWNormsFormat extends Lucene53NormsFormat {
 
-  @Override
-  public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
-    return new Lucene53NormsConsumer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION);
-  }
+	@Override
+	public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
+		return new Lucene53NormsConsumer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION);
+	}
 
 }

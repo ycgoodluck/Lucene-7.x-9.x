@@ -28,53 +28,53 @@ import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
 
 class CrankyPostingsFormat extends PostingsFormat {
-  final PostingsFormat delegate;
-  final Random random;
-  
-  CrankyPostingsFormat(PostingsFormat delegate, Random random) {
-    // we impersonate the passed-in codec, so we don't need to be in SPI,
-    // and so we dont change file formats
-    super(delegate.getName());
-    this.delegate = delegate;
-    this.random = random;
-  }
-  
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    if (random.nextInt(100) == 0) {
-      throw new IOException("Fake IOException from PostingsFormat.fieldsConsumer()");
-    }  
-    return new CrankyFieldsConsumer(delegate.fieldsConsumer(state), random);
-  }
+	final PostingsFormat delegate;
+	final Random random;
 
-  @Override
-  public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
-    return delegate.fieldsProducer(state);
-  }
-  
-  static class CrankyFieldsConsumer extends FieldsConsumer {
-    final FieldsConsumer delegate;
-    final Random random;
-    
-    CrankyFieldsConsumer(FieldsConsumer delegate, Random random) {
-      this.delegate = delegate;
-      this.random = random;
-    }
-    
-    @Override
-    public void write(Fields fields, NormsProducer norms) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from FieldsConsumer.write()");
-      }  
-      delegate.write(fields, norms);
-    }
+	CrankyPostingsFormat(PostingsFormat delegate, Random random) {
+		// we impersonate the passed-in codec, so we don't need to be in SPI,
+		// and so we dont change file formats
+		super(delegate.getName());
+		this.delegate = delegate;
+		this.random = random;
+	}
 
-    @Override
-    public void close() throws IOException {
-      delegate.close();
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from FieldsConsumer.close()");
-      }  
-    }
-  }
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		if (random.nextInt(100) == 0) {
+			throw new IOException("Fake IOException from PostingsFormat.fieldsConsumer()");
+		}
+		return new CrankyFieldsConsumer(delegate.fieldsConsumer(state), random);
+	}
+
+	@Override
+	public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
+		return delegate.fieldsProducer(state);
+	}
+
+	static class CrankyFieldsConsumer extends FieldsConsumer {
+		final FieldsConsumer delegate;
+		final Random random;
+
+		CrankyFieldsConsumer(FieldsConsumer delegate, Random random) {
+			this.delegate = delegate;
+			this.random = random;
+		}
+
+		@Override
+		public void write(Fields fields, NormsProducer norms) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from FieldsConsumer.write()");
+			}
+			delegate.write(fields, norms);
+		}
+
+		@Override
+		public void close() throws IOException {
+			delegate.close();
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from FieldsConsumer.close()");
+			}
+		}
+	}
 }

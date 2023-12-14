@@ -25,99 +25,97 @@ import org.apache.lucene.search.SortField;
 
 /**
  * Does sort search on specified field.
- * 
  */
 public class SearchWithSortTask extends ReadTask {
 
-  private Sort sort;
+	private Sort sort;
 
-  public SearchWithSortTask(PerfRunData runData) {
-    super(runData);
-  }
+	public SearchWithSortTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  /**
-   * SortFields: field:type,field:type[,noscore][,nomaxscore]
-   *
-   * If noscore is present, then we turn off score tracking
-   * in {@link org.apache.lucene.search.TopFieldCollector}.
-   * If nomaxscore is present, then we turn off maxScore tracking
-   * in {@link org.apache.lucene.search.TopFieldCollector}.
-   * 
-   * name:string,page:int,subject:string
-   * 
-   */
-  @Override
-  public void setParams(String sortField) {
-    super.setParams(sortField);
-    String[] fields = sortField.split(",");
-    SortField[] sortFields = new SortField[fields.length];
-    int upto = 0;
-    for (int i = 0; i < fields.length; i++) {
-      String field = fields[i];
-      SortField sortField0;
-      if (field.equals("doc")) {
-        sortField0 = SortField.FIELD_DOC;
-      } else if (field.equals("score")) {
-        sortField0 = SortField.FIELD_SCORE;
-      } else {
-        int index = field.lastIndexOf(":");
-        String fieldName;
-        String typeString;
-        if (index != -1) {
-          fieldName = field.substring(0, index);
-          typeString = field.substring(1+index, field.length());
-        } else {
-          throw new RuntimeException("You must specify the sort type ie page:int,subject:string");
-        }
-        sortField0 = new SortField(fieldName, SortField.Type.valueOf(typeString.toUpperCase(Locale.ROOT)));
-      }
-      sortFields[upto++] = sortField0;
-    }
+	/**
+	 * SortFields: field:type,field:type[,noscore][,nomaxscore]
+	 * <p>
+	 * If noscore is present, then we turn off score tracking
+	 * in {@link org.apache.lucene.search.TopFieldCollector}.
+	 * If nomaxscore is present, then we turn off maxScore tracking
+	 * in {@link org.apache.lucene.search.TopFieldCollector}.
+	 * <p>
+	 * name:string,page:int,subject:string
+	 */
+	@Override
+	public void setParams(String sortField) {
+		super.setParams(sortField);
+		String[] fields = sortField.split(",");
+		SortField[] sortFields = new SortField[fields.length];
+		int upto = 0;
+		for (int i = 0; i < fields.length; i++) {
+			String field = fields[i];
+			SortField sortField0;
+			if (field.equals("doc")) {
+				sortField0 = SortField.FIELD_DOC;
+			} else if (field.equals("score")) {
+				sortField0 = SortField.FIELD_SCORE;
+			} else {
+				int index = field.lastIndexOf(":");
+				String fieldName;
+				String typeString;
+				if (index != -1) {
+					fieldName = field.substring(0, index);
+					typeString = field.substring(1 + index, field.length());
+				} else {
+					throw new RuntimeException("You must specify the sort type ie page:int,subject:string");
+				}
+				sortField0 = new SortField(fieldName, SortField.Type.valueOf(typeString.toUpperCase(Locale.ROOT)));
+			}
+			sortFields[upto++] = sortField0;
+		}
 
-    if (upto < sortFields.length) {
-      SortField[] newSortFields = new SortField[upto];
-      System.arraycopy(sortFields, 0, newSortFields, 0, upto);
-      sortFields = newSortFields;
-    }
-    this.sort = new Sort(sortFields);
-  }
+		if (upto < sortFields.length) {
+			SortField[] newSortFields = new SortField[upto];
+			System.arraycopy(sortFields, 0, newSortFields, 0, upto);
+			sortFields = newSortFields;
+		}
+		this.sort = new Sort(sortFields);
+	}
 
-  @Override
-  public boolean supportsParams() {
-    return true;
-  }
+	@Override
+	public boolean supportsParams() {
+		return true;
+	}
 
-  @Override
-  public QueryMaker getQueryMaker() {
-    return getRunData().getQueryMaker(this);
-  }
+	@Override
+	public QueryMaker getQueryMaker() {
+		return getRunData().getQueryMaker(this);
+	}
 
-  @Override
-  public boolean withRetrieve() {
-    return false;
-  }
+	@Override
+	public boolean withRetrieve() {
+		return false;
+	}
 
-  @Override
-  public boolean withSearch() {
-    return true;
-  }
+	@Override
+	public boolean withSearch() {
+		return true;
+	}
 
-  @Override
-  public boolean withTraverse() {
-    return false;
-  }
+	@Override
+	public boolean withTraverse() {
+		return false;
+	}
 
-  @Override
-  public boolean withWarm() {
-    return false;
-  }
-  
-  @Override
-  public Sort getSort() {
-    if (sort == null) {
-      throw new IllegalStateException("No sort field was set");
-    }
-    return sort;
-  }
+	@Override
+	public boolean withWarm() {
+		return false;
+	}
+
+	@Override
+	public Sort getSort() {
+		if (sort == null) {
+			throw new IllegalStateException("No sort field was set");
+		}
+		return sort;
+	}
 
 }

@@ -31,126 +31,126 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestDirectory extends LuceneTestCase {
 
-  // Test that different instances of FSDirectory can coexist on the same
-  // path, can read, write, and lock files.
-  public void testDirectInstantiation() throws Exception {
-    final Path path = createTempDir("testDirectInstantiation");
-    
-    final byte[] largeBuffer = new byte[random().nextInt(256*1024)], largeReadBuffer = new byte[largeBuffer.length];
-    for (int i = 0; i < largeBuffer.length; i++) {
-      largeBuffer[i] = (byte) i; // automatically loops with modulo
-    }
+	// Test that different instances of FSDirectory can coexist on the same
+	// path, can read, write, and lock files.
+	public void testDirectInstantiation() throws Exception {
+		final Path path = createTempDir("testDirectInstantiation");
 
-    final List<FSDirectory> dirs0 = new ArrayList<>();
-    dirs0.add(new SimpleFSDirectory(path));
-    dirs0.add(new NIOFSDirectory(path));
-    if (hasWorkingMMapOnWindows()) {
-      dirs0.add(new MMapDirectory(path));
-    }
-    final FSDirectory[] dirs = dirs0.stream().toArray(FSDirectory[]::new);
+		final byte[] largeBuffer = new byte[random().nextInt(256 * 1024)], largeReadBuffer = new byte[largeBuffer.length];
+		for (int i = 0; i < largeBuffer.length; i++) {
+			largeBuffer[i] = (byte) i; // automatically loops with modulo
+		}
 
-    for (int i=0; i<dirs.length; i++) {
-      FSDirectory dir = dirs[i];
-      dir.ensureOpen();
-      String fname = "foo." + i;
-      String lockname = "foo" + i + ".lck";
-      IndexOutput out = dir.createOutput(fname, newIOContext(random()));
-      out.writeByte((byte)i);
-      out.writeBytes(largeBuffer, largeBuffer.length);
-      out.close();
+		final List<FSDirectory> dirs0 = new ArrayList<>();
+		dirs0.add(new SimpleFSDirectory(path));
+		dirs0.add(new NIOFSDirectory(path));
+		if (hasWorkingMMapOnWindows()) {
+			dirs0.add(new MMapDirectory(path));
+		}
+		final FSDirectory[] dirs = dirs0.stream().toArray(FSDirectory[]::new);
 
-      for (int j=0; j<dirs.length; j++) {
-        FSDirectory d2 = dirs[j];
-        d2.ensureOpen();
-        assertTrue(slowFileExists(d2, fname));
-        assertEquals(1 + largeBuffer.length, d2.fileLength(fname));
+		for (int i = 0; i < dirs.length; i++) {
+			FSDirectory dir = dirs[i];
+			dir.ensureOpen();
+			String fname = "foo." + i;
+			String lockname = "foo" + i + ".lck";
+			IndexOutput out = dir.createOutput(fname, newIOContext(random()));
+			out.writeByte((byte) i);
+			out.writeBytes(largeBuffer, largeBuffer.length);
+			out.close();
 
-        // don't do read tests if unmapping is not supported!
-        if (d2 instanceof MMapDirectory && !((MMapDirectory) d2).getUseUnmap())
-          continue;
-        
-        IndexInput input = d2.openInput(fname, newIOContext(random()));
-        assertEquals((byte)i, input.readByte());
-        // read array with buffering enabled
-        Arrays.fill(largeReadBuffer, (byte)0);
-        input.readBytes(largeReadBuffer, 0, largeReadBuffer.length, true);
-        assertArrayEquals(largeBuffer, largeReadBuffer);
-        // read again without using buffer
-        input.seek(1L);
-        Arrays.fill(largeReadBuffer, (byte)0);
-        input.readBytes(largeReadBuffer, 0, largeReadBuffer.length, false);
-        assertArrayEquals(largeBuffer, largeReadBuffer);        
-        input.close();
-      }
+			for (int j = 0; j < dirs.length; j++) {
+				FSDirectory d2 = dirs[j];
+				d2.ensureOpen();
+				assertTrue(slowFileExists(d2, fname));
+				assertEquals(1 + largeBuffer.length, d2.fileLength(fname));
 
-      // delete with a different dir
-      dirs[(i+1)%dirs.length].deleteFile(fname);
+				// don't do read tests if unmapping is not supported!
+				if (d2 instanceof MMapDirectory && !((MMapDirectory) d2).getUseUnmap())
+					continue;
 
-      for (int j=0; j<dirs.length; j++) {
-        FSDirectory d2 = dirs[j];
-        assertFalse(slowFileExists(d2, fname));
-      }
+				IndexInput input = d2.openInput(fname, newIOContext(random()));
+				assertEquals((byte) i, input.readByte());
+				// read array with buffering enabled
+				Arrays.fill(largeReadBuffer, (byte) 0);
+				input.readBytes(largeReadBuffer, 0, largeReadBuffer.length, true);
+				assertArrayEquals(largeBuffer, largeReadBuffer);
+				// read again without using buffer
+				input.seek(1L);
+				Arrays.fill(largeReadBuffer, (byte) 0);
+				input.readBytes(largeReadBuffer, 0, largeReadBuffer.length, false);
+				assertArrayEquals(largeBuffer, largeReadBuffer);
+				input.close();
+			}
 
-      Lock lock = dir.obtainLock(lockname);
+			// delete with a different dir
+			dirs[(i + 1) % dirs.length].deleteFile(fname);
 
-      for (Directory other : dirs) {
-        expectThrows(LockObtainFailedException.class, () -> {
-          other.obtainLock(lockname);
-        });
-      }
+			for (int j = 0; j < dirs.length; j++) {
+				FSDirectory d2 = dirs[j];
+				assertFalse(slowFileExists(d2, fname));
+			}
 
-      lock.close();
-      
-      // now lock with different dir
-      lock = dirs[(i+1)%dirs.length].obtainLock(lockname);
-      lock.close();
-    }
+			Lock lock = dir.obtainLock(lockname);
 
-    for (int i=0; i<dirs.length; i++) {
-      FSDirectory dir = dirs[i];
-      dir.ensureOpen();
-      dir.close();
-      assertFalse(dir.isOpen);
-    }
-  }
+			for (Directory other : dirs) {
+				expectThrows(LockObtainFailedException.class, () -> {
+					other.obtainLock(lockname);
+				});
+			}
 
-  // LUCENE-1468
-  @SuppressWarnings("resource")
-  public void testCopySubdir() throws Throwable {
-    Path path = createTempDir("testsubdir");
-    Files.createDirectory(path.resolve("subdir"));
-    FSDirectory fsDir = new SimpleFSDirectory(path);
-    RAMDirectory ramDir = new RAMDirectory(fsDir, newIOContext(random()));
-    List<String> files = Arrays.asList(ramDir.listAll());
-    assertFalse(files.contains("subdir"));
-  }
+			lock.close();
 
-  // LUCENE-1468
-  public void testNotDirectory() throws Throwable {
-    Path path = createTempDir("testnotdir");
-    Directory fsDir = new SimpleFSDirectory(path);
-    try {
-      IndexOutput out = fsDir.createOutput("afile", newIOContext(random()));
-      out.close();
-      assertTrue(slowFileExists(fsDir, "afile"));
-      expectThrows(IOException.class, () -> {
-        new SimpleFSDirectory(path.resolve("afile"));
-      });
-    } finally {
-      fsDir.close();
-    }
-  }
+			// now lock with different dir
+			lock = dirs[(i + 1) % dirs.length].obtainLock(lockname);
+			lock.close();
+		}
 
-  public void testListAll() throws Throwable {
-    Path dir = createTempDir("testdir");
-    assumeFalse("this test does not expect extra files", dir.getFileSystem().provider() instanceof ExtrasFS);
-    Path file1 = Files.createFile(dir.resolve("tempfile1"));
-    Path file2 = Files.createFile(dir.resolve("tempfile2"));
-    Set<String> files = new HashSet<>(Arrays.asList(FSDirectory.listAll(dir)));
+		for (int i = 0; i < dirs.length; i++) {
+			FSDirectory dir = dirs[i];
+			dir.ensureOpen();
+			dir.close();
+			assertFalse(dir.isOpen);
+		}
+	}
 
-    assertTrue(files.size() == 2);
-    assertTrue(files.contains(file1.getFileName().toString()));
-    assertTrue(files.contains(file2.getFileName().toString()));
-  }
+	// LUCENE-1468
+	@SuppressWarnings("resource")
+	public void testCopySubdir() throws Throwable {
+		Path path = createTempDir("testsubdir");
+		Files.createDirectory(path.resolve("subdir"));
+		FSDirectory fsDir = new SimpleFSDirectory(path);
+		RAMDirectory ramDir = new RAMDirectory(fsDir, newIOContext(random()));
+		List<String> files = Arrays.asList(ramDir.listAll());
+		assertFalse(files.contains("subdir"));
+	}
+
+	// LUCENE-1468
+	public void testNotDirectory() throws Throwable {
+		Path path = createTempDir("testnotdir");
+		Directory fsDir = new SimpleFSDirectory(path);
+		try {
+			IndexOutput out = fsDir.createOutput("afile", newIOContext(random()));
+			out.close();
+			assertTrue(slowFileExists(fsDir, "afile"));
+			expectThrows(IOException.class, () -> {
+				new SimpleFSDirectory(path.resolve("afile"));
+			});
+		} finally {
+			fsDir.close();
+		}
+	}
+
+	public void testListAll() throws Throwable {
+		Path dir = createTempDir("testdir");
+		assumeFalse("this test does not expect extra files", dir.getFileSystem().provider() instanceof ExtrasFS);
+		Path file1 = Files.createFile(dir.resolve("tempfile1"));
+		Path file2 = Files.createFile(dir.resolve("tempfile2"));
+		Set<String> files = new HashSet<>(Arrays.asList(FSDirectory.listAll(dir)));
+
+		assertTrue(files.size() == 2);
+		assertTrue(files.contains(file1.getFileName().toString()));
+		assertTrue(files.contains(file2.getFileName().toString()));
+	}
 }
 

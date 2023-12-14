@@ -23,39 +23,42 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+
 import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 import org.apache.lucene.store.InputStreamDataInput;
 import org.apache.lucene.store.OutputStreamDataOutput;
 
-/** Simple point-to-point TCP connection */
+/**
+ * Simple point-to-point TCP connection
+ */
 class Connection implements Closeable {
-  public final DataInput in;
-  public final DataOutput out;
-  public final InputStream sockIn;
-  public final BufferedOutputStream bos;
-  public final Socket s;
-  public final int destTCPPort;
-  public long lastKeepAliveNS = System.nanoTime();
+	public final DataInput in;
+	public final DataOutput out;
+	public final InputStream sockIn;
+	public final BufferedOutputStream bos;
+	public final Socket s;
+	public final int destTCPPort;
+	public long lastKeepAliveNS = System.nanoTime();
 
-  public Connection(int tcpPort) throws IOException {
-    this.destTCPPort = tcpPort;
-    this.s = new Socket(InetAddress.getLoopbackAddress(), tcpPort);
-    this.sockIn = s.getInputStream();
-    this.in = new InputStreamDataInput(sockIn);
-    this.bos = new BufferedOutputStream(s.getOutputStream());
-    this.out = new OutputStreamDataOutput(bos);
-    if (Node.VERBOSE_CONNECTIONS) {
-      System.out.println("make new client Connection socket=" + this.s + " destPort=" + tcpPort);
-    }
-  }
+	public Connection(int tcpPort) throws IOException {
+		this.destTCPPort = tcpPort;
+		this.s = new Socket(InetAddress.getLoopbackAddress(), tcpPort);
+		this.sockIn = s.getInputStream();
+		this.in = new InputStreamDataInput(sockIn);
+		this.bos = new BufferedOutputStream(s.getOutputStream());
+		this.out = new OutputStreamDataOutput(bos);
+		if (Node.VERBOSE_CONNECTIONS) {
+			System.out.println("make new client Connection socket=" + this.s + " destPort=" + tcpPort);
+		}
+	}
 
-  public void flush() throws IOException {
-    bos.flush();
-  }
+	public void flush() throws IOException {
+		bos.flush();
+	}
 
-  @Override
-  public void close() throws IOException {
-    s.close();
-  }
+	@Override
+	public void close() throws IOException {
+		s.close();
+	}
 }

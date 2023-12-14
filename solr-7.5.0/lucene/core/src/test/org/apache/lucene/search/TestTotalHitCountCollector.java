@@ -26,24 +26,24 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestTotalHitCountCollector extends LuceneTestCase {
-  
-  public void testBasics() throws Exception {
-    Directory indexStore = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(random(), indexStore);
-    for(int i=0; i<5; i++) {
-      Document doc = new Document();
-      doc.add(new StringField("string", "a"+i, Field.Store.NO));
-      doc.add(new StringField("string", "b"+i, Field.Store.NO));
-      writer.addDocument(doc);
-    }
-    IndexReader reader = writer.getReader();
-    writer.close();
 
-    IndexSearcher searcher = newSearcher(reader);
-    TotalHitCountCollector c = new TotalHitCountCollector();
-    searcher.search(new MatchAllDocsQuery(), c);
-    assertEquals(5, c.getTotalHits());
-    reader.close();
-    indexStore.close();
-  }
+	public void testBasics() throws Exception {
+		Directory indexStore = newDirectory();
+		RandomIndexWriter writer = new RandomIndexWriter(random(), indexStore);
+		for (int i = 0; i < 5; i++) {
+			Document doc = new Document();
+			doc.add(new StringField("string", "a" + i, Field.Store.NO));
+			doc.add(new StringField("string", "b" + i, Field.Store.NO));
+			writer.addDocument(doc);
+		}
+		IndexReader reader = writer.getReader();
+		writer.close();
+
+		IndexSearcher searcher = newSearcher(reader);
+		TotalHitCountCollector c = new TotalHitCountCollector();
+		searcher.search(new MatchAllDocsQuery(), c);
+		assertEquals(5, c.getTotalHits());
+		reader.close();
+		indexStore.close();
+	}
 }

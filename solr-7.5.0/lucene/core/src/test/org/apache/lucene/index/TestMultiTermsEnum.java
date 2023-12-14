@@ -47,233 +47,230 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestMultiTermsEnum extends LuceneTestCase {
 
-  // LUCENE-6826
-  public void testNoTermsInField() throws Exception {
-    Directory directory = new RAMDirectory();
-    IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(new MockAnalyzer(random())));
-    Document document = new Document();
-    document.add(new StringField("deleted", "0", Field.Store.YES));
-    writer.addDocument(document);
+	// LUCENE-6826
+	public void testNoTermsInField() throws Exception {
+		Directory directory = new RAMDirectory();
+		IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(new MockAnalyzer(random())));
+		Document document = new Document();
+		document.add(new StringField("deleted", "0", Field.Store.YES));
+		writer.addDocument(document);
 
-    DirectoryReader reader = DirectoryReader.open(writer);
-    writer.close();
+		DirectoryReader reader = DirectoryReader.open(writer);
+		writer.close();
 
-    Directory directory2 = new RAMDirectory();
-    writer = new IndexWriter(directory2, new IndexWriterConfig(new MockAnalyzer(random())));
-    
-    List<LeafReaderContext> leaves = reader.leaves();
-    CodecReader[] codecReaders = new CodecReader[leaves.size()];
-    for (int i = 0; i < leaves.size(); i++) {
-      codecReaders[i] = new MigratingCodecReader((CodecReader) leaves.get(i).reader());
-    }
+		Directory directory2 = new RAMDirectory();
+		writer = new IndexWriter(directory2, new IndexWriterConfig(new MockAnalyzer(random())));
 
-    writer.addIndexes(codecReaders); // <- bang
+		List<LeafReaderContext> leaves = reader.leaves();
+		CodecReader[] codecReaders = new CodecReader[leaves.size()];
+		for (int i = 0; i < leaves.size(); i++) {
+			codecReaders[i] = new MigratingCodecReader((CodecReader) leaves.get(i).reader());
+		}
 
-    IOUtils.close(writer, reader, directory);
-  }
+		writer.addIndexes(codecReaders); // <- bang
 
-  private static class MigratingCodecReader extends FilterCodecReader {
+		IOUtils.close(writer, reader, directory);
+	}
 
-    MigratingCodecReader(CodecReader in) {
-      super(in);
-    }
+	private static class MigratingCodecReader extends FilterCodecReader {
 
-    @Override
-    public FieldsProducer getPostingsReader() {
-      return new MigratingFieldsProducer(super.getPostingsReader(), getFieldInfos());
-    }
+		MigratingCodecReader(CodecReader in) {
+			super(in);
+		}
 
-    private static class MigratingFieldsProducer extends BaseMigratingFieldsProducer {
-      MigratingFieldsProducer(FieldsProducer delegate, FieldInfos newFieldInfo) {
-        super(delegate, newFieldInfo);
-      }
+		@Override
+		public FieldsProducer getPostingsReader() {
+			return new MigratingFieldsProducer(super.getPostingsReader(), getFieldInfos());
+		}
 
-      @Override
-      public Terms terms(String field) throws IOException {
-        if ("deleted".equals(field)) {
-          Terms deletedTerms = super.terms("deleted");
-          if (deletedTerms != null) {
-            return new ValueFilteredTerms(deletedTerms, new BytesRef("1"));
-          }
-          return null;
-        } else {
-          return super.terms(field);
-        }
-      }
+		private static class MigratingFieldsProducer extends BaseMigratingFieldsProducer {
+			MigratingFieldsProducer(FieldsProducer delegate, FieldInfos newFieldInfo) {
+				super(delegate, newFieldInfo);
+			}
 
-      @Override
-      protected FieldsProducer create(FieldsProducer delegate, FieldInfos newFieldInfo) {
-        return new MigratingFieldsProducer(delegate, newFieldInfo);
-      }
+			@Override
+			public Terms terms(String field) throws IOException {
+				if ("deleted".equals(field)) {
+					Terms deletedTerms = super.terms("deleted");
+					if (deletedTerms != null) {
+						return new ValueFilteredTerms(deletedTerms, new BytesRef("1"));
+					}
+					return null;
+				} else {
+					return super.terms(field);
+				}
+			}
 
-      private static class ValueFilteredTerms extends Terms {
+			@Override
+			protected FieldsProducer create(FieldsProducer delegate, FieldInfos newFieldInfo) {
+				return new MigratingFieldsProducer(delegate, newFieldInfo);
+			}
 
-        private final Terms delegate;
-        private final BytesRef value;
+			private static class ValueFilteredTerms extends Terms {
 
-        public ValueFilteredTerms(Terms delegate, BytesRef value) {
-          this.delegate = delegate;
-          this.value = value;
-        }
+				private final Terms delegate;
+				private final BytesRef value;
 
-        @Override
-        public TermsEnum iterator() throws IOException {
-          return new FilteredTermsEnum(delegate.iterator()) {
+				public ValueFilteredTerms(Terms delegate, BytesRef value) {
+					this.delegate = delegate;
+					this.value = value;
+				}
 
-            @Override
-            protected AcceptStatus accept(BytesRef term) {
+				@Override
+				public TermsEnum iterator() throws IOException {
+					return new FilteredTermsEnum(delegate.iterator()) {
 
-              int comparison = term.compareTo(value);
-              if (comparison < 0) {
-                // I don't think it will actually get here because they are supposed to call nextSeekTerm
-                // to get the initial term to seek to.
-                return AcceptStatus.NO_AND_SEEK;
-              } else if (comparison > 0) {
-                return AcceptStatus.END;
-              } else { // comparison == 0
-                return AcceptStatus.YES;
-              }
-            }
+						@Override
+						protected AcceptStatus accept(BytesRef term) {
 
-            @Override
-            protected BytesRef nextSeekTerm(BytesRef currentTerm) {
-              if (currentTerm == null || currentTerm.compareTo(value) < 0) {
-                return value;
-              }
+							int comparison = term.compareTo(value);
+							if (comparison < 0) {
+								// I don't think it will actually get here because they are supposed to call nextSeekTerm
+								// to get the initial term to seek to.
+								return AcceptStatus.NO_AND_SEEK;
+							} else if (comparison > 0) {
+								return AcceptStatus.END;
+							} else { // comparison == 0
+								return AcceptStatus.YES;
+							}
+						}
 
-              return null;
-            }
-          };
-        }
+						@Override
+						protected BytesRef nextSeekTerm(BytesRef currentTerm) {
+							if (currentTerm == null || currentTerm.compareTo(value) < 0) {
+								return value;
+							}
 
-        @Override
-        public long size() throws IOException {
-          // Docs say we can return -1 if we don't know.
-          return -1;
-        }
+							return null;
+						}
+					};
+				}
 
-        @Override
-        public long getSumTotalTermFreq() throws IOException {
-          // Docs say we can return -1 if we don't know.
-          return -1;
-        }
+				@Override
+				public long size() throws IOException {
+					// Docs say we can return -1 if we don't know.
+					return -1;
+				}
 
-        @Override
-        public long getSumDocFreq() throws IOException {
-          // Docs say we can return -1 if we don't know.
-          return -1;
-        }
+				@Override
+				public long getSumTotalTermFreq() throws IOException {
+					// Docs say we can return -1 if we don't know.
+					return -1;
+				}
 
-        @Override
-        public int getDocCount() throws IOException {
-          // Docs say we can return -1 if we don't know.
-          return -1;
-        }
+				@Override
+				public long getSumDocFreq() throws IOException {
+					// Docs say we can return -1 if we don't know.
+					return -1;
+				}
 
-        @Override
-        public boolean hasFreqs() {
-          return delegate.hasFreqs();
-        }
+				@Override
+				public int getDocCount() throws IOException {
+					// Docs say we can return -1 if we don't know.
+					return -1;
+				}
 
-        @Override
-        public boolean hasOffsets() {
-          return delegate.hasOffsets();
-        }
+				@Override
+				public boolean hasFreqs() {
+					return delegate.hasFreqs();
+				}
 
-        @Override
-        public boolean hasPositions() {
-          return delegate.hasPositions();
-        }
+				@Override
+				public boolean hasOffsets() {
+					return delegate.hasOffsets();
+				}
 
-        @Override
-        public boolean hasPayloads() {
-          return delegate.hasPayloads();
-        }
-      }
-    }
+				@Override
+				public boolean hasPositions() {
+					return delegate.hasPositions();
+				}
 
-    private static class BaseMigratingFieldsProducer extends FieldsProducer {
+				@Override
+				public boolean hasPayloads() {
+					return delegate.hasPayloads();
+				}
+			}
+		}
 
-      private final FieldsProducer delegate;
-      private final FieldInfos newFieldInfo;
+		private static class BaseMigratingFieldsProducer extends FieldsProducer {
 
-      public BaseMigratingFieldsProducer(FieldsProducer delegate, FieldInfos newFieldInfo) {
-        this.delegate = delegate;
-        this.newFieldInfo = newFieldInfo;
-      }
+			private final FieldsProducer delegate;
+			private final FieldInfos newFieldInfo;
 
-      @Override
-      public Iterator<String> iterator() {
-        final Iterator<FieldInfo> fieldInfoIterator = newFieldInfo.iterator();
-        return new Iterator<String>() {
-          @Override
-          public boolean hasNext()
-          {
-            return fieldInfoIterator.hasNext();
-          }
+			public BaseMigratingFieldsProducer(FieldsProducer delegate, FieldInfos newFieldInfo) {
+				this.delegate = delegate;
+				this.newFieldInfo = newFieldInfo;
+			}
 
-          @Override
-          public void remove()
-          {
-            throw new UnsupportedOperationException();
-          }
+			@Override
+			public Iterator<String> iterator() {
+				final Iterator<FieldInfo> fieldInfoIterator = newFieldInfo.iterator();
+				return new Iterator<String>() {
+					@Override
+					public boolean hasNext() {
+						return fieldInfoIterator.hasNext();
+					}
 
-          @Override
-          public String next()
-          {
-            return fieldInfoIterator.next().name;
-          }
-        };
-      }
+					@Override
+					public void remove() {
+						throw new UnsupportedOperationException();
+					}
 
-      @Override
-      public int size() {
-        return newFieldInfo.size();
-      }
+					@Override
+					public String next() {
+						return fieldInfoIterator.next().name;
+					}
+				};
+			}
 
-      @Override
-      public Terms terms(String field) throws IOException {
-        return delegate.terms(field);
-      }
+			@Override
+			public int size() {
+				return newFieldInfo.size();
+			}
 
-      @Override
-      public FieldsProducer getMergeInstance() throws IOException {
-        return create(delegate.getMergeInstance(), newFieldInfo);
-      }
+			@Override
+			public Terms terms(String field) throws IOException {
+				return delegate.terms(field);
+			}
 
-      protected FieldsProducer create(FieldsProducer delegate, FieldInfos newFieldInfo) {
-        return new BaseMigratingFieldsProducer(delegate, newFieldInfo);
-      }
+			@Override
+			public FieldsProducer getMergeInstance() throws IOException {
+				return create(delegate.getMergeInstance(), newFieldInfo);
+			}
 
-      @Override
-      public void checkIntegrity() throws IOException {
-        delegate.checkIntegrity();
-      }
+			protected FieldsProducer create(FieldsProducer delegate, FieldInfos newFieldInfo) {
+				return new BaseMigratingFieldsProducer(delegate, newFieldInfo);
+			}
 
-      @Override
-      public long ramBytesUsed() {
-        return delegate.ramBytesUsed();
-      }
+			@Override
+			public void checkIntegrity() throws IOException {
+				delegate.checkIntegrity();
+			}
 
-      @Override
-      public Collection<Accountable> getChildResources() {
-        return delegate.getChildResources();
-      }
+			@Override
+			public long ramBytesUsed() {
+				return delegate.ramBytesUsed();
+			}
 
-      @Override
-      public void close() throws IOException {
-        delegate.close();
-      }
-    }
+			@Override
+			public Collection<Accountable> getChildResources() {
+				return delegate.getChildResources();
+			}
 
-    @Override
-    public CacheHelper getCoreCacheHelper() {
-      return null;
-    }
+			@Override
+			public void close() throws IOException {
+				delegate.close();
+			}
+		}
 
-    @Override
-    public CacheHelper getReaderCacheHelper() {
-      return null;
-    }
-  }
+		@Override
+		public CacheHelper getCoreCacheHelper() {
+			return null;
+		}
+
+		@Override
+		public CacheHelper getReaderCacheHelper() {
+			return null;
+		}
+	}
 }

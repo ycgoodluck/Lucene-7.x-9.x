@@ -28,57 +28,56 @@ import java.util.List;
  */
 public class BooleanQueryNode extends QueryNodeImpl {
 
-  /**
-   * @param clauses
-   *          - the query nodes to be and'ed
-   */
-  public BooleanQueryNode(List<QueryNode> clauses) {
-    setLeaf(false);
-    allocate();
-    set(clauses);
-  }
+	/**
+	 * @param clauses - the query nodes to be and'ed
+	 */
+	public BooleanQueryNode(List<QueryNode> clauses) {
+		setLeaf(false);
+		allocate();
+		set(clauses);
+	}
 
-  @Override
-  public String toString() {
-    if (getChildren() == null || getChildren().size() == 0)
-      return "<boolean operation='default'/>";
-    StringBuilder sb = new StringBuilder();
-    sb.append("<boolean operation='default'>");
-    for (QueryNode child : getChildren()) {
-      sb.append("\n");
-      sb.append(child.toString());
-    }
-    sb.append("\n</boolean>");
-    return sb.toString();
-  }
+	@Override
+	public String toString() {
+		if (getChildren() == null || getChildren().size() == 0)
+			return "<boolean operation='default'/>";
+		StringBuilder sb = new StringBuilder();
+		sb.append("<boolean operation='default'>");
+		for (QueryNode child : getChildren()) {
+			sb.append("\n");
+			sb.append(child.toString());
+		}
+		sb.append("\n</boolean>");
+		return sb.toString();
+	}
 
-  @Override
-  public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser) {
-    if (getChildren() == null || getChildren().size() == 0)
-      return "";
+	@Override
+	public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser) {
+		if (getChildren() == null || getChildren().size() == 0)
+			return "";
 
-    StringBuilder sb = new StringBuilder();
-    String filler = "";
-    for (QueryNode child : getChildren()) {
-      sb.append(filler).append(child.toQueryString(escapeSyntaxParser));
-      filler = " ";
-    }
+		StringBuilder sb = new StringBuilder();
+		String filler = "";
+		for (QueryNode child : getChildren()) {
+			sb.append(filler).append(child.toQueryString(escapeSyntaxParser));
+			filler = " ";
+		}
 
-    // in case is root or the parent is a group node avoid parenthesis
-    if ((getParent() != null && getParent() instanceof GroupQueryNode)
-        || isRoot())
-      return sb.toString();
-    else
-      return "( " + sb.toString() + " )";
-  }
+		// in case is root or the parent is a group node avoid parenthesis
+		if ((getParent() != null && getParent() instanceof GroupQueryNode)
+			|| isRoot())
+			return sb.toString();
+		else
+			return "( " + sb.toString() + " )";
+	}
 
-  @Override
-  public QueryNode cloneTree() throws CloneNotSupportedException {
-    BooleanQueryNode clone = (BooleanQueryNode) super.cloneTree();
+	@Override
+	public QueryNode cloneTree() throws CloneNotSupportedException {
+		BooleanQueryNode clone = (BooleanQueryNode) super.cloneTree();
 
-    // nothing to do here
+		// nothing to do here
 
-    return clone;
-  }
+		return clone;
+	}
 
 }

@@ -61,203 +61,205 @@ import org.apache.lucene.luke.models.tools.IndexToolsFactory;
 import org.apache.lucene.luke.util.LoggerFactory;
 import org.apache.lucene.util.NamedThreadFactory;
 
-/** Factory of optimize index dialog */
+/**
+ * Factory of optimize index dialog
+ */
 public final class OptimizeIndexDialogFactory implements DialogOpener.DialogFactory {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private static OptimizeIndexDialogFactory instance;
+	private static OptimizeIndexDialogFactory instance;
 
-  private final Preferences prefs;
+	private final Preferences prefs;
 
-  private final IndexToolsFactory indexToolsFactory = new IndexToolsFactory();
+	private final IndexToolsFactory indexToolsFactory = new IndexToolsFactory();
 
-  private final IndexHandler indexHandler;
+	private final IndexHandler indexHandler;
 
-  private final JCheckBox expungeCB = new JCheckBox();
+	private final JCheckBox expungeCB = new JCheckBox();
 
-  private final JSpinner maxSegSpnr = new JSpinner();
+	private final JSpinner maxSegSpnr = new JSpinner();
 
-  private final JLabel statusLbl = new JLabel();
+	private final JLabel statusLbl = new JLabel();
 
-  private final JLabel indicatorLbl = new JLabel();
+	private final JLabel indicatorLbl = new JLabel();
 
-  private final JTextArea logArea = new JTextArea();
+	private final JTextArea logArea = new JTextArea();
 
-  private final ListenerFunctions listeners = new ListenerFunctions();
+	private final ListenerFunctions listeners = new ListenerFunctions();
 
-  private JDialog dialog;
+	private JDialog dialog;
 
-  private IndexTools toolsModel;
+	private IndexTools toolsModel;
 
-  public synchronized static OptimizeIndexDialogFactory getInstance() throws IOException {
-    if (instance == null) {
-      instance = new OptimizeIndexDialogFactory();
-    }
-    return instance;
-  }
+	public synchronized static OptimizeIndexDialogFactory getInstance() throws IOException {
+		if (instance == null) {
+			instance = new OptimizeIndexDialogFactory();
+		}
+		return instance;
+	}
 
-  private OptimizeIndexDialogFactory() throws IOException {
-    this.prefs = PreferencesFactory.getInstance();
-    this.indexHandler = IndexHandler.getInstance();
-    indexHandler.addObserver(new Observer());
+	private OptimizeIndexDialogFactory() throws IOException {
+		this.prefs = PreferencesFactory.getInstance();
+		this.indexHandler = IndexHandler.getInstance();
+		indexHandler.addObserver(new Observer());
 
-    initialize();
-  }
+		initialize();
+	}
 
-  private void initialize() {
-    expungeCB.setText(MessageUtils.getLocalizedMessage("optimize.checkbox.expunge"));
-    expungeCB.setOpaque(false);
+	private void initialize() {
+		expungeCB.setText(MessageUtils.getLocalizedMessage("optimize.checkbox.expunge"));
+		expungeCB.setOpaque(false);
 
-    maxSegSpnr.setModel(new SpinnerNumberModel(1, 1, 100, 1));
-    maxSegSpnr.setPreferredSize(new Dimension(100, 30));
+		maxSegSpnr.setModel(new SpinnerNumberModel(1, 1, 100, 1));
+		maxSegSpnr.setPreferredSize(new Dimension(100, 30));
 
-    indicatorLbl.setIcon(ImageUtils.createImageIcon("indicator.gif", 20, 20));
+		indicatorLbl.setIcon(ImageUtils.createImageIcon("indicator.gif", 20, 20));
 
-    logArea.setEditable(false);
-  }
+		logArea.setEditable(false);
+	}
 
-  @Override
-  public JDialog create(Window owner, String title, int width, int height) {
-    dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
-    dialog.add(content());
-    dialog.setSize(new Dimension(width, height));
-    dialog.setLocationRelativeTo(owner);
-    dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
-    return dialog;
-  }
+	@Override
+	public JDialog create(Window owner, String title, int width, int height) {
+		dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
+		dialog.add(content());
+		dialog.setSize(new Dimension(width, height));
+		dialog.setLocationRelativeTo(owner);
+		dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
+		return dialog;
+	}
 
-  private JPanel content() {
-    JPanel panel = new JPanel();
-    panel.setOpaque(false);
-    panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
-    panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+	private JPanel content() {
+		JPanel panel = new JPanel();
+		panel.setOpaque(false);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+		panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-    panel.add(controller());
-    panel.add(new JSeparator(JSeparator.HORIZONTAL));
-    panel.add(logs());
+		panel.add(controller());
+		panel.add(new JSeparator(JSeparator.HORIZONTAL));
+		panel.add(logs());
 
-    return panel;
-  }
+		return panel;
+	}
 
-  private JPanel controller() {
-    JPanel panel = new JPanel(new GridLayout(4, 1));
-    panel.setOpaque(false);
+	private JPanel controller() {
+		JPanel panel = new JPanel(new GridLayout(4, 1));
+		panel.setOpaque(false);
 
-    JPanel idxPath = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    idxPath.setOpaque(false);
-    idxPath.add(new JLabel(MessageUtils.getLocalizedMessage("optimize.label.index_path")));
-    JLabel idxPathLbl = new JLabel(indexHandler.getState().getIndexPath());
-    idxPathLbl.setToolTipText(indexHandler.getState().getIndexPath());
-    idxPath.add(idxPathLbl);
-    panel.add(idxPath);
+		JPanel idxPath = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		idxPath.setOpaque(false);
+		idxPath.add(new JLabel(MessageUtils.getLocalizedMessage("optimize.label.index_path")));
+		JLabel idxPathLbl = new JLabel(indexHandler.getState().getIndexPath());
+		idxPathLbl.setToolTipText(indexHandler.getState().getIndexPath());
+		idxPath.add(idxPathLbl);
+		panel.add(idxPath);
 
-    JPanel expunge = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    expunge.setOpaque(false);
+		JPanel expunge = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		expunge.setOpaque(false);
 
-    expunge.add(expungeCB);
-    panel.add(expunge);
+		expunge.add(expungeCB);
+		panel.add(expunge);
 
-    JPanel maxSegs = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    maxSegs.setOpaque(false);
-    maxSegs.add(new JLabel(MessageUtils.getLocalizedMessage("optimize.label.max_segments")));
-    maxSegs.add(maxSegSpnr);
-    panel.add(maxSegs);
+		JPanel maxSegs = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		maxSegs.setOpaque(false);
+		maxSegs.add(new JLabel(MessageUtils.getLocalizedMessage("optimize.label.max_segments")));
+		maxSegs.add(maxSegSpnr);
+		panel.add(maxSegs);
 
-    JPanel execButtons = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    execButtons.setOpaque(false);
-    JButton optimizeBtn = new JButton(FontUtils.elegantIconHtml("&#xe0ff;", MessageUtils.getLocalizedMessage("optimize.button.optimize")));
-    optimizeBtn.setFont(StyleConstants.FONT_BUTTON_LARGE);
-    optimizeBtn.setMargin(new Insets(3, 0, 3, 0));
-    optimizeBtn.addActionListener(listeners::optimize);
-    execButtons.add(optimizeBtn);
-    JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
-    closeBtn.setFont(StyleConstants.FONT_BUTTON_LARGE);
-    closeBtn.setMargin(new Insets(3, 0, 3, 0));
-    closeBtn.addActionListener(e -> dialog.dispose());
-    execButtons.add(closeBtn);
-    panel.add(execButtons);
+		JPanel execButtons = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+		execButtons.setOpaque(false);
+		JButton optimizeBtn = new JButton(FontUtils.elegantIconHtml("&#xe0ff;", MessageUtils.getLocalizedMessage("optimize.button.optimize")));
+		optimizeBtn.setFont(StyleConstants.FONT_BUTTON_LARGE);
+		optimizeBtn.setMargin(new Insets(3, 0, 3, 0));
+		optimizeBtn.addActionListener(listeners::optimize);
+		execButtons.add(optimizeBtn);
+		JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
+		closeBtn.setFont(StyleConstants.FONT_BUTTON_LARGE);
+		closeBtn.setMargin(new Insets(3, 0, 3, 0));
+		closeBtn.addActionListener(e -> dialog.dispose());
+		execButtons.add(closeBtn);
+		panel.add(execButtons);
 
-    return panel;
-  }
+		return panel;
+	}
 
-  private JPanel logs() {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setOpaque(false);
+	private JPanel logs() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setOpaque(false);
 
-    JPanel header = new JPanel(new GridLayout(2, 1));
-    header.setOpaque(false);
-    header.add(new JLabel(MessageUtils.getLocalizedMessage("optimize.label.note")));
-    JPanel status = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    status.setOpaque(false);
-    status.add(new JLabel(MessageUtils.getLocalizedMessage("label.status")));
-    statusLbl.setText("Idle");
-    status.add(statusLbl);
-    indicatorLbl.setVisible(false);
-    status.add(indicatorLbl);
-    header.add(status);
-    panel.add(header, BorderLayout.PAGE_START);
+		JPanel header = new JPanel(new GridLayout(2, 1));
+		header.setOpaque(false);
+		header.add(new JLabel(MessageUtils.getLocalizedMessage("optimize.label.note")));
+		JPanel status = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		status.setOpaque(false);
+		status.add(new JLabel(MessageUtils.getLocalizedMessage("label.status")));
+		statusLbl.setText("Idle");
+		status.add(statusLbl);
+		indicatorLbl.setVisible(false);
+		status.add(indicatorLbl);
+		header.add(status);
+		panel.add(header, BorderLayout.PAGE_START);
 
-    logArea.setText("");
-    panel.add(new JScrollPane(logArea), BorderLayout.CENTER);
+		logArea.setText("");
+		panel.add(new JScrollPane(logArea), BorderLayout.CENTER);
 
-    return panel;
-  }
+		return panel;
+	}
 
-  private class ListenerFunctions {
+	private class ListenerFunctions {
 
-    void optimize(ActionEvent e) {
-      ExecutorService executor = Executors.newFixedThreadPool(1, new NamedThreadFactory("optimize-index-dialog"));
+		void optimize(ActionEvent e) {
+			ExecutorService executor = Executors.newFixedThreadPool(1, new NamedThreadFactory("optimize-index-dialog"));
 
-      SwingWorker<Void, Void> task = new SwingWorker<Void, Void>() {
+			SwingWorker<Void, Void> task = new SwingWorker<Void, Void>() {
 
-        @Override
-        protected Void doInBackground() {
-          setProgress(0);
-          statusLbl.setText("Running...");
-          indicatorLbl.setVisible(true);
-          TextAreaPrintStream ps;
-          try {
-            ps = new TextAreaPrintStream(logArea);
-            toolsModel.optimize(expungeCB.isSelected(), (int) maxSegSpnr.getValue(), ps);
-            ps.flush();
-          } catch (UnsupportedEncodingException e) {
-            // will not reach
-          } catch (Exception e) {
-            statusLbl.setText(MessageUtils.getLocalizedMessage("message.error.unknown"));
-            throw e;
-          } finally {
-            setProgress(100);
-          }
-          return null;
-        }
+				@Override
+				protected Void doInBackground() {
+					setProgress(0);
+					statusLbl.setText("Running...");
+					indicatorLbl.setVisible(true);
+					TextAreaPrintStream ps;
+					try {
+						ps = new TextAreaPrintStream(logArea);
+						toolsModel.optimize(expungeCB.isSelected(), (int) maxSegSpnr.getValue(), ps);
+						ps.flush();
+					} catch (UnsupportedEncodingException e) {
+						// will not reach
+					} catch (Exception e) {
+						statusLbl.setText(MessageUtils.getLocalizedMessage("message.error.unknown"));
+						throw e;
+					} finally {
+						setProgress(100);
+					}
+					return null;
+				}
 
-        @Override
-        protected void done() {
-          indicatorLbl.setVisible(false);
-          statusLbl.setText("Done");
-          indexHandler.reOpen();
-        }
-      };
+				@Override
+				protected void done() {
+					indicatorLbl.setVisible(false);
+					statusLbl.setText("Done");
+					indexHandler.reOpen();
+				}
+			};
 
-      executor.submit(task);
-      executor.shutdown();
-    }
+			executor.submit(task);
+			executor.shutdown();
+		}
 
-  }
+	}
 
-  private class Observer implements IndexObserver {
+	private class Observer implements IndexObserver {
 
-    @Override
-    public void openIndex(LukeState state) {
-      toolsModel = indexToolsFactory.newInstance(state.getIndexReader(), state.useCompound(), state.keepAllCommits());
-    }
+		@Override
+		public void openIndex(LukeState state) {
+			toolsModel = indexToolsFactory.newInstance(state.getIndexReader(), state.useCompound(), state.keepAllCommits());
+		}
 
-    @Override
-    public void closeIndex() {
-      toolsModel = null;
-    }
+		@Override
+		public void closeIndex() {
+			toolsModel = null;
+		}
 
-  }
+	}
 
 }

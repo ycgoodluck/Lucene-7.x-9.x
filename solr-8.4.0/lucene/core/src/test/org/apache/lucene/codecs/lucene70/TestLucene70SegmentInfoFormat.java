@@ -23,13 +23,13 @@ import org.apache.lucene.util.Version;
 
 public class TestLucene70SegmentInfoFormat extends BaseSegmentInfoFormatTestCase {
 
-  @Override
-  protected Version[] getVersions() {
-    return new Version[] { Version.LATEST };
-  }
+	@Override
+	protected Version[] getVersions() {
+		return new Version[]{Version.LATEST};
+	}
 
-  @Override
-  protected Codec getCodec() {
-    return TestUtil.getDefaultCodec();
-  }
+	@Override
+	protected Codec getCodec() {
+		return TestUtil.getDefaultCodec();
+	}
 }

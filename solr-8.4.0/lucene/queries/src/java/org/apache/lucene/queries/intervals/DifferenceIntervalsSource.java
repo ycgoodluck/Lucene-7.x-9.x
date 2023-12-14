@@ -26,50 +26,50 @@ import org.apache.lucene.search.QueryVisitor;
 
 abstract class DifferenceIntervalsSource extends IntervalsSource {
 
-  final IntervalsSource minuend;
-  final IntervalsSource subtrahend;
+	final IntervalsSource minuend;
+	final IntervalsSource subtrahend;
 
-  DifferenceIntervalsSource(IntervalsSource minuend, IntervalsSource subtrahend) {
-    this.minuend = minuend;
-    this.subtrahend = subtrahend;
-  }
+	DifferenceIntervalsSource(IntervalsSource minuend, IntervalsSource subtrahend) {
+		this.minuend = minuend;
+		this.subtrahend = subtrahend;
+	}
 
-  protected abstract IntervalIterator combine(IntervalIterator minuend, IntervalIterator subtrahend);
+	protected abstract IntervalIterator combine(IntervalIterator minuend, IntervalIterator subtrahend);
 
-  @Override
-  public final IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
-    IntervalIterator minIt = minuend.intervals(field, ctx);
-    if (minIt == null)
-      return null;
-    IntervalIterator subIt = subtrahend.intervals(field, ctx);
-    if (subIt == null)
-      return minIt;
-    return combine(minIt, subIt);
-  }
+	@Override
+	public final IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
+		IntervalIterator minIt = minuend.intervals(field, ctx);
+		if (minIt == null)
+			return null;
+		IntervalIterator subIt = subtrahend.intervals(field, ctx);
+		if (subIt == null)
+			return minIt;
+		return combine(minIt, subIt);
+	}
 
-  @Override
-  public final MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
-    MatchesIterator minIt = minuend.matches(field, ctx, doc);
-    if (minIt == null) {
-      return null;
-    }
-    MatchesIterator subIt = subtrahend.matches(field, ctx, doc);
-    if (subIt == null) {
-      return minIt;
-    }
-    IntervalIterator difference = combine(IntervalMatches.wrapMatches(minIt, doc), IntervalMatches.wrapMatches(subIt, doc));
-    return IntervalMatches.asMatches(difference, minIt, doc);
-  }
+	@Override
+	public final MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
+		MatchesIterator minIt = minuend.matches(field, ctx, doc);
+		if (minIt == null) {
+			return null;
+		}
+		MatchesIterator subIt = subtrahend.matches(field, ctx, doc);
+		if (subIt == null) {
+			return minIt;
+		}
+		IntervalIterator difference = combine(IntervalMatches.wrapMatches(minIt, doc), IntervalMatches.wrapMatches(subIt, doc));
+		return IntervalMatches.asMatches(difference, minIt, doc);
+	}
 
-  @Override
-  public void visit(String field, QueryVisitor visitor) {
-    IntervalQuery q = new IntervalQuery(field, this);
-    minuend.visit(field, visitor.getSubVisitor(BooleanClause.Occur.MUST, q));
-    subtrahend.visit(field, visitor.getSubVisitor(BooleanClause.Occur.MUST_NOT, q));
-  }
+	@Override
+	public void visit(String field, QueryVisitor visitor) {
+		IntervalQuery q = new IntervalQuery(field, this);
+		minuend.visit(field, visitor.getSubVisitor(BooleanClause.Occur.MUST, q));
+		subtrahend.visit(field, visitor.getSubVisitor(BooleanClause.Occur.MUST_NOT, q));
+	}
 
-  @Override
-  public int minExtent() {
-    return minuend.minExtent();
-  }
+	@Override
+	public int minExtent() {
+		return minuend.minExtent();
+	}
 }

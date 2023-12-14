@@ -20,21 +20,25 @@ import java.io.IOException;
 
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
-/** A lowercasing {@link TokenFilter}. */
+/**
+ * A lowercasing {@link TokenFilter}.
+ */
 public final class MockLowerCaseFilter extends TokenFilter {
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
 
-  /** Sole constructor. */
-  public MockLowerCaseFilter(TokenStream in) {
-    super(in);
-  }
-  
-  @Override
-  public final boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      CharacterUtils.toLowerCase(termAtt.buffer(), 0, termAtt.length());
-      return true;
-    } else
-      return false;
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public MockLowerCaseFilter(TokenStream in) {
+		super(in);
+	}
+
+	@Override
+	public final boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			CharacterUtils.toLowerCase(termAtt.buffer(), 0, termAtt.length());
+			return true;
+		} else
+			return false;
+	}
 }

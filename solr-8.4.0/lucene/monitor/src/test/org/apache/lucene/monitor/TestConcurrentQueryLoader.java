@@ -19,15 +19,15 @@ package org.apache.lucene.monitor;
 
 public class TestConcurrentQueryLoader extends MonitorTestBase {
 
-  public void testLoading() throws Exception {
-    try (Monitor monitor = newMonitor()) {
-      try (ConcurrentQueryLoader loader = new ConcurrentQueryLoader(monitor)) {
-        for (int i = 0; i < 2000; i++) {
-          loader.add(new MonitorQuery(Integer.toString(i), parse("\"test " + i + "\"")));
-        }
-      }
-      assertEquals(2000, monitor.getQueryCount());
-    }
-  }
+	public void testLoading() throws Exception {
+		try (Monitor monitor = newMonitor()) {
+			try (ConcurrentQueryLoader loader = new ConcurrentQueryLoader(monitor)) {
+				for (int i = 0; i < 2000; i++) {
+					loader.add(new MonitorQuery(Integer.toString(i), parse("\"test " + i + "\"")));
+				}
+			}
+			assertEquals(2000, monitor.getQueryCount());
+		}
+	}
 
 }

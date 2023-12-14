@@ -21,132 +21,149 @@ package org.apache.lucene.analysis.util;
  * A StringBuilder that allows one to access the array.
  */
 public class OpenStringBuilder implements Appendable, CharSequence {
-  protected char[] buf;
-  protected int len;
+	protected char[] buf;
+	protected int len;
 
-  public OpenStringBuilder() {
-    this(32);
-  }
+	public OpenStringBuilder() {
+		this(32);
+	}
 
-  public OpenStringBuilder(int size) {
-    buf = new char[size];
-  }
+	public OpenStringBuilder(int size) {
+		buf = new char[size];
+	}
 
-  public OpenStringBuilder(char[] arr, int len) {
-    set(arr, len);
-  }
+	public OpenStringBuilder(char[] arr, int len) {
+		set(arr, len);
+	}
 
-  public void setLength(int len) { this.len = len; }
+	public void setLength(int len) {
+		this.len = len;
+	}
 
-  public void set(char[] arr, int end) {
-    this.buf = arr;
-    this.len = end;
-  }
+	public void set(char[] arr, int end) {
+		this.buf = arr;
+		this.len = end;
+	}
 
-  public char[] getArray() { return buf; }
-  public int size() { return len; }
-  @Override
-  public int length() { return len; }
-  public int capacity() { return buf.length; }
+	public char[] getArray() {
+		return buf;
+	}
 
-  @Override
-  public Appendable append(CharSequence csq) {
-    return append(csq, 0, csq.length());
-  }
+	public int size() {
+		return len;
+	}
 
-  @Override
-  public Appendable append(CharSequence csq, int start, int end) {
-    reserve(end-start);
-    for (int i=start; i<end; i++) {
-      unsafeWrite(csq.charAt(i));
-    }
-    return this;
-  }
+	@Override
+	public int length() {
+		return len;
+	}
 
-  @Override
-  public Appendable append(char c) {
-    write(c);
-    return this;
-  }
+	public int capacity() {
+		return buf.length;
+	}
 
-  @Override
-  public char charAt(int index) {
-    return buf[index];
-  }
+	@Override
+	public Appendable append(CharSequence csq) {
+		return append(csq, 0, csq.length());
+	}
 
-  public void setCharAt(int index, char ch) {
-    buf[index] = ch;    
-  }
+	@Override
+	public Appendable append(CharSequence csq, int start, int end) {
+		reserve(end - start);
+		for (int i = start; i < end; i++) {
+			unsafeWrite(csq.charAt(i));
+		}
+		return this;
+	}
 
-  @Override
-  public CharSequence subSequence(int start, int end) {
-    throw new UnsupportedOperationException(); // todo
-  }
+	@Override
+	public Appendable append(char c) {
+		write(c);
+		return this;
+	}
 
-  public void unsafeWrite(char b) {
-    buf[len++] = b;
-  }
+	@Override
+	public char charAt(int index) {
+		return buf[index];
+	}
 
-  public void unsafeWrite(int b) { unsafeWrite((char)b); }
+	public void setCharAt(int index, char ch) {
+		buf[index] = ch;
+	}
 
-  public void unsafeWrite(char b[], int off, int len) {
-    System.arraycopy(b, off, buf, this.len, len);
-    this.len += len;
-  }
+	@Override
+	public CharSequence subSequence(int start, int end) {
+		throw new UnsupportedOperationException(); // todo
+	}
 
-  protected void resize(int len) {
-    char newbuf[] = new char[Math.max(buf.length << 1, len)];
-    System.arraycopy(buf, 0, newbuf, 0, size());
-    buf = newbuf;
-  }
+	public void unsafeWrite(char b) {
+		buf[len++] = b;
+	}
 
-  public void reserve(int num) {
-    if (len + num > buf.length) resize(len + num);
-  }
+	public void unsafeWrite(int b) {
+		unsafeWrite((char) b);
+	}
 
-  public void write(char b) {
-    if (len >= buf.length) {
-      resize(len +1);
-    }
-    unsafeWrite(b);
-  }
+	public void unsafeWrite(char b[], int off, int len) {
+		System.arraycopy(b, off, buf, this.len, len);
+		this.len += len;
+	}
 
-  public void write(int b) { write((char)b); }
+	protected void resize(int len) {
+		char newbuf[] = new char[Math.max(buf.length << 1, len)];
+		System.arraycopy(buf, 0, newbuf, 0, size());
+		buf = newbuf;
+	}
 
-  public final void write(char[] b) {
-    write(b,0,b.length);
-  }
+	public void reserve(int num) {
+		if (len + num > buf.length) resize(len + num);
+	}
 
-  public void write(char b[], int off, int len) {
-    reserve(len);
-    unsafeWrite(b, off, len);
-  }
+	public void write(char b) {
+		if (len >= buf.length) {
+			resize(len + 1);
+		}
+		unsafeWrite(b);
+	}
 
-  public final void write(OpenStringBuilder arr) {
-    write(arr.buf, 0, len);
-  }
+	public void write(int b) {
+		write((char) b);
+	}
 
-  public void write(String s) {
-    reserve(s.length());
-    s.getChars(0,s.length(),buf, len);
-    len +=s.length();
-  }
+	public final void write(char[] b) {
+		write(b, 0, b.length);
+	}
 
-  public void flush() {
-  }
+	public void write(char b[], int off, int len) {
+		reserve(len);
+		unsafeWrite(b, off, len);
+	}
 
-  public final void reset() {
-    len =0;
-  }
+	public final void write(OpenStringBuilder arr) {
+		write(arr.buf, 0, len);
+	}
 
-  public char[] toCharArray() {
-    char newbuf[] = new char[size()];
-    System.arraycopy(buf, 0, newbuf, 0, size());
-    return newbuf;
-  }
+	public void write(String s) {
+		reserve(s.length());
+		s.getChars(0, s.length(), buf, len);
+		len += s.length();
+	}
 
-  @Override
-  public String toString() {
-    return new String(buf, 0, size());
-  }
+	public void flush() {
+	}
+
+	public final void reset() {
+		len = 0;
+	}
+
+	public char[] toCharArray() {
+		char newbuf[] = new char[size()];
+		System.arraycopy(buf, 0, newbuf, 0, size());
+		return newbuf;
+	}
+
+	@Override
+	public String toString() {
+		return new String(buf, 0, size());
+	}
 }

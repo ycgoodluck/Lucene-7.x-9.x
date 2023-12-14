@@ -21,31 +21,31 @@
  * as the base for ranking functions. For searching, users can employ the models
  * already implemented or create their own by extending one of the classes in this
  * package.
- * 
+ *
  * <h2>Table Of Contents</h2>
  *     <ol>
  *         <li><a href="#sims">Summary of the Ranking Methods</a></li>
  *         <li><a href="#changingSimilarity">Changing the Similarity</a></li>
  *     </ol>
- * 
- * 
+ *
+ *
  * <a name="sims"></a>
  * <h2>Summary of the Ranking Methods</h2>
- * 
+ *
  * <p>{@link org.apache.lucene.search.similarities.ClassicSimilarity} is the original Lucene
- * scoring function. It is based on a highly optimized 
+ * scoring function. It is based on a highly optimized
  * <a href="http://en.wikipedia.org/wiki/Vector_Space_Model">Vector Space Model</a>. For more
  * information, see {@link org.apache.lucene.search.similarities.TFIDFSimilarity}.
- * 
+ *
  * <p>{@link org.apache.lucene.search.similarities.BM25Similarity} is an optimized
  * implementation of the successful Okapi BM25 model.
- * 
+ *
  * <p>{@link org.apache.lucene.search.similarities.SimilarityBase} provides a basic
  * implementation of the Similarity contract and exposes a highly simplified
  * interface, which makes it an ideal starting point for new ranking functions.
  * Lucene ships the following methods built on
  * {@link org.apache.lucene.search.similarities.SimilarityBase}:
- * 
+ *
  * <a name="framework"></a>
  * <ul>
  *   <li>Amati and Rijsbergen's {@linkplain org.apache.lucene.search.similarities.DFRSimilarity DFR} framework;</li>
@@ -57,7 +57,7 @@
  *   in "IRRA at TREC 2012" (Dinçer).
  *   <li>
  * </ul>
- * 
+ * <p>
  * Since {@link org.apache.lucene.search.similarities.SimilarityBase} is not
  * optimized to the same extent as
  * {@link org.apache.lucene.search.similarities.ClassicSimilarity} and
@@ -65,10 +65,10 @@
  * performance is to be expected when using the methods listed above. However,
  * optimizations can always be implemented in subclasses; see
  * <a href="#changingSimilarity">below</a>.
- * 
+ *
  * <a name="changingSimilarity"></a>
  * <h2>Changing Similarity</h2>
- * 
+ *
  * <p>Chances are the available Similarities are sufficient for all
  *     your searching needs.
  *     However, in some applications it may be necessary to customize your <a
@@ -76,12 +76,12 @@
  *     applications do not need to
  *     distinguish between shorter and longer documents (see <a
  *         href="http://www.gossamer-threads.com/lists/lucene/java-user/38967#38967">a "fair" similarity</a>).
- * 
+ *
  * <p>To change {@link org.apache.lucene.search.similarities.Similarity}, one must do so for both indexing and
  *     searching, and the changes must happen before
  *     either of these actions take place. Although in theory there is nothing stopping you from changing mid-stream, it
  *     just isn't well-defined what is going to happen.
- * 
+ *
  * <p>To make this change, implement your own {@link org.apache.lucene.search.similarities.Similarity} (likely
  *     you'll want to simply subclass an existing method, be it
  *     {@link org.apache.lucene.search.similarities.ClassicSimilarity} or a descendant of
@@ -91,7 +91,7 @@
  *     before indexing and
  *     {@link org.apache.lucene.search.IndexSearcher#setSimilarity(Similarity)}
  *     before searching.
- * 
+ *
  * <h3>Extending {@linkplain org.apache.lucene.search.similarities.SimilarityBase}</h3>
  * <p>
  * The easiest way to quickly implement a new ranking method is to extend
@@ -100,7 +100,7 @@
  * implement the {@link org.apache.lucene.search.similarities.SimilarityBase#score(BasicStats, float, float)}
  * and {@link org.apache.lucene.search.similarities.SimilarityBase#toString()}
  * methods.
- * 
+ *
  * <p>Another option is to extend one of the <a href="#framework">frameworks</a>
  * based on {@link org.apache.lucene.search.similarities.SimilarityBase}. These
  * Similarities are implemented modularly, e.g.
@@ -111,7 +111,7 @@
  * {@link org.apache.lucene.search.similarities.Normalization}. Instead of
  * subclassing the Similarity, one can simply introduce a new basic model and tell
  * {@link org.apache.lucene.search.similarities.DFRSimilarity} to use it.
- * 
+ *
  * <h3>Changing {@linkplain org.apache.lucene.search.similarities.ClassicSimilarity}</h3>
  * <p>
  *     If you are interested in use cases for changing your similarity, see the Lucene users's mailing list at <a

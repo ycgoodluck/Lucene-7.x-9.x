@@ -53,10 +53,10 @@
  *   </ol>
  * <a name="index"></a>
  * <h2>Index APIs</h2>
-
+ *
  * <a name="writer"></a>
  * <h3>IndexWriter</h3>
-
+ *
  * <p>{@link org.apache.lucene.index.IndexWriter} is used to create an index, and to add, update and
  * delete documents. The IndexWriter class is thread safe, and enforces a single instance per
  * index. Creating an IndexWriter creates a new index or opens an existing index for writing, in a
@@ -65,20 +65,20 @@
  * represents a local file-system directory (see various implementations of {@link
  * org.apache.lucene.store.FSDirectory}), but it may also stand for some other storage, such as
  * RAM.</p>
-
+ *
  * <a name="reader"></a>
  * <h3>IndexReader</h3>
-
+ *
  * <p>{@link org.apache.lucene.index.IndexReader} is used to read data from the index, and supports
  * searching. Many thread-safe readers may be {@link org.apache.lucene.index.DirectoryReader#open}
  * concurrently with a single (or no) writer. Each reader maintains a consistent "point in time"
  * view of an index and must be explicitly refreshed (see {@link
  * org.apache.lucene.index.DirectoryReader#openIfChanged}) in order to incorporate writes that may
  * occur after it is opened.</p>
-
+ *
  * <a name="segments"></a>
  * <h3>Segments and docids</h3>
-
+ *
  * <p>Lucene's index is composed of segments, each of which contains a subset of all the documents
  * in the index, and is a complete searchable index in itself, over that subset. As documents are
  * written to the index, new segments are created and flushed to directory storage. Segments are
@@ -86,7 +86,7 @@
  * ones. Over time, the writer merges groups of smaller segments into single larger ones in order to
  * maintain an index that is efficient to search, and to reclaim dead space left behind by deleted
  * (and updated) documents.</p>
-
+ *
  * <p>Each document is identified by a 32-bit number, its "docid," and is composed of a collection
  * of Field values of diverse types (postings, stored fields, doc values, and points). Docids come
  * in two flavors: global and per-segment. A document's global docid is just the sum of its
@@ -100,7 +100,7 @@
  * sequential docids. Accordingly, docid values must always be treated as internal implementation,
  * not exposed as part of an application, nor stored or referenced outside of Lucene's internal
  * APIs.</p>
-
+ *
  * <a name="field_types"></a>
  * <h2>Field Types</h2>
  *
@@ -119,7 +119,7 @@
  * block. Different types of stored field provide high-level datatypes such as strings and numbers
  * on top of the underlying bytes. Stored field values are usually retrieved by the searcher using
  * an implementation of {@link org.apache.lucene.index.StoredFieldVisitor}.</p>
-
+ *
  * <a name="docvalues"></a>
  * <p>{@link org.apache.lucene.index.DocValues} fields are what are sometimes referred to as
  * columnar, or column-stride fields, by analogy to relational database terminology, in which
@@ -127,12 +127,12 @@
  * value for every document is held in a single data structure, providing for rapid, sequential
  * lookup of a field-value given a docid. These fields are used for efficient value-based sorting,
  * and for faceting, but they are not useful for filtering.</p>
-
+ *
  * <a name="points"></a>
  * <p>{@link org.apache.lucene.index.PointValues} represent numeric values using a kd-tree data
  * structure. Efficient 1- and higher dimensional implementations make these the choice for numeric
  * range and interval queries, and geo-spatial queries.</p>
-
+ *
  * <a name="postings"></a>
  * <h2>Postings APIs</h2>
  * <a name="fields"></a>
@@ -238,17 +238,17 @@
  *   Term statistics
  * </h3>
  *     <ul>
- *        <li>{@link org.apache.lucene.index.TermsEnum#docFreq}: Returns the number of 
- *            documents that contain at least one occurrence of the term. This statistic 
- *            is always available for an indexed term. Note that it will also count 
- *            deleted documents, when segments are merged the statistic is updated as 
+ *        <li>{@link org.apache.lucene.index.TermsEnum#docFreq}: Returns the number of
+ *            documents that contain at least one occurrence of the term. This statistic
+ *            is always available for an indexed term. Note that it will also count
+ *            deleted documents, when segments are merged the statistic is updated as
  *            those deleted documents are merged away.
- *        <li>{@link org.apache.lucene.index.TermsEnum#totalTermFreq}: Returns the number 
- *            of occurrences of this term across all documents. Note that this statistic 
- *            is unavailable (returns <code>-1</code>) if term frequencies were omitted 
- *            from the index 
- *            ({@link org.apache.lucene.index.IndexOptions#DOCS DOCS}) 
- *            for the field. Like docFreq(), it will also count occurrences that appear in 
+ *        <li>{@link org.apache.lucene.index.TermsEnum#totalTermFreq}: Returns the number
+ *            of occurrences of this term across all documents. Note that this statistic
+ *            is unavailable (returns <code>-1</code>) if term frequencies were omitted
+ *            from the index
+ *            ({@link org.apache.lucene.index.IndexOptions#DOCS DOCS})
+ *            for the field. Like docFreq(), it will also count occurrences that appear in
  *            deleted documents.
  *     </ul>
  * <a name="fieldstats"></a>
@@ -256,8 +256,8 @@
  *   Field statistics
  * </h3>
  *     <ul>
- *        <li>{@link org.apache.lucene.index.Terms#size}: Returns the number of 
- *            unique terms in the field. This statistic may be unavailable 
+ *        <li>{@link org.apache.lucene.index.Terms#size}: Returns the number of
+ *            unique terms in the field. This statistic may be unavailable
  *            (returns <code>-1</code>) for some Terms implementations such as
  *            {@link org.apache.lucene.index.MultiTerms}, where it cannot be efficiently
  *            computed.  Note that this count also includes terms that appear only
@@ -273,12 +273,12 @@
  *            across all terms in the field, and like docFreq() it will also count postings
  *            that appear in deleted documents.
  *        <li>{@link org.apache.lucene.index.Terms#getSumTotalTermFreq}: Returns the number
- *            of tokens for the field. This can be thought of as the sum of 
+ *            of tokens for the field. This can be thought of as the sum of
  *            {@link org.apache.lucene.index.TermsEnum#totalTermFreq} across all terms in the
  *            field, and like totalTermFreq() it will also count occurrences that appear in
- *            deleted documents, and will be unavailable (returns <code>-1</code>) if term 
- *            frequencies were omitted from the index 
- *            ({@link org.apache.lucene.index.IndexOptions#DOCS DOCS}) 
+ *            deleted documents, and will be unavailable (returns <code>-1</code>) if term
+ *            frequencies were omitted from the index
+ *            ({@link org.apache.lucene.index.IndexOptions#DOCS DOCS})
  *            for the field.
  *     </ul>
  * <a name="segmentstats"></a>

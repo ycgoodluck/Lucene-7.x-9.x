@@ -32,92 +32,95 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.luke.util.LoggerFactory;
 
-/** 20 Newsgroups (http://kdd.ics.uci.edu/databases/20newsgroups/20newsgroups.html) message files parser */
-public class MessageFilesParser  extends SimpleFileVisitor<Path> {
+/**
+ * 20 Newsgroups (http://kdd.ics.uci.edu/databases/20newsgroups/20newsgroups.html) message files parser
+ */
+public class MessageFilesParser extends SimpleFileVisitor<Path> {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private final Path root;
+	private final Path root;
 
-  private final List<Message> messages = new ArrayList<>();
+	private final List<Message> messages = new ArrayList<>();
 
-  public MessageFilesParser(Path root) {
-    this.root = root;
-  }
+	public MessageFilesParser(Path root) {
+		this.root = root;
+	}
 
-  public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
-    try {
-      if (attr.isRegularFile()) {
-        Message message = parse(file);
-        if (message != null) {
-          messages.add(parse(file));
-        }
-      }
-    } catch (IOException e) {
-      log.warn("Invalid file? " + file.toString());
-    }
-    return FileVisitResult.CONTINUE;
-  }
+	public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
+		try {
+			if (attr.isRegularFile()) {
+				Message message = parse(file);
+				if (message != null) {
+					messages.add(parse(file));
+				}
+			}
+		} catch (IOException e) {
+			log.warn("Invalid file? " + file.toString());
+		}
+		return FileVisitResult.CONTINUE;
+	}
 
-  Message parse(Path file) throws IOException {
-    try (BufferedReader br = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-      String line = br.readLine();
+	Message parse(Path file) throws IOException {
+		try (BufferedReader br = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+			String line = br.readLine();
 
-      Message message = new Message();
-      while (!line.equals("")) {
-        String[] ary = line.split(":", 2);
-        if (ary.length < 2) {
-          line = br.readLine();
-          continue;
-        }
-        String att = ary[0].trim();
-        String val = ary[1].trim();
-        switch (att) {
-          case "From":
-            message.setFrom(val);
-            break;
-          case "Newsgroups":
-            message.setNewsgroups(val.split(","));
-            break;
-          case "Subject":
-            message.setSubject(val);
-            break;
-          case "Message-ID":
-            message.setMessageId(val);
-            break;
-          case "Date":
-            message.setDate(val);
-            break;
-          case "Organization":
-            message.setOrganization(val);
-            break;
-          case "Lines":
-            try {
-              message.setLines(Integer.parseInt(ary[1].trim()));
-            } catch (NumberFormatException e) {}
-            break;
-          default:
-            break;
-        }
+			Message message = new Message();
+			while (!line.equals("")) {
+				String[] ary = line.split(":", 2);
+				if (ary.length < 2) {
+					line = br.readLine();
+					continue;
+				}
+				String att = ary[0].trim();
+				String val = ary[1].trim();
+				switch (att) {
+					case "From":
+						message.setFrom(val);
+						break;
+					case "Newsgroups":
+						message.setNewsgroups(val.split(","));
+						break;
+					case "Subject":
+						message.setSubject(val);
+						break;
+					case "Message-ID":
+						message.setMessageId(val);
+						break;
+					case "Date":
+						message.setDate(val);
+						break;
+					case "Organization":
+						message.setOrganization(val);
+						break;
+					case "Lines":
+						try {
+							message.setLines(Integer.parseInt(ary[1].trim()));
+						} catch (NumberFormatException e) {
+						}
+						break;
+					default:
+						break;
+				}
 
-        line = br.readLine();
-      }
+				line = br.readLine();
+			}
 
-      StringBuilder sb = new StringBuilder();
-      while (line != null) {
-        sb.append(line);
-        sb.append(" ");
-        line = br.readLine();
-      }
-      message.setBody(sb.toString());
+			StringBuilder sb = new StringBuilder();
+			while (line != null) {
+				sb.append(line);
+				sb.append(" ");
+				line = br.readLine();
+			}
+			message.setBody(sb.toString());
 
-      return message;
-    }
-  }
+			return message;
+		}
+	}
 
-  public List<Message> parseAll() throws IOException {
-    Files.walkFileTree(root, this);
-    return messages;
-  }
+	public List<Message> parseAll() throws IOException {
+		Files.walkFileTree(root, this);
+		return messages;
+	}
 
 }

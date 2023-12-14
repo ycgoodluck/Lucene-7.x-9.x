@@ -27,22 +27,22 @@ import java.io.IOException;
  */
 public final class RawDirectoryWrapper extends BaseDirectoryWrapper {
 
-  public RawDirectoryWrapper(Directory delegate) {
-    super(delegate);
-  }
-  
-  @Override
-  public void copyFrom(Directory from, String src, String dest, IOContext context) throws IOException {
-    in.copyFrom(from, src, dest, context);
-  }
-  
-  @Override
-  public ChecksumIndexInput openChecksumInput(String name, IOContext context) throws IOException {
-    return in.openChecksumInput(name, context);
-  }
+	public RawDirectoryWrapper(Directory delegate) {
+		super(delegate);
+	}
 
-  @Override
-  protected void ensureOpen() throws AlreadyClosedException {
-    in.ensureOpen();
-  }
+	@Override
+	public void copyFrom(Directory from, String src, String dest, IOContext context) throws IOException {
+		in.copyFrom(from, src, dest, context);
+	}
+
+	@Override
+	public ChecksumIndexInput openChecksumInput(String name, IOContext context) throws IOException {
+		return in.openChecksumInput(name, context);
+	}
+
+	@Override
+	protected void ensureOpen() throws AlreadyClosedException {
+		in.ensureOpen();
+	}
 }

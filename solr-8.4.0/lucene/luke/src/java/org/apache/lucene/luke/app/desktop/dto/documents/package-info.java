@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** DTO classes */
+/**
+ * DTO classes
+ */
 package org.apache.lucene.luke.app.desktop.dto.documents;

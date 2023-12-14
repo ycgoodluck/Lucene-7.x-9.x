@@ -28,21 +28,22 @@ import org.apache.lucene.util.BytesRef;
  * <p>
  * For example, implementations may decompress or decrypt.
  *
- * @see BlockEncoder
  * @lucene.experimental
+ * @see BlockEncoder
  */
 public interface BlockDecoder {
 
-  /**
-   * Decodes all the bytes of one block in a single operation. The decoding is per block.
-   * @param blockBytes The input block bytes to read.
-   * @param length The number of bytes to read from the input.
-   * @return The decoded block bytes.
-   * @throws IOException If a decoding error occurs.
-   */
-  // TODO: this method could return a new interface ReadableBytes which
-  // would provide the size and create PositionableDataInput (get/set position)
-  // implemented by ByteArrayDataInput and ByteBuffersDataInput.
-  // Big length could be supported (> Integer.MAX_VALUE).
-  BytesRef decode(DataInput blockBytes, long length) throws IOException;
+	/**
+	 * Decodes all the bytes of one block in a single operation. The decoding is per block.
+	 *
+	 * @param blockBytes The input block bytes to read.
+	 * @param length     The number of bytes to read from the input.
+	 * @return The decoded block bytes.
+	 * @throws IOException If a decoding error occurs.
+	 */
+	// TODO: this method could return a new interface ReadableBytes which
+	// would provide the size and create PositionableDataInput (get/set position)
+	// implemented by ByteArrayDataInput and ByteBuffersDataInput.
+	// Big length could be supported (> Integer.MAX_VALUE).
+	BytesRef decode(DataInput blockBytes, long length) throws IOException;
 }

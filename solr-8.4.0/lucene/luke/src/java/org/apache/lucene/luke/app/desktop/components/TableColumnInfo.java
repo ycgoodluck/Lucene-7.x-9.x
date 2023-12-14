@@ -17,17 +17,19 @@
 
 package org.apache.lucene.luke.app.desktop.components;
 
-/** Holder of table column attributes */
+/**
+ * Holder of table column attributes
+ */
 public interface TableColumnInfo {
 
-  String getColName();
+	String getColName();
 
-  int getIndex();
+	int getIndex();
 
-  Class<?> getType();
+	Class<?> getType();
 
-  default int getColumnWidth() {
-    return 0;
-  }
+	default int getColumnWidth() {
+		return 0;
+	}
 
 }

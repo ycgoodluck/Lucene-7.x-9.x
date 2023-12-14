@@ -24,14 +24,14 @@ import org.apache.lucene.util.BytesRef;
  */
 public interface PayloadDecoder {
 
-  /**
-   * Compute a float value for the given payload
-   */
-  float computePayloadFactor(BytesRef payload);
+	/**
+	 * Compute a float value for the given payload
+	 */
+	float computePayloadFactor(BytesRef payload);
 
-  /**
-   * A {@link PayloadDecoder} that interprets the bytes of a payload as a float
-   */
-  PayloadDecoder FLOAT_DECODER = bytes -> bytes == null ? 1 : bytes.bytes[bytes.offset];
+	/**
+	 * A {@link PayloadDecoder} that interprets the bytes of a payload as a float
+	 */
+	PayloadDecoder FLOAT_DECODER = bytes -> bytes == null ? 1 : bytes.bytes[bytes.offset];
 
 }

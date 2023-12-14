@@ -29,18 +29,18 @@ import org.apache.lucene.index.LeafReader;
  */
 public class PostingsOffsetStrategy extends FieldOffsetStrategy {
 
-  public PostingsOffsetStrategy(UHComponents components) {
-    super(components);
-  }
+	public PostingsOffsetStrategy(UHComponents components) {
+		super(components);
+	}
 
-  @Override
-  public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
-    return createOffsetsEnumFromReader(reader, docId);
-  }
+	@Override
+	public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
+		return createOffsetsEnumFromReader(reader, docId);
+	}
 
 
-  @Override
-  public UnifiedHighlighter.OffsetSource getOffsetSource() {
-    return UnifiedHighlighter.OffsetSource.POSTINGS;
-  }
+	@Override
+	public UnifiedHighlighter.OffsetSource getOffsetSource() {
+		return UnifiedHighlighter.OffsetSource.POSTINGS;
+	}
 }

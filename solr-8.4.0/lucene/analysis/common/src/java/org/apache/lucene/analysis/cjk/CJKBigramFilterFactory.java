@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link CJKBigramFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_cjk" class="solr.TextField"&gt;
@@ -30,47 +30,52 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;tokenizer class="solr.StandardTokenizerFactory"/&gt;
  *     &lt;filter class="solr.CJKWidthFilterFactory"/&gt;
  *     &lt;filter class="solr.LowerCaseFilterFactory"/&gt;
- *     &lt;filter class="solr.CJKBigramFilterFactory" 
- *       han="true" hiragana="true" 
+ *     &lt;filter class="solr.CJKBigramFilterFactory"
+ *       han="true" hiragana="true"
  *       katakana="true" hangul="true" outputUnigrams="false" /&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.6.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.6.0
  */
 public class CJKBigramFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "cjkBigram";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "cjkBigram";
 
-  final int flags;
-  final boolean outputUnigrams;
+	final int flags;
+	final boolean outputUnigrams;
 
-  /** Creates a new CJKBigramFilterFactory */
-  public CJKBigramFilterFactory(Map<String,String> args) {
-    super(args);
-    int flags = 0;
-    if (getBoolean(args, "han", true)) {
-      flags |= CJKBigramFilter.HAN;
-    }
-    if (getBoolean(args, "hiragana", true)) {
-      flags |= CJKBigramFilter.HIRAGANA;
-    }
-    if (getBoolean(args, "katakana", true)) {
-      flags |= CJKBigramFilter.KATAKANA;
-    }
-    if (getBoolean(args, "hangul", true)) {
-      flags |= CJKBigramFilter.HANGUL;
-    }
-    this.flags = flags;
-    this.outputUnigrams = getBoolean(args, "outputUnigrams", false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new CJKBigramFilter(input, flags, outputUnigrams);
-  }
+	/**
+	 * Creates a new CJKBigramFilterFactory
+	 */
+	public CJKBigramFilterFactory(Map<String, String> args) {
+		super(args);
+		int flags = 0;
+		if (getBoolean(args, "han", true)) {
+			flags |= CJKBigramFilter.HAN;
+		}
+		if (getBoolean(args, "hiragana", true)) {
+			flags |= CJKBigramFilter.HIRAGANA;
+		}
+		if (getBoolean(args, "katakana", true)) {
+			flags |= CJKBigramFilter.KATAKANA;
+		}
+		if (getBoolean(args, "hangul", true)) {
+			flags |= CJKBigramFilter.HANGUL;
+		}
+		this.flags = flags;
+		this.outputUnigrams = getBoolean(args, "outputUnigrams", false);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new CJKBigramFilter(input, flags, outputUnigrams);
+	}
 }

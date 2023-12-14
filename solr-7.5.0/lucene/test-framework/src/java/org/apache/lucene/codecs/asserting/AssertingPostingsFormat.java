@@ -42,205 +42,205 @@ import org.apache.lucene.util.TestUtil;
  * Just like the default postings format but with additional asserts.
  */
 public final class AssertingPostingsFormat extends PostingsFormat {
-  private final PostingsFormat in = TestUtil.getDefaultPostingsFormat();
-  
-  public AssertingPostingsFormat() {
-    super("Asserting");
-  }
-  
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    return new AssertingFieldsConsumer(state, in.fieldsConsumer(state));
-  }
+	private final PostingsFormat in = TestUtil.getDefaultPostingsFormat();
 
-  @Override
-  public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
-    return new AssertingFieldsProducer(in.fieldsProducer(state));
-  }
-  
-  static class AssertingFieldsProducer extends FieldsProducer {
-    private final FieldsProducer in;
-    
-    AssertingFieldsProducer(FieldsProducer in) {
-      this.in = in;
-      // do a few simple checks on init
-      assert toString() != null;
-      assert ramBytesUsed() >= 0;
-      assert getChildResources() != null;
-    }
-    
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
+	public AssertingPostingsFormat() {
+		super("Asserting");
+	}
 
-    @Override
-    public Iterator<String> iterator() {
-      Iterator<String> iterator = in.iterator();
-      assert iterator != null;
-      return iterator;
-    }
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		return new AssertingFieldsConsumer(state, in.fieldsConsumer(state));
+	}
 
-    @Override
-    public Terms terms(String field) throws IOException {
-      Terms terms = in.terms(field);
-      return terms == null ? null : new AssertingLeafReader.AssertingTerms(terms);
-    }
+	@Override
+	public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
+		return new AssertingFieldsProducer(in.fieldsProducer(state));
+	}
 
-    @Override
-    public int size() {
-      return in.size();
-    }
+	static class AssertingFieldsProducer extends FieldsProducer {
+		private final FieldsProducer in;
 
-    @Override
-    public long ramBytesUsed() {
-      long v = in.ramBytesUsed();
-      assert v >= 0;
-      return v;
-    }
-    
-    @Override
-    public Collection<Accountable> getChildResources() {
-      Collection<Accountable> res = in.getChildResources();
-      TestUtil.checkReadOnly(res);
-      return res;
-    }
+		AssertingFieldsProducer(FieldsProducer in) {
+			this.in = in;
+			// do a few simple checks on init
+			assert toString() != null;
+			assert ramBytesUsed() >= 0;
+			assert getChildResources() != null;
+		}
 
-    @Override
-    public void checkIntegrity() throws IOException {
-      in.checkIntegrity();
-    }
-    
-    @Override
-    public FieldsProducer getMergeInstance() throws IOException {
-      return new AssertingFieldsProducer(in.getMergeInstance());
-    }
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
 
-    @Override
-    public String toString() {
-      return getClass().getSimpleName() + "(" + in.toString() + ")";
-    }
-  }
+		@Override
+		public Iterator<String> iterator() {
+			Iterator<String> iterator = in.iterator();
+			assert iterator != null;
+			return iterator;
+		}
 
-  static class AssertingFieldsConsumer extends FieldsConsumer {
-    private final FieldsConsumer in;
-    private final SegmentWriteState writeState;
+		@Override
+		public Terms terms(String field) throws IOException {
+			Terms terms = in.terms(field);
+			return terms == null ? null : new AssertingLeafReader.AssertingTerms(terms);
+		}
 
-    AssertingFieldsConsumer(SegmentWriteState writeState, FieldsConsumer in) {
-      this.writeState = writeState;
-      this.in = in;
-    }
-    
-    @Override
-    public void write(Fields fields) throws IOException {
-      in.write(fields);
+		@Override
+		public int size() {
+			return in.size();
+		}
 
-      // TODO: more asserts?  can we somehow run a
-      // "limited" CheckIndex here???  Or ... can we improve
-      // AssertingFieldsProducer and us it also to wrap the
-      // incoming Fields here?
- 
-      String lastField = null;
+		@Override
+		public long ramBytesUsed() {
+			long v = in.ramBytesUsed();
+			assert v >= 0;
+			return v;
+		}
 
-      for(String field : fields) {
+		@Override
+		public Collection<Accountable> getChildResources() {
+			Collection<Accountable> res = in.getChildResources();
+			TestUtil.checkReadOnly(res);
+			return res;
+		}
 
-        FieldInfo fieldInfo = writeState.fieldInfos.fieldInfo(field);
-        assert fieldInfo != null;
-        assert lastField == null || lastField.compareTo(field) < 0;
-        lastField = field;
+		@Override
+		public void checkIntegrity() throws IOException {
+			in.checkIntegrity();
+		}
 
-        Terms terms = fields.terms(field);
-        if (terms == null) {
-          continue;
-        }
-        assert terms != null;
+		@Override
+		public FieldsProducer getMergeInstance() throws IOException {
+			return new AssertingFieldsProducer(in.getMergeInstance());
+		}
 
-        TermsEnum termsEnum = terms.iterator();
-        BytesRefBuilder lastTerm = null;
-        PostingsEnum postingsEnum = null;
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + "(" + in.toString() + ")";
+		}
+	}
 
-        boolean hasFreqs = fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0;
-        boolean hasPositions = fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS) >= 0;
-        boolean hasOffsets = fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS) >= 0;
-        boolean hasPayloads = terms.hasPayloads();
+	static class AssertingFieldsConsumer extends FieldsConsumer {
+		private final FieldsConsumer in;
+		private final SegmentWriteState writeState;
 
-        assert hasPositions == terms.hasPositions();
-        assert hasOffsets == terms.hasOffsets();
+		AssertingFieldsConsumer(SegmentWriteState writeState, FieldsConsumer in) {
+			this.writeState = writeState;
+			this.in = in;
+		}
 
-        while(true) {
-          BytesRef term = termsEnum.next();
-          if (term == null) {
-            break;
-          }
-          assert lastTerm == null || lastTerm.get().compareTo(term) < 0;
-          if (lastTerm == null) {
-            lastTerm = new BytesRefBuilder();
-            lastTerm.append(term);
-          } else {
-            lastTerm.copyBytes(term);
-          }
+		@Override
+		public void write(Fields fields) throws IOException {
+			in.write(fields);
 
-          int flags = 0;
-          if (hasPositions == false) {
-            if (hasFreqs) {
-              flags = flags | PostingsEnum.FREQS;
-            }
-            postingsEnum = termsEnum.postings(postingsEnum, flags);
-          } else {
-            flags = PostingsEnum.POSITIONS;
-            if (hasPayloads) {
-              flags |= PostingsEnum.PAYLOADS;
-            }
-            if (hasOffsets) {
-              flags = flags | PostingsEnum.OFFSETS;
-            }
-            postingsEnum = termsEnum.postings(postingsEnum, flags);
-          }
+			// TODO: more asserts?  can we somehow run a
+			// "limited" CheckIndex here???  Or ... can we improve
+			// AssertingFieldsProducer and us it also to wrap the
+			// incoming Fields here?
 
-          assert postingsEnum != null : "termsEnum=" + termsEnum + " hasPositions=" + hasPositions;
+			String lastField = null;
 
-          int lastDocID = -1;
+			for (String field : fields) {
 
-          while(true) {
-            int docID = postingsEnum.nextDoc();
-            if (docID == PostingsEnum.NO_MORE_DOCS) {
-              break;
-            }
-            assert docID > lastDocID;
-            lastDocID = docID;
-            if (hasFreqs) {
-              int freq = postingsEnum.freq();
-              assert freq > 0;
+				FieldInfo fieldInfo = writeState.fieldInfos.fieldInfo(field);
+				assert fieldInfo != null;
+				assert lastField == null || lastField.compareTo(field) < 0;
+				lastField = field;
 
-              if (hasPositions) {
-                int lastPos = -1;
-                int lastStartOffset = -1;
-                for(int i=0;i<freq;i++) {
-                  int pos = postingsEnum.nextPosition();
-                  assert pos >= lastPos: "pos=" + pos + " vs lastPos=" + lastPos + " i=" + i + " freq=" + freq;
-                  assert pos <= IndexWriter.MAX_POSITION: "pos=" + pos + " is > IndexWriter.MAX_POSITION=" + IndexWriter.MAX_POSITION;
-                  lastPos = pos;
+				Terms terms = fields.terms(field);
+				if (terms == null) {
+					continue;
+				}
+				assert terms != null;
 
-                  if (hasOffsets) {
-                    int startOffset = postingsEnum.startOffset();
-                    int endOffset = postingsEnum.endOffset();
-                    assert endOffset >= startOffset;
-                    assert startOffset >= lastStartOffset;
-                    lastStartOffset = startOffset;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+				TermsEnum termsEnum = terms.iterator();
+				BytesRefBuilder lastTerm = null;
+				PostingsEnum postingsEnum = null;
 
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
-  }
+				boolean hasFreqs = fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0;
+				boolean hasPositions = fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS) >= 0;
+				boolean hasOffsets = fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS) >= 0;
+				boolean hasPayloads = terms.hasPayloads();
+
+				assert hasPositions == terms.hasPositions();
+				assert hasOffsets == terms.hasOffsets();
+
+				while (true) {
+					BytesRef term = termsEnum.next();
+					if (term == null) {
+						break;
+					}
+					assert lastTerm == null || lastTerm.get().compareTo(term) < 0;
+					if (lastTerm == null) {
+						lastTerm = new BytesRefBuilder();
+						lastTerm.append(term);
+					} else {
+						lastTerm.copyBytes(term);
+					}
+
+					int flags = 0;
+					if (hasPositions == false) {
+						if (hasFreqs) {
+							flags = flags | PostingsEnum.FREQS;
+						}
+						postingsEnum = termsEnum.postings(postingsEnum, flags);
+					} else {
+						flags = PostingsEnum.POSITIONS;
+						if (hasPayloads) {
+							flags |= PostingsEnum.PAYLOADS;
+						}
+						if (hasOffsets) {
+							flags = flags | PostingsEnum.OFFSETS;
+						}
+						postingsEnum = termsEnum.postings(postingsEnum, flags);
+					}
+
+					assert postingsEnum != null : "termsEnum=" + termsEnum + " hasPositions=" + hasPositions;
+
+					int lastDocID = -1;
+
+					while (true) {
+						int docID = postingsEnum.nextDoc();
+						if (docID == PostingsEnum.NO_MORE_DOCS) {
+							break;
+						}
+						assert docID > lastDocID;
+						lastDocID = docID;
+						if (hasFreqs) {
+							int freq = postingsEnum.freq();
+							assert freq > 0;
+
+							if (hasPositions) {
+								int lastPos = -1;
+								int lastStartOffset = -1;
+								for (int i = 0; i < freq; i++) {
+									int pos = postingsEnum.nextPosition();
+									assert pos >= lastPos : "pos=" + pos + " vs lastPos=" + lastPos + " i=" + i + " freq=" + freq;
+									assert pos <= IndexWriter.MAX_POSITION : "pos=" + pos + " is > IndexWriter.MAX_POSITION=" + IndexWriter.MAX_POSITION;
+									lastPos = pos;
+
+									if (hasOffsets) {
+										int startOffset = postingsEnum.startOffset();
+										int endOffset = postingsEnum.endOffset();
+										assert endOffset >= startOffset;
+										assert startOffset >= lastStartOffset;
+										lastStartOffset = startOffset;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
+	}
 }

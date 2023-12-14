@@ -32,89 +32,91 @@ import org.apache.lucene.index.LeafReaderContext;
 
 public class SortRescorer extends Rescorer {
 
-  private final Sort sort;
+	private final Sort sort;
 
-  /** Sole constructor. */
-  public SortRescorer(Sort sort) {
-    this.sort = sort;
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public SortRescorer(Sort sort) {
+		this.sort = sort;
+	}
 
-  @Override
-  public TopDocs rescore(IndexSearcher searcher, TopDocs firstPassTopDocs, int topN) throws IOException {
+	@Override
+	public TopDocs rescore(IndexSearcher searcher, TopDocs firstPassTopDocs, int topN) throws IOException {
 
-    // Copy ScoreDoc[] and sort by ascending docID:
-    ScoreDoc[] hits = firstPassTopDocs.scoreDocs.clone();
-    Arrays.sort(hits,
-                new Comparator<ScoreDoc>() {
-                  @Override
-                  public int compare(ScoreDoc a, ScoreDoc b) {
-                    return a.doc - b.doc;
-                  }
-                });
+		// Copy ScoreDoc[] and sort by ascending docID:
+		ScoreDoc[] hits = firstPassTopDocs.scoreDocs.clone();
+		Arrays.sort(hits,
+			new Comparator<ScoreDoc>() {
+				@Override
+				public int compare(ScoreDoc a, ScoreDoc b) {
+					return a.doc - b.doc;
+				}
+			});
 
-    List<LeafReaderContext> leaves = searcher.getIndexReader().leaves();
+		List<LeafReaderContext> leaves = searcher.getIndexReader().leaves();
 
-    TopFieldCollector collector = TopFieldCollector.create(sort, topN, true, true, true, true);
+		TopFieldCollector collector = TopFieldCollector.create(sort, topN, true, true, true, true);
 
-    // Now merge sort docIDs from hits, with reader's leaves:
-    int hitUpto = 0;
-    int readerUpto = -1;
-    int endDoc = 0;
-    int docBase = 0;
+		// Now merge sort docIDs from hits, with reader's leaves:
+		int hitUpto = 0;
+		int readerUpto = -1;
+		int endDoc = 0;
+		int docBase = 0;
 
-    LeafCollector leafCollector = null;
-    FakeScorer fakeScorer = new FakeScorer();
+		LeafCollector leafCollector = null;
+		FakeScorer fakeScorer = new FakeScorer();
 
-    while (hitUpto < hits.length) {
-      ScoreDoc hit = hits[hitUpto];
-      int docID = hit.doc;
-      LeafReaderContext readerContext = null;
-      while (docID >= endDoc) {
-        readerUpto++;
-        readerContext = leaves.get(readerUpto);
-        endDoc = readerContext.docBase + readerContext.reader().maxDoc();
-      }
+		while (hitUpto < hits.length) {
+			ScoreDoc hit = hits[hitUpto];
+			int docID = hit.doc;
+			LeafReaderContext readerContext = null;
+			while (docID >= endDoc) {
+				readerUpto++;
+				readerContext = leaves.get(readerUpto);
+				endDoc = readerContext.docBase + readerContext.reader().maxDoc();
+			}
 
-      if (readerContext != null) {
-        // We advanced to another segment:
-        leafCollector = collector.getLeafCollector(readerContext);
-        leafCollector.setScorer(fakeScorer);
-        docBase = readerContext.docBase;
-      }
+			if (readerContext != null) {
+				// We advanced to another segment:
+				leafCollector = collector.getLeafCollector(readerContext);
+				leafCollector.setScorer(fakeScorer);
+				docBase = readerContext.docBase;
+			}
 
-      fakeScorer.score = hit.score;
-      fakeScorer.doc = docID - docBase;
+			fakeScorer.score = hit.score;
+			fakeScorer.doc = docID - docBase;
 
-      leafCollector.collect(fakeScorer.doc);
+			leafCollector.collect(fakeScorer.doc);
 
-      hitUpto++;
-    }
+			hitUpto++;
+		}
 
-    return collector.topDocs();
-  }
+		return collector.topDocs();
+	}
 
-  @Override
-  public Explanation explain(IndexSearcher searcher, Explanation firstPassExplanation, int docID) throws IOException {
-    TopDocs oneHit = new TopDocs(1, new ScoreDoc[] {new ScoreDoc(docID, firstPassExplanation.getValue())});
-    TopDocs hits = rescore(searcher, oneHit, 1);
-    assert hits.totalHits == 1;
+	@Override
+	public Explanation explain(IndexSearcher searcher, Explanation firstPassExplanation, int docID) throws IOException {
+		TopDocs oneHit = new TopDocs(1, new ScoreDoc[]{new ScoreDoc(docID, firstPassExplanation.getValue())});
+		TopDocs hits = rescore(searcher, oneHit, 1);
+		assert hits.totalHits == 1;
 
-    List<Explanation> subs = new ArrayList<>();
+		List<Explanation> subs = new ArrayList<>();
 
-    // Add first pass:
-    Explanation first = Explanation.match(firstPassExplanation.getValue(), "first pass score", firstPassExplanation);
-    subs.add(first);
+		// Add first pass:
+		Explanation first = Explanation.match(firstPassExplanation.getValue(), "first pass score", firstPassExplanation);
+		subs.add(first);
 
-    FieldDoc fieldDoc = (FieldDoc) hits.scoreDocs[0];
+		FieldDoc fieldDoc = (FieldDoc) hits.scoreDocs[0];
 
-    // Add sort values:
-    SortField[] sortFields = sort.getSort();
-    for(int i=0;i<sortFields.length;i++) {
-      subs.add(Explanation.match(0.0f, "sort field " + sortFields[i].toString() + " value=" + fieldDoc.fields[i]));
-    }
+		// Add sort values:
+		SortField[] sortFields = sort.getSort();
+		for (int i = 0; i < sortFields.length; i++) {
+			subs.add(Explanation.match(0.0f, "sort field " + sortFields[i].toString() + " value=" + fieldDoc.fields[i]));
+		}
 
-    // TODO: if we could ask the Sort to explain itself then
-    // we wouldn't need the separate ExpressionRescorer...
-    return Explanation.match(0.0f, "sort field values for sort=" + sort.toString(), subs);
-  }
+		// TODO: if we could ask the Sort to explain itself then
+		// we wouldn't need the separate ExpressionRescorer...
+		return Explanation.match(0.0f, "sort field values for sort=" + sort.toString(), subs);
+	}
 }

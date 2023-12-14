@@ -38,55 +38,55 @@ import com.carrotsearch.randomizedtesting.annotations.TimeoutSuite;
 @Monster("takes ~ 2 hours if the heap is 5gb")
 @SuppressSysoutChecks(bugUrl = "Stuff gets printed")
 public class Test2BNumericDocValues extends LuceneTestCase {
-  
-  // indexes IndexWriter.MAX_DOCS docs with an increasing dv field
-  public void testNumerics() throws Exception {
-    BaseDirectoryWrapper dir = newFSDirectory(createTempDir("2BNumerics"));
-    if (dir instanceof MockDirectoryWrapper) {
-      ((MockDirectoryWrapper)dir).setThrottling(MockDirectoryWrapper.Throttling.NEVER);
-    }
-    
-    IndexWriter w = new IndexWriter(dir,
-        new IndexWriterConfig(new MockAnalyzer(random()))
-        .setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH)
-        .setRAMBufferSizeMB(256.0)
-        .setMergeScheduler(new ConcurrentMergeScheduler())
-        .setMergePolicy(newLogMergePolicy(false, 10))
-        .setOpenMode(IndexWriterConfig.OpenMode.CREATE)
-        .setCodec(TestUtil.getDefaultCodec()));
 
-    Document doc = new Document();
-    NumericDocValuesField dvField = new NumericDocValuesField("dv", 0);
-    doc.add(dvField);
-    
-    for (int i = 0; i < IndexWriter.MAX_DOCS; i++) {
-      dvField.setLongValue(i);
-      w.addDocument(doc);
-      if (i % 100000 == 0) {
-        System.out.println("indexed: " + i);
-        System.out.flush();
-      }
-    }
-    
-    w.forceMerge(1);
-    w.close();
-    
-    System.out.println("verifying...");
-    System.out.flush();
-    
-    DirectoryReader r = DirectoryReader.open(dir);
-    long expectedValue = 0;
-    for (LeafReaderContext context : r.leaves()) {
-      LeafReader reader = context.reader();
-      NumericDocValues dv = reader.getNumericDocValues("dv");
-      for (int i = 0; i < reader.maxDoc(); i++) {
-        assertEquals(i, dv.nextDoc());
-        assertEquals(expectedValue, dv.longValue());
-        expectedValue++;
-      }
-    }
-    
-    r.close();
-    dir.close();
-  }
+	// indexes IndexWriter.MAX_DOCS docs with an increasing dv field
+	public void testNumerics() throws Exception {
+		BaseDirectoryWrapper dir = newFSDirectory(createTempDir("2BNumerics"));
+		if (dir instanceof MockDirectoryWrapper) {
+			((MockDirectoryWrapper) dir).setThrottling(MockDirectoryWrapper.Throttling.NEVER);
+		}
+
+		IndexWriter w = new IndexWriter(dir,
+			new IndexWriterConfig(new MockAnalyzer(random()))
+				.setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH)
+				.setRAMBufferSizeMB(256.0)
+				.setMergeScheduler(new ConcurrentMergeScheduler())
+				.setMergePolicy(newLogMergePolicy(false, 10))
+				.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
+				.setCodec(TestUtil.getDefaultCodec()));
+
+		Document doc = new Document();
+		NumericDocValuesField dvField = new NumericDocValuesField("dv", 0);
+		doc.add(dvField);
+
+		for (int i = 0; i < IndexWriter.MAX_DOCS; i++) {
+			dvField.setLongValue(i);
+			w.addDocument(doc);
+			if (i % 100000 == 0) {
+				System.out.println("indexed: " + i);
+				System.out.flush();
+			}
+		}
+
+		w.forceMerge(1);
+		w.close();
+
+		System.out.println("verifying...");
+		System.out.flush();
+
+		DirectoryReader r = DirectoryReader.open(dir);
+		long expectedValue = 0;
+		for (LeafReaderContext context : r.leaves()) {
+			LeafReader reader = context.reader();
+			NumericDocValues dv = reader.getNumericDocValues("dv");
+			for (int i = 0; i < reader.maxDoc(); i++) {
+				assertEquals(i, dv.nextDoc());
+				assertEquals(expectedValue, dv.longValue());
+				expectedValue++;
+			}
+		}
+
+		r.close();
+		dir.close();
+	}
 }

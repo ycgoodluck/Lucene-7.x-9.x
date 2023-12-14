@@ -43,154 +43,156 @@ import org.apache.lucene.luke.app.desktop.util.MessageUtils;
 import org.apache.lucene.luke.app.desktop.util.TableUtils;
 import org.apache.lucene.luke.models.analysis.Analysis;
 
-/** Factory of token attribute dialog */
+/**
+ * Factory of token attribute dialog
+ */
 public final class TokenAttributeDialogFactory implements DialogOpener.DialogFactory {
 
-  private static TokenAttributeDialogFactory instance;
+	private static TokenAttributeDialogFactory instance;
 
-  private final Preferences prefs;
+	private final Preferences prefs;
 
-  private final JTable attributesTable = new JTable();
+	private final JTable attributesTable = new JTable();
 
-  private JDialog dialog;
+	private JDialog dialog;
 
-  private String term;
+	private String term;
 
-  private List<Analysis.TokenAttribute> attributes;
+	private List<Analysis.TokenAttribute> attributes;
 
-  public synchronized static TokenAttributeDialogFactory getInstance() throws IOException {
-    if (instance == null) {
-      instance = new TokenAttributeDialogFactory();
-    }
-    return instance;
-  }
+	public synchronized static TokenAttributeDialogFactory getInstance() throws IOException {
+		if (instance == null) {
+			instance = new TokenAttributeDialogFactory();
+		}
+		return instance;
+	}
 
-  private TokenAttributeDialogFactory() throws IOException {
-    this.prefs = PreferencesFactory.getInstance();
-  }
+	private TokenAttributeDialogFactory() throws IOException {
+		this.prefs = PreferencesFactory.getInstance();
+	}
 
-  public void setTerm(String term) {
-    this.term = term;
-  }
+	public void setTerm(String term) {
+		this.term = term;
+	}
 
-  public void setAttributes(List<Analysis.TokenAttribute> attributes) {
-    this.attributes = attributes;
-  }
+	public void setAttributes(List<Analysis.TokenAttribute> attributes) {
+		this.attributes = attributes;
+	}
 
-  @Override
-  public JDialog create(Window owner, String title, int width, int height) {
-    dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
-    dialog.add(content());
-    dialog.setSize(new Dimension(width, height));
-    dialog.setLocationRelativeTo(owner);
-    dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
-    return dialog;
-  }
+	@Override
+	public JDialog create(Window owner, String title, int width, int height) {
+		dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
+		dialog.add(content());
+		dialog.setSize(new Dimension(width, height));
+		dialog.setLocationRelativeTo(owner);
+		dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
+		return dialog;
+	}
 
-  private JPanel content() {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setOpaque(false);
-    panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+	private JPanel content() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setOpaque(false);
+		panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-    JPanel header = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    header.setOpaque(false);
-    header.add(new JLabel("All token attributes for:"));
-    header.add(new JLabel(term));
-    panel.add(header, BorderLayout.PAGE_START);
+		JPanel header = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		header.setOpaque(false);
+		header.add(new JLabel("All token attributes for:"));
+		header.add(new JLabel(term));
+		panel.add(header, BorderLayout.PAGE_START);
 
-    List<TokenAttValue> attrValues = attributes.stream()
-        .flatMap(att -> att.getAttValues().entrySet().stream().map(e -> TokenAttValue.of(att.getAttClass(), e.getKey(), e.getValue())))
-        .collect(Collectors.toList());
-    TableUtils.setupTable(attributesTable, ListSelectionModel.SINGLE_SELECTION, new AttributeTableModel(attrValues), null);
-    panel.add(new JScrollPane(attributesTable), BorderLayout.CENTER);
+		List<TokenAttValue> attrValues = attributes.stream()
+			.flatMap(att -> att.getAttValues().entrySet().stream().map(e -> TokenAttValue.of(att.getAttClass(), e.getKey(), e.getValue())))
+			.collect(Collectors.toList());
+		TableUtils.setupTable(attributesTable, ListSelectionModel.SINGLE_SELECTION, new AttributeTableModel(attrValues), null);
+		panel.add(new JScrollPane(attributesTable), BorderLayout.CENTER);
 
-    JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    footer.setOpaque(false);
-    JButton okBtn = new JButton(MessageUtils.getLocalizedMessage("button.ok"));
-    okBtn.addActionListener(e -> dialog.dispose());
-    footer.add(okBtn);
-    panel.add(footer, BorderLayout.PAGE_END);
+		JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+		footer.setOpaque(false);
+		JButton okBtn = new JButton(MessageUtils.getLocalizedMessage("button.ok"));
+		okBtn.addActionListener(e -> dialog.dispose());
+		footer.add(okBtn);
+		panel.add(footer, BorderLayout.PAGE_END);
 
-    return panel;
-  }
+		return panel;
+	}
 
-  static final class AttributeTableModel extends TableModelBase<AttributeTableModel.Column> {
+	static final class AttributeTableModel extends TableModelBase<AttributeTableModel.Column> {
 
-    enum Column implements TableColumnInfo {
+		enum Column implements TableColumnInfo {
 
-      ATTR("Attribute", 0, String.class),
-      NAME("Name", 1, String.class),
-      VALUE("Value", 2, String.class);
+			ATTR("Attribute", 0, String.class),
+			NAME("Name", 1, String.class),
+			VALUE("Value", 2, String.class);
 
-      private final String colName;
-      private final int index;
-      private final Class<?> type;
+			private final String colName;
+			private final int index;
+			private final Class<?> type;
 
-      Column(String colName, int index, Class<?> type) {
-        this.colName = colName;
-        this.index = index;
-        this.type = type;
-      }
+			Column(String colName, int index, Class<?> type) {
+				this.colName = colName;
+				this.index = index;
+				this.type = type;
+			}
 
-      @Override
-      public String getColName() {
-        return colName;
-      }
+			@Override
+			public String getColName() {
+				return colName;
+			}
 
-      @Override
-      public int getIndex() {
-        return index;
-      }
+			@Override
+			public int getIndex() {
+				return index;
+			}
 
-      @Override
-      public Class<?> getType() {
-        return type;
-      }
-    }
+			@Override
+			public Class<?> getType() {
+				return type;
+			}
+		}
 
-    AttributeTableModel(List<TokenAttValue> attrValues) {
-      super(attrValues.size());
-      for (int i = 0; i < attrValues.size(); i++) {
-        TokenAttValue attrValue = attrValues.get(i);
-        data[i][Column.ATTR.getIndex()] = attrValue.getAttClass();
-        data[i][Column.NAME.getIndex()] = attrValue.getName();
-        data[i][Column.VALUE.getIndex()] = attrValue.getValue();
-      }
-    }
+		AttributeTableModel(List<TokenAttValue> attrValues) {
+			super(attrValues.size());
+			for (int i = 0; i < attrValues.size(); i++) {
+				TokenAttValue attrValue = attrValues.get(i);
+				data[i][Column.ATTR.getIndex()] = attrValue.getAttClass();
+				data[i][Column.NAME.getIndex()] = attrValue.getName();
+				data[i][Column.VALUE.getIndex()] = attrValue.getValue();
+			}
+		}
 
-    @Override
-    protected Column[] columnInfos() {
-      return Column.values();
-    }
-  }
+		@Override
+		protected Column[] columnInfos() {
+			return Column.values();
+		}
+	}
 
-  static final class TokenAttValue {
-    private String attClass;
-    private String name;
-    private String value;
+	static final class TokenAttValue {
+		private String attClass;
+		private String name;
+		private String value;
 
-    public static TokenAttValue of(String attClass, String name, String value) {
-      TokenAttValue attValue = new TokenAttValue();
-      attValue.attClass = attClass;
-      attValue.name = name;
-      attValue.value = value;
-      return attValue;
-    }
+		public static TokenAttValue of(String attClass, String name, String value) {
+			TokenAttValue attValue = new TokenAttValue();
+			attValue.attClass = attClass;
+			attValue.name = name;
+			attValue.value = value;
+			return attValue;
+		}
 
-    private TokenAttValue() {
-    }
+		private TokenAttValue() {
+		}
 
-    String getAttClass() {
-      return attClass;
-    }
+		String getAttClass() {
+			return attClass;
+		}
 
-    String getName() {
-      return name;
-    }
+		String getName() {
+			return name;
+		}
 
-    String getValue() {
-      return value;
-    }
-  }
+		String getValue() {
+			return value;
+		}
+	}
 
 }

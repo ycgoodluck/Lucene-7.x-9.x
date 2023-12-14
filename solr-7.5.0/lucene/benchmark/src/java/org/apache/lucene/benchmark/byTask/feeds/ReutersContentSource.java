@@ -44,110 +44,110 @@ import org.apache.lucene.benchmark.byTask.utils.Config;
  */
 public class ReutersContentSource extends ContentSource {
 
-  private static final class DateFormatInfo {
-    DateFormat df;
-    ParsePosition pos;
-  }
+	private static final class DateFormatInfo {
+		DateFormat df;
+		ParsePosition pos;
+	}
 
-  private ThreadLocal<DateFormatInfo> dateFormat = new ThreadLocal<>();
-  private Path dataDir = null;
-  private ArrayList<Path> inputFiles = new ArrayList<>();
-  private int nextFile = 0;
-  private int iteration = 0;
-  
-  @Override
-  public void setConfig(Config config) {
-    super.setConfig(config);
-    Path workDir = Paths.get(config.get("work.dir", "work"));
-    String d = config.get("docs.dir", "reuters-out");
-    dataDir = Paths.get(d);
-    if (!dataDir.isAbsolute()) {
-      dataDir = workDir.resolve(d);
-    }
-    inputFiles.clear();
-    try {
-      collectFiles(dataDir, inputFiles);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    if (inputFiles.size() == 0) {
-      throw new RuntimeException("No txt files in dataDir: "+dataDir.toAbsolutePath());
-    }
-  }
+	private ThreadLocal<DateFormatInfo> dateFormat = new ThreadLocal<>();
+	private Path dataDir = null;
+	private ArrayList<Path> inputFiles = new ArrayList<>();
+	private int nextFile = 0;
+	private int iteration = 0;
 
-  private synchronized DateFormatInfo getDateFormatInfo() {
-    DateFormatInfo dfi = dateFormat.get();
-    if (dfi == null) {
-      dfi = new DateFormatInfo();
-      // date format: 30-MAR-1987 14:22:36.87
-      dfi.df = new SimpleDateFormat("dd-MMM-yyyy kk:mm:ss.SSS",Locale.ENGLISH);
-      dfi.df.setLenient(true);
-      dfi.pos = new ParsePosition(0);
-      dateFormat.set(dfi);
-    }
-    return dfi;
-  }
-  
-  private Date parseDate(String dateStr) {
-    DateFormatInfo dfi = getDateFormatInfo();
-    dfi.pos.setIndex(0);
-    dfi.pos.setErrorIndex(-1);
-    return dfi.df.parse(dateStr.trim(), dfi.pos);
-  }
+	@Override
+	public void setConfig(Config config) {
+		super.setConfig(config);
+		Path workDir = Paths.get(config.get("work.dir", "work"));
+		String d = config.get("docs.dir", "reuters-out");
+		dataDir = Paths.get(d);
+		if (!dataDir.isAbsolute()) {
+			dataDir = workDir.resolve(d);
+		}
+		inputFiles.clear();
+		try {
+			collectFiles(dataDir, inputFiles);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		if (inputFiles.size() == 0) {
+			throw new RuntimeException("No txt files in dataDir: " + dataDir.toAbsolutePath());
+		}
+	}
+
+	private synchronized DateFormatInfo getDateFormatInfo() {
+		DateFormatInfo dfi = dateFormat.get();
+		if (dfi == null) {
+			dfi = new DateFormatInfo();
+			// date format: 30-MAR-1987 14:22:36.87
+			dfi.df = new SimpleDateFormat("dd-MMM-yyyy kk:mm:ss.SSS", Locale.ENGLISH);
+			dfi.df.setLenient(true);
+			dfi.pos = new ParsePosition(0);
+			dateFormat.set(dfi);
+		}
+		return dfi;
+	}
+
+	private Date parseDate(String dateStr) {
+		DateFormatInfo dfi = getDateFormatInfo();
+		dfi.pos.setIndex(0);
+		dfi.pos.setErrorIndex(-1);
+		return dfi.df.parse(dateStr.trim(), dfi.pos);
+	}
 
 
-  @Override
-  public void close() throws IOException {
-    // TODO implement?
-  }
-  
-  @Override
-  public DocData getNextDocData(DocData docData) throws NoMoreDataException, IOException {
-    Path f = null;
-    String name = null;
-    synchronized (this) {
-      if (nextFile >= inputFiles.size()) {
-        // exhausted files, start a new round, unless forever set to false.
-        if (!forever) {
-          throw new NoMoreDataException();
-        }
-        nextFile = 0;
-        iteration++;
-      }
-      f = inputFiles.get(nextFile++);
-      name = f.toRealPath() + "_" + iteration;
-    }
+	@Override
+	public void close() throws IOException {
+		// TODO implement?
+	}
 
-    try (BufferedReader reader = Files.newBufferedReader(f, StandardCharsets.UTF_8)) {
-      // First line is the date, 3rd is the title, rest is body
-      String dateStr = reader.readLine();
-      reader.readLine();// skip an empty line
-      String title = reader.readLine();
-      reader.readLine();// skip an empty line
-      StringBuilder bodyBuf = new StringBuilder(1024);
-      String line = null;
-      while ((line = reader.readLine()) != null) {
-        bodyBuf.append(line).append(' ');
-      }
-      
-      addBytes(Files.size(f));
-      
-      Date date = parseDate(dateStr.trim());
-      
-      docData.clear();
-      docData.setName(name);
-      docData.setBody(bodyBuf.toString());
-      docData.setTitle(title);
-      docData.setDate(date);
-      return docData;
-    }
-  }
+	@Override
+	public DocData getNextDocData(DocData docData) throws NoMoreDataException, IOException {
+		Path f = null;
+		String name = null;
+		synchronized (this) {
+			if (nextFile >= inputFiles.size()) {
+				// exhausted files, start a new round, unless forever set to false.
+				if (!forever) {
+					throw new NoMoreDataException();
+				}
+				nextFile = 0;
+				iteration++;
+			}
+			f = inputFiles.get(nextFile++);
+			name = f.toRealPath() + "_" + iteration;
+		}
 
-  @Override
-  public synchronized void resetInputs() throws IOException {
-    super.resetInputs();
-    nextFile = 0;
-    iteration = 0;
-  }
+		try (BufferedReader reader = Files.newBufferedReader(f, StandardCharsets.UTF_8)) {
+			// First line is the date, 3rd is the title, rest is body
+			String dateStr = reader.readLine();
+			reader.readLine();// skip an empty line
+			String title = reader.readLine();
+			reader.readLine();// skip an empty line
+			StringBuilder bodyBuf = new StringBuilder(1024);
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				bodyBuf.append(line).append(' ');
+			}
+
+			addBytes(Files.size(f));
+
+			Date date = parseDate(dateStr.trim());
+
+			docData.clear();
+			docData.setName(name);
+			docData.setBody(bodyBuf.toString());
+			docData.setTitle(title);
+			docData.setDate(date);
+			return docData;
+		}
+	}
+
+	@Override
+	public synchronized void resetInputs() throws IOException {
+		super.resetInputs();
+		nextFile = 0;
+		iteration = 0;
+	}
 
 }

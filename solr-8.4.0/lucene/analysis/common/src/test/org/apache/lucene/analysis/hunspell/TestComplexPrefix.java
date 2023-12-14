@@ -20,20 +20,20 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestComplexPrefix extends StemmerTestBase {
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("complexprefix.aff", "complexprefix.dic");
-  }
-  
-  public void testPrefixes() {
-    assertStemsTo("ptwofoo", "foo");
-    assertStemsTo("poneptwofoo", "foo");
-    assertStemsTo("foosuf", "foo");
-    assertStemsTo("ptwofoosuf", "foo");
-    assertStemsTo("poneptwofoosuf", "foo");
-    assertStemsTo("ponefoo");
-    assertStemsTo("ponefoosuf");
-    assertStemsTo("ptwoponefoo");
-    assertStemsTo("ptwoponefoosuf");
-  }
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("complexprefix.aff", "complexprefix.dic");
+	}
+
+	public void testPrefixes() {
+		assertStemsTo("ptwofoo", "foo");
+		assertStemsTo("poneptwofoo", "foo");
+		assertStemsTo("foosuf", "foo");
+		assertStemsTo("ptwofoosuf", "foo");
+		assertStemsTo("poneptwofoosuf", "foo");
+		assertStemsTo("ponefoo");
+		assertStemsTo("ponefoosuf");
+		assertStemsTo("ptwoponefoo");
+		assertStemsTo("ptwoponefoosuf");
+	}
 }

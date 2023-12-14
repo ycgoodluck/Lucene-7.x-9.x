@@ -35,24 +35,24 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
  * </p>
  */
 public final class FinnishLightStemFilter extends TokenFilter {
-  private final FinnishLightStemmer stemmer = new FinnishLightStemmer();
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+	private final FinnishLightStemmer stemmer = new FinnishLightStemmer();
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
 
-  public FinnishLightStemFilter(TokenStream input) {
-    super(input);
-  }
-  
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if (!keywordAttr.isKeyword()) {
-        final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
-        termAtt.setLength(newlen);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	public FinnishLightStemFilter(TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
+				termAtt.setLength(newlen);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

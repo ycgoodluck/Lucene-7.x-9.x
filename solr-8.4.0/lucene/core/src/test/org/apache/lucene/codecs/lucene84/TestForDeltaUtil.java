@@ -32,64 +32,64 @@ import com.carrotsearch.randomizedtesting.generators.RandomNumbers;
 
 public class TestForDeltaUtil extends LuceneTestCase {
 
-  public void testEncodeDecode() throws IOException {
-    final int iterations = RandomNumbers.randomIntBetween(random(), 50, 1000);
-    final int[] values = new int[iterations * ForUtil.BLOCK_SIZE];
+	public void testEncodeDecode() throws IOException {
+		final int iterations = RandomNumbers.randomIntBetween(random(), 50, 1000);
+		final int[] values = new int[iterations * ForUtil.BLOCK_SIZE];
 
-    for (int i = 0; i < iterations; ++i) {
-      final int bpv = TestUtil.nextInt(random(), 1, 31-7);
-      for (int j = 0; j < ForUtil.BLOCK_SIZE; ++j) {
-        values[i * ForUtil.BLOCK_SIZE + j] = RandomNumbers.randomIntBetween(random(),
-            1, (int) PackedInts.maxValue(bpv));
-      }
-    }
+		for (int i = 0; i < iterations; ++i) {
+			final int bpv = TestUtil.nextInt(random(), 1, 31 - 7);
+			for (int j = 0; j < ForUtil.BLOCK_SIZE; ++j) {
+				values[i * ForUtil.BLOCK_SIZE + j] = RandomNumbers.randomIntBetween(random(),
+					1, (int) PackedInts.maxValue(bpv));
+			}
+		}
 
-    final Directory d = new ByteBuffersDirectory();
-    final long endPointer;
+		final Directory d = new ByteBuffersDirectory();
+		final long endPointer;
 
-    {
-      // encode
-      IndexOutput out = d.createOutput("test.bin", IOContext.DEFAULT);
-      final ForDeltaUtil forDeltaUtil = new ForDeltaUtil(new ForUtil());
+		{
+			// encode
+			IndexOutput out = d.createOutput("test.bin", IOContext.DEFAULT);
+			final ForDeltaUtil forDeltaUtil = new ForDeltaUtil(new ForUtil());
 
-      for (int i = 0; i < iterations; ++i) {
-        long[] source = new long[ForUtil.BLOCK_SIZE];
-        for (int j = 0; j < ForUtil.BLOCK_SIZE; ++j) {
-          source[j] = values[i*ForUtil.BLOCK_SIZE+j];
-        }
-        forDeltaUtil.encodeDeltas(source, out);
-      }
-      endPointer = out.getFilePointer();
-      out.close();
-    }
+			for (int i = 0; i < iterations; ++i) {
+				long[] source = new long[ForUtil.BLOCK_SIZE];
+				for (int j = 0; j < ForUtil.BLOCK_SIZE; ++j) {
+					source[j] = values[i * ForUtil.BLOCK_SIZE + j];
+				}
+				forDeltaUtil.encodeDeltas(source, out);
+			}
+			endPointer = out.getFilePointer();
+			out.close();
+		}
 
-    {
-      // decode
-      IndexInput in = d.openInput("test.bin", IOContext.READONCE);
-      final ForDeltaUtil forDeltaUtil = new ForDeltaUtil(new ForUtil());
-      for (int i = 0; i < iterations; ++i) {
-        if (random().nextInt(5) == 0) {
-          forDeltaUtil.skip(in);
-          continue;
-        }
-        long base = 0;
-        final long[] restored = new long[ForUtil.BLOCK_SIZE];
-        forDeltaUtil.decodeAndPrefixSum(in, base, restored);
-        final long[] expected = new long[ForUtil.BLOCK_SIZE];
-        for (int j = 0; j < ForUtil.BLOCK_SIZE; ++j) {
-          expected[j] = values[i*ForUtil.BLOCK_SIZE+j];
-          if (j > 0) {
-            expected[j] += expected[j-1];
-          } else {
-            expected[j] += base;
-          }
-        }
-        assertArrayEquals(Arrays.toString(restored), expected, restored);
-      }
-      assertEquals(endPointer, in.getFilePointer());
-      in.close();
-    }
+		{
+			// decode
+			IndexInput in = d.openInput("test.bin", IOContext.READONCE);
+			final ForDeltaUtil forDeltaUtil = new ForDeltaUtil(new ForUtil());
+			for (int i = 0; i < iterations; ++i) {
+				if (random().nextInt(5) == 0) {
+					forDeltaUtil.skip(in);
+					continue;
+				}
+				long base = 0;
+				final long[] restored = new long[ForUtil.BLOCK_SIZE];
+				forDeltaUtil.decodeAndPrefixSum(in, base, restored);
+				final long[] expected = new long[ForUtil.BLOCK_SIZE];
+				for (int j = 0; j < ForUtil.BLOCK_SIZE; ++j) {
+					expected[j] = values[i * ForUtil.BLOCK_SIZE + j];
+					if (j > 0) {
+						expected[j] += expected[j - 1];
+					} else {
+						expected[j] += base;
+					}
+				}
+				assertArrayEquals(Arrays.toString(restored), expected, restored);
+			}
+			assertEquals(endPointer, in.getFilePointer());
+			in.close();
+		}
 
-    d.close();
-  }
+		d.close();
+	}
 }

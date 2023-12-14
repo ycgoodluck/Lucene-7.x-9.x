@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 package org.apache.lucene.queryparser.surround.query;
+
 import java.util.List;
+
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BooleanClause;
@@ -23,19 +25,21 @@ import org.apache.lucene.search.BooleanClause;
 /**
  * Factory for prohibited clauses
  */
-public class NotQuery extends ComposedQuery { 
-  public NotQuery(List<SrndQuery> queries, String opName) { super(queries, true /* infix */, opName); }
-  
-  @Override
-  public Query makeLuceneQueryFieldNoBoost(String fieldName, BasicQueryFactory qf) {
-    List<Query> luceneSubQueries = makeLuceneSubQueriesField(fieldName, qf);
-    BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add( luceneSubQueries.get(0), BooleanClause.Occur.MUST);
-    SrndBooleanQuery.addQueriesToBoolean(bq,
-            // FIXME: do not allow weights on prohibited subqueries.
-            luceneSubQueries.subList(1, luceneSubQueries.size()),
-            // later subqueries: not required, prohibited
-            BooleanClause.Occur.MUST_NOT);
-    return bq.build();
-  }
+public class NotQuery extends ComposedQuery {
+	public NotQuery(List<SrndQuery> queries, String opName) {
+		super(queries, true /* infix */, opName);
+	}
+
+	@Override
+	public Query makeLuceneQueryFieldNoBoost(String fieldName, BasicQueryFactory qf) {
+		List<Query> luceneSubQueries = makeLuceneSubQueriesField(fieldName, qf);
+		BooleanQuery.Builder bq = new BooleanQuery.Builder();
+		bq.add(luceneSubQueries.get(0), BooleanClause.Occur.MUST);
+		SrndBooleanQuery.addQueriesToBoolean(bq,
+			// FIXME: do not allow weights on prohibited subqueries.
+			luceneSubQueries.subList(1, luceneSubQueries.size()),
+			// later subqueries: not required, prohibited
+			BooleanClause.Occur.MUST_NOT);
+		return bq.build();
+	}
 }

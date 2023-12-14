@@ -24,27 +24,29 @@ import java.util.Map;
  */
 public class PresearcherMatches<T extends QueryMatch> {
 
-  private final Map<String, StringBuilder> matchingTerms;
+	private final Map<String, StringBuilder> matchingTerms;
 
-  /** The wrapped Matches */
-  public final MultiMatchingQueries<T> matcher;
+	/**
+	 * The wrapped Matches
+	 */
+	public final MultiMatchingQueries<T> matcher;
 
-  /**
-   * Builds a new PresearcherMatches
-   */
-  public PresearcherMatches(Map<String, StringBuilder> matchingTerms, MultiMatchingQueries<T> matcher) {
-    this.matcher = matcher;
-    this.matchingTerms = matchingTerms;
-  }
+	/**
+	 * Builds a new PresearcherMatches
+	 */
+	public PresearcherMatches(Map<String, StringBuilder> matchingTerms, MultiMatchingQueries<T> matcher) {
+		this.matcher = matcher;
+		this.matchingTerms = matchingTerms;
+	}
 
-  /**
-   * Returns match information for a given query
-   */
-  public PresearcherMatch<T> match(String queryId, int doc) {
-    StringBuilder found = matchingTerms.get(queryId);
-    if (found != null)
-      return new PresearcherMatch<>(queryId, found.toString(), matcher.matches(queryId, doc));
-    return null;
-  }
+	/**
+	 * Returns match information for a given query
+	 */
+	public PresearcherMatch<T> match(String queryId, int doc) {
+		StringBuilder found = matchingTerms.get(queryId);
+		if (found != null)
+			return new PresearcherMatch<>(queryId, found.toString(), matcher.matches(queryId, doc));
+		return null;
+	}
 
 }

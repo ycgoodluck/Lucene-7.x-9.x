@@ -25,75 +25,79 @@ import org.apache.lucene.analysis.util.ResourceLoader;
 
 public class TestStopFilterFactory extends BaseTokenStreamFactoryTestCase {
 
-  public void testInform() throws Exception {
-    ResourceLoader loader = new ClasspathResourceLoader(getClass());
-    assertTrue("loader is null and it shouldn't be", loader != null);
-    StopFilterFactory factory = (StopFilterFactory) tokenFilterFactory("Stop",
-        "words", "stop-1.txt",
-        "ignoreCase", "true");
-    CharArraySet words = factory.getStopWords();
-    assertTrue("words is null and it shouldn't be", words != null);
-    assertTrue("words Size: " + words.size() + " is not: " + 2, words.size() == 2);
-    assertTrue(factory.isIgnoreCase() + " does not equal: " + true, factory.isIgnoreCase() == true);
+	public void testInform() throws Exception {
+		ResourceLoader loader = new ClasspathResourceLoader(getClass());
+		assertTrue("loader is null and it shouldn't be", loader != null);
+		StopFilterFactory factory = (StopFilterFactory) tokenFilterFactory("Stop",
+			"words", "stop-1.txt",
+			"ignoreCase", "true");
+		CharArraySet words = factory.getStopWords();
+		assertTrue("words is null and it shouldn't be", words != null);
+		assertTrue("words Size: " + words.size() + " is not: " + 2, words.size() == 2);
+		assertTrue(factory.isIgnoreCase() + " does not equal: " + true, factory.isIgnoreCase() == true);
 
-    factory = (StopFilterFactory) tokenFilterFactory("Stop",
-        "words", "stop-1.txt, stop-2.txt",
-        "ignoreCase", "true");
-    words = factory.getStopWords();
-    assertTrue("words is null and it shouldn't be", words != null);
-    assertTrue("words Size: " + words.size() + " is not: " + 4, words.size() == 4);
-    assertTrue(factory.isIgnoreCase() + " does not equal: " + true, factory.isIgnoreCase() == true);
+		factory = (StopFilterFactory) tokenFilterFactory("Stop",
+			"words", "stop-1.txt, stop-2.txt",
+			"ignoreCase", "true");
+		words = factory.getStopWords();
+		assertTrue("words is null and it shouldn't be", words != null);
+		assertTrue("words Size: " + words.size() + " is not: " + 4, words.size() == 4);
+		assertTrue(factory.isIgnoreCase() + " does not equal: " + true, factory.isIgnoreCase() == true);
 
-    factory = (StopFilterFactory) tokenFilterFactory("Stop",
-        "words", "stop-snowball.txt",
-        "format", "snowball",
-        "ignoreCase", "true");
-    words = factory.getStopWords();
-    assertEquals(8, words.size());
-    assertTrue(words.contains("he"));
-    assertTrue(words.contains("him"));
-    assertTrue(words.contains("his"));
-    assertTrue(words.contains("himself"));
-    assertTrue(words.contains("she"));
-    assertTrue(words.contains("her"));
-    assertTrue(words.contains("hers"));
-    assertTrue(words.contains("herself"));
+		factory = (StopFilterFactory) tokenFilterFactory("Stop",
+			"words", "stop-snowball.txt",
+			"format", "snowball",
+			"ignoreCase", "true");
+		words = factory.getStopWords();
+		assertEquals(8, words.size());
+		assertTrue(words.contains("he"));
+		assertTrue(words.contains("him"));
+		assertTrue(words.contains("his"));
+		assertTrue(words.contains("himself"));
+		assertTrue(words.contains("she"));
+		assertTrue(words.contains("her"));
+		assertTrue(words.contains("hers"));
+		assertTrue(words.contains("herself"));
 
-    // defaults
-    factory = (StopFilterFactory) tokenFilterFactory("Stop");
-    assertEquals(EnglishAnalyzer.ENGLISH_STOP_WORDS_SET, factory.getStopWords());
-    assertEquals(false, factory.isIgnoreCase());
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("Stop", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+		// defaults
+		factory = (StopFilterFactory) tokenFilterFactory("Stop");
+		assertEquals(EnglishAnalyzer.ENGLISH_STOP_WORDS_SET, factory.getStopWords());
+		assertEquals(false, factory.isIgnoreCase());
+	}
 
-  /** Test that bogus arguments result in exception */
-  public void testBogusFormats() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("Stop", 
-                         "words", "stop-snowball.txt",
-                         "format", "bogus");
-    });
-    String msg = expected.getMessage();
-    assertTrue(msg, msg.contains("Unknown"));
-    assertTrue(msg, msg.contains("format"));
-    assertTrue(msg, msg.contains("bogus"));
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("Stop", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 
-    expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("Stop", 
-                         // implicit default words file
-                         "format", "bogus");
-      fail();
-    });
-    msg = expected.getMessage();
-    assertTrue(msg, msg.contains("can not be specified"));
-    assertTrue(msg, msg.contains("format"));
-    assertTrue(msg, msg.contains("bogus"));
-  }
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusFormats() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("Stop",
+				"words", "stop-snowball.txt",
+				"format", "bogus");
+		});
+		String msg = expected.getMessage();
+		assertTrue(msg, msg.contains("Unknown"));
+		assertTrue(msg, msg.contains("format"));
+		assertTrue(msg, msg.contains("bogus"));
+
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("Stop",
+				// implicit default words file
+				"format", "bogus");
+			fail();
+		});
+		msg = expected.getMessage();
+		assertTrue(msg, msg.contains("can not be specified"));
+		assertTrue(msg, msg.contains("format"));
+		assertTrue(msg, msg.contains("bogus"));
+	}
 }

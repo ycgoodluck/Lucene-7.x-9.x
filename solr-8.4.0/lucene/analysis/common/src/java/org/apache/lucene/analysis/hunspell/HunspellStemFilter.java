@@ -38,7 +38,7 @@ import org.apache.lucene.util.CharsRef;
  * certain terms from being passed to the stemmer
  * {@link KeywordAttribute#isKeyword()} should be set to <code>true</code>
  * in a previous {@link TokenStream}.
- *
+ * <p>
  * Note: For including the original term as well as the stemmed version, see
  * {@link org.apache.lucene.analysis.miscellaneous.KeywordRepeatFilterFactory}
  * </p>
@@ -46,103 +46,109 @@ import org.apache.lucene.util.CharsRef;
  * @lucene.experimental
  */
 public final class HunspellStemFilter extends TokenFilter {
-  
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
-  private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
-  private final Stemmer stemmer;
-  
-  private List<CharsRef> buffer;
-  private State savedState;
-  
-  private final boolean dedup;
-  private final boolean longestOnly;
 
-  /** Create a {@link HunspellStemFilter} outputting all possible stems.
-   *  @see #HunspellStemFilter(TokenStream, Dictionary, boolean) */
-  public HunspellStemFilter(TokenStream input, Dictionary dictionary) {
-    this(input, dictionary, true);
-  }
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
+	private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
+	private final Stemmer stemmer;
 
-  /** Create a {@link HunspellStemFilter} outputting all possible stems. 
-   *  @see #HunspellStemFilter(TokenStream, Dictionary, boolean, boolean) */
-  public HunspellStemFilter(TokenStream input, Dictionary dictionary, boolean dedup) {
-    this(input, dictionary, dedup, false);
-  }
-  
-  /**
-   * Creates a new HunspellStemFilter that will stem tokens from the given TokenStream using affix rules in the provided
-   * Dictionary
-   *
-   * @param input TokenStream whose tokens will be stemmed
-   * @param dictionary HunspellDictionary containing the affix rules and words that will be used to stem the tokens
-   * @param longestOnly true if only the longest term should be output.
-   */
-  public HunspellStemFilter(TokenStream input, Dictionary dictionary, boolean dedup,  boolean longestOnly) {
-    super(input);
-    this.dedup = dedup && longestOnly == false; // don't waste time deduping if longestOnly is set
-    this.stemmer = new Stemmer(dictionary);
-    this.longestOnly = longestOnly;
-  }
+	private List<CharsRef> buffer;
+	private State savedState;
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (buffer != null && !buffer.isEmpty()) {
-      CharsRef nextStem = buffer.remove(0);
-      restoreState(savedState);
-      posIncAtt.setPositionIncrement(0);
-      termAtt.setEmpty().append(nextStem);
-      return true;
-    }
-    
-    if (!input.incrementToken()) {
-      return false;
-    }
-    
-    if (keywordAtt.isKeyword()) {
-      return true;
-    }
-    
-    buffer = dedup ? stemmer.uniqueStems(termAtt.buffer(), termAtt.length()) : stemmer.stem(termAtt.buffer(), termAtt.length());
+	private final boolean dedup;
+	private final boolean longestOnly;
 
-    if (buffer.isEmpty()) { // we do not know this word, return it unchanged
-      return true;
-    }     
-    
-    if (longestOnly && buffer.size() > 1) {
-      Collections.sort(buffer, lengthComparator);
-    }
+	/**
+	 * Create a {@link HunspellStemFilter} outputting all possible stems.
+	 *
+	 * @see #HunspellStemFilter(TokenStream, Dictionary, boolean)
+	 */
+	public HunspellStemFilter(TokenStream input, Dictionary dictionary) {
+		this(input, dictionary, true);
+	}
 
-    CharsRef stem = buffer.remove(0);
-    termAtt.setEmpty().append(stem);
+	/**
+	 * Create a {@link HunspellStemFilter} outputting all possible stems.
+	 *
+	 * @see #HunspellStemFilter(TokenStream, Dictionary, boolean, boolean)
+	 */
+	public HunspellStemFilter(TokenStream input, Dictionary dictionary, boolean dedup) {
+		this(input, dictionary, dedup, false);
+	}
 
-    if (longestOnly) {
-      buffer.clear();
-    } else {
-      if (!buffer.isEmpty()) {
-        savedState = captureState();
-      }
-    }
+	/**
+	 * Creates a new HunspellStemFilter that will stem tokens from the given TokenStream using affix rules in the provided
+	 * Dictionary
+	 *
+	 * @param input       TokenStream whose tokens will be stemmed
+	 * @param dictionary  HunspellDictionary containing the affix rules and words that will be used to stem the tokens
+	 * @param longestOnly true if only the longest term should be output.
+	 */
+	public HunspellStemFilter(TokenStream input, Dictionary dictionary, boolean dedup, boolean longestOnly) {
+		super(input);
+		this.dedup = dedup && longestOnly == false; // don't waste time deduping if longestOnly is set
+		this.stemmer = new Stemmer(dictionary);
+		this.longestOnly = longestOnly;
+	}
 
-    return true;
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (buffer != null && !buffer.isEmpty()) {
+			CharsRef nextStem = buffer.remove(0);
+			restoreState(savedState);
+			posIncAtt.setPositionIncrement(0);
+			termAtt.setEmpty().append(nextStem);
+			return true;
+		}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    buffer = null;
-  }
-  
-  static final Comparator<CharsRef> lengthComparator = new Comparator<CharsRef>() {
-    @Override
-    public int compare(CharsRef o1, CharsRef o2) {
-      int cmp = Integer.compare(o2.length, o1.length);
-      if (cmp == 0) {
-        // tie break on text
-        return o2.compareTo(o1);
-      } else {
-        return cmp;
-      }
-    }
-  };
+		if (!input.incrementToken()) {
+			return false;
+		}
+
+		if (keywordAtt.isKeyword()) {
+			return true;
+		}
+
+		buffer = dedup ? stemmer.uniqueStems(termAtt.buffer(), termAtt.length()) : stemmer.stem(termAtt.buffer(), termAtt.length());
+
+		if (buffer.isEmpty()) { // we do not know this word, return it unchanged
+			return true;
+		}
+
+		if (longestOnly && buffer.size() > 1) {
+			Collections.sort(buffer, lengthComparator);
+		}
+
+		CharsRef stem = buffer.remove(0);
+		termAtt.setEmpty().append(stem);
+
+		if (longestOnly) {
+			buffer.clear();
+		} else {
+			if (!buffer.isEmpty()) {
+				savedState = captureState();
+			}
+		}
+
+		return true;
+	}
+
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		buffer = null;
+	}
+
+	static final Comparator<CharsRef> lengthComparator = new Comparator<CharsRef>() {
+		@Override
+		public int compare(CharsRef o1, CharsRef o2) {
+			int cmp = Integer.compare(o2.length, o1.length);
+			if (cmp == 0) {
+				// tie break on text
+				return o2.compareTo(o1);
+			} else {
+				return cmp;
+			}
+		}
+	};
 }

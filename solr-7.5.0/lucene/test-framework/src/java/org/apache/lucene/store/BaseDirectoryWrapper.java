@@ -28,47 +28,47 @@ import org.apache.lucene.util.TestUtil;
 // do NOT import anything from the concurrency package.
 // no randoms, no nothing.
 public abstract class BaseDirectoryWrapper extends FilterDirectory {
-  
-  private boolean checkIndexOnClose = true;
-  private boolean crossCheckTermVectorsOnClose = true;
-  protected volatile boolean isOpen = true;
 
-  protected BaseDirectoryWrapper(Directory delegate) {
-    super(delegate);
-  }
+	private boolean checkIndexOnClose = true;
+	private boolean crossCheckTermVectorsOnClose = true;
+	protected volatile boolean isOpen = true;
 
-  @Override
-  public void close() throws IOException {
-    if (isOpen) {
-      isOpen = false;
-      if (checkIndexOnClose && DirectoryReader.indexExists(this)) {
-        TestUtil.checkIndex(this, crossCheckTermVectorsOnClose);
-      }
-    }
-    super.close();
-  }
-  
-  public boolean isOpen() {
-    return isOpen;
-  }
-  
-  /**
-   * Set whether or not checkindex should be run
-   * on close
-   */
-  public void setCheckIndexOnClose(boolean value) {
-    this.checkIndexOnClose = value;
-  }
-  
-  public boolean getCheckIndexOnClose() {
-    return checkIndexOnClose;
-  }
+	protected BaseDirectoryWrapper(Directory delegate) {
+		super(delegate);
+	}
 
-  public void setCrossCheckTermVectorsOnClose(boolean value) {
-    this.crossCheckTermVectorsOnClose = value;
-  }
+	@Override
+	public void close() throws IOException {
+		if (isOpen) {
+			isOpen = false;
+			if (checkIndexOnClose && DirectoryReader.indexExists(this)) {
+				TestUtil.checkIndex(this, crossCheckTermVectorsOnClose);
+			}
+		}
+		super.close();
+	}
 
-  public boolean getCrossCheckTermVectorsOnClose() {
-    return crossCheckTermVectorsOnClose;
-  }
+	public boolean isOpen() {
+		return isOpen;
+	}
+
+	/**
+	 * Set whether or not checkindex should be run
+	 * on close
+	 */
+	public void setCheckIndexOnClose(boolean value) {
+		this.checkIndexOnClose = value;
+	}
+
+	public boolean getCheckIndexOnClose() {
+		return checkIndexOnClose;
+	}
+
+	public void setCrossCheckTermVectorsOnClose(boolean value) {
+		this.crossCheckTermVectorsOnClose = value;
+	}
+
+	public boolean getCrossCheckTermVectorsOnClose() {
+		return crossCheckTermVectorsOnClose;
+	}
 }

@@ -23,12 +23,14 @@ package org.apache.lucene.spatial3d.geom;
  */
 abstract class GeoBasePolygon extends GeoBaseAreaShape implements GeoPolygon {
 
-  /** Constructor.
-   *@param planetModel is the planet model to use.
-   */
-  public GeoBasePolygon(final PlanetModel planetModel) {
-    super(planetModel);
-  }
+	/**
+	 * Constructor.
+	 *
+	 * @param planetModel is the planet model to use.
+	 */
+	public GeoBasePolygon(final PlanetModel planetModel) {
+		super(planetModel);
+	}
 
 }
-  
+

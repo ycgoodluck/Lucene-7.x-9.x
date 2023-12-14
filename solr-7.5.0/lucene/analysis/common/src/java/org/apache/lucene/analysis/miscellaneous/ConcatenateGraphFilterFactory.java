@@ -42,29 +42,30 @@ import org.apache.lucene.util.automaton.TooComplexToDeterminizeException;
  *                            machine.
  *                            </li>
  * </ul>
+ *
  * @see ConcatenateGraphFilter
  * @since 7.4.0
  */
 public class ConcatenateGraphFilterFactory extends TokenFilterFactory {
 
-  private boolean preserveSep;
-  private boolean preservePositionIncrements;
-  private int maxGraphExpansions;
+	private boolean preserveSep;
+	private boolean preservePositionIncrements;
+	private int maxGraphExpansions;
 
-  public ConcatenateGraphFilterFactory(Map<String, String> args) {
-    super(args);
+	public ConcatenateGraphFilterFactory(Map<String, String> args) {
+		super(args);
 
-    preserveSep = getBoolean(args, "preserveSep", ConcatenateGraphFilter.DEFAULT_PRESERVE_SEP);
-    preservePositionIncrements = getBoolean(args, "preservePositionIncrements", ConcatenateGraphFilter.DEFAULT_PRESERVE_POSITION_INCREMENTS);
-    maxGraphExpansions = getInt(args, "maxGraphExpansions", ConcatenateGraphFilter.DEFAULT_MAX_GRAPH_EXPANSIONS);
+		preserveSep = getBoolean(args, "preserveSep", ConcatenateGraphFilter.DEFAULT_PRESERVE_SEP);
+		preservePositionIncrements = getBoolean(args, "preservePositionIncrements", ConcatenateGraphFilter.DEFAULT_PRESERVE_POSITION_INCREMENTS);
+		maxGraphExpansions = getInt(args, "maxGraphExpansions", ConcatenateGraphFilter.DEFAULT_MAX_GRAPH_EXPANSIONS);
 
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new ConcatenateGraphFilter(input, preserveSep, preservePositionIncrements, maxGraphExpansions);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new ConcatenateGraphFilter(input, preserveSep, preservePositionIncrements, maxGraphExpansions);
+	}
 }

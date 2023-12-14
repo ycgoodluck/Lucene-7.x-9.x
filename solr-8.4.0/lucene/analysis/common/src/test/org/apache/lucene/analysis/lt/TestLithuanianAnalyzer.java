@@ -24,30 +24,38 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestLithuanianAnalyzer extends BaseTokenStreamTestCase {
-  
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new LithuanianAnalyzer().close();
-  }
-  
-  /** Test stopword removal */
-  public void testStopWord() throws Exception {
-    Analyzer a = new LithuanianAnalyzer();
-    assertAnalyzesTo(a, "man", 
-        new String[] { });
-  }
-  
-  /** Test stemmer exceptions */
-  public void testStemExclusion() throws IOException{
-    CharArraySet set = new CharArraySet(1, true);
-    set.add("vaikų");
-    Analyzer a = new LithuanianAnalyzer(CharArraySet.EMPTY_SET, set);
-    assertAnalyzesTo(a, "vaikų", new String[] {"vaikų"});
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    checkRandomData(random(), new LithuanianAnalyzer(), 1000*RANDOM_MULTIPLIER);
-  }
+
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new LithuanianAnalyzer().close();
+	}
+
+	/**
+	 * Test stopword removal
+	 */
+	public void testStopWord() throws Exception {
+		Analyzer a = new LithuanianAnalyzer();
+		assertAnalyzesTo(a, "man",
+			new String[]{});
+	}
+
+	/**
+	 * Test stemmer exceptions
+	 */
+	public void testStemExclusion() throws IOException {
+		CharArraySet set = new CharArraySet(1, true);
+		set.add("vaikų");
+		Analyzer a = new LithuanianAnalyzer(CharArraySet.EMPTY_SET, set);
+		assertAnalyzesTo(a, "vaikų", new String[]{"vaikų"});
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		checkRandomData(random(), new LithuanianAnalyzer(), 1000 * RANDOM_MULTIPLIER);
+	}
 }

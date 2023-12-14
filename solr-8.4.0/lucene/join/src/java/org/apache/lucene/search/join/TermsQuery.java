@@ -36,86 +36,88 @@ import org.apache.lucene.util.RamUsageEstimator;
  * @lucene.experimental
  */
 class TermsQuery extends MultiTermQuery implements Accountable {
-  private static final long BASE_RAM_BYTES = RamUsageEstimator.shallowSizeOfInstance(TermsQuery.class);
+	private static final long BASE_RAM_BYTES = RamUsageEstimator.shallowSizeOfInstance(TermsQuery.class);
 
-  private final BytesRefHash terms;
-  private final int[] ords;
+	private final BytesRefHash terms;
+	private final int[] ords;
 
-  // These fields are used for equals() and hashcode() only
-  private final String fromField;
-  private final Query fromQuery;
-  // id of the context rather than the context itself in order not to hold references to index readers
-  private final Object indexReaderContextId;
+	// These fields are used for equals() and hashcode() only
+	private final String fromField;
+	private final Query fromQuery;
+	// id of the context rather than the context itself in order not to hold references to index readers
+	private final Object indexReaderContextId;
 
-  private final long ramBytesUsed; // cache
+	private final long ramBytesUsed; // cache
 
-  /**
-   * @param toField               The field that should contain terms that are specified in the next parameter.
-   * @param terms                 The terms that matching documents should have. The terms must be sorted by natural order.
-   * @param indexReaderContextId  Refers to the top level index reader used to create the set of terms in the previous parameter.
-   */
-  TermsQuery(String toField, BytesRefHash terms, String fromField, Query fromQuery, Object indexReaderContextId) {
-    super(toField);
-    this.terms = terms;
-    ords = terms.sort();
-    this.fromField = fromField;
-    this.fromQuery = fromQuery;
-    this.indexReaderContextId = indexReaderContextId;
+	/**
+	 * @param toField              The field that should contain terms that are specified in the next parameter.
+	 * @param terms                The terms that matching documents should have. The terms must be sorted by natural order.
+	 * @param indexReaderContextId Refers to the top level index reader used to create the set of terms in the previous parameter.
+	 */
+	TermsQuery(String toField, BytesRefHash terms, String fromField, Query fromQuery, Object indexReaderContextId) {
+		super(toField);
+		this.terms = terms;
+		ords = terms.sort();
+		this.fromField = fromField;
+		this.fromQuery = fromQuery;
+		this.indexReaderContextId = indexReaderContextId;
 
-    this.ramBytesUsed = BASE_RAM_BYTES +
-        RamUsageEstimator.sizeOfObject(field) +
-        RamUsageEstimator.sizeOfObject(fromField) +
-        RamUsageEstimator.sizeOfObject(fromQuery, RamUsageEstimator.QUERY_DEFAULT_RAM_BYTES_USED) +
-        RamUsageEstimator.sizeOfObject(ords) +
-        RamUsageEstimator.sizeOfObject(terms);
-  }
+		this.ramBytesUsed = BASE_RAM_BYTES +
+			RamUsageEstimator.sizeOfObject(field) +
+			RamUsageEstimator.sizeOfObject(fromField) +
+			RamUsageEstimator.sizeOfObject(fromQuery, RamUsageEstimator.QUERY_DEFAULT_RAM_BYTES_USED) +
+			RamUsageEstimator.sizeOfObject(ords) +
+			RamUsageEstimator.sizeOfObject(terms);
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    visitor.visitLeaf(this);
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		visitor.visitLeaf(this);
+	}
 
-  @Override
-  protected TermsEnum getTermsEnum(Terms terms, AttributeSource atts) throws IOException {
-    if (this.terms.size() == 0) {
-      return TermsEnum.EMPTY;
-    }
+	@Override
+	protected TermsEnum getTermsEnum(Terms terms, AttributeSource atts) throws IOException {
+		if (this.terms.size() == 0) {
+			return TermsEnum.EMPTY;
+		}
 
-    return new SeekingTermSetTermsEnum(terms.iterator(), this.terms, ords);
-  }
+		return new SeekingTermSetTermsEnum(terms.iterator(), this.terms, ords);
+	}
 
-  @Override
-  public String toString(String string) {
-    return "TermsQuery{" +
-        "field=" + field +
-        "fromQuery=" + fromQuery.toString(field) +
-        '}';
-  }
+	@Override
+	public String toString(String string) {
+		return "TermsQuery{" +
+			"field=" + field +
+			"fromQuery=" + fromQuery.toString(field) +
+			'}';
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    } if (!super.equals(obj)) {
-      return false;
-    } if (getClass() != obj.getClass()) {
-      return false;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!super.equals(obj)) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
 
-    TermsQuery other = (TermsQuery) obj;
-    return Objects.equals(field, other.field) &&
-        Objects.equals(fromField, other.fromField) &&
-        Objects.equals(fromQuery, other.fromQuery) &&
-        Objects.equals(indexReaderContextId, other.indexReaderContextId);
-  }
+		TermsQuery other = (TermsQuery) obj;
+		return Objects.equals(field, other.field) &&
+			Objects.equals(fromField, other.fromField) &&
+			Objects.equals(fromQuery, other.fromQuery) &&
+			Objects.equals(indexReaderContextId, other.indexReaderContextId);
+	}
 
-  @Override
-  public int hashCode() {
-    return classHash() + Objects.hash(field, fromField, fromQuery, indexReaderContextId);
-  }
+	@Override
+	public int hashCode() {
+		return classHash() + Objects.hash(field, fromField, fromQuery, indexReaderContextId);
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return ramBytesUsed;
-  }
+	@Override
+	public long ramBytesUsed() {
+		return ramBytesUsed;
+	}
 }

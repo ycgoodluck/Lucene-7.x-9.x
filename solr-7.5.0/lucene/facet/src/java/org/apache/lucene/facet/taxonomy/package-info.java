@@ -20,7 +20,7 @@
  * <p>
  * Facets are defined using a hierarchy of categories, known as a <i>Taxonomy</i>.
  * For example, the taxonomy of a book store application might have the following structure:
- * 
+ *
  * <ul>
  *   <li>Author
  *     <ul>
@@ -29,7 +29,7 @@
  *     </ul>
  *   </li>
  * </ul>
- * 
+ *
  * <ul>
  *   <li>Date
  *     <ul>
@@ -42,11 +42,11 @@
  *   </li>
  *   <li>2009</li>
  * </ul>
- * 
+ *
  * <p>
  * The <i>Taxonomy</i> translates category-paths into integer identifiers (often termed <i>ordinals</i>) and vice versa.
- * The category <code>Author/Mark Twain</code> adds two nodes to the taxonomy: <code>Author</code> and 
- * <code>Author/Mark Twain</code>, each is assigned a different ordinal. The taxonomy maintains the invariant that a 
+ * The category <code>Author/Mark Twain</code> adds two nodes to the taxonomy: <code>Author</code> and
+ * <code>Author/Mark Twain</code>, each is assigned a different ordinal. The taxonomy maintains the invariant that a
  * node always has an ordinal that is &lt; all its children.
  */
 package org.apache.lucene.facet.taxonomy;

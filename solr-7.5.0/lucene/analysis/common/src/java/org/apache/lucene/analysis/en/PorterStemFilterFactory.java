@@ -35,17 +35,19 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class PorterStemFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new PorterStemFilterFactory */
-  public PorterStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public PorterStemFilter create(TokenStream input) {
-    return new PorterStemFilter(input);
-  }
+
+	/**
+	 * Creates a new PorterStemFilterFactory
+	 */
+	public PorterStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public PorterStemFilter create(TokenStream input) {
+		return new PorterStemFilter(input);
+	}
 }

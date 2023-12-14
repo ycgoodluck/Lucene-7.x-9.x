@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Utilities for models and APIs */
+/**
+ * Utilities for models and APIs
+ */
 package org.apache.lucene.luke.models.util;

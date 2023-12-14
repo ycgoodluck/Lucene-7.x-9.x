@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Utilities for the UI components */
+/**
+ * Utilities for the UI components
+ */
 package org.apache.lucene.luke.app.desktop.util;

@@ -30,72 +30,72 @@ import org.apache.lucene.util.BytesRefHash;
  */
 abstract class TermsCollector<DV> extends DocValuesTermsCollector<DV> {
 
-  TermsCollector(Function<DV> docValuesCall) {
-    super(docValuesCall);
-  }
+	TermsCollector(Function<DV> docValuesCall) {
+		super(docValuesCall);
+	}
 
-  final BytesRefHash collectorTerms = new BytesRefHash();
+	final BytesRefHash collectorTerms = new BytesRefHash();
 
-  public BytesRefHash getCollectorTerms() {
-    return collectorTerms;
-  }
+	public BytesRefHash getCollectorTerms() {
+		return collectorTerms;
+	}
 
-  /**
-   * Chooses the right {@link TermsCollector} implementation.
-   *
-   * @param field                     The field to collect terms for
-   * @param multipleValuesPerDocument Whether the field to collect terms for has multiple values per document.
-   * @return a {@link TermsCollector} instance
-   */
-  static TermsCollector<?> create(String field, boolean multipleValuesPerDocument) {
-    return multipleValuesPerDocument 
-        ? new MV(sortedSetDocValues(field))
-        : new SV(binaryDocValues(field));
-  }
-  
-  // impl that works with multiple values per document
-  static class MV extends TermsCollector<SortedSetDocValues> {
-    
-    MV(Function<SortedSetDocValues> docValuesCall) {
-      super(docValuesCall);
-    }
+	/**
+	 * Chooses the right {@link TermsCollector} implementation.
+	 *
+	 * @param field                     The field to collect terms for
+	 * @param multipleValuesPerDocument Whether the field to collect terms for has multiple values per document.
+	 * @return a {@link TermsCollector} instance
+	 */
+	static TermsCollector<?> create(String field, boolean multipleValuesPerDocument) {
+		return multipleValuesPerDocument
+			? new MV(sortedSetDocValues(field))
+			: new SV(binaryDocValues(field));
+	}
 
-    @Override
-    public void collect(int doc) throws IOException {
-      long ord;
-      if (doc > docValues.docID()) {
-        docValues.advance(doc);
-      }
-      if (doc == docValues.docID()) {
-        while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS) {
-          final BytesRef term = docValues.lookupOrd(ord);
-          collectorTerms.add(term);
-        }
-      }
-    }
-  }
+	// impl that works with multiple values per document
+	static class MV extends TermsCollector<SortedSetDocValues> {
 
-  // impl that works with single value per document
-  static class SV extends TermsCollector<BinaryDocValues> {
+		MV(Function<SortedSetDocValues> docValuesCall) {
+			super(docValuesCall);
+		}
 
-    SV(Function<BinaryDocValues> docValuesCall) {
-      super(docValuesCall);
-    }
+		@Override
+		public void collect(int doc) throws IOException {
+			long ord;
+			if (doc > docValues.docID()) {
+				docValues.advance(doc);
+			}
+			if (doc == docValues.docID()) {
+				while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS) {
+					final BytesRef term = docValues.lookupOrd(ord);
+					collectorTerms.add(term);
+				}
+			}
+		}
+	}
 
-    @Override
-    public void collect(int doc) throws IOException {
-      BytesRef term;
-      if (docValues.advanceExact(doc)) {
-        term = docValues.binaryValue();
-      } else {
-        term = new BytesRef(BytesRef.EMPTY_BYTES);
-      }
-      collectorTerms.add(term);
-    }
-  }
+	// impl that works with single value per document
+	static class SV extends TermsCollector<BinaryDocValues> {
 
-  @Override
-  public org.apache.lucene.search.ScoreMode scoreMode() {
-    return org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;
-  }
+		SV(Function<BinaryDocValues> docValuesCall) {
+			super(docValuesCall);
+		}
+
+		@Override
+		public void collect(int doc) throws IOException {
+			BytesRef term;
+			if (docValues.advanceExact(doc)) {
+				term = docValues.binaryValue();
+			} else {
+				term = new BytesRef(BytesRef.EMPTY_BYTES);
+			}
+			collectorTerms.add(term);
+		}
+	}
+
+	@Override
+	public org.apache.lucene.search.ScoreMode scoreMode() {
+		return org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;
+	}
 }

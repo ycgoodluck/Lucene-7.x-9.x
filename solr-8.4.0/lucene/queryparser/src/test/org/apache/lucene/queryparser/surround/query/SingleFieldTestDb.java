@@ -29,30 +29,38 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 
 public class SingleFieldTestDb {
-  private Directory db;
-  private String[] docs;
-  private String fieldName;
-  
-  public SingleFieldTestDb(Random random, String[] documents, String fName) {
-    try {
-      db = new MockDirectoryWrapper(random, new RAMDirectory());
-      docs = documents;
-      fieldName = fName;
-      IndexWriter writer = new IndexWriter(db, new IndexWriterConfig(new MockAnalyzer(random)));
-      for (int j = 0; j < docs.length; j++) {
-        Document d = new Document();
-        d.add(new TextField(fieldName, docs[j], Field.Store.NO));
-        writer.addDocument(d);
-      }
-      writer.close();
-    } catch (java.io.IOException ioe) {
-      throw new Error(ioe);
-    }
-  }
-  
-  Directory getDb() {return db;}
-  String[] getDocs() {return docs;}
-  String getFieldname() {return fieldName;}
+	private Directory db;
+	private String[] docs;
+	private String fieldName;
+
+	public SingleFieldTestDb(Random random, String[] documents, String fName) {
+		try {
+			db = new MockDirectoryWrapper(random, new RAMDirectory());
+			docs = documents;
+			fieldName = fName;
+			IndexWriter writer = new IndexWriter(db, new IndexWriterConfig(new MockAnalyzer(random)));
+			for (int j = 0; j < docs.length; j++) {
+				Document d = new Document();
+				d.add(new TextField(fieldName, docs[j], Field.Store.NO));
+				writer.addDocument(d);
+			}
+			writer.close();
+		} catch (java.io.IOException ioe) {
+			throw new Error(ioe);
+		}
+	}
+
+	Directory getDb() {
+		return db;
+	}
+
+	String[] getDocs() {
+		return docs;
+	}
+
+	String getFieldname() {
+		return fieldName;
+	}
 }
 
 

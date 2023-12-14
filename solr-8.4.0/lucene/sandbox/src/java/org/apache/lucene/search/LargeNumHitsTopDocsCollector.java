@@ -35,123 +35,127 @@ import static org.apache.lucene.search.TopDocsCollector.EMPTY_TOPDOCS;
  * score.
  */
 public final class LargeNumHitsTopDocsCollector implements Collector {
-  private final int requestedHitCount;
-  private List<ScoreDoc> hits = new ArrayList<>();
-  // package private for testing
-  HitQueue pq;
-  ScoreDoc pqTop;
-  int totalHits;
+	private final int requestedHitCount;
+	private List<ScoreDoc> hits = new ArrayList<>();
+	// package private for testing
+	HitQueue pq;
+	ScoreDoc pqTop;
+	int totalHits;
 
-  public LargeNumHitsTopDocsCollector(int requestedHitCount) {
-    this.requestedHitCount = requestedHitCount;
-    this.totalHits = 0;
-  }
+	public LargeNumHitsTopDocsCollector(int requestedHitCount) {
+		this.requestedHitCount = requestedHitCount;
+		this.totalHits = 0;
+	}
 
-  // We always return COMPLETE since this collector should ideally
-  // be used only with large number of hits case
-  @Override
-  public ScoreMode scoreMode() {
-    return ScoreMode.COMPLETE;
-  }
+	// We always return COMPLETE since this collector should ideally
+	// be used only with large number of hits case
+	@Override
+	public ScoreMode scoreMode() {
+		return ScoreMode.COMPLETE;
+	}
 
-  @Override
-  public LeafCollector getLeafCollector(LeafReaderContext context) {
-    final int docBase = context.docBase;
-    return new TopScoreDocCollector.ScorerLeafCollector() {
+	@Override
+	public LeafCollector getLeafCollector(LeafReaderContext context) {
+		final int docBase = context.docBase;
+		return new TopScoreDocCollector.ScorerLeafCollector() {
 
-      @Override
-      public void setScorer(Scorable scorer) throws IOException {
-        super.setScorer(scorer);
-      }
+			@Override
+			public void setScorer(Scorable scorer) throws IOException {
+				super.setScorer(scorer);
+			}
 
-      @Override
-      public void collect(int doc) throws IOException {
-        float score = scorer.score();
+			@Override
+			public void collect(int doc) throws IOException {
+				float score = scorer.score();
 
-        // This collector relies on the fact that scorers produce positive values:
-        assert score >= 0; // NOTE: false for NaN
+				// This collector relies on the fact that scorers produce positive values:
+				assert score >= 0; // NOTE: false for NaN
 
-        if (totalHits < requestedHitCount) {
-          hits.add(new ScoreDoc(doc + docBase, score));
-          totalHits++;
-          return;
-        } else if (totalHits == requestedHitCount) {
-          // Convert the list to a priority queue
+				if (totalHits < requestedHitCount) {
+					hits.add(new ScoreDoc(doc + docBase, score));
+					totalHits++;
+					return;
+				} else if (totalHits == requestedHitCount) {
+					// Convert the list to a priority queue
 
-          // We should get here only when priority queue
-          // has not been built
-          assert pq == null;
-          assert pqTop == null;
-          pq = new HitQueue(requestedHitCount, false);
+					// We should get here only when priority queue
+					// has not been built
+					assert pq == null;
+					assert pqTop == null;
+					pq = new HitQueue(requestedHitCount, false);
 
-          for (ScoreDoc scoreDoc : hits) {
-            pq.add(scoreDoc);
-          }
+					for (ScoreDoc scoreDoc : hits) {
+						pq.add(scoreDoc);
+					}
 
-          pqTop = pq.top();
-          hits = null;
-        }
+					pqTop = pq.top();
+					hits = null;
+				}
 
-        if (score > pqTop.score) {
-          pqTop.doc = doc + docBase;
-          pqTop.score = score;
-          pqTop = pq.updateTop();
-        }
-        ++totalHits;
-      }
-    };
-  }
+				if (score > pqTop.score) {
+					pqTop.doc = doc + docBase;
+					pqTop.score = score;
+					pqTop = pq.updateTop();
+				}
+				++totalHits;
+			}
+		};
+	}
 
-  /** Returns the top docs that were collected by this collector. */
-  public TopDocs topDocs(int howMany) {
+	/**
+	 * Returns the top docs that were collected by this collector.
+	 */
+	public TopDocs topDocs(int howMany) {
 
-    if (howMany <= 0 || howMany > totalHits) {
-      throw new IllegalArgumentException("Incorrect number of hits requested");
-    }
+		if (howMany <= 0 || howMany > totalHits) {
+			throw new IllegalArgumentException("Incorrect number of hits requested");
+		}
 
-    ScoreDoc[] results = new ScoreDoc[howMany];
+		ScoreDoc[] results = new ScoreDoc[howMany];
 
-    // Get the requested results from either hits list or PQ
-    populateResults(results, howMany);
+		// Get the requested results from either hits list or PQ
+		populateResults(results, howMany);
 
-    return newTopDocs(results);
-  }
+		return newTopDocs(results);
+	}
 
-  /**
-   * Populates the results array with the ScoreDoc instances. This can be
-   * overridden in case a different ScoreDoc type should be returned.
-   */
-  protected void populateResults(ScoreDoc[] results, int howMany) {
-    if (pq != null) {
-      assert totalHits >= requestedHitCount;
-      for (int i = howMany - 1; i >= 0; i--) {
-        results[i] = pq.pop();
-      }
-      return;
-    }
+	/**
+	 * Populates the results array with the ScoreDoc instances. This can be
+	 * overridden in case a different ScoreDoc type should be returned.
+	 */
+	protected void populateResults(ScoreDoc[] results, int howMany) {
+		if (pq != null) {
+			assert totalHits >= requestedHitCount;
+			for (int i = howMany - 1; i >= 0; i--) {
+				results[i] = pq.pop();
+			}
+			return;
+		}
 
-    // Total number of hits collected were less than requestedHitCount
-    assert totalHits < requestedHitCount;
-    Collections.sort(hits, Comparator.comparing((ScoreDoc scoreDoc) ->
-        scoreDoc.score).reversed().thenComparing(scoreDoc -> scoreDoc.doc));
+		// Total number of hits collected were less than requestedHitCount
+		assert totalHits < requestedHitCount;
+		Collections.sort(hits, Comparator.comparing((ScoreDoc scoreDoc) ->
+			scoreDoc.score).reversed().thenComparing(scoreDoc -> scoreDoc.doc));
 
-    for (int i = 0; i < howMany; i++) {
-      results[i] = hits.get(i);
-    }
-  }
+		for (int i = 0; i < howMany; i++) {
+			results[i] = hits.get(i);
+		}
+	}
 
-  /**
-   * Returns a {@link TopDocs} instance containing the given results. If
-   * <code>results</code> is null it means there are no results to return,
-   * either because there were 0 calls to collect() or because the arguments to
-   * topDocs were invalid.
-   */
-  protected TopDocs newTopDocs(ScoreDoc[] results) {
-    return results == null ? EMPTY_TOPDOCS : new TopDocs(new TotalHits(totalHits, TotalHits.Relation.EQUAL_TO), results);
-  }
+	/**
+	 * Returns a {@link TopDocs} instance containing the given results. If
+	 * <code>results</code> is null it means there are no results to return,
+	 * either because there were 0 calls to collect() or because the arguments to
+	 * topDocs were invalid.
+	 */
+	protected TopDocs newTopDocs(ScoreDoc[] results) {
+		return results == null ? EMPTY_TOPDOCS : new TopDocs(new TotalHits(totalHits, TotalHits.Relation.EQUAL_TO), results);
+	}
 
-  /** Returns the top docs that were collected by this collector. */
-  public TopDocs topDocs() {
-    return topDocs(Math.min(totalHits, requestedHitCount));
-  }
+	/**
+	 * Returns the top docs that were collected by this collector.
+	 */
+	public TopDocs topDocs() {
+		return topDocs(Math.min(totalHits, requestedHitCount));
+	}
 }

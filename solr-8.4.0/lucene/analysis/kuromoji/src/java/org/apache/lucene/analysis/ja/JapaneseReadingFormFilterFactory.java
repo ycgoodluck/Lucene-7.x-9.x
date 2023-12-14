@@ -33,28 +33,33 @@ import java.util.Map;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;
  * </pre>
- * @since 3.6.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.6.0
  */
 public class JapaneseReadingFormFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "japaneseReadingForm";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "japaneseReadingForm";
 
-  private static final String ROMAJI_PARAM = "useRomaji";
-  private final boolean useRomaji;
-  
-  /** Creates a new JapaneseReadingFormFilterFactory */
-  public JapaneseReadingFormFilterFactory(Map<String,String> args) {
-    super(args);
-    useRomaji = getBoolean(args, ROMAJI_PARAM, false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private static final String ROMAJI_PARAM = "useRomaji";
+	private final boolean useRomaji;
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new JapaneseReadingFormFilter(input, useRomaji);
-  }
+	/**
+	 * Creates a new JapaneseReadingFormFilterFactory
+	 */
+	public JapaneseReadingFormFilterFactory(Map<String, String> args) {
+		super(args);
+		useRomaji = getBoolean(args, ROMAJI_PARAM, false);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new JapaneseReadingFormFilter(input, useRomaji);
+	}
 }

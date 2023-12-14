@@ -27,155 +27,169 @@ import java.io.IOException;
  */
 class dXdYdZSolid extends BaseXYZSolid {
 
-  /** X */
-  protected final double X;
-  /** Y */
-  protected final double Y;
-  /** Z */
-  protected final double Z;
+	/**
+	 * X
+	 */
+	protected final double X;
+	/**
+	 * Y
+	 */
+	protected final double Y;
+	/**
+	 * Z
+	 */
+	protected final double Z;
 
-  /** On surface? */
-  protected final boolean isOnSurface;
-  /** The point */
-  protected final GeoPoint thePoint;
-  
-  /** These are the edge points of the shape, which are defined to be at least one point on
-   * each surface area boundary.  In the case of a solid, this includes points which represent
-   * the intersection of XYZ bounding planes and the planet, as well as points representing
-   * the intersection of single bounding planes with the planet itself.
-   */
-  protected final GeoPoint[] edgePoints;
+	/**
+	 * On surface?
+	 */
+	protected final boolean isOnSurface;
+	/**
+	 * The point
+	 */
+	protected final GeoPoint thePoint;
 
-  /** Empty array of {@link GeoPoint}. */
-  protected static final GeoPoint[] nullPoints = new GeoPoint[0];
-  
-  /**
-   * Sole constructor
-   *
-   *@param planetModel is the planet model.
-   *@param X is the X value.
-   *@param Y is the Y value.
-   *@param Z is the Z value.
-   */
-  public dXdYdZSolid(final PlanetModel planetModel,
-    final double X,
-    final double Y,
-    final double Z) {
-    super(planetModel);
-      
-    this.X = X;
-    this.Y = Y;
-    this.Z = Z;
+	/**
+	 * These are the edge points of the shape, which are defined to be at least one point on
+	 * each surface area boundary.  In the case of a solid, this includes points which represent
+	 * the intersection of XYZ bounding planes and the planet, as well as points representing
+	 * the intersection of single bounding planes with the planet itself.
+	 */
+	protected final GeoPoint[] edgePoints;
 
-    isOnSurface = planetModel.pointOnSurface(X,Y,Z);
-    if (isOnSurface) {
-      thePoint = new GeoPoint(X,Y,Z);
-      edgePoints = new GeoPoint[]{thePoint};
-    } else {
-      thePoint = null;
-      edgePoints = nullPoints;
-    }
-  }
+	/**
+	 * Empty array of {@link GeoPoint}.
+	 */
+	protected static final GeoPoint[] nullPoints = new GeoPoint[0];
 
-  /**
-   * Constructor for deserialization.
-   * @param planetModel is the planet model.
-   * @param inputStream is the input stream.
-   */
-  public dXdYdZSolid(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
-    this(planetModel, 
-      SerializableObject.readDouble(inputStream),
-      SerializableObject.readDouble(inputStream),
-      SerializableObject.readDouble(inputStream));
-  }
+	/**
+	 * Sole constructor
+	 *
+	 * @param planetModel is the planet model.
+	 * @param X           is the X value.
+	 * @param Y           is the Y value.
+	 * @param Z           is the Z value.
+	 */
+	public dXdYdZSolid(final PlanetModel planetModel,
+										 final double X,
+										 final double Y,
+										 final double Z) {
+		super(planetModel);
 
-  @Override
-  public void write(final OutputStream outputStream) throws IOException {
-    SerializableObject.writeDouble(outputStream, X);
-    SerializableObject.writeDouble(outputStream, Y);
-    SerializableObject.writeDouble(outputStream, Z);
-  }
+		this.X = X;
+		this.Y = Y;
+		this.Z = Z;
 
-  @Override
-  protected GeoPoint[] getEdgePoints() {
-    return edgePoints;
-  }
-  
-  @Override
-  public boolean isWithin(final double x, final double y, final double z) {
-    if (!isOnSurface) {
-      return false;
-    }
-    return thePoint.isIdentical(x,y,z);
-  }
+		isOnSurface = planetModel.pointOnSurface(X, Y, Z);
+		if (isOnSurface) {
+			thePoint = new GeoPoint(X, Y, Z);
+			edgePoints = new GeoPoint[]{thePoint};
+		} else {
+			thePoint = null;
+			edgePoints = nullPoints;
+		}
+	}
 
-  @Override
-  public int getRelationship(final GeoShape path) {
-    if (!isOnSurface) {
-      return DISJOINT;
-    }
-    
-    //System.err.println(this+" getrelationship with "+path);
-    final int insideRectangle = isShapeInsideArea(path);
-    if (insideRectangle == SOME_INSIDE) {
-      //System.err.println(" some shape points inside area");
-      return OVERLAPS;
-    }
+	/**
+	 * Constructor for deserialization.
+	 *
+	 * @param planetModel is the planet model.
+	 * @param inputStream is the input stream.
+	 */
+	public dXdYdZSolid(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
+		this(planetModel,
+			SerializableObject.readDouble(inputStream),
+			SerializableObject.readDouble(inputStream),
+			SerializableObject.readDouble(inputStream));
+	}
 
-    // Figure out if the entire XYZArea is contained by the shape.
-    final int insideShape = isAreaInsideShape(path);
-    if (insideShape == SOME_INSIDE) {
-      //System.err.println(" some area points inside shape");
-      return OVERLAPS;
-    }
+	@Override
+	public void write(final OutputStream outputStream) throws IOException {
+		SerializableObject.writeDouble(outputStream, X);
+		SerializableObject.writeDouble(outputStream, Y);
+		SerializableObject.writeDouble(outputStream, Z);
+	}
 
-    if (insideRectangle == ALL_INSIDE && insideShape == ALL_INSIDE) {
-      //System.err.println(" inside of each other");
-      return OVERLAPS;
-    }
+	@Override
+	protected GeoPoint[] getEdgePoints() {
+		return edgePoints;
+	}
 
-    if (insideRectangle == ALL_INSIDE) {
-      //System.err.println(" shape inside area entirely");
-      return WITHIN;
-    }
+	@Override
+	public boolean isWithin(final double x, final double y, final double z) {
+		if (!isOnSurface) {
+			return false;
+		}
+		return thePoint.isIdentical(x, y, z);
+	}
 
-    if (insideShape == ALL_INSIDE) {
-      //System.err.println(" shape contains area entirely");
-      return CONTAINS;
-    }
-    //System.err.println(" disjoint");
-    return DISJOINT;
-  }
+	@Override
+	public int getRelationship(final GeoShape path) {
+		if (!isOnSurface) {
+			return DISJOINT;
+		}
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof dXdYdZSolid))
-      return false;
-    dXdYdZSolid other = (dXdYdZSolid) o;
-    if (!super.equals(other) ||
-      other.isOnSurface != isOnSurface) {
-      return false;
-    }
-    if (isOnSurface) {
-      return other.thePoint.equals(thePoint);
-    }
-    return true;
-  }
+		//System.err.println(this+" getrelationship with "+path);
+		final int insideRectangle = isShapeInsideArea(path);
+		if (insideRectangle == SOME_INSIDE) {
+			//System.err.println(" some shape points inside area");
+			return OVERLAPS;
+		}
 
-  @Override
-  public int hashCode() {
-    int result = super.hashCode();
-    result = 31 * result + (isOnSurface?1:0);
-    if (isOnSurface) {
-      result = 31 * result  + thePoint.hashCode();
-    }
-    return result;
-  }
+		// Figure out if the entire XYZArea is contained by the shape.
+		final int insideShape = isAreaInsideShape(path);
+		if (insideShape == SOME_INSIDE) {
+			//System.err.println(" some area points inside shape");
+			return OVERLAPS;
+		}
 
-  @Override
-  public String toString() {
-    return "dXdYdZSolid: {planetmodel="+planetModel+", isOnSurface="+isOnSurface+", thePoint="+thePoint+"}";
-  }
-  
+		if (insideRectangle == ALL_INSIDE && insideShape == ALL_INSIDE) {
+			//System.err.println(" inside of each other");
+			return OVERLAPS;
+		}
+
+		if (insideRectangle == ALL_INSIDE) {
+			//System.err.println(" shape inside area entirely");
+			return WITHIN;
+		}
+
+		if (insideShape == ALL_INSIDE) {
+			//System.err.println(" shape contains area entirely");
+			return CONTAINS;
+		}
+		//System.err.println(" disjoint");
+		return DISJOINT;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof dXdYdZSolid))
+			return false;
+		dXdYdZSolid other = (dXdYdZSolid) o;
+		if (!super.equals(other) ||
+			other.isOnSurface != isOnSurface) {
+			return false;
+		}
+		if (isOnSurface) {
+			return other.thePoint.equals(thePoint);
+		}
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + (isOnSurface ? 1 : 0);
+		if (isOnSurface) {
+			result = 31 * result + thePoint.hashCode();
+		}
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return "dXdYdZSolid: {planetmodel=" + planetModel + ", isOnSurface=" + isOnSurface + ", thePoint=" + thePoint + "}";
+	}
+
 }
-  
+

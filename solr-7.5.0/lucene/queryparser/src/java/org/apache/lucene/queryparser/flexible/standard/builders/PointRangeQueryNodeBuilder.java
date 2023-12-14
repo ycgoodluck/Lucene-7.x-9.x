@@ -37,101 +37,101 @@ import org.apache.lucene.search.Query;
  * @see PointRangeQueryNode
  */
 public class PointRangeQueryNodeBuilder implements StandardQueryBuilder {
-  
-  /**
-   * Constructs a {@link PointRangeQueryNodeBuilder} object.
-   */
-  public PointRangeQueryNodeBuilder() {
-  // empty constructor
-  }
-  
-  @Override
-  public Query build(QueryNode queryNode) throws QueryNodeException {
-    PointRangeQueryNode numericRangeNode = (PointRangeQueryNode) queryNode;
-    
-    PointQueryNode lowerNumericNode = numericRangeNode.getLowerBound();
-    PointQueryNode upperNumericNode = numericRangeNode.getUpperBound();
-    
-    Number lowerNumber = lowerNumericNode.getValue();
-    Number upperNumber = upperNumericNode.getValue();
-    
-    PointsConfig pointsConfig = numericRangeNode.getPointsConfig();
-    Class<? extends Number> numberType = pointsConfig.getType();
-    String field = StringUtils.toString(numericRangeNode.getField());
-    boolean minInclusive = numericRangeNode.isLowerInclusive();
-    boolean maxInclusive = numericRangeNode.isUpperInclusive();
-    
-    // TODO: push down cleaning up of crazy nulls and inclusive/exclusive elsewhere
-    if (Integer.class.equals(numberType)) {
-      Integer lower = (Integer) lowerNumber;
-      if (lower == null) {
-        lower = Integer.MIN_VALUE;
-      }
-      if (minInclusive == false) {
-        lower = lower + 1;
-      }
-      
-      Integer upper = (Integer) upperNumber;
-      if (upper == null) {
-        upper = Integer.MAX_VALUE;
-      }
-      if (maxInclusive == false) {
-        upper = upper - 1;
-      }
-      return IntPoint.newRangeQuery(field, lower, upper);
-    } else if (Long.class.equals(numberType)) {
-      Long lower = (Long) lowerNumber;
-      if (lower == null) {
-        lower = Long.MIN_VALUE;
-      }
-      if (minInclusive == false) {
-        lower = lower + 1;
-      }
-      
-      Long upper = (Long) upperNumber;
-      if (upper == null) {
-        upper = Long.MAX_VALUE;
-      }
-      if (maxInclusive == false) {
-        upper = upper - 1;
-      }
-      return LongPoint.newRangeQuery(field, lower, upper);
-    } else if (Float.class.equals(numberType)) {
-      Float lower = (Float) lowerNumber;
-      if (lower == null) {
-        lower = Float.NEGATIVE_INFINITY;
-      }
-      if (minInclusive == false) {
-        lower = Math.nextUp(lower);
-      }
-      
-      Float upper = (Float) upperNumber;
-      if (upper == null) {
-        upper = Float.POSITIVE_INFINITY;
-      }
-      if (maxInclusive == false) {
-        upper = Math.nextDown(upper);
-      }
-      return FloatPoint.newRangeQuery(field, lower, upper);
-    } else if (Double.class.equals(numberType)) {
-      Double lower = (Double) lowerNumber;
-      if (lower == null) {
-        lower = Double.NEGATIVE_INFINITY;
-      }
-      if (minInclusive == false) {
-        lower = Math.nextUp(lower);
-      }
-      
-      Double upper = (Double) upperNumber;
-      if (upper == null) {
-        upper = Double.POSITIVE_INFINITY;
-      }
-      if (maxInclusive == false) {
-        upper = Math.nextDown(upper);
-      }
-      return DoublePoint.newRangeQuery(field, lower, upper);
-    } else {
-      throw new QueryNodeException(new MessageImpl(QueryParserMessages.UNSUPPORTED_NUMERIC_DATA_TYPE, numberType));
-    }
-  }
+
+	/**
+	 * Constructs a {@link PointRangeQueryNodeBuilder} object.
+	 */
+	public PointRangeQueryNodeBuilder() {
+		// empty constructor
+	}
+
+	@Override
+	public Query build(QueryNode queryNode) throws QueryNodeException {
+		PointRangeQueryNode numericRangeNode = (PointRangeQueryNode) queryNode;
+
+		PointQueryNode lowerNumericNode = numericRangeNode.getLowerBound();
+		PointQueryNode upperNumericNode = numericRangeNode.getUpperBound();
+
+		Number lowerNumber = lowerNumericNode.getValue();
+		Number upperNumber = upperNumericNode.getValue();
+
+		PointsConfig pointsConfig = numericRangeNode.getPointsConfig();
+		Class<? extends Number> numberType = pointsConfig.getType();
+		String field = StringUtils.toString(numericRangeNode.getField());
+		boolean minInclusive = numericRangeNode.isLowerInclusive();
+		boolean maxInclusive = numericRangeNode.isUpperInclusive();
+
+		// TODO: push down cleaning up of crazy nulls and inclusive/exclusive elsewhere
+		if (Integer.class.equals(numberType)) {
+			Integer lower = (Integer) lowerNumber;
+			if (lower == null) {
+				lower = Integer.MIN_VALUE;
+			}
+			if (minInclusive == false) {
+				lower = lower + 1;
+			}
+
+			Integer upper = (Integer) upperNumber;
+			if (upper == null) {
+				upper = Integer.MAX_VALUE;
+			}
+			if (maxInclusive == false) {
+				upper = upper - 1;
+			}
+			return IntPoint.newRangeQuery(field, lower, upper);
+		} else if (Long.class.equals(numberType)) {
+			Long lower = (Long) lowerNumber;
+			if (lower == null) {
+				lower = Long.MIN_VALUE;
+			}
+			if (minInclusive == false) {
+				lower = lower + 1;
+			}
+
+			Long upper = (Long) upperNumber;
+			if (upper == null) {
+				upper = Long.MAX_VALUE;
+			}
+			if (maxInclusive == false) {
+				upper = upper - 1;
+			}
+			return LongPoint.newRangeQuery(field, lower, upper);
+		} else if (Float.class.equals(numberType)) {
+			Float lower = (Float) lowerNumber;
+			if (lower == null) {
+				lower = Float.NEGATIVE_INFINITY;
+			}
+			if (minInclusive == false) {
+				lower = Math.nextUp(lower);
+			}
+
+			Float upper = (Float) upperNumber;
+			if (upper == null) {
+				upper = Float.POSITIVE_INFINITY;
+			}
+			if (maxInclusive == false) {
+				upper = Math.nextDown(upper);
+			}
+			return FloatPoint.newRangeQuery(field, lower, upper);
+		} else if (Double.class.equals(numberType)) {
+			Double lower = (Double) lowerNumber;
+			if (lower == null) {
+				lower = Double.NEGATIVE_INFINITY;
+			}
+			if (minInclusive == false) {
+				lower = Math.nextUp(lower);
+			}
+
+			Double upper = (Double) upperNumber;
+			if (upper == null) {
+				upper = Double.POSITIVE_INFINITY;
+			}
+			if (maxInclusive == false) {
+				upper = Math.nextDown(upper);
+			}
+			return DoublePoint.newRangeQuery(field, lower, upper);
+		} else {
+			throw new QueryNodeException(new MessageImpl(QueryParserMessages.UNSUPPORTED_NUMERIC_DATA_TYPE, numberType));
+		}
+	}
 }

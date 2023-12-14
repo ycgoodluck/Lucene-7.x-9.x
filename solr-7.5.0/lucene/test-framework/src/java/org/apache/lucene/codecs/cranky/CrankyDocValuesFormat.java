@@ -27,85 +27,85 @@ import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
 
 class CrankyDocValuesFormat extends DocValuesFormat {
-  final DocValuesFormat delegate;
-  final Random random;
-  
-  CrankyDocValuesFormat(DocValuesFormat delegate, Random random) {
-    // we impersonate the passed-in codec, so we don't need to be in SPI,
-    // and so we dont change file formats
-    super(delegate.getName());
-    this.delegate = delegate;
-    this.random = random;
-  }
+	final DocValuesFormat delegate;
+	final Random random;
 
-  @Override
-  public DocValuesConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    if (random.nextInt(100) == 0) {
-      throw new IOException("Fake IOException from DocValuesFormat.fieldsConsumer()");
-    }
-    return new CrankyDocValuesConsumer(delegate.fieldsConsumer(state), random);
-  }
+	CrankyDocValuesFormat(DocValuesFormat delegate, Random random) {
+		// we impersonate the passed-in codec, so we don't need to be in SPI,
+		// and so we dont change file formats
+		super(delegate.getName());
+		this.delegate = delegate;
+		this.random = random;
+	}
 
-  @Override
-  public DocValuesProducer fieldsProducer(SegmentReadState state) throws IOException {
-    return delegate.fieldsProducer(state);
-  }
-  
-  static class CrankyDocValuesConsumer extends DocValuesConsumer {
-    final DocValuesConsumer delegate;
-    final Random random;
-    
-    CrankyDocValuesConsumer(DocValuesConsumer delegate, Random random) {
-      this.delegate = delegate;
-      this.random = random;
-    }
-    
-    @Override
-    public void close() throws IOException {
-      delegate.close();
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from DocValuesConsumer.close()");
-      }
-    }
+	@Override
+	public DocValuesConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		if (random.nextInt(100) == 0) {
+			throw new IOException("Fake IOException from DocValuesFormat.fieldsConsumer()");
+		}
+		return new CrankyDocValuesConsumer(delegate.fieldsConsumer(state), random);
+	}
 
-    @Override
-    public void addNumericField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from DocValuesConsumer.addNumericField()");
-      }
-      delegate.addNumericField(field, valuesProducer);
-    }
+	@Override
+	public DocValuesProducer fieldsProducer(SegmentReadState state) throws IOException {
+		return delegate.fieldsProducer(state);
+	}
 
-    @Override
-    public void addBinaryField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from DocValuesConsumer.addBinaryField()");
-      }
-      delegate.addBinaryField(field, valuesProducer);
-    }
+	static class CrankyDocValuesConsumer extends DocValuesConsumer {
+		final DocValuesConsumer delegate;
+		final Random random;
 
-    @Override
-    public void addSortedField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from DocValuesConsumer.addSortedField()");
-      }
-      delegate.addSortedField(field, valuesProducer);
-    }
-    
-    @Override
-    public void addSortedNumericField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from DocValuesConsumer.addSortedNumericField()");
-      }
-      delegate.addSortedNumericField(field, valuesProducer);
-    }
+		CrankyDocValuesConsumer(DocValuesConsumer delegate, Random random) {
+			this.delegate = delegate;
+			this.random = random;
+		}
 
-    @Override
-    public void addSortedSetField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from DocValuesConsumer.addSortedSetField()");
-      }
-      delegate.addSortedSetField(field, valuesProducer);
-    }
-  }
+		@Override
+		public void close() throws IOException {
+			delegate.close();
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from DocValuesConsumer.close()");
+			}
+		}
+
+		@Override
+		public void addNumericField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from DocValuesConsumer.addNumericField()");
+			}
+			delegate.addNumericField(field, valuesProducer);
+		}
+
+		@Override
+		public void addBinaryField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from DocValuesConsumer.addBinaryField()");
+			}
+			delegate.addBinaryField(field, valuesProducer);
+		}
+
+		@Override
+		public void addSortedField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from DocValuesConsumer.addSortedField()");
+			}
+			delegate.addSortedField(field, valuesProducer);
+		}
+
+		@Override
+		public void addSortedNumericField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from DocValuesConsumer.addSortedNumericField()");
+			}
+			delegate.addSortedNumericField(field, valuesProducer);
+		}
+
+		@Override
+		public void addSortedSetField(FieldInfo field, DocValuesProducer valuesProducer) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from DocValuesConsumer.addSortedSetField()");
+			}
+			delegate.addSortedSetField(field, valuesProducer);
+		}
+	}
 }

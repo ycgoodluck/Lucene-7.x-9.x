@@ -28,40 +28,42 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the CJK bigram factory is working.
  */
 public class TestCJKBigramFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testDefaults() throws Exception {
-    Reader reader = new StringReader("多くの学生が試験に落ちた。");
-    TokenStream stream = tokenizerFactory("standard").create();
-    ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("CJKBigram").create(stream);
-    assertTokenStreamContents(stream,
-        new String[] { "多く", "くの", "の学", "学生", "生が", "が試", "試験", "験に", "に落", "落ち", "ちた" });
-  }
-  
-  public void testHanOnly() throws Exception {
-    Reader reader = new StringReader("多くの学生が試験に落ちた。");
-    TokenStream stream = tokenizerFactory("standard").create();
-    ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("CJKBigram", 
-        "hiragana", "false").create(stream);
-    assertTokenStreamContents(stream,
-        new String[] { "多", "く", "の",  "学生", "が",  "試験", "に",  "落", "ち", "た" });
-  }
-  
-  public void testHanOnlyUnigrams() throws Exception {
-    Reader reader = new StringReader("多くの学生が試験に落ちた。");
-    TokenStream stream = tokenizerFactory("standard").create();
-    ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("CJKBigram", 
-        "hiragana", "false", 
-        "outputUnigrams", "true").create(stream);
-    assertTokenStreamContents(stream,
-        new String[] { "多", "く", "の",  "学", "学生", "生", "が",  "試", "試験", "験", "に",  "落", "ち", "た" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {      
-      tokenFilterFactory("CJKBigram", "bogusArg", "bogusValue");
-    });
-  }
+	public void testDefaults() throws Exception {
+		Reader reader = new StringReader("多くの学生が試験に落ちた。");
+		TokenStream stream = tokenizerFactory("standard").create();
+		((Tokenizer) stream).setReader(reader);
+		stream = tokenFilterFactory("CJKBigram").create(stream);
+		assertTokenStreamContents(stream,
+			new String[]{"多く", "くの", "の学", "学生", "生が", "が試", "試験", "験に", "に落", "落ち", "ちた"});
+	}
+
+	public void testHanOnly() throws Exception {
+		Reader reader = new StringReader("多くの学生が試験に落ちた。");
+		TokenStream stream = tokenizerFactory("standard").create();
+		((Tokenizer) stream).setReader(reader);
+		stream = tokenFilterFactory("CJKBigram",
+			"hiragana", "false").create(stream);
+		assertTokenStreamContents(stream,
+			new String[]{"多", "く", "の", "学生", "が", "試験", "に", "落", "ち", "た"});
+	}
+
+	public void testHanOnlyUnigrams() throws Exception {
+		Reader reader = new StringReader("多くの学生が試験に落ちた。");
+		TokenStream stream = tokenizerFactory("standard").create();
+		((Tokenizer) stream).setReader(reader);
+		stream = tokenFilterFactory("CJKBigram",
+			"hiragana", "false",
+			"outputUnigrams", "true").create(stream);
+		assertTokenStreamContents(stream,
+			new String[]{"多", "く", "の", "学", "学生", "生", "が", "試", "試験", "験", "に", "落", "ち", "た"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("CJKBigram", "bogusArg", "bogusValue");
+		});
+	}
 }

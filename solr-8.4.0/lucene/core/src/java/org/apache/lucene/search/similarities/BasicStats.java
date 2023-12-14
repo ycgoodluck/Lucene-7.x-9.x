@@ -21,92 +21,127 @@ import org.apache.lucene.index.Terms;
 
 /**
  * Stores all statistics commonly used ranking methods.
+ *
  * @lucene.experimental
  */
 public class BasicStats {
-  final String field;
-  /** The number of documents. */
-  protected long numberOfDocuments;
-  /** The total number of tokens in the field. */
-  protected long numberOfFieldTokens;
-  /** The average field length. */
-  protected double avgFieldLength;
-  /** The document frequency. */
-  protected long docFreq;
-  /** The total number of occurrences of this term across all documents. */
-  protected long totalTermFreq;
-  
-  // -------------------------- Boost-related stuff --------------------------
+	final String field;
+	/**
+	 * The number of documents.
+	 */
+	protected long numberOfDocuments;
+	/**
+	 * The total number of tokens in the field.
+	 */
+	protected long numberOfFieldTokens;
+	/**
+	 * The average field length.
+	 */
+	protected double avgFieldLength;
+	/**
+	 * The document frequency.
+	 */
+	protected long docFreq;
+	/**
+	 * The total number of occurrences of this term across all documents.
+	 */
+	protected long totalTermFreq;
 
-  /** A query boost. Should be applied as a multiplicative factor to the score. */
-  protected final double boost;
-  
-  /** Constructor. */
-  public BasicStats(String field, double boost) {
-    this.field = field;
-    this.boost = boost;
-  }
-  
-  // ------------------------- Getter/setter methods -------------------------
-  
-  /** Returns the number of documents. */
-  public long getNumberOfDocuments() {
-    return numberOfDocuments;
-  }
-  
-  /** Sets the number of documents. */
-  public void setNumberOfDocuments(long numberOfDocuments) {
-    this.numberOfDocuments = numberOfDocuments;
-  }
-  
-  /**
-   * Returns the total number of tokens in the field.
-   * @see Terms#getSumTotalTermFreq()
-   */
-  public long getNumberOfFieldTokens() {
-    return numberOfFieldTokens;
-  }
-  
-  /**
-   * Sets the total number of tokens in the field.
-   * @see Terms#getSumTotalTermFreq()
-   */
-  public void setNumberOfFieldTokens(long numberOfFieldTokens) {
-    this.numberOfFieldTokens = numberOfFieldTokens;
-  }
-  
-  /** Returns the average field length. */
-  public double getAvgFieldLength() {
-    return avgFieldLength;
-  }
-  
-  /** Sets the average field length. */
-  public void setAvgFieldLength(double avgFieldLength) {
-    this.avgFieldLength = avgFieldLength;
-  }
-  
-  /** Returns the document frequency. */
-  public long getDocFreq() {
-    return docFreq;
-  }
-  
-  /** Sets the document frequency. */
-  public void setDocFreq(long docFreq) {
-    this.docFreq = docFreq;
-  }
-  
-  /** Returns the total number of occurrences of this term across all documents. */
-  public long getTotalTermFreq() {
-    return totalTermFreq;
-  }
-  
-  /** Sets the total number of occurrences of this term across all documents. */
-  public void setTotalTermFreq(long totalTermFreq) {
-    this.totalTermFreq = totalTermFreq;
-  }
-  
-  /** Returns the total boost. */
-  public double getBoost() {
-    return boost;
-  }
+	// -------------------------- Boost-related stuff --------------------------
+
+	/**
+	 * A query boost. Should be applied as a multiplicative factor to the score.
+	 */
+	protected final double boost;
+
+	/**
+	 * Constructor.
+	 */
+	public BasicStats(String field, double boost) {
+		this.field = field;
+		this.boost = boost;
+	}
+
+	// ------------------------- Getter/setter methods -------------------------
+
+	/**
+	 * Returns the number of documents.
+	 */
+	public long getNumberOfDocuments() {
+		return numberOfDocuments;
+	}
+
+	/**
+	 * Sets the number of documents.
+	 */
+	public void setNumberOfDocuments(long numberOfDocuments) {
+		this.numberOfDocuments = numberOfDocuments;
+	}
+
+	/**
+	 * Returns the total number of tokens in the field.
+	 *
+	 * @see Terms#getSumTotalTermFreq()
+	 */
+	public long getNumberOfFieldTokens() {
+		return numberOfFieldTokens;
+	}
+
+	/**
+	 * Sets the total number of tokens in the field.
+	 *
+	 * @see Terms#getSumTotalTermFreq()
+	 */
+	public void setNumberOfFieldTokens(long numberOfFieldTokens) {
+		this.numberOfFieldTokens = numberOfFieldTokens;
+	}
+
+	/**
+	 * Returns the average field length.
+	 */
+	public double getAvgFieldLength() {
+		return avgFieldLength;
+	}
+
+	/**
+	 * Sets the average field length.
+	 */
+	public void setAvgFieldLength(double avgFieldLength) {
+		this.avgFieldLength = avgFieldLength;
+	}
+
+	/**
+	 * Returns the document frequency.
+	 */
+	public long getDocFreq() {
+		return docFreq;
+	}
+
+	/**
+	 * Sets the document frequency.
+	 */
+	public void setDocFreq(long docFreq) {
+		this.docFreq = docFreq;
+	}
+
+	/**
+	 * Returns the total number of occurrences of this term across all documents.
+	 */
+	public long getTotalTermFreq() {
+		return totalTermFreq;
+	}
+
+	/**
+	 * Sets the total number of occurrences of this term across all documents.
+	 */
+	public void setTotalTermFreq(long totalTermFreq) {
+		this.totalTermFreq = totalTermFreq;
+	}
+
+	/**
+	 * Returns the total boost.
+	 */
+	public double getBoost() {
+		return boost;
+	}
 }

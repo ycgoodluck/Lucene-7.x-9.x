@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-/** 
+
+/**
  * HTTP replication implementation
  */
 package org.apache.lucene.replicator.http;

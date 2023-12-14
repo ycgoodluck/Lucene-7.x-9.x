@@ -20,69 +20,70 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 
-/**  
- * A {@code FilterSeekableByteChannel} contains another 
- * {@code SeekableByteChannel}, which it uses as its basic 
- * source of data, possibly transforming the data along the 
- * way or providing additional functionality. 
+/**
+ * A {@code FilterSeekableByteChannel} contains another
+ * {@code SeekableByteChannel}, which it uses as its basic
+ * source of data, possibly transforming the data along the
+ * way or providing additional functionality.
  */
 public class FilterSeekableByteChannel implements SeekableByteChannel {
-  
-  /** 
-   * The underlying {@code SeekableByteChannel} instance. 
-   */
-  protected final SeekableByteChannel delegate;
-  
-  /**
-   * Construct a {@code FilterSeekableByteChannel} based on 
-   * the specified base channel.
-   * <p>
-   * Note that base channel is closed if this channel is closed.
-   * @param delegate specified base channel.
-   */
-  public FilterSeekableByteChannel(SeekableByteChannel delegate) {
-    this.delegate = delegate;
-  }
 
-  @Override
-  public boolean isOpen() {
-    return delegate.isOpen();
-  }
+	/**
+	 * The underlying {@code SeekableByteChannel} instance.
+	 */
+	protected final SeekableByteChannel delegate;
 
-  @Override
-  public void close() throws IOException {
-    delegate.close();
-  }
+	/**
+	 * Construct a {@code FilterSeekableByteChannel} based on
+	 * the specified base channel.
+	 * <p>
+	 * Note that base channel is closed if this channel is closed.
+	 *
+	 * @param delegate specified base channel.
+	 */
+	public FilterSeekableByteChannel(SeekableByteChannel delegate) {
+		this.delegate = delegate;
+	}
 
-  @Override
-  public int read(ByteBuffer dst) throws IOException {
-    return delegate.read(dst);
-  }
+	@Override
+	public boolean isOpen() {
+		return delegate.isOpen();
+	}
 
-  @Override
-  public int write(ByteBuffer src) throws IOException {
-    return delegate.write(src);
-  }
+	@Override
+	public void close() throws IOException {
+		delegate.close();
+	}
 
-  @Override
-  public long position() throws IOException {
-    return delegate.position();
-  }
+	@Override
+	public int read(ByteBuffer dst) throws IOException {
+		return delegate.read(dst);
+	}
 
-  @Override
-  public SeekableByteChannel position(long newPosition) throws IOException {
-    delegate.position(newPosition);
-    return this;
-  }
+	@Override
+	public int write(ByteBuffer src) throws IOException {
+		return delegate.write(src);
+	}
 
-  @Override
-  public long size() throws IOException {
-    return delegate.size();
-  }
+	@Override
+	public long position() throws IOException {
+		return delegate.position();
+	}
 
-  @Override
-  public SeekableByteChannel truncate(long size) throws IOException {
-    delegate.truncate(size);
-    return this;
-  }
+	@Override
+	public SeekableByteChannel position(long newPosition) throws IOException {
+		delegate.position(newPosition);
+		return this;
+	}
+
+	@Override
+	public long size() throws IOException {
+		return delegate.size();
+	}
+
+	@Override
+	public SeekableByteChannel truncate(long size) throws IOException {
+		delegate.truncate(size);
+		return this;
+	}
 }

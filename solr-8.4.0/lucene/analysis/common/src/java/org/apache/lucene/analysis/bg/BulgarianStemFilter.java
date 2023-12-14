@@ -35,24 +35,24 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  * </p>
  */
 public final class BulgarianStemFilter extends TokenFilter {
-  private final BulgarianStemmer stemmer = new BulgarianStemmer();
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
-  
-  public BulgarianStemFilter(final TokenStream input) {
-    super(input);
-  }
-  
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if(!keywordAttr.isKeyword()) {
-        final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
-        termAtt.setLength(newlen);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	private final BulgarianStemmer stemmer = new BulgarianStemmer();
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+
+	public BulgarianStemFilter(final TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
+				termAtt.setLength(newlen);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

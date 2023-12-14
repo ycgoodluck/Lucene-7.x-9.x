@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link LimitTokenCountFilter}. 
+ * Factory for {@link LimitTokenCountFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_lngthcnt" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -32,34 +32,39 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  * <p>
- * The {@code consumeAllTokens} property is optional and defaults to {@code false}.  
+ * The {@code consumeAllTokens} property is optional and defaults to {@code false}.
  * See {@link LimitTokenCountFilter} for an explanation of its use.
- * @since 3.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.1.0
  */
 public class LimitTokenCountFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "limitTokenCount";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "limitTokenCount";
 
-  public static final String MAX_TOKEN_COUNT_KEY = "maxTokenCount";
-  public static final String CONSUME_ALL_TOKENS_KEY = "consumeAllTokens";
-  final int maxTokenCount;
-  final boolean consumeAllTokens;
+	public static final String MAX_TOKEN_COUNT_KEY = "maxTokenCount";
+	public static final String CONSUME_ALL_TOKENS_KEY = "consumeAllTokens";
+	final int maxTokenCount;
+	final boolean consumeAllTokens;
 
-  /** Creates a new LimitTokenCountFilterFactory */
-  public LimitTokenCountFilterFactory(Map<String, String> args) {
-    super(args);
-    maxTokenCount = requireInt(args, MAX_TOKEN_COUNT_KEY);
-    consumeAllTokens = getBoolean(args, CONSUME_ALL_TOKENS_KEY, false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new LimitTokenCountFilterFactory
+	 */
+	public LimitTokenCountFilterFactory(Map<String, String> args) {
+		super(args);
+		maxTokenCount = requireInt(args, MAX_TOKEN_COUNT_KEY);
+		consumeAllTokens = getBoolean(args, CONSUME_ALL_TOKENS_KEY, false);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new LimitTokenCountFilter(input, maxTokenCount, consumeAllTokens);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new LimitTokenCountFilter(input, maxTokenCount, consumeAllTokens);
+	}
 
 }

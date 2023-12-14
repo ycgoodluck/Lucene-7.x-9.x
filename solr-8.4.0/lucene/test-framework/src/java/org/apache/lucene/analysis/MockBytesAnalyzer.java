@@ -21,16 +21,16 @@ import org.apache.lucene.util.AttributeFactory;
 /**
  * Analyzer for testing that encodes terms as UTF-16 bytes.
  */
-public final class MockBytesAnalyzer extends Analyzer {  
-  @Override
-  protected TokenStreamComponents createComponents(String fieldName) {
-    Tokenizer t = new MockTokenizer(MockUTF16TermAttributeImpl.UTF16_TERM_ATTRIBUTE_FACTORY,
-        MockTokenizer.KEYWORD, false, MockTokenizer.DEFAULT_MAX_TOKEN_LENGTH);
-    return new TokenStreamComponents(t);
-  }
+public final class MockBytesAnalyzer extends Analyzer {
+	@Override
+	protected TokenStreamComponents createComponents(String fieldName) {
+		Tokenizer t = new MockTokenizer(MockUTF16TermAttributeImpl.UTF16_TERM_ATTRIBUTE_FACTORY,
+			MockTokenizer.KEYWORD, false, MockTokenizer.DEFAULT_MAX_TOKEN_LENGTH);
+		return new TokenStreamComponents(t);
+	}
 
-  @Override
-  protected AttributeFactory attributeFactory(String fieldName) {
-    return MockUTF16TermAttributeImpl.UTF16_TERM_ATTRIBUTE_FACTORY;
-  }
+	@Override
+	protected AttributeFactory attributeFactory(String fieldName) {
+		return MockUTF16TermAttributeImpl.UTF16_TERM_ATTRIBUTE_FACTORY;
+	}
 }

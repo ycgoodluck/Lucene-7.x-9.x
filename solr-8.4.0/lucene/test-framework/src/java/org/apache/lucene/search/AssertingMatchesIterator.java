@@ -21,61 +21,60 @@ import java.io.IOException;
 
 class AssertingMatchesIterator implements MatchesIterator {
 
-  private final MatchesIterator in;
-  private State state = State.UNPOSITIONED;
+	private final MatchesIterator in;
+	private State state = State.UNPOSITIONED;
 
-  private enum State { UNPOSITIONED, ITERATING, EXHAUSTED }
+	private enum State {UNPOSITIONED, ITERATING, EXHAUSTED}
 
-  AssertingMatchesIterator(MatchesIterator in) {
-    this.in = in;
-  }
+	AssertingMatchesIterator(MatchesIterator in) {
+		this.in = in;
+	}
 
-  @Override
-  public boolean next() throws IOException {
-    assert state != State.EXHAUSTED : state;
-    boolean more = in.next();
-    if (more == false) {
-      state = State.EXHAUSTED;
-    }
-    else {
-      state = State.ITERATING;
-    }
-    return more;
-  }
+	@Override
+	public boolean next() throws IOException {
+		assert state != State.EXHAUSTED : state;
+		boolean more = in.next();
+		if (more == false) {
+			state = State.EXHAUSTED;
+		} else {
+			state = State.ITERATING;
+		}
+		return more;
+	}
 
-  @Override
-  public int startPosition() {
-    assert state == State.ITERATING : state;
-    return in.startPosition();
-  }
+	@Override
+	public int startPosition() {
+		assert state == State.ITERATING : state;
+		return in.startPosition();
+	}
 
-  @Override
-  public int endPosition() {
-    assert state == State.ITERATING : state;
-    return in.endPosition();
-  }
+	@Override
+	public int endPosition() {
+		assert state == State.ITERATING : state;
+		return in.endPosition();
+	}
 
-  @Override
-  public int startOffset() throws IOException {
-    assert state == State.ITERATING : state;
-    return in.startOffset();
-  }
+	@Override
+	public int startOffset() throws IOException {
+		assert state == State.ITERATING : state;
+		return in.startOffset();
+	}
 
-  @Override
-  public int endOffset() throws IOException {
-    assert state == State.ITERATING : state;
-    return in.endOffset();
-  }
+	@Override
+	public int endOffset() throws IOException {
+		assert state == State.ITERATING : state;
+		return in.endOffset();
+	}
 
-  @Override
-  public MatchesIterator getSubMatches() throws IOException {
-    assert state == State.ITERATING : state;
-    return in.getSubMatches();
-  }
+	@Override
+	public MatchesIterator getSubMatches() throws IOException {
+		assert state == State.ITERATING : state;
+		return in.getSubMatches();
+	}
 
-  @Override
-  public Query getQuery() {
-    assert state == State.ITERATING : state;
-    return in.getQuery();
-  }
+	@Override
+	public Query getQuery() {
+		assert state == State.ITERATING : state;
+		return in.getQuery();
+	}
 }

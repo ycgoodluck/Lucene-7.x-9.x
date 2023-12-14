@@ -36,16 +36,18 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  */
 public class ArabicStemFilterFactory extends TokenFilterFactory {
 
-  /** Creates a new ArabicStemFilterFactory */
-  public ArabicStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new ArabicStemFilterFactory
+	 */
+	public ArabicStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public ArabicStemFilter create(TokenStream input) {
-    return new ArabicStemFilter(input);
-  }
+	@Override
+	public ArabicStemFilter create(TokenStream input) {
+		return new ArabicStemFilter(input);
+	}
 }

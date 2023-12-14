@@ -28,269 +28,269 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestIndexWriterMergePolicy extends LuceneTestCase {
-  
-  // Test the normal case
-  public void testNormalCase() throws IOException {
-    Directory dir = newDirectory();
 
-    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                                .setMaxBufferedDocs(10)
-                                                .setMergePolicy(new LogDocMergePolicy()));
+	// Test the normal case
+	public void testNormalCase() throws IOException {
+		Directory dir = newDirectory();
 
-    for (int i = 0; i < 100; i++) {
-      addDoc(writer);
-      checkInvariants(writer);
-    }
+		IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setMaxBufferedDocs(10)
+			.setMergePolicy(new LogDocMergePolicy()));
 
-    writer.close();
-    dir.close();
-  }
+		for (int i = 0; i < 100; i++) {
+			addDoc(writer);
+			checkInvariants(writer);
+		}
 
-  // Test to see if there is over merge
-  public void testNoOverMerge() throws IOException {
-    Directory dir = newDirectory();
+		writer.close();
+		dir.close();
+	}
 
-    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                                .setMaxBufferedDocs(10)
-                                                .setMergePolicy(new LogDocMergePolicy()));
+	// Test to see if there is over merge
+	public void testNoOverMerge() throws IOException {
+		Directory dir = newDirectory();
 
-    boolean noOverMerge = false;
-    for (int i = 0; i < 100; i++) {
-      addDoc(writer);
-      checkInvariants(writer);
-      if (writer.getNumBufferedDocuments() + writer.getSegmentCount() >= 18) {
-        noOverMerge = true;
-      }
-    }
-    assertTrue(noOverMerge);
+		IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setMaxBufferedDocs(10)
+			.setMergePolicy(new LogDocMergePolicy()));
 
-    writer.close();
-    dir.close();
-  }
+		boolean noOverMerge = false;
+		for (int i = 0; i < 100; i++) {
+			addDoc(writer);
+			checkInvariants(writer);
+			if (writer.getNumBufferedDocuments() + writer.getSegmentCount() >= 18) {
+				noOverMerge = true;
+			}
+		}
+		assertTrue(noOverMerge);
 
-  // Test the case where flush is forced after every addDoc
-  public void testForceFlush() throws IOException {
-    Directory dir = newDirectory();
+		writer.close();
+		dir.close();
+	}
 
-    LogDocMergePolicy mp = new LogDocMergePolicy();
-    mp.setMinMergeDocs(100);
-    mp.setMergeFactor(10);
-    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                                .setMaxBufferedDocs(10)
-                                                .setMergePolicy(mp));
+	// Test the case where flush is forced after every addDoc
+	public void testForceFlush() throws IOException {
+		Directory dir = newDirectory();
 
-    for (int i = 0; i < 100; i++) {
-      addDoc(writer);
-      writer.close();
+		LogDocMergePolicy mp = new LogDocMergePolicy();
+		mp.setMinMergeDocs(100);
+		mp.setMergeFactor(10);
+		IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setMaxBufferedDocs(10)
+			.setMergePolicy(mp));
 
-      mp = new LogDocMergePolicy();
-      mp.setMergeFactor(10);
-      writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                      .setOpenMode(OpenMode.APPEND)
-                                      .setMaxBufferedDocs(10)
-                                      .setMergePolicy(mp));
-      mp.setMinMergeDocs(100);
-      checkInvariants(writer);
-    }
+		for (int i = 0; i < 100; i++) {
+			addDoc(writer);
+			writer.close();
 
-    writer.close();
-    dir.close();
-  }
+			mp = new LogDocMergePolicy();
+			mp.setMergeFactor(10);
+			writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+				.setOpenMode(OpenMode.APPEND)
+				.setMaxBufferedDocs(10)
+				.setMergePolicy(mp));
+			mp.setMinMergeDocs(100);
+			checkInvariants(writer);
+		}
 
-  // Test the case where mergeFactor changes
-  public void testMergeFactorChange() throws IOException {
-    Directory dir = newDirectory();
+		writer.close();
+		dir.close();
+	}
 
-    IndexWriter writer = new IndexWriter(
-        dir,
-        newIndexWriterConfig(new MockAnalyzer(random()))
-            .setMaxBufferedDocs(10)
-            .setMergePolicy(newLogMergePolicy())
-            .setMergeScheduler(new SerialMergeScheduler())
-    );
+	// Test the case where mergeFactor changes
+	public void testMergeFactorChange() throws IOException {
+		Directory dir = newDirectory();
 
-    for (int i = 0; i < 250; i++) {
-      addDoc(writer);
-      checkInvariants(writer);
-    }
+		IndexWriter writer = new IndexWriter(
+			dir,
+			newIndexWriterConfig(new MockAnalyzer(random()))
+				.setMaxBufferedDocs(10)
+				.setMergePolicy(newLogMergePolicy())
+				.setMergeScheduler(new SerialMergeScheduler())
+		);
 
-    ((LogMergePolicy) writer.getConfig().getMergePolicy()).setMergeFactor(5);
+		for (int i = 0; i < 250; i++) {
+			addDoc(writer);
+			checkInvariants(writer);
+		}
 
-    // merge policy only fixes segments on levels where merges
-    // have been triggered, so check invariants after all adds
-    for (int i = 0; i < 10; i++) {
-      addDoc(writer);
-    }
-    checkInvariants(writer);
+		((LogMergePolicy) writer.getConfig().getMergePolicy()).setMergeFactor(5);
 
-    writer.close();
-    dir.close();
-  }
+		// merge policy only fixes segments on levels where merges
+		// have been triggered, so check invariants after all adds
+		for (int i = 0; i < 10; i++) {
+			addDoc(writer);
+		}
+		checkInvariants(writer);
 
-  // Test the case where both mergeFactor and maxBufferedDocs change
-  public void testMaxBufferedDocsChange() throws IOException {
-    Directory dir = newDirectory();
+		writer.close();
+		dir.close();
+	}
 
-    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-        .setMaxBufferedDocs(101)
-        .setMergePolicy(new LogDocMergePolicy())
-        .setMergeScheduler(new SerialMergeScheduler()));
+	// Test the case where both mergeFactor and maxBufferedDocs change
+	public void testMaxBufferedDocsChange() throws IOException {
+		Directory dir = newDirectory();
 
-    // leftmost* segment has 1 doc
-    // rightmost* segment has 100 docs
-    for (int i = 1; i <= 100; i++) {
-      for (int j = 0; j < i; j++) {
-        addDoc(writer);
-        checkInvariants(writer);
-      }
-      writer.close();
+		IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setMaxBufferedDocs(101)
+			.setMergePolicy(new LogDocMergePolicy())
+			.setMergeScheduler(new SerialMergeScheduler()));
 
-      writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                      .setOpenMode(OpenMode.APPEND)
-                                      .setMaxBufferedDocs(101)
-                                      .setMergePolicy(new LogDocMergePolicy())
-                                      .setMergeScheduler(new SerialMergeScheduler()));
-    }
+		// leftmost* segment has 1 doc
+		// rightmost* segment has 100 docs
+		for (int i = 1; i <= 100; i++) {
+			for (int j = 0; j < i; j++) {
+				addDoc(writer);
+				checkInvariants(writer);
+			}
+			writer.close();
 
-    writer.close();
-    LogDocMergePolicy ldmp = new LogDocMergePolicy();
-    ldmp.setMergeFactor(10);
-    writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                    .setOpenMode(OpenMode.APPEND)
-                                    .setMaxBufferedDocs(10)
-                                    .setMergePolicy(ldmp)
-                                    .setMergeScheduler(new SerialMergeScheduler()));
+			writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+				.setOpenMode(OpenMode.APPEND)
+				.setMaxBufferedDocs(101)
+				.setMergePolicy(new LogDocMergePolicy())
+				.setMergeScheduler(new SerialMergeScheduler()));
+		}
 
-    // merge policy only fixes segments on levels where merges
-    // have been triggered, so check invariants after all adds
-    for (int i = 0; i < 100; i++) {
-      addDoc(writer);
-    }
-    checkInvariants(writer);
+		writer.close();
+		LogDocMergePolicy ldmp = new LogDocMergePolicy();
+		ldmp.setMergeFactor(10);
+		writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setOpenMode(OpenMode.APPEND)
+			.setMaxBufferedDocs(10)
+			.setMergePolicy(ldmp)
+			.setMergeScheduler(new SerialMergeScheduler()));
 
-    for (int i = 100; i < 1000; i++) {
-      addDoc(writer);
-    }
-    writer.commit();
-    writer.waitForMerges();
-    writer.commit();
-    checkInvariants(writer);
+		// merge policy only fixes segments on levels where merges
+		// have been triggered, so check invariants after all adds
+		for (int i = 0; i < 100; i++) {
+			addDoc(writer);
+		}
+		checkInvariants(writer);
 
-    writer.close();
-    dir.close();
-  }
+		for (int i = 100; i < 1000; i++) {
+			addDoc(writer);
+		}
+		writer.commit();
+		writer.waitForMerges();
+		writer.commit();
+		checkInvariants(writer);
 
-  // Test the case where a merge results in no doc at all
-  public void testMergeDocCount0() throws IOException {
-    Directory dir = newDirectory();
+		writer.close();
+		dir.close();
+	}
 
-    LogDocMergePolicy ldmp = new LogDocMergePolicy();
-    ldmp.setMergeFactor(100);
-    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                                .setMaxBufferedDocs(10)
-                                                .setMergePolicy(ldmp));
+	// Test the case where a merge results in no doc at all
+	public void testMergeDocCount0() throws IOException {
+		Directory dir = newDirectory();
 
-    for (int i = 0; i < 250; i++) {
-      addDoc(writer);
-      checkInvariants(writer);
-    }
-    writer.close();
+		LogDocMergePolicy ldmp = new LogDocMergePolicy();
+		ldmp.setMergeFactor(100);
+		IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setMaxBufferedDocs(10)
+			.setMergePolicy(ldmp));
 
-    // delete some docs without merging
-    writer = new IndexWriter(
-        dir,
-        newIndexWriterConfig(new MockAnalyzer(random()))
-          .setMergePolicy(NoMergePolicy.INSTANCE)
-    );
-    writer.deleteDocuments(new Term("content", "aaa"));
-    writer.close();
+		for (int i = 0; i < 250; i++) {
+			addDoc(writer);
+			checkInvariants(writer);
+		}
+		writer.close();
 
-    ldmp = new LogDocMergePolicy();
-    ldmp.setMergeFactor(5);
-    writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                    .setOpenMode(OpenMode.APPEND)
-                                    .setMaxBufferedDocs(10)
-                                    .setMergePolicy(ldmp)
-                                    .setMergeScheduler(new ConcurrentMergeScheduler()));
+		// delete some docs without merging
+		writer = new IndexWriter(
+			dir,
+			newIndexWriterConfig(new MockAnalyzer(random()))
+				.setMergePolicy(NoMergePolicy.INSTANCE)
+		);
+		writer.deleteDocuments(new Term("content", "aaa"));
+		writer.close();
 
-    // merge factor is changed, so check invariants after all adds
-    for (int i = 0; i < 10; i++) {
-      addDoc(writer);
-    }
-    writer.commit();
-    writer.waitForMerges();
-    writer.commit();
-    checkInvariants(writer);
-    assertEquals(10, writer.getDocStats().maxDoc);
+		ldmp = new LogDocMergePolicy();
+		ldmp.setMergeFactor(5);
+		writer = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setOpenMode(OpenMode.APPEND)
+			.setMaxBufferedDocs(10)
+			.setMergePolicy(ldmp)
+			.setMergeScheduler(new ConcurrentMergeScheduler()));
 
-    writer.close();
-    dir.close();
-  }
+		// merge factor is changed, so check invariants after all adds
+		for (int i = 0; i < 10; i++) {
+			addDoc(writer);
+		}
+		writer.commit();
+		writer.waitForMerges();
+		writer.commit();
+		checkInvariants(writer);
+		assertEquals(10, writer.getDocStats().maxDoc);
 
-  private void addDoc(IndexWriter writer) throws IOException {
-    Document doc = new Document();
-    doc.add(newTextField("content", "aaa", Field.Store.NO));
-    writer.addDocument(doc);
-  }
+		writer.close();
+		dir.close();
+	}
 
-  private void checkInvariants(IndexWriter writer) throws IOException {
-    writer.waitForMerges();
-    int maxBufferedDocs = writer.getConfig().getMaxBufferedDocs();
-    int mergeFactor = ((LogMergePolicy) writer.getConfig().getMergePolicy()).getMergeFactor();
-    int maxMergeDocs = ((LogMergePolicy) writer.getConfig().getMergePolicy()).getMaxMergeDocs();
+	private void addDoc(IndexWriter writer) throws IOException {
+		Document doc = new Document();
+		doc.add(newTextField("content", "aaa", Field.Store.NO));
+		writer.addDocument(doc);
+	}
 
-    int ramSegmentCount = writer.getNumBufferedDocuments();
-    assertTrue(ramSegmentCount < maxBufferedDocs);
+	private void checkInvariants(IndexWriter writer) throws IOException {
+		writer.waitForMerges();
+		int maxBufferedDocs = writer.getConfig().getMaxBufferedDocs();
+		int mergeFactor = ((LogMergePolicy) writer.getConfig().getMergePolicy()).getMergeFactor();
+		int maxMergeDocs = ((LogMergePolicy) writer.getConfig().getMergePolicy()).getMaxMergeDocs();
 
-    int lowerBound = -1;
-    int upperBound = maxBufferedDocs;
-    int numSegments = 0;
+		int ramSegmentCount = writer.getNumBufferedDocuments();
+		assertTrue(ramSegmentCount < maxBufferedDocs);
 
-    int segmentCount = writer.getSegmentCount();
-    for (int i = segmentCount - 1; i >= 0; i--) {
-      int docCount = writer.maxDoc(i);
-      assertTrue("docCount=" + docCount + " lowerBound=" + lowerBound + " upperBound=" + upperBound + " i=" + i + " segmentCount=" + segmentCount + " index=" + writer.segString() + " config=" + writer.getConfig(), docCount > lowerBound);
+		int lowerBound = -1;
+		int upperBound = maxBufferedDocs;
+		int numSegments = 0;
 
-      if (docCount <= upperBound) {
-        numSegments++;
-      } else {
-        if (upperBound * mergeFactor <= maxMergeDocs) {
-          assertTrue("maxMergeDocs=" + maxMergeDocs + "; numSegments=" + numSegments + "; upperBound=" + upperBound + "; mergeFactor=" + mergeFactor + "; segs=" + writer.segString() + " config=" + writer.getConfig(), numSegments < mergeFactor);
-        }
+		int segmentCount = writer.getSegmentCount();
+		for (int i = segmentCount - 1; i >= 0; i--) {
+			int docCount = writer.maxDoc(i);
+			assertTrue("docCount=" + docCount + " lowerBound=" + lowerBound + " upperBound=" + upperBound + " i=" + i + " segmentCount=" + segmentCount + " index=" + writer.segString() + " config=" + writer.getConfig(), docCount > lowerBound);
 
-        do {
-          lowerBound = upperBound;
-          upperBound *= mergeFactor;
-        } while (docCount > upperBound);
-        numSegments = 1;
-      }
-    }
-    if (upperBound * mergeFactor <= maxMergeDocs) {
-      assertTrue(numSegments < mergeFactor);
-    }
-  }
+			if (docCount <= upperBound) {
+				numSegments++;
+			} else {
+				if (upperBound * mergeFactor <= maxMergeDocs) {
+					assertTrue("maxMergeDocs=" + maxMergeDocs + "; numSegments=" + numSegments + "; upperBound=" + upperBound + "; mergeFactor=" + mergeFactor + "; segs=" + writer.segString() + " config=" + writer.getConfig(), numSegments < mergeFactor);
+				}
 
-  private static final double EPSILON = 1E-14;
-  
-  public void testSetters() {
-    assertSetters(new LogByteSizeMergePolicy());
-    assertSetters(new LogDocMergePolicy());
-  }
+				do {
+					lowerBound = upperBound;
+					upperBound *= mergeFactor;
+				} while (docCount > upperBound);
+				numSegments = 1;
+			}
+		}
+		if (upperBound * mergeFactor <= maxMergeDocs) {
+			assertTrue(numSegments < mergeFactor);
+		}
+	}
 
-  private void assertSetters(MergePolicy lmp) {
-    lmp.setMaxCFSSegmentSizeMB(2.0);
-    assertEquals(2.0, lmp.getMaxCFSSegmentSizeMB(), EPSILON);
-    
-    lmp.setMaxCFSSegmentSizeMB(Double.POSITIVE_INFINITY);
-    assertEquals(Long.MAX_VALUE/1024/1024., lmp.getMaxCFSSegmentSizeMB(), EPSILON*Long.MAX_VALUE);
-    
-    lmp.setMaxCFSSegmentSizeMB(Long.MAX_VALUE/1024/1024.);
-    assertEquals(Long.MAX_VALUE/1024/1024., lmp.getMaxCFSSegmentSizeMB(), EPSILON*Long.MAX_VALUE);
-    
-    expectThrows(IllegalArgumentException.class, () -> {
-      lmp.setMaxCFSSegmentSizeMB(-2.0);
-    });
-    
-    // TODO: Add more checks for other non-double setters!
-  }
+	private static final double EPSILON = 1E-14;
+
+	public void testSetters() {
+		assertSetters(new LogByteSizeMergePolicy());
+		assertSetters(new LogDocMergePolicy());
+	}
+
+	private void assertSetters(MergePolicy lmp) {
+		lmp.setMaxCFSSegmentSizeMB(2.0);
+		assertEquals(2.0, lmp.getMaxCFSSegmentSizeMB(), EPSILON);
+
+		lmp.setMaxCFSSegmentSizeMB(Double.POSITIVE_INFINITY);
+		assertEquals(Long.MAX_VALUE / 1024 / 1024., lmp.getMaxCFSSegmentSizeMB(), EPSILON * Long.MAX_VALUE);
+
+		lmp.setMaxCFSSegmentSizeMB(Long.MAX_VALUE / 1024 / 1024.);
+		assertEquals(Long.MAX_VALUE / 1024 / 1024., lmp.getMaxCFSSegmentSizeMB(), EPSILON * Long.MAX_VALUE);
+
+		expectThrows(IllegalArgumentException.class, () -> {
+			lmp.setMaxCFSSegmentSizeMB(-2.0);
+		});
+
+		// TODO: Add more checks for other non-double setters!
+	}
 }

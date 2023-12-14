@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Dialogs used in the menu bar */
+/**
+ * Dialogs used in the menu bar
+ */
 package org.apache.lucene.luke.app.desktop.components.dialog.menubar;

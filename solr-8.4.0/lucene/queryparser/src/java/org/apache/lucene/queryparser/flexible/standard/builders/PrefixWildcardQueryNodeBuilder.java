@@ -30,24 +30,24 @@ import org.apache.lucene.search.PrefixQuery;
  */
 public class PrefixWildcardQueryNodeBuilder implements StandardQueryBuilder {
 
-  public PrefixWildcardQueryNodeBuilder() {
-    // empty constructor
-  }
+	public PrefixWildcardQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public PrefixQuery build(QueryNode queryNode) throws QueryNodeException {    
+	@Override
+	public PrefixQuery build(QueryNode queryNode) throws QueryNodeException {
 
-    PrefixWildcardQueryNode wildcardNode = (PrefixWildcardQueryNode) queryNode;
+		PrefixWildcardQueryNode wildcardNode = (PrefixWildcardQueryNode) queryNode;
 
-    String text = wildcardNode.getText().subSequence(0, wildcardNode.getText().length() - 1).toString();
-    PrefixQuery q = new PrefixQuery(new Term(wildcardNode.getFieldAsString(), text));
-    
-    MultiTermQuery.RewriteMethod method = (MultiTermQuery.RewriteMethod)queryNode.getTag(MultiTermRewriteMethodProcessor.TAG_ID);
-    if (method != null) {
-      q.setRewriteMethod(method);
-    }
-    
-    return q;
-  }
+		String text = wildcardNode.getText().subSequence(0, wildcardNode.getText().length() - 1).toString();
+		PrefixQuery q = new PrefixQuery(new Term(wildcardNode.getFieldAsString(), text));
+
+		MultiTermQuery.RewriteMethod method = (MultiTermQuery.RewriteMethod) queryNode.getTag(MultiTermRewriteMethodProcessor.TAG_ID);
+		if (method != null) {
+			q.setRewriteMethod(method);
+		}
+
+		return q;
+	}
 
 }

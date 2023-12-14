@@ -28,49 +28,52 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
 
 /**
+ *
  */
 public class TestTrimFilter extends BaseTokenStreamTestCase {
 
-  public void testTrim() throws Exception {
-    char[] a = " a ".toCharArray();
-    char[] b = "b   ".toCharArray();
-    char[] ccc = "cCc".toCharArray();
-    char[] whitespace = "   ".toCharArray();
-    char[] empty = "".toCharArray();
+	public void testTrim() throws Exception {
+		char[] a = " a ".toCharArray();
+		char[] b = "b   ".toCharArray();
+		char[] ccc = "cCc".toCharArray();
+		char[] whitespace = "   ".toCharArray();
+		char[] empty = "".toCharArray();
 
-    TokenStream ts = new CannedTokenStream(new Token(new String(a, 0, a.length), 1, 5),
-                    new Token(new String(b, 0, b.length), 6, 10),
-                    new Token(new String(ccc, 0, ccc.length), 11, 15),
-                    new Token(new String(whitespace, 0, whitespace.length), 16, 20),
-                    new Token(new String(empty, 0, empty.length), 21, 21));
-    ts = new TrimFilter(ts);
+		TokenStream ts = new CannedTokenStream(new Token(new String(a, 0, a.length), 1, 5),
+			new Token(new String(b, 0, b.length), 6, 10),
+			new Token(new String(ccc, 0, ccc.length), 11, 15),
+			new Token(new String(whitespace, 0, whitespace.length), 16, 20),
+			new Token(new String(empty, 0, empty.length), 21, 21));
+		ts = new TrimFilter(ts);
 
-    assertTokenStreamContents(ts, new String[] { "a", "b", "cCc", "", ""});
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer a = new Analyzer() {
+		assertTokenStreamContents(ts, new String[]{"a", "b", "cCc", "", ""});
+	}
 
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new MockTokenizer(MockTokenizer.KEYWORD, false);
-        return new TokenStreamComponents(tokenizer, new TrimFilter(tokenizer));
-      } 
-    };
-    checkRandomData(random(), a, 1000*RANDOM_MULTIPLIER);
-    a.close();
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new TrimFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer a = new Analyzer() {
+
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new MockTokenizer(MockTokenizer.KEYWORD, false);
+				return new TokenStreamComponents(tokenizer, new TrimFilter(tokenizer));
+			}
+		};
+		checkRandomData(random(), a, 1000 * RANDOM_MULTIPLIER);
+		a.close();
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new TrimFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

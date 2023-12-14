@@ -24,39 +24,39 @@ import org.apache.lucene.geo.Polygon;
 
 public class TestLatLonDocValuesQueries extends BaseGeoPointTestCase {
 
-  @Override
-  protected boolean supportsPolygons() {
-    return false;
-  }
+	@Override
+	protected boolean supportsPolygons() {
+		return false;
+	}
 
-  @Override
-  protected void addPointToDoc(String field, Document doc, double lat, double lon) {
-    doc.add(new LatLonDocValuesField(field, lat, lon));
-  }
+	@Override
+	protected void addPointToDoc(String field, Document doc, double lat, double lon) {
+		doc.add(new LatLonDocValuesField(field, lat, lon));
+	}
 
-  @Override
-  protected Query newRectQuery(String field, double minLat, double maxLat, double minLon, double maxLon) {
-    return LatLonDocValuesField.newSlowBoxQuery(field, minLat, maxLat, minLon, maxLon);
-  }
+	@Override
+	protected Query newRectQuery(String field, double minLat, double maxLat, double minLon, double maxLon) {
+		return LatLonDocValuesField.newSlowBoxQuery(field, minLat, maxLat, minLon, maxLon);
+	}
 
-  @Override
-  protected Query newDistanceQuery(String field, double centerLat, double centerLon, double radiusMeters) {
-    return LatLonDocValuesField.newSlowDistanceQuery(field, centerLat, centerLon, radiusMeters);
-  }
+	@Override
+	protected Query newDistanceQuery(String field, double centerLat, double centerLon, double radiusMeters) {
+		return LatLonDocValuesField.newSlowDistanceQuery(field, centerLat, centerLon, radiusMeters);
+	}
 
-  @Override
-  protected Query newPolygonQuery(String field, Polygon... polygons) {
-    fail();
-    return null;
-  }
+	@Override
+	protected Query newPolygonQuery(String field, Polygon... polygons) {
+		fail();
+		return null;
+	}
 
-  @Override
-  protected double quantizeLat(double latRaw) {
-    return GeoEncodingUtils.decodeLatitude(GeoEncodingUtils.encodeLatitude(latRaw));
-  }
+	@Override
+	protected double quantizeLat(double latRaw) {
+		return GeoEncodingUtils.decodeLatitude(GeoEncodingUtils.encodeLatitude(latRaw));
+	}
 
-  @Override
-  protected double quantizeLon(double lonRaw) {
-    return GeoEncodingUtils.decodeLongitude(GeoEncodingUtils.encodeLongitude(lonRaw));
-  }
+	@Override
+	protected double quantizeLon(double lonRaw) {
+		return GeoEncodingUtils.decodeLongitude(GeoEncodingUtils.encodeLongitude(lonRaw));
+	}
 }

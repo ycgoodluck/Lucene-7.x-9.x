@@ -36,17 +36,19 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  */
 @Deprecated
 public class StandardFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new StandardFilterFactory */
-  public StandardFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public StandardFilter create(TokenStream input) {
-    return new StandardFilter(input);
-  }
+
+	/**
+	 * Creates a new StandardFilterFactory
+	 */
+	public StandardFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public StandardFilter create(TokenStream input) {
+		return new StandardFilter(input);
+	}
 }

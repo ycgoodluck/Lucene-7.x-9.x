@@ -23,26 +23,26 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestBytesRefAttImpl extends LuceneTestCase {
 
-  public void testCopyTo() throws Exception {
-    BytesTermAttributeImpl t = new BytesTermAttributeImpl();
-    BytesTermAttributeImpl copy = assertCopyIsEqual(t);
+	public void testCopyTo() throws Exception {
+		BytesTermAttributeImpl t = new BytesTermAttributeImpl();
+		BytesTermAttributeImpl copy = assertCopyIsEqual(t);
 
-    // first do empty
-    assertEquals(t.getBytesRef(), copy.getBytesRef());
-    assertNull(copy.getBytesRef());
-    // now after setting it
-    t.setBytesRef(new BytesRef("hello"));
-    copy = assertCopyIsEqual(t);
-    assertEquals(t.getBytesRef(), copy.getBytesRef());
-    assertNotSame(t.getBytesRef(), copy.getBytesRef());
-  }
+		// first do empty
+		assertEquals(t.getBytesRef(), copy.getBytesRef());
+		assertNull(copy.getBytesRef());
+		// now after setting it
+		t.setBytesRef(new BytesRef("hello"));
+		copy = assertCopyIsEqual(t);
+		assertEquals(t.getBytesRef(), copy.getBytesRef());
+		assertNotSame(t.getBytesRef(), copy.getBytesRef());
+	}
 
-  public static <T extends AttributeImpl> T assertCopyIsEqual(T att) throws Exception {
-    @SuppressWarnings("unchecked")
-    T copy = (T) att.getClass().newInstance();
-    att.copyTo(copy);
-    assertEquals("Copied instance must be equal", att, copy);
-    assertEquals("Copied instance's hashcode must be equal", att.hashCode(), copy.hashCode());
-    return copy;
-  }
+	public static <T extends AttributeImpl> T assertCopyIsEqual(T att) throws Exception {
+		@SuppressWarnings("unchecked")
+		T copy = (T) att.getClass().newInstance();
+		att.copyTo(copy);
+		assertEquals("Copied instance must be equal", att, copy);
+		assertEquals("Copied instance's hashcode must be equal", att.hashCode(), copy.hashCode());
+		return copy;
+	}
 }

@@ -29,30 +29,30 @@ import org.apache.lucene.search.highlight.TermVectorLeafReader;
  */
 public class TermVectorOffsetStrategy extends FieldOffsetStrategy {
 
-  public TermVectorOffsetStrategy(UHComponents components) {
-    super(components);
-  }
+	public TermVectorOffsetStrategy(UHComponents components) {
+		super(components);
+	}
 
-  @Override
-  public UnifiedHighlighter.OffsetSource getOffsetSource() {
-    return UnifiedHighlighter.OffsetSource.TERM_VECTORS;
-  }
+	@Override
+	public UnifiedHighlighter.OffsetSource getOffsetSource() {
+		return UnifiedHighlighter.OffsetSource.TERM_VECTORS;
+	}
 
-  @Override
-  public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
-    Terms tvTerms = reader.getTermVector(docId, getField());
-    if (tvTerms == null) {
-      return OffsetsEnum.EMPTY;
-    }
+	@Override
+	public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
+		Terms tvTerms = reader.getTermVector(docId, getField());
+		if (tvTerms == null) {
+			return OffsetsEnum.EMPTY;
+		}
 
-    LeafReader singleDocReader = new TermVectorLeafReader(getField(), tvTerms);
-    return createOffsetsEnumFromReader(
-        new OverlaySingleDocTermsLeafReader(
-            reader,
-            singleDocReader,
-            getField(),
-            docId),
-        docId);
-  }
+		LeafReader singleDocReader = new TermVectorLeafReader(getField(), tvTerms);
+		return createOffsetsEnumFromReader(
+			new OverlaySingleDocTermsLeafReader(
+				reader,
+				singleDocReader,
+				getField(),
+				docId),
+			docId);
+	}
 
 }

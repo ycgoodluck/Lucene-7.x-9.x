@@ -34,38 +34,38 @@ import org.apache.lucene.queryparser.flexible.core.processors.QueryNodeProcessor
  * {@link OrQueryNode}s or {@link FieldQueryNode}s, otherwise an exception will
  * be thrown. <br>
  * <br>
- * 
+ * <p>
  * If they are {@link AndQueryNode} or an instance of anything else that
  * implements {@link FieldQueryNode} the exception will also be thrown.
  */
 public class SpansValidatorQueryNodeProcessor extends QueryNodeProcessorImpl {
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-    return node;
+		return node;
 
-  }
+	}
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
 
-    if (!((node instanceof BooleanQueryNode && !(node instanceof AndQueryNode)) || node
-        .getClass() == FieldQueryNode.class)) {
-      throw new QueryNodeException(new MessageImpl(
-          QueryParserMessages.NODE_ACTION_NOT_SUPPORTED));
-    }
+		if (!((node instanceof BooleanQueryNode && !(node instanceof AndQueryNode)) || node
+			.getClass() == FieldQueryNode.class)) {
+			throw new QueryNodeException(new MessageImpl(
+				QueryParserMessages.NODE_ACTION_NOT_SUPPORTED));
+		}
 
-    return node;
+		return node;
 
-  }
+	}
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
 
-    return children;
+		return children;
 
-  }
+	}
 
 }

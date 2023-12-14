@@ -26,24 +26,23 @@ import org.apache.lucene.util.BytesRefIterator;
  * A reset'able {@link org.apache.lucene.util.BytesRefIterator} wrapper around
  * an {@link java.util.Iterator} of {@link org.apache.lucene.spatial.prefix.tree.Cell}s.
  *
- * @see PrefixTreeStrategy#newCellToBytesRefIterator()
- *
  * @lucene.internal
+ * @see PrefixTreeStrategy#newCellToBytesRefIterator()
  */
 public class CellToBytesRefIterator implements BytesRefIterator {
 
-  protected Iterator<Cell> cellIter;
-  protected BytesRef bytesRef = new BytesRef();
+	protected Iterator<Cell> cellIter;
+	protected BytesRef bytesRef = new BytesRef();
 
-  public void reset(Iterator<Cell> cellIter) {
-    this.cellIter = cellIter;
-  }
+	public void reset(Iterator<Cell> cellIter) {
+		this.cellIter = cellIter;
+	}
 
-  @Override
-  public BytesRef next() {
-    if (!cellIter.hasNext()) {
-      return null;
-    }
-    return cellIter.next().getTokenBytesWithLeaf(bytesRef);
-  }
+	@Override
+	public BytesRef next() {
+		if (!cellIter.hasNext()) {
+			return null;
+		}
+		return cellIter.next().getTokenBytesWithLeaf(bytesRef);
+	}
 }

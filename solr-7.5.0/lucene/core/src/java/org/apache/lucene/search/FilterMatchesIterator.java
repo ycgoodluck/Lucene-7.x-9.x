@@ -24,51 +24,52 @@ import java.io.IOException;
  */
 public abstract class FilterMatchesIterator implements MatchesIterator {
 
-  /**
-   * The delegate
-   */
-  protected final MatchesIterator in;
+	/**
+	 * The delegate
+	 */
+	protected final MatchesIterator in;
 
-  /**
-   * Create a new FilterMatchesIterator
-   * @param in the delegate
-   */
-  protected FilterMatchesIterator(MatchesIterator in) {
-    this.in = in;
-  }
+	/**
+	 * Create a new FilterMatchesIterator
+	 *
+	 * @param in the delegate
+	 */
+	protected FilterMatchesIterator(MatchesIterator in) {
+		this.in = in;
+	}
 
-  @Override
-  public boolean next() throws IOException {
-    return in.next();
-  }
+	@Override
+	public boolean next() throws IOException {
+		return in.next();
+	}
 
-  @Override
-  public int startPosition() {
-    return in.startPosition();
-  }
+	@Override
+	public int startPosition() {
+		return in.startPosition();
+	}
 
-  @Override
-  public int endPosition() {
-    return in.endPosition();
-  }
+	@Override
+	public int endPosition() {
+		return in.endPosition();
+	}
 
-  @Override
-  public int startOffset() throws IOException {
-    return in.startOffset();
-  }
+	@Override
+	public int startOffset() throws IOException {
+		return in.startOffset();
+	}
 
-  @Override
-  public int endOffset() throws IOException {
-    return in.endOffset();
-  }
+	@Override
+	public int endOffset() throws IOException {
+		return in.endOffset();
+	}
 
-  @Override
-  public MatchesIterator getSubMatches() throws IOException {
-    return in.getSubMatches();
-  }
+	@Override
+	public MatchesIterator getSubMatches() throws IOException {
+		return in.getSubMatches();
+	}
 
-  @Override
-  public Query getQuery() {
-    return in.getQuery();
-  }
+	@Override
+	public Query getQuery() {
+		return in.getQuery();
+	}
 }

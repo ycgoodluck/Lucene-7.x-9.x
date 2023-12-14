@@ -25,34 +25,34 @@ import java.util.List;
 
 public class TestSimpleFacetsExample extends LuceneTestCase {
 
-  @Test
-  public void testFacetOnly() throws Exception {
-    List<FacetResult> results = new SimpleFacetsExample().runFacetOnly();
-    assertEquals(2, results.size());
-    assertEquals("dim=Author path=[] value=5 childCount=4\n  Lisa (2)\n  Bob (1)\n  Susan (1)\n  Frank (1)\n", results.get(0).toString());
-    assertEquals("dim=Publish Date path=[] value=5 childCount=3\n  2010 (2)\n  2012 (2)\n  1999 (1)\n", results.get(1).toString());
-  }
-  
-  
-  @Test
-  public void testSimple() throws Exception {
-    List<FacetResult> results = new SimpleFacetsExample().runSearch();
-    assertEquals(2, results.size());
-    assertEquals("dim=Author path=[] value=5 childCount=4\n  Lisa (2)\n  Bob (1)\n  Susan (1)\n  Frank (1)\n", results.get(0).toString());
-    assertEquals("dim=Publish Date path=[] value=5 childCount=3\n  2010 (2)\n  2012 (2)\n  1999 (1)\n", results.get(1).toString());
-  }
+	@Test
+	public void testFacetOnly() throws Exception {
+		List<FacetResult> results = new SimpleFacetsExample().runFacetOnly();
+		assertEquals(2, results.size());
+		assertEquals("dim=Author path=[] value=5 childCount=4\n  Lisa (2)\n  Bob (1)\n  Susan (1)\n  Frank (1)\n", results.get(0).toString());
+		assertEquals("dim=Publish Date path=[] value=5 childCount=3\n  2010 (2)\n  2012 (2)\n  1999 (1)\n", results.get(1).toString());
+	}
 
-  @Test
-  public void testDrillDown() throws Exception {
-    FacetResult result = new SimpleFacetsExample().runDrillDown();
-    assertEquals("dim=Author path=[] value=2 childCount=2\n  Bob (1)\n  Lisa (1)\n", result.toString());
-  }
 
-  @Test
-  public void testDrillSideways() throws Exception {
-    List<FacetResult> result = new SimpleFacetsExample().runDrillSideways();
-    assertEquals("dim=Publish Date path=[] value=5 childCount=3\n  2010 (2)\n  2012 (2)\n  1999 (1)\n", result.get(0).toString());
-    assertEquals("dim=Author path=[] value=2 childCount=2\n  Bob (1)\n  Lisa (1)\n", result.get(1).toString());
-  }
+	@Test
+	public void testSimple() throws Exception {
+		List<FacetResult> results = new SimpleFacetsExample().runSearch();
+		assertEquals(2, results.size());
+		assertEquals("dim=Author path=[] value=5 childCount=4\n  Lisa (2)\n  Bob (1)\n  Susan (1)\n  Frank (1)\n", results.get(0).toString());
+		assertEquals("dim=Publish Date path=[] value=5 childCount=3\n  2010 (2)\n  2012 (2)\n  1999 (1)\n", results.get(1).toString());
+	}
+
+	@Test
+	public void testDrillDown() throws Exception {
+		FacetResult result = new SimpleFacetsExample().runDrillDown();
+		assertEquals("dim=Author path=[] value=2 childCount=2\n  Bob (1)\n  Lisa (1)\n", result.toString());
+	}
+
+	@Test
+	public void testDrillSideways() throws Exception {
+		List<FacetResult> result = new SimpleFacetsExample().runDrillSideways();
+		assertEquals("dim=Publish Date path=[] value=5 childCount=3\n  2010 (2)\n  2012 (2)\n  1999 (1)\n", result.get(0).toString());
+		assertEquals("dim=Author path=[] value=2 childCount=2\n  Bob (1)\n  Lisa (1)\n", result.get(1).toString());
+	}
 
 }

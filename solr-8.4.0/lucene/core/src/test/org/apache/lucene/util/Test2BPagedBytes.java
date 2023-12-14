@@ -29,47 +29,47 @@ import org.apache.lucene.util.LuceneTestCase.Monster;
 @Monster("You must increase heap to > 2 G to run this")
 public class Test2BPagedBytes extends LuceneTestCase {
 
-  public void test() throws Exception {
-    BaseDirectoryWrapper dir = newFSDirectory(createTempDir("test2BPagedBytes"));
-    if (dir instanceof MockDirectoryWrapper) {
-      ((MockDirectoryWrapper)dir).setThrottling(MockDirectoryWrapper.Throttling.NEVER);
-    }
-    PagedBytes pb = new PagedBytes(15);
-    IndexOutput dataOutput = dir.createOutput("foo", IOContext.DEFAULT);
-    long netBytes = 0;
-    long seed = random().nextLong();
-    long lastFP = 0;
-    Random r2 = new Random(seed);
-    while(netBytes < 1.1*Integer.MAX_VALUE) {
-      int numBytes = TestUtil.nextInt(r2, 1, 32768);
-      byte[] bytes = new byte[numBytes];
-      r2.nextBytes(bytes);
-      dataOutput.writeBytes(bytes, bytes.length);
-      long fp = dataOutput.getFilePointer();
-      assert fp == lastFP + numBytes;
-      lastFP = fp;
-      netBytes += numBytes;
-    }
-    dataOutput.close();
-    IndexInput input = dir.openInput("foo", IOContext.DEFAULT);
-    pb.copy(input, input.length());
-    input.close();
-    PagedBytes.Reader reader = pb.freeze(true);
+	public void test() throws Exception {
+		BaseDirectoryWrapper dir = newFSDirectory(createTempDir("test2BPagedBytes"));
+		if (dir instanceof MockDirectoryWrapper) {
+			((MockDirectoryWrapper) dir).setThrottling(MockDirectoryWrapper.Throttling.NEVER);
+		}
+		PagedBytes pb = new PagedBytes(15);
+		IndexOutput dataOutput = dir.createOutput("foo", IOContext.DEFAULT);
+		long netBytes = 0;
+		long seed = random().nextLong();
+		long lastFP = 0;
+		Random r2 = new Random(seed);
+		while (netBytes < 1.1 * Integer.MAX_VALUE) {
+			int numBytes = TestUtil.nextInt(r2, 1, 32768);
+			byte[] bytes = new byte[numBytes];
+			r2.nextBytes(bytes);
+			dataOutput.writeBytes(bytes, bytes.length);
+			long fp = dataOutput.getFilePointer();
+			assert fp == lastFP + numBytes;
+			lastFP = fp;
+			netBytes += numBytes;
+		}
+		dataOutput.close();
+		IndexInput input = dir.openInput("foo", IOContext.DEFAULT);
+		pb.copy(input, input.length());
+		input.close();
+		PagedBytes.Reader reader = pb.freeze(true);
 
-    r2 = new Random(seed);
-    netBytes = 0;
-    while(netBytes < 1.1*Integer.MAX_VALUE) {
-      int numBytes = TestUtil.nextInt(r2, 1, 32768);
-      byte[] bytes = new byte[numBytes];
-      r2.nextBytes(bytes);
-      BytesRef expected = new BytesRef(bytes);
+		r2 = new Random(seed);
+		netBytes = 0;
+		while (netBytes < 1.1 * Integer.MAX_VALUE) {
+			int numBytes = TestUtil.nextInt(r2, 1, 32768);
+			byte[] bytes = new byte[numBytes];
+			r2.nextBytes(bytes);
+			BytesRef expected = new BytesRef(bytes);
 
-      BytesRef actual = new BytesRef();
-      reader.fillSlice(actual, netBytes, numBytes);
-      assertEquals(expected, actual);
+			BytesRef actual = new BytesRef();
+			reader.fillSlice(actual, netBytes, numBytes);
+			assertEquals(expected, actual);
 
-      netBytes += numBytes;
-    }
-    dir.close();
-  }
+			netBytes += numBytes;
+		}
+		dir.close();
+	}
 }

@@ -38,47 +38,47 @@ import org.apache.lucene.util.LuceneTestCase;
 
 /**
  * A very simple demo used in the API documentation (src/java/overview.html).
- *
+ * <p>
  * Please try to keep src/java/overview.html up-to-date when making changes
  * to this class.
  */
 public class TestDemo extends LuceneTestCase {
 
-  public void testDemo() throws IOException {
-    String longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
-    String text = "This is the text to be indexed. " + longTerm;
+	public void testDemo() throws IOException {
+		String longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
+		String text = "This is the text to be indexed. " + longTerm;
 
-    Path indexPath = Files.createTempDirectory("tempIndex");
-    try (Directory dir = FSDirectory.open(indexPath)) {
-      Analyzer analyzer = new StandardAnalyzer();
-      try (IndexWriter iw = new IndexWriter(dir, new IndexWriterConfig(analyzer))) {
-        Document doc = new Document();
-        doc.add(newTextField("fieldname", text, Field.Store.YES));
-        iw.addDocument(doc);
-      }
+		Path indexPath = Files.createTempDirectory("tempIndex");
+		try (Directory dir = FSDirectory.open(indexPath)) {
+			Analyzer analyzer = new StandardAnalyzer();
+			try (IndexWriter iw = new IndexWriter(dir, new IndexWriterConfig(analyzer))) {
+				Document doc = new Document();
+				doc.add(newTextField("fieldname", text, Field.Store.YES));
+				iw.addDocument(doc);
+			}
 
-      // Now search the index.
-      try (IndexReader reader = DirectoryReader.open(dir)) {
-        IndexSearcher searcher = newSearcher(reader);
+			// Now search the index.
+			try (IndexReader reader = DirectoryReader.open(dir)) {
+				IndexSearcher searcher = newSearcher(reader);
 
-        assertEquals(1, searcher.count(new TermQuery(new Term("fieldname", longTerm))));
+				assertEquals(1, searcher.count(new TermQuery(new Term("fieldname", longTerm))));
 
-        Query query = new TermQuery(new Term("fieldname", "text"));
-        TopDocs hits = searcher.search(query, 1);
-        assertEquals(1, hits.totalHits.value);
+				Query query = new TermQuery(new Term("fieldname", "text"));
+				TopDocs hits = searcher.search(query, 1);
+				assertEquals(1, hits.totalHits.value);
 
-        // Iterate through the results.
-        for (int i = 0; i < hits.scoreDocs.length; i++) {
-          Document hitDoc = searcher.doc(hits.scoreDocs[i].doc);
-          assertEquals(text, hitDoc.get("fieldname"));
-        }
+				// Iterate through the results.
+				for (int i = 0; i < hits.scoreDocs.length; i++) {
+					Document hitDoc = searcher.doc(hits.scoreDocs[i].doc);
+					assertEquals(text, hitDoc.get("fieldname"));
+				}
 
-        // Test simple phrase query.
-        PhraseQuery phraseQuery = new PhraseQuery("fieldname", "to", "be");
-        assertEquals(1, searcher.count(phraseQuery));
-      }
-    }
+				// Test simple phrase query.
+				PhraseQuery phraseQuery = new PhraseQuery("fieldname", "to", "be");
+				assertEquals(1, searcher.count(phraseQuery));
+			}
+		}
 
-    IOUtils.rm(indexPath);
-  }
+		IOUtils.rm(indexPath);
+	}
 }

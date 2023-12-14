@@ -34,36 +34,38 @@ import java.util.Random;
  * linux but developers are using macs.
  */
 public class ShuffleFS extends FilterFileSystemProvider {
-  final long seed;
-  
-  /** 
-   * Create a new instance, wrapping {@code delegate}.
-   */
-  public ShuffleFS(FileSystem delegate, long seed) {
-    super("shuffle://", delegate);
-    this.seed = seed;
-  }
+	final long seed;
 
-  @Override
-  public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter) throws IOException {
-    try (DirectoryStream<Path> stream = super.newDirectoryStream(dir, filter)) {
-      // read complete directory listing
-      List<Path> contents = new ArrayList<>();
-      for (Path path : stream) {
-        contents.add(path);
-      }
-      // sort first based only on filename
-      Collections.sort(contents, (path1, path2) -> path1.getFileName().toString().compareTo(path2.getFileName().toString()));
-      // sort based on current class seed
-      Collections.shuffle(contents, new Random(seed));
-      return new DirectoryStream<Path>() {
-        @Override
-        public Iterator<Path> iterator() {
-          return contents.iterator();
-        }
-        @Override
-        public void close() throws IOException {}        
-      };
-    }
-  }
+	/**
+	 * Create a new instance, wrapping {@code delegate}.
+	 */
+	public ShuffleFS(FileSystem delegate, long seed) {
+		super("shuffle://", delegate);
+		this.seed = seed;
+	}
+
+	@Override
+	public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter) throws IOException {
+		try (DirectoryStream<Path> stream = super.newDirectoryStream(dir, filter)) {
+			// read complete directory listing
+			List<Path> contents = new ArrayList<>();
+			for (Path path : stream) {
+				contents.add(path);
+			}
+			// sort first based only on filename
+			Collections.sort(contents, (path1, path2) -> path1.getFileName().toString().compareTo(path2.getFileName().toString()));
+			// sort based on current class seed
+			Collections.shuffle(contents, new Random(seed));
+			return new DirectoryStream<Path>() {
+				@Override
+				public Iterator<Path> iterator() {
+					return contents.iterator();
+				}
+
+				@Override
+				public void close() throws IOException {
+				}
+			};
+		}
+	}
 }

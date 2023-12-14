@@ -15,24 +15,24 @@
  * limitations under the License.
  */
 
-/** 
+/**
  * Packed integer arrays and streams.
- * 
+ *
  * <p>
- *     The packed package provides
+ * The packed package provides
  *     <ul>
  *      <li>sequential and random access capable arrays of positive longs,</li>
  *      <li>routines for efficient serialization and deserialization of streams of packed integers.</li>
  *     </ul>
- * 
+ * <p>
  *     The implementations provide different trade-offs between memory usage and
  *     access speed. The standard usage scenario is replacing large int or long
  *     arrays in order to reduce the memory footprint.
  * <p>
  *     The main access point is the {@link org.apache.lucene.util.packed.PackedInts} factory.
- * 
+ *
  * <h3>In-memory structures</h3>
- * 
+ *
  * <ul>
  *     <li><b>{@link org.apache.lucene.util.packed.PackedInts.Mutable}</b><ul>
  *         <li>Only supports positive longs.</li>
@@ -61,9 +61,9 @@
  *         <li>Same as deltaPackedBuilder except that compression is good when the stream is a succession of affine functions.</li>
  *     </ul></li>
  * </ul>
- * 
+ *
  * <h3>Disk-based structures</h3>
- * 
+ *
  * <ul>
  *     <li><b>{@link org.apache.lucene.util.packed.PackedInts.Writer}, {@link org.apache.lucene.util.packed.PackedInts.Reader}, {@link org.apache.lucene.util.packed.PackedInts.ReaderIterator}</b><ul>
  *         <li>Only supports positive longs.</li>

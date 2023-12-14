@@ -45,90 +45,89 @@ import org.apache.lucene.codecs.perfield.PerFieldPostingsFormat;
  * If you want to reuse functionality of this codec in another codec, extend
  * {@link FilterCodec}.
  *
- * @see org.apache.lucene.codecs.lucene70 package documentation for file format details.
- *
  * @lucene.experimental
+ * @see org.apache.lucene.codecs.lucene70 package documentation for file format details.
  */
 public class Lucene70Codec extends Codec {
-  private final TermVectorsFormat vectorsFormat = new Lucene50TermVectorsFormat();
-  private final FieldInfosFormat fieldInfosFormat = new Lucene60FieldInfosFormat();
-  private final SegmentInfoFormat segmentInfosFormat = new Lucene70SegmentInfoFormat();
-  private final LiveDocsFormat liveDocsFormat = new Lucene50LiveDocsFormat();
-  private final CompoundFormat compoundFormat = new Lucene50CompoundFormat();
-  private final DocValuesFormat defaultDVFormat = DocValuesFormat.forName("Lucene70");
+	private final TermVectorsFormat vectorsFormat = new Lucene50TermVectorsFormat();
+	private final FieldInfosFormat fieldInfosFormat = new Lucene60FieldInfosFormat();
+	private final SegmentInfoFormat segmentInfosFormat = new Lucene70SegmentInfoFormat();
+	private final LiveDocsFormat liveDocsFormat = new Lucene50LiveDocsFormat();
+	private final CompoundFormat compoundFormat = new Lucene50CompoundFormat();
+	private final DocValuesFormat defaultDVFormat = DocValuesFormat.forName("Lucene70");
 
-  private final PostingsFormat postingsFormat = new PerFieldPostingsFormat() {
-    @Override
-    public PostingsFormat getPostingsFormatForField(String field) {
-      throw new IllegalStateException("This codec should only be used for reading, not writing");
-    }
-  };
-  
-  private final DocValuesFormat docValuesFormat = new PerFieldDocValuesFormat() {
-    @Override
-    public DocValuesFormat getDocValuesFormatForField(String field) {
-      return defaultDVFormat;
-    }
-  };
-  
-  private final StoredFieldsFormat storedFieldsFormat = new Lucene50StoredFieldsFormat(Mode.BEST_SPEED);
+	private final PostingsFormat postingsFormat = new PerFieldPostingsFormat() {
+		@Override
+		public PostingsFormat getPostingsFormatForField(String field) {
+			throw new IllegalStateException("This codec should only be used for reading, not writing");
+		}
+	};
 
-  /** 
-   * Instantiates a new codec.
-   */
-  public Lucene70Codec() {
-    super("Lucene70");
-  }
-  
-  @Override
-  public final StoredFieldsFormat storedFieldsFormat() {
-    return storedFieldsFormat;
-  }
-  
-  @Override
-  public final TermVectorsFormat termVectorsFormat() {
-    return vectorsFormat;
-  }
+	private final DocValuesFormat docValuesFormat = new PerFieldDocValuesFormat() {
+		@Override
+		public DocValuesFormat getDocValuesFormatForField(String field) {
+			return defaultDVFormat;
+		}
+	};
 
-  @Override
-  public final PostingsFormat postingsFormat() {
-    return postingsFormat;
-  }
-  
-  @Override
-  public final FieldInfosFormat fieldInfosFormat() {
-    return fieldInfosFormat;
-  }
-  
-  @Override
-  public final SegmentInfoFormat segmentInfoFormat() {
-    return segmentInfosFormat;
-  }
-  
-  @Override
-  public final LiveDocsFormat liveDocsFormat() {
-    return liveDocsFormat;
-  }
+	private final StoredFieldsFormat storedFieldsFormat = new Lucene50StoredFieldsFormat(Mode.BEST_SPEED);
 
-  @Override
-  public final CompoundFormat compoundFormat() {
-    return compoundFormat;
-  }
+	/**
+	 * Instantiates a new codec.
+	 */
+	public Lucene70Codec() {
+		super("Lucene70");
+	}
 
-  @Override
-  public final PointsFormat pointsFormat() {
-    return new Lucene60PointsFormat();
-  }
-  
-  @Override
-  public final DocValuesFormat docValuesFormat() {
-    return docValuesFormat;
-  }
+	@Override
+	public final StoredFieldsFormat storedFieldsFormat() {
+		return storedFieldsFormat;
+	}
 
-  private final NormsFormat normsFormat = new Lucene70NormsFormat();
+	@Override
+	public final TermVectorsFormat termVectorsFormat() {
+		return vectorsFormat;
+	}
 
-  @Override
-  public final NormsFormat normsFormat() {
-    return normsFormat;
-  }
+	@Override
+	public final PostingsFormat postingsFormat() {
+		return postingsFormat;
+	}
+
+	@Override
+	public final FieldInfosFormat fieldInfosFormat() {
+		return fieldInfosFormat;
+	}
+
+	@Override
+	public final SegmentInfoFormat segmentInfoFormat() {
+		return segmentInfosFormat;
+	}
+
+	@Override
+	public final LiveDocsFormat liveDocsFormat() {
+		return liveDocsFormat;
+	}
+
+	@Override
+	public final CompoundFormat compoundFormat() {
+		return compoundFormat;
+	}
+
+	@Override
+	public final PointsFormat pointsFormat() {
+		return new Lucene60PointsFormat();
+	}
+
+	@Override
+	public final DocValuesFormat docValuesFormat() {
+		return docValuesFormat;
+	}
+
+	private final NormsFormat normsFormat = new Lucene70NormsFormat();
+
+	@Override
+	public final NormsFormat normsFormat() {
+		return normsFormat;
+	}
 }

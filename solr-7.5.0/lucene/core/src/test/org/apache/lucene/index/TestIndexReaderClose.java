@@ -30,158 +30,167 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;
 
 /**
+ *
  */
 public class TestIndexReaderClose extends LuceneTestCase {
 
-  public void testCloseUnderException() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(random(), new MockAnalyzer(random())));
-    writer.addDocument(new Document());
-    writer.commit();
-    writer.close();
-    final int iters = 1000 +  1 + random().nextInt(20);
-    for (int j = 0; j < iters; j++) {
-      DirectoryReader open = DirectoryReader.open(dir);
-      final boolean throwOnClose = !rarely();
-      LeafReader leaf = getOnlyLeafReader(open);
-      FilterLeafReader reader = new FilterLeafReader(leaf) {
-        @Override
-        public CacheHelper getCoreCacheHelper() {
-          return in.getCoreCacheHelper();
-        }
-        @Override
-        public CacheHelper getReaderCacheHelper() {
-          return in.getReaderCacheHelper();
-        }
-        @Override
-        protected void doClose() throws IOException {
-          try {
-            super.doClose();
-          } finally {
-            if (throwOnClose) {
-              throw new IllegalStateException("BOOM!");
-             }
-          }
-        }
-      };
-      int listenerCount = random().nextInt(20);
-      AtomicInteger count = new AtomicInteger();
-      boolean faultySet = false;
-      for (int i = 0; i < listenerCount; i++) {
-          if (rarely()) {
-            faultySet = true;
-            reader.getReaderCacheHelper().addClosedListener(new FaultyListener());
-          } else {
-            count.incrementAndGet();
-            reader.getReaderCacheHelper().addClosedListener(new CountListener(count, reader.getReaderCacheHelper().getKey()));
-          }
-      }
-      if (!faultySet && !throwOnClose) {
-        reader.getReaderCacheHelper().addClosedListener(new FaultyListener());
-      }
+	public void testCloseUnderException() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(random(), new MockAnalyzer(random())));
+		writer.addDocument(new Document());
+		writer.commit();
+		writer.close();
+		final int iters = 1000 + 1 + random().nextInt(20);
+		for (int j = 0; j < iters; j++) {
+			DirectoryReader open = DirectoryReader.open(dir);
+			final boolean throwOnClose = !rarely();
+			LeafReader leaf = getOnlyLeafReader(open);
+			FilterLeafReader reader = new FilterLeafReader(leaf) {
+				@Override
+				public CacheHelper getCoreCacheHelper() {
+					return in.getCoreCacheHelper();
+				}
 
-      IllegalStateException expected = expectThrows(IllegalStateException.class, () -> reader.close());
+				@Override
+				public CacheHelper getReaderCacheHelper() {
+					return in.getReaderCacheHelper();
+				}
 
-      if (throwOnClose) {
-        assertEquals("BOOM!", expected.getMessage());
-      } else {
-        assertEquals("GRRRRRRRRRRRR!", expected.getMessage());
-      }
+				@Override
+				protected void doClose() throws IOException {
+					try {
+						super.doClose();
+					} finally {
+						if (throwOnClose) {
+							throw new IllegalStateException("BOOM!");
+						}
+					}
+				}
+			};
+			int listenerCount = random().nextInt(20);
+			AtomicInteger count = new AtomicInteger();
+			boolean faultySet = false;
+			for (int i = 0; i < listenerCount; i++) {
+				if (rarely()) {
+					faultySet = true;
+					reader.getReaderCacheHelper().addClosedListener(new FaultyListener());
+				} else {
+					count.incrementAndGet();
+					reader.getReaderCacheHelper().addClosedListener(new CountListener(count, reader.getReaderCacheHelper().getKey()));
+				}
+			}
+			if (!faultySet && !throwOnClose) {
+				reader.getReaderCacheHelper().addClosedListener(new FaultyListener());
+			}
 
-      expectThrows(AlreadyClosedException.class, () -> reader.terms("someField"));
+			IllegalStateException expected = expectThrows(IllegalStateException.class, () -> reader.close());
 
-      if (random().nextBoolean()) {
-        reader.close(); // call it again
-      }
-      assertEquals(0, count.get());
-    }
-    dir.close();
-  }
+			if (throwOnClose) {
+				assertEquals("BOOM!", expected.getMessage());
+			} else {
+				assertEquals("GRRRRRRRRRRRR!", expected.getMessage());
+			}
 
-  public void testCoreListenerOnWrapperWithDifferentCacheKey() throws IOException {
-    RandomIndexWriter w = new RandomIndexWriter(random(), newDirectory());
-    final int numDocs = TestUtil.nextInt(random(), 1, 5);
-    for (int i = 0; i < numDocs; ++i) {
-      w.addDocument(new Document());
-      if (random().nextBoolean()) {
-        w.commit();
-      }
-    }
-    w.forceMerge(1);
-    w.commit();
-    w.close();
+			expectThrows(AlreadyClosedException.class, () -> reader.terms("someField"));
 
-    final IndexReader reader = DirectoryReader.open(w.w.getDirectory());
-    final LeafReader leafReader = new AssertingLeafReader(getOnlyLeafReader(reader));
+			if (random().nextBoolean()) {
+				reader.close(); // call it again
+			}
+			assertEquals(0, count.get());
+		}
+		dir.close();
+	}
 
-    final int numListeners = TestUtil.nextInt(random(), 1, 10);
-    final List<IndexReader.ClosedListener> listeners = new ArrayList<>();
-    AtomicInteger counter = new AtomicInteger(numListeners);
+	public void testCoreListenerOnWrapperWithDifferentCacheKey() throws IOException {
+		RandomIndexWriter w = new RandomIndexWriter(random(), newDirectory());
+		final int numDocs = TestUtil.nextInt(random(), 1, 5);
+		for (int i = 0; i < numDocs; ++i) {
+			w.addDocument(new Document());
+			if (random().nextBoolean()) {
+				w.commit();
+			}
+		}
+		w.forceMerge(1);
+		w.commit();
+		w.close();
 
-    for (int i = 0; i < numListeners; ++i) {
-      CountListener listener = new CountListener(counter, leafReader.getCoreCacheHelper().getKey());
-      listeners.add(listener);
-      leafReader.getCoreCacheHelper().addClosedListener(listener);
-    }
-    for (int i = 0; i < 100; ++i) {
-      leafReader.getCoreCacheHelper().addClosedListener(listeners.get(random().nextInt(listeners.size())));
-    }
-    assertEquals(numListeners, counter.get());
-    // make sure listeners are registered on the wrapped reader and that closing any of them has the same effect
-    if (random().nextBoolean()) {
-      reader.close();
-    } else {
-      leafReader.close();
-    }
-    assertEquals(0, counter.get());
-    w.w.getDirectory().close();
-  }
+		final IndexReader reader = DirectoryReader.open(w.w.getDirectory());
+		final LeafReader leafReader = new AssertingLeafReader(getOnlyLeafReader(reader));
 
-  private static final class CountListener implements IndexReader.ClosedListener {
+		final int numListeners = TestUtil.nextInt(random(), 1, 10);
+		final List<IndexReader.ClosedListener> listeners = new ArrayList<>();
+		AtomicInteger counter = new AtomicInteger(numListeners);
 
-    private final AtomicInteger count;
-    private final Object coreCacheKey;
+		for (int i = 0; i < numListeners; ++i) {
+			CountListener listener = new CountListener(counter, leafReader.getCoreCacheHelper().getKey());
+			listeners.add(listener);
+			leafReader.getCoreCacheHelper().addClosedListener(listener);
+		}
+		for (int i = 0; i < 100; ++i) {
+			leafReader.getCoreCacheHelper().addClosedListener(listeners.get(random().nextInt(listeners.size())));
+		}
+		assertEquals(numListeners, counter.get());
+		// make sure listeners are registered on the wrapped reader and that closing any of them has the same effect
+		if (random().nextBoolean()) {
+			reader.close();
+		} else {
+			leafReader.close();
+		}
+		assertEquals(0, counter.get());
+		w.w.getDirectory().close();
+	}
 
-    public CountListener(AtomicInteger count, Object coreCacheKey) {
-      this.count = count;
-      this.coreCacheKey = coreCacheKey;
-    }
+	private static final class CountListener implements IndexReader.ClosedListener {
 
-    @Override
-    public void onClose(IndexReader.CacheKey coreCacheKey) {
-      assertSame(this.coreCacheKey, coreCacheKey);
-      count.decrementAndGet();
-    }
+		private final AtomicInteger count;
+		private final Object coreCacheKey;
 
-  }
+		public CountListener(AtomicInteger count, Object coreCacheKey) {
+			this.count = count;
+			this.coreCacheKey = coreCacheKey;
+		}
 
-  private static final class FaultyListener implements IndexReader.ClosedListener {
+		@Override
+		public void onClose(IndexReader.CacheKey coreCacheKey) {
+			assertSame(this.coreCacheKey, coreCacheKey);
+			count.decrementAndGet();
+		}
 
-    @Override
-    public void onClose(IndexReader.CacheKey cacheKey) {
-      throw new IllegalStateException("GRRRRRRRRRRRR!");
-    }
-  }
+	}
 
-  public void testRegisterListenerOnClosedReader() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
-    w.addDocument(new Document());
-    DirectoryReader r = DirectoryReader.open(w);
-    w.close();
+	private static final class FaultyListener implements IndexReader.ClosedListener {
 
-    // The reader is open, everything should work
-    r.getReaderCacheHelper().addClosedListener(key -> {});
-    r.leaves().get(0).reader().getReaderCacheHelper().addClosedListener(key -> {});
-    r.leaves().get(0).reader().getCoreCacheHelper().addClosedListener(key -> {});
+		@Override
+		public void onClose(IndexReader.CacheKey cacheKey) {
+			throw new IllegalStateException("GRRRRRRRRRRRR!");
+		}
+	}
 
-    // But now we close
-    r.close();
-    expectThrows(AlreadyClosedException.class, () -> r.getReaderCacheHelper().addClosedListener(key -> {}));
-    expectThrows(AlreadyClosedException.class, () -> r.leaves().get(0).reader().getReaderCacheHelper().addClosedListener(key -> {}));
-    expectThrows(AlreadyClosedException.class, () -> r.leaves().get(0).reader().getCoreCacheHelper().addClosedListener(key -> {}));
+	public void testRegisterListenerOnClosedReader() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
+		w.addDocument(new Document());
+		DirectoryReader r = DirectoryReader.open(w);
+		w.close();
 
-    dir.close();
-  }
+		// The reader is open, everything should work
+		r.getReaderCacheHelper().addClosedListener(key -> {
+		});
+		r.leaves().get(0).reader().getReaderCacheHelper().addClosedListener(key -> {
+		});
+		r.leaves().get(0).reader().getCoreCacheHelper().addClosedListener(key -> {
+		});
+
+		// But now we close
+		r.close();
+		expectThrows(AlreadyClosedException.class, () -> r.getReaderCacheHelper().addClosedListener(key -> {
+		}));
+		expectThrows(AlreadyClosedException.class, () -> r.leaves().get(0).reader().getReaderCacheHelper().addClosedListener(key -> {
+		}));
+		expectThrows(AlreadyClosedException.class, () -> r.leaves().get(0).reader().getCoreCacheHelper().addClosedListener(key -> {
+		}));
+
+		dir.close();
+	}
 
 }

@@ -34,23 +34,25 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class NGramFilterFactory extends TokenFilterFactory {
-  private final int maxGramSize;
-  private final int minGramSize;
-  private final boolean preserveOriginal;
+	private final int maxGramSize;
+	private final int minGramSize;
+	private final boolean preserveOriginal;
 
-  /** Creates a new NGramFilterFactory */
-  public NGramFilterFactory(Map<String, String> args) {
-    super(args);
-    minGramSize = getInt(args, "minGramSize", NGramTokenFilter.DEFAULT_MIN_NGRAM_SIZE);
-    maxGramSize = getInt(args, "maxGramSize", NGramTokenFilter.DEFAULT_MAX_NGRAM_SIZE);
-    preserveOriginal = getBoolean(args, "keepShortTerm", NGramTokenFilter.DEFAULT_PRESERVE_ORIGINAL);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new NGramFilterFactory
+	 */
+	public NGramFilterFactory(Map<String, String> args) {
+		super(args);
+		minGramSize = getInt(args, "minGramSize", NGramTokenFilter.DEFAULT_MIN_NGRAM_SIZE);
+		maxGramSize = getInt(args, "maxGramSize", NGramTokenFilter.DEFAULT_MAX_NGRAM_SIZE);
+		preserveOriginal = getBoolean(args, "keepShortTerm", NGramTokenFilter.DEFAULT_PRESERVE_ORIGINAL);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenFilter create(TokenStream input) {
-    return new NGramTokenFilter(input, minGramSize, maxGramSize, preserveOriginal);
-  }
+	@Override
+	public TokenFilter create(TokenStream input) {
+		return new NGramTokenFilter(input, minGramSize, maxGramSize, preserveOriginal);
+	}
 }

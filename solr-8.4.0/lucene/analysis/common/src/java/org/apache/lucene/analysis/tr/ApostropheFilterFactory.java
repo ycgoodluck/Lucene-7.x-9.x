@@ -32,23 +32,26 @@ import java.util.Map;
  *     &lt;filter class="solr.TurkishLowerCaseFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 4.8.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 4.8.0
  */
 public class ApostropheFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "apostrophe";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "apostrophe";
 
-  public ApostropheFilterFactory(Map<String, String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameter(s): " + args);
-    }
-  }
+	public ApostropheFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameter(s): " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new ApostropheFilter(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new ApostropheFilter(input);
+	}
 }

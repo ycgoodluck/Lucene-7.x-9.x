@@ -34,93 +34,93 @@ import org.apache.lucene.util.LuceneTestCase;
  */
 public class TestBlockWriter extends LuceneTestCase {
 
-  private BlockWriter blockWriter;
-  private ByteBuffersIndexOutput blockOutput;
+	private BlockWriter blockWriter;
+	private ByteBuffersIndexOutput blockOutput;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    blockOutput = new ByteBuffersIndexOutput(ByteBuffersDataOutput.newResettableInstance(), "Test", "Test");
-    blockWriter = new BlockWriter(blockOutput, 10, 2, null);
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		blockOutput = new ByteBuffersIndexOutput(ByteBuffersDataOutput.newResettableInstance(), "Test", "Test");
+		blockWriter = new BlockWriter(blockOutput, 10, 2, null);
+	}
 
-  public void testAddLine() throws IOException {
-    BytesRef term = new BytesRef("mike");
-    blockWriter.addLine(term, MockTermStateFactory.create(), null);
-    assertEquals(1, blockWriter.blockLines.size());
-    assertEquals(term, blockWriter.lastTerm);
-  }
+	public void testAddLine() throws IOException {
+		BytesRef term = new BytesRef("mike");
+		blockWriter.addLine(term, MockTermStateFactory.create(), null);
+		assertEquals(1, blockWriter.blockLines.size());
+		assertEquals(term, blockWriter.lastTerm);
+	}
 
-  public void testAddMultipleLinesSingleBlock() throws IOException {
-    String[] terms = new String[]{
-        "ana",
-        "bark",
-        "condor",
-        "dice",
-        "elephant"
-    };
-    for (String t : terms) {
-      blockWriter.addLine(new BytesRef(t), MockTermStateFactory.create(), null);
-    }
-    assertEquals(terms.length, blockWriter.blockLines.size());
-    assertEquals(new BytesRef(terms[terms.length - 1]), blockWriter.lastTerm);
-  }
+	public void testAddMultipleLinesSingleBlock() throws IOException {
+		String[] terms = new String[]{
+			"ana",
+			"bark",
+			"condor",
+			"dice",
+			"elephant"
+		};
+		for (String t : terms) {
+			blockWriter.addLine(new BytesRef(t), MockTermStateFactory.create(), null);
+		}
+		assertEquals(terms.length, blockWriter.blockLines.size());
+		assertEquals(new BytesRef(terms[terms.length - 1]), blockWriter.lastTerm);
+	}
 
-  public void testAddMultipleLinesMultiBlock() throws IOException {
-    String[] terms = new String[]{
-        "ana",
-        "bark",
-        "condor",
-        "dice",
-        "elephant",
-        "fork",
-        "gain",
-        "hyper",
-        "identifier",
-        "judge",
-        "ko",
-        "large",
-    };
-    // in order to build a block a FieldMetadata must be set
-    blockWriter.setField(new FieldMetadata(getMockFieldInfo("content", 0), 0));
+	public void testAddMultipleLinesMultiBlock() throws IOException {
+		String[] terms = new String[]{
+			"ana",
+			"bark",
+			"condor",
+			"dice",
+			"elephant",
+			"fork",
+			"gain",
+			"hyper",
+			"identifier",
+			"judge",
+			"ko",
+			"large",
+		};
+		// in order to build a block a FieldMetadata must be set
+		blockWriter.setField(new FieldMetadata(getMockFieldInfo("content", 0), 0));
 
-    FSTDictionary.Builder dictionaryBuilder = new FSTDictionary.Builder();
+		FSTDictionary.Builder dictionaryBuilder = new FSTDictionary.Builder();
 
-    for (String t : terms) {
-      blockWriter.addLine(new BytesRef(t), MockTermStateFactory.create(), dictionaryBuilder);
-    }
-    //at least one block was flushed
-    assertTrue(blockOutput.getFilePointer() > 0);
+		for (String t : terms) {
+			blockWriter.addLine(new BytesRef(t), MockTermStateFactory.create(), dictionaryBuilder);
+		}
+		//at least one block was flushed
+		assertTrue(blockOutput.getFilePointer() > 0);
 
-    // last term is always the last term to be writen
-    assertEquals(new BytesRef(terms[terms.length - 1]), blockWriter.lastTerm);
+		// last term is always the last term to be writen
+		assertEquals(new BytesRef(terms[terms.length - 1]), blockWriter.lastTerm);
 
-    // remains 'large' to be flushed
-    assertEquals(1, blockWriter.blockLines.size());
+		// remains 'large' to be flushed
+		assertEquals(1, blockWriter.blockLines.size());
 
-    blockWriter.finishLastBlock(dictionaryBuilder);
+		blockWriter.finishLastBlock(dictionaryBuilder);
 
-    // we release memory
-    assertTrue(blockWriter.blockLines.isEmpty());
-    assertNull(blockWriter.lastTerm);
-    assertEquals(0, blockWriter.blockLinesWriteBuffer.size());
-    assertEquals(0, blockWriter.termStatesWriteBuffer.size());
-  }
+		// we release memory
+		assertTrue(blockWriter.blockLines.isEmpty());
+		assertNull(blockWriter.lastTerm);
+		assertEquals(0, blockWriter.blockLinesWriteBuffer.size());
+		assertEquals(0, blockWriter.termStatesWriteBuffer.size());
+	}
 
-  private static FieldInfo getMockFieldInfo(String fieldName, int number) {
-    return new FieldInfo(fieldName,
-        number,
-        false,
-        false,
-        true,
-        IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS,
-        DocValuesType.NONE,
-        -1,
-        Collections.emptyMap(),
-        0,
-        0,
-        0,
-        true
-    );
-  }
+	private static FieldInfo getMockFieldInfo(String fieldName, int number) {
+		return new FieldInfo(fieldName,
+			number,
+			false,
+			false,
+			true,
+			IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS,
+			DocValuesType.NONE,
+			-1,
+			Collections.emptyMap(),
+			0,
+			0,
+			0,
+			true
+		);
+	}
 }

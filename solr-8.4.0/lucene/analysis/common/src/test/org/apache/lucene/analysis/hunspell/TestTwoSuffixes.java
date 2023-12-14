@@ -20,17 +20,17 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestTwoSuffixes extends StemmerTestBase {
-  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("twosuffixes.aff", "twosuffixes.dic");
-  }
-  
-  public void testExamples() {
-    assertStemsTo("drink", "drink");
-    assertStemsTo("drinkable", "drink");
-    assertStemsTo("drinks", "drink");
-    assertStemsTo("drinkableable");
-    assertStemsTo("drinkss");
-  }
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("twosuffixes.aff", "twosuffixes.dic");
+	}
+
+	public void testExamples() {
+		assertStemsTo("drink", "drink");
+		assertStemsTo("drinkable", "drink");
+		assertStemsTo("drinks", "drink");
+		assertStemsTo("drinkableable");
+		assertStemsTo("drinkss");
+	}
 }

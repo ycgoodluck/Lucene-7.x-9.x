@@ -40,217 +40,217 @@ import org.apache.lucene.util.RamUsageEstimator;
  */
 public class FieldMetadata implements Accountable {
 
-  private static final long BASE_RAM_USAGE = RamUsageEstimator.shallowSizeOfInstance(FieldMetadata.class);
+	private static final long BASE_RAM_USAGE = RamUsageEstimator.shallowSizeOfInstance(FieldMetadata.class);
 
-  protected final FieldInfo fieldInfo;
-  protected final boolean isMutable;
-  protected final FixedBitSet docsSeen;
+	protected final FieldInfo fieldInfo;
+	protected final boolean isMutable;
+	protected final FixedBitSet docsSeen;
 
-  protected int sumDocFreq;
-  protected int numTerms;
-  protected int sumTotalTermFreq;
-  protected int docCount;
+	protected int sumDocFreq;
+	protected int numTerms;
+	protected int sumTotalTermFreq;
+	protected int docCount;
 
-  protected long dictionaryStartFP;
-  protected long firstBlockStartFP;
-  protected long lastBlockStartFP;
+	protected long dictionaryStartFP;
+	protected long firstBlockStartFP;
+	protected long lastBlockStartFP;
 
-  protected BytesRef lastTerm;
+	protected BytesRef lastTerm;
 
-  /**
-   * Constructs a {@link FieldMetadata} used for writing the index. This {@link FieldMetadata} is mutable.
-   *
-   * @param maxDoc The total number of documents in the segment being written.
-   */
-  public FieldMetadata(FieldInfo fieldInfo, int maxDoc) {
-    this(fieldInfo, maxDoc, true);
-  }
+	/**
+	 * Constructs a {@link FieldMetadata} used for writing the index. This {@link FieldMetadata} is mutable.
+	 *
+	 * @param maxDoc The total number of documents in the segment being written.
+	 */
+	public FieldMetadata(FieldInfo fieldInfo, int maxDoc) {
+		this(fieldInfo, maxDoc, true);
+	}
 
-  public FieldMetadata(FieldInfo fieldInfo, int maxDoc, boolean isMutable) {
-    this(fieldInfo, maxDoc, isMutable, -1, -1, null);
-  }
+	public FieldMetadata(FieldInfo fieldInfo, int maxDoc, boolean isMutable) {
+		this(fieldInfo, maxDoc, isMutable, -1, -1, null);
+	}
 
-  /**
-   * @param isMutable Set true if this FieldMetadata is created for writing the index. Set false if it is used for reading the index.
-   */
-  public FieldMetadata(FieldInfo fieldInfo, int maxDoc, boolean isMutable, long firstBlockStartFP, long lastBlockStartFP, BytesRef lastTerm) {
-    assert isMutable || maxDoc == 0;
-    this.fieldInfo = fieldInfo;
-    this.isMutable = isMutable;
-    // docsSeen must not be set if this FieldMetadata is immutable, that means it is used for reading the index.
-    this.docsSeen = isMutable ? new FixedBitSet(maxDoc) : null;
-    this.dictionaryStartFP = -1;
-    this.firstBlockStartFP = firstBlockStartFP;
-    this.lastBlockStartFP = lastBlockStartFP;
-    this.lastTerm = lastTerm;
-  }
+	/**
+	 * @param isMutable Set true if this FieldMetadata is created for writing the index. Set false if it is used for reading the index.
+	 */
+	public FieldMetadata(FieldInfo fieldInfo, int maxDoc, boolean isMutable, long firstBlockStartFP, long lastBlockStartFP, BytesRef lastTerm) {
+		assert isMutable || maxDoc == 0;
+		this.fieldInfo = fieldInfo;
+		this.isMutable = isMutable;
+		// docsSeen must not be set if this FieldMetadata is immutable, that means it is used for reading the index.
+		this.docsSeen = isMutable ? new FixedBitSet(maxDoc) : null;
+		this.dictionaryStartFP = -1;
+		this.firstBlockStartFP = firstBlockStartFP;
+		this.lastBlockStartFP = lastBlockStartFP;
+		this.lastTerm = lastTerm;
+	}
 
-  /**
-   * Updates the field stats with the given {@link BlockTermState} for the current
-   * block line (for one term).
-   */
-  public void updateStats(BlockTermState state) {
-    assert isMutable;
-    assert state.docFreq > 0;
-    sumDocFreq += state.docFreq;
-    if (state.totalTermFreq > 0) {
-      sumTotalTermFreq += state.totalTermFreq;
-    }
-    numTerms++;
-  }
+	/**
+	 * Updates the field stats with the given {@link BlockTermState} for the current
+	 * block line (for one term).
+	 */
+	public void updateStats(BlockTermState state) {
+		assert isMutable;
+		assert state.docFreq > 0;
+		sumDocFreq += state.docFreq;
+		if (state.totalTermFreq > 0) {
+			sumTotalTermFreq += state.totalTermFreq;
+		}
+		numTerms++;
+	}
 
-  /**
-   * Provides the {@link FixedBitSet} to keep track of the docs seen when calling
-   * {@link org.apache.lucene.codecs.PostingsWriterBase#writeTerm(BytesRef, TermsEnum, FixedBitSet, org.apache.lucene.codecs.NormsProducer)}.
-   * <p>
-   * The returned {@link FixedBitSet} is created once in this {@link FieldMetadata}
-   * constructor.
-   *
-   * @return The {@link FixedBitSet} for the docs seen, during segment writing;
-   * or null if this {@link FieldMetadata} is created immutable during segment reading.
-   */
-  public FixedBitSet getDocsSeen() {
-    return docsSeen;
-  }
+	/**
+	 * Provides the {@link FixedBitSet} to keep track of the docs seen when calling
+	 * {@link org.apache.lucene.codecs.PostingsWriterBase#writeTerm(BytesRef, TermsEnum, FixedBitSet, org.apache.lucene.codecs.NormsProducer)}.
+	 * <p>
+	 * The returned {@link FixedBitSet} is created once in this {@link FieldMetadata}
+	 * constructor.
+	 *
+	 * @return The {@link FixedBitSet} for the docs seen, during segment writing;
+	 * or null if this {@link FieldMetadata} is created immutable during segment reading.
+	 */
+	public FixedBitSet getDocsSeen() {
+		return docsSeen;
+	}
 
-  public FieldInfo getFieldInfo() {
-    return fieldInfo;
-  }
+	public FieldInfo getFieldInfo() {
+		return fieldInfo;
+	}
 
-  public int getSumDocFreq() {
-    return sumDocFreq;
-  }
+	public int getSumDocFreq() {
+		return sumDocFreq;
+	}
 
-  public int getNumTerms() {
-    return numTerms;
-  }
+	public int getNumTerms() {
+		return numTerms;
+	}
 
-  public int getSumTotalTermFreq() {
-    return sumTotalTermFreq;
-  }
+	public int getSumTotalTermFreq() {
+		return sumTotalTermFreq;
+	}
 
-  public int getDocCount() {
-    return isMutable ? docsSeen.cardinality() : docCount;
-  }
+	public int getDocCount() {
+		return isMutable ? docsSeen.cardinality() : docCount;
+	}
 
-  /**
-   * @return The file pointer to the start of the first block of the field.
-   */
-  public long getFirstBlockStartFP() {
-    return firstBlockStartFP;
-  }
+	/**
+	 * @return The file pointer to the start of the first block of the field.
+	 */
+	public long getFirstBlockStartFP() {
+		return firstBlockStartFP;
+	}
 
-  /**
-   * Sets the file pointer to the start of the first block of the field.
-   */
-  public void setFirstBlockStartFP(long firstBlockStartFP) {
-    assert isMutable;
-    this.firstBlockStartFP = firstBlockStartFP;
-  }
+	/**
+	 * Sets the file pointer to the start of the first block of the field.
+	 */
+	public void setFirstBlockStartFP(long firstBlockStartFP) {
+		assert isMutable;
+		this.firstBlockStartFP = firstBlockStartFP;
+	}
 
-  /**
-   * @return The start file pointer for the last block of the field.
-   */
-  public long getLastBlockStartFP() {
-    return lastBlockStartFP;
-  }
+	/**
+	 * @return The start file pointer for the last block of the field.
+	 */
+	public long getLastBlockStartFP() {
+		return lastBlockStartFP;
+	}
 
-  /**
-   * Sets the file pointer after the end of the last block of the field.
-   */
-  public void setLastBlockStartFP(long lastBlockStartFP) {
-    assert isMutable;
-    this.lastBlockStartFP = lastBlockStartFP;
-  }
+	/**
+	 * Sets the file pointer after the end of the last block of the field.
+	 */
+	public void setLastBlockStartFP(long lastBlockStartFP) {
+		assert isMutable;
+		this.lastBlockStartFP = lastBlockStartFP;
+	}
 
-  /**
-   * @return The file pointer to the start of the dictionary of the field.
-   */
-  public long getDictionaryStartFP() {
-    return dictionaryStartFP;
-  }
+	/**
+	 * @return The file pointer to the start of the dictionary of the field.
+	 */
+	public long getDictionaryStartFP() {
+		return dictionaryStartFP;
+	}
 
-  /**
-   * Sets the file pointer to the start of the dictionary of the field.
-   */
-  public void setDictionaryStartFP(long dictionaryStartFP) {
-    assert isMutable;
-    this.dictionaryStartFP = dictionaryStartFP;
-  }
+	/**
+	 * Sets the file pointer to the start of the dictionary of the field.
+	 */
+	public void setDictionaryStartFP(long dictionaryStartFP) {
+		assert isMutable;
+		this.dictionaryStartFP = dictionaryStartFP;
+	}
 
-  public void setLastTerm(BytesRef lastTerm) {
-    assert lastTerm != null;
-    this.lastTerm = lastTerm;
-  }
+	public void setLastTerm(BytesRef lastTerm) {
+		assert lastTerm != null;
+		this.lastTerm = lastTerm;
+	}
 
-  public BytesRef getLastTerm() {
-    return lastTerm;
-  }
+	public BytesRef getLastTerm() {
+		return lastTerm;
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return BASE_RAM_USAGE
-        + (docsSeen == null ? 0 : docsSeen.ramBytesUsed());
-  }
+	@Override
+	public long ramBytesUsed() {
+		return BASE_RAM_USAGE
+			+ (docsSeen == null ? 0 : docsSeen.ramBytesUsed());
+	}
 
-  public static FieldMetadata read(DataInput input, FieldInfos fieldInfos) throws IOException {
-    int fieldId = input.readVInt();
-    FieldMetadata stats = new FieldMetadata(fieldInfos.fieldInfo(fieldId), 0, false);
+	public static FieldMetadata read(DataInput input, FieldInfos fieldInfos) throws IOException {
+		int fieldId = input.readVInt();
+		FieldMetadata stats = new FieldMetadata(fieldInfos.fieldInfo(fieldId), 0, false);
 
-    stats.numTerms = input.readVInt();
-    stats.sumDocFreq = input.readVInt();
+		stats.numTerms = input.readVInt();
+		stats.sumDocFreq = input.readVInt();
 
-    stats.sumTotalTermFreq = stats.sumDocFreq;
-    if (stats.fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0) {
-      stats.sumTotalTermFreq += input.readVInt();
-      assert stats.sumTotalTermFreq >= stats.sumDocFreq : "sumTotalFQ: " + stats.sumTotalTermFreq + " sumDocFQ: " + stats.sumDocFreq;
-    }
+		stats.sumTotalTermFreq = stats.sumDocFreq;
+		if (stats.fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0) {
+			stats.sumTotalTermFreq += input.readVInt();
+			assert stats.sumTotalTermFreq >= stats.sumDocFreq : "sumTotalFQ: " + stats.sumTotalTermFreq + " sumDocFQ: " + stats.sumDocFreq;
+		}
 
-    stats.docCount = input.readVInt();
+		stats.docCount = input.readVInt();
 
-    stats.dictionaryStartFP = input.readVLong();
-    stats.firstBlockStartFP = input.readVLong();
-    stats.lastBlockStartFP = input.readVLong();
+		stats.dictionaryStartFP = input.readVLong();
+		stats.firstBlockStartFP = input.readVLong();
+		stats.lastBlockStartFP = input.readVLong();
 
-    int len = input.readVInt();
-    BytesRef lastTerm = new BytesRef(len);
-    if (len > 0) {
-      input.readBytes(lastTerm.bytes, 0, len);
-      lastTerm.length = len;
-    }
-    stats.setLastTerm(lastTerm);
-    return stats;
-  }
+		int len = input.readVInt();
+		BytesRef lastTerm = new BytesRef(len);
+		if (len > 0) {
+			input.readBytes(lastTerm.bytes, 0, len);
+			lastTerm.length = len;
+		}
+		stats.setLastTerm(lastTerm);
+		return stats;
+	}
 
-  public void write(DataOutput output) throws IOException {
-    assert dictionaryStartFP >= 0;
-    assert firstBlockStartFP >= 0;
-    assert lastBlockStartFP >= 0;
-    assert numTerms > 0 : "There should be at least one term for field " + fieldInfo.name + ": " + numTerms;
-    assert firstBlockStartFP <= lastBlockStartFP : "start: " + firstBlockStartFP + " end: " + lastBlockStartFP;
-    assert lastTerm != null : "you must set the last term";
+	public void write(DataOutput output) throws IOException {
+		assert dictionaryStartFP >= 0;
+		assert firstBlockStartFP >= 0;
+		assert lastBlockStartFP >= 0;
+		assert numTerms > 0 : "There should be at least one term for field " + fieldInfo.name + ": " + numTerms;
+		assert firstBlockStartFP <= lastBlockStartFP : "start: " + firstBlockStartFP + " end: " + lastBlockStartFP;
+		assert lastTerm != null : "you must set the last term";
 
-    output.writeVInt(fieldInfo.number);
+		output.writeVInt(fieldInfo.number);
 
-    output.writeVInt(numTerms);
-    output.writeVInt(sumDocFreq);
+		output.writeVInt(numTerms);
+		output.writeVInt(sumDocFreq);
 
-    if (fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0) {
-      assert sumTotalTermFreq >= sumDocFreq : "sumTotalFQ: " + sumTotalTermFreq + " sumDocFQ: " + sumDocFreq;
-      output.writeVInt(sumTotalTermFreq - sumDocFreq);
-    }
+		if (fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0) {
+			assert sumTotalTermFreq >= sumDocFreq : "sumTotalFQ: " + sumTotalTermFreq + " sumDocFQ: " + sumDocFreq;
+			output.writeVInt(sumTotalTermFreq - sumDocFreq);
+		}
 
-    output.writeVInt(getDocCount());
+		output.writeVInt(getDocCount());
 
-    output.writeVLong(dictionaryStartFP);
-    output.writeVLong(firstBlockStartFP);
-    output.writeVLong(lastBlockStartFP);
+		output.writeVLong(dictionaryStartFP);
+		output.writeVLong(firstBlockStartFP);
+		output.writeVLong(lastBlockStartFP);
 
-    if (lastTerm.length > 0) {
-      output.writeVInt(lastTerm.length);
-      output.writeBytes(lastTerm.bytes, lastTerm.offset, lastTerm.length);
-    } else {
-      output.writeVInt(0);
-    }
-  }
+		if (lastTerm.length > 0) {
+			output.writeVInt(lastTerm.length);
+			output.writeBytes(lastTerm.bytes, lastTerm.offset, lastTerm.length);
+		} else {
+			output.writeVInt(0);
+		}
+	}
 }

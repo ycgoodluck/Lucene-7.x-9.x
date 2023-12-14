@@ -23,40 +23,40 @@ package org.apache.lucene.classification;
  */
 public class ClassificationResult<T> implements Comparable<ClassificationResult<T>> {
 
-  private final T assignedClass;
-  private final double score;
+	private final T assignedClass;
+	private final double score;
 
-  /**
-   * Constructor
-   *
-   * @param assignedClass the class <code>T</code> assigned by a {@link Classifier}
-   * @param score         the score for the assignedClass as a <code>double</code>
-   */
-  public ClassificationResult(T assignedClass, double score) {
-    this.assignedClass = assignedClass;
-    this.score = score;
-  }
+	/**
+	 * Constructor
+	 *
+	 * @param assignedClass the class <code>T</code> assigned by a {@link Classifier}
+	 * @param score         the score for the assignedClass as a <code>double</code>
+	 */
+	public ClassificationResult(T assignedClass, double score) {
+		this.assignedClass = assignedClass;
+		this.score = score;
+	}
 
-  /**
-   * retrieve the result class
-   *
-   * @return a <code>T</code> representing an assigned class
-   */
-  public T getAssignedClass() {
-    return assignedClass;
-  }
+	/**
+	 * retrieve the result class
+	 *
+	 * @return a <code>T</code> representing an assigned class
+	 */
+	public T getAssignedClass() {
+		return assignedClass;
+	}
 
-  /**
-   * retrieve the result score
-   *
-   * @return a <code>double</code> representing a result score
-   */
-  public double getScore() {
-    return score;
-  }
+	/**
+	 * retrieve the result score
+	 *
+	 * @return a <code>double</code> representing a result score
+	 */
+	public double getScore() {
+		return score;
+	}
 
-  @Override
-  public int compareTo(ClassificationResult<T> o) {
-    return this.getScore() < o.getScore() ? 1 : this.getScore() > o.getScore() ? -1 : 0;
-  }
+	@Override
+	public int compareTo(ClassificationResult<T> o) {
+		return this.getScore() < o.getScore() ? 1 : this.getScore() > o.getScore() ? -1 : 0;
+	}
 }

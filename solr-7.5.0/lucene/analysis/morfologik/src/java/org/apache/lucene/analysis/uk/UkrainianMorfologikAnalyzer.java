@@ -41,118 +41,121 @@ import org.apache.lucene.util.IOUtils;
  * A dictionary-based {@link Analyzer} for Ukrainian.
  */
 public final class UkrainianMorfologikAnalyzer extends StopwordAnalyzerBase {
-  private final CharArraySet stemExclusionSet;
-  
-  /** File containing default Ukrainian stopwords. */
-  public final static String DEFAULT_STOPWORD_FILE = "stopwords.txt";
-  
-  /**
-   * Returns an unmodifiable instance of the default stop words set.
-   * @return default stop words set.
-   */
-  public static CharArraySet getDefaultStopSet() {
-    return DefaultSetHolder.DEFAULT_STOP_SET;
-  }
-  
-  /**
-   * Atomically loads the DEFAULT_STOP_SET in a lazy fashion once the outer class 
-   * accesses the static final set the first time.;
-   */
-  private static class DefaultSetHolder {
-    static final CharArraySet DEFAULT_STOP_SET;
+	private final CharArraySet stemExclusionSet;
 
-    static {
-      try {
-        DEFAULT_STOP_SET = WordlistLoader.getSnowballWordSet(IOUtils.getDecodingReader(UkrainianMorfologikAnalyzer.class, 
-            DEFAULT_STOPWORD_FILE, StandardCharsets.UTF_8));
-      } catch (IOException ex) {
-        // default set should always be present as it is part of the
-        // distribution (JAR)
-        throw new RuntimeException("Unable to load default stopword set");
-      }
-    }
-  }
+	/**
+	 * File containing default Ukrainian stopwords.
+	 */
+	public final static String DEFAULT_STOPWORD_FILE = "stopwords.txt";
 
-  /**
-   * Builds an analyzer with the default stop words: {@link #DEFAULT_STOPWORD_FILE}.
-   */
-  public UkrainianMorfologikAnalyzer() {
-    this(DefaultSetHolder.DEFAULT_STOP_SET);
-  }
-  
-  /**
-   * Builds an analyzer with the given stop words.
-   * 
-   * @param stopwords a stopword set
-   */
-  public UkrainianMorfologikAnalyzer(CharArraySet stopwords) {
-    this(stopwords, CharArraySet.EMPTY_SET);
-  }
+	/**
+	 * Returns an unmodifiable instance of the default stop words set.
+	 *
+	 * @return default stop words set.
+	 */
+	public static CharArraySet getDefaultStopSet() {
+		return DefaultSetHolder.DEFAULT_STOP_SET;
+	}
 
-  /**
-   * Builds an analyzer with the given stop words. If a non-empty stem exclusion set is
-   * provided this analyzer will add a {@link SetKeywordMarkerFilter} before
-   * stemming.
-   * 
-   * @param stopwords a stopword set
-   * @param stemExclusionSet a set of terms not to be stemmed
-   */
-  public UkrainianMorfologikAnalyzer(CharArraySet stopwords, CharArraySet stemExclusionSet) {
-    super(stopwords);
-    this.stemExclusionSet = CharArraySet.unmodifiableSet(CharArraySet.copy(stemExclusionSet));
-  }
+	/**
+	 * Atomically loads the DEFAULT_STOP_SET in a lazy fashion once the outer class
+	 * accesses the static final set the first time.;
+	 */
+	private static class DefaultSetHolder {
+		static final CharArraySet DEFAULT_STOP_SET;
 
-  @Override
-  protected Reader initReader(String fieldName, Reader reader) {
-    NormalizeCharMap.Builder builder = new NormalizeCharMap.Builder();
-    // different apostrophes
-    builder.add("\u2019", "'");
-    builder.add("\u2018", "'");
-    builder.add("\u02BC", "'");
-    builder.add("`", "'");
-    builder.add("´", "'");
-    // ignored characters
-    builder.add("\u0301", "");
-    builder.add("\u00AD", "");
-    builder.add("ґ", "г");
-    builder.add("Ґ", "Г");
+		static {
+			try {
+				DEFAULT_STOP_SET = WordlistLoader.getSnowballWordSet(IOUtils.getDecodingReader(UkrainianMorfologikAnalyzer.class,
+					DEFAULT_STOPWORD_FILE, StandardCharsets.UTF_8));
+			} catch (IOException ex) {
+				// default set should always be present as it is part of the
+				// distribution (JAR)
+				throw new RuntimeException("Unable to load default stopword set");
+			}
+		}
+	}
 
-    NormalizeCharMap normMap = builder.build();
-    reader = new MappingCharFilter(normMap, reader);
-    return reader;
-  }
+	/**
+	 * Builds an analyzer with the default stop words: {@link #DEFAULT_STOPWORD_FILE}.
+	 */
+	public UkrainianMorfologikAnalyzer() {
+		this(DefaultSetHolder.DEFAULT_STOP_SET);
+	}
 
-  /**
-   * Creates a
-   * {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
-   * which tokenizes all the text in the provided {@link Reader}.
-   * 
-   * @return A
-   *         {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
-   *         built from an {@link StandardTokenizer} filtered with
-   *         {@link LowerCaseFilter}, {@link StopFilter}
-   *         , {@link SetKeywordMarkerFilter} if a stem exclusion set is
-   *         provided and {@link MorfologikFilter} on the Ukrainian dictionary.
-   */
-  @Override
-  protected TokenStreamComponents createComponents(String fieldName) {
-    Tokenizer source = new StandardTokenizer();
-    TokenStream result = new LowerCaseFilter(source);
-    result = new StopFilter(result, stopwords);
+	/**
+	 * Builds an analyzer with the given stop words.
+	 *
+	 * @param stopwords a stopword set
+	 */
+	public UkrainianMorfologikAnalyzer(CharArraySet stopwords) {
+		this(stopwords, CharArraySet.EMPTY_SET);
+	}
 
-    if (stemExclusionSet.isEmpty() == false) {
-      result = new SetKeywordMarkerFilter(result, stemExclusionSet);
-    }
+	/**
+	 * Builds an analyzer with the given stop words. If a non-empty stem exclusion set is
+	 * provided this analyzer will add a {@link SetKeywordMarkerFilter} before
+	 * stemming.
+	 *
+	 * @param stopwords        a stopword set
+	 * @param stemExclusionSet a set of terms not to be stemmed
+	 */
+	public UkrainianMorfologikAnalyzer(CharArraySet stopwords, CharArraySet stemExclusionSet) {
+		super(stopwords);
+		this.stemExclusionSet = CharArraySet.unmodifiableSet(CharArraySet.copy(stemExclusionSet));
+	}
 
-    result = new MorfologikFilter(result, getDictionary());
-    return new TokenStreamComponents(source, result);
-  }
+	@Override
+	protected Reader initReader(String fieldName, Reader reader) {
+		NormalizeCharMap.Builder builder = new NormalizeCharMap.Builder();
+		// different apostrophes
+		builder.add("\u2019", "'");
+		builder.add("\u2018", "'");
+		builder.add("\u02BC", "'");
+		builder.add("`", "'");
+		builder.add("´", "'");
+		// ignored characters
+		builder.add("\u0301", "");
+		builder.add("\u00AD", "");
+		builder.add("ґ", "г");
+		builder.add("Ґ", "Г");
 
-  private static Dictionary getDictionary() {
-    try {
-      return Dictionary.read(UkrainianMorfologikAnalyzer.class.getClassLoader().getResource("ua/net/nlp/ukrainian.dict"));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
+		NormalizeCharMap normMap = builder.build();
+		reader = new MappingCharFilter(normMap, reader);
+		return reader;
+	}
+
+	/**
+	 * Creates a
+	 * {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
+	 * which tokenizes all the text in the provided {@link Reader}.
+	 *
+	 * @return A
+	 * {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
+	 * built from an {@link StandardTokenizer} filtered with
+	 * {@link LowerCaseFilter}, {@link StopFilter}
+	 * , {@link SetKeywordMarkerFilter} if a stem exclusion set is
+	 * provided and {@link MorfologikFilter} on the Ukrainian dictionary.
+	 */
+	@Override
+	protected TokenStreamComponents createComponents(String fieldName) {
+		Tokenizer source = new StandardTokenizer();
+		TokenStream result = new LowerCaseFilter(source);
+		result = new StopFilter(result, stopwords);
+
+		if (stemExclusionSet.isEmpty() == false) {
+			result = new SetKeywordMarkerFilter(result, stemExclusionSet);
+		}
+
+		result = new MorfologikFilter(result, getDictionary());
+		return new TokenStreamComponents(source, result);
+	}
+
+	private static Dictionary getDictionary() {
+		try {
+			return Dictionary.read(UkrainianMorfologikAnalyzer.class.getClassLoader().getResource("ua/net/nlp/ukrainian.dict"));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

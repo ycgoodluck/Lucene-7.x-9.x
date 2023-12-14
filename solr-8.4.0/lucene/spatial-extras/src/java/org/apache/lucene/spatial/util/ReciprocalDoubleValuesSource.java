@@ -31,77 +31,78 @@ import org.apache.lucene.search.IndexSearcher;
  */
 public class ReciprocalDoubleValuesSource extends DoubleValuesSource {
 
-  private final double distToEdge;
-  private final DoubleValuesSource input;
+	private final double distToEdge;
+	private final DoubleValuesSource input;
 
-  /**
-   * Creates a ReciprocalDoubleValuesSource
-   * @param distToEdge  the value k in v = k / (v + k)
-   * @param input       the input DoubleValuesSource to transform
-   */
-  public ReciprocalDoubleValuesSource(double distToEdge, DoubleValuesSource input) {
-    this.distToEdge = distToEdge;
-    this.input = input;
-  }
+	/**
+	 * Creates a ReciprocalDoubleValuesSource
+	 *
+	 * @param distToEdge the value k in v = k / (v + k)
+	 * @param input      the input DoubleValuesSource to transform
+	 */
+	public ReciprocalDoubleValuesSource(double distToEdge, DoubleValuesSource input) {
+		this.distToEdge = distToEdge;
+		this.input = input;
+	}
 
-  @Override
-  public DoubleValues getValues(LeafReaderContext ctx, DoubleValues scores) throws IOException {
-    DoubleValues in = input.getValues(ctx, scores);
-    return new DoubleValues() {
-      @Override
-      public double doubleValue() throws IOException {
-        return recip(in.doubleValue());
-      }
+	@Override
+	public DoubleValues getValues(LeafReaderContext ctx, DoubleValues scores) throws IOException {
+		DoubleValues in = input.getValues(ctx, scores);
+		return new DoubleValues() {
+			@Override
+			public double doubleValue() throws IOException {
+				return recip(in.doubleValue());
+			}
 
-      @Override
-      public boolean advanceExact(int doc) throws IOException {
-        return in.advanceExact(doc);
-      }
-    };
-  }
+			@Override
+			public boolean advanceExact(int doc) throws IOException {
+				return in.advanceExact(doc);
+			}
+		};
+	}
 
-  private double recip(double in) {
-    return distToEdge / (in + distToEdge);
-  }
+	private double recip(double in) {
+		return distToEdge / (in + distToEdge);
+	}
 
-  @Override
-  public boolean needsScores() {
-    return input.needsScores();
-  }
+	@Override
+	public boolean needsScores() {
+		return input.needsScores();
+	}
 
-  @Override
-  public boolean isCacheable(LeafReaderContext ctx) {
-    return input.isCacheable(ctx);
-  }
+	@Override
+	public boolean isCacheable(LeafReaderContext ctx) {
+		return input.isCacheable(ctx);
+	}
 
-  @Override
-  public Explanation explain(LeafReaderContext ctx, int docId, Explanation scoreExplanation) throws IOException {
-    Explanation expl = input.explain(ctx, docId, scoreExplanation);
-    return Explanation.match(recip(expl.getValue().doubleValue()),
-        distToEdge + " / (v + " + distToEdge + "), computed from:", expl);
-  }
+	@Override
+	public Explanation explain(LeafReaderContext ctx, int docId, Explanation scoreExplanation) throws IOException {
+		Explanation expl = input.explain(ctx, docId, scoreExplanation);
+		return Explanation.match(recip(expl.getValue().doubleValue()),
+			distToEdge + " / (v + " + distToEdge + "), computed from:", expl);
+	}
 
-  @Override
-  public DoubleValuesSource rewrite(IndexSearcher searcher) throws IOException {
-    return new ReciprocalDoubleValuesSource(distToEdge, input.rewrite(searcher));
-  }
+	@Override
+	public DoubleValuesSource rewrite(IndexSearcher searcher) throws IOException {
+		return new ReciprocalDoubleValuesSource(distToEdge, input.rewrite(searcher));
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    ReciprocalDoubleValuesSource that = (ReciprocalDoubleValuesSource) o;
-    return Double.compare(that.distToEdge, distToEdge) == 0 &&
-        Objects.equals(input, that.input);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		ReciprocalDoubleValuesSource that = (ReciprocalDoubleValuesSource) o;
+		return Double.compare(that.distToEdge, distToEdge) == 0 &&
+			Objects.equals(input, that.input);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(distToEdge, input);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(distToEdge, input);
+	}
 
-  @Override
-  public String toString() {
-    return "recip(" + distToEdge + ", " + input.toString() + ")";
-  }
+	@Override
+	public String toString() {
+		return "recip(" + distToEdge + ", " + input.toString() + ")";
+	}
 }

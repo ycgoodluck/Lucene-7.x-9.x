@@ -29,37 +29,39 @@ import java.net.URL;
 
 import org.apache.lucene.luke.models.LukeException;
 
-/** JLabel extension for representing urls */
+/**
+ * JLabel extension for representing urls
+ */
 public final class URLLabel extends JLabel {
 
-  private final URL link;
+	private final URL link;
 
-  public URLLabel(String text) {
-    super(text);
+	public URLLabel(String text) {
+		super(text);
 
-    try {
-      this.link = new URL(text);
-    } catch (MalformedURLException e) {
-      throw new LukeException(e.getMessage(), e);
-    }
+		try {
+			this.link = new URL(text);
+		} catch (MalformedURLException e) {
+			throw new LukeException(e.getMessage(), e);
+		}
 
-    setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-    addMouseListener(new MouseAdapter() {
-      @Override
-      public void mouseClicked(MouseEvent e) {
-        openUrl(link);
-      }
-    });
-  }
+		addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				openUrl(link);
+			}
+		});
+	}
 
-  private void openUrl(URL link) {
-    if (Desktop.isDesktopSupported()) {
-      try {
-        Desktop.getDesktop().browse(link.toURI());
-      } catch (IOException | URISyntaxException e) {
-        throw new LukeException(e.getMessage(), e);
-      }
-    }
-  }
+	private void openUrl(URL link) {
+		if (Desktop.isDesktopSupported()) {
+			try {
+				Desktop.getDesktop().browse(link.toURI());
+			} catch (IOException | URISyntaxException e) {
+				throw new LukeException(e.getMessage(), e);
+			}
+		}
+	}
 }

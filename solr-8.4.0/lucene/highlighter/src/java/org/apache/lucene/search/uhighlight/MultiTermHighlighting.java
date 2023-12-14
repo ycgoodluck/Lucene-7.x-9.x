@@ -34,56 +34,56 @@ import org.apache.lucene.util.automaton.ByteRunAutomaton;
  * @lucene.internal
  */
 final class MultiTermHighlighting {
-  private MultiTermHighlighting() {
-  }
+	private MultiTermHighlighting() {
+	}
 
-  /**
-   * Extracts MultiTermQueries that match the provided field predicate.
-   * Returns equivalent automata that will match terms.
-   */
-  static LabelledCharArrayMatcher[] extractAutomata(Query query, Predicate<String> fieldMatcher, boolean lookInSpan) {
-    AutomataCollector collector = new AutomataCollector(lookInSpan, fieldMatcher);
-    query.visit(collector);
-    return collector.runAutomata.toArray(new LabelledCharArrayMatcher[0]);
-  }
+	/**
+	 * Extracts MultiTermQueries that match the provided field predicate.
+	 * Returns equivalent automata that will match terms.
+	 */
+	static LabelledCharArrayMatcher[] extractAutomata(Query query, Predicate<String> fieldMatcher, boolean lookInSpan) {
+		AutomataCollector collector = new AutomataCollector(lookInSpan, fieldMatcher);
+		query.visit(collector);
+		return collector.runAutomata.toArray(new LabelledCharArrayMatcher[0]);
+	}
 
-  /**
-   * Indicates if the the leaf query (from {@link QueryVisitor#visitLeaf(Query)}) is a type of query that
-   * we can extract automata from.
-   */
-  public static boolean canExtractAutomataFromLeafQuery(Query query) {
-    return query instanceof AutomatonQuery || query instanceof FuzzyQuery;
-  }
+	/**
+	 * Indicates if the the leaf query (from {@link QueryVisitor#visitLeaf(Query)}) is a type of query that
+	 * we can extract automata from.
+	 */
+	public static boolean canExtractAutomataFromLeafQuery(Query query) {
+		return query instanceof AutomatonQuery || query instanceof FuzzyQuery;
+	}
 
-  private static class AutomataCollector extends QueryVisitor {
+	private static class AutomataCollector extends QueryVisitor {
 
-    List<LabelledCharArrayMatcher> runAutomata = new ArrayList<>();
-    final boolean lookInSpan;
-    final Predicate<String> fieldMatcher;
+		List<LabelledCharArrayMatcher> runAutomata = new ArrayList<>();
+		final boolean lookInSpan;
+		final Predicate<String> fieldMatcher;
 
-    private AutomataCollector(boolean lookInSpan, Predicate<String> fieldMatcher) {
-      this.lookInSpan = lookInSpan;
-      this.fieldMatcher = fieldMatcher;
-    }
+		private AutomataCollector(boolean lookInSpan, Predicate<String> fieldMatcher) {
+			this.lookInSpan = lookInSpan;
+			this.fieldMatcher = fieldMatcher;
+		}
 
-    @Override
-    public boolean acceptField(String field) {
-      return fieldMatcher.test(field);
-    }
+		@Override
+		public boolean acceptField(String field) {
+			return fieldMatcher.test(field);
+		}
 
-    @Override
-    public QueryVisitor getSubVisitor(BooleanClause.Occur occur, Query parent) {
-      if (lookInSpan == false && parent instanceof SpanQuery) {
-        return QueryVisitor.EMPTY_VISITOR;
-      }
-      return super.getSubVisitor(occur, parent);
-    }
+		@Override
+		public QueryVisitor getSubVisitor(BooleanClause.Occur occur, Query parent) {
+			if (lookInSpan == false && parent instanceof SpanQuery) {
+				return QueryVisitor.EMPTY_VISITOR;
+			}
+			return super.getSubVisitor(occur, parent);
+		}
 
-    @Override
-    public void consumeTermsMatching(Query query, String field, ByteRunAutomaton automaton) {
-      runAutomata.add(LabelledCharArrayMatcher.wrap(query.toString(), automaton));
-    }
+		@Override
+		public void consumeTermsMatching(Query query, String field, ByteRunAutomaton automaton) {
+			runAutomata.add(LabelledCharArrayMatcher.wrap(query.toString(), automaton));
+		}
 
-  }
+	}
 
 }

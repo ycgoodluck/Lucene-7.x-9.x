@@ -31,112 +31,112 @@ import org.apache.lucene.util.mutable.MutableValueLong;
  * Implementations can control how the long values are loaded through {@link #longVal(int)}}
  */
 public abstract class LongDocValues extends FunctionValues {
-  protected final ValueSource vs;
+	protected final ValueSource vs;
 
-  public LongDocValues(ValueSource vs) {
-    this.vs = vs;
-  }
+	public LongDocValues(ValueSource vs) {
+		this.vs = vs;
+	}
 
-  @Override
-  public byte byteVal(int doc) throws IOException {
-    return (byte)longVal(doc);
-  }
+	@Override
+	public byte byteVal(int doc) throws IOException {
+		return (byte) longVal(doc);
+	}
 
-  @Override
-  public short shortVal(int doc) throws IOException {
-    return (short)longVal(doc);
-  }
+	@Override
+	public short shortVal(int doc) throws IOException {
+		return (short) longVal(doc);
+	}
 
-  @Override
-  public float floatVal(int doc) throws IOException {
-    return (float)longVal(doc);
-  }
+	@Override
+	public float floatVal(int doc) throws IOException {
+		return (float) longVal(doc);
+	}
 
-  @Override
-  public int intVal(int doc) throws IOException {
-    return (int)longVal(doc);
-  }
+	@Override
+	public int intVal(int doc) throws IOException {
+		return (int) longVal(doc);
+	}
 
-  @Override
-  public abstract long longVal(int doc) throws IOException;
+	@Override
+	public abstract long longVal(int doc) throws IOException;
 
-  @Override
-  public double doubleVal(int doc) throws IOException {
-    return (double)longVal(doc);
-  }
+	@Override
+	public double doubleVal(int doc) throws IOException {
+		return (double) longVal(doc);
+	}
 
-  @Override
-  public boolean boolVal(int doc) throws IOException {
-    return longVal(doc) != 0;
-  }
+	@Override
+	public boolean boolVal(int doc) throws IOException {
+		return longVal(doc) != 0;
+	}
 
-  @Override
-  public String strVal(int doc) throws IOException {
-    return Long.toString(longVal(doc));
-  }
+	@Override
+	public String strVal(int doc) throws IOException {
+		return Long.toString(longVal(doc));
+	}
 
-  @Override
-  public Object objectVal(int doc) throws IOException {
-    return exists(doc) ? longVal(doc) : null;
-  }
+	@Override
+	public Object objectVal(int doc) throws IOException {
+		return exists(doc) ? longVal(doc) : null;
+	}
 
-  @Override
-  public String toString(int doc) throws IOException {
-    return vs.description() + '=' + strVal(doc);
-  }
-  
-  protected long externalToLong(String extVal) {
-    return Long.parseLong(extVal);
-  }
-  
-  @Override
-  public ValueSourceScorer getRangeScorer(Weight weight,  LeafReaderContext readerContext, String lowerVal, String upperVal, boolean includeLower, boolean includeUpper) {
-    long lower,upper;
+	@Override
+	public String toString(int doc) throws IOException {
+		return vs.description() + '=' + strVal(doc);
+	}
 
-    // instead of using separate comparison functions, adjust the endpoints.
+	protected long externalToLong(String extVal) {
+		return Long.parseLong(extVal);
+	}
 
-    if (lowerVal==null) {
-      lower = Long.MIN_VALUE;
-    } else {
-      lower = externalToLong(lowerVal);
-      if (!includeLower && lower < Long.MAX_VALUE) lower++;
-    }
+	@Override
+	public ValueSourceScorer getRangeScorer(Weight weight, LeafReaderContext readerContext, String lowerVal, String upperVal, boolean includeLower, boolean includeUpper) {
+		long lower, upper;
 
-     if (upperVal==null) {
-      upper = Long.MAX_VALUE;
-    } else {
-      upper = externalToLong(upperVal);
-      if (!includeUpper && upper > Long.MIN_VALUE) upper--;
-    }
+		// instead of using separate comparison functions, adjust the endpoints.
 
-    final long ll = lower;
-    final long uu = upper;
+		if (lowerVal == null) {
+			lower = Long.MIN_VALUE;
+		} else {
+			lower = externalToLong(lowerVal);
+			if (!includeLower && lower < Long.MAX_VALUE) lower++;
+		}
 
-    return new ValueSourceScorer(weight, readerContext, this) {
-      @Override
-      public boolean matches(int doc) throws IOException {
-        if (!exists(doc)) return false;
-        long val = longVal(doc);
-        return val >= ll && val <= uu;
-      }
-    };
-  }
+		if (upperVal == null) {
+			upper = Long.MAX_VALUE;
+		} else {
+			upper = externalToLong(upperVal);
+			if (!includeUpper && upper > Long.MIN_VALUE) upper--;
+		}
 
-  @Override
-  public ValueFiller getValueFiller() {
-    return new ValueFiller() {
-      private final MutableValueLong mval = new MutableValueLong();
+		final long ll = lower;
+		final long uu = upper;
 
-      @Override
-      public MutableValue getValue() {
-        return mval;
-      }
+		return new ValueSourceScorer(weight, readerContext, this) {
+			@Override
+			public boolean matches(int doc) throws IOException {
+				if (!exists(doc)) return false;
+				long val = longVal(doc);
+				return val >= ll && val <= uu;
+			}
+		};
+	}
 
-      @Override
-      public void fillValue(int doc) throws IOException {
-        mval.value = longVal(doc);
-        mval.exists = exists(doc);
-      }
-    };
-  }
+	@Override
+	public ValueFiller getValueFiller() {
+		return new ValueFiller() {
+			private final MutableValueLong mval = new MutableValueLong();
+
+			@Override
+			public MutableValue getValue() {
+				return mval;
+			}
+
+			@Override
+			public void fillValue(int doc) throws IOException {
+				mval.value = longVal(doc);
+				mval.exists = exists(doc);
+			}
+		};
+	}
 }

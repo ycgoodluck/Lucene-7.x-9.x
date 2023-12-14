@@ -25,23 +25,23 @@ import org.junit.runner.Result;
 import com.carrotsearch.randomizedtesting.RandomizedTest;
 
 public class TestFailIfDirectoryNotClosed extends WithNestedTests {
-  public TestFailIfDirectoryNotClosed() {
-    super(true);
-  }
+	public TestFailIfDirectoryNotClosed() {
+		super(true);
+	}
 
-  public static class Nested1 extends WithNestedTests.AbstractNestedTest {
-    public void testDummy() throws Exception {
-      Directory dir = newDirectory();
-      System.out.println(dir.toString());
-    }
-  }
+	public static class Nested1 extends WithNestedTests.AbstractNestedTest {
+		public void testDummy() throws Exception {
+			Directory dir = newDirectory();
+			System.out.println(dir.toString());
+		}
+	}
 
-  @Test
-  public void testFailIfDirectoryNotClosed() {
-    Result r = JUnitCore.runClasses(Nested1.class);
-    RandomizedTest.assumeTrue("Ignoring nested test, very likely zombie threads present.", 
-        r.getIgnoreCount() == 0);
-    assertFailureCount(1, r);
-    Assert.assertTrue(r.getFailures().get(0).toString().contains("Resource in scope SUITE failed to close"));
-  }
+	@Test
+	public void testFailIfDirectoryNotClosed() {
+		Result r = JUnitCore.runClasses(Nested1.class);
+		RandomizedTest.assumeTrue("Ignoring nested test, very likely zombie threads present.",
+			r.getIgnoreCount() == 0);
+		assertFailureCount(1, r);
+		Assert.assertTrue(r.getFailures().get(0).toString().contains("Resource in scope SUITE failed to close"));
+	}
 }

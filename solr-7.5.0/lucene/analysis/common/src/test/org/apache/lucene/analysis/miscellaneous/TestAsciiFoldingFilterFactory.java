@@ -29,26 +29,26 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 public class TestAsciiFoldingFilterFactory extends BaseTokenStreamFactoryTestCase {
 
-  public void testMultiTermAnalysis() throws IOException {
-    TokenFilterFactory factory = new ASCIIFoldingFilterFactory(Collections.emptyMap());
-    TokenStream stream = new CannedTokenStream(new Token("Été", 0, 3));
-    stream = factory.create(stream);
-    assertTokenStreamContents(stream, new String[] { "Ete" });
+	public void testMultiTermAnalysis() throws IOException {
+		TokenFilterFactory factory = new ASCIIFoldingFilterFactory(Collections.emptyMap());
+		TokenStream stream = new CannedTokenStream(new Token("Été", 0, 3));
+		stream = factory.create(stream);
+		assertTokenStreamContents(stream, new String[]{"Ete"});
 
-    factory = (TokenFilterFactory) ((MultiTermAwareComponent) factory).getMultiTermComponent();
-    stream = new CannedTokenStream(new Token("Été", 0, 3));
-    stream = factory.create(stream);
-    assertTokenStreamContents(stream, new String[] { "Ete" });
+		factory = (TokenFilterFactory) ((MultiTermAwareComponent) factory).getMultiTermComponent();
+		stream = new CannedTokenStream(new Token("Été", 0, 3));
+		stream = factory.create(stream);
+		assertTokenStreamContents(stream, new String[]{"Ete"});
 
-    factory = new ASCIIFoldingFilterFactory(new HashMap<>(Collections.singletonMap("preserveOriginal", "true")));
-    stream = new CannedTokenStream(new Token("Été", 0, 3));
-    stream = factory.create(stream);
-    assertTokenStreamContents(stream, new String[] { "Ete", "Été" });
+		factory = new ASCIIFoldingFilterFactory(new HashMap<>(Collections.singletonMap("preserveOriginal", "true")));
+		stream = new CannedTokenStream(new Token("Été", 0, 3));
+		stream = factory.create(stream);
+		assertTokenStreamContents(stream, new String[]{"Ete", "Été"});
 
-    factory = (TokenFilterFactory) ((MultiTermAwareComponent) factory).getMultiTermComponent();
-    stream = new CannedTokenStream(new Token("Été", 0, 3));
-    stream = factory.create(stream);
-    assertTokenStreamContents(stream, new String[] { "Ete" });
-  }
+		factory = (TokenFilterFactory) ((MultiTermAwareComponent) factory).getMultiTermComponent();
+		stream = new CannedTokenStream(new Token("Été", 0, 3));
+		stream = factory.create(stream);
+		assertTokenStreamContents(stream, new String[]{"Ete"});
+	}
 
 }

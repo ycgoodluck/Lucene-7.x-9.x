@@ -34,45 +34,45 @@ import org.apache.lucene.util.TestUtil;
  * ordinarily are larger and operate on only primary key type fields.
  */
 public final class TestBloomFilteredLucenePostings extends PostingsFormat {
-  
-  private BloomFilteringPostingsFormat delegate;
-  
-  // Special class used to avoid OOM exceptions where Junit tests create many
-  // fields.
-  static class LowMemoryBloomFactory extends BloomFilterFactory {
-    @Override
-    public FuzzySet getSetForField(SegmentWriteState state,FieldInfo info) {
-      return FuzzySet.createSetBasedOnMaxMemory(1024);
-    }
-    
-    @Override
-    public boolean isSaturated(FuzzySet bloomFilter, FieldInfo fieldInfo) {
-      // For test purposes always maintain the BloomFilter - even past the point
-      // of usefulness when all bits are set
-      return false;
-    }
-  }
-  
-  public TestBloomFilteredLucenePostings() {
-    super("TestBloomFilteredLucenePostings");
-    delegate = new BloomFilteringPostingsFormat(TestUtil.getDefaultPostingsFormat(),
-        new LowMemoryBloomFactory());
-  }
-  
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState state)
-      throws IOException {
-    return delegate.fieldsConsumer(state);
-  }
-  
-  @Override
-  public FieldsProducer fieldsProducer(SegmentReadState state)
-      throws IOException {
-    return delegate.fieldsProducer(state);
-  }
 
-  @Override
-  public String toString() {
-    return "TestBloomFilteredLucenePostings(" + delegate + ")";
-  }
+	private BloomFilteringPostingsFormat delegate;
+
+	// Special class used to avoid OOM exceptions where Junit tests create many
+	// fields.
+	static class LowMemoryBloomFactory extends BloomFilterFactory {
+		@Override
+		public FuzzySet getSetForField(SegmentWriteState state, FieldInfo info) {
+			return FuzzySet.createSetBasedOnMaxMemory(1024);
+		}
+
+		@Override
+		public boolean isSaturated(FuzzySet bloomFilter, FieldInfo fieldInfo) {
+			// For test purposes always maintain the BloomFilter - even past the point
+			// of usefulness when all bits are set
+			return false;
+		}
+	}
+
+	public TestBloomFilteredLucenePostings() {
+		super("TestBloomFilteredLucenePostings");
+		delegate = new BloomFilteringPostingsFormat(TestUtil.getDefaultPostingsFormat(),
+			new LowMemoryBloomFactory());
+	}
+
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState state)
+		throws IOException {
+		return delegate.fieldsConsumer(state);
+	}
+
+	@Override
+	public FieldsProducer fieldsProducer(SegmentReadState state)
+		throws IOException {
+		return delegate.fieldsProducer(state);
+	}
+
+	@Override
+	public String toString() {
+		return "TestBloomFilteredLucenePostings(" + delegate + ")";
+	}
 }

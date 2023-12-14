@@ -24,69 +24,69 @@ import org.apache.lucene.util.AttributeReflector;
  * This attribute is used by the {@link UniqueFieldQueryNodeProcessor}
  * processor. It holds a value that defines which is the unique field name that
  * should be set in every {@link FieldableNode}.
- * 
+ *
  * @see UniqueFieldQueryNodeProcessor
  */
 public class UniqueFieldAttributeImpl extends AttributeImpl implements
-    UniqueFieldAttribute {
+	UniqueFieldAttribute {
 
-  private CharSequence uniqueField;
+	private CharSequence uniqueField;
 
-  public UniqueFieldAttributeImpl() {
-    clear();
-  }
+	public UniqueFieldAttributeImpl() {
+		clear();
+	}
 
-  @Override
-  public void clear() {
-    this.uniqueField = "";
-  }
+	@Override
+	public void clear() {
+		this.uniqueField = "";
+	}
 
-  @Override
-  public void setUniqueField(CharSequence uniqueField) {
-    this.uniqueField = uniqueField;
-  }
+	@Override
+	public void setUniqueField(CharSequence uniqueField) {
+		this.uniqueField = uniqueField;
+	}
 
-  @Override
-  public CharSequence getUniqueField() {
-    return this.uniqueField;
-  }
+	@Override
+	public CharSequence getUniqueField() {
+		return this.uniqueField;
+	}
 
-  @Override
-  public void copyTo(AttributeImpl target) {
+	@Override
+	public void copyTo(AttributeImpl target) {
 
-    if (!(target instanceof UniqueFieldAttributeImpl)) {
-      throw new IllegalArgumentException(
-          "cannot copy the values from attribute UniqueFieldAttribute to an instance of "
-              + target.getClass().getName());
-    }
+		if (!(target instanceof UniqueFieldAttributeImpl)) {
+			throw new IllegalArgumentException(
+				"cannot copy the values from attribute UniqueFieldAttribute to an instance of "
+					+ target.getClass().getName());
+		}
 
-    UniqueFieldAttributeImpl uniqueFieldAttr = (UniqueFieldAttributeImpl) target;
-    uniqueFieldAttr.uniqueField = uniqueField.toString();
+		UniqueFieldAttributeImpl uniqueFieldAttr = (UniqueFieldAttributeImpl) target;
+		uniqueFieldAttr.uniqueField = uniqueField.toString();
 
-  }
+	}
 
-  @Override
-  public boolean equals(Object other) {
+	@Override
+	public boolean equals(Object other) {
 
-    if (other instanceof UniqueFieldAttributeImpl) {
+		if (other instanceof UniqueFieldAttributeImpl) {
 
-      return ((UniqueFieldAttributeImpl) other).uniqueField
-          .equals(this.uniqueField);
+			return ((UniqueFieldAttributeImpl) other).uniqueField
+				.equals(this.uniqueField);
 
-    }
+		}
 
-    return false;
+		return false;
 
-  }
+	}
 
-  @Override
-  public int hashCode() {
-    return this.uniqueField.hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return this.uniqueField.hashCode();
+	}
 
-  @Override
-  public void reflectWith(AttributeReflector reflector) {
-    reflector.reflect(UniqueFieldAttribute.class, "uniqueField", uniqueField);
-  }
+	@Override
+	public void reflectWith(AttributeReflector reflector) {
+		reflector.reflect(UniqueFieldAttribute.class, "uniqueField", uniqueField);
+	}
 
 }

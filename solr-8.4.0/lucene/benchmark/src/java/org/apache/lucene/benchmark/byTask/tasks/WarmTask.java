@@ -22,44 +22,44 @@ import org.apache.lucene.benchmark.byTask.feeds.QueryMaker;
 
 /**
  * Warm reader task: retrieve all reader documents.
- * 
- * <p>Note: This task reuses the reader if it is already open. 
+ *
+ * <p>Note: This task reuses the reader if it is already open.
  * Otherwise a reader is opened at start and closed at the end.
  * </p>
- * 
- * <p>Other side effects: counts additional 1 (record) for each 
+ *
+ * <p>Other side effects: counts additional 1 (record) for each
  * retrieved (non null) document.</p>
  */
 public class WarmTask extends ReadTask {
 
-  public WarmTask(PerfRunData runData) {
-    super(runData);
-  }
+	public WarmTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  public boolean withRetrieve() {
-    return false;
-  }
+	@Override
+	public boolean withRetrieve() {
+		return false;
+	}
 
-  @Override
-  public boolean withSearch() {
-    return false;
-  }
+	@Override
+	public boolean withSearch() {
+		return false;
+	}
 
-  @Override
-  public boolean withTraverse() {
-    return false;
-  }
+	@Override
+	public boolean withTraverse() {
+		return false;
+	}
 
-  @Override
-  public boolean withWarm() {
-    return true;
-  }
+	@Override
+	public boolean withWarm() {
+		return true;
+	}
 
-  @Override
-  public QueryMaker getQueryMaker() {
-    return null; // not required for this task.
-  }
+	@Override
+	public QueryMaker getQueryMaker() {
+		return null; // not required for this task.
+	}
 
 
 }

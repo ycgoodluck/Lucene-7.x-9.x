@@ -24,46 +24,47 @@ import org.apache.lucene.util.packed.PackedInts.Mutable;
  * <p>You should use this class instead of the {@link PackedLongValues} related ones only when
  * you need random write-access. Otherwise this class will likely be slower and
  * less memory-efficient.
+ *
  * @lucene.internal
  */
 public final class PagedGrowableWriter extends AbstractPagedMutable<PagedGrowableWriter> {
 
-  final float acceptableOverheadRatio;
+	final float acceptableOverheadRatio;
 
-  /**
-   * Create a new {@link PagedGrowableWriter} instance.
-   *
-   * @param size the number of values to store.
-   * @param pageSize the number of values per page
-   * @param startBitsPerValue the initial number of bits per value
-   * @param acceptableOverheadRatio an acceptable overhead ratio
-   */
-  public PagedGrowableWriter(long size, int pageSize,
-      int startBitsPerValue, float acceptableOverheadRatio) {
-    this(size, pageSize, startBitsPerValue, acceptableOverheadRatio, true);
-  }
+	/**
+	 * Create a new {@link PagedGrowableWriter} instance.
+	 *
+	 * @param size                    the number of values to store.
+	 * @param pageSize                the number of values per page
+	 * @param startBitsPerValue       the initial number of bits per value
+	 * @param acceptableOverheadRatio an acceptable overhead ratio
+	 */
+	public PagedGrowableWriter(long size, int pageSize,
+														 int startBitsPerValue, float acceptableOverheadRatio) {
+		this(size, pageSize, startBitsPerValue, acceptableOverheadRatio, true);
+	}
 
-  PagedGrowableWriter(long size, int pageSize,int startBitsPerValue, float acceptableOverheadRatio, boolean fillPages) {
-    super(startBitsPerValue, size, pageSize);
-    this.acceptableOverheadRatio = acceptableOverheadRatio;
-    if (fillPages) {
-      fillPages();
-    }
-  }
+	PagedGrowableWriter(long size, int pageSize, int startBitsPerValue, float acceptableOverheadRatio, boolean fillPages) {
+		super(startBitsPerValue, size, pageSize);
+		this.acceptableOverheadRatio = acceptableOverheadRatio;
+		if (fillPages) {
+			fillPages();
+		}
+	}
 
-  @Override
-  protected Mutable newMutable(int valueCount, int bitsPerValue) {
-    return new GrowableWriter(bitsPerValue, valueCount, acceptableOverheadRatio);
-  }
+	@Override
+	protected Mutable newMutable(int valueCount, int bitsPerValue) {
+		return new GrowableWriter(bitsPerValue, valueCount, acceptableOverheadRatio);
+	}
 
-  @Override
-  protected PagedGrowableWriter newUnfilledCopy(long newSize) {
-    return new PagedGrowableWriter(newSize, pageSize(), bitsPerValue, acceptableOverheadRatio, false);
-  }
+	@Override
+	protected PagedGrowableWriter newUnfilledCopy(long newSize) {
+		return new PagedGrowableWriter(newSize, pageSize(), bitsPerValue, acceptableOverheadRatio, false);
+	}
 
-  @Override
-  protected long baseRamBytesUsed() {
-    return super.baseRamBytesUsed() + Float.BYTES;
-  }
+	@Override
+	protected long baseRamBytesUsed() {
+		return super.baseRamBytesUsed() + Float.BYTES;
+	}
 
 }

@@ -28,38 +28,42 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreMode;
 
-/** Base class for span-based queries. */
+/**
+ * Base class for span-based queries.
+ */
 public abstract class SpanQuery extends Query {
 
-  /**
-   * Returns the name of the field matched by this query.
-   */
-  public abstract String getField();
+	/**
+	 * Returns the name of the field matched by this query.
+	 */
+	public abstract String getField();
 
-  @Override
-  public abstract SpanWeight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException;
+	@Override
+	public abstract SpanWeight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException;
 
-  /**
-   * Build a map of terms to {@link TermStates}, for use in constructing SpanWeights
-   * @lucene.internal
-   */
-  public static Map<Term, TermStates> getTermStates(SpanWeight... weights) {
-    Map<Term, TermStates> terms = new TreeMap<>();
-    for (SpanWeight w : weights) {
-      w.extractTermStates(terms);
-    }
-    return terms;
-  }
+	/**
+	 * Build a map of terms to {@link TermStates}, for use in constructing SpanWeights
+	 *
+	 * @lucene.internal
+	 */
+	public static Map<Term, TermStates> getTermStates(SpanWeight... weights) {
+		Map<Term, TermStates> terms = new TreeMap<>();
+		for (SpanWeight w : weights) {
+			w.extractTermStates(terms);
+		}
+		return terms;
+	}
 
-  /**
-   * Build a map of terms to {@link TermStates}, for use in constructing SpanWeights
-   * @lucene.internal
-   */
-  public static Map<Term, TermStates> getTermStates(Collection<SpanWeight> weights) {
-    Map<Term, TermStates> terms = new TreeMap<>();
-    for (SpanWeight w : weights) {
-      w.extractTermStates(terms);
-    }
-    return terms;
-  }
+	/**
+	 * Build a map of terms to {@link TermStates}, for use in constructing SpanWeights
+	 *
+	 * @lucene.internal
+	 */
+	public static Map<Term, TermStates> getTermStates(Collection<SpanWeight> weights) {
+		Map<Term, TermStates> terms = new TreeMap<>();
+		for (SpanWeight w : weights) {
+			w.extractTermStates(terms);
+		}
+		return terms;
+	}
 }

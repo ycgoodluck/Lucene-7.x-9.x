@@ -44,43 +44,43 @@ import org.apache.lucene.facet.FacetsConfig;
  */
 public class AddFacetedDocTask extends AddDocTask {
 
-  private FacetsConfig config;
-  
-  public AddFacetedDocTask(PerfRunData runData) {
-    super(runData);
-  }
+	private FacetsConfig config;
 
-  @Override
-  public void setup() throws Exception {
-    super.setup();
-    if (config == null) {
-      boolean withFacets = getRunData().getConfig().get("with.facets", true);
-      if (withFacets) {
-        FacetSource facetsSource = getRunData().getFacetSource();
-        config = new FacetsConfig();
-        facetsSource.configure(config);
-      }
-    }
-  }
+	public AddFacetedDocTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  protected String getLogMessage(int recsCount) {
-    if (config == null) {
-      return super.getLogMessage(recsCount);
-    }
-    return super.getLogMessage(recsCount)+ " with facets";
-  }
-  
-  @Override
-  public int doLogic() throws Exception {
-    if (config != null) {
-      List<FacetField> facets = new ArrayList<>();
-      getRunData().getFacetSource().getNextFacets(facets);
-      for(FacetField ff : facets) {
-        doc.add(ff);
-      }
-      doc = config.build(getRunData().getTaxonomyWriter(), doc);
-    }
-    return super.doLogic();
-  }
+	@Override
+	public void setup() throws Exception {
+		super.setup();
+		if (config == null) {
+			boolean withFacets = getRunData().getConfig().get("with.facets", true);
+			if (withFacets) {
+				FacetSource facetsSource = getRunData().getFacetSource();
+				config = new FacetsConfig();
+				facetsSource.configure(config);
+			}
+		}
+	}
+
+	@Override
+	protected String getLogMessage(int recsCount) {
+		if (config == null) {
+			return super.getLogMessage(recsCount);
+		}
+		return super.getLogMessage(recsCount) + " with facets";
+	}
+
+	@Override
+	public int doLogic() throws Exception {
+		if (config != null) {
+			List<FacetField> facets = new ArrayList<>();
+			getRunData().getFacetSource().getNextFacets(facets);
+			for (FacetField ff : facets) {
+				doc.add(ff);
+			}
+			doc = config.build(getRunData().getTaxonomyWriter(), doc);
+		}
+		return super.doLogic();
+	}
 }

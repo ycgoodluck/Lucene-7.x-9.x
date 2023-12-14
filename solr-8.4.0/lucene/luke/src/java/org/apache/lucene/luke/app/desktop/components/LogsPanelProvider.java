@@ -28,31 +28,33 @@ import java.awt.FlowLayout;
 import org.apache.lucene.luke.app.desktop.LukeMain;
 import org.apache.lucene.luke.app.desktop.util.MessageUtils;
 
-/** Provider of the Logs panel */
+/**
+ * Provider of the Logs panel
+ */
 public final class LogsPanelProvider {
 
-  private final JTextArea logTextArea;
+	private final JTextArea logTextArea;
 
-  public LogsPanelProvider(JTextArea logTextArea) {
-    this.logTextArea = logTextArea;
-  }
+	public LogsPanelProvider(JTextArea logTextArea) {
+		this.logTextArea = logTextArea;
+	}
 
-  public JPanel get() {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setOpaque(false);
-    panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	public JPanel get() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setOpaque(false);
+		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-    JPanel header = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    header.setOpaque(false);
-    header.add(new JLabel(MessageUtils.getLocalizedMessage("logs.label.see_also")));
+		JPanel header = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		header.setOpaque(false);
+		header.add(new JLabel(MessageUtils.getLocalizedMessage("logs.label.see_also")));
 
-    JLabel logPathLabel = new JLabel(LukeMain.LOG_FILE);
-    header.add(logPathLabel);
+		JLabel logPathLabel = new JLabel(LukeMain.LOG_FILE);
+		header.add(logPathLabel);
 
-    panel.add(header, BorderLayout.PAGE_START);
+		panel.add(header, BorderLayout.PAGE_START);
 
-    panel.add(new JScrollPane(logTextArea), BorderLayout.CENTER);
-    return panel;
-  }
+		panel.add(new JScrollPane(logTextArea), BorderLayout.CENTER);
+		return panel;
+	}
 
 }

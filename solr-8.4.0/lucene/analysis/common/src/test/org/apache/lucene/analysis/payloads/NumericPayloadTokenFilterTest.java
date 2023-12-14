@@ -29,52 +29,52 @@ import java.io.StringReader;
 
 public class NumericPayloadTokenFilterTest extends BaseTokenStreamTestCase {
 
-  public void test() throws IOException {
-    String test = "The quick red fox jumped over the lazy brown dogs";
+	public void test() throws IOException {
+		String test = "The quick red fox jumped over the lazy brown dogs";
 
-    final MockTokenizer input = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    input.setReader(new StringReader(test));
-    NumericPayloadTokenFilter nptf = new NumericPayloadTokenFilter(new WordTokenFilter(input), 3, "D");
-    boolean seenDogs = false;
-    CharTermAttribute termAtt = nptf.getAttribute(CharTermAttribute.class);
-    TypeAttribute typeAtt = nptf.getAttribute(TypeAttribute.class);
-    PayloadAttribute payloadAtt = nptf.getAttribute(PayloadAttribute.class);
-    nptf.reset();
-    while (nptf.incrementToken()) {
-      if (termAtt.toString().equals("dogs")) {
-        seenDogs = true;
-        assertTrue(typeAtt.type() + " is not equal to " + "D", typeAtt.type().equals("D") == true);
-        assertTrue("payloadAtt.getPayload() is null and it shouldn't be", payloadAtt.getPayload() != null);
-        byte [] bytes = payloadAtt.getPayload().bytes;//safe here to just use the bytes, otherwise we should use offset, length
-        assertTrue(bytes.length + " does not equal: " + payloadAtt.getPayload().length, bytes.length == payloadAtt.getPayload().length);
-        assertTrue(payloadAtt.getPayload().offset + " does not equal: " + 0, payloadAtt.getPayload().offset == 0);
-        float pay = PayloadHelper.decodeFloat(bytes);
-        assertTrue(pay + " does not equal: " + 3, pay == 3);
-      } else {
-        assertTrue(typeAtt.type() + " is not null and it should be", typeAtt.type().equals("word"));
-      }
-    }
-    assertTrue(seenDogs + " does not equal: " + true, seenDogs == true);
-  }
+		final MockTokenizer input = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		input.setReader(new StringReader(test));
+		NumericPayloadTokenFilter nptf = new NumericPayloadTokenFilter(new WordTokenFilter(input), 3, "D");
+		boolean seenDogs = false;
+		CharTermAttribute termAtt = nptf.getAttribute(CharTermAttribute.class);
+		TypeAttribute typeAtt = nptf.getAttribute(TypeAttribute.class);
+		PayloadAttribute payloadAtt = nptf.getAttribute(PayloadAttribute.class);
+		nptf.reset();
+		while (nptf.incrementToken()) {
+			if (termAtt.toString().equals("dogs")) {
+				seenDogs = true;
+				assertTrue(typeAtt.type() + " is not equal to " + "D", typeAtt.type().equals("D") == true);
+				assertTrue("payloadAtt.getPayload() is null and it shouldn't be", payloadAtt.getPayload() != null);
+				byte[] bytes = payloadAtt.getPayload().bytes;//safe here to just use the bytes, otherwise we should use offset, length
+				assertTrue(bytes.length + " does not equal: " + payloadAtt.getPayload().length, bytes.length == payloadAtt.getPayload().length);
+				assertTrue(payloadAtt.getPayload().offset + " does not equal: " + 0, payloadAtt.getPayload().offset == 0);
+				float pay = PayloadHelper.decodeFloat(bytes);
+				assertTrue(pay + " does not equal: " + 3, pay == 3);
+			} else {
+				assertTrue(typeAtt.type() + " is not null and it should be", typeAtt.type().equals("word"));
+			}
+		}
+		assertTrue(seenDogs + " does not equal: " + true, seenDogs == true);
+	}
 
-  private static final class WordTokenFilter extends TokenFilter {
-    private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-    private final TypeAttribute typeAtt = addAttribute(TypeAttribute.class);
-    
-    private WordTokenFilter(TokenStream input) {
-      super(input);
-    }
-    
-    @Override
-    public boolean incrementToken() throws IOException {
-      if (input.incrementToken()) {
-        if (termAtt.toString().equals("dogs"))
-          typeAtt.setType("D");
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
+	private static final class WordTokenFilter extends TokenFilter {
+		private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+		private final TypeAttribute typeAtt = addAttribute(TypeAttribute.class);
+
+		private WordTokenFilter(TokenStream input) {
+			super(input);
+		}
+
+		@Override
+		public boolean incrementToken() throws IOException {
+			if (input.incrementToken()) {
+				if (termAtt.toString().equals("dogs"))
+					typeAtt.setType("D");
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
 
 }

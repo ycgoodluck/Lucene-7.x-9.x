@@ -22,12 +22,12 @@ package org.apache.lucene.search.vectorhighlight;
  */
 public interface FragListBuilder {
 
-  /**
-   * create a FieldFragList.
-   * 
-   * @param fieldPhraseList FieldPhraseList object
-   * @param fragCharSize the length (number of chars) of a fragment
-   * @return the created FieldFragList object
-   */
-  public FieldFragList createFieldFragList( FieldPhraseList fieldPhraseList, int fragCharSize );
+	/**
+	 * create a FieldFragList.
+	 *
+	 * @param fieldPhraseList FieldPhraseList object
+	 * @param fragCharSize    the length (number of chars) of a fragment
+	 * @return the created FieldFragList object
+	 */
+	public FieldFragList createFieldFragList(FieldPhraseList fieldPhraseList, int fragCharSize);
 }

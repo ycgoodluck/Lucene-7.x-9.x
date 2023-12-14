@@ -30,40 +30,40 @@ import org.apache.lucene.util.InfoStream;
  */
 public class CloseIndexTask extends PerfTask {
 
-  public CloseIndexTask(PerfRunData runData) {
-    super(runData);
-  }
+	public CloseIndexTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  boolean doWait = true;
+	boolean doWait = true;
 
-  @Override
-  public int doLogic() throws IOException {
-    IndexWriter iw = getRunData().getIndexWriter();
-    if (iw != null) {
-      // If infoStream was set to output to a file, close it.
-      InfoStream infoStream = iw.getConfig().getInfoStream();
-      if (infoStream != null) {
-        infoStream.close();
-      }
-      if (doWait == false) {
-        iw.commit();
-        iw.rollback();
-      } else {
-        iw.close();
-      }
-      getRunData().setIndexWriter(null);
-    }
-    return 1;
-  }
+	@Override
+	public int doLogic() throws IOException {
+		IndexWriter iw = getRunData().getIndexWriter();
+		if (iw != null) {
+			// If infoStream was set to output to a file, close it.
+			InfoStream infoStream = iw.getConfig().getInfoStream();
+			if (infoStream != null) {
+				infoStream.close();
+			}
+			if (doWait == false) {
+				iw.commit();
+				iw.rollback();
+			} else {
+				iw.close();
+			}
+			getRunData().setIndexWriter(null);
+		}
+		return 1;
+	}
 
-  @Override
-  public void setParams(String params) {
-    super.setParams(params);
-    doWait = Boolean.valueOf(params).booleanValue();
-  }
+	@Override
+	public void setParams(String params) {
+		super.setParams(params);
+		doWait = Boolean.valueOf(params).booleanValue();
+	}
 
-  @Override
-  public boolean supportsParams() {
-    return true;
-  }
+	@Override
+	public boolean supportsParams() {
+		return true;
+	}
 }

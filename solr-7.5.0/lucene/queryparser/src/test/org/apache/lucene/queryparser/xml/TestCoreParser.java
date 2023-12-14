@@ -37,233 +37,233 @@ import java.io.InputStream;
 
 public class TestCoreParser extends LuceneTestCase {
 
-  final private static String defaultField = "contents";
+	final private static String defaultField = "contents";
 
-  private static Analyzer analyzer;
-  private static CoreParser coreParser;
+	private static Analyzer analyzer;
+	private static CoreParser coreParser;
 
-  private static CoreParserTestIndexData indexData;
+	private static CoreParserTestIndexData indexData;
 
-  protected Analyzer newAnalyzer() {
-    // TODO: rewrite test (this needs to set QueryParser.enablePositionIncrements, too, for work with CURRENT):
-    return new MockAnalyzer(random(), MockTokenizer.WHITESPACE, true, MockTokenFilter.ENGLISH_STOPSET);
-  }
+	protected Analyzer newAnalyzer() {
+		// TODO: rewrite test (this needs to set QueryParser.enablePositionIncrements, too, for work with CURRENT):
+		return new MockAnalyzer(random(), MockTokenizer.WHITESPACE, true, MockTokenFilter.ENGLISH_STOPSET);
+	}
 
-  protected CoreParser newCoreParser(String defaultField, Analyzer analyzer) {
-    return new CoreParser(defaultField, analyzer);
-  }
+	protected CoreParser newCoreParser(String defaultField, Analyzer analyzer) {
+		return new CoreParser(defaultField, analyzer);
+	}
 
-  @AfterClass
-  public static void afterClass() throws Exception {
-    if (indexData != null) {
-      indexData.close();
-      indexData = null;
-    }
-    coreParser = null;
-    analyzer = null;
-  }
+	@AfterClass
+	public static void afterClass() throws Exception {
+		if (indexData != null) {
+			indexData.close();
+			indexData = null;
+		}
+		coreParser = null;
+		analyzer = null;
+	}
 
-  public void testTermQueryXML() throws ParserException, IOException {
-    Query q = parse("TermQuery.xml");
-    dumpResults("TermQuery", q, 5);
-  }
+	public void testTermQueryXML() throws ParserException, IOException {
+		Query q = parse("TermQuery.xml");
+		dumpResults("TermQuery", q, 5);
+	}
 
-  public void test_DOCTYPE_TermQueryXML() throws ParserException, IOException {
-    SAXException saxe = LuceneTestCase.expectThrows(ParserException.class, SAXException.class,
-        () -> parse("DOCTYPE_TermQuery.xml"));
-    assertTrue(saxe.getMessage().startsWith("External Entity resolving unsupported:"));
-  }
+	public void test_DOCTYPE_TermQueryXML() throws ParserException, IOException {
+		SAXException saxe = LuceneTestCase.expectThrows(ParserException.class, SAXException.class,
+			() -> parse("DOCTYPE_TermQuery.xml"));
+		assertTrue(saxe.getMessage().startsWith("External Entity resolving unsupported:"));
+	}
 
-  public void test_ENTITY_TermQueryXML() throws ParserException, IOException {
-    SAXException saxe = LuceneTestCase.expectThrows(ParserException.class, SAXException.class,
-        () -> parse("ENTITY_TermQuery.xml"));
-    assertTrue(saxe.getMessage().startsWith("External Entity resolving unsupported:"));
-  }
+	public void test_ENTITY_TermQueryXML() throws ParserException, IOException {
+		SAXException saxe = LuceneTestCase.expectThrows(ParserException.class, SAXException.class,
+			() -> parse("ENTITY_TermQuery.xml"));
+		assertTrue(saxe.getMessage().startsWith("External Entity resolving unsupported:"));
+	}
 
-  public void testTermQueryEmptyXML() throws ParserException, IOException {
-    parseShouldFail("TermQueryEmpty.xml",
-        "TermQuery has no text");
-  }
+	public void testTermQueryEmptyXML() throws ParserException, IOException {
+		parseShouldFail("TermQueryEmpty.xml",
+			"TermQuery has no text");
+	}
 
-  public void testTermsQueryXML() throws ParserException, IOException {
-    Query q = parse("TermsQuery.xml");
-    dumpResults("TermsQuery", q, 5);
-  }
+	public void testTermsQueryXML() throws ParserException, IOException {
+		Query q = parse("TermsQuery.xml");
+		dumpResults("TermsQuery", q, 5);
+	}
 
-  public void testBooleanQueryXML() throws ParserException, IOException {
-    Query q = parse("BooleanQuery.xml");
-    dumpResults("BooleanQuery", q, 5);
-  }
-  
-  public void testDisjunctionMaxQueryXML() throws ParserException, IOException {
-    Query q = parse("DisjunctionMaxQuery.xml");
-    assertTrue(q instanceof DisjunctionMaxQuery);
-    DisjunctionMaxQuery d = (DisjunctionMaxQuery)q;
-    assertEquals(0.0f, d.getTieBreakerMultiplier(), 0.0001f);
-    assertEquals(2, d.getDisjuncts().size());
-    DisjunctionMaxQuery ndq = (DisjunctionMaxQuery) d.getDisjuncts().get(1);
-    assertEquals(1.2f, ndq.getTieBreakerMultiplier(), 0.0001f);
-    assertEquals(1, ndq.getDisjuncts().size());
-  }
+	public void testBooleanQueryXML() throws ParserException, IOException {
+		Query q = parse("BooleanQuery.xml");
+		dumpResults("BooleanQuery", q, 5);
+	}
 
-  public void testRangeQueryXML() throws ParserException, IOException {
-    Query q = parse("RangeQuery.xml");
-    dumpResults("RangeQuery", q, 5);
-  }
+	public void testDisjunctionMaxQueryXML() throws ParserException, IOException {
+		Query q = parse("DisjunctionMaxQuery.xml");
+		assertTrue(q instanceof DisjunctionMaxQuery);
+		DisjunctionMaxQuery d = (DisjunctionMaxQuery) q;
+		assertEquals(0.0f, d.getTieBreakerMultiplier(), 0.0001f);
+		assertEquals(2, d.getDisjuncts().size());
+		DisjunctionMaxQuery ndq = (DisjunctionMaxQuery) d.getDisjuncts().get(1);
+		assertEquals(1.2f, ndq.getTieBreakerMultiplier(), 0.0001f);
+		assertEquals(1, ndq.getDisjuncts().size());
+	}
 
-  public void testUserQueryXML() throws ParserException, IOException {
-    Query q = parse("UserInputQuery.xml");
-    dumpResults("UserInput with Filter", q, 5);
-  }
+	public void testRangeQueryXML() throws ParserException, IOException {
+		Query q = parse("RangeQuery.xml");
+		dumpResults("RangeQuery", q, 5);
+	}
 
-  public void testCustomFieldUserQueryXML() throws ParserException, IOException {
-    Query q = parse("UserInputQueryCustomField.xml");
-    long h = searcher().search(q, 1000).totalHits;
-    assertEquals("UserInputQueryCustomField should produce 0 result ", 0, h);
-  }
+	public void testUserQueryXML() throws ParserException, IOException {
+		Query q = parse("UserInputQuery.xml");
+		dumpResults("UserInput with Filter", q, 5);
+	}
 
-  public void testBoostingTermQueryXML() throws Exception {
-    Query q = parse("BoostingTermQuery.xml");
-    dumpResults("BoostingTermQuery", q, 5);
-  }
+	public void testCustomFieldUserQueryXML() throws ParserException, IOException {
+		Query q = parse("UserInputQueryCustomField.xml");
+		long h = searcher().search(q, 1000).totalHits;
+		assertEquals("UserInputQueryCustomField should produce 0 result ", 0, h);
+	}
 
-  public void testSpanTermXML() throws Exception {
-    Query q = parse("SpanQuery.xml");
-    dumpResults("Span Query", q, 5);
-    SpanQuery sq = parseAsSpan("SpanQuery.xml");
-    dumpResults("Span Query", sq, 5);
-    assertEquals(q, sq);
-  }
+	public void testBoostingTermQueryXML() throws Exception {
+		Query q = parse("BoostingTermQuery.xml");
+		dumpResults("BoostingTermQuery", q, 5);
+	}
 
-  public void testConstantScoreQueryXML() throws Exception {
-    Query q = parse("ConstantScoreQuery.xml");
-    dumpResults("ConstantScoreQuery", q, 5);
-  }
+	public void testSpanTermXML() throws Exception {
+		Query q = parse("SpanQuery.xml");
+		dumpResults("Span Query", q, 5);
+		SpanQuery sq = parseAsSpan("SpanQuery.xml");
+		dumpResults("Span Query", sq, 5);
+		assertEquals(q, sq);
+	}
 
-  public void testMatchAllDocsPlusFilterXML() throws ParserException, IOException {
-    Query q = parse("MatchAllDocsQuery.xml");
-    dumpResults("MatchAllDocsQuery with range filter", q, 5);
-  }
+	public void testConstantScoreQueryXML() throws Exception {
+		Query q = parse("ConstantScoreQuery.xml");
+		dumpResults("ConstantScoreQuery", q, 5);
+	}
 
-  public void testNestedBooleanQuery() throws ParserException, IOException {
-    Query q = parse("NestedBooleanQuery.xml");
-    dumpResults("Nested Boolean query", q, 5);
-  }
-  
-  public void testPointRangeQuery() throws ParserException, IOException {
-    Query q = parse("PointRangeQuery.xml");
-    dumpResults("PointRangeQuery", q, 5);
-  }
+	public void testMatchAllDocsPlusFilterXML() throws ParserException, IOException {
+		Query q = parse("MatchAllDocsQuery.xml");
+		dumpResults("MatchAllDocsQuery with range filter", q, 5);
+	}
 
-  public void testPointRangeQueryWithoutLowerTerm() throws ParserException, IOException {
-    Query q = parse("PointRangeQueryWithoutLowerTerm.xml");
-    dumpResults("PointRangeQueryWithoutLowerTerm", q, 5);
-  }
+	public void testNestedBooleanQuery() throws ParserException, IOException {
+		Query q = parse("NestedBooleanQuery.xml");
+		dumpResults("Nested Boolean query", q, 5);
+	}
 
-  public void testPointRangeQueryWithoutUpperTerm() throws ParserException, IOException {
-    Query q = parse("PointRangeQueryWithoutUpperTerm.xml");
-    dumpResults("PointRangeQueryWithoutUpperTerm", q, 5);
-  }
+	public void testPointRangeQuery() throws ParserException, IOException {
+		Query q = parse("PointRangeQuery.xml");
+		dumpResults("PointRangeQuery", q, 5);
+	}
 
-  public void testPointRangeQueryWithoutRange() throws ParserException, IOException {
-    Query q = parse("PointRangeQueryWithoutRange.xml");
-    dumpResults("PointRangeQueryWithoutRange", q, 5);
-  }
+	public void testPointRangeQueryWithoutLowerTerm() throws ParserException, IOException {
+		Query q = parse("PointRangeQueryWithoutLowerTerm.xml");
+		dumpResults("PointRangeQueryWithoutLowerTerm", q, 5);
+	}
 
-  //================= Helper methods ===================================
+	public void testPointRangeQueryWithoutUpperTerm() throws ParserException, IOException {
+		Query q = parse("PointRangeQueryWithoutUpperTerm.xml");
+		dumpResults("PointRangeQueryWithoutUpperTerm", q, 5);
+	}
 
-  protected String defaultField() {
-    return defaultField;
-  }
+	public void testPointRangeQueryWithoutRange() throws ParserException, IOException {
+		Query q = parse("PointRangeQueryWithoutRange.xml");
+		dumpResults("PointRangeQueryWithoutRange", q, 5);
+	}
 
-  protected Analyzer analyzer() {
-    if (analyzer == null) {
-      analyzer = newAnalyzer();
-    }
-    return analyzer;
-  }
+	//================= Helper methods ===================================
 
-  protected CoreParser coreParser() {
-    if (coreParser == null) {
-      coreParser = newCoreParser(defaultField, analyzer());
-    }
-    return coreParser;
-  }
+	protected String defaultField() {
+		return defaultField;
+	}
 
-  private CoreParserTestIndexData indexData() {
-    if (indexData == null) {
-      try {
-        indexData = new CoreParserTestIndexData(analyzer());
-      } catch (Exception e) {
-        fail("caught Exception "+e);
-      }
-    }
-    return indexData;
-  }
+	protected Analyzer analyzer() {
+		if (analyzer == null) {
+			analyzer = newAnalyzer();
+		}
+		return analyzer;
+	}
 
-  protected IndexReader reader() {
-    return indexData().reader;
-  }
+	protected CoreParser coreParser() {
+		if (coreParser == null) {
+			coreParser = newCoreParser(defaultField, analyzer());
+		}
+		return coreParser;
+	}
 
-  protected IndexSearcher searcher() {
-    return indexData().searcher;
-  }
+	private CoreParserTestIndexData indexData() {
+		if (indexData == null) {
+			try {
+				indexData = new CoreParserTestIndexData(analyzer());
+			} catch (Exception e) {
+				fail("caught Exception " + e);
+			}
+		}
+		return indexData;
+	}
 
-  protected void parseShouldFail(String xmlFileName, String expectedParserExceptionMessage) throws IOException {
-    Query q = null;
-    ParserException pe = null;
-    try {
-      q = parse(xmlFileName);
-    } catch (ParserException e) {
-      pe = e;
-    }
-    assertNull("for "+xmlFileName+" unexpectedly got "+q, q);
-    assertNotNull("expected a ParserException for "+xmlFileName, pe);
-    assertEquals("expected different ParserException for "+xmlFileName,
-        expectedParserExceptionMessage, pe.getMessage());
-  }
+	protected IndexReader reader() {
+		return indexData().reader;
+	}
 
-  protected Query parse(String xmlFileName) throws ParserException, IOException {
-    return implParse(xmlFileName, false);
-  }
+	protected IndexSearcher searcher() {
+		return indexData().searcher;
+	}
 
-  protected SpanQuery parseAsSpan(String xmlFileName) throws ParserException, IOException {
-    return (SpanQuery)implParse(xmlFileName, true);
-  }
+	protected void parseShouldFail(String xmlFileName, String expectedParserExceptionMessage) throws IOException {
+		Query q = null;
+		ParserException pe = null;
+		try {
+			q = parse(xmlFileName);
+		} catch (ParserException e) {
+			pe = e;
+		}
+		assertNull("for " + xmlFileName + " unexpectedly got " + q, q);
+		assertNotNull("expected a ParserException for " + xmlFileName, pe);
+		assertEquals("expected different ParserException for " + xmlFileName,
+			expectedParserExceptionMessage, pe.getMessage());
+	}
 
-  private Query implParse(String xmlFileName, boolean span) throws ParserException, IOException {
-    try (InputStream xmlStream = TestCoreParser.class.getResourceAsStream(xmlFileName)) {
-      assertNotNull("Test XML file " + xmlFileName + " cannot be found", xmlStream);
-      if (span) {
-        return coreParser().parseAsSpanQuery(xmlStream);
-      } else {
-        return coreParser().parse(xmlStream);
-      }
-    }
-  }
+	protected Query parse(String xmlFileName) throws ParserException, IOException {
+		return implParse(xmlFileName, false);
+	}
 
-  protected Query rewrite(Query q) throws IOException {
-    return q.rewrite(reader());
-  }
+	protected SpanQuery parseAsSpan(String xmlFileName) throws ParserException, IOException {
+		return (SpanQuery) implParse(xmlFileName, true);
+	}
 
-  protected void dumpResults(String qType, Query q, int numDocs) throws IOException {
-    if (VERBOSE) {
-      System.out.println("TEST: qType=" + qType + " numDocs=" + numDocs + " " + q.getClass().getCanonicalName() + " query=" + q);
-    }
-    final IndexSearcher searcher = searcher();
-    TopDocs hits = searcher.search(q, numDocs);
-    final boolean producedResults = (hits.totalHits > 0);
-    if (!producedResults) {
-      System.out.println("TEST: qType=" + qType + " numDocs=" + numDocs + " " + q.getClass().getCanonicalName() + " query=" + q);
-    }
-    if (VERBOSE) {
-      ScoreDoc[] scoreDocs = hits.scoreDocs;
-      for (int i = 0; i < Math.min(numDocs, hits.totalHits); i++) {
-        Document ldoc = searcher.doc(scoreDocs[i].doc);
-        System.out.println("[" + ldoc.get("date") + "]" + ldoc.get("contents"));
-      }
-      System.out.println();
-    }
-    assertTrue(qType + " produced no results", producedResults);
-  }
+	private Query implParse(String xmlFileName, boolean span) throws ParserException, IOException {
+		try (InputStream xmlStream = TestCoreParser.class.getResourceAsStream(xmlFileName)) {
+			assertNotNull("Test XML file " + xmlFileName + " cannot be found", xmlStream);
+			if (span) {
+				return coreParser().parseAsSpanQuery(xmlStream);
+			} else {
+				return coreParser().parse(xmlStream);
+			}
+		}
+	}
+
+	protected Query rewrite(Query q) throws IOException {
+		return q.rewrite(reader());
+	}
+
+	protected void dumpResults(String qType, Query q, int numDocs) throws IOException {
+		if (VERBOSE) {
+			System.out.println("TEST: qType=" + qType + " numDocs=" + numDocs + " " + q.getClass().getCanonicalName() + " query=" + q);
+		}
+		final IndexSearcher searcher = searcher();
+		TopDocs hits = searcher.search(q, numDocs);
+		final boolean producedResults = (hits.totalHits > 0);
+		if (!producedResults) {
+			System.out.println("TEST: qType=" + qType + " numDocs=" + numDocs + " " + q.getClass().getCanonicalName() + " query=" + q);
+		}
+		if (VERBOSE) {
+			ScoreDoc[] scoreDocs = hits.scoreDocs;
+			for (int i = 0; i < Math.min(numDocs, hits.totalHits); i++) {
+				Document ldoc = searcher.doc(scoreDocs[i].doc);
+				System.out.println("[" + ldoc.get("date") + "]" + ldoc.get("contents"));
+			}
+			System.out.println();
+		}
+		assertTrue(qType + " produced no results", producedResults);
+	}
 }

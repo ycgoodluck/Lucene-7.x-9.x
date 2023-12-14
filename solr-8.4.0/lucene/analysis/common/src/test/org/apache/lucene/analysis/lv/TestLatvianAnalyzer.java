@@ -24,37 +24,45 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestLatvianAnalyzer extends BaseTokenStreamTestCase {
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new LatvianAnalyzer().close();
-  }
-  
-  /** test stopwords and stemming */
-  public void testBasics() throws IOException {
-    Analyzer a = new LatvianAnalyzer();
-    // stemming
-    checkOneTerm(a, "tirgiem", "tirg");
-    checkOneTerm(a, "tirgus", "tirg");
-    // stopword
-    assertAnalyzesTo(a, "un", new String[] {});
-    a.close();
-  }
-  
-  /** test use of exclusion set */
-  public void testExclude() throws IOException {
-    CharArraySet exclusionSet = new CharArraySet( asSet("tirgiem"), false);
-    Analyzer a = new LatvianAnalyzer( 
-        LatvianAnalyzer.getDefaultStopSet(), exclusionSet);
-    checkOneTerm(a, "tirgiem", "tirgiem");
-    checkOneTerm(a, "tirgus", "tirg");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer analyzer = new LatvianAnalyzer();
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-    analyzer.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new LatvianAnalyzer().close();
+	}
+
+	/**
+	 * test stopwords and stemming
+	 */
+	public void testBasics() throws IOException {
+		Analyzer a = new LatvianAnalyzer();
+		// stemming
+		checkOneTerm(a, "tirgiem", "tirg");
+		checkOneTerm(a, "tirgus", "tirg");
+		// stopword
+		assertAnalyzesTo(a, "un", new String[]{});
+		a.close();
+	}
+
+	/**
+	 * test use of exclusion set
+	 */
+	public void testExclude() throws IOException {
+		CharArraySet exclusionSet = new CharArraySet(asSet("tirgiem"), false);
+		Analyzer a = new LatvianAnalyzer(
+			LatvianAnalyzer.getDefaultStopSet(), exclusionSet);
+		checkOneTerm(a, "tirgiem", "tirgiem");
+		checkOneTerm(a, "tirgus", "tirg");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer analyzer = new LatvianAnalyzer();
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+		analyzer.close();
+	}
 }

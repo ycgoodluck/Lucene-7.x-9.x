@@ -28,44 +28,52 @@ import org.apache.lucene.search.similarities.Similarity.SimScorer;
  */
 public final class LeafSimScorer {
 
-  private final SimScorer scorer;
-  private final NumericDocValues norms;
+	private final SimScorer scorer;
+	private final NumericDocValues norms;
 
-  /**
-   * Sole constructor: Score documents of {@code reader} with {@code scorer}.
-   */
-  public LeafSimScorer(SimScorer scorer, LeafReader reader, String field, boolean needsScores) throws IOException {
-    this.scorer = Objects.requireNonNull(scorer);
-    norms = needsScores ? reader.getNormValues(field) : null;
-  }
+	/**
+	 * Sole constructor: Score documents of {@code reader} with {@code scorer}.
+	 */
+	public LeafSimScorer(SimScorer scorer, LeafReader reader, String field, boolean needsScores) throws IOException {
+		this.scorer = Objects.requireNonNull(scorer);
+		norms = needsScores ? reader.getNormValues(field) : null;
+	}
 
-  /** Return the wrapped {@link SimScorer}. */
-  public SimScorer getSimScorer() {
-    return scorer;
-  }
+	/**
+	 * Return the wrapped {@link SimScorer}.
+	 */
+	public SimScorer getSimScorer() {
+		return scorer;
+	}
 
-  private long getNormValue(int doc) throws IOException {
-    if (norms != null) {
-      boolean found = norms.advanceExact(doc);
-      assert found;
-      return norms.longValue();
-    } else {
-      return 1L; // default norm
-    }
-  }
+	private long getNormValue(int doc) throws IOException {
+		if (norms != null) {
+			boolean found = norms.advanceExact(doc);
+			assert found;
+			return norms.longValue();
+		} else {
+			return 1L; // default norm
+		}
+	}
 
-  /** Score the provided document assuming the given term document frequency.
-   *  This method must be called on non-decreasing sequences of doc ids.
-   *  @see SimScorer#score(float, long) */
-  public float score(int doc, float freq) throws IOException {
-    return scorer.score(freq, getNormValue(doc));
-  }
+	/**
+	 * Score the provided document assuming the given term document frequency.
+	 * This method must be called on non-decreasing sequences of doc ids.
+	 *
+	 * @see SimScorer#score(float, long)
+	 */
+	public float score(int doc, float freq) throws IOException {
+		return scorer.score(freq, getNormValue(doc));
+	}
 
-  /** Explain the score for the provided document assuming the given term document frequency.
-   *  This method must be called on non-decreasing sequences of doc ids.
-   *  @see SimScorer#explain(Explanation, long) */
-  public Explanation explain(int doc, Explanation freqExpl) throws IOException {
-    return scorer.explain(freqExpl, getNormValue(doc));
-  }
+	/**
+	 * Explain the score for the provided document assuming the given term document frequency.
+	 * This method must be called on non-decreasing sequences of doc ids.
+	 *
+	 * @see SimScorer#explain(Explanation, long)
+	 */
+	public Explanation explain(int doc, Explanation freqExpl) throws IOException {
+		return scorer.explain(freqExpl, getNormValue(doc));
+	}
 
 }

@@ -27,30 +27,32 @@ import org.junit.Test;
 
 public class TestFilterDirectory extends BaseDirectoryTestCase {
 
-  @Override
-  protected Directory getDirectory(Path path) {
-    return new FilterDirectory(new RAMDirectory()) {};
-  }
-  
-  @Test
-  public void testOverrides() throws Exception {
-    // verify that all methods of Directory are overridden by FilterDirectory,
-    // except those under the 'exclude' list
-    Set<Method> exclude = new HashSet<>();
-    exclude.add(Directory.class.getMethod("copyFrom", Directory.class, String.class, String.class, IOContext.class));
-    exclude.add(Directory.class.getMethod("openChecksumInput", String.class, IOContext.class));
-    for (Method m : FilterDirectory.class.getMethods()) {
-      if (m.getDeclaringClass() == Directory.class) {
-        assertTrue("method " + m.getName() + " not overridden!", exclude.contains(m));
-      }
-    }
-  }
+	@Override
+	protected Directory getDirectory(Path path) {
+		return new FilterDirectory(new RAMDirectory()) {
+		};
+	}
 
-  public void testUnwrap() throws IOException {
-    Directory dir = FSDirectory.open(createTempDir());
-    FilterDirectory dir2 = new FilterDirectory(dir) {};
-    assertEquals(dir, dir2.getDelegate());
-    assertEquals(dir, FilterDirectory.unwrap(dir2));
-    dir2.close();
-  }
+	@Test
+	public void testOverrides() throws Exception {
+		// verify that all methods of Directory are overridden by FilterDirectory,
+		// except those under the 'exclude' list
+		Set<Method> exclude = new HashSet<>();
+		exclude.add(Directory.class.getMethod("copyFrom", Directory.class, String.class, String.class, IOContext.class));
+		exclude.add(Directory.class.getMethod("openChecksumInput", String.class, IOContext.class));
+		for (Method m : FilterDirectory.class.getMethods()) {
+			if (m.getDeclaringClass() == Directory.class) {
+				assertTrue("method " + m.getName() + " not overridden!", exclude.contains(m));
+			}
+		}
+	}
+
+	public void testUnwrap() throws IOException {
+		Directory dir = FSDirectory.open(createTempDir());
+		FilterDirectory dir2 = new FilterDirectory(dir) {
+		};
+		assertEquals(dir, dir2.getDelegate());
+		assertEquals(dir, FilterDirectory.unwrap(dir2));
+		dir2.close();
+	}
 }

@@ -25,31 +25,37 @@ import org.apache.lucene.util.LuceneTestCase;
  */
 public class TestAssertions extends LuceneTestCase {
 
-  static class TestTokenStream1 extends TokenStream {
-    @Override
-    public final boolean incrementToken() { return false; }
-  }
+	static class TestTokenStream1 extends TokenStream {
+		@Override
+		public final boolean incrementToken() {
+			return false;
+		}
+	}
 
-  static final class TestTokenStream2 extends TokenStream {
-    @Override
-    public boolean incrementToken() { return false; }
-  }
+	static final class TestTokenStream2 extends TokenStream {
+		@Override
+		public boolean incrementToken() {
+			return false;
+		}
+	}
 
-  static class TestTokenStream3 extends TokenStream {
-    @Override
-    public boolean incrementToken() { return false; }
-  }
+	static class TestTokenStream3 extends TokenStream {
+		@Override
+		public boolean incrementToken() {
+			return false;
+		}
+	}
 
-  public void testTokenStreams() {
-    new TestTokenStream1();
-    new TestTokenStream2();
-    try {
-      new TestTokenStream3();
-      if (assertsAreEnabled) {
-        fail("TestTokenStream3 should fail assertion");
-      }
-    } catch (AssertionError e) {
-      // expected
-    }
-  }
+	public void testTokenStreams() {
+		new TestTokenStream1();
+		new TestTokenStream2();
+		try {
+			new TestTokenStream3();
+			if (assertsAreEnabled) {
+				fail("TestTokenStream3 should fail assertion");
+			}
+		} catch (AssertionError e) {
+			// expected
+		}
+	}
 }

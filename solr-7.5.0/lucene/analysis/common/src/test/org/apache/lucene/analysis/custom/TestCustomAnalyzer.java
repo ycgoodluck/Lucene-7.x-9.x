@@ -51,505 +51,507 @@ import org.apache.lucene.util.SetOnce.AlreadySetException;
 import org.apache.lucene.util.Version;
 
 public class TestCustomAnalyzer extends BaseTokenStreamTestCase {
-  
-  // Test some examples (TODO: we only check behavior, we may need something like TestRandomChains...)
 
-  public void testWhitespaceFactoryWithFolding() throws Exception {
-    CustomAnalyzer a = CustomAnalyzer.builder()
-        .withTokenizer(WhitespaceTokenizerFactory.class)
-        .addTokenFilter(ASCIIFoldingFilterFactory.class, "preserveOriginal", "true")
-        .addTokenFilter(LowerCaseFilterFactory.class)
-        .build();
-    
-    assertSame(WhitespaceTokenizerFactory.class, a.getTokenizerFactory().getClass());
-    assertEquals(Collections.emptyList(), a.getCharFilterFactories());
-    List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
-    assertEquals(2, tokenFilters.size());
-    assertSame(ASCIIFoldingFilterFactory.class, tokenFilters.get(0).getClass());
-    assertSame(LowerCaseFilterFactory.class, tokenFilters.get(1).getClass());
-    assertEquals(0, a.getPositionIncrementGap("dummy"));
-    assertEquals(1, a.getOffsetGap("dummy"));
-    assertSame(Version.LATEST, a.getVersion());
+	// Test some examples (TODO: we only check behavior, we may need something like TestRandomChains...)
 
-    assertAnalyzesTo(a, "foo bar FOO BAR", 
-        new String[] { "foo", "bar", "foo", "bar" },
-        new int[]    { 1,     1,     1,     1});
-    assertAnalyzesTo(a, "föó bär FÖÖ BAR", 
-        new String[] { "foo", "föó", "bar", "bär", "foo", "föö", "bar" },
-        new int[]    { 1,     0,     1,     0,     1,     0,     1});
-    a.close();
-  }
+	public void testWhitespaceFactoryWithFolding() throws Exception {
+		CustomAnalyzer a = CustomAnalyzer.builder()
+			.withTokenizer(WhitespaceTokenizerFactory.class)
+			.addTokenFilter(ASCIIFoldingFilterFactory.class, "preserveOriginal", "true")
+			.addTokenFilter(LowerCaseFilterFactory.class)
+			.build();
 
-  public void testWhitespaceWithFolding() throws Exception {
-    CustomAnalyzer a = CustomAnalyzer.builder()
-        .withTokenizer("whitespace")
-        .addTokenFilter("asciifolding", "preserveOriginal", "true")
-        .addTokenFilter("lowercase")
-        .build();
-    
-    assertSame(WhitespaceTokenizerFactory.class, a.getTokenizerFactory().getClass());
-    assertEquals(Collections.emptyList(), a.getCharFilterFactories());
-    List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
-    assertEquals(2, tokenFilters.size());
-    assertSame(ASCIIFoldingFilterFactory.class, tokenFilters.get(0).getClass());
-    assertSame(LowerCaseFilterFactory.class, tokenFilters.get(1).getClass());
-    assertEquals(0, a.getPositionIncrementGap("dummy"));
-    assertEquals(1, a.getOffsetGap("dummy"));
-    assertSame(Version.LATEST, a.getVersion());
+		assertSame(WhitespaceTokenizerFactory.class, a.getTokenizerFactory().getClass());
+		assertEquals(Collections.emptyList(), a.getCharFilterFactories());
+		List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
+		assertEquals(2, tokenFilters.size());
+		assertSame(ASCIIFoldingFilterFactory.class, tokenFilters.get(0).getClass());
+		assertSame(LowerCaseFilterFactory.class, tokenFilters.get(1).getClass());
+		assertEquals(0, a.getPositionIncrementGap("dummy"));
+		assertEquals(1, a.getOffsetGap("dummy"));
+		assertSame(Version.LATEST, a.getVersion());
 
-    assertAnalyzesTo(a, "foo bar FOO BAR", 
-        new String[] { "foo", "bar", "foo", "bar" },
-        new int[]    { 1,     1,     1,     1});
-    assertAnalyzesTo(a, "föó bär FÖÖ BAR", 
-        new String[] { "foo", "föó", "bar", "bär", "foo", "föö", "bar" },
-        new int[]    { 1,     0,     1,     0,     1,     0,     1});
-    a.close();
-  }
+		assertAnalyzesTo(a, "foo bar FOO BAR",
+			new String[]{"foo", "bar", "foo", "bar"},
+			new int[]{1, 1, 1, 1});
+		assertAnalyzesTo(a, "föó bär FÖÖ BAR",
+			new String[]{"foo", "föó", "bar", "bär", "foo", "föö", "bar"},
+			new int[]{1, 0, 1, 0, 1, 0, 1});
+		a.close();
+	}
 
-  public void testFactoryHtmlStripClassicFolding() throws Exception {
-    CustomAnalyzer a = CustomAnalyzer.builder()
-        .withDefaultMatchVersion(Version.LUCENE_6_0_0)
-        .addCharFilter(HTMLStripCharFilterFactory.class)
-        .withTokenizer(ClassicTokenizerFactory.class)
-        .addTokenFilter(ASCIIFoldingFilterFactory.class, "preserveOriginal", "true")
-        .addTokenFilter(LowerCaseFilterFactory.class)
-        .withPositionIncrementGap(100)
-        .withOffsetGap(1000)
-        .build();
-    
-    assertSame(ClassicTokenizerFactory.class, a.getTokenizerFactory().getClass());
-    List<CharFilterFactory> charFilters = a.getCharFilterFactories();
-    assertEquals(1, charFilters.size());
-    assertEquals(HTMLStripCharFilterFactory.class, charFilters.get(0).getClass());
-    List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
-    assertEquals(2, tokenFilters.size());
-    assertSame(ASCIIFoldingFilterFactory.class, tokenFilters.get(0).getClass());
-    assertSame(LowerCaseFilterFactory.class, tokenFilters.get(1).getClass());
-    assertEquals(100, a.getPositionIncrementGap("dummy"));
-    assertEquals(1000, a.getOffsetGap("dummy"));
-    assertSame(Version.LUCENE_6_0_0, a.getVersion());
+	public void testWhitespaceWithFolding() throws Exception {
+		CustomAnalyzer a = CustomAnalyzer.builder()
+			.withTokenizer("whitespace")
+			.addTokenFilter("asciifolding", "preserveOriginal", "true")
+			.addTokenFilter("lowercase")
+			.build();
 
-    assertAnalyzesTo(a, "<p>foo bar</p> FOO BAR", 
-        new String[] { "foo", "bar", "foo", "bar" },
-        new int[]    { 1,     1,     1,     1});
-    assertAnalyzesTo(a, "<p><b>föó</b> bär     FÖÖ BAR</p>", 
-        new String[] { "foo", "föó", "bar", "bär", "foo", "föö", "bar" },
-        new int[]    { 1,     0,     1,     0,     1,     0,     1});
-    a.close();
-  }
-  
-  public void testHtmlStripClassicFolding() throws Exception {
-    CustomAnalyzer a = CustomAnalyzer.builder()
-        .withDefaultMatchVersion(Version.LUCENE_6_0_0)
-        .addCharFilter("htmlstrip")
-        .withTokenizer("classic")
-        .addTokenFilter("asciifolding", "preserveOriginal", "true")
-        .addTokenFilter("lowercase")
-        .withPositionIncrementGap(100)
-        .withOffsetGap(1000)
-        .build();
-    
-    assertSame(ClassicTokenizerFactory.class, a.getTokenizerFactory().getClass());
-    List<CharFilterFactory> charFilters = a.getCharFilterFactories();
-    assertEquals(1, charFilters.size());
-    assertEquals(HTMLStripCharFilterFactory.class, charFilters.get(0).getClass());
-    List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
-    assertEquals(2, tokenFilters.size());
-    assertSame(ASCIIFoldingFilterFactory.class, tokenFilters.get(0).getClass());
-    assertSame(LowerCaseFilterFactory.class, tokenFilters.get(1).getClass());
-    assertEquals(100, a.getPositionIncrementGap("dummy"));
-    assertEquals(1000, a.getOffsetGap("dummy"));
-    assertSame(Version.LUCENE_6_0_0, a.getVersion());
+		assertSame(WhitespaceTokenizerFactory.class, a.getTokenizerFactory().getClass());
+		assertEquals(Collections.emptyList(), a.getCharFilterFactories());
+		List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
+		assertEquals(2, tokenFilters.size());
+		assertSame(ASCIIFoldingFilterFactory.class, tokenFilters.get(0).getClass());
+		assertSame(LowerCaseFilterFactory.class, tokenFilters.get(1).getClass());
+		assertEquals(0, a.getPositionIncrementGap("dummy"));
+		assertEquals(1, a.getOffsetGap("dummy"));
+		assertSame(Version.LATEST, a.getVersion());
 
-    assertAnalyzesTo(a, "<p>foo bar</p> FOO BAR", 
-        new String[] { "foo", "bar", "foo", "bar" },
-        new int[]    { 1,     1,     1,     1});
-    assertAnalyzesTo(a, "<p><b>föó</b> bär     FÖÖ BAR</p>", 
-        new String[] { "foo", "föó", "bar", "bär", "foo", "föö", "bar" },
-        new int[]    { 1,     0,     1,     0,     1,     0,     1});
-    a.close();
-  }
-  
-  public void testStopWordsFromClasspath() throws Exception {
-    CustomAnalyzer a = CustomAnalyzer.builder()
-        .withTokenizer(WhitespaceTokenizerFactory.class)
-        .addTokenFilter("stop",
-            "ignoreCase", "true",
-            "words", "org/apache/lucene/analysis/custom/teststop.txt",
-            "format", "wordset")
-        .build();
-    
-    assertSame(WhitespaceTokenizerFactory.class, a.getTokenizerFactory().getClass());
-    assertEquals(Collections.emptyList(), a.getCharFilterFactories());
-    List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
-    assertEquals(1, tokenFilters.size());
-    assertSame(StopFilterFactory.class, tokenFilters.get(0).getClass());
-    assertEquals(0, a.getPositionIncrementGap("dummy"));
-    assertEquals(1, a.getOffsetGap("dummy"));
-    assertSame(Version.LATEST, a.getVersion());
+		assertAnalyzesTo(a, "foo bar FOO BAR",
+			new String[]{"foo", "bar", "foo", "bar"},
+			new int[]{1, 1, 1, 1});
+		assertAnalyzesTo(a, "föó bär FÖÖ BAR",
+			new String[]{"foo", "föó", "bar", "bär", "foo", "föö", "bar"},
+			new int[]{1, 0, 1, 0, 1, 0, 1});
+		a.close();
+	}
 
-    assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
-    a.close();
-  }
-  
-  public void testStopWordsFromClasspathWithMap() throws Exception {
-    Map<String,String> stopConfig1 = new HashMap<>();
-    stopConfig1.put("ignoreCase", "true");
-    stopConfig1.put("words", "org/apache/lucene/analysis/custom/teststop.txt");
-    stopConfig1.put("format", "wordset");
-    
-    Map<String,String> stopConfig2 = new HashMap<>(stopConfig1);
-    Map<String,String> stopConfigImmutable = Collections.unmodifiableMap(new HashMap<>(stopConfig1));
+	public void testFactoryHtmlStripClassicFolding() throws Exception {
+		CustomAnalyzer a = CustomAnalyzer.builder()
+			.withDefaultMatchVersion(Version.LUCENE_6_0_0)
+			.addCharFilter(HTMLStripCharFilterFactory.class)
+			.withTokenizer(ClassicTokenizerFactory.class)
+			.addTokenFilter(ASCIIFoldingFilterFactory.class, "preserveOriginal", "true")
+			.addTokenFilter(LowerCaseFilterFactory.class)
+			.withPositionIncrementGap(100)
+			.withOffsetGap(1000)
+			.build();
 
-    CustomAnalyzer a = CustomAnalyzer.builder()
-        .withTokenizer("whitespace")
-        .addTokenFilter("stop", stopConfig1)
-        .build();
-    assertTrue(stopConfig1.isEmpty());
-    assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
-    
-    a = CustomAnalyzer.builder()
-        .withTokenizer(WhitespaceTokenizerFactory.class)
-        .addTokenFilter(StopFilterFactory.class, stopConfig2)
-        .build();
-    assertTrue(stopConfig2.isEmpty());
-    assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
-    
-    // try with unmodifiableMap, should fail
-    expectThrows(UnsupportedOperationException.class, () -> {
-      CustomAnalyzer.builder()
-          .withTokenizer("whitespace")
-          .addTokenFilter("stop", stopConfigImmutable)
-          .build();
-    });
-    a.close();
-  }
-  
-  public void testStopWordsFromFile() throws Exception {
-    CustomAnalyzer a = CustomAnalyzer.builder(this.getDataPath(""))
-        .withTokenizer("whitespace")
-        .addTokenFilter("stop",
-            "ignoreCase", "true",
-            "words", "teststop.txt",
-            "format", "wordset")
-        .build();
-    assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
-    a.close();
-  }
-  
-  public void testStopWordsFromFileAbsolute() throws Exception {
-    CustomAnalyzer a = CustomAnalyzer.builder(Paths.get("."))
-        .withTokenizer("whitespace")
-        .addTokenFilter("stop",
-            "ignoreCase", "true",
-            "words", this.getDataPath("teststop.txt").toString(),
-            "format", "wordset")
-        .build();
-    assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
-    a.close();
-  }
-  
-  // Now test misconfigurations:
+		assertSame(ClassicTokenizerFactory.class, a.getTokenizerFactory().getClass());
+		List<CharFilterFactory> charFilters = a.getCharFilterFactories();
+		assertEquals(1, charFilters.size());
+		assertEquals(HTMLStripCharFilterFactory.class, charFilters.get(0).getClass());
+		List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
+		assertEquals(2, tokenFilters.size());
+		assertSame(ASCIIFoldingFilterFactory.class, tokenFilters.get(0).getClass());
+		assertSame(LowerCaseFilterFactory.class, tokenFilters.get(1).getClass());
+		assertEquals(100, a.getPositionIncrementGap("dummy"));
+		assertEquals(1000, a.getOffsetGap("dummy"));
+		assertSame(Version.LUCENE_6_0_0, a.getVersion());
 
-  public void testIncorrectOrder() throws Exception {
-    expectThrows(IllegalStateException.class, () -> {
-      CustomAnalyzer.builder()
-          .addCharFilter("htmlstrip")
-          .withDefaultMatchVersion(Version.LATEST)
-          .withTokenizer("whitespace")
-          .build();
-    });
-  }
+		assertAnalyzesTo(a, "<p>foo bar</p> FOO BAR",
+			new String[]{"foo", "bar", "foo", "bar"},
+			new int[]{1, 1, 1, 1});
+		assertAnalyzesTo(a, "<p><b>föó</b> bär     FÖÖ BAR</p>",
+			new String[]{"foo", "föó", "bar", "bär", "foo", "föö", "bar"},
+			new int[]{1, 0, 1, 0, 1, 0, 1});
+		a.close();
+	}
 
-  public void testMissingSPI() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      CustomAnalyzer.builder()
-          .withTokenizer("foobar_nonexistent")
-          .build();
-    });
-    assertTrue(expected.getMessage().contains("SPI"));
-    assertTrue(expected.getMessage().contains("does not exist"));
-  }
+	public void testHtmlStripClassicFolding() throws Exception {
+		CustomAnalyzer a = CustomAnalyzer.builder()
+			.withDefaultMatchVersion(Version.LUCENE_6_0_0)
+			.addCharFilter("htmlstrip")
+			.withTokenizer("classic")
+			.addTokenFilter("asciifolding", "preserveOriginal", "true")
+			.addTokenFilter("lowercase")
+			.withPositionIncrementGap(100)
+			.withOffsetGap(1000)
+			.build();
 
-  public void testSetTokenizerTwice() throws Exception {
-    expectThrows(AlreadySetException.class, () -> {
-      CustomAnalyzer.builder()
-          .withTokenizer("whitespace")
-          .withTokenizer(StandardTokenizerFactory.class)
-          .build();
-    });
-  }
+		assertSame(ClassicTokenizerFactory.class, a.getTokenizerFactory().getClass());
+		List<CharFilterFactory> charFilters = a.getCharFilterFactories();
+		assertEquals(1, charFilters.size());
+		assertEquals(HTMLStripCharFilterFactory.class, charFilters.get(0).getClass());
+		List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
+		assertEquals(2, tokenFilters.size());
+		assertSame(ASCIIFoldingFilterFactory.class, tokenFilters.get(0).getClass());
+		assertSame(LowerCaseFilterFactory.class, tokenFilters.get(1).getClass());
+		assertEquals(100, a.getPositionIncrementGap("dummy"));
+		assertEquals(1000, a.getOffsetGap("dummy"));
+		assertSame(Version.LUCENE_6_0_0, a.getVersion());
 
-  public void testSetMatchVersionTwice() throws Exception {
-    expectThrows(AlreadySetException.class, () -> {
-      CustomAnalyzer.builder()
-          .withDefaultMatchVersion(Version.LATEST)
-          .withDefaultMatchVersion(Version.LATEST)
-          .withTokenizer("standard")
-          .build();
-    });
-  }
+		assertAnalyzesTo(a, "<p>foo bar</p> FOO BAR",
+			new String[]{"foo", "bar", "foo", "bar"},
+			new int[]{1, 1, 1, 1});
+		assertAnalyzesTo(a, "<p><b>föó</b> bär     FÖÖ BAR</p>",
+			new String[]{"foo", "föó", "bar", "bär", "foo", "föö", "bar"},
+			new int[]{1, 0, 1, 0, 1, 0, 1});
+		a.close();
+	}
 
-  public void testSetPosIncTwice() throws Exception {
-    expectThrows(AlreadySetException.class, () -> {
-      CustomAnalyzer.builder()
-          .withPositionIncrementGap(2)
-          .withPositionIncrementGap(3)
-          .withTokenizer("standard")
-          .build();
-    });
-  }
+	public void testStopWordsFromClasspath() throws Exception {
+		CustomAnalyzer a = CustomAnalyzer.builder()
+			.withTokenizer(WhitespaceTokenizerFactory.class)
+			.addTokenFilter("stop",
+				"ignoreCase", "true",
+				"words", "org/apache/lucene/analysis/custom/teststop.txt",
+				"format", "wordset")
+			.build();
 
-  public void testSetOfsGapTwice() throws Exception {
-    expectThrows(AlreadySetException.class, () -> {
-      CustomAnalyzer.builder()
-          .withOffsetGap(2)
-          .withOffsetGap(3)
-          .withTokenizer("standard")
-          .build();
-    });
-  }
+		assertSame(WhitespaceTokenizerFactory.class, a.getTokenizerFactory().getClass());
+		assertEquals(Collections.emptyList(), a.getCharFilterFactories());
+		List<TokenFilterFactory> tokenFilters = a.getTokenFilterFactories();
+		assertEquals(1, tokenFilters.size());
+		assertSame(StopFilterFactory.class, tokenFilters.get(0).getClass());
+		assertEquals(0, a.getPositionIncrementGap("dummy"));
+		assertEquals(1, a.getOffsetGap("dummy"));
+		assertSame(Version.LATEST, a.getVersion());
 
-  public void testNoTokenizer() throws Exception {
-    expectThrows(IllegalStateException.class, () -> {
-      CustomAnalyzer.builder().build();
-    });
-  }
+		assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
+		a.close();
+	}
 
-  public void testNullTokenizer() throws Exception {
-    expectThrows(NullPointerException.class, () -> {
-      CustomAnalyzer.builder()
-        .withTokenizer((String) null)
-        .build();
-    });
-  }
+	public void testStopWordsFromClasspathWithMap() throws Exception {
+		Map<String, String> stopConfig1 = new HashMap<>();
+		stopConfig1.put("ignoreCase", "true");
+		stopConfig1.put("words", "org/apache/lucene/analysis/custom/teststop.txt");
+		stopConfig1.put("format", "wordset");
 
-  public void testNullTokenizerFactory() throws Exception {
-    expectThrows(NullPointerException.class, () -> {
-      CustomAnalyzer.builder()
-        .withTokenizer((Class<TokenizerFactory>) null)
-        .build();
-    });
-  }
+		Map<String, String> stopConfig2 = new HashMap<>(stopConfig1);
+		Map<String, String> stopConfigImmutable = Collections.unmodifiableMap(new HashMap<>(stopConfig1));
 
-  public void testNullParamKey() throws Exception {
-    expectThrows(NullPointerException.class, () -> {
-      CustomAnalyzer.builder()
-        .withTokenizer("whitespace", null, "foo")
-        .build();
-    });
-  }
+		CustomAnalyzer a = CustomAnalyzer.builder()
+			.withTokenizer("whitespace")
+			.addTokenFilter("stop", stopConfig1)
+			.build();
+		assertTrue(stopConfig1.isEmpty());
+		assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
 
-  public void testNullMatchVersion() throws Exception {
-    expectThrows(NullPointerException.class, () -> {
-      CustomAnalyzer.builder()
-        .withDefaultMatchVersion(null)
-        .withTokenizer("whitespace")
-        .build();
-    });
-  }
+		a = CustomAnalyzer.builder()
+			.withTokenizer(WhitespaceTokenizerFactory.class)
+			.addTokenFilter(StopFilterFactory.class, stopConfig2)
+			.build();
+		assertTrue(stopConfig2.isEmpty());
+		assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
 
-  private static class DummyCharFilter extends CharFilter {
+		// try with unmodifiableMap, should fail
+		expectThrows(UnsupportedOperationException.class, () -> {
+			CustomAnalyzer.builder()
+				.withTokenizer("whitespace")
+				.addTokenFilter("stop", stopConfigImmutable)
+				.build();
+		});
+		a.close();
+	}
 
-    private final char match, repl;
+	public void testStopWordsFromFile() throws Exception {
+		CustomAnalyzer a = CustomAnalyzer.builder(this.getDataPath(""))
+			.withTokenizer("whitespace")
+			.addTokenFilter("stop",
+				"ignoreCase", "true",
+				"words", "teststop.txt",
+				"format", "wordset")
+			.build();
+		assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
+		a.close();
+	}
 
-    public DummyCharFilter(Reader input, char match, char repl) {
-      super(input);
-      this.match = match;
-      this.repl = repl;
-    }
+	public void testStopWordsFromFileAbsolute() throws Exception {
+		CustomAnalyzer a = CustomAnalyzer.builder(Paths.get("."))
+			.withTokenizer("whitespace")
+			.addTokenFilter("stop",
+				"ignoreCase", "true",
+				"words", this.getDataPath("teststop.txt").toString(),
+				"format", "wordset")
+			.build();
+		assertAnalyzesTo(a, "foo Foo Bar", new String[0]);
+		a.close();
+	}
 
-    @Override
-    protected int correct(int currentOff) {
-      return currentOff;
-    }
+	// Now test misconfigurations:
 
-    @Override
-    public int read(char[] cbuf, int off, int len) throws IOException {
-      final int read = input.read(cbuf, off, len);
-      for (int i = 0; i < read; ++i) {
-        if (cbuf[off+i] == match) {
-          cbuf[off+i] = repl;
-        }
-      }
-      return read;
-    }
-    
-  }
+	public void testIncorrectOrder() throws Exception {
+		expectThrows(IllegalStateException.class, () -> {
+			CustomAnalyzer.builder()
+				.addCharFilter("htmlstrip")
+				.withDefaultMatchVersion(Version.LATEST)
+				.withTokenizer("whitespace")
+				.build();
+		});
+	}
 
-  public static class DummyCharFilterFactory extends CharFilterFactory {
+	public void testMissingSPI() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			CustomAnalyzer.builder()
+				.withTokenizer("foobar_nonexistent")
+				.build();
+		});
+		assertTrue(expected.getMessage().contains("SPI"));
+		assertTrue(expected.getMessage().contains("does not exist"));
+	}
 
-    private final char match, repl;
+	public void testSetTokenizerTwice() throws Exception {
+		expectThrows(AlreadySetException.class, () -> {
+			CustomAnalyzer.builder()
+				.withTokenizer("whitespace")
+				.withTokenizer(StandardTokenizerFactory.class)
+				.build();
+		});
+	}
 
-    public DummyCharFilterFactory(Map<String,String> args) {
-      this(args, '0', '1');
-    }
+	public void testSetMatchVersionTwice() throws Exception {
+		expectThrows(AlreadySetException.class, () -> {
+			CustomAnalyzer.builder()
+				.withDefaultMatchVersion(Version.LATEST)
+				.withDefaultMatchVersion(Version.LATEST)
+				.withTokenizer("standard")
+				.build();
+		});
+	}
 
-    DummyCharFilterFactory(Map<String,String> args, char match, char repl) {
-      super(args);
-      this.match = match;
-      this.repl = repl;
-    }
+	public void testSetPosIncTwice() throws Exception {
+		expectThrows(AlreadySetException.class, () -> {
+			CustomAnalyzer.builder()
+				.withPositionIncrementGap(2)
+				.withPositionIncrementGap(3)
+				.withTokenizer("standard")
+				.build();
+		});
+	}
 
-    @Override
-    public Reader create(Reader input) {
-      return new DummyCharFilter(input, match, repl);
-    }
-    
-  }
+	public void testSetOfsGapTwice() throws Exception {
+		expectThrows(AlreadySetException.class, () -> {
+			CustomAnalyzer.builder()
+				.withOffsetGap(2)
+				.withOffsetGap(3)
+				.withTokenizer("standard")
+				.build();
+		});
+	}
 
-  public static class DummyMultiTermAwareCharFilterFactory extends DummyCharFilterFactory implements MultiTermAwareComponent {
+	public void testNoTokenizer() throws Exception {
+		expectThrows(IllegalStateException.class, () -> {
+			CustomAnalyzer.builder().build();
+		});
+	}
 
-    public DummyMultiTermAwareCharFilterFactory(Map<String,String> args) {
-      super(args);
-    }
+	public void testNullTokenizer() throws Exception {
+		expectThrows(NullPointerException.class, () -> {
+			CustomAnalyzer.builder()
+				.withTokenizer((String) null)
+				.build();
+		});
+	}
 
-    @Override
-    public AbstractAnalysisFactory getMultiTermComponent() {
-      return new DummyCharFilterFactory(Collections.emptyMap(), '0', '2');
-    }
+	public void testNullTokenizerFactory() throws Exception {
+		expectThrows(NullPointerException.class, () -> {
+			CustomAnalyzer.builder()
+				.withTokenizer((Class<TokenizerFactory>) null)
+				.build();
+		});
+	}
 
-  }
+	public void testNullParamKey() throws Exception {
+		expectThrows(NullPointerException.class, () -> {
+			CustomAnalyzer.builder()
+				.withTokenizer("whitespace", null, "foo")
+				.build();
+		});
+	}
 
-  public static class DummyTokenizerFactory extends TokenizerFactory {
+	public void testNullMatchVersion() throws Exception {
+		expectThrows(NullPointerException.class, () -> {
+			CustomAnalyzer.builder()
+				.withDefaultMatchVersion(null)
+				.withTokenizer("whitespace")
+				.build();
+		});
+	}
 
-    public DummyTokenizerFactory(Map<String,String> args) {
-      super(args);
-    }
+	private static class DummyCharFilter extends CharFilter {
 
-    @Override
-    public Tokenizer create(AttributeFactory factory) {
-      return new LowerCaseTokenizer(factory);
-    }
+		private final char match, repl;
 
-  }
+		public DummyCharFilter(Reader input, char match, char repl) {
+			super(input);
+			this.match = match;
+			this.repl = repl;
+		}
 
-  public static class DummyMultiTermAwareTokenizerFactory extends DummyTokenizerFactory implements MultiTermAwareComponent {
+		@Override
+		protected int correct(int currentOff) {
+			return currentOff;
+		}
 
-    public DummyMultiTermAwareTokenizerFactory(Map<String,String> args) {
-      super(args);
-    }
+		@Override
+		public int read(char[] cbuf, int off, int len) throws IOException {
+			final int read = input.read(cbuf, off, len);
+			for (int i = 0; i < read; ++i) {
+				if (cbuf[off + i] == match) {
+					cbuf[off + i] = repl;
+				}
+			}
+			return read;
+		}
 
-    @Override
-    public AbstractAnalysisFactory getMultiTermComponent() {
-      return new DummyTokenFilterFactory(Collections.emptyMap());
-    }
-    
-  }
+	}
 
-  public static class DummyTokenFilterFactory extends TokenFilterFactory {
+	public static class DummyCharFilterFactory extends CharFilterFactory {
 
-    public DummyTokenFilterFactory(Map<String,String> args) {
-      super(args);
-    }
+		private final char match, repl;
 
-    @Override
-    public TokenStream create(TokenStream input) {
-      return input;
-    }
-    
-  }
+		public DummyCharFilterFactory(Map<String, String> args) {
+			this(args, '0', '1');
+		}
 
-  public static class DummyMultiTermAwareTokenFilterFactory extends DummyTokenFilterFactory implements MultiTermAwareComponent {
+		DummyCharFilterFactory(Map<String, String> args, char match, char repl) {
+			super(args);
+			this.match = match;
+			this.repl = repl;
+		}
 
-    public DummyMultiTermAwareTokenFilterFactory(Map<String,String> args) {
-      super(args);
-    }
+		@Override
+		public Reader create(Reader input) {
+			return new DummyCharFilter(input, match, repl);
+		}
 
-    @Override
-    public AbstractAnalysisFactory getMultiTermComponent() {
-      return new ASCIIFoldingFilterFactory(Collections.emptyMap());
-    }
-    
-  }
+	}
 
-  public void testNormalization() throws IOException {
-    CustomAnalyzer analyzer1 = CustomAnalyzer.builder()
-        // none of these components are multi-term aware so they should not be applied
-        .withTokenizer(DummyTokenizerFactory.class, Collections.emptyMap())
-        .addCharFilter(DummyCharFilterFactory.class, Collections.emptyMap())
-        .addTokenFilter(DummyTokenFilterFactory.class, Collections.emptyMap())
-        .build();
-    assertEquals(new BytesRef("0À"), analyzer1.normalize("dummy", "0À"));
+	public static class DummyMultiTermAwareCharFilterFactory extends DummyCharFilterFactory implements MultiTermAwareComponent {
 
-    CustomAnalyzer analyzer2 = CustomAnalyzer.builder()
-        // these components are multi-term aware so they should be applied
-        .withTokenizer(DummyMultiTermAwareTokenizerFactory.class, Collections.emptyMap())
-        .addCharFilter(DummyMultiTermAwareCharFilterFactory.class, Collections.emptyMap())
-        .addTokenFilter(DummyMultiTermAwareTokenFilterFactory.class, Collections.emptyMap())
-        .build();
-    assertEquals(new BytesRef("2A"), analyzer2.normalize("dummy", "0À"));
-  }
+		public DummyMultiTermAwareCharFilterFactory(Map<String, String> args) {
+			super(args);
+		}
 
-  public void testNormalizationWithMultipleTokenFilters() throws IOException {
-    CustomAnalyzer analyzer = CustomAnalyzer.builder()
-        // none of these components are multi-term aware so they should not be applied
-        .withTokenizer(WhitespaceTokenizerFactory.class, Collections.emptyMap())
-        .addTokenFilter(LowerCaseFilterFactory.class, Collections.emptyMap())
-        .addTokenFilter(ASCIIFoldingFilterFactory.class, Collections.emptyMap())
-        .build();
-    assertEquals(new BytesRef("a b e"), analyzer.normalize("dummy", "À B é"));
-  }
+		@Override
+		public AbstractAnalysisFactory getMultiTermComponent() {
+			return new DummyCharFilterFactory(Collections.emptyMap(), '0', '2');
+		}
 
-  public void testNormalizationWithMultiplCharFilters() throws IOException {
-    CustomAnalyzer analyzer = CustomAnalyzer.builder()
-        // none of these components are multi-term aware so they should not be applied
-        .withTokenizer(WhitespaceTokenizerFactory.class, Collections.emptyMap())
-        .addCharFilter(MappingCharFilterFactory.class, new HashMap<>(Collections.singletonMap("mapping", "org/apache/lucene/analysis/custom/mapping1.txt")))
-        .addCharFilter(MappingCharFilterFactory.class, new HashMap<>(Collections.singletonMap("mapping", "org/apache/lucene/analysis/custom/mapping2.txt")))
-        .build();
-    assertEquals(new BytesRef("e f c"), analyzer.normalize("dummy", "a b c"));
-  }
-  
-  /** test normalize where the TokenizerFactory returns a filter to normalize the text */
-  public void testNormalizationWithLowerCaseTokenizer() throws IOException {
-    CustomAnalyzer analyzer1 = CustomAnalyzer.builder()
-        .withTokenizer(LowerCaseTokenizerFactory.class, Collections.emptyMap())
-        .build();
-    assertEquals(new BytesRef("abc"), analyzer1.normalize("dummy", "ABC"));
-  }
+	}
 
-  public void testConditions() throws IOException {
-    CustomAnalyzer analyzer = CustomAnalyzer.builder()
-        .withTokenizer("whitespace")
-        .addTokenFilter("lowercase")
-        .whenTerm(t -> t.toString().contains("o"))
-          .addTokenFilter("uppercase")
-          .addTokenFilter(ReverseStringFilterFactory.class)
-        .endwhen()
-        .addTokenFilter("asciifolding")
-        .build();
+	public static class DummyTokenizerFactory extends TokenizerFactory {
 
-    assertAnalyzesTo(analyzer, "Héllo world whaT's hãppening",
-        new String[]{ "OLLEH", "DLROW", "what's", "happening" });
-  }
+		public DummyTokenizerFactory(Map<String, String> args) {
+			super(args);
+		}
 
-  public void testConditionsWithResourceLoader() throws IOException {
-    CustomAnalyzer analyzer = CustomAnalyzer.builder()
-        .withTokenizer("whitespace")
-        .addTokenFilter("lowercase")
-        .when("protectedterm", "protected", "org/apache/lucene/analysis/custom/teststop.txt")
-          .addTokenFilter("reversestring")
-        .endwhen()
-        .build();
+		@Override
+		public Tokenizer create(AttributeFactory factory) {
+			return new LowerCaseTokenizer(factory);
+		}
 
-    assertAnalyzesTo(analyzer, "FOO BAR BAZ",
-        new String[]{ "foo", "bar", "zab" });
-  }
+	}
 
-  public void testConditionsWithWrappedResourceLoader() throws IOException {
-    CustomAnalyzer analyzer = CustomAnalyzer.builder()
-        .withTokenizer("whitespace")
-        .addTokenFilter("lowercase")
-        .whenTerm(t -> t.toString().contains("o") == false)
-          .addTokenFilter("stop",
-            "ignoreCase", "true",
-            "words", "org/apache/lucene/analysis/custom/teststop.txt",
-            "format", "wordset")
-        .endwhen()
-        .build();
+	public static class DummyMultiTermAwareTokenizerFactory extends DummyTokenizerFactory implements MultiTermAwareComponent {
 
-    assertAnalyzesTo(analyzer, "foo bar baz", new String[]{ "foo", "baz" });
-  }
+		public DummyMultiTermAwareTokenizerFactory(Map<String, String> args) {
+			super(args);
+		}
+
+		@Override
+		public AbstractAnalysisFactory getMultiTermComponent() {
+			return new DummyTokenFilterFactory(Collections.emptyMap());
+		}
+
+	}
+
+	public static class DummyTokenFilterFactory extends TokenFilterFactory {
+
+		public DummyTokenFilterFactory(Map<String, String> args) {
+			super(args);
+		}
+
+		@Override
+		public TokenStream create(TokenStream input) {
+			return input;
+		}
+
+	}
+
+	public static class DummyMultiTermAwareTokenFilterFactory extends DummyTokenFilterFactory implements MultiTermAwareComponent {
+
+		public DummyMultiTermAwareTokenFilterFactory(Map<String, String> args) {
+			super(args);
+		}
+
+		@Override
+		public AbstractAnalysisFactory getMultiTermComponent() {
+			return new ASCIIFoldingFilterFactory(Collections.emptyMap());
+		}
+
+	}
+
+	public void testNormalization() throws IOException {
+		CustomAnalyzer analyzer1 = CustomAnalyzer.builder()
+			// none of these components are multi-term aware so they should not be applied
+			.withTokenizer(DummyTokenizerFactory.class, Collections.emptyMap())
+			.addCharFilter(DummyCharFilterFactory.class, Collections.emptyMap())
+			.addTokenFilter(DummyTokenFilterFactory.class, Collections.emptyMap())
+			.build();
+		assertEquals(new BytesRef("0À"), analyzer1.normalize("dummy", "0À"));
+
+		CustomAnalyzer analyzer2 = CustomAnalyzer.builder()
+			// these components are multi-term aware so they should be applied
+			.withTokenizer(DummyMultiTermAwareTokenizerFactory.class, Collections.emptyMap())
+			.addCharFilter(DummyMultiTermAwareCharFilterFactory.class, Collections.emptyMap())
+			.addTokenFilter(DummyMultiTermAwareTokenFilterFactory.class, Collections.emptyMap())
+			.build();
+		assertEquals(new BytesRef("2A"), analyzer2.normalize("dummy", "0À"));
+	}
+
+	public void testNormalizationWithMultipleTokenFilters() throws IOException {
+		CustomAnalyzer analyzer = CustomAnalyzer.builder()
+			// none of these components are multi-term aware so they should not be applied
+			.withTokenizer(WhitespaceTokenizerFactory.class, Collections.emptyMap())
+			.addTokenFilter(LowerCaseFilterFactory.class, Collections.emptyMap())
+			.addTokenFilter(ASCIIFoldingFilterFactory.class, Collections.emptyMap())
+			.build();
+		assertEquals(new BytesRef("a b e"), analyzer.normalize("dummy", "À B é"));
+	}
+
+	public void testNormalizationWithMultiplCharFilters() throws IOException {
+		CustomAnalyzer analyzer = CustomAnalyzer.builder()
+			// none of these components are multi-term aware so they should not be applied
+			.withTokenizer(WhitespaceTokenizerFactory.class, Collections.emptyMap())
+			.addCharFilter(MappingCharFilterFactory.class, new HashMap<>(Collections.singletonMap("mapping", "org/apache/lucene/analysis/custom/mapping1.txt")))
+			.addCharFilter(MappingCharFilterFactory.class, new HashMap<>(Collections.singletonMap("mapping", "org/apache/lucene/analysis/custom/mapping2.txt")))
+			.build();
+		assertEquals(new BytesRef("e f c"), analyzer.normalize("dummy", "a b c"));
+	}
+
+	/**
+	 * test normalize where the TokenizerFactory returns a filter to normalize the text
+	 */
+	public void testNormalizationWithLowerCaseTokenizer() throws IOException {
+		CustomAnalyzer analyzer1 = CustomAnalyzer.builder()
+			.withTokenizer(LowerCaseTokenizerFactory.class, Collections.emptyMap())
+			.build();
+		assertEquals(new BytesRef("abc"), analyzer1.normalize("dummy", "ABC"));
+	}
+
+	public void testConditions() throws IOException {
+		CustomAnalyzer analyzer = CustomAnalyzer.builder()
+			.withTokenizer("whitespace")
+			.addTokenFilter("lowercase")
+			.whenTerm(t -> t.toString().contains("o"))
+			.addTokenFilter("uppercase")
+			.addTokenFilter(ReverseStringFilterFactory.class)
+			.endwhen()
+			.addTokenFilter("asciifolding")
+			.build();
+
+		assertAnalyzesTo(analyzer, "Héllo world whaT's hãppening",
+			new String[]{"OLLEH", "DLROW", "what's", "happening"});
+	}
+
+	public void testConditionsWithResourceLoader() throws IOException {
+		CustomAnalyzer analyzer = CustomAnalyzer.builder()
+			.withTokenizer("whitespace")
+			.addTokenFilter("lowercase")
+			.when("protectedterm", "protected", "org/apache/lucene/analysis/custom/teststop.txt")
+			.addTokenFilter("reversestring")
+			.endwhen()
+			.build();
+
+		assertAnalyzesTo(analyzer, "FOO BAR BAZ",
+			new String[]{"foo", "bar", "zab"});
+	}
+
+	public void testConditionsWithWrappedResourceLoader() throws IOException {
+		CustomAnalyzer analyzer = CustomAnalyzer.builder()
+			.withTokenizer("whitespace")
+			.addTokenFilter("lowercase")
+			.whenTerm(t -> t.toString().contains("o") == false)
+			.addTokenFilter("stop",
+				"ignoreCase", "true",
+				"words", "org/apache/lucene/analysis/custom/teststop.txt",
+				"format", "wordset")
+			.endwhen()
+			.build();
+
+		assertAnalyzesTo(analyzer, "foo bar baz", new String[]{"foo", "baz"});
+	}
 
 }

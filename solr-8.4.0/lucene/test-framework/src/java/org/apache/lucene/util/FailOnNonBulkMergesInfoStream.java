@@ -18,21 +18,23 @@ package org.apache.lucene.util;
 
 import java.io.IOException;
 
-/** Hackidy-Häck-Hack to cause a test to fail on non-bulk merges */
+/**
+ * Hackidy-Häck-Hack to cause a test to fail on non-bulk merges
+ */
 // TODO: we should probably be a wrapper so verbose still works...
 public class FailOnNonBulkMergesInfoStream extends InfoStream {
 
-  @Override
-  public void close() throws IOException {   
-  }
-  
-  @Override
-  public boolean isEnabled(String component) {
-    return true;
-  }
+	@Override
+	public void close() throws IOException {
+	}
 
-  @Override
-  public void message(String component, String message) {
-    assert !message.contains("non-bulk merges");
-  }
+	@Override
+	public boolean isEnabled(String component) {
+		return true;
+	}
+
+	@Override
+	public void message(String component, String message) {
+		assert !message.contains("non-bulk merges");
+	}
 }

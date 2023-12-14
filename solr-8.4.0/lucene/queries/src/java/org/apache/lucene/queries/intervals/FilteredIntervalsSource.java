@@ -32,127 +32,128 @@ import org.apache.lucene.search.QueryVisitor;
  */
 public abstract class FilteredIntervalsSource extends IntervalsSource {
 
-  public static IntervalsSource maxGaps(IntervalsSource in, int maxGaps) {
-    return Intervals.or(in.pullUpDisjunctions().stream().map(s -> new MaxGaps(s, maxGaps)).collect(Collectors.toList()));
-  }
+	public static IntervalsSource maxGaps(IntervalsSource in, int maxGaps) {
+		return Intervals.or(in.pullUpDisjunctions().stream().map(s -> new MaxGaps(s, maxGaps)).collect(Collectors.toList()));
+	}
 
-  private static class MaxGaps extends FilteredIntervalsSource {
+	private static class MaxGaps extends FilteredIntervalsSource {
 
-    private final int maxGaps;
+		private final int maxGaps;
 
-    MaxGaps(IntervalsSource in, int maxGaps) {
-      super("MAXGAPS/" + maxGaps, in);
-      this.maxGaps = maxGaps;
-    }
+		MaxGaps(IntervalsSource in, int maxGaps) {
+			super("MAXGAPS/" + maxGaps, in);
+			this.maxGaps = maxGaps;
+		}
 
-    @Override
-    protected boolean accept(IntervalIterator it) {
-      return it.gaps() <= maxGaps;
-    }
-  }
+		@Override
+		protected boolean accept(IntervalIterator it) {
+			return it.gaps() <= maxGaps;
+		}
+	}
 
-  public static IntervalsSource maxWidth(IntervalsSource in, int maxWidth) {
-    return new MaxWidth(in, maxWidth);
-  }
+	public static IntervalsSource maxWidth(IntervalsSource in, int maxWidth) {
+		return new MaxWidth(in, maxWidth);
+	}
 
-  private static class MaxWidth extends FilteredIntervalsSource {
+	private static class MaxWidth extends FilteredIntervalsSource {
 
-    private final int maxWidth;
+		private final int maxWidth;
 
-    MaxWidth(IntervalsSource in, int maxWidth) {
-      super("MAXWIDTH/" + maxWidth, in);
-      this.maxWidth = maxWidth;
-    }
+		MaxWidth(IntervalsSource in, int maxWidth) {
+			super("MAXWIDTH/" + maxWidth, in);
+			this.maxWidth = maxWidth;
+		}
 
-    @Override
-    protected boolean accept(IntervalIterator it) {
-      return (it.end() - it.start()) + 1 <= maxWidth;
-    }
+		@Override
+		protected boolean accept(IntervalIterator it) {
+			return (it.end() - it.start()) + 1 <= maxWidth;
+		}
 
-    @Override
-    public Collection<IntervalsSource> pullUpDisjunctions() {
-      return Disjunctions.pullUp(in, s -> new MaxWidth(s, maxWidth));
-    }
-  }
+		@Override
+		public Collection<IntervalsSource> pullUpDisjunctions() {
+			return Disjunctions.pullUp(in, s -> new MaxWidth(s, maxWidth));
+		}
+	}
 
-  private final String name;
-  protected final IntervalsSource in;
+	private final String name;
+	protected final IntervalsSource in;
 
-  /**
-   * Create a new FilteredIntervalsSource
-   * @param name  the name of the filter
-   * @param in    the source to filter
-   */
-  public FilteredIntervalsSource(String name, IntervalsSource in) {
-    this.name = name;
-    this.in = in;
-  }
+	/**
+	 * Create a new FilteredIntervalsSource
+	 *
+	 * @param name the name of the filter
+	 * @param in   the source to filter
+	 */
+	public FilteredIntervalsSource(String name, IntervalsSource in) {
+		this.name = name;
+		this.in = in;
+	}
 
-  /**
-   * @return {@code false} if the current interval should be filtered out
-   */
-  protected abstract boolean accept(IntervalIterator it);
+	/**
+	 * @return {@code false} if the current interval should be filtered out
+	 */
+	protected abstract boolean accept(IntervalIterator it);
 
-  @Override
-  public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
-    IntervalIterator i = in.intervals(field, ctx);
-    if (i == null) {
-      return null;
-    }
-    return new IntervalFilter(i) {
-      @Override
-      protected boolean accept() {
-        return FilteredIntervalsSource.this.accept(in);
-      }
-    };
-  }
+	@Override
+	public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
+		IntervalIterator i = in.intervals(field, ctx);
+		if (i == null) {
+			return null;
+		}
+		return new IntervalFilter(i) {
+			@Override
+			protected boolean accept() {
+				return FilteredIntervalsSource.this.accept(in);
+			}
+		};
+	}
 
-  @Override
-  public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
-    MatchesIterator mi = in.matches(field, ctx, doc);
-    if (mi == null) {
-      return null;
-    }
-    IntervalIterator filtered = new IntervalFilter(IntervalMatches.wrapMatches(mi, doc)) {
-      @Override
-      protected boolean accept() {
-        return FilteredIntervalsSource.this.accept(in);
-      }
-    };
-    return IntervalMatches.asMatches(filtered, mi, doc);
-  }
+	@Override
+	public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
+		MatchesIterator mi = in.matches(field, ctx, doc);
+		if (mi == null) {
+			return null;
+		}
+		IntervalIterator filtered = new IntervalFilter(IntervalMatches.wrapMatches(mi, doc)) {
+			@Override
+			protected boolean accept() {
+				return FilteredIntervalsSource.this.accept(in);
+			}
+		};
+		return IntervalMatches.asMatches(filtered, mi, doc);
+	}
 
-  @Override
-  public int minExtent() {
-    return in.minExtent();
-  }
+	@Override
+	public int minExtent() {
+		return in.minExtent();
+	}
 
-  @Override
-  public Collection<IntervalsSource> pullUpDisjunctions() {
-    return Collections.singletonList(this);
-  }
+	@Override
+	public Collection<IntervalsSource> pullUpDisjunctions() {
+		return Collections.singletonList(this);
+	}
 
-  @Override
-  public void visit(String field, QueryVisitor visitor) {
-    in.visit(field, visitor);
-  }
+	@Override
+	public void visit(String field, QueryVisitor visitor) {
+		in.visit(field, visitor);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || o instanceof FilteredIntervalsSource == false) return false;
-    FilteredIntervalsSource that = (FilteredIntervalsSource) o;
-    return Objects.equals(name, that.name) &&
-        Objects.equals(in, that.in);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || o instanceof FilteredIntervalsSource == false) return false;
+		FilteredIntervalsSource that = (FilteredIntervalsSource) o;
+		return Objects.equals(name, that.name) &&
+			Objects.equals(in, that.in);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(name, in);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, in);
+	}
 
-  @Override
-  public String toString() {
-    return name + "(" + in + ")";
-  }
+	@Override
+	public String toString() {
+		return name + "(" + in + ")";
+	}
 }

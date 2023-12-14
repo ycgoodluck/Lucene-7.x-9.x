@@ -28,26 +28,26 @@ import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
 
 final class TrackingTmpOutputDirectoryWrapper extends FilterDirectory {
-  private final Map<String,String> fileNames = new HashMap<>();
+	private final Map<String, String> fileNames = new HashMap<>();
 
-  TrackingTmpOutputDirectoryWrapper(Directory in) {
-    super(in);
-  }
+	TrackingTmpOutputDirectoryWrapper(Directory in) {
+		super(in);
+	}
 
-  @Override
-  public IndexOutput createOutput(String name, IOContext context) throws IOException {
-    IndexOutput output = super.createTempOutput(name, "", context);
-    fileNames.put(name, output.getName());
-    return output;
-  }
+	@Override
+	public IndexOutput createOutput(String name, IOContext context) throws IOException {
+		IndexOutput output = super.createTempOutput(name, "", context);
+		fileNames.put(name, output.getName());
+		return output;
+	}
 
-  @Override
-  public IndexInput openInput(String name, IOContext context) throws IOException {
-    String tmpName = fileNames.get(name);
-    return super.openInput(tmpName, context);
-  }
+	@Override
+	public IndexInput openInput(String name, IOContext context) throws IOException {
+		String tmpName = fileNames.get(name);
+		return super.openInput(tmpName, context);
+	}
 
-  public Map<String, String> getTemporaryFiles() {
-    return fileNames;
-  }
+	public Map<String, String> getTemporaryFiles() {
+		return fileNames;
+	}
 }

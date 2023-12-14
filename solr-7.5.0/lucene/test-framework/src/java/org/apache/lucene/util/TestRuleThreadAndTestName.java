@@ -20,37 +20,38 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-/** 
+/**
  * Saves the executing thread and method name of the test case.
  */
 final class TestRuleThreadAndTestName implements TestRule {
-  /** 
-   * The thread executing the current test case.
-   * @see LuceneTestCase#isTestThread()
-   */
-  public volatile Thread testCaseThread;
+	/**
+	 * The thread executing the current test case.
+	 *
+	 * @see LuceneTestCase#isTestThread()
+	 */
+	public volatile Thread testCaseThread;
 
-  /**
-   * Test method name.
-   */
-  public volatile String testMethodName = "<unknown>";
+	/**
+	 * Test method name.
+	 */
+	public volatile String testMethodName = "<unknown>";
 
-  @Override
-  public Statement apply(final Statement base, final Description description) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        try {
-          Thread current = Thread.currentThread();
-          testCaseThread = current;
-          testMethodName = description.getMethodName();
+	@Override
+	public Statement apply(final Statement base, final Description description) {
+		return new Statement() {
+			@Override
+			public void evaluate() throws Throwable {
+				try {
+					Thread current = Thread.currentThread();
+					testCaseThread = current;
+					testMethodName = description.getMethodName();
 
-          base.evaluate();
-        } finally {
-          testCaseThread = null;
-          testMethodName = null;
-        }
-      }
-    };
-  }
+					base.evaluate();
+				} finally {
+					testCaseThread = null;
+					testMethodName = null;
+				}
+			}
+		};
+	}
 }

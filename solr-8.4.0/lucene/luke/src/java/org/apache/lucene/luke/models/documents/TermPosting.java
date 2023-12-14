@@ -27,64 +27,64 @@ import org.apache.lucene.util.BytesRef;
  */
 public final class TermPosting {
 
-  // position
-  private int position = -1;
+	// position
+	private int position = -1;
 
-  // start and end offset (optional)
-  private int startOffset = -1;
-  private int endOffset = -1;
+	// start and end offset (optional)
+	private int startOffset = -1;
+	private int endOffset = -1;
 
-  // payload (optional)
-  private BytesRef payload;
+	// payload (optional)
+	private BytesRef payload;
 
-  static TermPosting of(int position, PostingsEnum penum) throws IOException {
-    TermPosting posting = new TermPosting();
+	static TermPosting of(int position, PostingsEnum penum) throws IOException {
+		TermPosting posting = new TermPosting();
 
-    // set position
-    posting.position = position;
+		// set position
+		posting.position = position;
 
-    // set offset (if available)
-    int sOffset = penum.startOffset();
-    int eOffset = penum.endOffset();
-    if (sOffset >= 0 && eOffset >= 0) {
-      posting.startOffset = sOffset;
-      posting.endOffset = eOffset;
-    }
+		// set offset (if available)
+		int sOffset = penum.startOffset();
+		int eOffset = penum.endOffset();
+		if (sOffset >= 0 && eOffset >= 0) {
+			posting.startOffset = sOffset;
+			posting.endOffset = eOffset;
+		}
 
-    // set payload (if available)
-    if (penum.getPayload() != null) {
-      posting.payload = BytesRef.deepCopyOf(penum.getPayload());
-    }
+		// set payload (if available)
+		if (penum.getPayload() != null) {
+			posting.payload = BytesRef.deepCopyOf(penum.getPayload());
+		}
 
-    return posting;
-  }
+		return posting;
+	}
 
-  public int getPosition() {
-    return position;
-  }
+	public int getPosition() {
+		return position;
+	}
 
-  public int getStartOffset() {
-    return startOffset;
-  }
+	public int getStartOffset() {
+		return startOffset;
+	}
 
-  public int getEndOffset() {
-    return endOffset;
-  }
+	public int getEndOffset() {
+		return endOffset;
+	}
 
-  public BytesRef getPayload() {
-    return payload;
-  }
+	public BytesRef getPayload() {
+		return payload;
+	}
 
-  @Override
-  public String toString() {
-    return "TermPosting{" +
-        "position=" + position +
-        ", startOffset=" + startOffset +
-        ", endOffset=" + endOffset +
-        ", payload=" + payload +
-        '}';
-  }
+	@Override
+	public String toString() {
+		return "TermPosting{" +
+			"position=" + position +
+			", startOffset=" + startOffset +
+			", endOffset=" + endOffset +
+			", payload=" + payload +
+			'}';
+	}
 
-  private TermPosting() {
-  }
+	private TermPosting() {
+	}
 }

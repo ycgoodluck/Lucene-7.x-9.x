@@ -8,13 +8,13 @@ import org.apache.lucene.geo.GeoEncodingUtils;
  */
 public class GeoUtilsTest {
 
-  public static void main(String[] args) {
-    double latitude1 = 30.23;
-    double latitude2 = -30.23;
-    int latitude1Encode = GeoEncodingUtils.encodeLatitude(latitude1);
-    int latitude2Encode = GeoEncodingUtils.encodeLatitude(latitude2);
-    System.out.println(latitude1Encode);
-    System.out.println(latitude2Encode);
-  }
+	public static void main(String[] args) {
+		double latitude1 = 30.23;
+		double latitude2 = -30.23;
+		int latitude1Encode = GeoEncodingUtils.encodeLatitude(latitude1);
+		int latitude2Encode = GeoEncodingUtils.encodeLatitude(latitude2);
+		System.out.println(latitude1Encode);
+		System.out.println(latitude2Encode);
+	}
 
 }

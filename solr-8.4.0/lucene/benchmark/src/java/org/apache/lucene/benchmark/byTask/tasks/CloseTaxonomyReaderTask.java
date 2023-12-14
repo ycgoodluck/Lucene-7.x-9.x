@@ -28,19 +28,19 @@ import org.apache.lucene.facet.taxonomy.TaxonomyReader;
  */
 public class CloseTaxonomyReaderTask extends PerfTask {
 
-  public CloseTaxonomyReaderTask(PerfRunData runData) {
-    super(runData);
-  }
+	public CloseTaxonomyReaderTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  public int doLogic() throws IOException {
-    try (TaxonomyReader taxoReader = getRunData().getTaxonomyReader()) {
-      getRunData().setTaxonomyReader(null);
-      if (taxoReader.getRefCount() != 1) {
-        System.out.println("WARNING: CloseTaxonomyReader: reference count is currently " + taxoReader.getRefCount());
-      }
-    }
-    return 1;
-  }
+	@Override
+	public int doLogic() throws IOException {
+		try (TaxonomyReader taxoReader = getRunData().getTaxonomyReader()) {
+			getRunData().setTaxonomyReader(null);
+			if (taxoReader.getRefCount() != 1) {
+				System.out.println("WARNING: CloseTaxonomyReader: reference count is currently " + taxoReader.getRefCount());
+			}
+		}
+		return 1;
+	}
 
 }

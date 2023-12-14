@@ -22,16 +22,17 @@ import java.io.IOException;
 /**
  * This is a result supplier that is allowed to throw an IOException.
  *
- * @see java.util.function.Supplier
  * @param <T> the suppliers result type.
+ * @see java.util.function.Supplier
  */
 @FunctionalInterface
-public interface IOSupplier<T>{
+public interface IOSupplier<T> {
 
-  /**
-   * Gets the result.
-   * @return the result
-   * @throws IOException if producing the result throws an {@link IOException}
-   */
-  T get() throws IOException;
+	/**
+	 * Gets the result.
+	 *
+	 * @return the result
+	 * @throws IOException if producing the result throws an {@link IOException}
+	 */
+	T get() throws IOException;
 }

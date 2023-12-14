@@ -29,28 +29,28 @@ import org.apache.lucene.util.AttributeFactory;
  * supplementary characters.
  */
 public class EdgeNGramTokenizer extends NGramTokenizer {
-  public static final int DEFAULT_MAX_GRAM_SIZE = 1;
-  public static final int DEFAULT_MIN_GRAM_SIZE = 1;
+	public static final int DEFAULT_MAX_GRAM_SIZE = 1;
+	public static final int DEFAULT_MIN_GRAM_SIZE = 1;
 
-  /**
-   * Creates EdgeNGramTokenizer that can generate n-grams in the sizes of the given range
-   *
-   * @param minGram the smallest n-gram to generate
-   * @param maxGram the largest n-gram to generate
-   */
-  public EdgeNGramTokenizer(int minGram, int maxGram) {
-    super(minGram, maxGram, true);
-  }
+	/**
+	 * Creates EdgeNGramTokenizer that can generate n-grams in the sizes of the given range
+	 *
+	 * @param minGram the smallest n-gram to generate
+	 * @param maxGram the largest n-gram to generate
+	 */
+	public EdgeNGramTokenizer(int minGram, int maxGram) {
+		super(minGram, maxGram, true);
+	}
 
-  /**
-   * Creates EdgeNGramTokenizer that can generate n-grams in the sizes of the given range
-   *
-   * @param factory {@link org.apache.lucene.util.AttributeFactory} to use
-   * @param minGram the smallest n-gram to generate
-   * @param maxGram the largest n-gram to generate
-   */
-  public EdgeNGramTokenizer(AttributeFactory factory, int minGram, int maxGram) {
-    super(factory, minGram, maxGram, true);
-  }
+	/**
+	 * Creates EdgeNGramTokenizer that can generate n-grams in the sizes of the given range
+	 *
+	 * @param factory {@link org.apache.lucene.util.AttributeFactory} to use
+	 * @param minGram the smallest n-gram to generate
+	 * @param maxGram the largest n-gram to generate
+	 */
+	public EdgeNGramTokenizer(AttributeFactory factory, int minGram, int maxGram) {
+		super(factory, minGram, maxGram, true);
+	}
 
 }

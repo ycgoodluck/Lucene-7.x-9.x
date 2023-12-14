@@ -21,29 +21,29 @@ package org.apache.lucene.search.join;
  */
 public enum ScoreMode {
 
-  /**
-   * Do no scoring.
-   */
-  None,
+	/**
+	 * Do no scoring.
+	 */
+	None,
 
-  /**
-   * Parent hit's score is the average of all child scores.
-   */
-  Avg,
+	/**
+	 * Parent hit's score is the average of all child scores.
+	 */
+	Avg,
 
-  /**
-   * Parent hit's score is the max of all child scores.
-   */
-  Max,
+	/**
+	 * Parent hit's score is the max of all child scores.
+	 */
+	Max,
 
-  /**
-   * Parent hit's score is the sum of all child scores.
-   */
-  Total,
+	/**
+	 * Parent hit's score is the sum of all child scores.
+	 */
+	Total,
 
-  /**
-   * Parent hit's score is the min of all child scores.
-   */
-  Min
+	/**
+	 * Parent hit's score is the min of all child scores.
+	 */
+	Min
 
 }

@@ -37,51 +37,53 @@ import org.apache.lucene.benchmark.quality.QualityQuery;
  */
 public class Trec1MQReader {
 
-  private String name;
-  
-  /**
-   *  Constructor for Trec's 1MQ TopicsReader
-   *  @param name name of name-value pair to set for all queries.
-   */
-  public Trec1MQReader(String name) {
-    super();
-    this.name = name;
-  }
+	private String name;
 
-  /**
-   * Read quality queries from trec 1MQ format topics file.
-   * @param reader where queries are read from.
-   * @return the result quality queries.
-   * @throws IOException if cannot read the queries.
-   */
-  public QualityQuery[] readQueries(BufferedReader reader) throws IOException {
-    ArrayList<QualityQuery> res = new ArrayList<>();
-    String line;
-    try {
-      while (null!=(line=reader.readLine())) {
-        line = line.trim();
-        if (line.startsWith("#")) {
-          continue;
-        }
-        // id
-        int k = line.indexOf(":");
-        String id = line.substring(0,k).trim();
-        // qtext
-        String qtext = line.substring(k+1).trim();
-        // we got a topic!
-        HashMap<String,String> fields = new HashMap<>();
-        fields.put(name,qtext);
-        //System.out.println("id: "+id+" qtext: "+qtext+"  line: "+line);
-        QualityQuery topic = new QualityQuery(id,fields);
-        res.add(topic);
-      }
-    } finally {
-      reader.close();
-    }
-    // sort result array (by ID) 
-    QualityQuery qq[] = res.toArray(new QualityQuery[0]);
-    Arrays.sort(qq);
-    return qq;
-  }
+	/**
+	 * Constructor for Trec's 1MQ TopicsReader
+	 *
+	 * @param name name of name-value pair to set for all queries.
+	 */
+	public Trec1MQReader(String name) {
+		super();
+		this.name = name;
+	}
+
+	/**
+	 * Read quality queries from trec 1MQ format topics file.
+	 *
+	 * @param reader where queries are read from.
+	 * @return the result quality queries.
+	 * @throws IOException if cannot read the queries.
+	 */
+	public QualityQuery[] readQueries(BufferedReader reader) throws IOException {
+		ArrayList<QualityQuery> res = new ArrayList<>();
+		String line;
+		try {
+			while (null != (line = reader.readLine())) {
+				line = line.trim();
+				if (line.startsWith("#")) {
+					continue;
+				}
+				// id
+				int k = line.indexOf(":");
+				String id = line.substring(0, k).trim();
+				// qtext
+				String qtext = line.substring(k + 1).trim();
+				// we got a topic!
+				HashMap<String, String> fields = new HashMap<>();
+				fields.put(name, qtext);
+				//System.out.println("id: "+id+" qtext: "+qtext+"  line: "+line);
+				QualityQuery topic = new QualityQuery(id, fields);
+				res.add(topic);
+			}
+		} finally {
+			reader.close();
+		}
+		// sort result array (by ID)
+		QualityQuery qq[] = res.toArray(new QualityQuery[0]);
+		Arrays.sort(qq);
+		return qq;
+	}
 
 }

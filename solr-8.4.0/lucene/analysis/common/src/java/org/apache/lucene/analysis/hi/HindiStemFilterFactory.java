@@ -22,8 +22,8 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
- * Factory for {@link HindiStemFilter}. 
+/**
+ * Factory for {@link HindiStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_histem" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -31,24 +31,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.HindiStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.1.0
  */
 public class HindiStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "hindiStem";
-  
-  /** Creates a new HindiStemFilterFactory */
-  public HindiStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new HindiStemFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "hindiStem";
+
+	/**
+	 * Creates a new HindiStemFilterFactory
+	 */
+	public HindiStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new HindiStemFilter(input);
+	}
 }

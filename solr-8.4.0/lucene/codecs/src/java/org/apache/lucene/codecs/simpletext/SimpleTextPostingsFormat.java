@@ -26,34 +26,38 @@ import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
 
-/** For debugging, curiosity, transparency only!!  Do not
- *  use this codec in production.
+/**
+ * For debugging, curiosity, transparency only!!  Do not
+ * use this codec in production.
  *
- *  <p>This codec stores all postings data in a single
- *  human-readable text file (_N.pst).  You can view this in
- *  any text editor, and even edit it to alter your index.
+ * <p>This codec stores all postings data in a single
+ * human-readable text file (_N.pst).  You can view this in
+ * any text editor, and even edit it to alter your index.
  *
- *  @lucene.experimental */
+ * @lucene.experimental
+ */
 final class SimpleTextPostingsFormat extends PostingsFormat {
-  
-  public SimpleTextPostingsFormat() {
-    super("SimpleText");
-  }
 
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    return new SimpleTextFieldsWriter(state);
-  }
+	public SimpleTextPostingsFormat() {
+		super("SimpleText");
+	}
 
-  @Override
-  public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
-    return new SimpleTextFieldsReader(state);
-  }
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		return new SimpleTextFieldsWriter(state);
+	}
 
-  /** Extension of freq postings file */
-  static final String POSTINGS_EXTENSION = "pst";
+	@Override
+	public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
+		return new SimpleTextFieldsReader(state);
+	}
 
-  static String getPostingsFileName(String segment, String segmentSuffix) {
-    return IndexFileNames.segmentFileName(segment, segmentSuffix, POSTINGS_EXTENSION);
-  }
+	/**
+	 * Extension of freq postings file
+	 */
+	static final String POSTINGS_EXTENSION = "pst";
+
+	static String getPostingsFileName(String segment, String segmentSuffix) {
+		return IndexFileNames.segmentFileName(segment, segmentSuffix, POSTINGS_EXTENSION);
+	}
 }

@@ -28,106 +28,106 @@ import org.apache.lucene.search.suggest.Lookup;
  */
 public class TopSuggestDocs extends TopDocs {
 
-  /**
-   * Singleton for empty {@link TopSuggestDocs}
-   */
-  public final static TopSuggestDocs EMPTY = new TopSuggestDocs(0, new SuggestScoreDoc[0], 0);
+	/**
+	 * Singleton for empty {@link TopSuggestDocs}
+	 */
+	public final static TopSuggestDocs EMPTY = new TopSuggestDocs(0, new SuggestScoreDoc[0], 0);
 
-  /**
-   * {@link org.apache.lucene.search.ScoreDoc} with an
-   * additional CharSequence key
-   */
-  public static class SuggestScoreDoc extends ScoreDoc implements Comparable<SuggestScoreDoc> {
+	/**
+	 * {@link org.apache.lucene.search.ScoreDoc} with an
+	 * additional CharSequence key
+	 */
+	public static class SuggestScoreDoc extends ScoreDoc implements Comparable<SuggestScoreDoc> {
 
-    /**
-     * Matched completion key
-     */
-    public final CharSequence key;
+		/**
+		 * Matched completion key
+		 */
+		public final CharSequence key;
 
-    /**
-     * Context for the completion
-     */
-    public final CharSequence context;
+		/**
+		 * Context for the completion
+		 */
+		public final CharSequence context;
 
-    /**
-     * Creates a SuggestScoreDoc instance
-     *
-     * @param doc   document id (hit)
-     * @param key   matched completion
-     * @param score weight of the matched completion
-     */
-    public SuggestScoreDoc(int doc, CharSequence key, CharSequence context, float score) {
-      super(doc, score);
-      this.key = key;
-      this.context = context;
-    }
+		/**
+		 * Creates a SuggestScoreDoc instance
+		 *
+		 * @param doc   document id (hit)
+		 * @param key   matched completion
+		 * @param score weight of the matched completion
+		 */
+		public SuggestScoreDoc(int doc, CharSequence key, CharSequence context, float score) {
+			super(doc, score);
+			this.key = key;
+			this.context = context;
+		}
 
-    @Override
-    public int compareTo(SuggestScoreDoc o) {
-      return Lookup.CHARSEQUENCE_COMPARATOR.compare(key, o.key);
-    }
+		@Override
+		public int compareTo(SuggestScoreDoc o) {
+			return Lookup.CHARSEQUENCE_COMPARATOR.compare(key, o.key);
+		}
 
-    @Override
-    public boolean equals(Object other) {
-      if (other instanceof SuggestScoreDoc == false) {
-        return false;
-      } else {
-        return key.equals(((SuggestScoreDoc) other).key);
-      }
-    }
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof SuggestScoreDoc == false) {
+				return false;
+			} else {
+				return key.equals(((SuggestScoreDoc) other).key);
+			}
+		}
 
-    @Override
-    public int hashCode() {
-      return key.hashCode();
-    }
+		@Override
+		public int hashCode() {
+			return key.hashCode();
+		}
 
-    @Override
-    public String toString() {
-      return "key=" + key + " doc=" + doc + " score=" + score + " shardIndex=" + shardIndex;      
-    }
-  }
+		@Override
+		public String toString() {
+			return "key=" + key + " doc=" + doc + " score=" + score + " shardIndex=" + shardIndex;
+		}
+	}
 
-  /**
-   * {@link org.apache.lucene.search.TopDocs} wrapper with
-   * {@link TopSuggestDocs.SuggestScoreDoc}
-   * instead of {@link org.apache.lucene.search.ScoreDoc}
-   */
-  public TopSuggestDocs(int totalHits, SuggestScoreDoc[] scoreDocs, float maxScore) {
-    super(totalHits, scoreDocs, maxScore);
-  }
+	/**
+	 * {@link org.apache.lucene.search.TopDocs} wrapper with
+	 * {@link TopSuggestDocs.SuggestScoreDoc}
+	 * instead of {@link org.apache.lucene.search.ScoreDoc}
+	 */
+	public TopSuggestDocs(int totalHits, SuggestScoreDoc[] scoreDocs, float maxScore) {
+		super(totalHits, scoreDocs, maxScore);
+	}
 
-  /**
-   * Returns {@link TopSuggestDocs.SuggestScoreDoc}s
-   * for this instance
-   */
-  public SuggestScoreDoc[] scoreLookupDocs() {
-    return (SuggestScoreDoc[]) scoreDocs;
-  }
+	/**
+	 * Returns {@link TopSuggestDocs.SuggestScoreDoc}s
+	 * for this instance
+	 */
+	public SuggestScoreDoc[] scoreLookupDocs() {
+		return (SuggestScoreDoc[]) scoreDocs;
+	}
 
-  /**
-   * Returns a new TopSuggestDocs, containing topN results across
-   * the provided TopSuggestDocs, sorting by score. Each {@link TopSuggestDocs}
-   * instance must be sorted.
-   * Analogous to {@link org.apache.lucene.search.TopDocs#merge(int, org.apache.lucene.search.TopDocs[])}
-   * for {@link TopSuggestDocs}
-   *
-   * NOTE: assumes every <code>shardHit</code> is already sorted by score
-   */
-  public static TopSuggestDocs merge(int topN, TopSuggestDocs[] shardHits) {
-    SuggestScoreDocPriorityQueue priorityQueue = new SuggestScoreDocPriorityQueue(topN);
-    for (TopSuggestDocs shardHit : shardHits) {
-      for (SuggestScoreDoc scoreDoc : shardHit.scoreLookupDocs()) {
-        if (scoreDoc == priorityQueue.insertWithOverflow(scoreDoc)) {
-          break;
-        }
-      }
-    }
-    SuggestScoreDoc[] topNResults = priorityQueue.getResults();
-    if (topNResults.length > 0) {
-      return new TopSuggestDocs(topNResults.length, topNResults, topNResults[0].score);
-    } else {
-      return TopSuggestDocs.EMPTY;
-    }
-  }
+	/**
+	 * Returns a new TopSuggestDocs, containing topN results across
+	 * the provided TopSuggestDocs, sorting by score. Each {@link TopSuggestDocs}
+	 * instance must be sorted.
+	 * Analogous to {@link org.apache.lucene.search.TopDocs#merge(int, org.apache.lucene.search.TopDocs[])}
+	 * for {@link TopSuggestDocs}
+	 * <p>
+	 * NOTE: assumes every <code>shardHit</code> is already sorted by score
+	 */
+	public static TopSuggestDocs merge(int topN, TopSuggestDocs[] shardHits) {
+		SuggestScoreDocPriorityQueue priorityQueue = new SuggestScoreDocPriorityQueue(topN);
+		for (TopSuggestDocs shardHit : shardHits) {
+			for (SuggestScoreDoc scoreDoc : shardHit.scoreLookupDocs()) {
+				if (scoreDoc == priorityQueue.insertWithOverflow(scoreDoc)) {
+					break;
+				}
+			}
+		}
+		SuggestScoreDoc[] topNResults = priorityQueue.getResults();
+		if (topNResults.length > 0) {
+			return new TopSuggestDocs(topNResults.length, topNResults, topNResults[0].score);
+		} else {
+			return TopSuggestDocs.EMPTY;
+		}
+	}
 
 }

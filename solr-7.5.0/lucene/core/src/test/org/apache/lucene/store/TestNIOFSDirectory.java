@@ -25,8 +25,8 @@ import java.nio.file.Path;
  */
 public class TestNIOFSDirectory extends BaseDirectoryTestCase {
 
-  @Override
-  protected Directory getDirectory(Path path) throws IOException {
-    return new NIOFSDirectory(path);
-  }
+	@Override
+	protected Directory getDirectory(Path path) throws IOException {
+		return new NIOFSDirectory(path);
+	}
 }

@@ -27,71 +27,72 @@ import org.apache.lucene.util.TestUtil;
 
 /**
  * Tests {@link Terms#getSumDocFreq()}
+ *
  * @lucene.experimental
  */
 public class TestSumDocFreq extends LuceneTestCase {
-  
-  public void testSumDocFreq() throws Exception {
-    final int numDocs = atLeast(500);
-    
-    Directory dir = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(random(), dir);
-    
-    Document doc = new Document();
-    Field id = newStringField("id", "", Field.Store.NO);
-    Field field1 = newTextField("foo", "", Field.Store.NO);
-    Field field2 = newTextField("bar", "", Field.Store.NO);
-    doc.add(id);
-    doc.add(field1);
-    doc.add(field2);
-    for (int i = 0; i < numDocs; i++) {
-      id.setStringValue("" + i);
-      char ch1 = (char) TestUtil.nextInt(random(), 'a', 'z');
-      char ch2 = (char) TestUtil.nextInt(random(), 'a', 'z');
-      field1.setStringValue("" + ch1 + " " + ch2);
-      ch1 = (char) TestUtil.nextInt(random(), 'a', 'z');
-      ch2 = (char) TestUtil.nextInt(random(), 'a', 'z');
-      field2.setStringValue("" + ch1 + " " + ch2);
-      writer.addDocument(doc);
-    }
-    
-    IndexReader ir = writer.getReader();
-    
-    assertSumDocFreq(ir);    
-    ir.close();
-    
-    int numDeletions = atLeast(20);
-    for (int i = 0; i < numDeletions; i++) {
-      writer.deleteDocuments(new Term("id", "" + random().nextInt(numDocs)));
-    }
-    writer.forceMerge(1);
-    writer.close();
-    
-    ir = DirectoryReader.open(dir);
-    assertSumDocFreq(ir);
-    ir.close();
-    dir.close();
-  }
-  
-  private void assertSumDocFreq(IndexReader ir) throws Exception {
-    // compute sumDocFreq across all fields
-    final Collection<String> fields = FieldInfos.getIndexedFields(ir);
-    for (String f : fields) {
-      Terms terms = MultiTerms.getTerms(ir, f);
-      long sumDocFreq = terms.getSumDocFreq();
-      if (sumDocFreq == -1) {
-        if (VERBOSE) {
-          System.out.println("skipping field: " + f + ", codec does not support sumDocFreq");
-        }
-        continue;
-      }
-      
-      long computedSumDocFreq = 0;
-      TermsEnum termsEnum = terms.iterator();
-      while (termsEnum.next() != null) {
-        computedSumDocFreq += termsEnum.docFreq();
-      }
-      assertEquals(computedSumDocFreq, sumDocFreq);
-    }
-  }
+
+	public void testSumDocFreq() throws Exception {
+		final int numDocs = atLeast(500);
+
+		Directory dir = newDirectory();
+		RandomIndexWriter writer = new RandomIndexWriter(random(), dir);
+
+		Document doc = new Document();
+		Field id = newStringField("id", "", Field.Store.NO);
+		Field field1 = newTextField("foo", "", Field.Store.NO);
+		Field field2 = newTextField("bar", "", Field.Store.NO);
+		doc.add(id);
+		doc.add(field1);
+		doc.add(field2);
+		for (int i = 0; i < numDocs; i++) {
+			id.setStringValue("" + i);
+			char ch1 = (char) TestUtil.nextInt(random(), 'a', 'z');
+			char ch2 = (char) TestUtil.nextInt(random(), 'a', 'z');
+			field1.setStringValue("" + ch1 + " " + ch2);
+			ch1 = (char) TestUtil.nextInt(random(), 'a', 'z');
+			ch2 = (char) TestUtil.nextInt(random(), 'a', 'z');
+			field2.setStringValue("" + ch1 + " " + ch2);
+			writer.addDocument(doc);
+		}
+
+		IndexReader ir = writer.getReader();
+
+		assertSumDocFreq(ir);
+		ir.close();
+
+		int numDeletions = atLeast(20);
+		for (int i = 0; i < numDeletions; i++) {
+			writer.deleteDocuments(new Term("id", "" + random().nextInt(numDocs)));
+		}
+		writer.forceMerge(1);
+		writer.close();
+
+		ir = DirectoryReader.open(dir);
+		assertSumDocFreq(ir);
+		ir.close();
+		dir.close();
+	}
+
+	private void assertSumDocFreq(IndexReader ir) throws Exception {
+		// compute sumDocFreq across all fields
+		final Collection<String> fields = FieldInfos.getIndexedFields(ir);
+		for (String f : fields) {
+			Terms terms = MultiTerms.getTerms(ir, f);
+			long sumDocFreq = terms.getSumDocFreq();
+			if (sumDocFreq == -1) {
+				if (VERBOSE) {
+					System.out.println("skipping field: " + f + ", codec does not support sumDocFreq");
+				}
+				continue;
+			}
+
+			long computedSumDocFreq = 0;
+			TermsEnum termsEnum = terms.iterator();
+			while (termsEnum.next() != null) {
+				computedSumDocFreq += termsEnum.docFreq();
+			}
+			assertEquals(computedSumDocFreq, sumDocFreq);
+		}
+	}
 }

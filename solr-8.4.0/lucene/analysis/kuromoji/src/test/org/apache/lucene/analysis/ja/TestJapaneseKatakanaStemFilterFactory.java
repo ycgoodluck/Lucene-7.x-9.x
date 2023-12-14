@@ -29,25 +29,28 @@ import java.util.HashMap;
  * Simple tests for {@link JapaneseKatakanaStemFilterFactory}
  */
 public class TestJapaneseKatakanaStemFilterFactory extends BaseTokenStreamTestCase {
-  public void testKatakanaStemming() throws IOException {
-    JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String,String>());
-    tokenizerFactory.inform(new StringMockResourceLoader(""));
-    TokenStream tokenStream = tokenizerFactory.create(newAttributeFactory());
-    ((Tokenizer)tokenStream).setReader(new StringReader("明後日パーティーに行く予定がある。図書館で資料をコピーしました。"));
-    JapaneseKatakanaStemFilterFactory filterFactory = new JapaneseKatakanaStemFilterFactory(new HashMap<String,String>());;
-    assertTokenStreamContents(filterFactory.create(tokenStream),
-        new String[]{ "明後日", "パーティ", "に", "行く", "予定", "が", "ある",   // パーティー should be stemmed
-                      "図書館", "で", "資料", "を", "コピー", "し", "まし", "た"} // コピー should not be stemmed
-    );
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new JapaneseKatakanaStemFilterFactory(new HashMap<String,String>() {{
-        put("bogusArg", "bogusValue");
-      }});
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testKatakanaStemming() throws IOException {
+		JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String, String>());
+		tokenizerFactory.inform(new StringMockResourceLoader(""));
+		TokenStream tokenStream = tokenizerFactory.create(newAttributeFactory());
+		((Tokenizer) tokenStream).setReader(new StringReader("明後日パーティーに行く予定がある。図書館で資料をコピーしました。"));
+		JapaneseKatakanaStemFilterFactory filterFactory = new JapaneseKatakanaStemFilterFactory(new HashMap<String, String>());
+		;
+		assertTokenStreamContents(filterFactory.create(tokenStream),
+			new String[]{"明後日", "パーティ", "に", "行く", "予定", "が", "ある",   // パーティー should be stemmed
+				"図書館", "で", "資料", "を", "コピー", "し", "まし", "た"} // コピー should not be stemmed
+		);
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new JapaneseKatakanaStemFilterFactory(new HashMap<String, String>() {{
+				put("bogusArg", "bogusValue");
+			}});
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

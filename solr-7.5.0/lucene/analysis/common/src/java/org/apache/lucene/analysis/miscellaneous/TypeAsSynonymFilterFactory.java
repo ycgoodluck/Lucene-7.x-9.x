@@ -38,18 +38,18 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * the emitted synonym will have text "_type_&lt;URL&gt;".
  */
 public class TypeAsSynonymFilterFactory extends TokenFilterFactory {
-  private final String prefix;
+	private final String prefix;
 
-  public TypeAsSynonymFilterFactory(Map<String,String> args) {
-    super(args);
-    prefix = get(args, "prefix");  // default value is null
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	public TypeAsSynonymFilterFactory(Map<String, String> args) {
+		super(args);
+		prefix = get(args, "prefix");  // default value is null
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new TypeAsSynonymFilter(input, prefix);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new TypeAsSynonymFilter(input, prefix);
+	}
 }

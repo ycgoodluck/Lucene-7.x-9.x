@@ -33,7 +33,7 @@ import org.apache.lucene.util.IOUtils;
 /**
  * Expert: A Directory instance that switches files between
  * two other Directory instances.
-
+ *
  * <p>Files with the specified extensions are placed in the
  * primary directory; others are placed in the secondary
  * directory.  The provided Set must not change once passed
@@ -49,172 +49,178 @@ import org.apache.lucene.util.IOUtils;
  */
 
 public class FileSwitchDirectory extends Directory {
-  private final Directory secondaryDir;
-  private final Directory primaryDir;
-  private final Set<String> primaryExtensions;
-  private boolean doClose;
+	private final Directory secondaryDir;
+	private final Directory primaryDir;
+	private final Set<String> primaryExtensions;
+	private boolean doClose;
 
-  public FileSwitchDirectory(Set<String> primaryExtensions, Directory primaryDir, Directory secondaryDir, boolean doClose) {
-    this.primaryExtensions = primaryExtensions;
-    this.primaryDir = primaryDir;
-    this.secondaryDir = secondaryDir;
-    this.doClose = doClose;
-  }
+	public FileSwitchDirectory(Set<String> primaryExtensions, Directory primaryDir, Directory secondaryDir, boolean doClose) {
+		this.primaryExtensions = primaryExtensions;
+		this.primaryDir = primaryDir;
+		this.secondaryDir = secondaryDir;
+		this.doClose = doClose;
+	}
 
-  /** Return the primary directory */
-  public Directory getPrimaryDir() {
-    return primaryDir;
-  }
-  
-  /** Return the secondary directory */
-  public Directory getSecondaryDir() {
-    return secondaryDir;
-  }
-  
-  @Override
-  public Lock obtainLock(String name) throws IOException {
-    return getDirectory(name).obtainLock(name);
-  }
+	/**
+	 * Return the primary directory
+	 */
+	public Directory getPrimaryDir() {
+		return primaryDir;
+	}
 
-  @Override
-  public void close() throws IOException {
-    if (doClose) {
-      IOUtils.close(primaryDir, secondaryDir);
-      doClose = false;
-    }
-  }
-  
-  @Override
-  public String[] listAll() throws IOException {
-    Set<String> files = new HashSet<>();
-    // LUCENE-3380: either or both of our dirs could be FSDirs,
-    // but if one underlying delegate is an FSDir and mkdirs() has not
-    // yet been called, because so far everything is written to the other,
-    // in this case, we don't want to throw a NoSuchFileException
-    NoSuchFileException exc = null;
-    try {
-      for(String f : primaryDir.listAll()) {
-        files.add(f);
-      }
-    } catch (NoSuchFileException e) {
-      exc = e;
-    }
-    try {
-      for(String f : secondaryDir.listAll()) {
-        files.add(f);
-      }
-    } catch (NoSuchFileException e) {
-      // we got NoSuchFileException from both dirs
-      // rethrow the first.
-      if (exc != null) {
-        throw exc;
-      }
-      // we got NoSuchFileException from the secondary,
-      // and the primary is empty.
-      if (files.isEmpty()) {
-        throw e;
-      }
-    }
-    // we got NoSuchFileException from the primary,
-    // and the secondary is empty.
-    if (exc != null && files.isEmpty()) {
-      throw exc;
-    }
-    String[] result = files.toArray(new String[files.size()]);
-    Arrays.sort(result);
-    return result;
-  }
+	/**
+	 * Return the secondary directory
+	 */
+	public Directory getSecondaryDir() {
+		return secondaryDir;
+	}
 
-  /** Utility method to return a file's extension. */
-  public static String getExtension(String name) {
-    int i = name.lastIndexOf('.');
-    if (i == -1) {
-      return "";
-    }
-    return name.substring(i+1, name.length());
-  }
+	@Override
+	public Lock obtainLock(String name) throws IOException {
+		return getDirectory(name).obtainLock(name);
+	}
 
-  private Directory getDirectory(String name) {
-    String ext = getExtension(name);
-    if (primaryExtensions.contains(ext)) {
-      return primaryDir;
-    } else {
-      return secondaryDir;
-    }
-  }
+	@Override
+	public void close() throws IOException {
+		if (doClose) {
+			IOUtils.close(primaryDir, secondaryDir);
+			doClose = false;
+		}
+	}
 
-  @Override
-  public void deleteFile(String name) throws IOException {
-    if (getDirectory(name) == primaryDir) {
-      primaryDir.deleteFile(name);
-    } else {
-      secondaryDir.deleteFile(name);
-    }
-  }
+	@Override
+	public String[] listAll() throws IOException {
+		Set<String> files = new HashSet<>();
+		// LUCENE-3380: either or both of our dirs could be FSDirs,
+		// but if one underlying delegate is an FSDir and mkdirs() has not
+		// yet been called, because so far everything is written to the other,
+		// in this case, we don't want to throw a NoSuchFileException
+		NoSuchFileException exc = null;
+		try {
+			for (String f : primaryDir.listAll()) {
+				files.add(f);
+			}
+		} catch (NoSuchFileException e) {
+			exc = e;
+		}
+		try {
+			for (String f : secondaryDir.listAll()) {
+				files.add(f);
+			}
+		} catch (NoSuchFileException e) {
+			// we got NoSuchFileException from both dirs
+			// rethrow the first.
+			if (exc != null) {
+				throw exc;
+			}
+			// we got NoSuchFileException from the secondary,
+			// and the primary is empty.
+			if (files.isEmpty()) {
+				throw e;
+			}
+		}
+		// we got NoSuchFileException from the primary,
+		// and the secondary is empty.
+		if (exc != null && files.isEmpty()) {
+			throw exc;
+		}
+		String[] result = files.toArray(new String[files.size()]);
+		Arrays.sort(result);
+		return result;
+	}
 
-  @Override
-  public long fileLength(String name) throws IOException {
-    return getDirectory(name).fileLength(name);
-  }
+	/**
+	 * Utility method to return a file's extension.
+	 */
+	public static String getExtension(String name) {
+		int i = name.lastIndexOf('.');
+		if (i == -1) {
+			return "";
+		}
+		return name.substring(i + 1, name.length());
+	}
 
-  @Override
-  public IndexOutput createOutput(String name, IOContext context) throws IOException {
-    return getDirectory(name).createOutput(name, context);
-  }
+	private Directory getDirectory(String name) {
+		String ext = getExtension(name);
+		if (primaryExtensions.contains(ext)) {
+			return primaryDir;
+		} else {
+			return secondaryDir;
+		}
+	}
 
-  @Override
-  public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) throws IOException {
-    return getDirectory("."+suffix).createTempOutput(prefix, suffix, context);
-  }
+	@Override
+	public void deleteFile(String name) throws IOException {
+		if (getDirectory(name) == primaryDir) {
+			primaryDir.deleteFile(name);
+		} else {
+			secondaryDir.deleteFile(name);
+		}
+	}
 
-  @Override
-  public void sync(Collection<String> names) throws IOException {
-    List<String> primaryNames = new ArrayList<>();
-    List<String> secondaryNames = new ArrayList<>();
+	@Override
+	public long fileLength(String name) throws IOException {
+		return getDirectory(name).fileLength(name);
+	}
 
-    for (String name : names)
-      if (primaryExtensions.contains(getExtension(name)))
-        primaryNames.add(name);
-      else
-        secondaryNames.add(name);
+	@Override
+	public IndexOutput createOutput(String name, IOContext context) throws IOException {
+		return getDirectory(name).createOutput(name, context);
+	}
 
-    primaryDir.sync(primaryNames);
-    secondaryDir.sync(secondaryNames);
-  }
+	@Override
+	public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) throws IOException {
+		return getDirectory("." + suffix).createTempOutput(prefix, suffix, context);
+	}
 
-  @Override
-  public void rename(String source, String dest) throws IOException {
-    Directory sourceDir = getDirectory(source);
-    // won't happen with standard lucene index files since pending and commit will
-    // always have the same extension ("")
-    if (sourceDir != getDirectory(dest)) {
-      throw new AtomicMoveNotSupportedException(source, dest, "source and dest are in different directories");
-    }
-    sourceDir.rename(source, dest);
-  }
+	@Override
+	public void sync(Collection<String> names) throws IOException {
+		List<String> primaryNames = new ArrayList<>();
+		List<String> secondaryNames = new ArrayList<>();
 
-  @Override
-  public void syncMetaData() throws IOException {
-    primaryDir.syncMetaData();
-    secondaryDir.syncMetaData();
-  }
+		for (String name : names)
+			if (primaryExtensions.contains(getExtension(name)))
+				primaryNames.add(name);
+			else
+				secondaryNames.add(name);
 
-  @Override
-  public IndexInput openInput(String name, IOContext context) throws IOException {
-    return getDirectory(name).openInput(name, context);
-  }
+		primaryDir.sync(primaryNames);
+		secondaryDir.sync(secondaryNames);
+	}
 
-  @Override
-  public Set<String> getPendingDeletions() throws IOException {
-    Set<String> primaryDeletions = primaryDir.getPendingDeletions();
-    Set<String> secondaryDeletions = secondaryDir.getPendingDeletions();
-    if (primaryDeletions.isEmpty() && secondaryDeletions.isEmpty()) {
-      return Collections.emptySet();
-    } else {
-      HashSet<String> combined = new HashSet<>();
-      combined.addAll(primaryDeletions);
-      combined.addAll(secondaryDeletions);
-      return Collections.unmodifiableSet(combined);
-    }
-  }
+	@Override
+	public void rename(String source, String dest) throws IOException {
+		Directory sourceDir = getDirectory(source);
+		// won't happen with standard lucene index files since pending and commit will
+		// always have the same extension ("")
+		if (sourceDir != getDirectory(dest)) {
+			throw new AtomicMoveNotSupportedException(source, dest, "source and dest are in different directories");
+		}
+		sourceDir.rename(source, dest);
+	}
+
+	@Override
+	public void syncMetaData() throws IOException {
+		primaryDir.syncMetaData();
+		secondaryDir.syncMetaData();
+	}
+
+	@Override
+	public IndexInput openInput(String name, IOContext context) throws IOException {
+		return getDirectory(name).openInput(name, context);
+	}
+
+	@Override
+	public Set<String> getPendingDeletions() throws IOException {
+		Set<String> primaryDeletions = primaryDir.getPendingDeletions();
+		Set<String> secondaryDeletions = secondaryDir.getPendingDeletions();
+		if (primaryDeletions.isEmpty() && secondaryDeletions.isEmpty()) {
+			return Collections.emptySet();
+		} else {
+			HashSet<String> combined = new HashSet<>();
+			combined.addAll(primaryDeletions);
+			combined.addAll(secondaryDeletions);
+			return Collections.unmodifiableSet(combined);
+		}
+	}
 }

@@ -27,69 +27,71 @@ import java.util.Set;
  */
 
 public class MockIndexInputWrapper extends IndexInput {
-  private MockDirectoryWrapper dir;
-  final String name;
-  private IndexInput delegate;
-  private volatile boolean closed;
+	private MockDirectoryWrapper dir;
+	final String name;
+	private IndexInput delegate;
+	private volatile boolean closed;
 
-  // Which MockIndexInputWrapper we were cloned from, or null if we are not a clone:
-  private final MockIndexInputWrapper parent;
-  
-  /** Sole constructor */
-  public MockIndexInputWrapper(MockDirectoryWrapper dir, String name, IndexInput delegate, MockIndexInputWrapper parent) {
-    super("MockIndexInputWrapper(name=" + name + " delegate=" + delegate + ")");
+	// Which MockIndexInputWrapper we were cloned from, or null if we are not a clone:
+	private final MockIndexInputWrapper parent;
 
-    // If we are a clone then our parent better not be a clone!
-    assert parent == null || parent.parent == null;
-    
-    this.parent = parent;
-    this.name = name;
-    this.dir = dir;
-    this.delegate = delegate;
-  }
+	/**
+	 * Sole constructor
+	 */
+	public MockIndexInputWrapper(MockDirectoryWrapper dir, String name, IndexInput delegate, MockIndexInputWrapper parent) {
+		super("MockIndexInputWrapper(name=" + name + " delegate=" + delegate + ")");
 
-  @Override
-  public void close() throws IOException {
-    if (closed) {
-      delegate.close(); // don't mask double-close bugs
-      return;
-    }
-    closed = true;
-    
-    try (Closeable delegate = this.delegate) {
-      // Pending resolution on LUCENE-686 we may want to
-      // remove the conditional check so we also track that
-      // all clones get closed:
-      assert delegate != null;
-      if (parent == null) {
-        dir.removeIndexInput(this, name);
-      }
-      dir.maybeThrowDeterministicException();
-    }
-  }
-  
-  private void ensureOpen() {
-    // TODO: not great this is a volatile read (closed) ... we should deploy heavy JVM voodoo like SwitchPoint to avoid this
-    if (closed) {
-      throw new RuntimeException("Abusing closed IndexInput!");
-    }
-    if (parent != null && parent.closed) {
-      throw new RuntimeException("Abusing clone of a closed IndexInput!");
-    }
-  }
+		// If we are a clone then our parent better not be a clone!
+		assert parent == null || parent.parent == null;
 
-  @Override
-  public MockIndexInputWrapper clone() {
-    ensureOpen();
-    if (dir.verboseClone) {
-      new Exception("clone: " + this).printStackTrace(System.out);
-    }
-    dir.inputCloneCount.incrementAndGet();
-    IndexInput iiclone = delegate.clone();
-    MockIndexInputWrapper clone = new MockIndexInputWrapper(dir, name, iiclone, parent != null ? parent : this);
-    // Pending resolution on LUCENE-686 we may want to
-    // uncomment this code so that we also track that all
-    // clones get closed:
+		this.parent = parent;
+		this.name = name;
+		this.dir = dir;
+		this.delegate = delegate;
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (closed) {
+			delegate.close(); // don't mask double-close bugs
+			return;
+		}
+		closed = true;
+
+		try (Closeable delegate = this.delegate) {
+			// Pending resolution on LUCENE-686 we may want to
+			// remove the conditional check so we also track that
+			// all clones get closed:
+			assert delegate != null;
+			if (parent == null) {
+				dir.removeIndexInput(this, name);
+			}
+			dir.maybeThrowDeterministicException();
+		}
+	}
+
+	private void ensureOpen() {
+		// TODO: not great this is a volatile read (closed) ... we should deploy heavy JVM voodoo like SwitchPoint to avoid this
+		if (closed) {
+			throw new RuntimeException("Abusing closed IndexInput!");
+		}
+		if (parent != null && parent.closed) {
+			throw new RuntimeException("Abusing clone of a closed IndexInput!");
+		}
+	}
+
+	@Override
+	public MockIndexInputWrapper clone() {
+		ensureOpen();
+		if (dir.verboseClone) {
+			new Exception("clone: " + this).printStackTrace(System.out);
+		}
+		dir.inputCloneCount.incrementAndGet();
+		IndexInput iiclone = delegate.clone();
+		MockIndexInputWrapper clone = new MockIndexInputWrapper(dir, name, iiclone, parent != null ? parent : this);
+		// Pending resolution on LUCENE-686 we may want to
+		// uncomment this code so that we also track that all
+		// clones get closed:
     /*
     synchronized(dir.openFiles) {
       if (dir.openFiles.containsKey(name)) {
@@ -101,127 +103,127 @@ public class MockIndexInputWrapper extends IndexInput {
       }
     }
     */
-    return clone;
-  }
+		return clone;
+	}
 
-  @Override
-  public IndexInput slice(String sliceDescription, long offset, long length) throws IOException {
-    ensureOpen();
-    if (dir.verboseClone) {
-      new Exception("slice: " + this).printStackTrace(System.out);
-    }
-    dir.inputCloneCount.incrementAndGet();
-    IndexInput slice = delegate.slice(sliceDescription, offset, length);
-    MockIndexInputWrapper clone = new MockIndexInputWrapper(dir, sliceDescription, slice, parent != null ? parent : this);
-    return clone;
-  }
+	@Override
+	public IndexInput slice(String sliceDescription, long offset, long length) throws IOException {
+		ensureOpen();
+		if (dir.verboseClone) {
+			new Exception("slice: " + this).printStackTrace(System.out);
+		}
+		dir.inputCloneCount.incrementAndGet();
+		IndexInput slice = delegate.slice(sliceDescription, offset, length);
+		MockIndexInputWrapper clone = new MockIndexInputWrapper(dir, sliceDescription, slice, parent != null ? parent : this);
+		return clone;
+	}
 
-  @Override
-  public long getFilePointer() {
-    ensureOpen();
-    return delegate.getFilePointer();
-  }
+	@Override
+	public long getFilePointer() {
+		ensureOpen();
+		return delegate.getFilePointer();
+	}
 
-  @Override
-  public void seek(long pos) throws IOException {
-    ensureOpen();
-    delegate.seek(pos);
-  }
+	@Override
+	public void seek(long pos) throws IOException {
+		ensureOpen();
+		delegate.seek(pos);
+	}
 
-  @Override
-  public long length() {
-    ensureOpen();
-    return delegate.length();
-  }
+	@Override
+	public long length() {
+		ensureOpen();
+		return delegate.length();
+	}
 
-  @Override
-  public byte readByte() throws IOException {
-    ensureOpen();
-    return delegate.readByte();
-  }
+	@Override
+	public byte readByte() throws IOException {
+		ensureOpen();
+		return delegate.readByte();
+	}
 
-  @Override
-  public void readBytes(byte[] b, int offset, int len) throws IOException {
-    ensureOpen();
-    delegate.readBytes(b, offset, len);
-  }
+	@Override
+	public void readBytes(byte[] b, int offset, int len) throws IOException {
+		ensureOpen();
+		delegate.readBytes(b, offset, len);
+	}
 
-  @Override
-  public void readBytes(byte[] b, int offset, int len, boolean useBuffer)
-      throws IOException {
-    ensureOpen();
-    delegate.readBytes(b, offset, len, useBuffer);
-  }
+	@Override
+	public void readBytes(byte[] b, int offset, int len, boolean useBuffer)
+		throws IOException {
+		ensureOpen();
+		delegate.readBytes(b, offset, len, useBuffer);
+	}
 
-  @Override
-  public short readShort() throws IOException {
-    ensureOpen();
-    return delegate.readShort();
-  }
+	@Override
+	public short readShort() throws IOException {
+		ensureOpen();
+		return delegate.readShort();
+	}
 
-  @Override
-  public int readInt() throws IOException {
-    ensureOpen();
-    return delegate.readInt();
-  }
+	@Override
+	public int readInt() throws IOException {
+		ensureOpen();
+		return delegate.readInt();
+	}
 
-  @Override
-  public long readLong() throws IOException {
-    ensureOpen();
-    return delegate.readLong();
-  }
+	@Override
+	public long readLong() throws IOException {
+		ensureOpen();
+		return delegate.readLong();
+	}
 
-  @Override
-  public String readString() throws IOException {
-    ensureOpen();
-    return delegate.readString();
-  }
+	@Override
+	public String readString() throws IOException {
+		ensureOpen();
+		return delegate.readString();
+	}
 
-  @Override
-  public int readVInt() throws IOException {
-    ensureOpen();
-    return delegate.readVInt();
-  }
+	@Override
+	public int readVInt() throws IOException {
+		ensureOpen();
+		return delegate.readVInt();
+	}
 
-  @Override
-  public long readVLong() throws IOException {
-    ensureOpen();
-    return delegate.readVLong();
-  }
+	@Override
+	public long readVLong() throws IOException {
+		ensureOpen();
+		return delegate.readVLong();
+	}
 
-  @Override
-  public int readZInt() throws IOException {
-    ensureOpen();
-    return delegate.readZInt();
-  }
+	@Override
+	public int readZInt() throws IOException {
+		ensureOpen();
+		return delegate.readZInt();
+	}
 
-  @Override
-  public long readZLong() throws IOException {
-    ensureOpen();
-    return delegate.readZLong();
-  }
+	@Override
+	public long readZLong() throws IOException {
+		ensureOpen();
+		return delegate.readZLong();
+	}
 
-  @Override
-  public void skipBytes(long numBytes) throws IOException {
-    ensureOpen();
-    super.skipBytes(numBytes);
-  }
+	@Override
+	public void skipBytes(long numBytes) throws IOException {
+		ensureOpen();
+		super.skipBytes(numBytes);
+	}
 
-  @Override
-  public Map<String,String> readMapOfStrings() throws IOException {
-    ensureOpen();
-    return delegate.readMapOfStrings();
-  }
+	@Override
+	public Map<String, String> readMapOfStrings() throws IOException {
+		ensureOpen();
+		return delegate.readMapOfStrings();
+	}
 
-  @Override
-  public Set<String> readSetOfStrings() throws IOException {
-    ensureOpen();
-    return delegate.readSetOfStrings();
-  }
+	@Override
+	public Set<String> readSetOfStrings() throws IOException {
+		ensureOpen();
+		return delegate.readSetOfStrings();
+	}
 
-  @Override
-  public String toString() {
-    return "MockIndexInputWrapper(" + delegate + ")";
-  }
+	@Override
+	public String toString() {
+		return "MockIndexInputWrapper(" + delegate + ")";
+	}
 }
 

@@ -29,149 +29,160 @@ import java.io.IOException;
  */
 class dXYdZSolid extends BaseXYZSolid {
 
-  /** X */
-  protected final double X;
-  /** Min-Y */
-  protected final double minY;
-  /** Max-Y */
-  protected final double maxY;
-  /** Z */
-  protected final double Z;
+	/**
+	 * X
+	 */
+	protected final double X;
+	/**
+	 * Min-Y
+	 */
+	protected final double minY;
+	/**
+	 * Max-Y
+	 */
+	protected final double maxY;
+	/**
+	 * Z
+	 */
+	protected final double Z;
 
-  /** The points in this figure on the planet surface; also doubles for edge points */
-  protected final GeoPoint[] surfacePoints;
-  
-  /**
-   * Sole constructor
-   *
-   *@param planetModel is the planet model.
-   *@param X is the X value.
-   *@param minY is the minimum Y value.
-   *@param maxY is the maximum Y value.
-   *@param Z is the Z value.
-   */
-  public dXYdZSolid(final PlanetModel planetModel,
-    final double X,
-    final double minY,
-    final double maxY,
-    final double Z) {
-    super(planetModel);
-    // Argument checking
-    if (maxY - minY < Vector.MINIMUM_RESOLUTION)
-      throw new IllegalArgumentException("Y values in wrong order or identical");
+	/**
+	 * The points in this figure on the planet surface; also doubles for edge points
+	 */
+	protected final GeoPoint[] surfacePoints;
 
-    this.X = X;
-    this.minY = minY;
-    this.maxY = maxY;
-    this.Z = Z;
+	/**
+	 * Sole constructor
+	 *
+	 * @param planetModel is the planet model.
+	 * @param X           is the X value.
+	 * @param minY        is the minimum Y value.
+	 * @param maxY        is the maximum Y value.
+	 * @param Z           is the Z value.
+	 */
+	public dXYdZSolid(final PlanetModel planetModel,
+										final double X,
+										final double minY,
+										final double maxY,
+										final double Z) {
+		super(planetModel);
+		// Argument checking
+		if (maxY - minY < Vector.MINIMUM_RESOLUTION)
+			throw new IllegalArgumentException("Y values in wrong order or identical");
 
-    // Build the planes and intersect them.
-    final Plane xPlane = new Plane(xUnitVector,-X);
-    final Plane zPlane = new Plane(zUnitVector,-Z);
-    final SidedPlane minYPlane = new SidedPlane(0.0,maxY,0.0,yUnitVector,-minY);
-    final SidedPlane maxYPlane = new SidedPlane(0.0,minY,0.0,yUnitVector,-maxY);
-    surfacePoints = xPlane.findIntersections(planetModel,zPlane,minYPlane,maxYPlane);
-  }
+		this.X = X;
+		this.minY = minY;
+		this.maxY = maxY;
+		this.Z = Z;
 
-  /**
-   * Constructor for deserialization.
-   * @param planetModel is the planet model.
-   * @param inputStream is the input stream.
-   */
-  public dXYdZSolid(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
-    this(planetModel, 
-      SerializableObject.readDouble(inputStream),
-      SerializableObject.readDouble(inputStream),
-      SerializableObject.readDouble(inputStream),
-      SerializableObject.readDouble(inputStream));
-  }
+		// Build the planes and intersect them.
+		final Plane xPlane = new Plane(xUnitVector, -X);
+		final Plane zPlane = new Plane(zUnitVector, -Z);
+		final SidedPlane minYPlane = new SidedPlane(0.0, maxY, 0.0, yUnitVector, -minY);
+		final SidedPlane maxYPlane = new SidedPlane(0.0, minY, 0.0, yUnitVector, -maxY);
+		surfacePoints = xPlane.findIntersections(planetModel, zPlane, minYPlane, maxYPlane);
+	}
 
-  @Override
-  public void write(final OutputStream outputStream) throws IOException {
-    SerializableObject.writeDouble(outputStream, X);
-    SerializableObject.writeDouble(outputStream, minY);
-    SerializableObject.writeDouble(outputStream, maxY);
-    SerializableObject.writeDouble(outputStream, Z);
-  }
+	/**
+	 * Constructor for deserialization.
+	 *
+	 * @param planetModel is the planet model.
+	 * @param inputStream is the input stream.
+	 */
+	public dXYdZSolid(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
+		this(planetModel,
+			SerializableObject.readDouble(inputStream),
+			SerializableObject.readDouble(inputStream),
+			SerializableObject.readDouble(inputStream),
+			SerializableObject.readDouble(inputStream));
+	}
 
-  @Override
-  protected GeoPoint[] getEdgePoints() {
-    return surfacePoints;
-  }
-  
-  @Override
-  public boolean isWithin(final double x, final double y, final double z) {
-    for (final GeoPoint p : surfacePoints) {
-      if (p.isIdentical(x,y,z))
-        return true;
-    }
-    return false;
-  }
+	@Override
+	public void write(final OutputStream outputStream) throws IOException {
+		SerializableObject.writeDouble(outputStream, X);
+		SerializableObject.writeDouble(outputStream, minY);
+		SerializableObject.writeDouble(outputStream, maxY);
+		SerializableObject.writeDouble(outputStream, Z);
+	}
 
-  @Override
-  public int getRelationship(final GeoShape path) {
-    //System.err.println(this+" getrelationship with "+path);
-    final int insideRectangle = isShapeInsideArea(path);
-    if (insideRectangle == SOME_INSIDE) {
-      //System.err.println(" some inside");
-      return OVERLAPS;
-    }
+	@Override
+	protected GeoPoint[] getEdgePoints() {
+		return surfacePoints;
+	}
 
-    // Figure out if the entire XYZArea is contained by the shape.
-    final int insideShape = isAreaInsideShape(path);
-    if (insideShape == SOME_INSIDE) {
-      return OVERLAPS;
-    }
+	@Override
+	public boolean isWithin(final double x, final double y, final double z) {
+		for (final GeoPoint p : surfacePoints) {
+			if (p.isIdentical(x, y, z))
+				return true;
+		}
+		return false;
+	}
 
-    if (insideRectangle == ALL_INSIDE && insideShape == ALL_INSIDE) {
-      //System.err.println(" inside of each other");
-      return OVERLAPS;
-    }
+	@Override
+	public int getRelationship(final GeoShape path) {
+		//System.err.println(this+" getrelationship with "+path);
+		final int insideRectangle = isShapeInsideArea(path);
+		if (insideRectangle == SOME_INSIDE) {
+			//System.err.println(" some inside");
+			return OVERLAPS;
+		}
 
-    if (insideRectangle == ALL_INSIDE) {
-      return WITHIN;
-    }
-    
-    if (insideShape == ALL_INSIDE) {
-      //System.err.println(" shape contains rectangle");
-      return CONTAINS;
-    }
-    //System.err.println(" disjoint");
-    return DISJOINT;
-  }
+		// Figure out if the entire XYZArea is contained by the shape.
+		final int insideShape = isAreaInsideShape(path);
+		if (insideShape == SOME_INSIDE) {
+			return OVERLAPS;
+		}
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof dXYdZSolid))
-      return false;
-    dXYdZSolid other = (dXYdZSolid) o;
-    if (!super.equals(other) || surfacePoints.length != other.surfacePoints.length ) {
-      return false;
-    }
-    for (int i = 0; i < surfacePoints.length; i++) {
-      if (!surfacePoints[i].equals(other.surfacePoints[i]))
-        return false;
-    }
-    return true;
-  }
+		if (insideRectangle == ALL_INSIDE && insideShape == ALL_INSIDE) {
+			//System.err.println(" inside of each other");
+			return OVERLAPS;
+		}
 
-  @Override
-  public int hashCode() {
-    int result = super.hashCode();
-    for (final GeoPoint p : surfacePoints) {
-      result = 31 * result  + p.hashCode();
-    }
-    return result;
-  }
+		if (insideRectangle == ALL_INSIDE) {
+			return WITHIN;
+		}
 
-  @Override
-  public String toString() {
-    final StringBuilder sb = new StringBuilder();
-    for (final GeoPoint p : surfacePoints) {
-      sb.append(" ").append(p).append(" ");
-    }
-    return "dXYdZSolid: {planetmodel="+planetModel+", "+sb.toString()+"}";
-  }
-  
+		if (insideShape == ALL_INSIDE) {
+			//System.err.println(" shape contains rectangle");
+			return CONTAINS;
+		}
+		//System.err.println(" disjoint");
+		return DISJOINT;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof dXYdZSolid))
+			return false;
+		dXYdZSolid other = (dXYdZSolid) o;
+		if (!super.equals(other) || surfacePoints.length != other.surfacePoints.length) {
+			return false;
+		}
+		for (int i = 0; i < surfacePoints.length; i++) {
+			if (!surfacePoints[i].equals(other.surfacePoints[i]))
+				return false;
+		}
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		for (final GeoPoint p : surfacePoints) {
+			result = 31 * result + p.hashCode();
+		}
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		for (final GeoPoint p : surfacePoints) {
+			sb.append(" ").append(p).append(" ");
+		}
+		return "dXYdZSolid: {planetmodel=" + planetModel + ", " + sb.toString() + "}";
+	}
+
 }
-  
+

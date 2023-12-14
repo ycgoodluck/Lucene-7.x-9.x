@@ -19,13 +19,15 @@ package org.apache.lucene.luke.app.desktop.util;
 
 import java.util.Objects;
 
-/** Utilities for handling strings */
+/**
+ * Utilities for handling strings
+ */
 public class StringUtils {
 
-  public static boolean isNullOrEmpty(String s) {
-    return Objects.isNull(s) || s.equals("");
-  }
+	public static boolean isNullOrEmpty(String s) {
+		return Objects.isNull(s) || s.equals("");
+	}
 
-  private StringUtils() {
-  }
+	private StringUtils() {
+	}
 }

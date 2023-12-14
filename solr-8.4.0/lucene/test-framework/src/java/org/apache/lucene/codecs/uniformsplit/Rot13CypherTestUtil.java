@@ -28,45 +28,45 @@ import org.apache.lucene.util.BytesRef;
  */
 public class Rot13CypherTestUtil {
 
-  private static final int ENCODING_OFFSET = 7;
-  private static final int ENCODING_ROTATION = 13;
+	private static final int ENCODING_OFFSET = 7;
+	private static final int ENCODING_ROTATION = 13;
 
-  public static byte[] encode(DataInput bytesInput, int length) throws IOException {
-    byte[] encodedBytes = new byte[length + ENCODING_OFFSET];
-    for (int i = 0; i < length; i++) {
-      encodedBytes[i + ENCODING_OFFSET] = (byte)(bytesInput.readByte() + ENCODING_ROTATION);
-    }
-    return encodedBytes;
-  }
+	public static byte[] encode(DataInput bytesInput, int length) throws IOException {
+		byte[] encodedBytes = new byte[length + ENCODING_OFFSET];
+		for (int i = 0; i < length; i++) {
+			encodedBytes[i + ENCODING_OFFSET] = (byte) (bytesInput.readByte() + ENCODING_ROTATION);
+		}
+		return encodedBytes;
+	}
 
-  public static byte[] decode(DataInput bytesInput, long length) throws IOException {
-    length -= ENCODING_OFFSET;
-    bytesInput.skipBytes(ENCODING_OFFSET);
-    byte[] decodedBytes = new byte[Math.toIntExact(length)];
-    for (int i = 0; i < length; i++) {
-      decodedBytes[i] = (byte)(bytesInput.readByte() - ENCODING_ROTATION);
-    }
-    return decodedBytes;
-  }
+	public static byte[] decode(DataInput bytesInput, long length) throws IOException {
+		length -= ENCODING_OFFSET;
+		bytesInput.skipBytes(ENCODING_OFFSET);
+		byte[] decodedBytes = new byte[Math.toIntExact(length)];
+		for (int i = 0; i < length; i++) {
+			decodedBytes[i] = (byte) (bytesInput.readByte() - ENCODING_ROTATION);
+		}
+		return decodedBytes;
+	}
 
-  public static BlockEncoder getBlockEncoder() {
-    return (blockBytes, length) -> {
-      byte[] encodedBytes = Rot13CypherTestUtil.encode(blockBytes, Math.toIntExact(length));
-      return new BlockEncoder.WritableBytes() {
-        @Override
-        public long size() {
-          return encodedBytes.length;
-        }
+	public static BlockEncoder getBlockEncoder() {
+		return (blockBytes, length) -> {
+			byte[] encodedBytes = Rot13CypherTestUtil.encode(blockBytes, Math.toIntExact(length));
+			return new BlockEncoder.WritableBytes() {
+				@Override
+				public long size() {
+					return encodedBytes.length;
+				}
 
-        @Override
-        public void writeTo(DataOutput dataOutput) throws IOException {
-          dataOutput.writeBytes(encodedBytes, 0, encodedBytes.length);
-        }
-      };
-    };
-  }
+				@Override
+				public void writeTo(DataOutput dataOutput) throws IOException {
+					dataOutput.writeBytes(encodedBytes, 0, encodedBytes.length);
+				}
+			};
+		};
+	}
 
-  public static BlockDecoder getBlockDecoder() {
-    return (blockBytes, length) -> new BytesRef(Rot13CypherTestUtil.decode(blockBytes, length));
-  }
+	public static BlockDecoder getBlockDecoder() {
+		return (blockBytes, length) -> new BytesRef(Rot13CypherTestUtil.decode(blockBytes, length));
+	}
 }

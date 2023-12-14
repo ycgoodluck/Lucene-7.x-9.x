@@ -25,24 +25,24 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IOContext;
 
 class CrankyCompoundFormat extends CompoundFormat {
-  CompoundFormat delegate;
-  Random random;
-  
-  CrankyCompoundFormat(CompoundFormat delegate, Random random) {
-    this.delegate = delegate;
-    this.random = random;
-  }
-  
-  @Override
-  public Directory getCompoundReader(Directory dir, SegmentInfo si, IOContext context) throws IOException {
-    return delegate.getCompoundReader(dir, si, context);
-  }
-  
-  @Override
-  public void write(Directory dir, SegmentInfo si, IOContext context) throws IOException {
-    if (random.nextInt(100) == 0) {
-      throw new IOException("Fake IOException from CompoundFormat.write()");
-    }
-    delegate.write(dir, si, context);
-  }
+	CompoundFormat delegate;
+	Random random;
+
+	CrankyCompoundFormat(CompoundFormat delegate, Random random) {
+		this.delegate = delegate;
+		this.random = random;
+	}
+
+	@Override
+	public Directory getCompoundReader(Directory dir, SegmentInfo si, IOContext context) throws IOException {
+		return delegate.getCompoundReader(dir, si, context);
+	}
+
+	@Override
+	public void write(Directory dir, SegmentInfo si, IOContext context) throws IOException {
+		if (random.nextInt(100) == 0) {
+			throw new IOException("Fake IOException from CompoundFormat.write()");
+		}
+		delegate.write(dir, si, context);
+	}
 }

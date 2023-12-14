@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.lucene.analysis;
+
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
@@ -31,62 +32,61 @@ import java.nio.charset.StandardCharsets;
  **/
 public final class MockPayloadAnalyzer extends Analyzer {
 
-  @Override
-  public TokenStreamComponents createComponents(String fieldName) {
-    Tokenizer result = new MockTokenizer( MockTokenizer.WHITESPACE, true);
-    return new TokenStreamComponents(result, new MockPayloadFilter(result, fieldName));
-  }
+	@Override
+	public TokenStreamComponents createComponents(String fieldName) {
+		Tokenizer result = new MockTokenizer(MockTokenizer.WHITESPACE, true);
+		return new TokenStreamComponents(result, new MockPayloadFilter(result, fieldName));
+	}
 }
 
 /**
  *
- *
  **/
 final class MockPayloadFilter extends TokenFilter {
-  String fieldName;
+	String fieldName;
 
-  int pos;
+	int pos;
 
-  int i;
+	int i;
 
-  final PositionIncrementAttribute posIncrAttr;
-  final PayloadAttribute payloadAttr;
-  final CharTermAttribute termAttr;
+	final PositionIncrementAttribute posIncrAttr;
+	final PayloadAttribute payloadAttr;
+	final CharTermAttribute termAttr;
 
-  public MockPayloadFilter(TokenStream input, String fieldName) {
-    super(input);
-    this.fieldName = fieldName;
-    pos = 0;
-    i = 0;
-    posIncrAttr = input.addAttribute(PositionIncrementAttribute.class);
-    payloadAttr = input.addAttribute(PayloadAttribute.class);
-    termAttr = input.addAttribute(CharTermAttribute.class);
-  }
+	public MockPayloadFilter(TokenStream input, String fieldName) {
+		super(input);
+		this.fieldName = fieldName;
+		pos = 0;
+		i = 0;
+		posIncrAttr = input.addAttribute(PositionIncrementAttribute.class);
+		payloadAttr = input.addAttribute(PayloadAttribute.class);
+		termAttr = input.addAttribute(CharTermAttribute.class);
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      payloadAttr.setPayload(new BytesRef(("pos: " + pos).getBytes(StandardCharsets.UTF_8)));
-      int posIncr;
-      if (pos == 0 || i % 2 == 1) {
-        posIncr = 1;
-      } else {
-        posIncr = 0;
-      }
-      posIncrAttr.setPositionIncrement(posIncr);
-      pos += posIncr;
-      i++;
-      return true;
-    } else {
-      return false;
-    }
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			payloadAttr.setPayload(new BytesRef(("pos: " + pos).getBytes(StandardCharsets.UTF_8)));
+			int posIncr;
+			if (pos == 0 || i % 2 == 1) {
+				posIncr = 1;
+			} else {
+				posIncr = 0;
+			}
+			posIncrAttr.setPositionIncrement(posIncr);
+			pos += posIncr;
+			i++;
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    i = 0;
-    pos = 0;
-  }
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		i = 0;
+		pos = 0;
+	}
 }
 

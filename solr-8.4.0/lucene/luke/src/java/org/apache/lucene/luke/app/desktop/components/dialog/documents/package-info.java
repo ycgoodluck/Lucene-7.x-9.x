@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Dialogs used in the Documents tab */
+/**
+ * Dialogs used in the Documents tab
+ */
 package org.apache.lucene.luke.app.desktop.components.dialog.documents;

@@ -29,12 +29,12 @@ import org.apache.lucene.search.SortField;
  * <pre class="prettyprint">
  *   // compile an expression:
  *   Expression expr = JavascriptCompiler.compile("sqrt(_score) + ln(popularity)");
- *   
+ *
  *   // SimpleBindings just maps variables to SortField instances
  *   SimpleBindings bindings = new SimpleBindings();
  *   bindings.add(new SortField("_score", SortField.Type.SCORE));
  *   bindings.add(new SortField("popularity", SortField.Type.INT));
- *   
+ *
  *   // create a sort field and sort by it (reverse order)
  *   Sort sort = new Sort(expr.getSortField(bindings, true));
  *   Query query = new TermQuery(new Term("body", "contents"));
@@ -58,53 +58,63 @@ import org.apache.lucene.search.SortField;
  *       expr.getDoubleValuesSource(bindings));
  *   searcher.search(query, 10);
  * </pre>
- * @see JavascriptCompiler#compile
+ *
  * @lucene.experimental
+ * @see JavascriptCompiler#compile
  */
 public abstract class Expression {
 
-  /** The original source text */
-  public final String sourceText;
+	/**
+	 * The original source text
+	 */
+	public final String sourceText;
 
-  /** Named variables referred to by this expression */
-  public final String[] variables;
+	/**
+	 * Named variables referred to by this expression
+	 */
+	public final String[] variables;
 
-  /**
-   * Creates a new {@code Expression}.
-   *
-   * @param sourceText Source text for the expression: e.g. {@code ln(popularity)}
-   * @param variables Names of external variables referred to by the expression
-   */
-  protected Expression(String sourceText, String[] variables) {
-    this.sourceText = sourceText;
-    this.variables = variables;
-  }
+	/**
+	 * Creates a new {@code Expression}.
+	 *
+	 * @param sourceText Source text for the expression: e.g. {@code ln(popularity)}
+	 * @param variables  Names of external variables referred to by the expression
+	 */
+	protected Expression(String sourceText, String[] variables) {
+		this.sourceText = sourceText;
+		this.variables = variables;
+	}
 
-  /**
-   * Evaluates the expression for the current document.
-   *
-   * @param functionValues {@link DoubleValues} for each element of {@link #variables}.
-   * @return The computed value of the expression for the given document.
-   */
-  public abstract double evaluate(DoubleValues[] functionValues);
+	/**
+	 * Evaluates the expression for the current document.
+	 *
+	 * @param functionValues {@link DoubleValues} for each element of {@link #variables}.
+	 * @return The computed value of the expression for the given document.
+	 */
+	public abstract double evaluate(DoubleValues[] functionValues);
 
-  /**
-   * Get a DoubleValuesSource which can compute the value of this expression in the context of the given bindings.
-   * @param bindings Bindings to use for external values in this expression
-   * @return A DoubleValuesSource which will evaluate this expression when used
-   */
-  public DoubleValuesSource getDoubleValuesSource(Bindings bindings) {
-    return new ExpressionValueSource(bindings, this);
-  }
-  
-  /** Get a sort field which can be used to rank documents by this expression. */
-  public SortField getSortField(Bindings bindings, boolean reverse) {
-    return getDoubleValuesSource(bindings).getSortField(reverse);
-  }
+	/**
+	 * Get a DoubleValuesSource which can compute the value of this expression in the context of the given bindings.
+	 *
+	 * @param bindings Bindings to use for external values in this expression
+	 * @return A DoubleValuesSource which will evaluate this expression when used
+	 */
+	public DoubleValuesSource getDoubleValuesSource(Bindings bindings) {
+		return new ExpressionValueSource(bindings, this);
+	}
 
-  /** Get a {@link Rescorer}, to rescore first-pass hits
-   *  using this expression. */
-  public Rescorer getRescorer(Bindings bindings) {
-    return new ExpressionRescorer(this, bindings);
-  }
+	/**
+	 * Get a sort field which can be used to rank documents by this expression.
+	 */
+	public SortField getSortField(Bindings bindings, boolean reverse) {
+		return getDoubleValuesSource(bindings).getSortField(reverse);
+	}
+
+	/**
+	 * Get a {@link Rescorer}, to rescore first-pass hits
+	 * using this expression.
+	 */
+	public Rescorer getRescorer(Bindings bindings) {
+		return new ExpressionRescorer(this, bindings);
+	}
 }

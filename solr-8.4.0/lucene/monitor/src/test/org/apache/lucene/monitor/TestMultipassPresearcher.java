@@ -36,88 +36,88 @@ import org.apache.lucene.util.BytesRef;
 
 public class TestMultipassPresearcher extends PresearcherTestBase {
 
-  @Override
-  protected Presearcher createPresearcher() {
-    return new MultipassTermFilteredPresearcher(4);
-  }
+	@Override
+	protected Presearcher createPresearcher() {
+		return new MultipassTermFilteredPresearcher(4);
+	}
 
-  public void testSimpleBoolean() throws IOException {
+	public void testSimpleBoolean() throws IOException {
 
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(
-          new MonitorQuery("1", parse("field:\"hello world\"")),
-          new MonitorQuery("2", parse("field:world")),
-          new MonitorQuery("3", parse("field:\"hello there world\"")),
-          new MonitorQuery("4", parse("field:\"this and that\"")));
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(
+				new MonitorQuery("1", parse("field:\"hello world\"")),
+				new MonitorQuery("2", parse("field:world")),
+				new MonitorQuery("3", parse("field:\"hello there world\"")),
+				new MonitorQuery("4", parse("field:\"this and that\"")));
 
-      MatchingQueries<QueryMatch> matches = monitor.match(buildDoc("field", "hello world and goodbye"),
-          QueryMatch.SIMPLE_MATCHER);
-      assertEquals(2, matches.getQueriesRun());
-      assertNotNull(matches.matches("1"));
-    }
-  }
+			MatchingQueries<QueryMatch> matches = monitor.match(buildDoc("field", "hello world and goodbye"),
+				QueryMatch.SIMPLE_MATCHER);
+			assertEquals(2, matches.getQueriesRun());
+			assertNotNull(matches.matches("1"));
+		}
+	}
 
-  public void testComplexBoolean() throws IOException {
+	public void testComplexBoolean() throws IOException {
 
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", parse("field:(+foo +bar +(badger cormorant))")));
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(new MonitorQuery("1", parse("field:(+foo +bar +(badger cormorant))")));
 
-      MatchingQueries<QueryMatch> matches
-          = monitor.match(buildDoc("field", "a badger walked into a bar"), QueryMatch.SIMPLE_MATCHER);
-      assertEquals(0, matches.getMatchCount());
-      assertEquals(0, matches.getQueriesRun());
+			MatchingQueries<QueryMatch> matches
+				= monitor.match(buildDoc("field", "a badger walked into a bar"), QueryMatch.SIMPLE_MATCHER);
+			assertEquals(0, matches.getMatchCount());
+			assertEquals(0, matches.getQueriesRun());
 
-      matches = monitor.match(buildDoc("field", "foo badger cormorant"), QueryMatch.SIMPLE_MATCHER);
-      assertEquals(0, matches.getMatchCount());
-      assertEquals(0, matches.getQueriesRun());
+			matches = monitor.match(buildDoc("field", "foo badger cormorant"), QueryMatch.SIMPLE_MATCHER);
+			assertEquals(0, matches.getMatchCount());
+			assertEquals(0, matches.getQueriesRun());
 
-      matches = monitor.match(buildDoc("field", "bar badger foo"), QueryMatch.SIMPLE_MATCHER);
-      assertEquals(1, matches.getMatchCount());
-    }
+			matches = monitor.match(buildDoc("field", "bar badger foo"), QueryMatch.SIMPLE_MATCHER);
+			assertEquals(1, matches.getMatchCount());
+		}
 
-  }
+	}
 
-  public void testQueryBuilder() throws IOException {
+	public void testQueryBuilder() throws IOException {
 
-    IndexWriterConfig iwc = new IndexWriterConfig(new KeywordAnalyzer());
-    Presearcher presearcher = createPresearcher();
+		IndexWriterConfig iwc = new IndexWriterConfig(new KeywordAnalyzer());
+		Presearcher presearcher = createPresearcher();
 
-    Directory dir = new ByteBuffersDirectory();
-    IndexWriter writer = new IndexWriter(dir, iwc);
-    MonitorConfiguration config = new MonitorConfiguration(){
-      @Override
-      public IndexWriter buildIndexWriter() {
-        return writer;
-      }
-    };
-    try (Monitor monitor = new Monitor(ANALYZER, presearcher, config)) {
+		Directory dir = new ByteBuffersDirectory();
+		IndexWriter writer = new IndexWriter(dir, iwc);
+		MonitorConfiguration config = new MonitorConfiguration() {
+			@Override
+			public IndexWriter buildIndexWriter() {
+				return writer;
+			}
+		};
+		try (Monitor monitor = new Monitor(ANALYZER, presearcher, config)) {
 
-      monitor.register(new MonitorQuery("1", parse("f:test")));
+			monitor.register(new MonitorQuery("1", parse("f:test")));
 
-      try (IndexReader reader = DirectoryReader.open(writer, false, false)) {
+			try (IndexReader reader = DirectoryReader.open(writer, false, false)) {
 
-        MemoryIndex mindex = new MemoryIndex();
-        mindex.addField("f", "this is a test document", WHITESPACE);
-        LeafReader docsReader = (LeafReader) mindex.createSearcher().getIndexReader();
+				MemoryIndex mindex = new MemoryIndex();
+				mindex.addField("f", "this is a test document", WHITESPACE);
+				LeafReader docsReader = (LeafReader) mindex.createSearcher().getIndexReader();
 
-        QueryIndex.QueryTermFilter termFilter = new QueryIndex.QueryTermFilter(reader);
+				QueryIndex.QueryTermFilter termFilter = new QueryIndex.QueryTermFilter(reader);
 
-        BooleanQuery q = (BooleanQuery) presearcher.buildQuery(docsReader, termFilter);
-        BooleanQuery expected = new BooleanQuery.Builder()
-            .add(should(new BooleanQuery.Builder()
-                .add(must(new BooleanQuery.Builder().add(should(new TermInSetQuery("f_0", new BytesRef("test")))).build()))
-                .add(must(new BooleanQuery.Builder().add(should(new TermInSetQuery("f_1", new BytesRef("test")))).build()))
-                .add(must(new BooleanQuery.Builder().add(should(new TermInSetQuery("f_2", new BytesRef("test")))).build()))
-                .add(must(new BooleanQuery.Builder().add(should(new TermInSetQuery("f_3", new BytesRef("test")))).build()))
-                .build()))
-            .add(should(new TermQuery(new Term("__anytokenfield", "__ANYTOKEN__"))))
-            .build();
+				BooleanQuery q = (BooleanQuery) presearcher.buildQuery(docsReader, termFilter);
+				BooleanQuery expected = new BooleanQuery.Builder()
+					.add(should(new BooleanQuery.Builder()
+						.add(must(new BooleanQuery.Builder().add(should(new TermInSetQuery("f_0", new BytesRef("test")))).build()))
+						.add(must(new BooleanQuery.Builder().add(should(new TermInSetQuery("f_1", new BytesRef("test")))).build()))
+						.add(must(new BooleanQuery.Builder().add(should(new TermInSetQuery("f_2", new BytesRef("test")))).build()))
+						.add(must(new BooleanQuery.Builder().add(should(new TermInSetQuery("f_3", new BytesRef("test")))).build()))
+						.build()))
+					.add(should(new TermQuery(new Term("__anytokenfield", "__ANYTOKEN__"))))
+					.build();
 
-        assertEquals(expected, q);
-      }
+				assertEquals(expected, q);
+			}
 
-    }
+		}
 
-  }
+	}
 
 }

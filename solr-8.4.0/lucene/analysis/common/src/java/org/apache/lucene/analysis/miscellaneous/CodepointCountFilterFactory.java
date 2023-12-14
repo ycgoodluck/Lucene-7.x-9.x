@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link CodepointCountFilter}. 
+ * Factory for {@link CodepointCountFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_lngth" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -31,31 +31,36 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.CodepointCountFilterFactory" min="0" max="1" /&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 4.5.1
+ *
  * @lucene.spi {@value #NAME}
+ * @since 4.5.1
  */
 public class CodepointCountFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "codepointCount";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "codepointCount";
 
-  final int min;
-  final int max;
-  public static final String MIN_KEY = "min";
-  public static final String MAX_KEY = "max";
+	final int min;
+	final int max;
+	public static final String MIN_KEY = "min";
+	public static final String MAX_KEY = "max";
 
-  /** Creates a new CodepointCountFilterFactory */
-  public CodepointCountFilterFactory(Map<String, String> args) {
-    super(args);
-    min = requireInt(args, MIN_KEY);
-    max = requireInt(args, MAX_KEY);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public CodepointCountFilter create(TokenStream input) {
-    return new CodepointCountFilter(input, min, max);
-  }
+	/**
+	 * Creates a new CodepointCountFilterFactory
+	 */
+	public CodepointCountFilterFactory(Map<String, String> args) {
+		super(args);
+		min = requireInt(args, MIN_KEY);
+		max = requireInt(args, MAX_KEY);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public CodepointCountFilter create(TokenStream input) {
+		return new CodepointCountFilter(input, min, max);
+	}
 }

@@ -24,63 +24,71 @@ package org.apache.lucene.spatial3d.geom;
  */
 public abstract class GeoBaseDistanceShape extends GeoBaseAreaShape implements GeoDistanceShape {
 
-  /** Constructor.
-   *@param planetModel is the planet model to use.
-   */
-  public GeoBaseDistanceShape(final PlanetModel planetModel) {
-    super(planetModel);
-  }
+	/**
+	 * Constructor.
+	 *
+	 * @param planetModel is the planet model to use.
+	 */
+	public GeoBaseDistanceShape(final PlanetModel planetModel) {
+		super(planetModel);
+	}
 
-  @Override
-  public boolean isWithin(Vector point) {
-    return isWithin(point.x, point.y, point.z);
-  }
+	@Override
+	public boolean isWithin(Vector point) {
+		return isWithin(point.x, point.y, point.z);
+	}
 
-  @Override
-  public double computeDistance(final DistanceStyle distanceStyle, final GeoPoint point) {
-    return computeDistance(distanceStyle, point.x, point.y, point.z);
-  }
+	@Override
+	public double computeDistance(final DistanceStyle distanceStyle, final GeoPoint point) {
+		return computeDistance(distanceStyle, point.x, point.y, point.z);
+	}
 
-  @Override
-  public double computeDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z) {
-    if (!isWithin(x,y,z)) {
-      return Double.POSITIVE_INFINITY;
-    }
-    return distance(distanceStyle, x, y, z);
-  }
+	@Override
+	public double computeDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z) {
+		if (!isWithin(x, y, z)) {
+			return Double.POSITIVE_INFINITY;
+		}
+		return distance(distanceStyle, x, y, z);
+	}
 
-  /** Called by a {@code computeDistance} method if X/Y/Z is within this shape. */
-  protected abstract double distance(final DistanceStyle distanceStyle, final double x, final double y, final double z);
+	/**
+	 * Called by a {@code computeDistance} method if X/Y/Z is within this shape.
+	 */
+	protected abstract double distance(final DistanceStyle distanceStyle, final double x, final double y, final double z);
 
-  @Override
-  public double computeDeltaDistance(final DistanceStyle distanceStyle, final GeoPoint point) {
-    return computeDeltaDistance(distanceStyle, point.x, point.y, point.z);
-  }
+	@Override
+	public double computeDeltaDistance(final DistanceStyle distanceStyle, final GeoPoint point) {
+		return computeDeltaDistance(distanceStyle, point.x, point.y, point.z);
+	}
 
-  @Override
-  public double computeDeltaDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z) {
-    if (!isWithin(x,y,z)) {
-      return Double.POSITIVE_INFINITY;
-    }
-    return deltaDistance(distanceStyle, x, y, z);
-  }
+	@Override
+	public double computeDeltaDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z) {
+		if (!isWithin(x, y, z)) {
+			return Double.POSITIVE_INFINITY;
+		}
+		return deltaDistance(distanceStyle, x, y, z);
+	}
 
-  /** Called by a {@code computeDeltaDistance} method if X/Y/Z is within this shape. */
-  protected double deltaDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z) {
-    return distance(distanceStyle, x, y, z) * 2.0;
-  }
+	/**
+	 * Called by a {@code computeDeltaDistance} method if X/Y/Z is within this shape.
+	 */
+	protected double deltaDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z) {
+		return distance(distanceStyle, x, y, z) * 2.0;
+	}
 
-  @Override
-  public void getDistanceBounds(final Bounds bounds, final DistanceStyle distanceStyle, final double distanceValue) {
-    if (distanceValue == Double.POSITIVE_INFINITY) {
-      getBounds(bounds);
-      return;
-    }
-    distanceBounds(bounds, distanceStyle, distanceValue);
-  }
-  
-  /** Called by a {@code getDistanceBounds} method if distanceValue is not Double.POSITIVE_INFINITY. */
-  protected abstract void distanceBounds(final Bounds bounds, final DistanceStyle distanceStyle, final double distanceValue);
+	@Override
+	public void getDistanceBounds(final Bounds bounds, final DistanceStyle distanceStyle, final double distanceValue) {
+		if (distanceValue == Double.POSITIVE_INFINITY) {
+			getBounds(bounds);
+			return;
+		}
+		distanceBounds(bounds, distanceStyle, distanceValue);
+	}
+
+	/**
+	 * Called by a {@code getDistanceBounds} method if distanceValue is not Double.POSITIVE_INFINITY.
+	 */
+	protected abstract void distanceBounds(final Bounds bounds, final DistanceStyle distanceStyle, final double distanceValue);
 
 }
 

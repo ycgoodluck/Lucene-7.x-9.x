@@ -29,14 +29,14 @@ import org.apache.lucene.util.AttributeFactory;
 import static org.apache.lucene.analysis.standard.StandardTokenizer.MAX_TOKEN_LENGTH_LIMIT;
 
 /**
- * Factory for {@link WhitespaceTokenizer}. 
+ * Factory for {@link WhitespaceTokenizer}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
  *     &lt;tokenizer class="solr.WhitespaceTokenizerFactory" rule="unicode"  maxTokenLen="256"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- *
+ * <p>
  * Options:
  * <ul>
  *   <li>rule: either "java" for {@link WhitespaceTokenizer}
@@ -46,44 +46,48 @@ import static org.apache.lucene.analysis.standard.StandardTokenizer.MAX_TOKEN_LE
  *      else {@link CharTokenizer}::DEFAULT_MAX_TOKEN_LEN</li>
  * </ul>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class WhitespaceTokenizerFactory extends TokenizerFactory {
 
-  /** SPI name */
-  public static final String NAME = "whitespace";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "whitespace";
 
-  public static final String RULE_JAVA = "java";
-  public static final String RULE_UNICODE = "unicode";
-  private static final Collection<String> RULE_NAMES = Arrays.asList(RULE_JAVA, RULE_UNICODE);
+	public static final String RULE_JAVA = "java";
+	public static final String RULE_UNICODE = "unicode";
+	private static final Collection<String> RULE_NAMES = Arrays.asList(RULE_JAVA, RULE_UNICODE);
 
-  private final String rule;
-  private final int maxTokenLen;
+	private final String rule;
+	private final int maxTokenLen;
 
-  /** Creates a new WhitespaceTokenizerFactory */
-  public WhitespaceTokenizerFactory(Map<String,String> args) {
-    super(args);
+	/**
+	 * Creates a new WhitespaceTokenizerFactory
+	 */
+	public WhitespaceTokenizerFactory(Map<String, String> args) {
+		super(args);
 
-    rule = get(args, "rule", RULE_NAMES, RULE_JAVA);
-    maxTokenLen = getInt(args, "maxTokenLen", CharTokenizer.DEFAULT_MAX_WORD_LEN);
-    if (maxTokenLen > MAX_TOKEN_LENGTH_LIMIT || maxTokenLen <= 0) {
-      throw new IllegalArgumentException("maxTokenLen must be greater than 0 and less than " + MAX_TOKEN_LENGTH_LIMIT + " passed: " + maxTokenLen);
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+		rule = get(args, "rule", RULE_NAMES, RULE_JAVA);
+		maxTokenLen = getInt(args, "maxTokenLen", CharTokenizer.DEFAULT_MAX_WORD_LEN);
+		if (maxTokenLen > MAX_TOKEN_LENGTH_LIMIT || maxTokenLen <= 0) {
+			throw new IllegalArgumentException("maxTokenLen must be greater than 0 and less than " + MAX_TOKEN_LENGTH_LIMIT + " passed: " + maxTokenLen);
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public Tokenizer create(AttributeFactory factory) {
-    switch (rule) {
-      case RULE_JAVA:
-        return new WhitespaceTokenizer(factory, maxTokenLen);
-      case RULE_UNICODE:
-        return new UnicodeWhitespaceTokenizer(factory, maxTokenLen);
-      default:
-        throw new AssertionError();
-    }
-  }
+	@Override
+	public Tokenizer create(AttributeFactory factory) {
+		switch (rule) {
+			case RULE_JAVA:
+				return new WhitespaceTokenizer(factory, maxTokenLen);
+			case RULE_UNICODE:
+				return new UnicodeWhitespaceTokenizer(factory, maxTokenLen);
+			default:
+				throw new AssertionError();
+		}
+	}
 }

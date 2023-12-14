@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Views (UIs) for Luke */
+/**
+ * Views (UIs) for Luke
+ */
 package org.apache.lucene.luke.app.desktop;

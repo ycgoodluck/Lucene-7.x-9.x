@@ -22,43 +22,43 @@ package org.apache.lucene.benchmark.byTask.stats;
  */
 public class Report {
 
-  private String text;
-  private int size;
-  private int outOf;
-  private int reported;
+	private String text;
+	private int size;
+	private int outOf;
+	private int reported;
 
-  public Report (String text, int size, int reported, int outOf) {
-    this.text = text;
-    this.size = size;
-    this.reported = reported;
-    this.outOf = outOf;
-  }
+	public Report(String text, int size, int reported, int outOf) {
+		this.text = text;
+		this.size = size;
+		this.reported = reported;
+		this.outOf = outOf;
+	}
 
-  /**
-   * Returns total number of stats points when this report was created.
-   */
-  public int getOutOf() {
-    return outOf;
-  }
+	/**
+	 * Returns total number of stats points when this report was created.
+	 */
+	public int getOutOf() {
+		return outOf;
+	}
 
-  /**
-   * Returns number of lines in the report.
-   */
-  public int getSize() {
-    return size;
-  }
+	/**
+	 * Returns number of lines in the report.
+	 */
+	public int getSize() {
+		return size;
+	}
 
-  /**
-   * Returns the report text.
-   */
-  public String getText() {
-    return text;
-  }
+	/**
+	 * Returns the report text.
+	 */
+	public String getText() {
+		return text;
+	}
 
-  /**
-   * Returns number of stats points represented in this report.
-   */
-  public int getReported() {
-    return reported;
-  }
+	/**
+	 * Returns number of stats points represented in this report.
+	 */
+	public int getReported() {
+		return reported;
+	}
 }

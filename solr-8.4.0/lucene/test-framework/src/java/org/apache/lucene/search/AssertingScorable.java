@@ -25,40 +25,40 @@ import java.io.IOException;
  */
 public class AssertingScorable extends FilterScorable {
 
-  public AssertingScorable(Scorable in) {
-    super(in);
-  }
+	public AssertingScorable(Scorable in) {
+		super(in);
+	}
 
-  @Override
-  public float score() throws IOException {
-    int docId = docID();
-    assert docId != -1 && docId != DocIdSetIterator.NO_MORE_DOCS : "score() called on unpositioned Scorable docid=" + docID();
-    final float score = in.score();
-    assert !Float.isNaN(score) : "NaN score for in="+in;
-    return score;
-  }
+	@Override
+	public float score() throws IOException {
+		int docId = docID();
+		assert docId != -1 && docId != DocIdSetIterator.NO_MORE_DOCS : "score() called on unpositioned Scorable docid=" + docID();
+		final float score = in.score();
+		assert !Float.isNaN(score) : "NaN score for in=" + in;
+		return score;
+	}
 
-  @Override
-  public void setMinCompetitiveScore(float minScore) throws IOException {
-    in.setMinCompetitiveScore(minScore);
-  }
+	@Override
+	public void setMinCompetitiveScore(float minScore) throws IOException {
+		in.setMinCompetitiveScore(minScore);
+	}
 
-  public static Scorable wrap(Scorable in) {
-    if (in instanceof AssertingScorable) {
-      return in;
-    }
-    return new AssertingScorable(in);
-  }
+	public static Scorable wrap(Scorable in) {
+		if (in instanceof AssertingScorable) {
+			return in;
+		}
+		return new AssertingScorable(in);
+	}
 
-  public static Scorable unwrap(Scorable in) {
-    while (true) {
-      if (in instanceof AssertingScorable)
-        in = ((AssertingScorable)in).in;
-      else if (in instanceof AssertingScorer)
-        in = ((AssertingScorer)in).in;
-      else
-        return in;
-    }
-  }
+	public static Scorable unwrap(Scorable in) {
+		while (true) {
+			if (in instanceof AssertingScorable)
+				in = ((AssertingScorable) in).in;
+			else if (in instanceof AssertingScorer)
+				in = ((AssertingScorer) in).in;
+			else
+				return in;
+		}
+	}
 
 }

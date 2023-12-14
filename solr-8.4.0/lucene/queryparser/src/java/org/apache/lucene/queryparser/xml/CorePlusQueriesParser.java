@@ -26,29 +26,29 @@ import org.apache.lucene.queryparser.xml.builders.LikeThisQueryBuilder;
  */
 public class CorePlusQueriesParser extends CoreParser {
 
-  /**
-   * Construct an XML parser that uses a single instance QueryParser for handling
-   * UserQuery tags - all parse operations are synchronized on this parser
-   *
-   * @param parser A QueryParser which will be synchronized on during parse calls.
-   */
-  public CorePlusQueriesParser(Analyzer analyzer, QueryParser parser) {
-    this(null, analyzer, parser);
-  }
+	/**
+	 * Construct an XML parser that uses a single instance QueryParser for handling
+	 * UserQuery tags - all parse operations are synchronized on this parser
+	 *
+	 * @param parser A QueryParser which will be synchronized on during parse calls.
+	 */
+	public CorePlusQueriesParser(Analyzer analyzer, QueryParser parser) {
+		this(null, analyzer, parser);
+	}
 
-  /**
-   * Constructs an XML parser that creates a QueryParser for each UserQuery request.
-   *
-   * @param defaultField The default field name used by QueryParsers constructed for UserQuery tags
-   */
-  public CorePlusQueriesParser(String defaultField, Analyzer analyzer) {
-    this(defaultField, analyzer, null);
-  }
+	/**
+	 * Constructs an XML parser that creates a QueryParser for each UserQuery request.
+	 *
+	 * @param defaultField The default field name used by QueryParsers constructed for UserQuery tags
+	 */
+	public CorePlusQueriesParser(String defaultField, Analyzer analyzer) {
+		this(defaultField, analyzer, null);
+	}
 
-  protected CorePlusQueriesParser(String defaultField, Analyzer analyzer, QueryParser parser) {
-    super(defaultField, analyzer, parser);
-    String fields[] = {"contents"};
-    queryFactory.addBuilder("LikeThisQuery", new LikeThisQueryBuilder(analyzer, fields));
+	protected CorePlusQueriesParser(String defaultField, Analyzer analyzer, QueryParser parser) {
+		super(defaultField, analyzer, parser);
+		String fields[] = {"contents"};
+		queryFactory.addBuilder("LikeThisQuery", new LikeThisQueryBuilder(analyzer, fields));
 
-  }
+	}
 }

@@ -24,114 +24,114 @@ import java.util.NoSuchElementException;
 
 public class TestFilterIterator extends LuceneTestCase {
 
-  private static final Set<String> set = new TreeSet<>(Arrays.asList("a", "b", "c"));
+	private static final Set<String> set = new TreeSet<>(Arrays.asList("a", "b", "c"));
 
-  private static void assertNoMore(Iterator<?> it) {
-    assertFalse(it.hasNext());
-    expectThrows(NoSuchElementException.class, () -> {
-      it.next();
-    });
-    assertFalse(it.hasNext());
-  }
+	private static void assertNoMore(Iterator<?> it) {
+		assertFalse(it.hasNext());
+		expectThrows(NoSuchElementException.class, () -> {
+			it.next();
+		});
+		assertFalse(it.hasNext());
+	}
 
-  public void testEmpty() {
-    final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
-      @Override
-      protected boolean predicateFunction(String s) {
-        return false;
-      }
-    };
-    assertNoMore(it);
-  }
-    
-  public void testA1() {
-    final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
-      @Override
-      protected boolean predicateFunction(String s) {
-        return "a".equals(s);
-      }
-    };
-    assertTrue(it.hasNext());
-    assertEquals("a", it.next());
-    assertNoMore(it);
-  }
-    
-  public void testA2() {
-    final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
-      @Override
-      protected boolean predicateFunction(String s) {
-        return "a".equals(s);
-      }
-    };
-    // this time without check: assertTrue(it.hasNext());
-    assertEquals("a", it.next());
-    assertNoMore(it);
-  }
-    
-  public void testB1() {
-    final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
-      @Override
-      protected boolean predicateFunction(String s) {
-        return "b".equals(s);
-      }
-    };
-    assertTrue(it.hasNext());
-    assertEquals("b", it.next());
-    assertNoMore(it);
-  }
-    
-  public void testB2() {
-    final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
-      @Override
-      protected boolean predicateFunction(String s) {
-        return "b".equals(s);
-      }
-    };
-    // this time without check: assertTrue(it.hasNext());
-    assertEquals("b", it.next());
-    assertNoMore(it);
-  }
-    
-  public void testAll1() {
-    final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
-      @Override
-      protected boolean predicateFunction(String s) {
-        return true;
-      }
-    };
-    assertTrue(it.hasNext());
-    assertEquals("a", it.next());
-    assertTrue(it.hasNext());
-    assertEquals("b", it.next());
-    assertTrue(it.hasNext());
-    assertEquals("c", it.next());
-    assertNoMore(it);
-  }
-    
-  public void testAll2() {
-    final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
-      @Override
-      protected boolean predicateFunction(String s) {
-        return true;
-      }
-    };
-    assertEquals("a", it.next());
-    assertEquals("b", it.next());
-    assertEquals("c", it.next());
-    assertNoMore(it);
-  }
+	public void testEmpty() {
+		final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
+			@Override
+			protected boolean predicateFunction(String s) {
+				return false;
+			}
+		};
+		assertNoMore(it);
+	}
 
-  public void testUnmodifiable() {
-    final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
-      @Override
-      protected boolean predicateFunction(String s) {
-        return true;
-      }
-    };
-    assertEquals("a", it.next());
-    expectThrows(UnsupportedOperationException.class, () -> {
-      it.remove();
-    });
-  }
+	public void testA1() {
+		final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
+			@Override
+			protected boolean predicateFunction(String s) {
+				return "a".equals(s);
+			}
+		};
+		assertTrue(it.hasNext());
+		assertEquals("a", it.next());
+		assertNoMore(it);
+	}
+
+	public void testA2() {
+		final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
+			@Override
+			protected boolean predicateFunction(String s) {
+				return "a".equals(s);
+			}
+		};
+		// this time without check: assertTrue(it.hasNext());
+		assertEquals("a", it.next());
+		assertNoMore(it);
+	}
+
+	public void testB1() {
+		final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
+			@Override
+			protected boolean predicateFunction(String s) {
+				return "b".equals(s);
+			}
+		};
+		assertTrue(it.hasNext());
+		assertEquals("b", it.next());
+		assertNoMore(it);
+	}
+
+	public void testB2() {
+		final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
+			@Override
+			protected boolean predicateFunction(String s) {
+				return "b".equals(s);
+			}
+		};
+		// this time without check: assertTrue(it.hasNext());
+		assertEquals("b", it.next());
+		assertNoMore(it);
+	}
+
+	public void testAll1() {
+		final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
+			@Override
+			protected boolean predicateFunction(String s) {
+				return true;
+			}
+		};
+		assertTrue(it.hasNext());
+		assertEquals("a", it.next());
+		assertTrue(it.hasNext());
+		assertEquals("b", it.next());
+		assertTrue(it.hasNext());
+		assertEquals("c", it.next());
+		assertNoMore(it);
+	}
+
+	public void testAll2() {
+		final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
+			@Override
+			protected boolean predicateFunction(String s) {
+				return true;
+			}
+		};
+		assertEquals("a", it.next());
+		assertEquals("b", it.next());
+		assertEquals("c", it.next());
+		assertNoMore(it);
+	}
+
+	public void testUnmodifiable() {
+		final Iterator<String> it = new FilterIterator<String, String>(set.iterator()) {
+			@Override
+			protected boolean predicateFunction(String s) {
+				return true;
+			}
+		};
+		assertEquals("a", it.next());
+		expectThrows(UnsupportedOperationException.class, () -> {
+			it.remove();
+		});
+	}
 
 }

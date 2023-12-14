@@ -29,74 +29,82 @@ import org.apache.lucene.util.UnicodeUtil;
  */
 public final class GrowableByteArrayDataOutput extends DataOutput {
 
-  /** Minimum utf8 byte size of a string over which double pass over string is to save memory during encode */
-  static final int MIN_UTF8_SIZE_TO_ENABLE_DOUBLE_PASS_ENCODING = 65536;
+	/**
+	 * Minimum utf8 byte size of a string over which double pass over string is to save memory during encode
+	 */
+	static final int MIN_UTF8_SIZE_TO_ENABLE_DOUBLE_PASS_ENCODING = 65536;
 
-  /** The bytes */
-  private byte[] bytes;
+	/**
+	 * The bytes
+	 */
+	private byte[] bytes;
 
-  /** The length */
-  private int length;
+	/**
+	 * The length
+	 */
+	private int length;
 
-  // scratch for utf8 encoding of small strings
-  private byte[] scratchBytes;
+	// scratch for utf8 encoding of small strings
+	private byte[] scratchBytes;
 
-  /** Create a {@link GrowableByteArrayDataOutput} with the given initial capacity. */
-  public GrowableByteArrayDataOutput(int cp) {
-    this.bytes = new byte[ArrayUtil.oversize(cp, 1)];
-    this.length = 0;
-  }
+	/**
+	 * Create a {@link GrowableByteArrayDataOutput} with the given initial capacity.
+	 */
+	public GrowableByteArrayDataOutput(int cp) {
+		this.bytes = new byte[ArrayUtil.oversize(cp, 1)];
+		this.length = 0;
+	}
 
-  @Override
-  public void writeByte(byte b) {
-    if (length >= bytes.length) {
-      bytes = ArrayUtil.grow(bytes);
-    }
-    bytes[length++] = b;
-  }
+	@Override
+	public void writeByte(byte b) {
+		if (length >= bytes.length) {
+			bytes = ArrayUtil.grow(bytes);
+		}
+		bytes[length++] = b;
+	}
 
-  @Override
-  public void writeBytes(byte[] b, int off, int len) {
-    final int newLength = length + len;
-    if (newLength > bytes.length) {
-      bytes = ArrayUtil.grow(bytes, newLength);
-    }
-    System.arraycopy(b, off, bytes, length, len);
-    length = newLength;
-  }
+	@Override
+	public void writeBytes(byte[] b, int off, int len) {
+		final int newLength = length + len;
+		if (newLength > bytes.length) {
+			bytes = ArrayUtil.grow(bytes, newLength);
+		}
+		System.arraycopy(b, off, bytes, length, len);
+		length = newLength;
+	}
 
-  @Override
-  public void writeString(String string) throws IOException {
-    int maxLen = UnicodeUtil.maxUTF8Length(string.length());
-    if (maxLen <= MIN_UTF8_SIZE_TO_ENABLE_DOUBLE_PASS_ENCODING)  {
-      // string is small enough that we don't need to save memory by falling back to double-pass approach
-      // this is just an optimized writeString() that re-uses scratchBytes.
-      if (scratchBytes == null) {
-        scratchBytes = new byte[ArrayUtil.oversize(maxLen, Character.BYTES)];
-      } else {
-        scratchBytes = ArrayUtil.grow(scratchBytes, maxLen);
-      }
-      int len = UnicodeUtil.UTF16toUTF8(string, 0, string.length(), scratchBytes);
-      writeVInt(len);
-      writeBytes(scratchBytes, len);
-    } else  {
-      // use a double pass approach to avoid allocating a large intermediate buffer for string encoding
-      int numBytes = UnicodeUtil.calcUTF16toUTF8Length(string, 0, string.length());
-      writeVInt(numBytes);
-      bytes = ArrayUtil.grow(bytes, length + numBytes);
-      length = UnicodeUtil.UTF16toUTF8(string, 0, string.length(), bytes, length);
-    }
-  }
+	@Override
+	public void writeString(String string) throws IOException {
+		int maxLen = UnicodeUtil.maxUTF8Length(string.length());
+		if (maxLen <= MIN_UTF8_SIZE_TO_ENABLE_DOUBLE_PASS_ENCODING) {
+			// string is small enough that we don't need to save memory by falling back to double-pass approach
+			// this is just an optimized writeString() that re-uses scratchBytes.
+			if (scratchBytes == null) {
+				scratchBytes = new byte[ArrayUtil.oversize(maxLen, Character.BYTES)];
+			} else {
+				scratchBytes = ArrayUtil.grow(scratchBytes, maxLen);
+			}
+			int len = UnicodeUtil.UTF16toUTF8(string, 0, string.length(), scratchBytes);
+			writeVInt(len);
+			writeBytes(scratchBytes, len);
+		} else {
+			// use a double pass approach to avoid allocating a large intermediate buffer for string encoding
+			int numBytes = UnicodeUtil.calcUTF16toUTF8Length(string, 0, string.length());
+			writeVInt(numBytes);
+			bytes = ArrayUtil.grow(bytes, length + numBytes);
+			length = UnicodeUtil.UTF16toUTF8(string, 0, string.length(), bytes, length);
+		}
+	}
 
-  public byte[] getBytes() {
-    return bytes;
-  }
+	public byte[] getBytes() {
+		return bytes;
+	}
 
-  public int getPosition() {
-    return length;
-  }
+	public int getPosition() {
+		return length;
+	}
 
-  public void reset() {
-    length = 0;
-  }
+	public void reset() {
+		length = 0;
+	}
 }

@@ -26,75 +26,83 @@ import java.io.IOException;
 
 /**
  * Create tokens for phonetic matches.
+ *
  * @see <a href="http://commons.apache.org/codec/api-release/org/apache/commons/codec/language/package-summary.html">
  * Apache Commons Codec</a>
  */
-public final class PhoneticFilter extends TokenFilter 
-{
-  /** true if encoded tokens should be added as synonyms */
-  protected boolean inject = true; 
-  /** phonetic encoder */
-  protected Encoder encoder = null;
-  /** captured state, non-null when <code>inject=true</code> and a token is buffered */
-  protected State save = null;
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final PositionIncrementAttribute posAtt = addAttribute(PositionIncrementAttribute.class);
+public final class PhoneticFilter extends TokenFilter {
+	/**
+	 * true if encoded tokens should be added as synonyms
+	 */
+	protected boolean inject = true;
+	/**
+	 * phonetic encoder
+	 */
+	protected Encoder encoder = null;
+	/**
+	 * captured state, non-null when <code>inject=true</code> and a token is buffered
+	 */
+	protected State save = null;
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final PositionIncrementAttribute posAtt = addAttribute(PositionIncrementAttribute.class);
 
-  /** Creates a PhoneticFilter with the specified encoder, and either
-   *  adding encoded forms as synonyms (<code>inject=true</code>) or
-   *  replacing them.
-   */
-  public PhoneticFilter(TokenStream in, Encoder encoder, boolean inject) {
-    super(in);
-    this.encoder = encoder;
-    this.inject = inject;   
-  }
+	/**
+	 * Creates a PhoneticFilter with the specified encoder, and either
+	 * adding encoded forms as synonyms (<code>inject=true</code>) or
+	 * replacing them.
+	 */
+	public PhoneticFilter(TokenStream in, Encoder encoder, boolean inject) {
+		super(in);
+		this.encoder = encoder;
+		this.inject = inject;
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if( save != null ) {
-      // clearAttributes();  // not currently necessary
-      restoreState(save);
-      save = null;
-      return true;
-    }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (save != null) {
+			// clearAttributes();  // not currently necessary
+			restoreState(save);
+			save = null;
+			return true;
+		}
 
-    if (!input.incrementToken()) return false;
+		if (!input.incrementToken()) return false;
 
-    // pass through zero-length terms
-    if (termAtt.length() == 0) return true;
+		// pass through zero-length terms
+		if (termAtt.length() == 0) return true;
 
-    String value = termAtt.toString();
-    String phonetic = null;
-    try {
-     String v = encoder.encode(value).toString();
-     if (v.length() > 0 && !value.equals(v)) phonetic = v;
-    } catch (Exception ignored) {} // just use the direct text
+		String value = termAtt.toString();
+		String phonetic = null;
+		try {
+			String v = encoder.encode(value).toString();
+			if (v.length() > 0 && !value.equals(v)) phonetic = v;
+		} catch (Exception ignored) {
+		} // just use the direct text
 
-    if (phonetic == null) return true;
+		if (phonetic == null) return true;
 
-    if (!inject) {
-      // just modify this token
-      termAtt.setEmpty().append(phonetic);
-      return true;
-    }
+		if (!inject) {
+			// just modify this token
+			termAtt.setEmpty().append(phonetic);
+			return true;
+		}
 
-    // We need to return both the original and the phonetic tokens.
-    // to avoid a orig=captureState() change_to_phonetic() saved=captureState()  restoreState(orig)
-    // we return the phonetic alternative first
+		// We need to return both the original and the phonetic tokens.
+		// to avoid a orig=captureState() change_to_phonetic() saved=captureState()  restoreState(orig)
+		// we return the phonetic alternative first
 
-    int origOffset = posAtt.getPositionIncrement();
-    posAtt.setPositionIncrement(0);
-    save = captureState();
+		int origOffset = posAtt.getPositionIncrement();
+		posAtt.setPositionIncrement(0);
+		save = captureState();
 
-    posAtt.setPositionIncrement(origOffset);
-    termAtt.setEmpty().append(phonetic);
-    return true;
-  }
+		posAtt.setPositionIncrement(origOffset);
+		termAtt.setEmpty().append(phonetic);
+		return true;
+	}
 
-  @Override
-  public void reset() throws IOException {
-    input.reset();
-    save = null;
-  }
+	@Override
+	public void reset() throws IOException {
+		input.reset();
+		save = null;
+	}
 }

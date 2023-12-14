@@ -28,13 +28,13 @@ import org.locationtech.spatial4j.shape.ShapeFactory;
  *
  * @lucene.experimental
  */
-public interface S2ShapeFactory extends ShapeFactory{
+public interface S2ShapeFactory extends ShapeFactory {
 
-  /**
-   * Factory method for S2 cell shapes.
-   *
-   * @param cellId The S2 cell id
-   * @return the shape representing the cell.
-   */
-  Shape getS2CellShape(S2CellId cellId);
+	/**
+	 * Factory method for S2 cell shapes.
+	 *
+	 * @param cellId The S2 cell id
+	 * @return the shape representing the cell.
+	 */
+	Shape getS2CellShape(S2CellId cellId);
 }

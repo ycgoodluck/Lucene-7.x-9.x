@@ -90,36 +90,36 @@ import org.apache.lucene.util.fst.FST;
  */
 public abstract class CompletionPostingsFormat extends PostingsFormat {
 
-  static final String CODEC_NAME = "completion";
-  static final int COMPLETION_CODEC_VERSION = 1;
-  static final int COMPLETION_VERSION_CURRENT = COMPLETION_CODEC_VERSION;
-  static final String INDEX_EXTENSION = "cmp";
-  static final String DICT_EXTENSION = "lkp";
+	static final String CODEC_NAME = "completion";
+	static final int COMPLETION_CODEC_VERSION = 1;
+	static final int COMPLETION_VERSION_CURRENT = COMPLETION_CODEC_VERSION;
+	static final String INDEX_EXTENSION = "cmp";
+	static final String DICT_EXTENSION = "lkp";
 
-  /**
-   * Used only by core Lucene at read-time via Service Provider instantiation
-   */
-  public CompletionPostingsFormat() {
-    super(CODEC_NAME);
-  }
+	/**
+	 * Used only by core Lucene at read-time via Service Provider instantiation
+	 */
+	public CompletionPostingsFormat() {
+		super(CODEC_NAME);
+	}
 
-  /**
-   * Concrete implementation should specify the delegating postings format
-   */
-  protected abstract PostingsFormat delegatePostingsFormat();
+	/**
+	 * Concrete implementation should specify the delegating postings format
+	 */
+	protected abstract PostingsFormat delegatePostingsFormat();
 
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    PostingsFormat delegatePostingsFormat = delegatePostingsFormat();
-    if (delegatePostingsFormat == null) {
-      throw new UnsupportedOperationException("Error - " + getClass().getName()
-          + " has been constructed without a choice of PostingsFormat");
-    }
-    return new CompletionFieldsConsumer(delegatePostingsFormat, state);
-  }
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		PostingsFormat delegatePostingsFormat = delegatePostingsFormat();
+		if (delegatePostingsFormat == null) {
+			throw new UnsupportedOperationException("Error - " + getClass().getName()
+				+ " has been constructed without a choice of PostingsFormat");
+		}
+		return new CompletionFieldsConsumer(delegatePostingsFormat, state);
+	}
 
-  @Override
-  public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
-    return new CompletionFieldsProducer(state);
-  }
+	@Override
+	public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
+		return new CompletionFieldsProducer(state);
+	}
 }

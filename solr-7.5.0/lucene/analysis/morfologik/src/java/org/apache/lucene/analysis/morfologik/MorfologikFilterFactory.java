@@ -32,9 +32,9 @@ import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Filter factory for {@link MorfologikFilter}. 
- * 
- * <p>An explicit resource name of the dictionary ({@code ".dict"}) can be 
+ * Filter factory for {@link MorfologikFilter}.
+ *
+ * <p>An explicit resource name of the dictionary ({@code ".dict"}) can be
  * provided via the <code>dictionary</code> attribute, as the example below demonstrates:
  * <pre class="prettyprint">
  * &lt;fieldType name="text_mylang" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -43,57 +43,65 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.MorfologikFilterFactory" dictionary="mylang.dict" /&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * 
+ *
  * <p>If the dictionary attribute is not provided, the Polish dictionary is loaded
- * and used by default. 
- * 
+ * and used by default.
+ *
  * @see <a href="http://morfologik.blogspot.com/">Morfologik web site</a>
  * @since 4.0.0
  */
 public class MorfologikFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
-  /** Dictionary resource attribute (should have {@code ".dict"} suffix), loaded from {@link ResourceLoader}. */
-  public static final String DICTIONARY_ATTRIBUTE = "dictionary";
+	/**
+	 * Dictionary resource attribute (should have {@code ".dict"} suffix), loaded from {@link ResourceLoader}.
+	 */
+	public static final String DICTIONARY_ATTRIBUTE = "dictionary";
 
-  /** {@link #DICTIONARY_ATTRIBUTE} value passed to {@link #inform}. */
-  private String resourceName;
+	/**
+	 * {@link #DICTIONARY_ATTRIBUTE} value passed to {@link #inform}.
+	 */
+	private String resourceName;
 
-  /** Loaded {@link Dictionary}, initialized on {@link #inform(ResourceLoader)}. */
-  private Dictionary dictionary;
+	/**
+	 * Loaded {@link Dictionary}, initialized on {@link #inform(ResourceLoader)}.
+	 */
+	private Dictionary dictionary;
 
-  /** Creates a new MorfologikFilterFactory */
-  public MorfologikFilterFactory(Map<String,String> args) {
-    super(args);
+	/**
+	 * Creates a new MorfologikFilterFactory
+	 */
+	public MorfologikFilterFactory(Map<String, String> args) {
+		super(args);
 
-    // Be specific about no-longer-supported dictionary attribute.
-    final String DICTIONARY_RESOURCE_ATTRIBUTE = "dictionary-resource";
-    String dictionaryResource = get(args, DICTIONARY_RESOURCE_ATTRIBUTE);
-    if (dictionaryResource != null && !dictionaryResource.isEmpty()) {
-      throw new IllegalArgumentException("The " + DICTIONARY_RESOURCE_ATTRIBUTE + " attribute is no "
-          + "longer supported. Use the '" + DICTIONARY_ATTRIBUTE + "' attribute instead (see LUCENE-6833).");
-    }
+		// Be specific about no-longer-supported dictionary attribute.
+		final String DICTIONARY_RESOURCE_ATTRIBUTE = "dictionary-resource";
+		String dictionaryResource = get(args, DICTIONARY_RESOURCE_ATTRIBUTE);
+		if (dictionaryResource != null && !dictionaryResource.isEmpty()) {
+			throw new IllegalArgumentException("The " + DICTIONARY_RESOURCE_ATTRIBUTE + " attribute is no "
+				+ "longer supported. Use the '" + DICTIONARY_ATTRIBUTE + "' attribute instead (see LUCENE-6833).");
+		}
 
-    resourceName = get(args, DICTIONARY_ATTRIBUTE);
+		resourceName = get(args, DICTIONARY_ATTRIBUTE);
 
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    if (resourceName == null) {
-      // Get the dictionary lazily, does not hold up memory.
-      this.dictionary = new PolishStemmer().getDictionary();
-    } else {
-      try (InputStream dict = loader.openResource(resourceName);
-           InputStream meta = loader.openResource(DictionaryMetadata.getExpectedMetadataFileName(resourceName))) {
-        this.dictionary = Dictionary.read(dict, meta);
-      }
-    }
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		if (resourceName == null) {
+			// Get the dictionary lazily, does not hold up memory.
+			this.dictionary = new PolishStemmer().getDictionary();
+		} else {
+			try (InputStream dict = loader.openResource(resourceName);
+					 InputStream meta = loader.openResource(DictionaryMetadata.getExpectedMetadataFileName(resourceName))) {
+				this.dictionary = Dictionary.read(dict, meta);
+			}
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream ts) {
-    return new MorfologikFilter(ts, Objects.requireNonNull(dictionary, "MorfologikFilterFactory was not fully initialized."));
-  }
+	@Override
+	public TokenStream create(TokenStream ts) {
+		return new MorfologikFilter(ts, Objects.requireNonNull(dictionary, "MorfologikFilterFactory was not fully initialized."));
+	}
 }

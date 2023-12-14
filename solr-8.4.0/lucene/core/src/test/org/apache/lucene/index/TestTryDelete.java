@@ -35,157 +35,151 @@ import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.LuceneTestCase;
 
 
-public class TestTryDelete extends LuceneTestCase
-{
-  private static IndexWriter getWriter (Directory directory)
-    throws IOException
-  {
-    MergePolicy policy = new LogByteSizeMergePolicy();
-    IndexWriterConfig conf = new IndexWriterConfig(new MockAnalyzer(random()));
-    conf.setMergePolicy(policy);
-    conf.setOpenMode(OpenMode.CREATE_OR_APPEND);
+public class TestTryDelete extends LuceneTestCase {
+	private static IndexWriter getWriter(Directory directory)
+		throws IOException {
+		MergePolicy policy = new LogByteSizeMergePolicy();
+		IndexWriterConfig conf = new IndexWriterConfig(new MockAnalyzer(random()));
+		conf.setMergePolicy(policy);
+		conf.setOpenMode(OpenMode.CREATE_OR_APPEND);
 
-    IndexWriter writer = new IndexWriter(directory, conf);
+		IndexWriter writer = new IndexWriter(directory, conf);
 
-    return writer;
-  }
+		return writer;
+	}
 
-  private static Directory createIndex ()
-    throws IOException
-  {
-    Directory directory = new RAMDirectory();
+	private static Directory createIndex()
+		throws IOException {
+		Directory directory = new RAMDirectory();
 
-    IndexWriter writer = getWriter(directory);
+		IndexWriter writer = getWriter(directory);
 
-    for (int i = 0; i < 10; i++) {
-      Document doc = new Document();
-      doc.add(new StringField("foo", String.valueOf(i), Store.YES));
-      writer.addDocument(doc);
-    }
+		for (int i = 0; i < 10; i++) {
+			Document doc = new Document();
+			doc.add(new StringField("foo", String.valueOf(i), Store.YES));
+			writer.addDocument(doc);
+		}
 
-    writer.commit();
-    writer.close();
+		writer.commit();
+		writer.close();
 
-    return directory;
-  }
+		return directory;
+	}
 
-  public void testTryDeleteDocument ()
-    throws IOException
-  {
-    Directory directory = createIndex();
+	public void testTryDeleteDocument()
+		throws IOException {
+		Directory directory = createIndex();
 
-    IndexWriter writer = getWriter(directory);
+		IndexWriter writer = getWriter(directory);
 
-    ReferenceManager<IndexSearcher> mgr = new SearcherManager(writer,
-                                                              new SearcherFactory());
+		ReferenceManager<IndexSearcher> mgr = new SearcherManager(writer,
+			new SearcherFactory());
 
-    IndexSearcher searcher = mgr.acquire();
+		IndexSearcher searcher = mgr.acquire();
 
-    TopDocs topDocs = searcher.search(new TermQuery(new Term("foo", "0")),
-                                      100);
-    assertEquals(1, topDocs.totalHits.value);
+		TopDocs topDocs = searcher.search(new TermQuery(new Term("foo", "0")),
+			100);
+		assertEquals(1, topDocs.totalHits.value);
 
-    long result;
-    if (random().nextBoolean()) {
-      IndexReader r = DirectoryReader.open(writer);
-      result = writer.tryDeleteDocument(r, 0);
-      r.close();
-    } else {
-      result = writer.tryDeleteDocument(searcher.getIndexReader(), 0);
-    }
+		long result;
+		if (random().nextBoolean()) {
+			IndexReader r = DirectoryReader.open(writer);
+			result = writer.tryDeleteDocument(r, 0);
+			r.close();
+		} else {
+			result = writer.tryDeleteDocument(searcher.getIndexReader(), 0);
+		}
 
-    // The tryDeleteDocument should have succeeded:
-    assertTrue(result != -1);
+		// The tryDeleteDocument should have succeeded:
+		assertTrue(result != -1);
 
-    assertTrue(writer.hasDeletions());
+		assertTrue(writer.hasDeletions());
 
-    if (random().nextBoolean()) {
-      writer.commit();
-    }
+		if (random().nextBoolean()) {
+			writer.commit();
+		}
 
-    assertTrue(writer.hasDeletions());
+		assertTrue(writer.hasDeletions());
 
-    mgr.maybeRefresh();
+		mgr.maybeRefresh();
 
-    searcher = mgr.acquire();
+		searcher = mgr.acquire();
 
-    topDocs = searcher.search(new TermQuery(new Term("foo", "0")), 100);
+		topDocs = searcher.search(new TermQuery(new Term("foo", "0")), 100);
 
-    assertEquals(0, topDocs.totalHits.value);
-  }
+		assertEquals(0, topDocs.totalHits.value);
+	}
 
-  public void testTryDeleteDocumentCloseAndReopen ()
-    throws IOException
-  {
-    Directory directory = createIndex();
+	public void testTryDeleteDocumentCloseAndReopen()
+		throws IOException {
+		Directory directory = createIndex();
 
-    IndexWriter writer = getWriter(directory);
+		IndexWriter writer = getWriter(directory);
 
-    ReferenceManager<IndexSearcher> mgr = new SearcherManager(writer,
-                                                              new SearcherFactory());
+		ReferenceManager<IndexSearcher> mgr = new SearcherManager(writer,
+			new SearcherFactory());
 
-    IndexSearcher searcher = mgr.acquire();
+		IndexSearcher searcher = mgr.acquire();
 
-    TopDocs topDocs = searcher.search(new TermQuery(new Term("foo", "0")),
-                                      100);
-    assertEquals(1, topDocs.totalHits.value);
+		TopDocs topDocs = searcher.search(new TermQuery(new Term("foo", "0")),
+			100);
+		assertEquals(1, topDocs.totalHits.value);
 
-    long result = writer.tryDeleteDocument(DirectoryReader.open(writer), 0);
+		long result = writer.tryDeleteDocument(DirectoryReader.open(writer), 0);
 
-    assertTrue(result != -1);
+		assertTrue(result != -1);
 
-    writer.commit();
+		writer.commit();
 
-    assertTrue(writer.hasDeletions());
+		assertTrue(writer.hasDeletions());
 
-    mgr.maybeRefresh();
+		mgr.maybeRefresh();
 
-    searcher = mgr.acquire();
+		searcher = mgr.acquire();
 
-    topDocs = searcher.search(new TermQuery(new Term("foo", "0")), 100);
+		topDocs = searcher.search(new TermQuery(new Term("foo", "0")), 100);
 
-    assertEquals(0, topDocs.totalHits.value);
+		assertEquals(0, topDocs.totalHits.value);
 
-    writer.close();
+		writer.close();
 
-    searcher = new IndexSearcher(DirectoryReader.open(directory));
+		searcher = new IndexSearcher(DirectoryReader.open(directory));
 
-    topDocs = searcher.search(new TermQuery(new Term("foo", "0")), 100);
+		topDocs = searcher.search(new TermQuery(new Term("foo", "0")), 100);
 
-    assertEquals(0, topDocs.totalHits.value);
+		assertEquals(0, topDocs.totalHits.value);
 
-  }
+	}
 
-  public void testDeleteDocuments ()
-    throws IOException
-  {
-    Directory directory = createIndex();
+	public void testDeleteDocuments()
+		throws IOException {
+		Directory directory = createIndex();
 
-    IndexWriter writer = getWriter(directory);
+		IndexWriter writer = getWriter(directory);
 
-    ReferenceManager<IndexSearcher> mgr = new SearcherManager(writer,
-                                                              new SearcherFactory());
+		ReferenceManager<IndexSearcher> mgr = new SearcherManager(writer,
+			new SearcherFactory());
 
-    IndexSearcher searcher = mgr.acquire();
+		IndexSearcher searcher = mgr.acquire();
 
-    TopDocs topDocs = searcher.search(new TermQuery(new Term("foo", "0")),
-                                      100);
-    assertEquals(1, topDocs.totalHits.value);
+		TopDocs topDocs = searcher.search(new TermQuery(new Term("foo", "0")),
+			100);
+		assertEquals(1, topDocs.totalHits.value);
 
-    long result = writer.deleteDocuments(new TermQuery(new Term("foo", "0")));
+		long result = writer.deleteDocuments(new TermQuery(new Term("foo", "0")));
 
-    assertTrue(result != -1);
+		assertTrue(result != -1);
 
-    // writer.commit();
+		// writer.commit();
 
-    assertTrue(writer.hasDeletions());
+		assertTrue(writer.hasDeletions());
 
-    mgr.maybeRefresh();
+		mgr.maybeRefresh();
 
-    searcher = mgr.acquire();
+		searcher = mgr.acquire();
 
-    topDocs = searcher.search(new TermQuery(new Term("foo", "0")), 100);
+		topDocs = searcher.search(new TermQuery(new Term("foo", "0")), 100);
 
-    assertEquals(0, topDocs.totalHits.value);
-  }
+		assertEquals(0, topDocs.totalHits.value);
+	}
 }

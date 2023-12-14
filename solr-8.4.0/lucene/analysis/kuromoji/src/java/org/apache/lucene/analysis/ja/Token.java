@@ -24,160 +24,166 @@ import org.apache.lucene.analysis.ja.dict.Dictionary;
  * Analyzed token with morphological data from its dictionary.
  */
 public class Token {
-  private final Dictionary dictionary;
+	private final Dictionary dictionary;
 
-  private final int wordId;
+	private final int wordId;
 
-  private final char[] surfaceForm;
-  private final int offset;
-  private final int length;
+	private final char[] surfaceForm;
+	private final int offset;
+	private final int length;
 
-  private final int position;
-  private int positionLength;
+	private final int position;
+	private int positionLength;
 
-  private final Type type;
+	private final Type type;
 
-  public Token(int wordId, char[] surfaceForm, int offset, int length, Type type, int position, Dictionary dictionary) {
-    this.wordId = wordId;
-    this.surfaceForm = surfaceForm;
-    this.offset = offset;
-    this.length = length;
-    this.type = type;
-    this.position = position;
-    this.dictionary = dictionary;
-  }
+	public Token(int wordId, char[] surfaceForm, int offset, int length, Type type, int position, Dictionary dictionary) {
+		this.wordId = wordId;
+		this.surfaceForm = surfaceForm;
+		this.offset = offset;
+		this.length = length;
+		this.type = type;
+		this.position = position;
+		this.dictionary = dictionary;
+	}
 
-  @Override
-  public String toString() {
-    return "Token(\"" + new String(surfaceForm, offset, length) + "\" pos=" + position + " length=" + length +
-      " posLen=" + positionLength + " type=" + type + " wordId=" + wordId +
-      " leftID=" + dictionary.getLeftId(wordId) + ")";
-  }
+	@Override
+	public String toString() {
+		return "Token(\"" + new String(surfaceForm, offset, length) + "\" pos=" + position + " length=" + length +
+			" posLen=" + positionLength + " type=" + type + " wordId=" + wordId +
+			" leftID=" + dictionary.getLeftId(wordId) + ")";
+	}
 
-  /**
-   * @return surfaceForm
-   */
-  public char[] getSurfaceForm() {
-    return surfaceForm;
-  }
+	/**
+	 * @return surfaceForm
+	 */
+	public char[] getSurfaceForm() {
+		return surfaceForm;
+	}
 
-  /**
-   * @return offset into surfaceForm
-   */
-  public int getOffset() {
-    return offset;
-  }
+	/**
+	 * @return offset into surfaceForm
+	 */
+	public int getOffset() {
+		return offset;
+	}
 
-  /**
-   * @return length of surfaceForm
-   */
-  public int getLength() {
-    return length;
-  }
+	/**
+	 * @return length of surfaceForm
+	 */
+	public int getLength() {
+		return length;
+	}
 
-  /**
-   * @return surfaceForm as a String
-   */
-  public String getSurfaceFormString() {
-    return new String(surfaceForm, offset, length);
-  }
+	/**
+	 * @return surfaceForm as a String
+	 */
+	public String getSurfaceFormString() {
+		return new String(surfaceForm, offset, length);
+	}
 
-  /**
-   * @return reading. null if token doesn't have reading.
-   */
-  public String getReading() {
-    return dictionary.getReading(wordId, surfaceForm, offset, length);
-  }
+	/**
+	 * @return reading. null if token doesn't have reading.
+	 */
+	public String getReading() {
+		return dictionary.getReading(wordId, surfaceForm, offset, length);
+	}
 
-  /**
-   * @return pronunciation. null if token doesn't have pronunciation.
-   */
-  public String getPronunciation() {
-    return dictionary.getPronunciation(wordId, surfaceForm, offset, length);
-  }
+	/**
+	 * @return pronunciation. null if token doesn't have pronunciation.
+	 */
+	public String getPronunciation() {
+		return dictionary.getPronunciation(wordId, surfaceForm, offset, length);
+	}
 
-  /**
-   * @return part of speech.
-   */
-  public String getPartOfSpeech() {
-    return dictionary.getPartOfSpeech(wordId);
-  }
+	/**
+	 * @return part of speech.
+	 */
+	public String getPartOfSpeech() {
+		return dictionary.getPartOfSpeech(wordId);
+	}
 
-  /**
-   * @return inflection type or null
-   */
-  public String getInflectionType() {
-    return dictionary.getInflectionType(wordId);
-  }
+	/**
+	 * @return inflection type or null
+	 */
+	public String getInflectionType() {
+		return dictionary.getInflectionType(wordId);
+	}
 
-  /**
-   * @return inflection form or null
-   */
-  public String getInflectionForm() {
-    return dictionary.getInflectionForm(wordId);
-  }
+	/**
+	 * @return inflection form or null
+	 */
+	public String getInflectionForm() {
+		return dictionary.getInflectionForm(wordId);
+	}
 
-  /**
-   * @return base form or null if token is not inflected
-   */
-  public String getBaseForm() {
-    return dictionary.getBaseForm(wordId, surfaceForm, offset, length);
-  }
+	/**
+	 * @return base form or null if token is not inflected
+	 */
+	public String getBaseForm() {
+		return dictionary.getBaseForm(wordId, surfaceForm, offset, length);
+	}
 
-  /**
-   * Returns the type of this token
-   * @return token type, not null
-   */
-  public Type getType() {
-    return type;
-  }
+	/**
+	 * Returns the type of this token
+	 *
+	 * @return token type, not null
+	 */
+	public Type getType() {
+		return type;
+	}
 
-  /**
-   * Returns true if this token is known word
-   * @return true if this token is in standard dictionary. false if not.
-   */
-  public boolean isKnown() {
-    return type == Type.KNOWN;
-  }
+	/**
+	 * Returns true if this token is known word
+	 *
+	 * @return true if this token is in standard dictionary. false if not.
+	 */
+	public boolean isKnown() {
+		return type == Type.KNOWN;
+	}
 
-  /**
-   * Returns true if this token is unknown word
-   * @return true if this token is unknown word. false if not.
-   */
-  public boolean isUnknown() {
-    return type == Type.UNKNOWN;
-  }
+	/**
+	 * Returns true if this token is unknown word
+	 *
+	 * @return true if this token is unknown word. false if not.
+	 */
+	public boolean isUnknown() {
+		return type == Type.UNKNOWN;
+	}
 
-  /**
-   * Returns true if this token is defined in user dictionary
-   * @return true if this token is in user dictionary. false if not.
-   */
-  public boolean isUser() {
-    return type == Type.USER;
-  }
+	/**
+	 * Returns true if this token is defined in user dictionary
+	 *
+	 * @return true if this token is in user dictionary. false if not.
+	 */
+	public boolean isUser() {
+		return type == Type.USER;
+	}
 
-  /**
-   * Get index of this token in input text
-   * @return position of token
-   */
-  public int getPosition() {
-    return position;
-  }
+	/**
+	 * Get index of this token in input text
+	 *
+	 * @return position of token
+	 */
+	public int getPosition() {
+		return position;
+	}
 
-  /**
-   * Set the position length (in tokens) of this token.  For normal
-   * tokens this is 1; for compound tokens it's &gt; 1.
-   */
-  public void setPositionLength(int positionLength) {
-    this.positionLength = positionLength;
-  }
+	/**
+	 * Set the position length (in tokens) of this token.  For normal
+	 * tokens this is 1; for compound tokens it's &gt; 1.
+	 */
+	public void setPositionLength(int positionLength) {
+		this.positionLength = positionLength;
+	}
 
-  /**
-   * Get the length (in tokens) of this token.  For normal
-   * tokens this is 1; for compound tokens it's &gt; 1.
-   * @return position length of token
-   */
-  public int getPositionLength() {
-    return positionLength;
-  }
+	/**
+	 * Get the length (in tokens) of this token.  For normal
+	 * tokens this is 1; for compound tokens it's &gt; 1.
+	 *
+	 * @return position length of token
+	 */
+	public int getPositionLength() {
+		return positionLength;
+	}
 }

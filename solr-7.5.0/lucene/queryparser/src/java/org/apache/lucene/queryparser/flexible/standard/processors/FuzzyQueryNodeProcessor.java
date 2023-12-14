@@ -35,60 +35,60 @@ import org.apache.lucene.search.FuzzyQuery;
  * {@link ConfigurationKeys#FUZZY_CONFIG}, gets the
  * fuzzy prefix length and default similarity from it and set to the fuzzy node.
  * For more information about fuzzy prefix length check: {@link FuzzyQuery}.
- * 
+ *
  * @see ConfigurationKeys#FUZZY_CONFIG
  * @see FuzzyQuery
  * @see FuzzyQueryNode
  */
 public class FuzzyQueryNodeProcessor extends QueryNodeProcessorImpl {
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-    return node;
+		return node;
 
-  }
+	}
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
 
-    if (node instanceof FuzzyQueryNode) {
-      FuzzyQueryNode fuzzyNode = (FuzzyQueryNode) node;
-      QueryConfigHandler config = getQueryConfigHandler();
+		if (node instanceof FuzzyQueryNode) {
+			FuzzyQueryNode fuzzyNode = (FuzzyQueryNode) node;
+			QueryConfigHandler config = getQueryConfigHandler();
 
-      Analyzer analyzer = getQueryConfigHandler().get(ConfigurationKeys.ANALYZER);
-      if (analyzer != null) {
-        // because we call utf8ToString, this will only work with the default TermToBytesRefAttribute
-        String text = fuzzyNode.getTextAsString();
-        text = analyzer.normalize(fuzzyNode.getFieldAsString(), text).utf8ToString();
-        fuzzyNode.setText(text);
-      }
+			Analyzer analyzer = getQueryConfigHandler().get(ConfigurationKeys.ANALYZER);
+			if (analyzer != null) {
+				// because we call utf8ToString, this will only work with the default TermToBytesRefAttribute
+				String text = fuzzyNode.getTextAsString();
+				text = analyzer.normalize(fuzzyNode.getFieldAsString(), text).utf8ToString();
+				fuzzyNode.setText(text);
+			}
 
-      FuzzyConfig fuzzyConfig = null;
-      
-      if ((fuzzyConfig = config.get(ConfigurationKeys.FUZZY_CONFIG)) != null) {
-        fuzzyNode.setPrefixLength(fuzzyConfig.getPrefixLength());
+			FuzzyConfig fuzzyConfig = null;
 
-        if (fuzzyNode.getSimilarity() < 0) {
-          fuzzyNode.setSimilarity(fuzzyConfig.getMinSimilarity());
-        }
-        
-      } else if (fuzzyNode.getSimilarity() < 0) {
-        throw new IllegalArgumentException("No FUZZY_CONFIG set in the config");
-      }
+			if ((fuzzyConfig = config.get(ConfigurationKeys.FUZZY_CONFIG)) != null) {
+				fuzzyNode.setPrefixLength(fuzzyConfig.getPrefixLength());
 
-    }
+				if (fuzzyNode.getSimilarity() < 0) {
+					fuzzyNode.setSimilarity(fuzzyConfig.getMinSimilarity());
+				}
 
-    return node;
+			} else if (fuzzyNode.getSimilarity() < 0) {
+				throw new IllegalArgumentException("No FUZZY_CONFIG set in the config");
+			}
 
-  }
+		}
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
+		return node;
 
-    return children;
+	}
 
-  }
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
+
+		return children;
+
+	}
 
 }

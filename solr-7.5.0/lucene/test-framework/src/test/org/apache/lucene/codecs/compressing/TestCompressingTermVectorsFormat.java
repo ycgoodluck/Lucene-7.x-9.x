@@ -41,88 +41,88 @@ import org.apache.lucene.util.BytesRef;
 
 public class TestCompressingTermVectorsFormat extends BaseTermVectorsFormatTestCase {
 
-  @Override
-  protected Codec getCodec() {
-    return CompressingCodec.randomInstance(random());
-  }
-  
-  // https://issues.apache.org/jira/browse/LUCENE-5156
-  public void testNoOrds() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
-    Document doc = new Document();
-    FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-    ft.setStoreTermVectors(true);
-    doc.add(new Field("foo", "this is a test", ft));
-    iw.addDocument(doc);
-    LeafReader ir = getOnlyLeafReader(iw.getReader());
-    Terms terms = ir.getTermVector(0, "foo");
-    assertNotNull(terms);
-    TermsEnum termsEnum = terms.iterator();
-    assertEquals(SeekStatus.FOUND, termsEnum.seekCeil(new BytesRef("this")));
-    try {
-      termsEnum.ord();
-      fail();
-    } catch (UnsupportedOperationException expected) {
-      // expected exception
-    }
-    
-    try {
-      termsEnum.seekExact(0);
-      fail();
-    } catch (UnsupportedOperationException expected) {
-      // expected exception
-    }
-    ir.close();
-    iw.close();
-    dir.close();
-  }
-  
-  /**
-   * writes some tiny segments with incomplete compressed blocks,
-   * and ensures merge recompresses them.
-   */
-  public void testChunkCleanup() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriterConfig iwConf = newIndexWriterConfig(new MockAnalyzer(random()));
-    iwConf.setMergePolicy(NoMergePolicy.INSTANCE);
-    
-    // we have to enforce certain things like maxDocsPerChunk to cause dirty chunks to be created
-    // by this test.
-    iwConf.setCodec(CompressingCodec.randomInstance(random(), 4*1024, 100, false, 8));
-    IndexWriter iw = new IndexWriter(dir, iwConf);
-    DirectoryReader ir = DirectoryReader.open(iw);
-    for (int i = 0; i < 5; i++) {
-      Document doc = new Document();
-      FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-      ft.setStoreTermVectors(true);
-      doc.add(new Field("text", "not very long at all", ft));
-      iw.addDocument(doc);
-      // force flush
-      DirectoryReader ir2 = DirectoryReader.openIfChanged(ir);
-      assertNotNull(ir2);
-      ir.close();
-      ir = ir2;
-      // examine dirty counts:
-      for (LeafReaderContext leaf : ir2.leaves()) {
-        CodecReader sr = (CodecReader) leaf.reader();
-        CompressingTermVectorsReader reader = (CompressingTermVectorsReader)sr.getTermVectorsReader();
-        assertEquals(1, reader.getNumChunks());
-        assertEquals(1, reader.getNumDirtyChunks());
-      }
-    }
-    iw.getConfig().setMergePolicy(newLogMergePolicy());
-    iw.forceMerge(1);
-    DirectoryReader ir2 = DirectoryReader.openIfChanged(ir);
-    assertNotNull(ir2);
-    ir.close();
-    ir = ir2;
-    CodecReader sr = (CodecReader) getOnlyLeafReader(ir);
-    CompressingTermVectorsReader reader = (CompressingTermVectorsReader)sr.getTermVectorsReader();
-    // we could get lucky, and have zero, but typically one.
-    assertTrue(reader.getNumDirtyChunks() <= 1);
-    ir.close();
-    iw.close();
-    dir.close();
-  }
+	@Override
+	protected Codec getCodec() {
+		return CompressingCodec.randomInstance(random());
+	}
+
+	// https://issues.apache.org/jira/browse/LUCENE-5156
+	public void testNoOrds() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
+		Document doc = new Document();
+		FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
+		ft.setStoreTermVectors(true);
+		doc.add(new Field("foo", "this is a test", ft));
+		iw.addDocument(doc);
+		LeafReader ir = getOnlyLeafReader(iw.getReader());
+		Terms terms = ir.getTermVector(0, "foo");
+		assertNotNull(terms);
+		TermsEnum termsEnum = terms.iterator();
+		assertEquals(SeekStatus.FOUND, termsEnum.seekCeil(new BytesRef("this")));
+		try {
+			termsEnum.ord();
+			fail();
+		} catch (UnsupportedOperationException expected) {
+			// expected exception
+		}
+
+		try {
+			termsEnum.seekExact(0);
+			fail();
+		} catch (UnsupportedOperationException expected) {
+			// expected exception
+		}
+		ir.close();
+		iw.close();
+		dir.close();
+	}
+
+	/**
+	 * writes some tiny segments with incomplete compressed blocks,
+	 * and ensures merge recompresses them.
+	 */
+	public void testChunkCleanup() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriterConfig iwConf = newIndexWriterConfig(new MockAnalyzer(random()));
+		iwConf.setMergePolicy(NoMergePolicy.INSTANCE);
+
+		// we have to enforce certain things like maxDocsPerChunk to cause dirty chunks to be created
+		// by this test.
+		iwConf.setCodec(CompressingCodec.randomInstance(random(), 4 * 1024, 100, false, 8));
+		IndexWriter iw = new IndexWriter(dir, iwConf);
+		DirectoryReader ir = DirectoryReader.open(iw);
+		for (int i = 0; i < 5; i++) {
+			Document doc = new Document();
+			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
+			ft.setStoreTermVectors(true);
+			doc.add(new Field("text", "not very long at all", ft));
+			iw.addDocument(doc);
+			// force flush
+			DirectoryReader ir2 = DirectoryReader.openIfChanged(ir);
+			assertNotNull(ir2);
+			ir.close();
+			ir = ir2;
+			// examine dirty counts:
+			for (LeafReaderContext leaf : ir2.leaves()) {
+				CodecReader sr = (CodecReader) leaf.reader();
+				CompressingTermVectorsReader reader = (CompressingTermVectorsReader) sr.getTermVectorsReader();
+				assertEquals(1, reader.getNumChunks());
+				assertEquals(1, reader.getNumDirtyChunks());
+			}
+		}
+		iw.getConfig().setMergePolicy(newLogMergePolicy());
+		iw.forceMerge(1);
+		DirectoryReader ir2 = DirectoryReader.openIfChanged(ir);
+		assertNotNull(ir2);
+		ir.close();
+		ir = ir2;
+		CodecReader sr = (CodecReader) getOnlyLeafReader(ir);
+		CompressingTermVectorsReader reader = (CompressingTermVectorsReader) sr.getTermVectorsReader();
+		// we could get lucky, and have zero, but typically one.
+		assertTrue(reader.getNumDirtyChunks() <= 1);
+		ir.close();
+		iw.close();
+		dir.close();
+	}
 }

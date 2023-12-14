@@ -25,32 +25,33 @@ import java.io.IOException;
  * @lucene.experimental
  */
 public class GeoCompositePolygon extends GeoBaseCompositeAreaShape<GeoPolygon> implements GeoPolygon {
-  /**
-   * Constructor.
-   */
-  public GeoCompositePolygon(PlanetModel planetModel) {
-    super(planetModel);
-  }
+	/**
+	 * Constructor.
+	 */
+	public GeoCompositePolygon(PlanetModel planetModel) {
+		super(planetModel);
+	}
 
-  /**
-   * Constructor for deserialization.
-   * @param planetModel is the planet model.
-   * @param inputStream is the input stream.
-   */
-  public GeoCompositePolygon(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
-    super(planetModel, inputStream, GeoPolygon.class);
-  }
+	/**
+	 * Constructor for deserialization.
+	 *
+	 * @param planetModel is the planet model.
+	 * @param inputStream is the input stream.
+	 */
+	public GeoCompositePolygon(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
+		super(planetModel, inputStream, GeoPolygon.class);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof GeoCompositePolygon))
-      return false;
-    return super.equals(o);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof GeoCompositePolygon))
+			return false;
+		return super.equals(o);
+	}
 
-  @Override
-  public String toString() {
-    return "GeoCompositePolygon: {" + shapes + '}';
-  }
+	@Override
+	public String toString() {
+		return "GeoCompositePolygon: {" + shapes + '}';
+	}
 }
-  
+

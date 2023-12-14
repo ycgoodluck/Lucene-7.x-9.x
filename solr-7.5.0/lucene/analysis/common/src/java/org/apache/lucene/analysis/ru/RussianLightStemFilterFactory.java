@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.ru.RussianLightStemFilter;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link RussianLightStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_rulgtstem" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -33,20 +33,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.RussianLightStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class RussianLightStemFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new RussianLightStemFilterFactory */
-  public RussianLightStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new RussianLightStemFilter(input);
-  }
+
+	/**
+	 * Creates a new RussianLightStemFilterFactory
+	 */
+	public RussianLightStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new RussianLightStemFilter(input);
+	}
 }

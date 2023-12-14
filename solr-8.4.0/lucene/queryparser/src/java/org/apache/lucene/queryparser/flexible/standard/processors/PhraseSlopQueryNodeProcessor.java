@@ -29,45 +29,45 @@ import org.apache.lucene.queryparser.flexible.standard.nodes.MultiPhraseQueryNod
  * This processor removes invalid {@link SlopQueryNode} objects in the query
  * node tree. A {@link SlopQueryNode} is invalid if its child is neither a
  * {@link TokenizedPhraseQueryNode} nor a {@link MultiPhraseQueryNode}.
- * 
+ *
  * @see SlopQueryNode
  */
 public class PhraseSlopQueryNodeProcessor extends QueryNodeProcessorImpl {
 
-  public PhraseSlopQueryNodeProcessor() {
-    // empty constructor
-  }
+	public PhraseSlopQueryNodeProcessor() {
+		// empty constructor
+	}
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-    if (node instanceof SlopQueryNode) {
-      SlopQueryNode phraseSlopNode = (SlopQueryNode) node;
+		if (node instanceof SlopQueryNode) {
+			SlopQueryNode phraseSlopNode = (SlopQueryNode) node;
 
-      if (!(phraseSlopNode.getChild() instanceof TokenizedPhraseQueryNode)
-          && !(phraseSlopNode.getChild() instanceof MultiPhraseQueryNode)) {
-        return phraseSlopNode.getChild();
-      }
+			if (!(phraseSlopNode.getChild() instanceof TokenizedPhraseQueryNode)
+				&& !(phraseSlopNode.getChild() instanceof MultiPhraseQueryNode)) {
+				return phraseSlopNode.getChild();
+			}
 
-    }
+		}
 
-    return node;
+		return node;
 
-  }
+	}
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
 
-    return node;
+		return node;
 
-  }
+	}
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
 
-    return children;
+		return children;
 
-  }
+	}
 
 }

@@ -29,63 +29,63 @@ import org.apache.lucene.analysis.core.KeywordTokenizer;
  * Tests for {@link CJKWidthFilter}
  */
 public class TestCJKWidthFilter extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-        return new TokenStreamComponents(source, new CJKWidthFilter(source));
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    analyzer.close();
-    super.tearDown();
-  }
-  
-  /**
-   * Full-width ASCII forms normalized to half-width (basic latin)
-   */
-  public void testFullWidthASCII() throws IOException {
-    assertAnalyzesTo(analyzer, "Ｔｅｓｔ １２３４",
-      new String[] { "Test",  "1234" },
-      new int[] { 0, 5 },
-      new int[] { 4, 9 });
-  }
-  
-  /**
-   * Half-width katakana forms normalized to standard katakana.
-   * A bit trickier in some cases, since half-width forms are decomposed
-   * and voice marks need to be recombined with a preceding base form. 
-   */
-  public void testHalfWidthKana() throws IOException {
-    assertAnalyzesTo(analyzer, "ｶﾀｶﾅ",
-      new String[] { "カタカナ" });
-    assertAnalyzesTo(analyzer, "ｳﾞｨｯﾂ",
-      new String[] { "ヴィッツ" });
-    assertAnalyzesTo(analyzer, "ﾊﾟﾅｿﾆｯｸ",
-      new String[] { "パナソニック" });
-  }
-  
-  public void testRandomData() throws IOException {
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new CJKWidthFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	private Analyzer analyzer;
+
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+				return new TokenStreamComponents(source, new CJKWidthFilter(source));
+			}
+		};
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		analyzer.close();
+		super.tearDown();
+	}
+
+	/**
+	 * Full-width ASCII forms normalized to half-width (basic latin)
+	 */
+	public void testFullWidthASCII() throws IOException {
+		assertAnalyzesTo(analyzer, "Ｔｅｓｔ １２３４",
+			new String[]{"Test", "1234"},
+			new int[]{0, 5},
+			new int[]{4, 9});
+	}
+
+	/**
+	 * Half-width katakana forms normalized to standard katakana.
+	 * A bit trickier in some cases, since half-width forms are decomposed
+	 * and voice marks need to be recombined with a preceding base form.
+	 */
+	public void testHalfWidthKana() throws IOException {
+		assertAnalyzesTo(analyzer, "ｶﾀｶﾅ",
+			new String[]{"カタカナ"});
+		assertAnalyzesTo(analyzer, "ｳﾞｨｯﾂ",
+			new String[]{"ヴィッツ"});
+		assertAnalyzesTo(analyzer, "ﾊﾟﾅｿﾆｯｸ",
+			new String[]{"パナソニック"});
+	}
+
+	public void testRandomData() throws IOException {
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new CJKWidthFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

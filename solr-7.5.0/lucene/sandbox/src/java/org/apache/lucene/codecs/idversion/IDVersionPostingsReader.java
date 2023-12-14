@@ -29,75 +29,75 @@ import org.apache.lucene.store.IndexInput;
 
 final class IDVersionPostingsReader extends PostingsReaderBase {
 
-  @Override
-  public void init(IndexInput termsIn, SegmentReadState state) throws IOException {
-    // Make sure we are talking to the matching postings writer
-    CodecUtil.checkIndexHeader(termsIn,
-                                 IDVersionPostingsWriter.TERMS_CODEC,
-                                 IDVersionPostingsWriter.VERSION_START,
-                                 IDVersionPostingsWriter.VERSION_CURRENT,
-                                 state.segmentInfo.getId(), state.segmentSuffix);
-  }
+	@Override
+	public void init(IndexInput termsIn, SegmentReadState state) throws IOException {
+		// Make sure we are talking to the matching postings writer
+		CodecUtil.checkIndexHeader(termsIn,
+			IDVersionPostingsWriter.TERMS_CODEC,
+			IDVersionPostingsWriter.VERSION_START,
+			IDVersionPostingsWriter.VERSION_CURRENT,
+			state.segmentInfo.getId(), state.segmentSuffix);
+	}
 
-  @Override
-  public BlockTermState newTermState() {
-    return new IDVersionTermState();
-  }
+	@Override
+	public BlockTermState newTermState() {
+		return new IDVersionTermState();
+	}
 
-  @Override
-  public void close() throws IOException {
-  }
+	@Override
+	public void close() throws IOException {
+	}
 
-  @Override
-  public void decodeTerm(long[] longs, DataInput in, FieldInfo fieldInfo, BlockTermState _termState, boolean absolute)
-    throws IOException {
-    final IDVersionTermState termState = (IDVersionTermState) _termState;
-    termState.docID = in.readVInt();
-    if (absolute) {
-      termState.idVersion = in.readVLong();
-    } else {
-      termState.idVersion += in.readZLong();
-    }
-  }
+	@Override
+	public void decodeTerm(long[] longs, DataInput in, FieldInfo fieldInfo, BlockTermState _termState, boolean absolute)
+		throws IOException {
+		final IDVersionTermState termState = (IDVersionTermState) _termState;
+		termState.docID = in.readVInt();
+		if (absolute) {
+			termState.idVersion = in.readVLong();
+		} else {
+			termState.idVersion += in.readZLong();
+		}
+	}
 
-  @Override
-  public PostingsEnum postings(FieldInfo fieldInfo, BlockTermState termState, PostingsEnum reuse, int flags) throws IOException {
-    SingleDocsEnum docsEnum;
+	@Override
+	public PostingsEnum postings(FieldInfo fieldInfo, BlockTermState termState, PostingsEnum reuse, int flags) throws IOException {
+		SingleDocsEnum docsEnum;
 
-    if (PostingsEnum.featureRequested(flags, PostingsEnum.POSITIONS)) {
-      SinglePostingsEnum posEnum;
+		if (PostingsEnum.featureRequested(flags, PostingsEnum.POSITIONS)) {
+			SinglePostingsEnum posEnum;
 
-      if (reuse instanceof SinglePostingsEnum) {
-        posEnum = (SinglePostingsEnum) reuse;
-      } else {
-        posEnum = new SinglePostingsEnum();
-      }
-      IDVersionTermState _termState = (IDVersionTermState) termState;
-      posEnum.reset(_termState.docID, _termState.idVersion);
-      return posEnum;
-    }
+			if (reuse instanceof SinglePostingsEnum) {
+				posEnum = (SinglePostingsEnum) reuse;
+			} else {
+				posEnum = new SinglePostingsEnum();
+			}
+			IDVersionTermState _termState = (IDVersionTermState) termState;
+			posEnum.reset(_termState.docID, _termState.idVersion);
+			return posEnum;
+		}
 
-    if (reuse instanceof SingleDocsEnum) {
-      docsEnum = (SingleDocsEnum) reuse;
-    } else {
-      docsEnum = new SingleDocsEnum();
-    }
-    docsEnum.reset(((IDVersionTermState) termState).docID);
+		if (reuse instanceof SingleDocsEnum) {
+			docsEnum = (SingleDocsEnum) reuse;
+		} else {
+			docsEnum = new SingleDocsEnum();
+		}
+		docsEnum.reset(((IDVersionTermState) termState).docID);
 
-    return docsEnum;
-  }
+		return docsEnum;
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return 0;
-  }
+	@Override
+	public long ramBytesUsed() {
+		return 0;
+	}
 
-  @Override
-  public void checkIntegrity() throws IOException {
-  }
+	@Override
+	public void checkIntegrity() throws IOException {
+	}
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName();
-  }
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
 }

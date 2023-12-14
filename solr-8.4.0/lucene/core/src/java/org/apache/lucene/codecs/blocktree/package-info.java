@@ -17,7 +17,7 @@
 
 /**
  * BlockTree terms dictionary.
- * 
+ *
  * <p>
  * This terms dictionary organizes all terms into blocks according to
  * shared prefix, such that each block has enough terms, and then stores
@@ -26,9 +26,9 @@
  * org.apache.lucene.codecs.PostingsWriterBase} to implement the
  * postings.
  * </p>
- * 
+ *
  * <p>See {@link org.apache.lucene.codecs.blocktree.BlockTreeTermsWriter}
- *   for the file format.
+ * for the file format.
  * </p>
  */
 package org.apache.lucene.codecs.blocktree;

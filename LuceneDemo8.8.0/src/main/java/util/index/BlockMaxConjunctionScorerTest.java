@@ -19,57 +19,57 @@ import java.nio.file.Paths;
  */
 public class BlockMaxConjunctionScorerTest {
 
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private final Analyzer analyzer = new WhitespaceAnalyzer();
-    private final IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-    private IndexWriter indexWriter;
+	private final Analyzer analyzer = new WhitespaceAnalyzer();
+	private final IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private IndexWriter indexWriter;
 
-    public void doSearch() throws Exception {
-        conf.setUseCompoundFile(false);
-        indexWriter = new IndexWriter(directory, conf);
-        int count = 0;
-        Document doc ;
-        while (count++ < 6){
-            doc = new Document();
-            doc.add(new TextField("author",  "andy lily baby andy lucy ably", Field.Store.YES));
-            indexWriter.addDocument(doc);
+	public void doSearch() throws Exception {
+		conf.setUseCompoundFile(false);
+		indexWriter = new IndexWriter(directory, conf);
+		int count = 0;
+		Document doc;
+		while (count++ < 6) {
+			doc = new Document();
+			doc.add(new TextField("author", "andy lily baby andy lucy ably", Field.Store.YES));
+			indexWriter.addDocument(doc);
 
-            doc = new Document();
-            if(count == 130){
-                doc.add(new TextField("author",  "lily andy tom lucy for you", Field.Store.YES));
-            }else {
-                doc.add(new TextField("author",  "lily andy tom lucy for you", Field.Store.YES));
-            }
-            indexWriter.addDocument(doc);
-        }
-        indexWriter.commit();
-        IndexReader reader = DirectoryReader.open(indexWriter);
-        IndexSearcher searcher = new IndexSearcher(reader);
-        BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        builder.add(new TermQuery(new Term("author", "lily")), BooleanClause.Occur.MUST);
-        builder.add(new TermQuery(new Term("author", "lucy")), BooleanClause.Occur.MUST);
-        ScoreDoc[] scoreDocs = searcher.search(builder.build(), 100).scoreDocs;
-        for (ScoreDoc scoreDoc : scoreDocs) {
-            System.out.print(scoreDoc.doc);
-            System.out.print(" ");
-        }
+			doc = new Document();
+			if (count == 130) {
+				doc.add(new TextField("author", "lily andy tom lucy for you", Field.Store.YES));
+			} else {
+				doc.add(new TextField("author", "lily andy tom lucy for you", Field.Store.YES));
+			}
+			indexWriter.addDocument(doc);
+		}
+		indexWriter.commit();
+		IndexReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
+		BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		builder.add(new TermQuery(new Term("author", "lily")), BooleanClause.Occur.MUST);
+		builder.add(new TermQuery(new Term("author", "lucy")), BooleanClause.Occur.MUST);
+		ScoreDoc[] scoreDocs = searcher.search(builder.build(), 100).scoreDocs;
+		for (ScoreDoc scoreDoc : scoreDocs) {
+			System.out.print(scoreDoc.doc);
+			System.out.print(" ");
+		}
 
-        System.out.println("DONE");
+		System.out.println("DONE");
 
-    }
+	}
 
-    public static void main(String[] args) throws Exception{
-        BlockMaxConjunctionScorerTest test = new BlockMaxConjunctionScorerTest();
-        test.doSearch();
-    }
+	public static void main(String[] args) throws Exception {
+		BlockMaxConjunctionScorerTest test = new BlockMaxConjunctionScorerTest();
+		test.doSearch();
+	}
 }

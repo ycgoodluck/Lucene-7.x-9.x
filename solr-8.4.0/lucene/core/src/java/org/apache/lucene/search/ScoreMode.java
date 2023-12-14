@@ -20,41 +20,41 @@ package org.apache.lucene.search;
  * Different modes of search.
  */
 public enum ScoreMode {
-  
-  /**
-   * Produced scorers will allow visiting all matches and get their score.
-   */
-  COMPLETE {
-    @Override
-    public boolean needsScores() {
-      return true;
-    }
-  },
 
-  /**
-   * Produced scorers will allow visiting all matches but scores won't be
-   * available.
-   */
-  COMPLETE_NO_SCORES {
-    @Override
-    public boolean needsScores() {
-      return false;
-    }
-  },
+	/**
+	 * Produced scorers will allow visiting all matches and get their score.
+	 */
+	COMPLETE {
+		@Override
+		public boolean needsScores() {
+			return true;
+		}
+	},
 
-  /**
-   * Produced scorers will optionally allow skipping over non-competitive
-   * hits using the {@link Scorer#setMinCompetitiveScore(float)} API.
-   */
-  TOP_SCORES {
-    @Override
-    public boolean needsScores() {
-      return true;
-    }
-  };
+	/**
+	 * Produced scorers will allow visiting all matches but scores won't be
+	 * available.
+	 */
+	COMPLETE_NO_SCORES {
+		@Override
+		public boolean needsScores() {
+			return false;
+		}
+	},
 
-  /**
-   * Whether this {@link ScoreMode} needs to compute scores.
-   */
-  public abstract boolean needsScores();
+	/**
+	 * Produced scorers will optionally allow skipping over non-competitive
+	 * hits using the {@link Scorer#setMinCompetitiveScore(float)} API.
+	 */
+	TOP_SCORES {
+		@Override
+		public boolean needsScores() {
+			return true;
+		}
+	};
+
+	/**
+	 * Whether this {@link ScoreMode} needs to compute scores.
+	 */
+	public abstract boolean needsScores();
 }

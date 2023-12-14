@@ -30,7 +30,7 @@ import org.apache.lucene.codecs.TermVectorsReader;
 import org.apache.lucene.util.Accountable;
 import org.apache.lucene.util.Bits;
 
-/** 
+/**
  * A <code>FilterCodecReader</code> contains another CodecReader, which it
  * uses as its basic source of data, possibly transforming the data along the
  * way or providing additional functionality.
@@ -40,128 +40,137 @@ import org.apache.lucene.util.Bits;
  */
 public abstract class FilterCodecReader extends CodecReader {
 
-  /** Get the wrapped instance by <code>reader</code> as long as this reader is
-   *  an instance of {@link FilterCodecReader}.  */
-  public static CodecReader unwrap(CodecReader reader) {
-    while (reader instanceof FilterCodecReader) {
-      reader = ((FilterCodecReader) reader).getDelegate();
-    }
-    return reader;
-  }
-  /**
-   * The underlying CodecReader instance.
-   */
-  protected final CodecReader in;
-  
-  /**
-   * Creates a new FilterCodecReader.
-   * @param in the underlying CodecReader instance.
-   */
-  public FilterCodecReader(CodecReader in) {
-    this.in = Objects.requireNonNull(in);
-  }
+	/**
+	 * Get the wrapped instance by <code>reader</code> as long as this reader is
+	 * an instance of {@link FilterCodecReader}.
+	 */
+	public static CodecReader unwrap(CodecReader reader) {
+		while (reader instanceof FilterCodecReader) {
+			reader = ((FilterCodecReader) reader).getDelegate();
+		}
+		return reader;
+	}
 
-  @Override
-  public StoredFieldsReader getFieldsReader() {
-    return in.getFieldsReader();
-  }
+	/**
+	 * The underlying CodecReader instance.
+	 */
+	protected final CodecReader in;
 
-  @Override
-  public TermVectorsReader getTermVectorsReader() {
-    return in.getTermVectorsReader();
-  }
+	/**
+	 * Creates a new FilterCodecReader.
+	 *
+	 * @param in the underlying CodecReader instance.
+	 */
+	public FilterCodecReader(CodecReader in) {
+		this.in = Objects.requireNonNull(in);
+	}
 
-  @Override
-  public NormsProducer getNormsReader() {
-    return in.getNormsReader();
-  }
+	@Override
+	public StoredFieldsReader getFieldsReader() {
+		return in.getFieldsReader();
+	}
 
-  @Override
-  public DocValuesProducer getDocValuesReader() {
-    return in.getDocValuesReader();
-  }
+	@Override
+	public TermVectorsReader getTermVectorsReader() {
+		return in.getTermVectorsReader();
+	}
 
-  @Override
-  public FieldsProducer getPostingsReader() {
-    return in.getPostingsReader();
-  }
+	@Override
+	public NormsProducer getNormsReader() {
+		return in.getNormsReader();
+	}
 
-  @Override
-  public Bits getLiveDocs() {
-    return in.getLiveDocs();
-  }
+	@Override
+	public DocValuesProducer getDocValuesReader() {
+		return in.getDocValuesReader();
+	}
 
-  @Override
-  public FieldInfos getFieldInfos() {
-    return in.getFieldInfos();
-  }
+	@Override
+	public FieldsProducer getPostingsReader() {
+		return in.getPostingsReader();
+	}
 
-  @Override
-  public PointsReader getPointsReader() {
-    return in.getPointsReader();
-  }
+	@Override
+	public Bits getLiveDocs() {
+		return in.getLiveDocs();
+	}
 
-  @Override
-  public int numDocs() {
-    return in.numDocs();
-  }
+	@Override
+	public FieldInfos getFieldInfos() {
+		return in.getFieldInfos();
+	}
 
-  @Override
-  public int maxDoc() {
-    return in.maxDoc();
-  }
+	@Override
+	public PointsReader getPointsReader() {
+		return in.getPointsReader();
+	}
 
-  @Override
-  public LeafMetaData getMetaData() {
-    return in.getMetaData();
-  }
+	@Override
+	public int numDocs() {
+		return in.numDocs();
+	}
 
-  @Override
-  protected void doClose() throws IOException {
-    in.doClose();
-  }
+	@Override
+	public int maxDoc() {
+		return in.maxDoc();
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return in.ramBytesUsed();
-  }
+	@Override
+	public LeafMetaData getMetaData() {
+		return in.getMetaData();
+	}
 
-  @Override
-  public Collection<Accountable> getChildResources() {
-    return in.getChildResources();
-  }
+	@Override
+	protected void doClose() throws IOException {
+		in.doClose();
+	}
 
-  @Override
-  public void checkIntegrity() throws IOException {
-    in.checkIntegrity();
-  }
+	@Override
+	public long ramBytesUsed() {
+		return in.ramBytesUsed();
+	}
 
-  /** Returns the wrapped {@link CodecReader}. */
-  public CodecReader getDelegate() {
-    return in;
-  }
+	@Override
+	public Collection<Accountable> getChildResources() {
+		return in.getChildResources();
+	}
 
-  /**
-   * Returns a filtered codec reader with the given live docs and numDocs.
-   */
-  static FilterCodecReader wrapLiveDocs(CodecReader reader, Bits liveDocs, int numDocs) {
-    return new FilterCodecReader(reader) {
-      @Override
-      public CacheHelper getCoreCacheHelper() {
-        return reader.getCoreCacheHelper();
-      }
-      @Override
-      public CacheHelper getReaderCacheHelper() {
-        return null; // we are altering live docs
-      }
-      @Override
-      public Bits getLiveDocs() {
-        return liveDocs;
-      }
-      @Override
-      public int numDocs() {
-        return numDocs;
-      }
-    };
-  }
+	@Override
+	public void checkIntegrity() throws IOException {
+		in.checkIntegrity();
+	}
+
+	/**
+	 * Returns the wrapped {@link CodecReader}.
+	 */
+	public CodecReader getDelegate() {
+		return in;
+	}
+
+	/**
+	 * Returns a filtered codec reader with the given live docs and numDocs.
+	 */
+	static FilterCodecReader wrapLiveDocs(CodecReader reader, Bits liveDocs, int numDocs) {
+		return new FilterCodecReader(reader) {
+			@Override
+			public CacheHelper getCoreCacheHelper() {
+				return reader.getCoreCacheHelper();
+			}
+
+			@Override
+			public CacheHelper getReaderCacheHelper() {
+				return null; // we are altering live docs
+			}
+
+			@Override
+			public Bits getLiveDocs() {
+				return liveDocs;
+			}
+
+			@Override
+			public int numDocs() {
+				return numDocs;
+			}
+		};
+	}
 }

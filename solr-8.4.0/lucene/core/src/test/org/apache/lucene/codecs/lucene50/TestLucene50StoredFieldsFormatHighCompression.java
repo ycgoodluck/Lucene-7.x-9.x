@@ -31,51 +31,51 @@ import org.apache.lucene.store.Directory;
 import com.carrotsearch.randomizedtesting.generators.RandomPicks;
 
 public class TestLucene50StoredFieldsFormatHighCompression extends BaseStoredFieldsFormatTestCase {
-  @Override
-  protected Codec getCodec() {
-    return new Lucene84Codec(Mode.BEST_COMPRESSION);
-  }
-  
-  /**
-   * Change compression params (leaving it the same for old segments)
-   * and tests that nothing breaks.
-   */
-  public void testMixedCompressions() throws Exception {
-    Directory dir = newDirectory();
-    for (int i = 0; i < 10; i++) {
-      IndexWriterConfig iwc = newIndexWriterConfig();
-      iwc.setCodec(new Lucene84Codec(RandomPicks.randomFrom(random(), Mode.values())));
-      IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig());
-      Document doc = new Document();
-      doc.add(new StoredField("field1", "value1"));
-      doc.add(new StoredField("field2", "value2"));
-      iw.addDocument(doc);
-      if (random().nextInt(4) == 0) {
-        iw.forceMerge(1);
-      }
-      iw.commit();
-      iw.close();
-    }
-    
-    DirectoryReader ir = DirectoryReader.open(dir);
-    assertEquals(10, ir.numDocs());
-    for (int i = 0; i < 10; i++) {
-      Document doc = ir.document(i);
-      assertEquals("value1", doc.get("field1"));
-      assertEquals("value2", doc.get("field2"));
-    }
-    ir.close();
-    // checkindex
-    dir.close();
-  }
-  
-  public void testInvalidOptions() {
-    expectThrows(NullPointerException.class, () -> {
-      new Lucene84Codec(null);
-    });
+	@Override
+	protected Codec getCodec() {
+		return new Lucene84Codec(Mode.BEST_COMPRESSION);
+	}
 
-    expectThrows(NullPointerException.class, () -> {
-      new Lucene50StoredFieldsFormat(null);
-    });
-  }
+	/**
+	 * Change compression params (leaving it the same for old segments)
+	 * and tests that nothing breaks.
+	 */
+	public void testMixedCompressions() throws Exception {
+		Directory dir = newDirectory();
+		for (int i = 0; i < 10; i++) {
+			IndexWriterConfig iwc = newIndexWriterConfig();
+			iwc.setCodec(new Lucene84Codec(RandomPicks.randomFrom(random(), Mode.values())));
+			IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig());
+			Document doc = new Document();
+			doc.add(new StoredField("field1", "value1"));
+			doc.add(new StoredField("field2", "value2"));
+			iw.addDocument(doc);
+			if (random().nextInt(4) == 0) {
+				iw.forceMerge(1);
+			}
+			iw.commit();
+			iw.close();
+		}
+
+		DirectoryReader ir = DirectoryReader.open(dir);
+		assertEquals(10, ir.numDocs());
+		for (int i = 0; i < 10; i++) {
+			Document doc = ir.document(i);
+			assertEquals("value1", doc.get("field1"));
+			assertEquals("value2", doc.get("field2"));
+		}
+		ir.close();
+		// checkindex
+		dir.close();
+	}
+
+	public void testInvalidOptions() {
+		expectThrows(NullPointerException.class, () -> {
+			new Lucene84Codec(null);
+		});
+
+		expectThrows(NullPointerException.class, () -> {
+			new Lucene50StoredFieldsFormat(null);
+		});
+	}
 }

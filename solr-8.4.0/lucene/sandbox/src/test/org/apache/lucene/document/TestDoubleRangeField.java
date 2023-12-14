@@ -22,46 +22,54 @@ import org.apache.lucene.util.LuceneTestCase;
  * Random testing for RangeField type.
  **/
 public class TestDoubleRangeField extends LuceneTestCase {
-  private static final String FIELD_NAME = "rangeField";
+	private static final String FIELD_NAME = "rangeField";
 
-  /** test illegal NaN range values */
-  public void testIllegalNaNValues() {
-    Document doc = new Document();
-    IllegalArgumentException expected;
+	/**
+	 * test illegal NaN range values
+	 */
+	public void testIllegalNaNValues() {
+		Document doc = new Document();
+		IllegalArgumentException expected;
 
-    expected = expectThrows(IllegalArgumentException.class, () ->
-        doc.add(new DoubleRange(FIELD_NAME, new double[] {Double.NaN}, new double[] {5})));
-    assertTrue(expected.getMessage().contains("invalid min value"));
+		expected = expectThrows(IllegalArgumentException.class, () ->
+			doc.add(new DoubleRange(FIELD_NAME, new double[]{Double.NaN}, new double[]{5})));
+		assertTrue(expected.getMessage().contains("invalid min value"));
 
-    expected = expectThrows(IllegalArgumentException.class, () ->
-        doc.add(new DoubleRange(FIELD_NAME, new double[] {5}, new double[] {Double.NaN})));
-    assertTrue(expected.getMessage().contains("invalid max value"));
-  }
+		expected = expectThrows(IllegalArgumentException.class, () ->
+			doc.add(new DoubleRange(FIELD_NAME, new double[]{5}, new double[]{Double.NaN})));
+		assertTrue(expected.getMessage().contains("invalid max value"));
+	}
 
-  /** min/max array sizes must agree */
-  public void testUnevenArrays() {
-    Document doc = new Document();
-    IllegalArgumentException expected;
-    expected = expectThrows(IllegalArgumentException.class, () ->
-        doc.add(new DoubleRange(FIELD_NAME, new double[] {5, 6}, new double[] {5})));
-    assertTrue(expected.getMessage().contains("min/max ranges must agree"));
-  }
+	/**
+	 * min/max array sizes must agree
+	 */
+	public void testUnevenArrays() {
+		Document doc = new Document();
+		IllegalArgumentException expected;
+		expected = expectThrows(IllegalArgumentException.class, () ->
+			doc.add(new DoubleRange(FIELD_NAME, new double[]{5, 6}, new double[]{5})));
+		assertTrue(expected.getMessage().contains("min/max ranges must agree"));
+	}
 
-  /** dimensions greater than 4 not supported */
-  public void testOversizeDimensions() {
-    Document doc = new Document();
-    IllegalArgumentException expected;
-    expected = expectThrows(IllegalArgumentException.class, () ->
-        doc.add(new DoubleRange(FIELD_NAME, new double[] {1, 2, 3, 4, 5}, new double[] {5})));
-    assertTrue(expected.getMessage().contains("does not support greater than 4 dimensions"));
-  }
+	/**
+	 * dimensions greater than 4 not supported
+	 */
+	public void testOversizeDimensions() {
+		Document doc = new Document();
+		IllegalArgumentException expected;
+		expected = expectThrows(IllegalArgumentException.class, () ->
+			doc.add(new DoubleRange(FIELD_NAME, new double[]{1, 2, 3, 4, 5}, new double[]{5})));
+		assertTrue(expected.getMessage().contains("does not support greater than 4 dimensions"));
+	}
 
-  /** min cannot be greater than max */
-  public void testMinGreaterThanMax() {
-    Document doc = new Document();
-    IllegalArgumentException expected;
-    expected = expectThrows(IllegalArgumentException.class, () ->
-      doc.add(new DoubleRange(FIELD_NAME, new double[] {3, 4}, new double[] {1, 2})));
-    assertTrue(expected.getMessage().contains("is greater than max value"));
-  }
+	/**
+	 * min cannot be greater than max
+	 */
+	public void testMinGreaterThanMax() {
+		Document doc = new Document();
+		IllegalArgumentException expected;
+		expected = expectThrows(IllegalArgumentException.class, () ->
+			doc.add(new DoubleRange(FIELD_NAME, new double[]{3, 4}, new double[]{1, 2})));
+		assertTrue(expected.getMessage().contains("is greater than max value"));
+	}
 }

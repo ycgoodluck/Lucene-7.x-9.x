@@ -78,78 +78,80 @@ import org.apache.lucene.analysis.util.ResourceLoaderAware;
  * modes, but it makes the most sense to use them with NORMAL mode.
  */
 public class JapaneseTokenizerFactory extends TokenizerFactory implements ResourceLoaderAware {
-  private static final String MODE = "mode";
+	private static final String MODE = "mode";
 
-  private static final String USER_DICT_PATH = "userDictionary";
+	private static final String USER_DICT_PATH = "userDictionary";
 
-  private static final String USER_DICT_ENCODING = "userDictionaryEncoding";
+	private static final String USER_DICT_ENCODING = "userDictionaryEncoding";
 
-  private static final String DISCARD_PUNCTUATION = "discardPunctuation"; // Expert option
+	private static final String DISCARD_PUNCTUATION = "discardPunctuation"; // Expert option
 
-  private static final String NBEST_COST = "nBestCost";
+	private static final String NBEST_COST = "nBestCost";
 
-  private static final String NBEST_EXAMPLES = "nBestExamples";
+	private static final String NBEST_EXAMPLES = "nBestExamples";
 
-  private UserDictionary userDictionary;
+	private UserDictionary userDictionary;
 
-  private final Mode mode;
-  private final boolean discardPunctuation;
-  private final String userDictionaryPath;
-  private final String userDictionaryEncoding;
+	private final Mode mode;
+	private final boolean discardPunctuation;
+	private final String userDictionaryPath;
+	private final String userDictionaryEncoding;
 
-  /* Example string for NBEST output.
-   * its form as:
-   *   nbestExamples := [ / ] example [ / example ]... [ / ]
-   *   example := TEXT - TOKEN
-   *   TEXT := input text
-   *   TOKEN := token should be in nbest result
-   * Ex. /箱根山-箱根/成田空港-成田/
-   * When the result tokens are "箱根山", "成田空港" in NORMAL mode,
-   * /箱根山-箱根/成田空港-成田/ requests "箱根" and "成田" to be in the result in NBEST output.
-   */
-  private final String nbestExamples;
-  private int nbestCost = -1;
+	/* Example string for NBEST output.
+	 * its form as:
+	 *   nbestExamples := [ / ] example [ / example ]... [ / ]
+	 *   example := TEXT - TOKEN
+	 *   TEXT := input text
+	 *   TOKEN := token should be in nbest result
+	 * Ex. /箱根山-箱根/成田空港-成田/
+	 * When the result tokens are "箱根山", "成田空港" in NORMAL mode,
+	 * /箱根山-箱根/成田空港-成田/ requests "箱根" and "成田" to be in the result in NBEST output.
+	 */
+	private final String nbestExamples;
+	private int nbestCost = -1;
 
-  /** Creates a new JapaneseTokenizerFactory */
-  public JapaneseTokenizerFactory(Map<String,String> args) {
-    super(args);
-    mode = Mode.valueOf(get(args, MODE, JapaneseTokenizer.DEFAULT_MODE.toString()).toUpperCase(Locale.ROOT));
-    userDictionaryPath = args.remove(USER_DICT_PATH);
-    userDictionaryEncoding = args.remove(USER_DICT_ENCODING);
-    discardPunctuation = getBoolean(args, DISCARD_PUNCTUATION, true);
-    nbestCost = getInt(args, NBEST_COST, 0);
-    nbestExamples = args.remove(NBEST_EXAMPLES);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new JapaneseTokenizerFactory
+	 */
+	public JapaneseTokenizerFactory(Map<String, String> args) {
+		super(args);
+		mode = Mode.valueOf(get(args, MODE, JapaneseTokenizer.DEFAULT_MODE.toString()).toUpperCase(Locale.ROOT));
+		userDictionaryPath = args.remove(USER_DICT_PATH);
+		userDictionaryEncoding = args.remove(USER_DICT_ENCODING);
+		discardPunctuation = getBoolean(args, DISCARD_PUNCTUATION, true);
+		nbestCost = getInt(args, NBEST_COST, 0);
+		nbestExamples = args.remove(NBEST_EXAMPLES);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    if (userDictionaryPath != null) {
-      try (InputStream stream = loader.openResource(userDictionaryPath)) {
-        String encoding = userDictionaryEncoding;
-        if (encoding == null) {
-          encoding = IOUtils.UTF_8;
-        }
-        CharsetDecoder decoder = Charset.forName(encoding).newDecoder()
-          .onMalformedInput(CodingErrorAction.REPORT)
-          .onUnmappableCharacter(CodingErrorAction.REPORT);
-        Reader reader = new InputStreamReader(stream, decoder);
-        userDictionary = UserDictionary.open(reader);
-      }
-    } else {
-      userDictionary = null;
-    }
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		if (userDictionaryPath != null) {
+			try (InputStream stream = loader.openResource(userDictionaryPath)) {
+				String encoding = userDictionaryEncoding;
+				if (encoding == null) {
+					encoding = IOUtils.UTF_8;
+				}
+				CharsetDecoder decoder = Charset.forName(encoding).newDecoder()
+					.onMalformedInput(CodingErrorAction.REPORT)
+					.onUnmappableCharacter(CodingErrorAction.REPORT);
+				Reader reader = new InputStreamReader(stream, decoder);
+				userDictionary = UserDictionary.open(reader);
+			}
+		} else {
+			userDictionary = null;
+		}
+	}
 
-  @Override
-  public JapaneseTokenizer create(AttributeFactory factory) {
-    JapaneseTokenizer t = new JapaneseTokenizer(factory, userDictionary, discardPunctuation, mode);
-    if (nbestExamples != null) {
-      nbestCost = Math.max(nbestCost, t.calcNBestCost(nbestExamples));
-    }
-    t.setNBestCost(nbestCost);
-    return t;
-  }
+	@Override
+	public JapaneseTokenizer create(AttributeFactory factory) {
+		JapaneseTokenizer t = new JapaneseTokenizer(factory, userDictionary, discardPunctuation, mode);
+		if (nbestExamples != null) {
+			nbestCost = Math.max(nbestCost, t.calcNBestCost(nbestExamples));
+		}
+		t.setNBestCost(nbestCost);
+		return t;
+	}
 }

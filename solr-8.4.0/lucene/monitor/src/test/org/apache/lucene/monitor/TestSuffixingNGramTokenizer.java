@@ -27,41 +27,41 @@ import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 
 public class TestSuffixingNGramTokenizer extends BaseTokenStreamTestCase {
 
-  private Analyzer analyzer = new Analyzer() {
-    @Override
-    protected TokenStreamComponents createComponents(String fieldName) {
-      Tokenizer source = new WhitespaceTokenizer();
-      TokenStream sink = new SuffixingNGramTokenFilter(source, "XX", "ANY", 10);
-      return new TokenStreamComponents(source, sink);
-    }
-  };
+	private Analyzer analyzer = new Analyzer() {
+		@Override
+		protected TokenStreamComponents createComponents(String fieldName) {
+			Tokenizer source = new WhitespaceTokenizer();
+			TokenStream sink = new SuffixingNGramTokenFilter(source, "XX", "ANY", 10);
+			return new TokenStreamComponents(source, sink);
+		}
+	};
 
-  public void testTokensAreSuffixed() throws IOException {
-    assertAnalyzesTo(analyzer, "term", new String[]{
-        "term", "termXX", "terXX", "teXX", "tXX", "ermXX", "erXX", "eXX", "rmXX", "rXX", "mXX", "XX"
-    });
-  }
+	public void testTokensAreSuffixed() throws IOException {
+		assertAnalyzesTo(analyzer, "term", new String[]{
+			"term", "termXX", "terXX", "teXX", "tXX", "ermXX", "erXX", "eXX", "rmXX", "rXX", "mXX", "XX"
+		});
+	}
 
-  public void testRepeatedSuffixesAreNotEmitted() throws IOException {
-    assertAnalyzesTo(analyzer, "arm harm term", new String[]{
-        "arm", "armXX", "arXX", "aXX", "rmXX", "rXX", "mXX", "XX",
-        "harm", "harmXX", "harXX", "haXX", "hXX",
-        "term", "termXX", "terXX", "teXX", "tXX", "ermXX", "erXX", "eXX"
-    });
-  }
+	public void testRepeatedSuffixesAreNotEmitted() throws IOException {
+		assertAnalyzesTo(analyzer, "arm harm term", new String[]{
+			"arm", "armXX", "arXX", "aXX", "rmXX", "rXX", "mXX", "XX",
+			"harm", "harmXX", "harXX", "haXX", "hXX",
+			"term", "termXX", "terXX", "teXX", "tXX", "ermXX", "erXX", "eXX"
+		});
+	}
 
-  public void testRepeatedInfixesAreNotEmitted() throws IOException {
-    assertAnalyzesTo(analyzer, "alarm alas harm", new String[]{
-        "alarm", "alarmXX", "alarXX", "alaXX", "alXX", "aXX",
-        "larmXX", "larXX", "laXX", "lXX", "armXX", "arXX", "rmXX", "rXX", "mXX", "XX",
-        "alas", "alasXX", "lasXX", "asXX", "sXX", "harm", "harmXX", "harXX", "haXX", "hXX"
-    });
-  }
+	public void testRepeatedInfixesAreNotEmitted() throws IOException {
+		assertAnalyzesTo(analyzer, "alarm alas harm", new String[]{
+			"alarm", "alarmXX", "alarXX", "alaXX", "alXX", "aXX",
+			"larmXX", "larXX", "laXX", "lXX", "armXX", "arXX", "rmXX", "rXX", "mXX", "XX",
+			"alas", "alasXX", "lasXX", "asXX", "sXX", "harm", "harmXX", "harXX", "haXX", "hXX"
+		});
+	}
 
-  public void testLengthyTokensAreNotNgrammed() throws IOException {
-    assertAnalyzesTo(analyzer, "alongtermthatshouldntbengrammed", new String[]{
-        "alongtermthatshouldntbengrammed", "ANY"
-    });
-  }
+	public void testLengthyTokensAreNotNgrammed() throws IOException {
+		assertAnalyzesTo(analyzer, "alongtermthatshouldntbengrammed", new String[]{
+			"alongtermthatshouldntbengrammed", "ANY"
+		});
+	}
 
 }

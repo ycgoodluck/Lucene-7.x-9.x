@@ -36,118 +36,120 @@ import org.apache.lucene.util.BytesRef;
  * If frequencies are omitted, returns 1.
  */
 public class TermFreqValueSource extends DocFreqValueSource {
-  public TermFreqValueSource(String field, String val, String indexedField, BytesRef indexedBytes) {
-    super(field, val, indexedField, indexedBytes);
-  }
+	public TermFreqValueSource(String field, String val, String indexedField, BytesRef indexedBytes) {
+		super(field, val, indexedField, indexedBytes);
+	}
 
-  @Override
-  public String name() {
-    return "termfreq";
-  }
+	@Override
+	public String name() {
+		return "termfreq";
+	}
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    final Terms terms = readerContext.reader().terms(indexedField);
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+		final Terms terms = readerContext.reader().terms(indexedField);
 
-    return new IntDocValues(this) {
-      PostingsEnum docs ;
-      int atDoc;
-      int lastDocRequested = -1;
+		return new IntDocValues(this) {
+			PostingsEnum docs;
+			int atDoc;
+			int lastDocRequested = -1;
 
-      { reset(); }
+			{
+				reset();
+			}
 
-      public void reset() throws IOException {
-        // no one should call us for deleted docs?
-        
-        if (terms != null) {
-          final TermsEnum termsEnum = terms.iterator();
-          if (termsEnum.seekExact(indexedBytes)) {
-            docs = termsEnum.postings(null);
-          } else {
-            docs = null;
-          }
-        } else {
-          docs = null;
-        }
+			public void reset() throws IOException {
+				// no one should call us for deleted docs?
 
-        if (docs == null) {
-          docs = new PostingsEnum() {
-            @Override
-            public int freq() {
-              return 0;
-            }
+				if (terms != null) {
+					final TermsEnum termsEnum = terms.iterator();
+					if (termsEnum.seekExact(indexedBytes)) {
+						docs = termsEnum.postings(null);
+					} else {
+						docs = null;
+					}
+				} else {
+					docs = null;
+				}
 
-            @Override
-            public int nextPosition() throws IOException {
-              return -1;
-            }
+				if (docs == null) {
+					docs = new PostingsEnum() {
+						@Override
+						public int freq() {
+							return 0;
+						}
 
-            @Override
-            public int startOffset() throws IOException {
-              return -1;
-            }
+						@Override
+						public int nextPosition() throws IOException {
+							return -1;
+						}
 
-            @Override
-            public int endOffset() throws IOException {
-              return -1;
-            }
+						@Override
+						public int startOffset() throws IOException {
+							return -1;
+						}
 
-            @Override
-            public BytesRef getPayload() throws IOException {
-              throw new UnsupportedOperationException();
-            }
+						@Override
+						public int endOffset() throws IOException {
+							return -1;
+						}
 
-            @Override
-            public int docID() {
-              return DocIdSetIterator.NO_MORE_DOCS;
-            }
+						@Override
+						public BytesRef getPayload() throws IOException {
+							throw new UnsupportedOperationException();
+						}
 
-            @Override
-            public int nextDoc() {
-              return DocIdSetIterator.NO_MORE_DOCS;
-            }
+						@Override
+						public int docID() {
+							return DocIdSetIterator.NO_MORE_DOCS;
+						}
 
-            @Override
-            public int advance(int target) {
-              return DocIdSetIterator.NO_MORE_DOCS;
-            }
+						@Override
+						public int nextDoc() {
+							return DocIdSetIterator.NO_MORE_DOCS;
+						}
 
-            @Override
-            public long cost() {
-              return 0;
-            }
-          };
-        }
-        atDoc = -1;
-      }
+						@Override
+						public int advance(int target) {
+							return DocIdSetIterator.NO_MORE_DOCS;
+						}
 
-      @Override
-      public int intVal(int doc) {
-        try {
-          if (doc < lastDocRequested) {
-            // out-of-order access.... reset
-            reset();
-          }
-          lastDocRequested = doc;
+						@Override
+						public long cost() {
+							return 0;
+						}
+					};
+				}
+				atDoc = -1;
+			}
 
-          if (atDoc < doc) {
-            atDoc = docs.advance(doc);
-          }
+			@Override
+			public int intVal(int doc) {
+				try {
+					if (doc < lastDocRequested) {
+						// out-of-order access.... reset
+						reset();
+					}
+					lastDocRequested = doc;
 
-          if (atDoc > doc) {
-            // term doesn't match this document... either because we hit the
-            // end, or because the next doc is after this doc.
-            return 0;
-          }
+					if (atDoc < doc) {
+						atDoc = docs.advance(doc);
+					}
 
-          // a match!
-          return docs.freq();
-        } catch (IOException e) {
-          throw new RuntimeException("caught exception in function "+description()+" : doc="+doc, e);
-        }
-      }
-    };
-  }
+					if (atDoc > doc) {
+						// term doesn't match this document... either because we hit the
+						// end, or because the next doc is after this doc.
+						return 0;
+					}
+
+					// a match!
+					return docs.freq();
+				} catch (IOException e) {
+					throw new RuntimeException("caught exception in function " + description() + " : doc=" + doc, e);
+				}
+			}
+		};
+	}
 }
 
 

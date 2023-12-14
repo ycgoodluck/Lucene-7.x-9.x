@@ -26,36 +26,36 @@ import static org.hamcrest.CoreMatchers.containsString;
 
 public class TestPresearcherMatchCollector extends MonitorTestBase {
 
-  public void testMatchCollectorShowMatches() throws IOException {
+	public void testMatchCollectorShowMatches() throws IOException {
 
-    try (Monitor monitor = new Monitor(ANALYZER, new TermFilteredPresearcher())) {
-      monitor.register(new MonitorQuery("1", parse("test")));
-      monitor.register(new MonitorQuery("2", parse("foo bar -baz f2:quuz")));
-      monitor.register(new MonitorQuery("3", parse("foo -test")));
-      monitor.register(new MonitorQuery("4", parse("baz")));
-      assertEquals(4, monitor.getQueryCount());
+		try (Monitor monitor = new Monitor(ANALYZER, new TermFilteredPresearcher())) {
+			monitor.register(new MonitorQuery("1", parse("test")));
+			monitor.register(new MonitorQuery("2", parse("foo bar -baz f2:quuz")));
+			monitor.register(new MonitorQuery("3", parse("foo -test")));
+			monitor.register(new MonitorQuery("4", parse("baz")));
+			assertEquals(4, monitor.getQueryCount());
 
-      Document doc = new Document();
-      doc.add(newTextField(FIELD, "this is a foo test", Field.Store.NO));
-      doc.add(newTextField("f2", "quuz", Field.Store.NO));
+			Document doc = new Document();
+			doc.add(newTextField(FIELD, "this is a foo test", Field.Store.NO));
+			doc.add(newTextField("f2", "quuz", Field.Store.NO));
 
-      PresearcherMatches<QueryMatch> matches = monitor.debug(doc, QueryMatch.SIMPLE_MATCHER);
+			PresearcherMatches<QueryMatch> matches = monitor.debug(doc, QueryMatch.SIMPLE_MATCHER);
 
-      assertNotNull(matches.match("1", 0));
-      assertEquals(" field:test", matches.match("1", 0).presearcherMatches);
-      assertNotNull(matches.match("1", 0).queryMatch);
+			assertNotNull(matches.match("1", 0));
+			assertEquals(" field:test", matches.match("1", 0).presearcherMatches);
+			assertNotNull(matches.match("1", 0).queryMatch);
 
-      assertNotNull(matches.match("2", 0));
-      String pm = matches.match("2", 0).presearcherMatches;
-      assertThat(pm, containsString("field:foo"));
-      assertThat(pm, containsString("f2:quuz"));
+			assertNotNull(matches.match("2", 0));
+			String pm = matches.match("2", 0).presearcherMatches;
+			assertThat(pm, containsString("field:foo"));
+			assertThat(pm, containsString("f2:quuz"));
 
-      assertNotNull(matches.match("3", 0));
-      assertEquals(" field:foo", matches.match("3", 0).presearcherMatches);
-      assertNull(matches.match("3", 0).queryMatch);
+			assertNotNull(matches.match("3", 0));
+			assertEquals(" field:foo", matches.match("3", 0).presearcherMatches);
+			assertNull(matches.match("3", 0).queryMatch);
 
-      assertNull(matches.match("4", 0));
-    }
-  }
+			assertNull(matches.match("4", 0));
+		}
+	}
 
 }

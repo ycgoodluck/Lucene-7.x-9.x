@@ -28,120 +28,123 @@ import org.apache.lucene.util.packed.PagedMutable;
 /**
  * A {@link DocValuesFieldUpdates} which holds updates of documents, of a single
  * {@link NumericDocValuesField}.
- * 
+ *
  * @lucene.experimental
  */
 final class NumericDocValuesFieldUpdates extends DocValuesFieldUpdates {
-  // TODO: can't this just be NumericDocValues now?  avoid boxing the long value...
-  final static class Iterator extends DocValuesFieldUpdates.AbstractIterator {
-    private final AbstractPagedMutable<?> values;
-    private final long minValue;
-    private long value;
+	// TODO: can't this just be NumericDocValues now?  avoid boxing the long value...
+	final static class Iterator extends DocValuesFieldUpdates.AbstractIterator {
+		private final AbstractPagedMutable<?> values;
+		private final long minValue;
+		private long value;
 
-    Iterator(int size, long minValue, AbstractPagedMutable<?> values, PagedMutable docs, long delGen) {
-      super(size, docs, delGen);
-      this.values = values;
-      this.minValue = minValue;
-    }
-    @Override
-    long longValue() {
-      return value;
-    }
+		Iterator(int size, long minValue, AbstractPagedMutable<?> values, PagedMutable docs, long delGen) {
+			super(size, docs, delGen);
+			this.values = values;
+			this.minValue = minValue;
+		}
 
-    @Override
-    BytesRef binaryValue() {
-      throw new UnsupportedOperationException();
-    }
+		@Override
+		long longValue() {
+			return value;
+		}
 
-    @Override
-    protected void set(long idx) {
-      value = values.get(idx) + minValue;
-    }
-  }
-  private AbstractPagedMutable<?> values;
-  private final long minValue;
+		@Override
+		BytesRef binaryValue() {
+			throw new UnsupportedOperationException();
+		}
 
-  NumericDocValuesFieldUpdates(long delGen, String field, int maxDoc) {
-    super(maxDoc, delGen, field, DocValuesType.NUMERIC);
-    // we don't know the min/max range so we use the growable writer here to adjust as we go.
-    values = new PagedGrowableWriter(1, PAGE_SIZE, 1, PackedInts.DEFAULT);
-    minValue = 0;
-  }
+		@Override
+		protected void set(long idx) {
+			value = values.get(idx) + minValue;
+		}
+	}
 
-  NumericDocValuesFieldUpdates(long delGen, String field, long minValue, long maxValue, int maxDoc) {
-    super(maxDoc, delGen, field, DocValuesType.NUMERIC);
-    assert minValue <= maxValue : "minValue must be <= maxValue [" + minValue + " > " + maxValue + "]";
-    int bitsPerValue = PackedInts.unsignedBitsRequired(maxValue - minValue);
-    values = new PagedMutable(1, PAGE_SIZE, bitsPerValue, PackedInts.DEFAULT);
-    this.minValue = minValue;
-  }
-  @Override
-  void add(int doc, BytesRef value) {
-    throw new UnsupportedOperationException();
-  }
+	private AbstractPagedMutable<?> values;
+	private final long minValue;
 
-  @Override
-  void add(int docId, DocValuesFieldUpdates.Iterator iterator) {
-    add(docId, iterator.longValue());
-  }
+	NumericDocValuesFieldUpdates(long delGen, String field, int maxDoc) {
+		super(maxDoc, delGen, field, DocValuesType.NUMERIC);
+		// we don't know the min/max range so we use the growable writer here to adjust as we go.
+		values = new PagedGrowableWriter(1, PAGE_SIZE, 1, PackedInts.DEFAULT);
+		minValue = 0;
+	}
 
-  @Override
-  synchronized void add(int doc, long value) {
-    int add = add(doc);
-    values.set(add, value-minValue);
-  }
+	NumericDocValuesFieldUpdates(long delGen, String field, long minValue, long maxValue, int maxDoc) {
+		super(maxDoc, delGen, field, DocValuesType.NUMERIC);
+		assert minValue <= maxValue : "minValue must be <= maxValue [" + minValue + " > " + maxValue + "]";
+		int bitsPerValue = PackedInts.unsignedBitsRequired(maxValue - minValue);
+		values = new PagedMutable(1, PAGE_SIZE, bitsPerValue, PackedInts.DEFAULT);
+		this.minValue = minValue;
+	}
 
-  @Override
-  protected void swap(int i, int j) {
-    super.swap(i, j);
-    long tmpVal = values.get(j);
-    values.set(j, values.get(i));
-    values.set(i, tmpVal);
-  }
+	@Override
+	void add(int doc, BytesRef value) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  protected void grow(int size) {
-    super.grow(size);
-    values = values.grow(size);
-  }
+	@Override
+	void add(int docId, DocValuesFieldUpdates.Iterator iterator) {
+		add(docId, iterator.longValue());
+	}
 
-  @Override
-  protected void resize(int size) {
-    super.resize(size);
-    values = values.resize(size);
-  }
+	@Override
+	synchronized void add(int doc, long value) {
+		int add = add(doc);
+		values.set(add, value - minValue);
+	}
 
-  @Override
-  Iterator iterator() {
-    ensureFinished();
-    return new Iterator(size, minValue, values, docs, delGen);
-  }
-  
-  @Override
-  public long ramBytesUsed() {
-    return values.ramBytesUsed()
-        + super.ramBytesUsed()
-        + Long.BYTES
-        + RamUsageEstimator.NUM_BYTES_OBJECT_REF;
-  }
+	@Override
+	protected void swap(int i, int j) {
+		super.swap(i, j);
+		long tmpVal = values.get(j);
+		values.set(j, values.get(i));
+		values.set(i, tmpVal);
+	}
 
-  static class SingleValueNumericDocValuesFieldUpdates extends SingleValueDocValuesFieldUpdates {
+	@Override
+	protected void grow(int size) {
+		super.grow(size);
+		values = values.grow(size);
+	}
 
-    private final long value;
+	@Override
+	protected void resize(int size) {
+		super.resize(size);
+		values = values.resize(size);
+	}
 
-    SingleValueNumericDocValuesFieldUpdates(long delGen, String field, int maxDoc, long value) {
-      super(maxDoc, delGen, field, DocValuesType.NUMERIC);
-      this.value = value;
-    }
+	@Override
+	Iterator iterator() {
+		ensureFinished();
+		return new Iterator(size, minValue, values, docs, delGen);
+	}
 
-    @Override
-    protected BytesRef binaryValue() {
-      throw new UnsupportedOperationException();
-    }
+	@Override
+	public long ramBytesUsed() {
+		return values.ramBytesUsed()
+			+ super.ramBytesUsed()
+			+ Long.BYTES
+			+ RamUsageEstimator.NUM_BYTES_OBJECT_REF;
+	}
 
-    @Override
-    protected long longValue() {
-      return value;
-    }
-  }
+	static class SingleValueNumericDocValuesFieldUpdates extends SingleValueDocValuesFieldUpdates {
+
+		private final long value;
+
+		SingleValueNumericDocValuesFieldUpdates(long delGen, String field, int maxDoc, long value) {
+			super(maxDoc, delGen, field, DocValuesType.NUMERIC);
+			this.value = value;
+		}
+
+		@Override
+		protected BytesRef binaryValue() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected long longValue() {
+			return value;
+		}
+	}
 }

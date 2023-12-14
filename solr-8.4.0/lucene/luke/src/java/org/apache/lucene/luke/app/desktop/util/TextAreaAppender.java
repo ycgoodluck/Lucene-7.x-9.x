@@ -35,68 +35,70 @@ import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 
-/** Log appender for text areas */
+/**
+ * Log appender for text areas
+ */
 @Plugin(name = "TextArea", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE, printObject = true)
 public final class TextAreaAppender extends AbstractAppender {
 
-  private static JTextArea textArea;
+	private static JTextArea textArea;
 
-  private static final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-  private static final Lock readLock = rwLock.readLock();
-  private static final Lock writeLock = rwLock.writeLock();
+	private static final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+	private static final Lock readLock = rwLock.readLock();
+	private static final Lock writeLock = rwLock.writeLock();
 
-  protected TextAreaAppender(String name, Filter filter,
-                             org.apache.logging.log4j.core.Layout<? extends Serializable> layout, final boolean ignoreExceptions) {
-    super(name, filter, layout, ignoreExceptions, Property.EMPTY_ARRAY);
-  }
+	protected TextAreaAppender(String name, Filter filter,
+														 org.apache.logging.log4j.core.Layout<? extends Serializable> layout, final boolean ignoreExceptions) {
+		super(name, filter, layout, ignoreExceptions, Property.EMPTY_ARRAY);
+	}
 
-  public static void setTextArea(JTextArea ta) {
-    writeLock.lock();
-    try {
-      if (textArea != null) {
-        throw new IllegalStateException("TextArea already set.");
-      }
-      textArea = ta;
-    } finally {
-      writeLock.unlock();
-    }
-  }
+	public static void setTextArea(JTextArea ta) {
+		writeLock.lock();
+		try {
+			if (textArea != null) {
+				throw new IllegalStateException("TextArea already set.");
+			}
+			textArea = ta;
+		} finally {
+			writeLock.unlock();
+		}
+	}
 
-  @Override
-  public void append(LogEvent event) {
-    readLock.lock();
-    try {
-      if (textArea == null) {
-        // just ignore any events logged before the area is available
-        return;
-      }
-  
-      final String message = ((StringLayout) getLayout()).toSerializable(event);
-      SwingUtilities.invokeLater(() -> {
-        textArea.append(message);
-      });
-    } finally {
-      readLock.unlock();
-    }
-  }
+	@Override
+	public void append(LogEvent event) {
+		readLock.lock();
+		try {
+			if (textArea == null) {
+				// just ignore any events logged before the area is available
+				return;
+			}
 
-  /**
-   * Builds TextAreaAppender instances.
-   *
-   * @param <B> The type to build
-   */
-  public static class Builder<B extends Builder<B>> extends AbstractOutputStreamAppender.Builder<B>
-      implements org.apache.logging.log4j.core.util.Builder<TextAreaAppender> {
+			final String message = ((StringLayout) getLayout()).toSerializable(event);
+			SwingUtilities.invokeLater(() -> {
+				textArea.append(message);
+			});
+		} finally {
+			readLock.unlock();
+		}
+	}
 
-    @Override
-    public TextAreaAppender build() {
-      return new TextAreaAppender(getName(), getFilter(), getOrCreateLayout(), true);
-    }
-  }
+	/**
+	 * Builds TextAreaAppender instances.
+	 *
+	 * @param <B> The type to build
+	 */
+	public static class Builder<B extends Builder<B>> extends AbstractOutputStreamAppender.Builder<B>
+		implements org.apache.logging.log4j.core.util.Builder<TextAreaAppender> {
 
-  @PluginBuilderFactory
-  public static <B extends Builder<B>> B newBuilder() {
-    return new Builder<B>().asBuilder();
-  }
+		@Override
+		public TextAreaAppender build() {
+			return new TextAreaAppender(getName(), getFilter(), getOrCreateLayout(), true);
+		}
+	}
+
+	@PluginBuilderFactory
+	public static <B extends Builder<B>> B newBuilder() {
+		return new Builder<B>().asBuilder();
+	}
 
 }

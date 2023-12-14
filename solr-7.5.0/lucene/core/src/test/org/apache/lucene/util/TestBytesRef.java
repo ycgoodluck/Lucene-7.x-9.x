@@ -18,42 +18,42 @@ package org.apache.lucene.util;
 
 
 public class TestBytesRef extends LuceneTestCase {
-  public void testEmpty() {
-    BytesRef b = new BytesRef();
-    assertEquals(BytesRef.EMPTY_BYTES, b.bytes);
-    assertEquals(0, b.offset);
-    assertEquals(0, b.length);
-  }
-  
-  public void testFromBytes() {
-    byte bytes[] = new byte[] { (byte)'a', (byte)'b', (byte)'c', (byte)'d' };
-    BytesRef b = new BytesRef(bytes);
-    assertEquals(bytes, b.bytes);
-    assertEquals(0, b.offset);
-    assertEquals(4, b.length);
-    
-    BytesRef b2 = new BytesRef(bytes, 1, 3);
-    assertEquals("bcd", b2.utf8ToString());
-    
-    assertFalse(b.equals(b2));
-  }
-  
-  public void testFromChars() {
-    for (int i = 0; i < 100; i++) {
-      String s = TestUtil.randomUnicodeString(random());
-      String s2 = new BytesRef(s).utf8ToString();
-      assertEquals(s, s2);
-    }
-    
-    // only for 4.x
-    assertEquals("\uFFFF", new BytesRef("\uFFFF").utf8ToString());
-  }
+	public void testEmpty() {
+		BytesRef b = new BytesRef();
+		assertEquals(BytesRef.EMPTY_BYTES, b.bytes);
+		assertEquals(0, b.offset);
+		assertEquals(0, b.length);
+	}
 
-  public void testInvalidDeepCopy() {
-    BytesRef from = new BytesRef(new byte[] { 1, 2 });
-    from.offset += 1; // now invalid
-    expectThrows(IndexOutOfBoundsException.class, () -> {
-      BytesRef.deepCopyOf(from);
-    });
-  }
+	public void testFromBytes() {
+		byte bytes[] = new byte[]{(byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd'};
+		BytesRef b = new BytesRef(bytes);
+		assertEquals(bytes, b.bytes);
+		assertEquals(0, b.offset);
+		assertEquals(4, b.length);
+
+		BytesRef b2 = new BytesRef(bytes, 1, 3);
+		assertEquals("bcd", b2.utf8ToString());
+
+		assertFalse(b.equals(b2));
+	}
+
+	public void testFromChars() {
+		for (int i = 0; i < 100; i++) {
+			String s = TestUtil.randomUnicodeString(random());
+			String s2 = new BytesRef(s).utf8ToString();
+			assertEquals(s, s2);
+		}
+
+		// only for 4.x
+		assertEquals("\uFFFF", new BytesRef("\uFFFF").utf8ToString());
+	}
+
+	public void testInvalidDeepCopy() {
+		BytesRef from = new BytesRef(new byte[]{1, 2});
+		from.offset += 1; // now invalid
+		expectThrows(IndexOutOfBoundsException.class, () -> {
+			BytesRef.deepCopyOf(from);
+		});
+	}
 }

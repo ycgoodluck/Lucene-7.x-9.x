@@ -27,45 +27,48 @@ import org.apache.commons.codec.language.bm.RuleType;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link BeiderMorseFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_bm" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
  *     &lt;tokenizer class="solr.StandardTokenizerFactory"/&gt;
  *     &lt;filter class="solr.BeiderMorseFilterFactory"
- *        nameType="GENERIC" ruleType="APPROX" 
+ *        nameType="GENERIC" ruleType="APPROX"
  *        concat="true" languageSet="auto"
  *     &lt;/filter&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.6.0
  */
 public class BeiderMorseFilterFactory extends TokenFilterFactory {
-  private final PhoneticEngine engine;
-  private final LanguageSet languageSet;
-  
-  /** Creates a new BeiderMorseFilterFactory */
-  public BeiderMorseFilterFactory(Map<String,String> args) {
-    super(args);
-    // PhoneticEngine = NameType + RuleType + concat
-    // we use common-codec's defaults: GENERIC + APPROX + true
-    NameType nameType = NameType.valueOf(get(args, "nameType", NameType.GENERIC.toString()));
-    RuleType ruleType = RuleType.valueOf(get(args, "ruleType", RuleType.APPROX.toString()));
-    
-    boolean concat = getBoolean(args, "concat", true);
-    engine = new PhoneticEngine(nameType, ruleType, concat);
-    
-    // LanguageSet: defaults to automagic, otherwise a comma-separated list.
-    Set<String> langs = getSet(args, "languageSet");
-    languageSet = (null == langs || (1 == langs.size() && langs.contains("auto"))) ? null : LanguageSet.from(langs);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private final PhoneticEngine engine;
+	private final LanguageSet languageSet;
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new BeiderMorseFilter(input, engine, languageSet);
-  }
+	/**
+	 * Creates a new BeiderMorseFilterFactory
+	 */
+	public BeiderMorseFilterFactory(Map<String, String> args) {
+		super(args);
+		// PhoneticEngine = NameType + RuleType + concat
+		// we use common-codec's defaults: GENERIC + APPROX + true
+		NameType nameType = NameType.valueOf(get(args, "nameType", NameType.GENERIC.toString()));
+		RuleType ruleType = RuleType.valueOf(get(args, "ruleType", RuleType.APPROX.toString()));
+
+		boolean concat = getBoolean(args, "concat", true);
+		engine = new PhoneticEngine(nameType, ruleType, concat);
+
+		// LanguageSet: defaults to automagic, otherwise a comma-separated list.
+		Set<String> langs = getSet(args, "languageSet");
+		languageSet = (null == langs || (1 == langs.size() && langs.contains("auto"))) ? null : LanguageSet.from(langs);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new BeiderMorseFilter(input, engine, languageSet);
+	}
 }

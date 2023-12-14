@@ -21,10 +21,14 @@ import java.util.List;
 import org.apache.lucene.queryparser.flexible.core.nodes.BooleanQueryNode;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 
-/** {@link QueryNode} for clauses that are synonym of each other. */
+/**
+ * {@link QueryNode} for clauses that are synonym of each other.
+ */
 public class SynonymQueryNode extends BooleanQueryNode {
-  /** Sole constructor. */
-  public SynonymQueryNode(List<QueryNode> clauses) {
-    super(clauses);
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public SynonymQueryNode(List<QueryNode> clauses) {
+		super(clauses);
+	}
 }

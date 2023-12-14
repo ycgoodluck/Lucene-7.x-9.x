@@ -26,33 +26,33 @@ import org.apache.lucene.util.PriorityQueue;
  * is broken by {@link SuggestScoreDoc#doc}
  */
 final class SuggestScoreDocPriorityQueue extends PriorityQueue<SuggestScoreDoc> {
-  /**
-   * Creates a new priority queue of the specified size.
-   */
-  public SuggestScoreDocPriorityQueue(int size) {
-    super(size);
-  }
+	/**
+	 * Creates a new priority queue of the specified size.
+	 */
+	public SuggestScoreDocPriorityQueue(int size) {
+		super(size);
+	}
 
-  @Override
-  protected boolean lessThan(SuggestScoreDoc a, SuggestScoreDoc b) {
-    if (a.score == b.score) {
-      // tie break by completion key
-      int cmp = Lookup.CHARSEQUENCE_COMPARATOR.compare(a.key, b.key);
-      // prefer smaller doc id, in case of a tie
-      return cmp != 0 ? cmp > 0 : a.doc > b.doc;
-    }
-    return a.score < b.score;
-  }
+	@Override
+	protected boolean lessThan(SuggestScoreDoc a, SuggestScoreDoc b) {
+		if (a.score == b.score) {
+			// tie break by completion key
+			int cmp = Lookup.CHARSEQUENCE_COMPARATOR.compare(a.key, b.key);
+			// prefer smaller doc id, in case of a tie
+			return cmp != 0 ? cmp > 0 : a.doc > b.doc;
+		}
+		return a.score < b.score;
+	}
 
-  /**
-   * Returns the top N results in descending order.
-   */
-  public SuggestScoreDoc[] getResults() {
-    int size = size();
-    SuggestScoreDoc[] res = new SuggestScoreDoc[size];
-    for (int i = size - 1; i >= 0; i--) {
-      res[i] = pop();
-    }
-    return res;
-  }
+	/**
+	 * Returns the top N results in descending order.
+	 */
+	public SuggestScoreDoc[] getResults() {
+		int size = size();
+		SuggestScoreDoc[] res = new SuggestScoreDoc[size];
+		for (int i = size - 1; i >= 0; i--) {
+			res[i] = pop();
+		}
+		return res;
+	}
 }

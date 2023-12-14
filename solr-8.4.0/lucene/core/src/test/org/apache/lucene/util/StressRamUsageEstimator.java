@@ -18,81 +18,81 @@ package org.apache.lucene.util;
 
 /**
  * Estimates how {@link RamUsageEstimator} estimates physical memory consumption
- * of Java objects. 
+ * of Java objects.
  */
 public class StressRamUsageEstimator extends LuceneTestCase {
-  static class Entry {
-    Object o;
-    Entry next;
+	static class Entry {
+		Object o;
+		Entry next;
 
-    public Entry createNext(Object o) {
-      Entry e = new Entry();
-      e.o = o;
-      e.next = next;
-      this.next = e;
-      return e;
-    }
-  }
+		public Entry createNext(Object o) {
+			Entry e = new Entry();
+			e.o = o;
+			e.next = next;
+			this.next = e;
+			return e;
+		}
+	}
 
-  volatile Object guard;
-  
-  // This shows an easy stack overflow because we're counting recursively.
-  public void testLargeSetOfByteArrays() {
+	volatile Object guard;
 
-    System.gc();
-    long before = Runtime.getRuntime().totalMemory();
-    Object [] all = new Object [1000000]; 
-    for (int i = 0; i < all.length; i++) {
-      all[i] = new byte[random().nextInt(3)];
-    }
-    System.gc();
-    long after = Runtime.getRuntime().totalMemory();
-    System.out.println("mx:  " + RamUsageEstimator.humanReadableUnits(after - before));
-    System.out.println("rue: " + RamUsageEstimator.humanReadableUnits(shallowSizeOf(all)));
+	// This shows an easy stack overflow because we're counting recursively.
+	public void testLargeSetOfByteArrays() {
 
-    guard = all;
-  }
- 
-  private long shallowSizeOf(Object[] all) {
-    long s = RamUsageEstimator.shallowSizeOf(all);
-    for (Object o : all) {
-      s+= RamUsageEstimator.shallowSizeOf(o);
-    }
-    return s;
-  }
+		System.gc();
+		long before = Runtime.getRuntime().totalMemory();
+		Object[] all = new Object[1000000];
+		for (int i = 0; i < all.length; i++) {
+			all[i] = new byte[random().nextInt(3)];
+		}
+		System.gc();
+		long after = Runtime.getRuntime().totalMemory();
+		System.out.println("mx:  " + RamUsageEstimator.humanReadableUnits(after - before));
+		System.out.println("rue: " + RamUsageEstimator.humanReadableUnits(shallowSizeOf(all)));
 
-  private long shallowSizeOf(Object[][] all) {
-    long s = RamUsageEstimator.shallowSizeOf(all);
-    for (Object[] o : all) {
-      s += RamUsageEstimator.shallowSizeOf(o);
-      for (Object o2 : o) {
-        s += RamUsageEstimator.shallowSizeOf(o2);
-      }
-    }
-    return s;
-  }
+		guard = all;
+	}
 
-  public void testSimpleByteArrays() {
-    Object [][] all = new Object [0][];
-    try {
-      while (true) {
-        // Check the current memory consumption and provide the estimate.
-        System.gc();
-        long estimated = shallowSizeOf(all);
-        if (estimated > 50 * RamUsageEstimator.ONE_MB) {
-          break;
-        }
+	private long shallowSizeOf(Object[] all) {
+		long s = RamUsageEstimator.shallowSizeOf(all);
+		for (Object o : all) {
+			s += RamUsageEstimator.shallowSizeOf(o);
+		}
+		return s;
+	}
 
-        // Make another batch of objects.
-        Object[] seg =  new Object[10000];
-        all = ArrayUtil.growExact(all, all.length + 1);
-        all[all.length - 1] = seg;
-        for (int i = 0; i < seg.length; i++) {
-          seg[i] = new byte[random().nextInt(7)];
-        }
-      }
-    } catch (OutOfMemoryError e) {
-      // Release and quit.
-    }
-  }
+	private long shallowSizeOf(Object[][] all) {
+		long s = RamUsageEstimator.shallowSizeOf(all);
+		for (Object[] o : all) {
+			s += RamUsageEstimator.shallowSizeOf(o);
+			for (Object o2 : o) {
+				s += RamUsageEstimator.shallowSizeOf(o2);
+			}
+		}
+		return s;
+	}
+
+	public void testSimpleByteArrays() {
+		Object[][] all = new Object[0][];
+		try {
+			while (true) {
+				// Check the current memory consumption and provide the estimate.
+				System.gc();
+				long estimated = shallowSizeOf(all);
+				if (estimated > 50 * RamUsageEstimator.ONE_MB) {
+					break;
+				}
+
+				// Make another batch of objects.
+				Object[] seg = new Object[10000];
+				all = ArrayUtil.growExact(all, all.length + 1);
+				all[all.length - 1] = seg;
+				for (int i = 0; i < seg.length; i++) {
+					seg[i] = new byte[random().nextInt(7)];
+				}
+			}
+		} catch (OutOfMemoryError e) {
+			// Release and quit.
+		}
+	}
 }

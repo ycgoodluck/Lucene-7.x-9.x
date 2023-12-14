@@ -54,99 +54,101 @@ import org.apache.lucene.util.BytesRef;
  */
 public class SuggestField extends Field {
 
-  /** Default field type for suggest field */
-  public static final FieldType FIELD_TYPE = new FieldType();
-  static {
-    FIELD_TYPE.setTokenized(true);
-    FIELD_TYPE.setStored(false);
-    FIELD_TYPE.setStoreTermVectors(false);
-    FIELD_TYPE.setOmitNorms(false);
-    FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
-    FIELD_TYPE.freeze();
-  }
+	/**
+	 * Default field type for suggest field
+	 */
+	public static final FieldType FIELD_TYPE = new FieldType();
 
-  static final byte TYPE = 0;
+	static {
+		FIELD_TYPE.setTokenized(true);
+		FIELD_TYPE.setStored(false);
+		FIELD_TYPE.setStoreTermVectors(false);
+		FIELD_TYPE.setOmitNorms(false);
+		FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+		FIELD_TYPE.freeze();
+	}
 
-  private final BytesRef surfaceForm;
-  private final int weight;
+	static final byte TYPE = 0;
 
-  /**
-   * Creates a {@link SuggestField}
-   *
-   * @param name   field name
-   * @param value  field value to get suggestions on
-   * @param weight field weight
-   *
-   * @throws IllegalArgumentException if either the name or value is null,
-   * if value is an empty string, if the weight is negative, if value contains
-   * any reserved characters
-   */
-  public SuggestField(String name, String value, int weight) {
-    super(name, value, FIELD_TYPE);
-    if (weight < 0) {
-      throw new IllegalArgumentException("weight must be >= 0");
-    }
-    if (value.length() == 0) {
-      throw new IllegalArgumentException("value must have a length > 0");
-    }
-    for (int i = 0; i < value.length(); i++) {
-      if (isReserved(value.charAt(i))) {
-        throw new IllegalArgumentException("Illegal input [" + value + "] UTF-16 codepoint [0x"
-            + Integer.toHexString((int) value.charAt(i))+ "] at position " + i + " is a reserved character");
-      }
-    }
-    this.surfaceForm = new BytesRef(value);
-    this.weight = weight;
-  }
+	private final BytesRef surfaceForm;
+	private final int weight;
 
-  @Override
-  public TokenStream tokenStream(Analyzer analyzer, TokenStream reuse) {
-    CompletionTokenStream completionStream = wrapTokenStream(super.tokenStream(analyzer, reuse));
-    completionStream.setPayload(buildSuggestPayload());
-    return completionStream;
-  }
+	/**
+	 * Creates a {@link SuggestField}
+	 *
+	 * @param name   field name
+	 * @param value  field value to get suggestions on
+	 * @param weight field weight
+	 * @throws IllegalArgumentException if either the name or value is null,
+	 *                                  if value is an empty string, if the weight is negative, if value contains
+	 *                                  any reserved characters
+	 */
+	public SuggestField(String name, String value, int weight) {
+		super(name, value, FIELD_TYPE);
+		if (weight < 0) {
+			throw new IllegalArgumentException("weight must be >= 0");
+		}
+		if (value.length() == 0) {
+			throw new IllegalArgumentException("value must have a length > 0");
+		}
+		for (int i = 0; i < value.length(); i++) {
+			if (isReserved(value.charAt(i))) {
+				throw new IllegalArgumentException("Illegal input [" + value + "] UTF-16 codepoint [0x"
+					+ Integer.toHexString((int) value.charAt(i)) + "] at position " + i + " is a reserved character");
+			}
+		}
+		this.surfaceForm = new BytesRef(value);
+		this.weight = weight;
+	}
 
-  /**
-   * Wraps a <code>stream</code> with a CompletionTokenStream.
-   *
-   * Subclasses can override this method to change the indexing pipeline.
-   */
-  protected CompletionTokenStream wrapTokenStream(TokenStream stream) {
-    if (stream instanceof CompletionTokenStream) {
-      return (CompletionTokenStream) stream;
-    } else {
-      return new CompletionTokenStream(stream);
-    }
-  }
+	@Override
+	public TokenStream tokenStream(Analyzer analyzer, TokenStream reuse) {
+		CompletionTokenStream completionStream = wrapTokenStream(super.tokenStream(analyzer, reuse));
+		completionStream.setPayload(buildSuggestPayload());
+		return completionStream;
+	}
 
-  /**
-   * Returns a byte to denote the type of the field
-   */
-  protected byte type() {
-    return TYPE;
-  }
+	/**
+	 * Wraps a <code>stream</code> with a CompletionTokenStream.
+	 * <p>
+	 * Subclasses can override this method to change the indexing pipeline.
+	 */
+	protected CompletionTokenStream wrapTokenStream(TokenStream stream) {
+		if (stream instanceof CompletionTokenStream) {
+			return (CompletionTokenStream) stream;
+		} else {
+			return new CompletionTokenStream(stream);
+		}
+	}
 
-  private BytesRef buildSuggestPayload() {
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    try (OutputStreamDataOutput output = new OutputStreamDataOutput(byteArrayOutputStream)) {
-      output.writeVInt(surfaceForm.length);
-      output.writeBytes(surfaceForm.bytes, surfaceForm.offset, surfaceForm.length);
-      output.writeVInt(weight + 1);
-      output.writeByte(type());
-    } catch (IOException e) {
-      throw new RuntimeException(e); // not possible, it's a ByteArrayOutputStream!
-    }
-    return new BytesRef(byteArrayOutputStream.toByteArray());
-  }
+	/**
+	 * Returns a byte to denote the type of the field
+	 */
+	protected byte type() {
+		return TYPE;
+	}
 
-  private boolean isReserved(char c) {
-    switch (c) {
-      case ConcatenateGraphFilter.SEP_LABEL:
-      case CompletionAnalyzer.HOLE_CHARACTER:
-      case NRTSuggesterBuilder.END_BYTE:
-        return true;
-      default:
-        return false;
-    }
-  }
+	private BytesRef buildSuggestPayload() {
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		try (OutputStreamDataOutput output = new OutputStreamDataOutput(byteArrayOutputStream)) {
+			output.writeVInt(surfaceForm.length);
+			output.writeBytes(surfaceForm.bytes, surfaceForm.offset, surfaceForm.length);
+			output.writeVInt(weight + 1);
+			output.writeByte(type());
+		} catch (IOException e) {
+			throw new RuntimeException(e); // not possible, it's a ByteArrayOutputStream!
+		}
+		return new BytesRef(byteArrayOutputStream.toByteArray());
+	}
+
+	private boolean isReserved(char c) {
+		switch (c) {
+			case ConcatenateGraphFilter.SEP_LABEL:
+			case CompletionAnalyzer.HOLE_CHARACTER:
+			case NRTSuggesterBuilder.END_BYTE:
+				return true;
+			default:
+				return false;
+		}
+	}
 }

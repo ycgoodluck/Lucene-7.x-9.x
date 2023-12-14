@@ -42,86 +42,87 @@ import org.apache.lucene.util.BytesRef;
  */
 public interface IndexDictionary extends Accountable {
 
-  /**
-   * Writes this dictionary to the provided output.
-   * @param blockEncoder The {@link BlockEncoder} for specific encoding of this index dictionary;
-   *                    or null if none.
-   */
-  void write(DataOutput output, BlockEncoder blockEncoder) throws IOException;
+	/**
+	 * Writes this dictionary to the provided output.
+	 *
+	 * @param blockEncoder The {@link BlockEncoder} for specific encoding of this index dictionary;
+	 *                     or null if none.
+	 */
+	void write(DataOutput output, BlockEncoder blockEncoder) throws IOException;
 
-  /**
-   * Creates a new {@link IndexDictionary.Browser}.
-   */
-  Browser browser();
+	/**
+	 * Creates a new {@link IndexDictionary.Browser}.
+	 */
+	Browser browser();
 
-  /**
-   * Builds an immutable {@link IndexDictionary}.
-   */
-  interface Builder {
+	/**
+	 * Builds an immutable {@link IndexDictionary}.
+	 */
+	interface Builder {
 
-    /**
-     * Adds a [block key - block file pointer] entry to the dictionary.
-     * <p>
-     * The Uniform Split technique adds block keys in the dictionary. See
-     * {@link BlockReader} and {@link TermBytes} for more info about block
-     * key and minimal distinguishing prefix (MDP).
-     * <p>
-     * All block keys are added in strictly increasing order of the block file pointers,
-     * this allows long encoding optimizations such as with {@link org.apache.lucene.util.fst.PositiveIntOutputs}
-     * for {@link org.apache.lucene.util.fst.FST}.
-     *
-     * @param blockKey         The block key which is the minimal distinguishing
-     *                         prefix (MDP) of the first term of a block.
-     * @param blockFilePointer Non-negative file pointer to the start of the
-     *                         block in the block file.
-     */
-    void add(BytesRef blockKey, long blockFilePointer);
+		/**
+		 * Adds a [block key - block file pointer] entry to the dictionary.
+		 * <p>
+		 * The Uniform Split technique adds block keys in the dictionary. See
+		 * {@link BlockReader} and {@link TermBytes} for more info about block
+		 * key and minimal distinguishing prefix (MDP).
+		 * <p>
+		 * All block keys are added in strictly increasing order of the block file pointers,
+		 * this allows long encoding optimizations such as with {@link org.apache.lucene.util.fst.PositiveIntOutputs}
+		 * for {@link org.apache.lucene.util.fst.FST}.
+		 *
+		 * @param blockKey         The block key which is the minimal distinguishing
+		 *                         prefix (MDP) of the first term of a block.
+		 * @param blockFilePointer Non-negative file pointer to the start of the
+		 *                         block in the block file.
+		 */
+		void add(BytesRef blockKey, long blockFilePointer);
 
-    IndexDictionary build();
-  }
+		IndexDictionary build();
+	}
 
-  /**
-   * Stateful {@link IndexDictionary.Browser} to seek a term in this {@link IndexDictionary}
-   * and get its corresponding block file pointer in the block file.
-   */
-  interface Browser {
+	/**
+	 * Stateful {@link IndexDictionary.Browser} to seek a term in this {@link IndexDictionary}
+	 * and get its corresponding block file pointer in the block file.
+	 */
+	interface Browser {
 
-    /**
-     * Seeks the given term in the {@link IndexDictionary} and returns its corresponding
-     * block file pointer.
-     *
-     * @return The block file pointer corresponding to the term if it matches
-     * exactly a block key in the dictionary.
-     * Otherwise the floor block key, which is the greatest block key present
-     * in the dictionary that is alphabetically preceding the searched term.
-     * Otherwise {@code -1} if there is no floor block key because the searched
-     * term precedes alphabetically the first block key of the dictionary.
-     */
-    long seekBlock(BytesRef term);
+		/**
+		 * Seeks the given term in the {@link IndexDictionary} and returns its corresponding
+		 * block file pointer.
+		 *
+		 * @return The block file pointer corresponding to the term if it matches
+		 * exactly a block key in the dictionary.
+		 * Otherwise the floor block key, which is the greatest block key present
+		 * in the dictionary that is alphabetically preceding the searched term.
+		 * Otherwise {@code -1} if there is no floor block key because the searched
+		 * term precedes alphabetically the first block key of the dictionary.
+		 */
+		long seekBlock(BytesRef term);
 
-    /**
-     * Returns the next block key and positions the browser at this key.
-     * A key is a prefix of a term in the dictionary.
-     * If seekBlock was just called then this is the current block key.
-     */
-    BytesRef nextKey();
+		/**
+		 * Returns the next block key and positions the browser at this key.
+		 * A key is a prefix of a term in the dictionary.
+		 * If seekBlock was just called then this is the current block key.
+		 */
+		BytesRef nextKey();
 
-    /**
-     * Returns the next key without advancing.
-     * Only call this after {@link #nextKey()} returns a non-null result.
-     */
-    BytesRef peekKey();
+		/**
+		 * Returns the next key without advancing.
+		 * Only call this after {@link #nextKey()} returns a non-null result.
+		 */
+		BytesRef peekKey();
 
-    /**
-     * Returns the number of characters of this block's key that is in common with all terms in this block.
-     * Only call this after {@link #nextKey()} returns a non-null result.
-     */
-    int getBlockPrefixLen();
+		/**
+		 * Returns the number of characters of this block's key that is in common with all terms in this block.
+		 * Only call this after {@link #nextKey()} returns a non-null result.
+		 */
+		int getBlockPrefixLen();
 
-    /**
-     * Returns the block file pointer associated with the key returned.
-     * Only call this after {@link #nextKey()} returns a non-null result.
-     */
-    long getBlockFilePointer();
-  }
+		/**
+		 * Returns the block file pointer associated with the key returned.
+		 * Only call this after {@link #nextKey()} returns a non-null result.
+		 */
+		long getBlockFilePointer();
+	}
 }

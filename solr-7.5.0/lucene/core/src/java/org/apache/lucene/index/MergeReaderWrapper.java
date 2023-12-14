@@ -27,216 +27,218 @@ import org.apache.lucene.codecs.TermVectorsReader;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.FutureObjects;
 
-/** This is a hack to make index sorting fast, with a {@link LeafReader} that always returns merge instances when you ask for the codec readers. */
+/**
+ * This is a hack to make index sorting fast, with a {@link LeafReader} that always returns merge instances when you ask for the codec readers.
+ */
 class MergeReaderWrapper extends LeafReader {
-  final CodecReader in;
-  final FieldsProducer fields;
-  final NormsProducer norms;
-  final DocValuesProducer docValues;
-  final StoredFieldsReader store;
-  final TermVectorsReader vectors;
-  
-  MergeReaderWrapper(CodecReader in) throws IOException {
-    this.in = in;
-    
-    FieldsProducer fields = in.getPostingsReader();
-    if (fields != null) {
-      fields = fields.getMergeInstance();
-    }
-    this.fields = fields;
-    
-    NormsProducer norms = in.getNormsReader();
-    if (norms != null) {
-      norms = norms.getMergeInstance();
-    }
-    this.norms = norms;
-    
-    DocValuesProducer docValues = in.getDocValuesReader();
-    if (docValues != null) {
-      docValues = docValues.getMergeInstance();
-    }
-    this.docValues = docValues;
-    
-    StoredFieldsReader store = in.getFieldsReader();
-    if (store != null) {
-      store = store.getMergeInstance();
-    }
-    this.store = store;
-    
-    TermVectorsReader vectors = in.getTermVectorsReader();
-    if (vectors != null) {
-      vectors = vectors.getMergeInstance();
-    }
-    this.vectors = vectors;
-  }
+	final CodecReader in;
+	final FieldsProducer fields;
+	final NormsProducer norms;
+	final DocValuesProducer docValues;
+	final StoredFieldsReader store;
+	final TermVectorsReader vectors;
 
-  @Override
-  public Terms terms(String field) throws IOException {
-    ensureOpen();
-    // We could check the FieldInfo IndexOptions but there's no point since
-    //   PostingsReader will simply return null for fields that don't exist or that have no terms index.
-    return fields.terms(field);
-  }
+	MergeReaderWrapper(CodecReader in) throws IOException {
+		this.in = in;
 
-  @Override
-  public NumericDocValues getNumericDocValues(String field) throws IOException {
-    ensureOpen();
-    FieldInfo fi = getFieldInfos().fieldInfo(field);
-    if (fi == null) {
-      // Field does not exist
-      return null;
-    }
-    if (fi.getDocValuesType() != DocValuesType.NUMERIC) {
-      // Field was not indexed with doc values
-      return null;
-    }
-    return docValues.getNumeric(fi);
-  }
+		FieldsProducer fields = in.getPostingsReader();
+		if (fields != null) {
+			fields = fields.getMergeInstance();
+		}
+		this.fields = fields;
 
-  @Override
-  public BinaryDocValues getBinaryDocValues(String field) throws IOException {
-    ensureOpen();
-    FieldInfo fi = getFieldInfos().fieldInfo(field);
-    if (fi == null) {
-      // Field does not exist
-      return null;
-    }
-    if (fi.getDocValuesType() != DocValuesType.BINARY) {
-      // Field was not indexed with doc values
-      return null;
-    }
-    return docValues.getBinary(fi);
-  }
+		NormsProducer norms = in.getNormsReader();
+		if (norms != null) {
+			norms = norms.getMergeInstance();
+		}
+		this.norms = norms;
 
-  @Override
-  public SortedDocValues getSortedDocValues(String field) throws IOException {
-    ensureOpen();
-    FieldInfo fi = getFieldInfos().fieldInfo(field);
-    if (fi == null) {
-      // Field does not exist
-      return null;
-    }
-    if (fi.getDocValuesType() != DocValuesType.SORTED) {
-      // Field was not indexed with doc values
-      return null;
-    }
-    return docValues.getSorted(fi);
-  }
+		DocValuesProducer docValues = in.getDocValuesReader();
+		if (docValues != null) {
+			docValues = docValues.getMergeInstance();
+		}
+		this.docValues = docValues;
 
-  @Override
-  public SortedNumericDocValues getSortedNumericDocValues(String field) throws IOException {
-    ensureOpen();
-    FieldInfo fi = getFieldInfos().fieldInfo(field);
-    if (fi == null) {
-      // Field does not exist
-      return null;
-    }
-    if (fi.getDocValuesType() != DocValuesType.SORTED_NUMERIC) {
-      // Field was not indexed with doc values
-      return null;
-    }
-    return docValues.getSortedNumeric(fi);
-  }
+		StoredFieldsReader store = in.getFieldsReader();
+		if (store != null) {
+			store = store.getMergeInstance();
+		}
+		this.store = store;
 
-  @Override
-  public SortedSetDocValues getSortedSetDocValues(String field) throws IOException {
-    ensureOpen();
-    FieldInfo fi = getFieldInfos().fieldInfo(field);
-    if (fi == null) {
-      // Field does not exist
-      return null;
-    }
-    if (fi.getDocValuesType() != DocValuesType.SORTED_SET) {
-      // Field was not indexed with doc values
-      return null;
-    }
-    return docValues.getSortedSet(fi);
-  }
+		TermVectorsReader vectors = in.getTermVectorsReader();
+		if (vectors != null) {
+			vectors = vectors.getMergeInstance();
+		}
+		this.vectors = vectors;
+	}
 
-  @Override
-  public NumericDocValues getNormValues(String field) throws IOException {
-    ensureOpen();
-    FieldInfo fi = getFieldInfos().fieldInfo(field);
-    if (fi == null || !fi.hasNorms()) {
-      // Field does not exist or does not index norms
-      return null;
-    }
-    return norms.getNorms(fi);
-  }
+	@Override
+	public Terms terms(String field) throws IOException {
+		ensureOpen();
+		// We could check the FieldInfo IndexOptions but there's no point since
+		//   PostingsReader will simply return null for fields that don't exist or that have no terms index.
+		return fields.terms(field);
+	}
 
-  @Override
-  public FieldInfos getFieldInfos() {
-    return in.getFieldInfos();
-  }
+	@Override
+	public NumericDocValues getNumericDocValues(String field) throws IOException {
+		ensureOpen();
+		FieldInfo fi = getFieldInfos().fieldInfo(field);
+		if (fi == null) {
+			// Field does not exist
+			return null;
+		}
+		if (fi.getDocValuesType() != DocValuesType.NUMERIC) {
+			// Field was not indexed with doc values
+			return null;
+		}
+		return docValues.getNumeric(fi);
+	}
 
-  @Override
-  public Bits getLiveDocs() {
-    return in.getLiveDocs();
-  }
+	@Override
+	public BinaryDocValues getBinaryDocValues(String field) throws IOException {
+		ensureOpen();
+		FieldInfo fi = getFieldInfos().fieldInfo(field);
+		if (fi == null) {
+			// Field does not exist
+			return null;
+		}
+		if (fi.getDocValuesType() != DocValuesType.BINARY) {
+			// Field was not indexed with doc values
+			return null;
+		}
+		return docValues.getBinary(fi);
+	}
 
-  @Override
-  public void checkIntegrity() throws IOException {
-    in.checkIntegrity();
-  }
+	@Override
+	public SortedDocValues getSortedDocValues(String field) throws IOException {
+		ensureOpen();
+		FieldInfo fi = getFieldInfos().fieldInfo(field);
+		if (fi == null) {
+			// Field does not exist
+			return null;
+		}
+		if (fi.getDocValuesType() != DocValuesType.SORTED) {
+			// Field was not indexed with doc values
+			return null;
+		}
+		return docValues.getSorted(fi);
+	}
 
-  @Override
-  public Fields getTermVectors(int docID) throws IOException {
-    ensureOpen();
-    checkBounds(docID);
-    if (vectors == null) {
-      return null;
-    }
-    return vectors.get(docID);
-  }
+	@Override
+	public SortedNumericDocValues getSortedNumericDocValues(String field) throws IOException {
+		ensureOpen();
+		FieldInfo fi = getFieldInfos().fieldInfo(field);
+		if (fi == null) {
+			// Field does not exist
+			return null;
+		}
+		if (fi.getDocValuesType() != DocValuesType.SORTED_NUMERIC) {
+			// Field was not indexed with doc values
+			return null;
+		}
+		return docValues.getSortedNumeric(fi);
+	}
 
-  @Override
-  public PointValues getPointValues(String fieldName) throws IOException {
-    return in.getPointValues(fieldName);
-  }
+	@Override
+	public SortedSetDocValues getSortedSetDocValues(String field) throws IOException {
+		ensureOpen();
+		FieldInfo fi = getFieldInfos().fieldInfo(field);
+		if (fi == null) {
+			// Field does not exist
+			return null;
+		}
+		if (fi.getDocValuesType() != DocValuesType.SORTED_SET) {
+			// Field was not indexed with doc values
+			return null;
+		}
+		return docValues.getSortedSet(fi);
+	}
 
-  @Override
-  public int numDocs() {
-    return in.numDocs();
-  }
+	@Override
+	public NumericDocValues getNormValues(String field) throws IOException {
+		ensureOpen();
+		FieldInfo fi = getFieldInfos().fieldInfo(field);
+		if (fi == null || !fi.hasNorms()) {
+			// Field does not exist or does not index norms
+			return null;
+		}
+		return norms.getNorms(fi);
+	}
 
-  @Override
-  public int maxDoc() {
-    return in.maxDoc();
-  }
+	@Override
+	public FieldInfos getFieldInfos() {
+		return in.getFieldInfos();
+	}
 
-  @Override
-  public void document(int docID, StoredFieldVisitor visitor) throws IOException {
-    ensureOpen();
-    checkBounds(docID);
-    store.visitDocument(docID, visitor);
-  }
+	@Override
+	public Bits getLiveDocs() {
+		return in.getLiveDocs();
+	}
 
-  @Override
-  protected void doClose() throws IOException {
-    in.close();
-  }
+	@Override
+	public void checkIntegrity() throws IOException {
+		in.checkIntegrity();
+	}
 
-  @Override
-  public CacheHelper getCoreCacheHelper() {
-    return in.getCoreCacheHelper();
-  }
+	@Override
+	public Fields getTermVectors(int docID) throws IOException {
+		ensureOpen();
+		checkBounds(docID);
+		if (vectors == null) {
+			return null;
+		}
+		return vectors.get(docID);
+	}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    return in.getReaderCacheHelper();
-  }
+	@Override
+	public PointValues getPointValues(String fieldName) throws IOException {
+		return in.getPointValues(fieldName);
+	}
 
-  private void checkBounds(int docID) {
-    FutureObjects.checkIndex(docID, maxDoc());
-  }
+	@Override
+	public int numDocs() {
+		return in.numDocs();
+	}
 
-  @Override
-  public String toString() {
-    return "MergeReaderWrapper(" + in + ")";
-  }
+	@Override
+	public int maxDoc() {
+		return in.maxDoc();
+	}
 
-  @Override
-  public LeafMetaData getMetaData() {
-    return in.getMetaData();
-  }
+	@Override
+	public void document(int docID, StoredFieldVisitor visitor) throws IOException {
+		ensureOpen();
+		checkBounds(docID);
+		store.visitDocument(docID, visitor);
+	}
+
+	@Override
+	protected void doClose() throws IOException {
+		in.close();
+	}
+
+	@Override
+	public CacheHelper getCoreCacheHelper() {
+		return in.getCoreCacheHelper();
+	}
+
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		return in.getReaderCacheHelper();
+	}
+
+	private void checkBounds(int docID) {
+		FutureObjects.checkIndex(docID, maxDoc());
+	}
+
+	@Override
+	public String toString() {
+		return "MergeReaderWrapper(" + in + ")";
+	}
+
+	@Override
+	public LeafMetaData getMetaData() {
+		return in.getMetaData();
+	}
 }

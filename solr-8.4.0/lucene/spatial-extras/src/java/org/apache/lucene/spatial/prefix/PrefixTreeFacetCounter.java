@@ -46,156 +46,165 @@ import org.apache.lucene.util.Bits;
  */
 public class PrefixTreeFacetCounter {
 
-  /** A callback/visitor of facet counts. */
-  public static abstract class FacetVisitor {
-    /** Called at the start of the segment, if there is indexed data. */
-    public void startOfSegment() {}
+	/**
+	 * A callback/visitor of facet counts.
+	 */
+	public static abstract class FacetVisitor {
+		/**
+		 * Called at the start of the segment, if there is indexed data.
+		 */
+		public void startOfSegment() {
+		}
 
-    /** Called for cells with a leaf, or cells at the target facet level.  {@code count} is greater than zero.
-     * When an ancestor cell is given with non-zero count, the count can be considered to be added to all cells
-     * below. You won't necessarily get a cell at level {@code facetLevel} if the indexed data is courser (bigger).
-     */
-    public abstract void visit(Cell cell, int count);
-  }
+		/**
+		 * Called for cells with a leaf, or cells at the target facet level.  {@code count} is greater than zero.
+		 * When an ancestor cell is given with non-zero count, the count can be considered to be added to all cells
+		 * below. You won't necessarily get a cell at level {@code facetLevel} if the indexed data is courser (bigger).
+		 */
+		public abstract void visit(Cell cell, int count);
+	}
 
-  private PrefixTreeFacetCounter() {
-  }
+	private PrefixTreeFacetCounter() {
+	}
 
-  /**
-   * Computes facets using a callback/visitor style design, allowing flexibility for the caller to determine what to do
-   * with each underlying count.
-   * @param strategy the prefix tree strategy (contains the field reference, grid, max levels)
-   * @param context the IndexReader's context
-   * @param topAcceptDocs a Bits to limit counted docs. If null, live docs are counted.
-   * @param queryShape the shape to limit the range of facet counts to
-   * @param facetLevel the maximum depth (detail) of faceted cells
-   * @param facetVisitor the visitor/callback to receive the counts
-   */
-  public static void compute(PrefixTreeStrategy strategy, IndexReaderContext context, Bits topAcceptDocs,
-                             Shape queryShape, int facetLevel, FacetVisitor facetVisitor)
-      throws IOException {
-    //We collect per-leaf
-    for (final LeafReaderContext leafCtx : context.leaves()) {
-      //determine leaf acceptDocs Bits
-      Bits leafAcceptDocs;
-      if (topAcceptDocs == null) {
-        leafAcceptDocs = leafCtx.reader().getLiveDocs();//filter deleted
-      } else {
-        leafAcceptDocs = new Bits() {
-          @Override
-          public boolean get(int index) {
-            return topAcceptDocs.get(leafCtx.docBase + index);
-          }
+	/**
+	 * Computes facets using a callback/visitor style design, allowing flexibility for the caller to determine what to do
+	 * with each underlying count.
+	 *
+	 * @param strategy      the prefix tree strategy (contains the field reference, grid, max levels)
+	 * @param context       the IndexReader's context
+	 * @param topAcceptDocs a Bits to limit counted docs. If null, live docs are counted.
+	 * @param queryShape    the shape to limit the range of facet counts to
+	 * @param facetLevel    the maximum depth (detail) of faceted cells
+	 * @param facetVisitor  the visitor/callback to receive the counts
+	 */
+	public static void compute(PrefixTreeStrategy strategy, IndexReaderContext context, Bits topAcceptDocs,
+														 Shape queryShape, int facetLevel, FacetVisitor facetVisitor)
+		throws IOException {
+		//We collect per-leaf
+		for (final LeafReaderContext leafCtx : context.leaves()) {
+			//determine leaf acceptDocs Bits
+			Bits leafAcceptDocs;
+			if (topAcceptDocs == null) {
+				leafAcceptDocs = leafCtx.reader().getLiveDocs();//filter deleted
+			} else {
+				leafAcceptDocs = new Bits() {
+					@Override
+					public boolean get(int index) {
+						return topAcceptDocs.get(leafCtx.docBase + index);
+					}
 
-          @Override
-          public int length() {
-            return leafCtx.reader().maxDoc();
-          }
-        };
-      }
+					@Override
+					public int length() {
+						return leafCtx.reader().maxDoc();
+					}
+				};
+			}
 
-      compute(strategy, leafCtx, leafAcceptDocs, queryShape, facetLevel, facetVisitor);
-    }
-  }
+			compute(strategy, leafCtx, leafAcceptDocs, queryShape, facetLevel, facetVisitor);
+		}
+	}
 
-  /** Lower-level per-leaf segment method. */
-  public static void compute(final PrefixTreeStrategy strategy, final LeafReaderContext context, final Bits acceptDocs,
-                             final Shape queryShape, final int facetLevel, final FacetVisitor facetVisitor)
-      throws IOException {
-    if (acceptDocs != null && acceptDocs.length() != context.reader().maxDoc()) {
-      throw new IllegalArgumentException(
-          "acceptDocs bits length " + acceptDocs.length() +" != leaf maxdoc " + context.reader().maxDoc());
-    }
-    final SpatialPrefixTree tree = strategy.getGrid();
+	/**
+	 * Lower-level per-leaf segment method.
+	 */
+	public static void compute(final PrefixTreeStrategy strategy, final LeafReaderContext context, final Bits acceptDocs,
+														 final Shape queryShape, final int facetLevel, final FacetVisitor facetVisitor)
+		throws IOException {
+		if (acceptDocs != null && acceptDocs.length() != context.reader().maxDoc()) {
+			throw new IllegalArgumentException(
+				"acceptDocs bits length " + acceptDocs.length() + " != leaf maxdoc " + context.reader().maxDoc());
+		}
+		final SpatialPrefixTree tree = strategy.getGrid();
 
-    //scanLevel is an optimization knob of AbstractVisitingPrefixTreeFilter. It's unlikely
-    // another scanLevel would be much faster and it tends to be a risky knob (can help a little, can hurt a ton).
-    // TODO use RPT's configured scan level?  Do we know better here?  Hard to say.
-    final int scanLevel = tree.getMaxLevels();
-    //AbstractVisitingPrefixTreeFilter is a Lucene Filter.  We don't need a filter; we use it for its great prefix-tree
-    // traversal code.  TODO consider refactoring if/when it makes sense (more use cases than this)
-    new AbstractVisitingPrefixTreeQuery(queryShape, strategy.getFieldName(), tree, facetLevel, scanLevel) {
+		//scanLevel is an optimization knob of AbstractVisitingPrefixTreeFilter. It's unlikely
+		// another scanLevel would be much faster and it tends to be a risky knob (can help a little, can hurt a ton).
+		// TODO use RPT's configured scan level?  Do we know better here?  Hard to say.
+		final int scanLevel = tree.getMaxLevels();
+		//AbstractVisitingPrefixTreeFilter is a Lucene Filter.  We don't need a filter; we use it for its great prefix-tree
+		// traversal code.  TODO consider refactoring if/when it makes sense (more use cases than this)
+		new AbstractVisitingPrefixTreeQuery(queryShape, strategy.getFieldName(), tree, facetLevel, scanLevel) {
 
-      @Override
-      public String toString(String field) {
-        return "anonPrefixTreeQuery";//un-used
-      }
+			@Override
+			public String toString(String field) {
+				return "anonPrefixTreeQuery";//un-used
+			}
 
-      @Override
-      public DocIdSet getDocIdSet(LeafReaderContext contexts) throws IOException {
-        assert facetLevel == super.detailLevel;//same thing, FYI. (constant)
+			@Override
+			public DocIdSet getDocIdSet(LeafReaderContext contexts) throws IOException {
+				assert facetLevel == super.detailLevel;//same thing, FYI. (constant)
 
-        return new VisitorTemplate(context) {
+				return new VisitorTemplate(context) {
 
-          @Override
-          protected void start() throws IOException {
-            facetVisitor.startOfSegment();
-          }
+					@Override
+					protected void start() throws IOException {
+						facetVisitor.startOfSegment();
+					}
 
-          @Override
-          protected DocIdSet finish() throws IOException {
-            return null;//unused;
-          }
+					@Override
+					protected DocIdSet finish() throws IOException {
+						return null;//unused;
+					}
 
-          @Override
-          protected boolean visitPrefix(Cell cell) throws IOException {
-            // At facetLevel...
-            if (cell.getLevel() == facetLevel) {
-              // Count docs
-              visitLeaf(cell);//we're not a leaf but we treat it as such at facet level
-              return false;//don't descend further; this is enough detail
-            }
+					@Override
+					protected boolean visitPrefix(Cell cell) throws IOException {
+						// At facetLevel...
+						if (cell.getLevel() == facetLevel) {
+							// Count docs
+							visitLeaf(cell);//we're not a leaf but we treat it as such at facet level
+							return false;//don't descend further; this is enough detail
+						}
 
-            // We optimize for discriminating filters (reflected in acceptDocs) and short-circuit if no
-            // matching docs. We could do this at all levels or never but the closer we get to the facet level, the
-            // higher the probability this is worthwhile. We do when docFreq == 1 because it's a cheap check, especially
-            // due to "pulsing" in the codec.
-            //TODO this opt should move to VisitorTemplate (which contains an optimization TODO to this effect)
-            if (cell.getLevel() == facetLevel - 1 || termsEnum.docFreq() == 1) {
-              if (!hasDocsAtThisTerm()) {
-                return false;
-              }
-            }
-            return true;
-          }
+						// We optimize for discriminating filters (reflected in acceptDocs) and short-circuit if no
+						// matching docs. We could do this at all levels or never but the closer we get to the facet level, the
+						// higher the probability this is worthwhile. We do when docFreq == 1 because it's a cheap check, especially
+						// due to "pulsing" in the codec.
+						//TODO this opt should move to VisitorTemplate (which contains an optimization TODO to this effect)
+						if (cell.getLevel() == facetLevel - 1 || termsEnum.docFreq() == 1) {
+							if (!hasDocsAtThisTerm()) {
+								return false;
+							}
+						}
+						return true;
+					}
 
-          @Override
-          protected void visitLeaf(Cell cell) throws IOException {
-            final int count = countDocsAtThisTerm();
-            if (count > 0) {
-              facetVisitor.visit(cell, count);
-            }
-          }
+					@Override
+					protected void visitLeaf(Cell cell) throws IOException {
+						final int count = countDocsAtThisTerm();
+						if (count > 0) {
+							facetVisitor.visit(cell, count);
+						}
+					}
 
-          private int countDocsAtThisTerm() throws IOException {
-            if (acceptDocs == null) {
-              return termsEnum.docFreq();
-            }
-            int count = 0;
-            postingsEnum = termsEnum.postings(postingsEnum, PostingsEnum.NONE);
-            while (postingsEnum.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
-              if (acceptDocs.get(postingsEnum.docID()) == false) {
-                continue;
-              }
-              count++;
-            }
-            return count;
-          }
+					private int countDocsAtThisTerm() throws IOException {
+						if (acceptDocs == null) {
+							return termsEnum.docFreq();
+						}
+						int count = 0;
+						postingsEnum = termsEnum.postings(postingsEnum, PostingsEnum.NONE);
+						while (postingsEnum.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
+							if (acceptDocs.get(postingsEnum.docID()) == false) {
+								continue;
+							}
+							count++;
+						}
+						return count;
+					}
 
-          private boolean hasDocsAtThisTerm() throws IOException {
-            if (acceptDocs == null) {
-              return true;
-            }
-            postingsEnum = termsEnum.postings(postingsEnum, PostingsEnum.NONE);
-            int nextDoc = postingsEnum.nextDoc();
-            while (nextDoc != DocIdSetIterator.NO_MORE_DOCS && acceptDocs.get(nextDoc) == false) {
-              nextDoc = postingsEnum.nextDoc();
-            }
-            return nextDoc != DocIdSetIterator.NO_MORE_DOCS;
-          }
+					private boolean hasDocsAtThisTerm() throws IOException {
+						if (acceptDocs == null) {
+							return true;
+						}
+						postingsEnum = termsEnum.postings(postingsEnum, PostingsEnum.NONE);
+						int nextDoc = postingsEnum.nextDoc();
+						while (nextDoc != DocIdSetIterator.NO_MORE_DOCS && acceptDocs.get(nextDoc) == false) {
+							nextDoc = postingsEnum.nextDoc();
+						}
+						return nextDoc != DocIdSetIterator.NO_MORE_DOCS;
+					}
 
-        }.getDocIdSet();
-      }
-    }.getDocIdSet(context);
-  }
+				}.getDocIdSet();
+			}
+		}.getDocIdSet(context);
+	}
 }

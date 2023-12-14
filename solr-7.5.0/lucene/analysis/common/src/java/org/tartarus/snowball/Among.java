@@ -49,35 +49,35 @@ import java.util.Locale;
  * </ul>
  */
 public final class Among {
-  
-  public Among(String s, int substring_i, int result,
-               String methodname, MethodHandles.Lookup methodobject) {
-    this.s_size = s.length();
-    this.s = s.toCharArray();
-    this.substring_i = substring_i;
-    this.result = result;
-    if (methodname.isEmpty()) {
-      this.method = null;
-    } else {
-      final Class<? extends SnowballProgram> clazz = methodobject.lookupClass().asSubclass(SnowballProgram.class);
-      try {
-        this.method = methodobject.findVirtual(clazz, methodname, MethodType.methodType(boolean.class))
-            .asType(MethodType.methodType(boolean.class, SnowballProgram.class));
-      } catch (NoSuchMethodException | IllegalAccessException e) {
-        throw new RuntimeException(String.format(Locale.ENGLISH,
-            "Snowball program '%s' is broken, cannot access method: boolean %s()",
-            clazz.getSimpleName(), methodname
-        ), e);
-      }
-    }
-  }
 
-  final int s_size; /* search string */
-  final char[] s; /* search string */
-  final int substring_i; /* index to longest matching substring */
-  final int result;      /* result of the lookup */
-  
-  // Make sure this is not accessible outside package for Java security reasons!
-  final MethodHandle method; /* method to use if substring matches */
-  
+	public Among(String s, int substring_i, int result,
+							 String methodname, MethodHandles.Lookup methodobject) {
+		this.s_size = s.length();
+		this.s = s.toCharArray();
+		this.substring_i = substring_i;
+		this.result = result;
+		if (methodname.isEmpty()) {
+			this.method = null;
+		} else {
+			final Class<? extends SnowballProgram> clazz = methodobject.lookupClass().asSubclass(SnowballProgram.class);
+			try {
+				this.method = methodobject.findVirtual(clazz, methodname, MethodType.methodType(boolean.class))
+					.asType(MethodType.methodType(boolean.class, SnowballProgram.class));
+			} catch (NoSuchMethodException | IllegalAccessException e) {
+				throw new RuntimeException(String.format(Locale.ENGLISH,
+					"Snowball program '%s' is broken, cannot access method: boolean %s()",
+					clazz.getSimpleName(), methodname
+				), e);
+			}
+		}
+	}
+
+	final int s_size; /* search string */
+	final char[] s; /* search string */
+	final int substring_i; /* index to longest matching substring */
+	final int result;      /* result of the lookup */
+
+	// Make sure this is not accessible outside package for Java security reasons!
+	final MethodHandle method; /* method to use if substring matches */
+
 }

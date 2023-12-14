@@ -43,69 +43,70 @@ import org.apache.lucene.util.BytesRef;
  */
 public class STMergingBlockReader extends STBlockReader {
 
-  public STMergingBlockReader(
-      Supplier<IndexDictionary.Browser> dictionaryBrowserSupplier,
-      IndexInput blockInput,
-      PostingsReaderBase postingsReader,
-      FieldMetadata fieldMetadata,
-      BlockDecoder blockDecoder,
-      FieldInfos fieldInfos) throws IOException {
-    super(dictionaryBrowserSupplier, blockInput, postingsReader, fieldMetadata, blockDecoder, fieldInfos);
-  }
+	public STMergingBlockReader(
+		Supplier<IndexDictionary.Browser> dictionaryBrowserSupplier,
+		IndexInput blockInput,
+		PostingsReaderBase postingsReader,
+		FieldMetadata fieldMetadata,
+		BlockDecoder blockDecoder,
+		FieldInfos fieldInfos) throws IOException {
+		super(dictionaryBrowserSupplier, blockInput, postingsReader, fieldMetadata, blockDecoder, fieldInfos);
+	}
 
-  @Override
-  public SeekStatus seekCeil(BytesRef searchedTerm) {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public SeekStatus seekCeil(BytesRef searchedTerm) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public boolean seekExact(BytesRef searchedTerm) {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public boolean seekExact(BytesRef searchedTerm) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public void seekExact(BytesRef term, TermState state) {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public void seekExact(BytesRef term, TermState state) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public void seekExact(long ord) {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public void seekExact(long ord) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  protected BlockTermState readTermStateIfNotRead() {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	protected BlockTermState readTermStateIfNotRead() {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public BytesRef next() throws IOException {
-    return nextTerm();
-  }
+	@Override
+	public BytesRef next() throws IOException {
+		return nextTerm();
+	}
 
-  /**
-   * Creates a new {@link PostingsEnum} for the provided field and {@link BlockTermState}.
-   * @param reuse Previous {@link PostingsEnum} to reuse; or null to create a new one.
-   * @param flags Postings flags.
-   */
-  public PostingsEnum postings(String fieldName, BlockTermState termState, PostingsEnum reuse, int flags) throws IOException {
-    return postingsReader.postings(fieldInfos.fieldInfo(fieldName), termState, reuse, flags);
-  }
+	/**
+	 * Creates a new {@link PostingsEnum} for the provided field and {@link BlockTermState}.
+	 *
+	 * @param reuse Previous {@link PostingsEnum} to reuse; or null to create a new one.
+	 * @param flags Postings flags.
+	 */
+	public PostingsEnum postings(String fieldName, BlockTermState termState, PostingsEnum reuse, int flags) throws IOException {
+		return postingsReader.postings(fieldInfos.fieldInfo(fieldName), termState, reuse, flags);
+	}
 
-  /**
-   * Reads all the fields {@link TermState}s of the current term and put them
-   * in the provided map. Clears the map first, before putting {@link TermState}s.
-   */
-  public void readFieldTermStatesMap(Map<String, BlockTermState> fieldTermStatesMap) throws IOException {
-    if (term() != null) {
-      termStatesReadBuffer.setPosition(blockFirstLineStart + blockHeader.getTermStatesBaseOffset() + blockLine.getTermStateRelativeOffset());
-      STBlockLine.Serializer.readFieldTermStatesMap(
-          termStatesReadBuffer,
-          termStateSerializer,
-          blockHeader,
-          fieldInfos,
-          fieldTermStatesMap
-      );
-    }
-  }
+	/**
+	 * Reads all the fields {@link TermState}s of the current term and put them
+	 * in the provided map. Clears the map first, before putting {@link TermState}s.
+	 */
+	public void readFieldTermStatesMap(Map<String, BlockTermState> fieldTermStatesMap) throws IOException {
+		if (term() != null) {
+			termStatesReadBuffer.setPosition(blockFirstLineStart + blockHeader.getTermStatesBaseOffset() + blockLine.getTermStateRelativeOffset());
+			STBlockLine.Serializer.readFieldTermStatesMap(
+				termStatesReadBuffer,
+				termStateSerializer,
+				blockHeader,
+				fieldInfos,
+				fieldTermStatesMap
+			);
+		}
+	}
 }

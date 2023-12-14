@@ -30,19 +30,19 @@ import org.apache.lucene.util.BytesRef;
  */
 public class PointPrefixTreeFieldCacheProvider extends ShapeFieldCacheProvider<Point> {
 
-  private final SpatialPrefixTree grid;
-  private Cell scanCell;//re-used in readShape to save GC
+	private final SpatialPrefixTree grid;
+	private Cell scanCell;//re-used in readShape to save GC
 
-  public PointPrefixTreeFieldCacheProvider(SpatialPrefixTree grid, String shapeField, int defaultSize) {
-    super( shapeField, defaultSize );
-    this.grid = grid;
-  }
+	public PointPrefixTreeFieldCacheProvider(SpatialPrefixTree grid, String shapeField, int defaultSize) {
+		super(shapeField, defaultSize);
+		this.grid = grid;
+	}
 
-  @Override
-  protected Point readShape(BytesRef term) {
-    scanCell = grid.readCell(term, scanCell);
-    if (scanCell.getLevel() == grid.getMaxLevels())
-      return scanCell.getShape().getCenter();
-    return null;
-  }
+	@Override
+	protected Point readShape(BytesRef term) {
+		scanCell = grid.readCell(term, scanCell);
+		if (scanCell.getLevel() == grid.getMaxLevels())
+			return scanCell.getShape().getCenter();
+		return null;
+	}
 }

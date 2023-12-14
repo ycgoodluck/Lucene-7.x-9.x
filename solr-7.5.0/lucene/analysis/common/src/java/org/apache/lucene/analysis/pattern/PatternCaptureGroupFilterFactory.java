@@ -24,7 +24,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link PatternCaptureGroupTokenFilter}. 
+ * Factory for {@link PatternCaptureGroupTokenFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_ptncapturegroup" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -37,16 +37,17 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * @since 4.4.0
  */
 public class PatternCaptureGroupFilterFactory extends TokenFilterFactory {
-  private Pattern pattern;
-  private boolean preserveOriginal = true;
-  
-  public  PatternCaptureGroupFilterFactory(Map<String,String> args) {
-    super(args);
-    pattern = getPattern(args, "pattern");
-    preserveOriginal = args.containsKey("preserve_original") ? Boolean.parseBoolean(args.get("preserve_original")) : true;
-  }
-  @Override
-  public PatternCaptureGroupTokenFilter create(TokenStream input) {
-    return new PatternCaptureGroupTokenFilter(input, preserveOriginal, pattern);
-  }
+	private Pattern pattern;
+	private boolean preserveOriginal = true;
+
+	public PatternCaptureGroupFilterFactory(Map<String, String> args) {
+		super(args);
+		pattern = getPattern(args, "pattern");
+		preserveOriginal = args.containsKey("preserve_original") ? Boolean.parseBoolean(args.get("preserve_original")) : true;
+	}
+
+	@Override
+	public PatternCaptureGroupTokenFilter create(TokenStream input) {
+		return new PatternCaptureGroupTokenFilter(input, preserveOriginal, pattern);
+	}
 }

@@ -32,29 +32,33 @@ import org.apache.lucene.analysis.util.CharFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class PersianCharFilterFactory extends CharFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "persian";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "persian";
 
-  /** Creates a new PersianCharFilterFactory */
-  public PersianCharFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public Reader create(Reader input) {
-    return new PersianCharFilter(input);
-  }
+	/**
+	 * Creates a new PersianCharFilterFactory
+	 */
+	public PersianCharFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public Reader normalize(Reader input) {
-    return create(input);
-  }
+	@Override
+	public Reader create(Reader input) {
+		return new PersianCharFilter(input);
+	}
+
+	@Override
+	public Reader normalize(Reader input) {
+		return create(input);
+	}
 }

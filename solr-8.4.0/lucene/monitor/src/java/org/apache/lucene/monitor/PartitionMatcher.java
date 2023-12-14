@@ -46,157 +46,157 @@ import org.apache.lucene.search.Query;
  */
 public class PartitionMatcher<T extends QueryMatch> extends CandidateMatcher<T> {
 
-  private final ExecutorService executor;
+	private final ExecutorService executor;
 
-  private final MatcherFactory<T> matcherFactory;
+	private final MatcherFactory<T> matcherFactory;
 
-  private final int threads;
+	private final int threads;
 
-  private final CandidateMatcher<T> resolvingMatcher;
+	private final CandidateMatcher<T> resolvingMatcher;
 
-  private static class MatchTask {
+	private static class MatchTask {
 
-    final String queryId;
-    final Query matchQuery;
-    final Map<String, String> metadata;
+		final String queryId;
+		final Query matchQuery;
+		final Map<String, String> metadata;
 
-    private MatchTask(String queryId, Query matchQuery, Map<String, String> metadata) {
-      this.queryId = queryId;
-      this.matchQuery = matchQuery;
-      this.metadata = metadata;
-    }
-  }
+		private MatchTask(String queryId, Query matchQuery, Map<String, String> metadata) {
+			this.queryId = queryId;
+			this.matchQuery = matchQuery;
+			this.metadata = metadata;
+		}
+	}
 
-  private final List<MatchTask> tasks = new ArrayList<>();
+	private final List<MatchTask> tasks = new ArrayList<>();
 
-  private PartitionMatcher(IndexSearcher searcher, ExecutorService executor, MatcherFactory<T> matcherFactory, int threads) {
-    super(searcher);
-    this.executor = executor;
-    this.matcherFactory = matcherFactory;
-    this.threads = threads;
-    this.resolvingMatcher = matcherFactory.createMatcher(searcher);
-  }
+	private PartitionMatcher(IndexSearcher searcher, ExecutorService executor, MatcherFactory<T> matcherFactory, int threads) {
+		super(searcher);
+		this.executor = executor;
+		this.matcherFactory = matcherFactory;
+		this.threads = threads;
+		this.resolvingMatcher = matcherFactory.createMatcher(searcher);
+	}
 
-  @Override
-  protected void matchQuery(String queryId, Query matchQuery, Map<String, String> metadata) {
-    tasks.add(new MatchTask(queryId, matchQuery, metadata));
-  }
+	@Override
+	protected void matchQuery(String queryId, Query matchQuery, Map<String, String> metadata) {
+		tasks.add(new MatchTask(queryId, matchQuery, metadata));
+	}
 
-  @Override
-  public T resolve(T match1, T match2) {
-    return resolvingMatcher.resolve(match1, match2);
-  }
+	@Override
+	public T resolve(T match1, T match2) {
+		return resolvingMatcher.resolve(match1, match2);
+	}
 
-  @Override
-  protected void doFinish() {
+	@Override
+	protected void doFinish() {
 
-    List<Callable<MultiMatchingQueries<T>>> workers = new ArrayList<>(threads);
-    for (List<MatchTask> taskset : partition(tasks, threads)) {
-      CandidateMatcher<T> matcher = matcherFactory.createMatcher(searcher);
-      workers.add(new MatcherWorker(taskset, matcher));
-    }
+		List<Callable<MultiMatchingQueries<T>>> workers = new ArrayList<>(threads);
+		for (List<MatchTask> taskset : partition(tasks, threads)) {
+			CandidateMatcher<T> matcher = matcherFactory.createMatcher(searcher);
+			workers.add(new MatcherWorker(taskset, matcher));
+		}
 
-    try {
-      for (Future<MultiMatchingQueries<T>> future : executor.invokeAll(workers)) {
-        MultiMatchingQueries<T> matches = future.get();
-        for (int doc = 0; doc < matches.getBatchSize(); doc++) {
-          for (T match : matches.getMatches(doc)) {
-            addMatch(match, doc);
-          }
-        }
-      }
+		try {
+			for (Future<MultiMatchingQueries<T>> future : executor.invokeAll(workers)) {
+				MultiMatchingQueries<T> matches = future.get();
+				for (int doc = 0; doc < matches.getBatchSize(); doc++) {
+					for (T match : matches.getMatches(doc)) {
+						addMatch(match, doc);
+					}
+				}
+			}
 
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException("Interrupted during match", e);
-    }
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException("Interrupted during match", e);
+		}
 
-  }
+	}
 
-  private class MatcherWorker implements Callable<MultiMatchingQueries<T>> {
+	private class MatcherWorker implements Callable<MultiMatchingQueries<T>> {
 
-    final List<MatchTask> tasks;
-    final CandidateMatcher<T> matcher;
+		final List<MatchTask> tasks;
+		final CandidateMatcher<T> matcher;
 
-    private MatcherWorker(List<MatchTask> tasks, CandidateMatcher<T> matcher) {
-      this.tasks = tasks;
-      this.matcher = matcher;
-    }
+		private MatcherWorker(List<MatchTask> tasks, CandidateMatcher<T> matcher) {
+			this.tasks = tasks;
+			this.matcher = matcher;
+		}
 
-    @Override
-    public MultiMatchingQueries<T> call() {
-      for (MatchTask task : tasks) {
-        try {
-          matcher.matchQuery(task.queryId, task.matchQuery, task.metadata);
-        } catch (IOException e) {
-          PartitionMatcher.this.reportError(task.queryId, e);
-        }
-      }
-      return matcher.finish(0, 0);
-    }
-  }
+		@Override
+		public MultiMatchingQueries<T> call() {
+			for (MatchTask task : tasks) {
+				try {
+					matcher.matchQuery(task.queryId, task.matchQuery, task.metadata);
+				} catch (IOException e) {
+					PartitionMatcher.this.reportError(task.queryId, e);
+				}
+			}
+			return matcher.finish(0, 0);
+		}
+	}
 
-  private static class PartitionMatcherFactory<T extends QueryMatch> implements MatcherFactory<T> {
+	private static class PartitionMatcherFactory<T extends QueryMatch> implements MatcherFactory<T> {
 
-    private final ExecutorService executor;
-    private final MatcherFactory<T> matcherFactory;
-    private final int threads;
+		private final ExecutorService executor;
+		private final MatcherFactory<T> matcherFactory;
+		private final int threads;
 
-    PartitionMatcherFactory(ExecutorService executor, MatcherFactory<T> matcherFactory,
-                                   int threads) {
-      this.executor = executor;
-      this.matcherFactory = matcherFactory;
-      this.threads = threads;
-    }
+		PartitionMatcherFactory(ExecutorService executor, MatcherFactory<T> matcherFactory,
+														int threads) {
+			this.executor = executor;
+			this.matcherFactory = matcherFactory;
+			this.threads = threads;
+		}
 
-    @Override
-    public PartitionMatcher<T> createMatcher(IndexSearcher searcher) {
-      return new PartitionMatcher<>(searcher, executor, matcherFactory, threads);
-    }
-  }
+		@Override
+		public PartitionMatcher<T> createMatcher(IndexSearcher searcher) {
+			return new PartitionMatcher<>(searcher, executor, matcherFactory, threads);
+		}
+	}
 
-  /**
-   * Create a new MatcherFactory for a PartitionMatcher
-   *
-   * @param executor       the ExecutorService to use
-   * @param matcherFactory the MatcherFactory to use to create submatchers
-   * @param threads        the number of threads to use
-   * @param <T>            the type of QueryMatch generated
-   */
-  public static <T extends QueryMatch> MatcherFactory<T> factory(ExecutorService executor,
-                                                                          MatcherFactory<T> matcherFactory, int threads) {
-    return new PartitionMatcherFactory<>(executor, matcherFactory, threads);
-  }
+	/**
+	 * Create a new MatcherFactory for a PartitionMatcher
+	 *
+	 * @param executor       the ExecutorService to use
+	 * @param matcherFactory the MatcherFactory to use to create submatchers
+	 * @param threads        the number of threads to use
+	 * @param <T>            the type of QueryMatch generated
+	 */
+	public static <T extends QueryMatch> MatcherFactory<T> factory(ExecutorService executor,
+																																 MatcherFactory<T> matcherFactory, int threads) {
+		return new PartitionMatcherFactory<>(executor, matcherFactory, threads);
+	}
 
-  /**
-   * Create a new MatcherFactory for a PartitionMatcher
-   * <p>
-   * This factory will create a PartitionMatcher that uses as many threads as there are cores available
-   * to the JVM (as determined by {@code Runtime.getRuntime().availableProcessors()}).
-   *
-   * @param executor       the ExecutorService to use
-   * @param matcherFactory the MatcherFactory to use to create submatchers
-   * @param <T>            the type of QueryMatch generated
-   */
-  public static <T extends QueryMatch> MatcherFactory<T> factory(ExecutorService executor,
-                                                                          MatcherFactory<T> matcherFactory) {
-    int threads = Runtime.getRuntime().availableProcessors();
-    return new PartitionMatcherFactory<>(executor, matcherFactory, threads);
-  }
+	/**
+	 * Create a new MatcherFactory for a PartitionMatcher
+	 * <p>
+	 * This factory will create a PartitionMatcher that uses as many threads as there are cores available
+	 * to the JVM (as determined by {@code Runtime.getRuntime().availableProcessors()}).
+	 *
+	 * @param executor       the ExecutorService to use
+	 * @param matcherFactory the MatcherFactory to use to create submatchers
+	 * @param <T>            the type of QueryMatch generated
+	 */
+	public static <T extends QueryMatch> MatcherFactory<T> factory(ExecutorService executor,
+																																 MatcherFactory<T> matcherFactory) {
+		int threads = Runtime.getRuntime().availableProcessors();
+		return new PartitionMatcherFactory<>(executor, matcherFactory, threads);
+	}
 
-  static <T> List<List<T>> partition(List<T> items, int slices) {
-    double size = items.size() / (double) slices;
-    double accum = 0;
-    int start = 0;
-    List<List<T>> list = new ArrayList<>(slices);
-    for (int i = 0; i < slices; i++) {
-      int end = (int) Math.floor(accum + size);
-      if (i == slices - 1)
-        end = items.size();
-      list.add(items.subList(start, end));
-      accum += size;
-      start = (int) Math.floor(accum);
-    }
-    return list;
-  }
+	static <T> List<List<T>> partition(List<T> items, int slices) {
+		double size = items.size() / (double) slices;
+		double accum = 0;
+		int start = 0;
+		List<List<T>> list = new ArrayList<>(slices);
+		for (int i = 0; i < slices; i++) {
+			int end = (int) Math.floor(accum + size);
+			if (i == slices - 1)
+				end = items.size();
+			list.add(items.subList(start, end));
+			accum += size;
+			start = (int) Math.floor(accum);
+		}
+		return list;
+	}
 
 }

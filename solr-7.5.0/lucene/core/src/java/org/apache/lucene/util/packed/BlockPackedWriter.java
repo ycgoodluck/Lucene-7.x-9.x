@@ -53,55 +53,57 @@ import org.apache.lucene.store.DataOutput;
  *     bits per value. They are the subtraction of the original values and
  *     MinValue
  * </ul>
+ *
+ * @lucene.internal
  * @see BlockPackedReaderIterator
  * @see BlockPackedReader
- * @lucene.internal
  */
 public final class BlockPackedWriter extends AbstractBlockPackedWriter {
-  
-  /**
-   * Sole constructor.
-   * @param blockSize the number of values of a single block, must be a power of 2
-   */
-  public BlockPackedWriter(DataOutput out, int blockSize) {
-    super(out, blockSize);
-  }
 
-  protected void flush() throws IOException {
-    assert off > 0;
-    long min = Long.MAX_VALUE, max = Long.MIN_VALUE;
-    for (int i = 0; i < off; ++i) {
-      min = Math.min(values[i], min);
-      max = Math.max(values[i], max);
-    }
+	/**
+	 * Sole constructor.
+	 *
+	 * @param blockSize the number of values of a single block, must be a power of 2
+	 */
+	public BlockPackedWriter(DataOutput out, int blockSize) {
+		super(out, blockSize);
+	}
 
-    final long delta = max - min;
-    int bitsRequired = delta == 0 ? 0 : PackedInts.unsignedBitsRequired(delta);
-    if (bitsRequired == 64) {
-      // no need to delta-encode
-      min = 0L;
-    } else if (min > 0L) {
-      // make min as small as possible so that writeVLong requires fewer bytes
-      min = Math.max(0L, max - PackedInts.maxValue(bitsRequired));
-    }
+	protected void flush() throws IOException {
+		assert off > 0;
+		long min = Long.MAX_VALUE, max = Long.MIN_VALUE;
+		for (int i = 0; i < off; ++i) {
+			min = Math.min(values[i], min);
+			max = Math.max(values[i], max);
+		}
 
-    final int token = (bitsRequired << BPV_SHIFT) | (min == 0 ? MIN_VALUE_EQUALS_0 : 0);
-    out.writeByte((byte) token);
+		final long delta = max - min;
+		int bitsRequired = delta == 0 ? 0 : PackedInts.unsignedBitsRequired(delta);
+		if (bitsRequired == 64) {
+			// no need to delta-encode
+			min = 0L;
+		} else if (min > 0L) {
+			// make min as small as possible so that writeVLong requires fewer bytes
+			min = Math.max(0L, max - PackedInts.maxValue(bitsRequired));
+		}
 
-    if (min != 0) {
-      writeVLong(out, zigZagEncode(min) - 1);
-    }
+		final int token = (bitsRequired << BPV_SHIFT) | (min == 0 ? MIN_VALUE_EQUALS_0 : 0);
+		out.writeByte((byte) token);
 
-    if (bitsRequired > 0) {
-      if (min != 0) {
-        for (int i = 0; i < off; ++i) {
-          values[i] -= min;
-        }
-      }
-      writeValues(bitsRequired);
-    }
+		if (min != 0) {
+			writeVLong(out, zigZagEncode(min) - 1);
+		}
 
-    off = 0;
-  }
+		if (bitsRequired > 0) {
+			if (min != 0) {
+				for (int i = 0; i < off; ++i) {
+					values[i] -= min;
+				}
+			}
+			writeValues(bitsRequired);
+		}
+
+		off = 0;
+	}
 
 }

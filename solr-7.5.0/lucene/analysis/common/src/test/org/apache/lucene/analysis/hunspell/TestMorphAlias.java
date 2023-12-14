@@ -20,20 +20,20 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestMorphAlias extends StemmerTestBase {
-  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("morphalias.aff", "morphalias.dic");
-  }
-  
-  public void testStemming() {
-    assertStemsTo("feet", "foot");
-    assertStemsTo("feetscratcher", "foot");
-    assertStemsTo("work", "workverb","worknoun");
-    assertStemsTo("works", "workverb","worknoun");
-    assertStemsTo("notspecial", "notspecial");
-    assertStemsTo("simplenoun", "simplenoun");
-    assertStemsTo("simplenouns", "simplenoun");
-    assertStemsTo("simplenounscratcher");
-  }
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("morphalias.aff", "morphalias.dic");
+	}
+
+	public void testStemming() {
+		assertStemsTo("feet", "foot");
+		assertStemsTo("feetscratcher", "foot");
+		assertStemsTo("work", "workverb", "worknoun");
+		assertStemsTo("works", "workverb", "worknoun");
+		assertStemsTo("notspecial", "notspecial");
+		assertStemsTo("simplenoun", "simplenoun");
+		assertStemsTo("simplenouns", "simplenoun");
+		assertStemsTo("simplenounscratcher");
+	}
 }

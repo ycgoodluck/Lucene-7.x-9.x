@@ -37,95 +37,95 @@ import org.apache.lucene.search.TwoPhaseIterator;
 import org.apache.lucene.search.Weight;
 
 abstract class BinaryRangeFieldRangeQuery extends Query {
-  private final String field;
-  private byte[] queryPackedValue;
-  private final int numBytesPerDimension;
-  private final int numDims;
-  private final RangeFieldQuery.QueryType queryType;
+	private final String field;
+	private byte[] queryPackedValue;
+	private final int numBytesPerDimension;
+	private final int numDims;
+	private final RangeFieldQuery.QueryType queryType;
 
-  BinaryRangeFieldRangeQuery(String field, byte[] queryPackedValue, int numBytesPerDimension, int numDims,
-                             RangeFieldQuery.QueryType queryType) {
-    this.field = field;
-    this.queryPackedValue = queryPackedValue;
-    this.numBytesPerDimension = numBytesPerDimension;
-    this.numDims = numDims;
+	BinaryRangeFieldRangeQuery(String field, byte[] queryPackedValue, int numBytesPerDimension, int numDims,
+														 RangeFieldQuery.QueryType queryType) {
+		this.field = field;
+		this.queryPackedValue = queryPackedValue;
+		this.numBytesPerDimension = numBytesPerDimension;
+		this.numDims = numDims;
 
-    if (!(queryType == RangeFieldQuery.QueryType.INTERSECTS)) {
-      throw new UnsupportedOperationException("INTERSECTS is the only query type supported for this field type right now");
-    }
+		if (!(queryType == RangeFieldQuery.QueryType.INTERSECTS)) {
+			throw new UnsupportedOperationException("INTERSECTS is the only query type supported for this field type right now");
+		}
 
-    this.queryType = queryType;
-  }
+		this.queryType = queryType;
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (sameClassAs(obj) == false) {
-      return false;
-    }
-    BinaryRangeFieldRangeQuery that = (BinaryRangeFieldRangeQuery) obj;
-    return Objects.equals(field, that.field)
-        && Arrays.equals(queryPackedValue, that.queryPackedValue);
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (sameClassAs(obj) == false) {
+			return false;
+		}
+		BinaryRangeFieldRangeQuery that = (BinaryRangeFieldRangeQuery) obj;
+		return Objects.equals(field, that.field)
+			&& Arrays.equals(queryPackedValue, that.queryPackedValue);
+	}
 
-  @Override
-  public int hashCode() {
-    int h = classHash();
-    h = 31 * h + field.hashCode();
-    h = 31 * h + Arrays.hashCode(queryPackedValue);
-    return h;
-  }
+	@Override
+	public int hashCode() {
+		int h = classHash();
+		h = 31 * h + field.hashCode();
+		h = 31 * h + Arrays.hashCode(queryPackedValue);
+		return h;
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    if (visitor.acceptField(field)) {
-      visitor.visitLeaf(this);
-    }
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		if (visitor.acceptField(field)) {
+			visitor.visitLeaf(this);
+		}
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    return super.rewrite(reader);
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		return super.rewrite(reader);
+	}
 
-  private BinaryRangeDocValues getValues(LeafReader reader, String field) throws IOException {
-    BinaryDocValues binaryDocValues = reader.getBinaryDocValues(field);
+	private BinaryRangeDocValues getValues(LeafReader reader, String field) throws IOException {
+		BinaryDocValues binaryDocValues = reader.getBinaryDocValues(field);
 
-    return new BinaryRangeDocValues(binaryDocValues, numDims, numBytesPerDimension);
-  }
+		return new BinaryRangeDocValues(binaryDocValues, numDims, numBytesPerDimension);
+	}
 
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    return new ConstantScoreWeight(this, boost) {
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		return new ConstantScoreWeight(this, boost) {
 
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        BinaryRangeDocValues values = getValues(context.reader(), field);
-        if (values == null) {
-          return null;
-        }
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				BinaryRangeDocValues values = getValues(context.reader(), field);
+				if (values == null) {
+					return null;
+				}
 
-        final TwoPhaseIterator iterator;
-        iterator = new TwoPhaseIterator(values) {
-          @Override
-          public boolean matches() {
-            return queryType.matches(queryPackedValue, values.getPackedValue(), numDims, numBytesPerDimension);
-          }
+				final TwoPhaseIterator iterator;
+				iterator = new TwoPhaseIterator(values) {
+					@Override
+					public boolean matches() {
+						return queryType.matches(queryPackedValue, values.getPackedValue(), numDims, numBytesPerDimension);
+					}
 
-          @Override
-          public float matchCost() {
-            return queryPackedValue.length;
-          }
-        };
+					@Override
+					public float matchCost() {
+						return queryPackedValue.length;
+					}
+				};
 
-        return new ConstantScoreScorer(this, score(), scoreMode, iterator);
-      }
+				return new ConstantScoreScorer(this, score(), scoreMode, iterator);
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return DocValues.isCacheable(ctx, field);
-      }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return DocValues.isCacheable(ctx, field);
+			}
 
-    };
-  }
+		};
+	}
 }

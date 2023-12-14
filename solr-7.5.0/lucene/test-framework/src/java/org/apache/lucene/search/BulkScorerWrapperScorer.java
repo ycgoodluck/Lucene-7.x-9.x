@@ -24,90 +24,94 @@ import java.util.Arrays;
  */
 public class BulkScorerWrapperScorer extends Scorer {
 
-  private final BulkScorer scorer;
+	private final BulkScorer scorer;
 
-  private int i = -1;
-  private int doc = -1;
-  private int next = 0;
+	private int i = -1;
+	private int doc = -1;
+	private int next = 0;
 
-  private final int[] docs;
-  private final float[] scores;
-  private int bufferLength;
+	private final int[] docs;
+	private final float[] scores;
+	private int bufferLength;
 
-  /** Sole constructor. */
-  public BulkScorerWrapperScorer(Weight weight, BulkScorer scorer, int bufferSize) {
-    super(weight);
-    this.scorer = scorer;
-    docs = new int[bufferSize];
-    scores = new float[bufferSize];
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public BulkScorerWrapperScorer(Weight weight, BulkScorer scorer, int bufferSize) {
+		super(weight);
+		this.scorer = scorer;
+		docs = new int[bufferSize];
+		scores = new float[bufferSize];
+	}
 
-  private void refill(int target) throws IOException {
-    bufferLength = 0;
-    while (next != DocIdSetIterator.NO_MORE_DOCS && bufferLength == 0) {
-      final int min = Math.max(target, next);
-      final int max = min + docs.length;
-      next = scorer.score(new LeafCollector() {
-        Scorer scorer;
-        @Override
-        public void setScorer(Scorer scorer) throws IOException {
-          this.scorer = scorer;
-        }
-        @Override
-        public void collect(int doc) throws IOException {
-          docs[bufferLength] = doc;
-          scores[bufferLength] = scorer.score();
-          bufferLength += 1;
-        }
-      }, null, min, max);
-    }
-    i = -1;
-  }
+	private void refill(int target) throws IOException {
+		bufferLength = 0;
+		while (next != DocIdSetIterator.NO_MORE_DOCS && bufferLength == 0) {
+			final int min = Math.max(target, next);
+			final int max = min + docs.length;
+			next = scorer.score(new LeafCollector() {
+				Scorer scorer;
 
-  @Override
-  public float score() throws IOException {
-    return scores[i];
-  }
+				@Override
+				public void setScorer(Scorer scorer) throws IOException {
+					this.scorer = scorer;
+				}
 
-  @Override
-  public int docID() {
-    return doc;
-  }
+				@Override
+				public void collect(int doc) throws IOException {
+					docs[bufferLength] = doc;
+					scores[bufferLength] = scorer.score();
+					bufferLength += 1;
+				}
+			}, null, min, max);
+		}
+		i = -1;
+	}
 
-  @Override
-  public DocIdSetIterator iterator() {
-    return new DocIdSetIterator() {
-      @Override
-      public int docID() {
-        return doc;
-      }
+	@Override
+	public float score() throws IOException {
+		return scores[i];
+	}
 
-      @Override
-      public int nextDoc() throws IOException {
-        return advance(docID() + 1);
-      }
+	@Override
+	public int docID() {
+		return doc;
+	}
 
-      @Override
-      public int advance(int target) throws IOException {
-        if (bufferLength == 0 || docs[bufferLength - 1] < target) {
-          refill(target);
-        }
+	@Override
+	public DocIdSetIterator iterator() {
+		return new DocIdSetIterator() {
+			@Override
+			public int docID() {
+				return doc;
+			}
 
-        i = Arrays.binarySearch(docs, i + 1, bufferLength, target);
-        if (i < 0) {
-          i = -1 - i;
-        }
-        if (i == bufferLength) {
-          return doc = DocIdSetIterator.NO_MORE_DOCS;
-        }
-        return doc = docs[i];
-      }
+			@Override
+			public int nextDoc() throws IOException {
+				return advance(docID() + 1);
+			}
 
-      @Override
-      public long cost() {
-        return scorer.cost();
-      }
-    };
-  }
+			@Override
+			public int advance(int target) throws IOException {
+				if (bufferLength == 0 || docs[bufferLength - 1] < target) {
+					refill(target);
+				}
+
+				i = Arrays.binarySearch(docs, i + 1, bufferLength, target);
+				if (i < 0) {
+					i = -1 - i;
+				}
+				if (i == bufferLength) {
+					return doc = DocIdSetIterator.NO_MORE_DOCS;
+				}
+				return doc = docs[i];
+			}
+
+			@Override
+			public long cost() {
+				return scorer.cost();
+			}
+		};
+	}
 
 }

@@ -40,71 +40,71 @@ import org.locationtech.spatial4j.shape.Shape;
  * particular the options starting with "query.".
  */
 public class SpatialFileQueryMaker extends AbstractQueryMaker {
-  protected SpatialStrategy strategy;
-  protected double distErrPct;//NaN if not set
-  protected SpatialOperation operation;
-  protected boolean score;
+	protected SpatialStrategy strategy;
+	protected double distErrPct;//NaN if not set
+	protected SpatialOperation operation;
+	protected boolean score;
 
-  protected SpatialDocMaker.ShapeConverter shapeConverter;
+	protected SpatialDocMaker.ShapeConverter shapeConverter;
 
-  @Override
-  public void setConfig(Config config) throws Exception {
-    strategy = SpatialDocMaker.getSpatialStrategy(config.getRoundNumber());
-    shapeConverter = SpatialDocMaker.makeShapeConverter(strategy, config, "query.spatial.");
+	@Override
+	public void setConfig(Config config) throws Exception {
+		strategy = SpatialDocMaker.getSpatialStrategy(config.getRoundNumber());
+		shapeConverter = SpatialDocMaker.makeShapeConverter(strategy, config, "query.spatial.");
 
-    distErrPct = config.get("query.spatial.distErrPct", Double.NaN);
-    operation = SpatialOperation.get(config.get("query.spatial.predicate", "Intersects"));
-    score = config.get("query.spatial.score", false);
+		distErrPct = config.get("query.spatial.distErrPct", Double.NaN);
+		operation = SpatialOperation.get(config.get("query.spatial.predicate", "Intersects"));
+		score = config.get("query.spatial.score", false);
 
-    super.setConfig(config);//call last, will call prepareQueries()
-  }
+		super.setConfig(config);//call last, will call prepareQueries()
+	}
 
-  @Override
-  protected Query[] prepareQueries() throws Exception {
-    final int maxQueries = config.get("query.file.maxQueries", 1000);
-    Config srcConfig = new Config(new Properties());
-    srcConfig.set("docs.file", config.get("query.file", null));
-    srcConfig.set("line.parser", config.get("query.file.line.parser", null));
-    srcConfig.set("content.source.forever", "false");
+	@Override
+	protected Query[] prepareQueries() throws Exception {
+		final int maxQueries = config.get("query.file.maxQueries", 1000);
+		Config srcConfig = new Config(new Properties());
+		srcConfig.set("docs.file", config.get("query.file", null));
+		srcConfig.set("line.parser", config.get("query.file.line.parser", null));
+		srcConfig.set("content.source.forever", "false");
 
-    List<Query> queries = new ArrayList<>();
-    LineDocSource src = new LineDocSource();
-    try {
-      src.setConfig(srcConfig);
-      src.resetInputs();
-      DocData docData = new DocData();
-      for (int i = 0; i < maxQueries; i++) {
-        docData = src.getNextDocData(docData);
-        Shape shape = SpatialDocMaker.makeShapeFromString(strategy, docData.getName(), docData.getBody());
-        if (shape != null) {
-          shape = shapeConverter.convert(shape);
-          queries.add(makeQueryFromShape(shape));
-        } else {
-          i--;//skip
-        }
-      }
-    } catch (NoMoreDataException e) {
-      //all-done
-    } finally {
-      src.close();
-    }
-    return queries.toArray(new Query[queries.size()]);
-  }
+		List<Query> queries = new ArrayList<>();
+		LineDocSource src = new LineDocSource();
+		try {
+			src.setConfig(srcConfig);
+			src.resetInputs();
+			DocData docData = new DocData();
+			for (int i = 0; i < maxQueries; i++) {
+				docData = src.getNextDocData(docData);
+				Shape shape = SpatialDocMaker.makeShapeFromString(strategy, docData.getName(), docData.getBody());
+				if (shape != null) {
+					shape = shapeConverter.convert(shape);
+					queries.add(makeQueryFromShape(shape));
+				} else {
+					i--;//skip
+				}
+			}
+		} catch (NoMoreDataException e) {
+			//all-done
+		} finally {
+			src.close();
+		}
+		return queries.toArray(new Query[queries.size()]);
+	}
 
 
-  protected Query makeQueryFromShape(Shape shape) {
-    SpatialArgs args = new SpatialArgs(operation, shape);
-    if (!Double.isNaN(distErrPct))
-      args.setDistErrPct(distErrPct);
+	protected Query makeQueryFromShape(Shape shape) {
+		SpatialArgs args = new SpatialArgs(operation, shape);
+		if (!Double.isNaN(distErrPct))
+			args.setDistErrPct(distErrPct);
 
-    Query filterQuery = strategy.makeQuery(args);
-    if (score) {
-      //wrap with distance computing query
-      DoubleValuesSource valueSource = strategy.makeDistanceValueSource(shape.getCenter());
-      return new FunctionScoreQuery(filterQuery, valueSource);
-    } else {
-      return filterQuery; // assume constant scoring
-    }
-  }
+		Query filterQuery = strategy.makeQuery(args);
+		if (score) {
+			//wrap with distance computing query
+			DoubleValuesSource valueSource = strategy.makeDistanceValueSource(shape.getCenter());
+			return new FunctionScoreQuery(filterQuery, valueSource);
+		} else {
+			return filterQuery; // assume constant scoring
+		}
+	}
 
 }

@@ -33,8 +33,8 @@ import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.FixedBitSet;
 
-/** 
- * Lucene 5.0 live docs format 
+/**
+ * Lucene 5.0 live docs format
  * <p>The .liv file is optional, and only exists when a segment contains
  * deletions.
  * <p>Although per-segment, this file is maintained exterior to compound segment
@@ -46,81 +46,89 @@ import org.apache.lucene.util.FixedBitSet;
  * </ul>
  */
 public final class Lucene50LiveDocsFormat extends LiveDocsFormat {
-  
-  /** Sole constructor. */
-  public Lucene50LiveDocsFormat() {
-  }
-  
-  /** extension of live docs */
-  private static final String EXTENSION = "liv";
-  
-  /** codec of live docs */
-  private static final String CODEC_NAME = "Lucene50LiveDocs";
-  
-  /** supported version range */
-  private static final int VERSION_START = 0;
-  private static final int VERSION_CURRENT = VERSION_START;
 
-  @Override
-  public Bits readLiveDocs(Directory dir, SegmentCommitInfo info, IOContext context) throws IOException {
-    long gen = info.getDelGen();
-    String name = IndexFileNames.fileNameFromGeneration(info.info.name, EXTENSION, gen);
-    final int length = info.info.maxDoc();
-    try (ChecksumIndexInput input = dir.openChecksumInput(name, context)) {
-      Throwable priorE = null;
-      try {
-        CodecUtil.checkIndexHeader(input, CODEC_NAME, VERSION_START, VERSION_CURRENT, 
-                                     info.info.getId(), Long.toString(gen, Character.MAX_RADIX));
-        long data[] = new long[FixedBitSet.bits2words(length)];
-        for (int i = 0; i < data.length; i++) {
-          data[i] = input.readLong();
-        }
-        FixedBitSet fbs = new FixedBitSet(data, length);
-        if (fbs.length() - fbs.cardinality() != info.getDelCount()) {
-          throw new CorruptIndexException("bits.deleted=" + (fbs.length() - fbs.cardinality()) + 
-                                          " info.delcount=" + info.getDelCount(), input);
-        }
-        return fbs.asReadOnlyBits();
-      } catch (Throwable exception) {
-        priorE = exception;
-      } finally {
-        CodecUtil.checkFooter(input, priorE);
-      }
-    }
-    throw new AssertionError();
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public Lucene50LiveDocsFormat() {
+	}
 
-  @Override
-  public void writeLiveDocs(Bits bits, Directory dir, SegmentCommitInfo info, int newDelCount, IOContext context) throws IOException {
-    long gen = info.getNextDelGen();
-    String name = IndexFileNames.fileNameFromGeneration(info.info.name, EXTENSION, gen);
-    int delCount = 0;
-    try (IndexOutput output = dir.createOutput(name, context)) {
-      CodecUtil.writeIndexHeader(output, CODEC_NAME, VERSION_CURRENT, info.info.getId(), Long.toString(gen, Character.MAX_RADIX));
-      final int longCount = FixedBitSet.bits2words(bits.length());
-      for (int i = 0; i < longCount; ++i) {
-        long currentBits = 0;
-        for (int j = i << 6, end = Math.min(j + 63, bits.length() - 1); j <= end; ++j) {
-          if (bits.get(j)) {
-            currentBits |= 1L << j; // mod 64
-          } else {
-            delCount += 1;
-          }
-        }
-        output.writeLong(currentBits);
-      }
-      CodecUtil.writeFooter(output);
-    }
-    if (delCount != info.getDelCount() + newDelCount) {
-      throw new CorruptIndexException("bits.deleted=" + delCount + 
-          " info.delcount=" + info.getDelCount() + " newdelcount=" + newDelCount, name);
-    }
-  }
+	/**
+	 * extension of live docs
+	 */
+	private static final String EXTENSION = "liv";
 
-  @Override
-  public void files(SegmentCommitInfo info, Collection<String> files) throws IOException {
-    if (info.hasDeletions()) {
-      files.add(IndexFileNames.fileNameFromGeneration(info.info.name, EXTENSION, info.getDelGen()));
-    }
-  }
+	/**
+	 * codec of live docs
+	 */
+	private static final String CODEC_NAME = "Lucene50LiveDocs";
+
+	/**
+	 * supported version range
+	 */
+	private static final int VERSION_START = 0;
+	private static final int VERSION_CURRENT = VERSION_START;
+
+	@Override
+	public Bits readLiveDocs(Directory dir, SegmentCommitInfo info, IOContext context) throws IOException {
+		long gen = info.getDelGen();
+		String name = IndexFileNames.fileNameFromGeneration(info.info.name, EXTENSION, gen);
+		final int length = info.info.maxDoc();
+		try (ChecksumIndexInput input = dir.openChecksumInput(name, context)) {
+			Throwable priorE = null;
+			try {
+				CodecUtil.checkIndexHeader(input, CODEC_NAME, VERSION_START, VERSION_CURRENT,
+					info.info.getId(), Long.toString(gen, Character.MAX_RADIX));
+				long data[] = new long[FixedBitSet.bits2words(length)];
+				for (int i = 0; i < data.length; i++) {
+					data[i] = input.readLong();
+				}
+				FixedBitSet fbs = new FixedBitSet(data, length);
+				if (fbs.length() - fbs.cardinality() != info.getDelCount()) {
+					throw new CorruptIndexException("bits.deleted=" + (fbs.length() - fbs.cardinality()) +
+						" info.delcount=" + info.getDelCount(), input);
+				}
+				return fbs.asReadOnlyBits();
+			} catch (Throwable exception) {
+				priorE = exception;
+			} finally {
+				CodecUtil.checkFooter(input, priorE);
+			}
+		}
+		throw new AssertionError();
+	}
+
+	@Override
+	public void writeLiveDocs(Bits bits, Directory dir, SegmentCommitInfo info, int newDelCount, IOContext context) throws IOException {
+		long gen = info.getNextDelGen();
+		String name = IndexFileNames.fileNameFromGeneration(info.info.name, EXTENSION, gen);
+		int delCount = 0;
+		try (IndexOutput output = dir.createOutput(name, context)) {
+			CodecUtil.writeIndexHeader(output, CODEC_NAME, VERSION_CURRENT, info.info.getId(), Long.toString(gen, Character.MAX_RADIX));
+			final int longCount = FixedBitSet.bits2words(bits.length());
+			for (int i = 0; i < longCount; ++i) {
+				long currentBits = 0;
+				for (int j = i << 6, end = Math.min(j + 63, bits.length() - 1); j <= end; ++j) {
+					if (bits.get(j)) {
+						currentBits |= 1L << j; // mod 64
+					} else {
+						delCount += 1;
+					}
+				}
+				output.writeLong(currentBits);
+			}
+			CodecUtil.writeFooter(output);
+		}
+		if (delCount != info.getDelCount() + newDelCount) {
+			throw new CorruptIndexException("bits.deleted=" + delCount +
+				" info.delcount=" + info.getDelCount() + " newdelcount=" + newDelCount, name);
+		}
+	}
+
+	@Override
+	public void files(SegmentCommitInfo info, Collection<String> files) throws IOException {
+		if (info.hasDeletions()) {
+			files.add(IndexFileNames.fileNameFromGeneration(info.info.name, EXTENSION, info.getDelGen()));
+		}
+	}
 }

@@ -40,61 +40,63 @@ import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
  * <p>
  * <b>NOTE:</b> the cache may be accessed concurrently by multiple threads,
  * therefore cache implementations should take this into consideration.
- * 
+ *
  * @lucene.experimental
  */
 public interface TaxonomyWriterCache {
 
-  /**
-   * Let go of whatever resources the cache is holding. After a close(),
-   * this object can no longer be used.
-   */
-  public void close();
+	/**
+	 * Let go of whatever resources the cache is holding. After a close(),
+	 * this object can no longer be used.
+	 */
+	public void close();
 
-  /**
-   * Lookup a category in the cache, returning its ordinal, or a negative
-   * number if the category is not in the cache.
-   * <P>
-   * It is up to the caller to remember what a negative response means:
-   * If the caller knows the cache is <I>complete</I> (it was initially
-   * fed with all the categories, and since then put() never returned true)
-   * it means the category does not exist. Otherwise, the category might
-   * still exist, but just be missing from the cache.
-   */
-  public int get(FacetLabel categoryPath);
+	/**
+	 * Lookup a category in the cache, returning its ordinal, or a negative
+	 * number if the category is not in the cache.
+	 * <p>
+	 * It is up to the caller to remember what a negative response means:
+	 * If the caller knows the cache is <I>complete</I> (it was initially
+	 * fed with all the categories, and since then put() never returned true)
+	 * it means the category does not exist. Otherwise, the category might
+	 * still exist, but just be missing from the cache.
+	 */
+	public int get(FacetLabel categoryPath);
 
-  /**
-   * Add a category to the cache, with the given ordinal as the value.
-   * <P>
-   * If the implementation keeps only a partial cache (e.g., an LRU cache)
-   * and finds that its cache is full, it should clear up part of the cache
-   * and return <code>true</code>. Otherwise, it should return
-   * <code>false</code>.
-   * <P>
-   * The reason why the caller needs to know if part of the cache was
-   * cleared is that in that case it will have to commit its on-disk index
-   * (so that all the latest category additions can be searched on disk, if
-   * we can't rely on the cache to contain them).
-   * <P>
-   * Ordinals should be non-negative. Currently there is no defined way to
-   * specify that a cache should remember a category does NOT exist.
-   * It doesn't really matter, because normally the next thing we do after
-   * finding that a category does not exist is to add it.
-   */
-  public boolean put(FacetLabel categoryPath, int ordinal);
+	/**
+	 * Add a category to the cache, with the given ordinal as the value.
+	 * <p>
+	 * If the implementation keeps only a partial cache (e.g., an LRU cache)
+	 * and finds that its cache is full, it should clear up part of the cache
+	 * and return <code>true</code>. Otherwise, it should return
+	 * <code>false</code>.
+	 * <p>
+	 * The reason why the caller needs to know if part of the cache was
+	 * cleared is that in that case it will have to commit its on-disk index
+	 * (so that all the latest category additions can be searched on disk, if
+	 * we can't rely on the cache to contain them).
+	 * <p>
+	 * Ordinals should be non-negative. Currently there is no defined way to
+	 * specify that a cache should remember a category does NOT exist.
+	 * It doesn't really matter, because normally the next thing we do after
+	 * finding that a category does not exist is to add it.
+	 */
+	public boolean put(FacetLabel categoryPath, int ordinal);
 
-  /**
-   * Returns true if the cache is full, such that the next {@link #put} will
-   * evict entries from it, false otherwise.
-   */
-  public boolean isFull();
+	/**
+	 * Returns true if the cache is full, such that the next {@link #put} will
+	 * evict entries from it, false otherwise.
+	 */
+	public boolean isFull();
 
-  /**
-   * Clears the content of the cache. Unlike {@link #close()}, the caller can
-   * assume that the cache is still operable after this method returns.
-   */
-  public void clear();
+	/**
+	 * Clears the content of the cache. Unlike {@link #close()}, the caller can
+	 * assume that the cache is still operable after this method returns.
+	 */
+	public void clear();
 
-  /** How many labels are currently stored in the cache. */
-  public int size();
+	/**
+	 * How many labels are currently stored in the cache.
+	 */
+	public int size();
 }

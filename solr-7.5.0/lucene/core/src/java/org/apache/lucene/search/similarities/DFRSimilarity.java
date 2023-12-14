@@ -35,7 +35,7 @@ import org.apache.lucene.search.similarities.Normalization.NoNormalization;
  * {@code BasicModel}, {@code AfterEffect} and {@code Normalization},
  * respectively. The names of these classes were chosen to match the names of
  * their counterparts in the Terrier IR engine.</p>
- * <p>To construct a DFRSimilarity, you must specify the implementations for 
+ * <p>To construct a DFRSimilarity, you must specify the implementations for
  * all three components of DFR:
  * <ol>
  *    <li>{@link BasicModel}: Basic model of information content:
@@ -43,7 +43,7 @@ import org.apache.lucene.search.similarities.Normalization.NoNormalization;
  *           <li>{@link BasicModelBE}: Limiting form of Bose-Einstein
  *           <li>{@link BasicModelG}: Geometric approximation of Bose-Einstein
  *           <li>{@link BasicModelP}: Poisson approximation of the Binomial
- *           <li>{@link BasicModelD}: Divergence approximation of the Binomial 
+ *           <li>{@link BasicModelD}: Divergence approximation of the Binomial
  *           <li>{@link BasicModelIn}: Inverse document frequency
  *           <li>{@link BasicModelIne}: Inverse expected document
  *               frequency [mixture of Poisson and IDF]
@@ -72,85 +72,93 @@ import org.apache.lucene.search.similarities.Normalization.NoNormalization;
  * </ol>
  * <p>Note that <em>qtf</em>, the multiplicity of term-occurrence in the query,
  * is not handled by this implementation.</p>
+ *
+ * @lucene.experimental
  * @see BasicModel
  * @see AfterEffect
  * @see Normalization
- * @lucene.experimental
  */
 public class DFRSimilarity extends SimilarityBase {
-  /** The basic model for information content. */
-  protected final BasicModel basicModel;
-  /** The first normalization of the information content. */
-  protected final AfterEffect afterEffect;
-  /** The term frequency normalization. */
-  protected final Normalization normalization;
-  
-  /**
-   * Creates DFRSimilarity from the three components.
-   * <p>
-   * Note that <code>null</code> values are not allowed:
-   * if you want no normalization or after-effect, instead pass 
-   * {@link NoNormalization} or {@link NoAfterEffect} respectively.
-   * @param basicModel Basic model of information content
-   * @param afterEffect First normalization of information gain
-   * @param normalization Second (length) normalization
-   */
-  public DFRSimilarity(BasicModel basicModel,
-                       AfterEffect afterEffect,
-                       Normalization normalization) {
-    if (basicModel == null || afterEffect == null || normalization == null) {
-      throw new NullPointerException("null parameters not allowed.");
-    }
-    this.basicModel = basicModel;
-    this.afterEffect = afterEffect;
-    this.normalization = normalization;
-  }
+	/**
+	 * The basic model for information content.
+	 */
+	protected final BasicModel basicModel;
+	/**
+	 * The first normalization of the information content.
+	 */
+	protected final AfterEffect afterEffect;
+	/**
+	 * The term frequency normalization.
+	 */
+	protected final Normalization normalization;
 
-  @Override
-  protected float score(BasicStats stats, float freq, float docLen) {
-    float tfn = normalization.tfn(stats, freq, docLen);
-    return stats.getBoost() *
-        basicModel.score(stats, tfn) * afterEffect.score(stats, tfn);
-  }
-  
-  @Override
-  protected void explain(List<Explanation> subs,
-      BasicStats stats, int doc, float freq, float docLen) {
-    if (stats.getBoost() != 1.0f) {
-      subs.add(Explanation.match(stats.getBoost(), "boost"));
-    }
-    
-    Explanation normExpl = normalization.explain(stats, freq, docLen);
-    float tfn = normExpl.getValue();
-    subs.add(normExpl);
-    subs.add(basicModel.explain(stats, tfn));
-    subs.add(afterEffect.explain(stats, tfn));
-  }
+	/**
+	 * Creates DFRSimilarity from the three components.
+	 * <p>
+	 * Note that <code>null</code> values are not allowed:
+	 * if you want no normalization or after-effect, instead pass
+	 * {@link NoNormalization} or {@link NoAfterEffect} respectively.
+	 *
+	 * @param basicModel    Basic model of information content
+	 * @param afterEffect   First normalization of information gain
+	 * @param normalization Second (length) normalization
+	 */
+	public DFRSimilarity(BasicModel basicModel,
+											 AfterEffect afterEffect,
+											 Normalization normalization) {
+		if (basicModel == null || afterEffect == null || normalization == null) {
+			throw new NullPointerException("null parameters not allowed.");
+		}
+		this.basicModel = basicModel;
+		this.afterEffect = afterEffect;
+		this.normalization = normalization;
+	}
 
-  @Override
-  public String toString() {
-    return "DFR " + basicModel.toString() + afterEffect.toString()
-                  + normalization.toString();
-  }
-  
-  /**
-   * Returns the basic model of information content
-   */
-  public BasicModel getBasicModel() {
-    return basicModel;
-  }
-  
-  /**
-   * Returns the first normalization
-   */
-  public AfterEffect getAfterEffect() {
-    return afterEffect;
-  }
-  
-  /**
-   * Returns the second normalization
-   */
-  public Normalization getNormalization() {
-    return normalization;
-  }
+	@Override
+	protected float score(BasicStats stats, float freq, float docLen) {
+		float tfn = normalization.tfn(stats, freq, docLen);
+		return stats.getBoost() *
+			basicModel.score(stats, tfn) * afterEffect.score(stats, tfn);
+	}
+
+	@Override
+	protected void explain(List<Explanation> subs,
+												 BasicStats stats, int doc, float freq, float docLen) {
+		if (stats.getBoost() != 1.0f) {
+			subs.add(Explanation.match(stats.getBoost(), "boost"));
+		}
+
+		Explanation normExpl = normalization.explain(stats, freq, docLen);
+		float tfn = normExpl.getValue();
+		subs.add(normExpl);
+		subs.add(basicModel.explain(stats, tfn));
+		subs.add(afterEffect.explain(stats, tfn));
+	}
+
+	@Override
+	public String toString() {
+		return "DFR " + basicModel.toString() + afterEffect.toString()
+			+ normalization.toString();
+	}
+
+	/**
+	 * Returns the basic model of information content
+	 */
+	public BasicModel getBasicModel() {
+		return basicModel;
+	}
+
+	/**
+	 * Returns the first normalization
+	 */
+	public AfterEffect getAfterEffect() {
+		return afterEffect;
+	}
+
+	/**
+	 * Returns the second normalization
+	 */
+	public Normalization getNormalization() {
+		return normalization;
+	}
 }

@@ -24,45 +24,55 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestItalianAnalyzer extends BaseTokenStreamTestCase {
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new ItalianAnalyzer().close();
-  }
-  
-  /** test stopwords and stemming */
-  public void testBasics() throws IOException {
-    Analyzer a = new ItalianAnalyzer();
-    // stemming
-    checkOneTerm(a, "abbandonata", "abbandonat");
-    checkOneTerm(a, "abbandonati", "abbandonat");
-    // stopword
-    assertAnalyzesTo(a, "dallo", new String[] {});
-    a.close();
-  }
-  
-  /** test use of exclusion set */
-  public void testExclude() throws IOException {
-    CharArraySet exclusionSet = new CharArraySet( asSet("abbandonata"), false);
-    Analyzer a = new ItalianAnalyzer( 
-        ItalianAnalyzer.getDefaultStopSet(), exclusionSet);
-    checkOneTerm(a, "abbandonata", "abbandonata");
-    checkOneTerm(a, "abbandonati", "abbandonat");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer analyzer = new ItalianAnalyzer();
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-    analyzer.close();
-  }
-  
-  /** test that the elisionfilter is working */
-  public void testContractions() throws IOException {
-    Analyzer a = new ItalianAnalyzer();
-    assertAnalyzesTo(a, "dell'Italia", new String[] { "ital" });
-    assertAnalyzesTo(a, "l'Italiano", new String[] { "italian" });
-    a.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new ItalianAnalyzer().close();
+	}
+
+	/**
+	 * test stopwords and stemming
+	 */
+	public void testBasics() throws IOException {
+		Analyzer a = new ItalianAnalyzer();
+		// stemming
+		checkOneTerm(a, "abbandonata", "abbandonat");
+		checkOneTerm(a, "abbandonati", "abbandonat");
+		// stopword
+		assertAnalyzesTo(a, "dallo", new String[]{});
+		a.close();
+	}
+
+	/**
+	 * test use of exclusion set
+	 */
+	public void testExclude() throws IOException {
+		CharArraySet exclusionSet = new CharArraySet(asSet("abbandonata"), false);
+		Analyzer a = new ItalianAnalyzer(
+			ItalianAnalyzer.getDefaultStopSet(), exclusionSet);
+		checkOneTerm(a, "abbandonata", "abbandonata");
+		checkOneTerm(a, "abbandonati", "abbandonat");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer analyzer = new ItalianAnalyzer();
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+		analyzer.close();
+	}
+
+	/**
+	 * test that the elisionfilter is working
+	 */
+	public void testContractions() throws IOException {
+		Analyzer a = new ItalianAnalyzer();
+		assertAnalyzesTo(a, "dell'Italia", new String[]{"ital"});
+		assertAnalyzesTo(a, "l'Italiano", new String[]{"italian"});
+		a.close();
+	}
 }

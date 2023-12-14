@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.lucene.queries.function.valuesource;
+
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.queries.function.FunctionValues;
 import org.apache.lucene.queries.function.ValueSource;
@@ -29,149 +30,149 @@ import java.util.Map;
  * ValueSources and apply their own logic.
  */
 public abstract class MultiFunction extends ValueSource {
-  protected final List<ValueSource> sources;
+	protected final List<ValueSource> sources;
 
-  public MultiFunction(List<ValueSource> sources) {
-    this.sources = sources;
-  }
+	public MultiFunction(List<ValueSource> sources) {
+		this.sources = sources;
+	}
 
-  abstract protected String name();
+	abstract protected String name();
 
-  @Override
-  public String description() {
-    return description(name(), sources);
-  }
+	@Override
+	public String description() {
+		return description(name(), sources);
+	}
 
-  /**
-   * Helper utility for {@link FunctionValues}
-   *
-   * @return true if <em>all</em> of the specified <code>values</code>
-   *         {@link FunctionValues#exists} for the specified doc, else false.
-   */
-  public static boolean allExists(int doc, FunctionValues[] values) throws IOException {
-    for (FunctionValues v : values) {
-      if ( ! v.exists(doc) ) {
-        return false;
-      }
-    }
-    return true;
-  }
-  
-  /**
-   * Helper utility for {@link FunctionValues}
-   *
-   * @return true if <em>any</em> of the specified <code>values</code>
-   *         {@link FunctionValues#exists} for the specified doc, else false.
-   */
-  public static boolean anyExists(int doc, FunctionValues[] values) throws IOException {
-    for (FunctionValues v : values) {
-      if ( v.exists(doc) ) {
-        return true;
-      }
-    }
-    return false;
-  }
-  
-  /**
-   * Equivalent to the {@code FunctionValues[]} method with the same name, but optimized for
-   * dealing with exactly 2 arguments.
-   *
-   * @return true if <em>both</em> of the specified <code>values</code>
-   *         {@link FunctionValues#exists} for the specified doc, else false.
-   * @see #anyExists(int,FunctionValues[])
-   */
-  public static boolean allExists(int doc, FunctionValues values1, FunctionValues values2) throws IOException {
-    return values1.exists(doc) && values2.exists(doc);
-  }
-  
-  /**
-   * Equivalent to the {@code FunctionValues[]} method with the same name, but optimized for
-   * dealing with exactly 2 arguments.
-   *
-   * @return true if <em>either</em> of the specified <code>values</code>
-   *         {@link FunctionValues#exists} for the specified doc, else false.
-   * @see #anyExists(int,FunctionValues[])
-   */
-  public static boolean anyExists(int doc, FunctionValues values1, FunctionValues values2) throws IOException {
-    return values1.exists(doc) || values2.exists(doc);
-  }
-  
-  public static String description(String name, List<ValueSource> sources) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(name).append('(');
-    boolean firstTime=true;
-    for (ValueSource source : sources) {
-      if (firstTime) {
-        firstTime=false;
-      } else {
-        sb.append(',');
-      }
-      sb.append(source);
-    }
-    sb.append(')');
-    return sb.toString();
-  }
+	/**
+	 * Helper utility for {@link FunctionValues}
+	 *
+	 * @return true if <em>all</em> of the specified <code>values</code>
+	 * {@link FunctionValues#exists} for the specified doc, else false.
+	 */
+	public static boolean allExists(int doc, FunctionValues[] values) throws IOException {
+		for (FunctionValues v : values) {
+			if (!v.exists(doc)) {
+				return false;
+			}
+		}
+		return true;
+	}
 
-  public static FunctionValues[] valsArr(List<ValueSource> sources, Map fcontext, LeafReaderContext readerContext) throws IOException {
-    final FunctionValues[] valsArr = new FunctionValues[sources.size()];
-    int i=0;
-    for (ValueSource source : sources) {
-      valsArr[i++] = source.getValues(fcontext, readerContext);
-    }
-    return valsArr;
-  }
+	/**
+	 * Helper utility for {@link FunctionValues}
+	 *
+	 * @return true if <em>any</em> of the specified <code>values</code>
+	 * {@link FunctionValues#exists} for the specified doc, else false.
+	 */
+	public static boolean anyExists(int doc, FunctionValues[] values) throws IOException {
+		for (FunctionValues v : values) {
+			if (v.exists(doc)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-  public class Values extends FunctionValues {
-    final FunctionValues[] valsArr;
+	/**
+	 * Equivalent to the {@code FunctionValues[]} method with the same name, but optimized for
+	 * dealing with exactly 2 arguments.
+	 *
+	 * @return true if <em>both</em> of the specified <code>values</code>
+	 * {@link FunctionValues#exists} for the specified doc, else false.
+	 * @see #anyExists(int, FunctionValues[])
+	 */
+	public static boolean allExists(int doc, FunctionValues values1, FunctionValues values2) throws IOException {
+		return values1.exists(doc) && values2.exists(doc);
+	}
 
-    public Values(FunctionValues[] valsArr) {
-      this.valsArr = valsArr;
-    }
+	/**
+	 * Equivalent to the {@code FunctionValues[]} method with the same name, but optimized for
+	 * dealing with exactly 2 arguments.
+	 *
+	 * @return true if <em>either</em> of the specified <code>values</code>
+	 * {@link FunctionValues#exists} for the specified doc, else false.
+	 * @see #anyExists(int, FunctionValues[])
+	 */
+	public static boolean anyExists(int doc, FunctionValues values1, FunctionValues values2) throws IOException {
+		return values1.exists(doc) || values2.exists(doc);
+	}
 
-    @Override
-    public String toString(int doc) throws IOException {
-      return MultiFunction.toString(name(), valsArr, doc);
-    }
+	public static String description(String name, List<ValueSource> sources) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(name).append('(');
+		boolean firstTime = true;
+		for (ValueSource source : sources) {
+			if (firstTime) {
+				firstTime = false;
+			} else {
+				sb.append(',');
+			}
+			sb.append(source);
+		}
+		sb.append(')');
+		return sb.toString();
+	}
 
-    @Override
-    public ValueFiller getValueFiller() {
-      // TODO: need ValueSource.type() to determine correct type
-      return super.getValueFiller();
-    }
-  }
+	public static FunctionValues[] valsArr(List<ValueSource> sources, Map fcontext, LeafReaderContext readerContext) throws IOException {
+		final FunctionValues[] valsArr = new FunctionValues[sources.size()];
+		int i = 0;
+		for (ValueSource source : sources) {
+			valsArr[i++] = source.getValues(fcontext, readerContext);
+		}
+		return valsArr;
+	}
 
-  public static String toString(String name, FunctionValues[] valsArr, int doc) throws IOException {
-    StringBuilder sb = new StringBuilder();
-    sb.append(name).append('(');
-    boolean firstTime=true;
-    for (FunctionValues vals : valsArr) {
-      if (firstTime) {
-        firstTime=false;
-      } else {
-        sb.append(',');
-      }
-      sb.append(vals.toString(doc));
-    }
-    sb.append(')');
-    return sb.toString();
-  }
+	public class Values extends FunctionValues {
+		final FunctionValues[] valsArr;
 
-  @Override
-  public void createWeight(Map context, IndexSearcher searcher) throws IOException {
-    for (ValueSource source : sources)
-      source.createWeight(context, searcher);
-  }
+		public Values(FunctionValues[] valsArr) {
+			this.valsArr = valsArr;
+		}
 
-  @Override
-  public int hashCode() {
-    return sources.hashCode() + name().hashCode();
-  }
+		@Override
+		public String toString(int doc) throws IOException {
+			return MultiFunction.toString(name(), valsArr, doc);
+		}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this.getClass() != o.getClass()) return false;
-    MultiFunction other = (MultiFunction)o;
-    return this.sources.equals(other.sources);
-  }
+		@Override
+		public ValueFiller getValueFiller() {
+			// TODO: need ValueSource.type() to determine correct type
+			return super.getValueFiller();
+		}
+	}
+
+	public static String toString(String name, FunctionValues[] valsArr, int doc) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		sb.append(name).append('(');
+		boolean firstTime = true;
+		for (FunctionValues vals : valsArr) {
+			if (firstTime) {
+				firstTime = false;
+			} else {
+				sb.append(',');
+			}
+			sb.append(vals.toString(doc));
+		}
+		sb.append(')');
+		return sb.toString();
+	}
+
+	@Override
+	public void createWeight(Map context, IndexSearcher searcher) throws IOException {
+		for (ValueSource source : sources)
+			source.createWeight(context, searcher);
+	}
+
+	@Override
+	public int hashCode() {
+		return sources.hashCode() + name().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this.getClass() != o.getClass()) return false;
+		MultiFunction other = (MultiFunction) o;
+		return this.sources.equals(other.sources);
+	}
 }
 

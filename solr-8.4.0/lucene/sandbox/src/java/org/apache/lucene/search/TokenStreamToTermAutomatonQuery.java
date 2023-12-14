@@ -25,89 +25,97 @@ import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
 import org.apache.lucene.util.BytesRef;
 
-/** Consumes a TokenStream and creates an {@link TermAutomatonQuery}
- *  where the transition labels are tokens from the {@link
- *  TermToBytesRefAttribute}.
+/**
+ * Consumes a TokenStream and creates an {@link TermAutomatonQuery}
+ * where the transition labels are tokens from the {@link
+ * TermToBytesRefAttribute}.
  *
- *  <p>This code is very new and likely has exciting bugs!
+ * <p>This code is very new and likely has exciting bugs!
  *
- *  @lucene.experimental */
+ * @lucene.experimental
+ */
 public class TokenStreamToTermAutomatonQuery {
 
-  private boolean preservePositionIncrements;
+	private boolean preservePositionIncrements;
 
-  /** Sole constructor. */
-  public TokenStreamToTermAutomatonQuery() {
-    this.preservePositionIncrements = true;
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public TokenStreamToTermAutomatonQuery() {
+		this.preservePositionIncrements = true;
+	}
 
-  /** Whether to generate holes in the automaton for missing positions, <code>true</code> by default. */
-  public void setPreservePositionIncrements(boolean enablePositionIncrements) {
-    this.preservePositionIncrements = enablePositionIncrements;
-  }
+	/**
+	 * Whether to generate holes in the automaton for missing positions, <code>true</code> by default.
+	 */
+	public void setPreservePositionIncrements(boolean enablePositionIncrements) {
+		this.preservePositionIncrements = enablePositionIncrements;
+	}
 
-  /** Pulls the graph (including {@link
-   *  PositionLengthAttribute}) from the provided {@link
-   *  TokenStream}, and creates the corresponding
-   *  automaton where arcs are bytes (or Unicode code points 
-   *  if unicodeArcs = true) from each term. */
-  public TermAutomatonQuery toQuery(String field, TokenStream in) throws IOException {
+	/**
+	 * Pulls the graph (including {@link
+	 * PositionLengthAttribute}) from the provided {@link
+	 * TokenStream}, and creates the corresponding
+	 * automaton where arcs are bytes (or Unicode code points
+	 * if unicodeArcs = true) from each term.
+	 */
+	public TermAutomatonQuery toQuery(String field, TokenStream in) throws IOException {
 
-    final TermToBytesRefAttribute termBytesAtt = in.addAttribute(TermToBytesRefAttribute.class);
-    final PositionIncrementAttribute posIncAtt = in.addAttribute(PositionIncrementAttribute.class);
-    final PositionLengthAttribute posLengthAtt = in.addAttribute(PositionLengthAttribute.class);
-    final OffsetAttribute offsetAtt = in.addAttribute(OffsetAttribute.class);
+		final TermToBytesRefAttribute termBytesAtt = in.addAttribute(TermToBytesRefAttribute.class);
+		final PositionIncrementAttribute posIncAtt = in.addAttribute(PositionIncrementAttribute.class);
+		final PositionLengthAttribute posLengthAtt = in.addAttribute(PositionLengthAttribute.class);
+		final OffsetAttribute offsetAtt = in.addAttribute(OffsetAttribute.class);
 
-    in.reset();
+		in.reset();
 
-    TermAutomatonQuery query = new TermAutomatonQuery(field);
+		TermAutomatonQuery query = new TermAutomatonQuery(field);
 
-    int pos = -1;
-    int lastPos = 0;
-    int maxOffset = 0;
-    int maxPos = -1;
-    int state = -1;
-    while (in.incrementToken()) {
-      int posInc = posIncAtt.getPositionIncrement();
-      if (preservePositionIncrements == false && posInc > 1) {
-        posInc = 1;
-      }
-      assert pos > -1 || posInc > 0;
+		int pos = -1;
+		int lastPos = 0;
+		int maxOffset = 0;
+		int maxPos = -1;
+		int state = -1;
+		while (in.incrementToken()) {
+			int posInc = posIncAtt.getPositionIncrement();
+			if (preservePositionIncrements == false && posInc > 1) {
+				posInc = 1;
+			}
+			assert pos > -1 || posInc > 0;
 
-      if (posInc > 1) {
-        throw new IllegalArgumentException("cannot handle holes; to accept any term, use '*' term");
-      }
+			if (posInc > 1) {
+				throw new IllegalArgumentException("cannot handle holes; to accept any term, use '*' term");
+			}
 
-      if (posInc > 0) {
-        // New node:
-        pos += posInc;
-      }
+			if (posInc > 0) {
+				// New node:
+				pos += posInc;
+			}
 
-      int endPos = pos + posLengthAtt.getPositionLength();
-      while (state < endPos) {
-        state = query.createState();
-      }
+			int endPos = pos + posLengthAtt.getPositionLength();
+			while (state < endPos) {
+				state = query.createState();
+			}
 
-      BytesRef term = termBytesAtt.getBytesRef();
-      //System.out.println(pos + "-" + endPos + ": " + term.utf8ToString() + ": posInc=" + posInc);
-      if (term.length == 1 && term.bytes[term.offset] == (byte) '*') {
-        query.addAnyTransition(pos, endPos);
-      } else {
-        query.addTransition(pos, endPos, term);
-      }
+			BytesRef term = termBytesAtt.getBytesRef();
+			//System.out.println(pos + "-" + endPos + ": " + term.utf8ToString() + ": posInc=" + posInc);
+			if (term.length == 1 && term.bytes[term.offset] == (byte) '*') {
+				query.addAnyTransition(pos, endPos);
+			} else {
+				query.addTransition(pos, endPos, term);
+			}
 
-      maxOffset = Math.max(maxOffset, offsetAtt.endOffset());
-      maxPos = Math.max(maxPos, endPos);
-    }
+			maxOffset = Math.max(maxOffset, offsetAtt.endOffset());
+			maxPos = Math.max(maxPos, endPos);
+		}
 
-    in.end();
+		in.end();
 
-    // TODO: look at endOffset?  ts2a did...
+		// TODO: look at endOffset?  ts2a did...
 
-    // TODO: this (setting "last" state as the only accept state) may be too simplistic?
-    query.setAccept(state, true);
-    query.finish();
+		// TODO: this (setting "last" state as the only accept state) may be too simplistic?
+		query.setAccept(state, true);
+		query.finish();
 
-    return query;
-  }
+		return query;
+	}
 }

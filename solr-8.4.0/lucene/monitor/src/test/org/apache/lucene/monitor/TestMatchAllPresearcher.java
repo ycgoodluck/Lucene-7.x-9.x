@@ -19,9 +19,9 @@ package org.apache.lucene.monitor;
 
 public class TestMatchAllPresearcher extends PresearcherTestBase {
 
-  @Override
-  protected Presearcher createPresearcher() {
-    return Presearcher.NO_FILTERING;
-  }
+	@Override
+	protected Presearcher createPresearcher() {
+		return Presearcher.NO_FILTERING;
+	}
 
 }

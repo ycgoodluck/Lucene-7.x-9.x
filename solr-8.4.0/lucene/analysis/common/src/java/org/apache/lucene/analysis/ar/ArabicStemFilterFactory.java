@@ -33,24 +33,28 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class ArabicStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "arabicStem";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "arabicStem";
 
-  /** Creates a new ArabicStemFilterFactory */
-  public ArabicStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new ArabicStemFilterFactory
+	 */
+	public ArabicStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public ArabicStemFilter create(TokenStream input) {
-    return new ArabicStemFilter(input);
-  }
+	@Override
+	public ArabicStemFilter create(TokenStream input) {
+		return new ArabicStemFilter(input);
+	}
 }

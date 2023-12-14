@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Factory for {@link HTMLStripCharFilter}. 
+ * Factory for {@link HTMLStripCharFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_html" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -35,26 +35,28 @@ import java.util.regex.Pattern;
  * &lt;/fieldType&gt;</pre>
  */
 public class HTMLStripCharFilterFactory extends CharFilterFactory {
-  final Set<String> escapedTags;
-  static final Pattern TAG_NAME_PATTERN = Pattern.compile("[^\\s,]+");
-  
-  /** Creates a new HTMLStripCharFilterFactory */
-  public HTMLStripCharFilterFactory(Map<String,String> args) {
-    super(args);
-    escapedTags = getSet(args, "escapedTags");
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	final Set<String> escapedTags;
+	static final Pattern TAG_NAME_PATTERN = Pattern.compile("[^\\s,]+");
 
-  @Override
-  public HTMLStripCharFilter create(Reader input) {
-    HTMLStripCharFilter charFilter;
-    if (null == escapedTags) {
-      charFilter = new HTMLStripCharFilter(input);
-    } else {
-      charFilter = new HTMLStripCharFilter(input, escapedTags);
-    }
-    return charFilter;
-  }
+	/**
+	 * Creates a new HTMLStripCharFilterFactory
+	 */
+	public HTMLStripCharFilterFactory(Map<String, String> args) {
+		super(args);
+		escapedTags = getSet(args, "escapedTags");
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public HTMLStripCharFilter create(Reader input) {
+		HTMLStripCharFilter charFilter;
+		if (null == escapedTags) {
+			charFilter = new HTMLStripCharFilter(input);
+		} else {
+			charFilter = new HTMLStripCharFilter(input, escapedTags);
+		}
+		return charFilter;
+	}
 }

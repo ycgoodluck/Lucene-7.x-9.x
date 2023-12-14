@@ -28,34 +28,34 @@ import java.util.Iterator;
  * @lucene.internal
  */
 class FilterCellIterator extends CellIterator {
-  final Iterator<Cell> baseIter;
-  final Shape shapeFilter;
+	final Iterator<Cell> baseIter;
+	final Shape shapeFilter;
 
-  FilterCellIterator(Iterator<Cell> baseIter, Shape shapeFilter) {
-    this.baseIter = baseIter;
-    this.shapeFilter = shapeFilter;
-  }
+	FilterCellIterator(Iterator<Cell> baseIter, Shape shapeFilter) {
+		this.baseIter = baseIter;
+		this.shapeFilter = shapeFilter;
+	}
 
-  @Override
-  public boolean hasNext() {
-    thisCell = null;
-    if (nextCell != null)//calling hasNext twice in a row
-      return true;
-    while (baseIter.hasNext()) {
-      nextCell = baseIter.next();
-      if (shapeFilter == null) {
-        return true;
-      } else {
-        SpatialRelation rel = nextCell.getShape().relate(shapeFilter);
-        if (rel.intersects()) {
-          nextCell.setShapeRel(rel);
-          if (rel == SpatialRelation.WITHIN)
-            nextCell.setLeaf();
-          return true;
-        }
-      }
-    }
-    return false;
-  }
+	@Override
+	public boolean hasNext() {
+		thisCell = null;
+		if (nextCell != null)//calling hasNext twice in a row
+			return true;
+		while (baseIter.hasNext()) {
+			nextCell = baseIter.next();
+			if (shapeFilter == null) {
+				return true;
+			} else {
+				SpatialRelation rel = nextCell.getShape().relate(shapeFilter);
+				if (rel.intersects()) {
+					nextCell.setShapeRel(rel);
+					if (rel == SpatialRelation.WITHIN)
+						nextCell.setLeaf();
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 }

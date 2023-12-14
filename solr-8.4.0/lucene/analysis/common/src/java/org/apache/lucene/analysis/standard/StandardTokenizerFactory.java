@@ -23,37 +23,41 @@ import org.apache.lucene.util.AttributeFactory;
 import java.util.Map;
 
 /**
- * Factory for {@link StandardTokenizer}. 
+ * Factory for {@link StandardTokenizer}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_stndrd" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
  *     &lt;tokenizer class="solr.StandardTokenizerFactory" maxTokenLength="255"/&gt;
  *   &lt;/analyzer&gt;
- * &lt;/fieldType&gt;</pre> 
+ * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class StandardTokenizerFactory extends TokenizerFactory {
 
-  /** SPI name */
-  public static final String NAME = "standard";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "standard";
 
-  private final int maxTokenLength;
-  
-  /** Creates a new StandardTokenizerFactory */
-  public StandardTokenizerFactory(Map<String,String> args) {
-    super(args);
-    maxTokenLength = getInt(args, "maxTokenLength", StandardAnalyzer.DEFAULT_MAX_TOKEN_LENGTH);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private final int maxTokenLength;
 
-  @Override
-  public StandardTokenizer create(AttributeFactory factory) {
-    StandardTokenizer tokenizer = new StandardTokenizer(factory);
-    tokenizer.setMaxTokenLength(maxTokenLength);
-    return tokenizer;
-  }
+	/**
+	 * Creates a new StandardTokenizerFactory
+	 */
+	public StandardTokenizerFactory(Map<String, String> args) {
+		super(args);
+		maxTokenLength = getInt(args, "maxTokenLength", StandardAnalyzer.DEFAULT_MAX_TOKEN_LENGTH);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public StandardTokenizer create(AttributeFactory factory) {
+		StandardTokenizer tokenizer = new StandardTokenizer(factory);
+		tokenizer.setMaxTokenLength(maxTokenLength);
+		return tokenizer;
+	}
 }

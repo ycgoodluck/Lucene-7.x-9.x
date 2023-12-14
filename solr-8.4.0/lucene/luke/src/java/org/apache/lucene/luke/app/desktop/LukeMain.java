@@ -34,61 +34,64 @@ import org.apache.lucene.luke.util.LoggerFactory;
 
 import static org.apache.lucene.luke.app.desktop.util.ExceptionHandler.handle;
 
-/** Entry class for desktop Luke */
+/**
+ * Entry class for desktop Luke
+ */
 public class LukeMain {
 
-  public static final String LOG_FILE = System.getProperty("user.home") +
-      FileSystems.getDefault().getSeparator() + ".luke.d" +
-      FileSystems.getDefault().getSeparator() + "luke.log";
+	public static final String LOG_FILE = System.getProperty("user.home") +
+		FileSystems.getDefault().getSeparator() + ".luke.d" +
+		FileSystems.getDefault().getSeparator() + "luke.log";
 
-  static {
-    LoggerFactory.initGuiLogging(LOG_FILE);
-  }
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-  
-  private static JFrame frame;
+	static {
+		LoggerFactory.initGuiLogging(LOG_FILE);
+	}
 
-  public static JFrame getOwnerFrame() {
-    return frame;
-  }
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private static void createAndShowGUI() {
-    // uncaught error handler
-    MessageBroker messageBroker = MessageBroker.getInstance();
-    Thread.setDefaultUncaughtExceptionHandler((thread, cause) ->
-        handle(cause, messageBroker)
-    );
+	private static JFrame frame;
 
-    try {
-      frame = new LukeWindowProvider().get();
-      frame.setLocation(200, 100);
-      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      frame.pack();
-      frame.setVisible(true);
+	public static JFrame getOwnerFrame() {
+		return frame;
+	}
 
-      // show open index dialog
-      OpenIndexDialogFactory openIndexDialogFactory = OpenIndexDialogFactory.getInstance();
-      new DialogOpener<>(openIndexDialogFactory).open(MessageUtils.getLocalizedMessage("openindex.dialog.title"), 600, 420,
-          (factory) -> {
-          });
-    } catch (IOException e) {
-      messageBroker.showUnknownErrorMessage();
-      log.error("Cannot initialize components.", e);
-    }
-  }
+	private static void createAndShowGUI() {
+		// uncaught error handler
+		MessageBroker messageBroker = MessageBroker.getInstance();
+		Thread.setDefaultUncaughtExceptionHandler((thread, cause) ->
+			handle(cause, messageBroker)
+		);
 
-  public static void main(String[] args) throws Exception {
-    String lookAndFeelClassName = UIManager.getSystemLookAndFeelClassName();
-    if (!lookAndFeelClassName.contains("AquaLookAndFeel") && !lookAndFeelClassName.contains("PlasticXPLookAndFeel")) {
-      // may be running on linux platform
-      lookAndFeelClassName = "javax.swing.plaf.metal.MetalLookAndFeel";
-    }
-    UIManager.setLookAndFeel(lookAndFeelClassName);
+		try {
+			frame = new LukeWindowProvider().get();
+			frame.setLocation(200, 100);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.pack();
+			frame.setVisible(true);
 
-    GraphicsEnvironment genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
-    genv.registerFont(FontUtils.createElegantIconFont());
+			// show open index dialog
+			OpenIndexDialogFactory openIndexDialogFactory = OpenIndexDialogFactory.getInstance();
+			new DialogOpener<>(openIndexDialogFactory).open(MessageUtils.getLocalizedMessage("openindex.dialog.title"), 600, 420,
+				(factory) -> {
+				});
+		} catch (IOException e) {
+			messageBroker.showUnknownErrorMessage();
+			log.error("Cannot initialize components.", e);
+		}
+	}
 
-    javax.swing.SwingUtilities.invokeLater(LukeMain::createAndShowGUI);
+	public static void main(String[] args) throws Exception {
+		String lookAndFeelClassName = UIManager.getSystemLookAndFeelClassName();
+		if (!lookAndFeelClassName.contains("AquaLookAndFeel") && !lookAndFeelClassName.contains("PlasticXPLookAndFeel")) {
+			// may be running on linux platform
+			lookAndFeelClassName = "javax.swing.plaf.metal.MetalLookAndFeel";
+		}
+		UIManager.setLookAndFeel(lookAndFeelClassName);
 
-  }
+		GraphicsEnvironment genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		genv.registerFont(FontUtils.createElegantIconFont());
+
+		javax.swing.SwingUtilities.invokeLater(LukeMain::createAndShowGUI);
+
+	}
 }

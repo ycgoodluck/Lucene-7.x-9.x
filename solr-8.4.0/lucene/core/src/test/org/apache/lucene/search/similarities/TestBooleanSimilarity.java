@@ -39,87 +39,87 @@ import org.apache.lucene.util.Version;
 
 public class TestBooleanSimilarity extends BaseSimilarityTestCase {
 
-  public void testTermScoreIsEqualToBoost() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir,
-        newIndexWriterConfig());
-    Document doc = new Document();
-    doc.add(new StringField("foo", "bar", Store.NO));
-    doc.add(new StringField("foo", "baz", Store.NO));
-    w.addDocument(doc);
-    doc = new Document();
-    doc.add(new StringField("foo", "bar", Store.NO));
-    doc.add(new StringField("foo", "bar", Store.NO));
-    w.addDocument(doc);
+	public void testTermScoreIsEqualToBoost() throws IOException {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir,
+			newIndexWriterConfig());
+		Document doc = new Document();
+		doc.add(new StringField("foo", "bar", Store.NO));
+		doc.add(new StringField("foo", "baz", Store.NO));
+		w.addDocument(doc);
+		doc = new Document();
+		doc.add(new StringField("foo", "bar", Store.NO));
+		doc.add(new StringField("foo", "bar", Store.NO));
+		w.addDocument(doc);
 
-    DirectoryReader reader = w.getReader();
-    w.close();
-    IndexSearcher searcher = newSearcher(reader);
-    searcher.setSimilarity(new BooleanSimilarity());
-    TopDocs topDocs = searcher.search(new TermQuery(new Term("foo", "bar")), 2);
-    assertEquals(2, topDocs.totalHits.value);
-    assertEquals(1f, topDocs.scoreDocs[0].score, 0f);
-    assertEquals(1f, topDocs.scoreDocs[1].score, 0f);
+		DirectoryReader reader = w.getReader();
+		w.close();
+		IndexSearcher searcher = newSearcher(reader);
+		searcher.setSimilarity(new BooleanSimilarity());
+		TopDocs topDocs = searcher.search(new TermQuery(new Term("foo", "bar")), 2);
+		assertEquals(2, topDocs.totalHits.value);
+		assertEquals(1f, topDocs.scoreDocs[0].score, 0f);
+		assertEquals(1f, topDocs.scoreDocs[1].score, 0f);
 
-    topDocs = searcher.search(new TermQuery(new Term("foo", "baz")), 1);
-    assertEquals(1, topDocs.totalHits.value);
-    assertEquals(1f, topDocs.scoreDocs[0].score, 0f);
+		topDocs = searcher.search(new TermQuery(new Term("foo", "baz")), 1);
+		assertEquals(1, topDocs.totalHits.value);
+		assertEquals(1f, topDocs.scoreDocs[0].score, 0f);
 
-    topDocs = searcher.search(new BoostQuery(new TermQuery(new Term("foo", "baz")), 3f), 1);
-    assertEquals(1, topDocs.totalHits.value);
-    assertEquals(3f, topDocs.scoreDocs[0].score, 0f);
+		topDocs = searcher.search(new BoostQuery(new TermQuery(new Term("foo", "baz")), 3f), 1);
+		assertEquals(1, topDocs.totalHits.value);
+		assertEquals(3f, topDocs.scoreDocs[0].score, 0f);
 
-    reader.close();
-    dir.close();
-  }
+		reader.close();
+		dir.close();
+	}
 
-  public void testPhraseScoreIsEqualToBoost() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir,
-        newIndexWriterConfig().setSimilarity(new BooleanSimilarity()));
-    Document doc = new Document();
-    doc.add(new TextField("foo", "bar baz quux", Store.NO));
-    w.addDocument(doc);
+	public void testPhraseScoreIsEqualToBoost() throws IOException {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir,
+			newIndexWriterConfig().setSimilarity(new BooleanSimilarity()));
+		Document doc = new Document();
+		doc.add(new TextField("foo", "bar baz quux", Store.NO));
+		w.addDocument(doc);
 
-    DirectoryReader reader = w.getReader();
-    w.close();
-    IndexSearcher searcher = newSearcher(reader);
-    searcher.setSimilarity(new BooleanSimilarity());
+		DirectoryReader reader = w.getReader();
+		w.close();
+		IndexSearcher searcher = newSearcher(reader);
+		searcher.setSimilarity(new BooleanSimilarity());
 
-    PhraseQuery query = new PhraseQuery(2, "foo", "bar", "quux");
+		PhraseQuery query = new PhraseQuery(2, "foo", "bar", "quux");
 
-    TopDocs topDocs = searcher.search(query, 2);
-    assertEquals(1, topDocs.totalHits.value);
-    assertEquals(1f, topDocs.scoreDocs[0].score, 0f);
+		TopDocs topDocs = searcher.search(query, 2);
+		assertEquals(1, topDocs.totalHits.value);
+		assertEquals(1f, topDocs.scoreDocs[0].score, 0f);
 
-    topDocs = searcher.search(new BoostQuery(query, 7), 2);
-    assertEquals(1, topDocs.totalHits.value);
-    assertEquals(7f, topDocs.scoreDocs[0].score, 0f);
+		topDocs = searcher.search(new BoostQuery(query, 7), 2);
+		assertEquals(1, topDocs.totalHits.value);
+		assertEquals(7f, topDocs.scoreDocs[0].score, 0f);
 
-    reader.close();
-    dir.close();
-  }
+		reader.close();
+		dir.close();
+	}
 
-  public void testSameNormsAsBM25() {
-    BooleanSimilarity sim1 = new BooleanSimilarity();
-    BM25Similarity sim2 = new BM25Similarity();
-    sim2.setDiscountOverlaps(true);
-    for (int iter = 0; iter < 100; ++iter) {
-      final int length = TestUtil.nextInt(random(), 1, 100);
-      final int position = random().nextInt(length);
-      final int numOverlaps = random().nextInt(length);
-      final int maxTermFrequency = 1;
-      final int uniqueTermCount = 1;
-      FieldInvertState state = new FieldInvertState(Version.LATEST.major, "foo", IndexOptions.DOCS_AND_FREQS, position, length, numOverlaps, 100, maxTermFrequency, uniqueTermCount);
-      assertEquals(
-          sim2.computeNorm(state),
-          sim1.computeNorm(state),
-          0f);
-    }
-  }
+	public void testSameNormsAsBM25() {
+		BooleanSimilarity sim1 = new BooleanSimilarity();
+		BM25Similarity sim2 = new BM25Similarity();
+		sim2.setDiscountOverlaps(true);
+		for (int iter = 0; iter < 100; ++iter) {
+			final int length = TestUtil.nextInt(random(), 1, 100);
+			final int position = random().nextInt(length);
+			final int numOverlaps = random().nextInt(length);
+			final int maxTermFrequency = 1;
+			final int uniqueTermCount = 1;
+			FieldInvertState state = new FieldInvertState(Version.LATEST.major, "foo", IndexOptions.DOCS_AND_FREQS, position, length, numOverlaps, 100, maxTermFrequency, uniqueTermCount);
+			assertEquals(
+				sim2.computeNorm(state),
+				sim1.computeNorm(state),
+				0f);
+		}
+	}
 
-  @Override
-  protected Similarity getSimilarity(Random random) {
-    return new BooleanSimilarity();
-  }
+	@Override
+	protected Similarity getSimilarity(Random random) {
+		return new BooleanSimilarity();
+	}
 }

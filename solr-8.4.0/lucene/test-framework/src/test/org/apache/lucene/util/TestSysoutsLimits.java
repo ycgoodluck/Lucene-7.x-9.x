@@ -29,77 +29,80 @@ import org.junit.runner.Result;
  * @see TestRuleLimitSysouts
  */
 public class TestSysoutsLimits extends WithNestedTests {
-  public TestSysoutsLimits() {
-    super(false);
-  }
+	public TestSysoutsLimits() {
+		super(false);
+	}
 
-  public static class ParentNestedTest extends LuceneTestCase
-    implements TestRuleIgnoreTestSuites.NestedTestSuite {
-    @BeforeClass
-    public static void onlyWhenNested() {
-      assumeTrue("Only runs when nested", TestRuleIgnoreTestSuites.isRunningNested());
-    }
-  }
+	public static class ParentNestedTest extends LuceneTestCase
+		implements TestRuleIgnoreTestSuites.NestedTestSuite {
+		@BeforeClass
+		public static void onlyWhenNested() {
+			assumeTrue("Only runs when nested", TestRuleIgnoreTestSuites.isRunningNested());
+		}
+	}
 
-  @TestRuleLimitSysouts.Limit(bytes = 10)
-  public static class OverSoftLimit extends ParentNestedTest {
-    public void testWrite() {
-      System.out.print(RandomizedTest.randomAsciiLettersOfLength(10));
-    }
-  }
+	@TestRuleLimitSysouts.Limit(bytes = 10)
+	public static class OverSoftLimit extends ParentNestedTest {
+		public void testWrite() {
+			System.out.print(RandomizedTest.randomAsciiLettersOfLength(10));
+		}
+	}
 
-  @Test
-  public void testOverSoftLimit() {
-    JUnitCore core = new JUnitCore();
-    Result result = core.run(OverSoftLimit.class);
+	@Test
+	public void testOverSoftLimit() {
+		JUnitCore core = new JUnitCore();
+		Result result = core.run(OverSoftLimit.class);
 
-    String msg = result.getFailures().stream()
-        .map(failure -> failure.getMessage())
-        .collect(Collectors.joining("\n"));
+		String msg = result.getFailures().stream()
+			.map(failure -> failure.getMessage())
+			.collect(Collectors.joining("\n"));
 
-    Assert.assertTrue(msg, msg.contains("The test or suite printed 10 bytes"));
-  }
+		Assert.assertTrue(msg, msg.contains("The test or suite printed 10 bytes"));
+	}
 
-  @TestRuleLimitSysouts.Limit(bytes = 10)
-  public static class UnderLimit extends ParentNestedTest {
-    public void testWrite() {
-      System.out.print(RandomizedTest.randomAsciiLettersOfLength(9));
-    }
-  }
+	@TestRuleLimitSysouts.Limit(bytes = 10)
+	public static class UnderLimit extends ParentNestedTest {
+		public void testWrite() {
+			System.out.print(RandomizedTest.randomAsciiLettersOfLength(9));
+		}
+	}
 
-  @Test
-  public void testUnderLimit() {
-    JUnitCore core = new JUnitCore();
-    Result result = core.run(UnderLimit.class);
+	@Test
+	public void testUnderLimit() {
+		JUnitCore core = new JUnitCore();
+		Result result = core.run(UnderLimit.class);
 
-    String msg = result.getFailures().stream()
-        .map(failure -> failure.getMessage())
-        .collect(Collectors.joining("\n"));
+		String msg = result.getFailures().stream()
+			.map(failure -> failure.getMessage())
+			.collect(Collectors.joining("\n"));
 
-    Assert.assertTrue(msg, msg.isEmpty());
-  }
+		Assert.assertTrue(msg, msg.isEmpty());
+	}
 
-  @TestRuleLimitSysouts.Limit(bytes = 10, hardLimit = 20)
-  public static class OverHardLimit extends ParentNestedTest {
-    public void testWrite() {
-      System.out.print("1234567890");
-      System.out.print("-marker1-");
-      System.out.print("-marker2-"); System.out.flush();
-      System.out.print("-marker3-"); System.out.flush();
-      System.out.print("-marker4-"); System.out.flush();
-    }
-  }
+	@TestRuleLimitSysouts.Limit(bytes = 10, hardLimit = 20)
+	public static class OverHardLimit extends ParentNestedTest {
+		public void testWrite() {
+			System.out.print("1234567890");
+			System.out.print("-marker1-");
+			System.out.print("-marker2-");
+			System.out.flush();
+			System.out.print("-marker3-");
+			System.out.flush();
+			System.out.print("-marker4-");
+			System.out.flush();
+		}
+	}
 
-  @Test
-  public void OverHardLimit() {
-    JUnitCore core = new JUnitCore();
-    Result result = core.run(OverHardLimit.class);
+	@Test
+	public void OverHardLimit() {
+		JUnitCore core = new JUnitCore();
+		Result result = core.run(OverHardLimit.class);
 
-    String msg = result.getFailures().stream()
-        .map(failure -> failure.getMessage())
-        .collect(Collectors.joining("\n"));
+		String msg = result.getFailures().stream()
+			.map(failure -> failure.getMessage())
+			.collect(Collectors.joining("\n"));
 
-    Assert.assertTrue(msg, msg.contains("Hard limit was enforced"));
-    Assert.assertTrue(msg, msg.contains("The test or suite printed 46 bytes"));
-  }
+		Assert.assertTrue(msg, msg.contains("Hard limit was enforced"));
+		Assert.assertTrue(msg, msg.contains("The test or suite printed 46 bytes"));
+	}
 }

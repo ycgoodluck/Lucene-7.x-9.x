@@ -35,90 +35,90 @@ import org.locationtech.spatial4j.shape.Point;
  */
 public class DistanceValueSource extends DoubleValuesSource {
 
-  private PointVectorStrategy strategy;
-  private final Point from;
-  private final double multiplier;
-  private final double nullValue;
+	private PointVectorStrategy strategy;
+	private final Point from;
+	private final double multiplier;
+	private final double nullValue;
 
-  /**
-   * Constructor.
-   */
-  public DistanceValueSource(PointVectorStrategy strategy, Point from, double multiplier) {
-    this.strategy = strategy;
-    this.from = from;
-    this.multiplier = multiplier;
-    this.nullValue = 180 * multiplier;
-  }
+	/**
+	 * Constructor.
+	 */
+	public DistanceValueSource(PointVectorStrategy strategy, Point from, double multiplier) {
+		this.strategy = strategy;
+		this.from = from;
+		this.multiplier = multiplier;
+		this.nullValue = 180 * multiplier;
+	}
 
-  /**
-   * Returns the ValueSource description.
-   */
-  @Override
-  public String toString() {
-    return "DistanceValueSource("+strategy+", "+from+")";
-  }
+	/**
+	 * Returns the ValueSource description.
+	 */
+	@Override
+	public String toString() {
+		return "DistanceValueSource(" + strategy + ", " + from + ")";
+	}
 
-  /**
-   * Returns the FunctionValues used by the function query.
-   */
-  @Override
-  public DoubleValues getValues(LeafReaderContext readerContext, DoubleValues scores) throws IOException {
-    LeafReader reader = readerContext.reader();
+	/**
+	 * Returns the FunctionValues used by the function query.
+	 */
+	@Override
+	public DoubleValues getValues(LeafReaderContext readerContext, DoubleValues scores) throws IOException {
+		LeafReader reader = readerContext.reader();
 
-    final NumericDocValues ptX = DocValues.getNumeric(reader, strategy.getFieldNameX());
-    final NumericDocValues ptY = DocValues.getNumeric(reader, strategy.getFieldNameY());
+		final NumericDocValues ptX = DocValues.getNumeric(reader, strategy.getFieldNameX());
+		final NumericDocValues ptY = DocValues.getNumeric(reader, strategy.getFieldNameY());
 
-    return DoubleValues.withDefault(new DoubleValues() {
+		return DoubleValues.withDefault(new DoubleValues() {
 
-      private final Point from = DistanceValueSource.this.from;
-      private final DistanceCalculator calculator = strategy.getSpatialContext().getDistCalc();
+			private final Point from = DistanceValueSource.this.from;
+			private final DistanceCalculator calculator = strategy.getSpatialContext().getDistCalc();
 
-      @Override
-      public double doubleValue() throws IOException {
-        double x = Double.longBitsToDouble(ptX.longValue());
-        double y = Double.longBitsToDouble(ptY.longValue());
-        return calculator.distance(from, x, y) * multiplier;
-      }
+			@Override
+			public double doubleValue() throws IOException {
+				double x = Double.longBitsToDouble(ptX.longValue());
+				double y = Double.longBitsToDouble(ptY.longValue());
+				return calculator.distance(from, x, y) * multiplier;
+			}
 
-      @Override
-      public boolean advanceExact(int doc) throws IOException {
-        return ptX.advanceExact(doc) && ptY.advanceExact(doc);
-      }
+			@Override
+			public boolean advanceExact(int doc) throws IOException {
+				return ptX.advanceExact(doc) && ptY.advanceExact(doc);
+			}
 
-    }, nullValue);
-  }
+		}, nullValue);
+	}
 
-  @Override
-  public boolean needsScores() {
-    return false;
-  }
+	@Override
+	public boolean needsScores() {
+		return false;
+	}
 
-  @Override
-  public boolean isCacheable(LeafReaderContext ctx) {
-    return DocValues.isCacheable(ctx, strategy.getFieldNameX(), strategy.getFieldNameY());
-  }
+	@Override
+	public boolean isCacheable(LeafReaderContext ctx) {
+		return DocValues.isCacheable(ctx, strategy.getFieldNameX(), strategy.getFieldNameY());
+	}
 
-  @Override
-  public DoubleValuesSource rewrite(IndexSearcher searcher) throws IOException {
-    return this;
-  }
+	@Override
+	public DoubleValuesSource rewrite(IndexSearcher searcher) throws IOException {
+		return this;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 
-    DistanceValueSource that = (DistanceValueSource) o;
+		DistanceValueSource that = (DistanceValueSource) o;
 
-    if (!from.equals(that.from)) return false;
-    if (!strategy.equals(that.strategy)) return false;
-    if (multiplier != that.multiplier) return false;
+		if (!from.equals(that.from)) return false;
+		if (!strategy.equals(that.strategy)) return false;
+		if (multiplier != that.multiplier) return false;
 
-    return true;
-  }
+		return true;
+	}
 
-  @Override
-  public int hashCode() {
-    return from.hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return from.hashCode();
+	}
 }

@@ -34,59 +34,63 @@ import static org.apache.lucene.analysis.VocabularyAssert.*;
  * Simple tests for {@link RussianLightStemFilter}
  */
 public class TestRussianLightStemFilter extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-        return new TokenStreamComponents(source, new RussianLightStemFilter(source));
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    analyzer.close();
-    super.tearDown();
-  }
-  
-  /** Test against a vocabulary from the reference impl */
-  public void testVocabulary() throws IOException {
-    assertVocabulary(analyzer, getDataPath("rulighttestdata.zip"), "rulight.txt");
-  }
-  
-  public void testKeyword() throws IOException {
-    final CharArraySet exclusionSet = new CharArraySet( asSet("энергии"), false);
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-        TokenStream sink = new SetKeywordMarkerFilter(source, exclusionSet);
-        return new TokenStreamComponents(source, new RussianLightStemFilter(sink));
-      }
-    };
-    checkOneTerm(a, "энергии", "энергии");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new RussianLightStemFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	private Analyzer analyzer;
+
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+				return new TokenStreamComponents(source, new RussianLightStemFilter(source));
+			}
+		};
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		analyzer.close();
+		super.tearDown();
+	}
+
+	/**
+	 * Test against a vocabulary from the reference impl
+	 */
+	public void testVocabulary() throws IOException {
+		assertVocabulary(analyzer, getDataPath("rulighttestdata.zip"), "rulight.txt");
+	}
+
+	public void testKeyword() throws IOException {
+		final CharArraySet exclusionSet = new CharArraySet(asSet("энергии"), false);
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+				TokenStream sink = new SetKeywordMarkerFilter(source, exclusionSet);
+				return new TokenStreamComponents(source, new RussianLightStemFilter(sink));
+			}
+		};
+		checkOneTerm(a, "энергии", "энергии");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new RussianLightStemFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

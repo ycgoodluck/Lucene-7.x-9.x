@@ -38,36 +38,35 @@ import java.io.IOException;
  */
 public class TermsQueryBuilder implements QueryBuilder {
 
-  private final Analyzer analyzer;
+	private final Analyzer analyzer;
 
-  public TermsQueryBuilder(Analyzer analyzer) {
-    this.analyzer = analyzer;
-  }
+	public TermsQueryBuilder(Analyzer analyzer) {
+		this.analyzer = analyzer;
+	}
 
-  @Override
-  public Query getQuery(Element e) throws ParserException {
-    String fieldName = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
-    String text = DOMUtils.getNonBlankTextOrFail(e);
+	@Override
+	public Query getQuery(Element e) throws ParserException {
+		String fieldName = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
+		String text = DOMUtils.getNonBlankTextOrFail(e);
 
-    BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.setMinimumNumberShouldMatch(DOMUtils.getAttribute(e, "minimumNumberShouldMatch", 0));
-    try (TokenStream ts = analyzer.tokenStream(fieldName, text)) {
-      TermToBytesRefAttribute termAtt = ts.addAttribute(TermToBytesRefAttribute.class);
-      Term term = null;
-      ts.reset();
-      while (ts.incrementToken()) {
-        term = new Term(fieldName, BytesRef.deepCopyOf(termAtt.getBytesRef()));
-        bq.add(new BooleanClause(new TermQuery(term), BooleanClause.Occur.SHOULD));
-      }
-      ts.end();
-    }
-    catch (IOException ioe) {
-      throw new RuntimeException("Error constructing terms from index:" + ioe);
-    }
+		BooleanQuery.Builder bq = new BooleanQuery.Builder();
+		bq.setMinimumNumberShouldMatch(DOMUtils.getAttribute(e, "minimumNumberShouldMatch", 0));
+		try (TokenStream ts = analyzer.tokenStream(fieldName, text)) {
+			TermToBytesRefAttribute termAtt = ts.addAttribute(TermToBytesRefAttribute.class);
+			Term term = null;
+			ts.reset();
+			while (ts.incrementToken()) {
+				term = new Term(fieldName, BytesRef.deepCopyOf(termAtt.getBytesRef()));
+				bq.add(new BooleanClause(new TermQuery(term), BooleanClause.Occur.SHOULD));
+			}
+			ts.end();
+		} catch (IOException ioe) {
+			throw new RuntimeException("Error constructing terms from index:" + ioe);
+		}
 
-    Query q = bq.build();
-    float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
-    return new BoostQuery(q, boost);
-  }
+		Query q = bq.build();
+		float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+		return new BoostQuery(q, boost);
+	}
 
 }

@@ -21,20 +21,20 @@ import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.index.BaseCompoundFormatTestCase;
 
 public class TestSimpleTextCompoundFormat extends BaseCompoundFormatTestCase {
-  private final Codec codec = new SimpleTextCodec();
+	private final Codec codec = new SimpleTextCodec();
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 
-  @Override
-  public void testCorruptFilesAreCaught() {
-    // SimpleText does not catch broken sub-files in CFS!
-  }
+	@Override
+	public void testCorruptFilesAreCaught() {
+		// SimpleText does not catch broken sub-files in CFS!
+	}
 
-  @Override
-  public void testMissingCodecHeadersAreCaught() {
-    // SimpleText does not catch broken sub-files in CFS!
-  }
+	@Override
+	public void testMissingCodecHeadersAreCaught() {
+		// SimpleText does not catch broken sub-files in CFS!
+	}
 }

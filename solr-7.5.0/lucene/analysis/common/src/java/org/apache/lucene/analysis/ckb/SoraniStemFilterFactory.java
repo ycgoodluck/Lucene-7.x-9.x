@@ -32,20 +32,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.SoraniStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 4.7.0
  */
 public class SoraniStemFilterFactory extends TokenFilterFactory {
 
-  /** Creates a new SoraniStemFilterFactory */
-  public SoraniStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new SoraniStemFilterFactory
+	 */
+	public SoraniStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public SoraniStemFilter create(TokenStream input) {
-    return new SoraniStemFilter(input);
-  }
+	@Override
+	public SoraniStemFilter create(TokenStream input) {
+		return new SoraniStemFilter(input);
+	}
 }

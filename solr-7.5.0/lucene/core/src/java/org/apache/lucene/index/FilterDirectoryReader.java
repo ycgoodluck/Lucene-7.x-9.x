@@ -23,127 +23,139 @@ import java.util.List;
 /**
  * A FilterDirectoryReader wraps another DirectoryReader, allowing implementations
  * to transform or extend it.
- *
+ * <p>
  * Subclasses should implement doWrapDirectoryReader to return an instance of the
  * subclass.
- *
+ * <p>
  * If the subclass wants to wrap the DirectoryReader's subreaders, it should also
  * implement a SubReaderWrapper subclass, and pass an instance to its super
  * constructor.
  */
 public abstract class FilterDirectoryReader extends DirectoryReader {
 
-  /** Get the wrapped instance by <code>reader</code> as long as this reader is
-   *  an instance of {@link FilterDirectoryReader}.  */
-  public static DirectoryReader unwrap(DirectoryReader reader) {
-    while (reader instanceof FilterDirectoryReader) {
-      reader = ((FilterDirectoryReader) reader).getDelegate();
-    }
-    return reader;
-  }
+	/**
+	 * Get the wrapped instance by <code>reader</code> as long as this reader is
+	 * an instance of {@link FilterDirectoryReader}.
+	 */
+	public static DirectoryReader unwrap(DirectoryReader reader) {
+		while (reader instanceof FilterDirectoryReader) {
+			reader = ((FilterDirectoryReader) reader).getDelegate();
+		}
+		return reader;
+	}
 
-  /**
-   * Factory class passed to FilterDirectoryReader constructor that allows
-   * subclasses to wrap the filtered DirectoryReader's subreaders.  You
-   * can use this to, e.g., wrap the subreaders with specialised
-   * FilterLeafReader implementations.
-   */
-  public static abstract class SubReaderWrapper {
+	/**
+	 * Factory class passed to FilterDirectoryReader constructor that allows
+	 * subclasses to wrap the filtered DirectoryReader's subreaders.  You
+	 * can use this to, e.g., wrap the subreaders with specialised
+	 * FilterLeafReader implementations.
+	 */
+	public static abstract class SubReaderWrapper {
 
-    /**
-     * Wraps a list of LeafReaders
-     * @return an array of wrapped LeafReaders. The returned array might contain less elements compared to the given
-     * reader list if an entire reader is filtered out.
-     */
-    protected LeafReader[] wrap(List<? extends LeafReader> readers) {
-      LeafReader[] wrapped = new LeafReader[readers.size()];
-      int i = 0;
-      for (LeafReader reader : readers) {
-        LeafReader wrap = wrap(reader);
-        assert wrap != null;
-        wrapped[i++] = wrap;
-      }
-      return wrapped;
-    }
+		/**
+		 * Wraps a list of LeafReaders
+		 *
+		 * @return an array of wrapped LeafReaders. The returned array might contain less elements compared to the given
+		 * reader list if an entire reader is filtered out.
+		 */
+		protected LeafReader[] wrap(List<? extends LeafReader> readers) {
+			LeafReader[] wrapped = new LeafReader[readers.size()];
+			int i = 0;
+			for (LeafReader reader : readers) {
+				LeafReader wrap = wrap(reader);
+				assert wrap != null;
+				wrapped[i++] = wrap;
+			}
+			return wrapped;
+		}
 
-    /** Constructor */
-    public SubReaderWrapper() {}
+		/**
+		 * Constructor
+		 */
+		public SubReaderWrapper() {
+		}
 
-    /**
-     * Wrap one of the parent DirectoryReader's subreaders
-     * @param reader the subreader to wrap
-     * @return a wrapped/filtered LeafReader
-     */
-    public abstract LeafReader wrap(LeafReader reader);
+		/**
+		 * Wrap one of the parent DirectoryReader's subreaders
+		 *
+		 * @param reader the subreader to wrap
+		 * @return a wrapped/filtered LeafReader
+		 */
+		public abstract LeafReader wrap(LeafReader reader);
 
-  }
+	}
 
-  /** The filtered DirectoryReader */
-  protected final DirectoryReader in;
+	/**
+	 * The filtered DirectoryReader
+	 */
+	protected final DirectoryReader in;
 
-  /**
-   * Create a new FilterDirectoryReader that filters a passed in DirectoryReader,
-   * using the supplied SubReaderWrapper to wrap its subreader.
-   * @param in the DirectoryReader to filter
-   * @param wrapper the SubReaderWrapper to use to wrap subreaders
-   */
-  public FilterDirectoryReader(DirectoryReader in, SubReaderWrapper wrapper) throws IOException {
-    super(in.directory(), wrapper.wrap(in.getSequentialSubReaders()));
-    this.in = in;
-  }
+	/**
+	 * Create a new FilterDirectoryReader that filters a passed in DirectoryReader,
+	 * using the supplied SubReaderWrapper to wrap its subreader.
+	 *
+	 * @param in      the DirectoryReader to filter
+	 * @param wrapper the SubReaderWrapper to use to wrap subreaders
+	 */
+	public FilterDirectoryReader(DirectoryReader in, SubReaderWrapper wrapper) throws IOException {
+		super(in.directory(), wrapper.wrap(in.getSequentialSubReaders()));
+		this.in = in;
+	}
 
-  /**
-   * Called by the doOpenIfChanged() methods to return a new wrapped DirectoryReader.
-   *
-   * Implementations should just return an instantiation of themselves, wrapping the
-   * passed in DirectoryReader.
-   *
-   * @param in the DirectoryReader to wrap
-   * @return the wrapped DirectoryReader
-   */
-  protected abstract DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException;
+	/**
+	 * Called by the doOpenIfChanged() methods to return a new wrapped DirectoryReader.
+	 * <p>
+	 * Implementations should just return an instantiation of themselves, wrapping the
+	 * passed in DirectoryReader.
+	 *
+	 * @param in the DirectoryReader to wrap
+	 * @return the wrapped DirectoryReader
+	 */
+	protected abstract DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException;
 
-  private final DirectoryReader wrapDirectoryReader(DirectoryReader in) throws IOException {
-    return in == null ? null : doWrapDirectoryReader(in);
-  }
+	private final DirectoryReader wrapDirectoryReader(DirectoryReader in) throws IOException {
+		return in == null ? null : doWrapDirectoryReader(in);
+	}
 
-  @Override
-  protected final DirectoryReader doOpenIfChanged() throws IOException {
-    return wrapDirectoryReader(in.doOpenIfChanged());
-  }
+	@Override
+	protected final DirectoryReader doOpenIfChanged() throws IOException {
+		return wrapDirectoryReader(in.doOpenIfChanged());
+	}
 
-  @Override
-  protected final DirectoryReader doOpenIfChanged(IndexCommit commit) throws IOException {
-    return wrapDirectoryReader(in.doOpenIfChanged(commit));
-  }
+	@Override
+	protected final DirectoryReader doOpenIfChanged(IndexCommit commit) throws IOException {
+		return wrapDirectoryReader(in.doOpenIfChanged(commit));
+	}
 
-  @Override
-  protected final DirectoryReader doOpenIfChanged(IndexWriter writer, boolean applyAllDeletes) throws IOException {
-    return wrapDirectoryReader(in.doOpenIfChanged(writer, applyAllDeletes));
-  }
+	@Override
+	protected final DirectoryReader doOpenIfChanged(IndexWriter writer, boolean applyAllDeletes) throws IOException {
+		return wrapDirectoryReader(in.doOpenIfChanged(writer, applyAllDeletes));
+	}
 
-  @Override
-  public long getVersion() {
-    return in.getVersion();
-  }
+	@Override
+	public long getVersion() {
+		return in.getVersion();
+	}
 
-  @Override
-  public boolean isCurrent() throws IOException {
-    return in.isCurrent();
-  }
+	@Override
+	public boolean isCurrent() throws IOException {
+		return in.isCurrent();
+	}
 
-  @Override
-  public IndexCommit getIndexCommit() throws IOException {
-    return in.getIndexCommit();
-  }
+	@Override
+	public IndexCommit getIndexCommit() throws IOException {
+		return in.getIndexCommit();
+	}
 
-  @Override
-  protected void doClose() throws IOException {
-    in.close();
-  }
+	@Override
+	protected void doClose() throws IOException {
+		in.close();
+	}
 
-  /** Returns the wrapped {@link DirectoryReader}. */
-  public DirectoryReader getDelegate() {
-    return in;
-  }
+	/**
+	 * Returns the wrapped {@link DirectoryReader}.
+	 */
+	public DirectoryReader getDelegate() {
+		return in;
+	}
 }

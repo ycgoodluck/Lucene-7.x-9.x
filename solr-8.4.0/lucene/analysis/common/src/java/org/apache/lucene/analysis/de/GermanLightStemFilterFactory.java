@@ -32,24 +32,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.GermanLightStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.1.0
  */
 public class GermanLightStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "germanLightStem";
-  
-  /** Creates a new GermanLightStemFilterFactory */
-  public GermanLightStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new GermanLightStemFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "germanLightStem";
+
+	/**
+	 * Creates a new GermanLightStemFilterFactory
+	 */
+	public GermanLightStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new GermanLightStemFilter(input);
+	}
 }

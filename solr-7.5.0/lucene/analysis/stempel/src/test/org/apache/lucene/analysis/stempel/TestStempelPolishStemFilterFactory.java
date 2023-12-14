@@ -28,22 +28,24 @@ import org.apache.lucene.analysis.TokenStream;
  * Tests for {@link StempelPolishStemFilterFactory}
  */
 public class TestStempelPolishStemFilterFactory extends BaseTokenStreamTestCase {
-  public void testBasics() throws Exception {
-    Reader reader = new StringReader("studenta studenci");
-    StempelPolishStemFilterFactory factory = new StempelPolishStemFilterFactory(new HashMap<String,String>());
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = factory.create(stream);
-    assertTokenStreamContents(stream,
-        new String[] { "student", "student" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new StempelPolishStemFilterFactory(new HashMap<String,String>() {{
-        put("bogusArg", "bogusValue");
-      }});
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testBasics() throws Exception {
+		Reader reader = new StringReader("studenta studenci");
+		StempelPolishStemFilterFactory factory = new StempelPolishStemFilterFactory(new HashMap<String, String>());
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = factory.create(stream);
+		assertTokenStreamContents(stream,
+			new String[]{"student", "student"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new StempelPolishStemFilterFactory(new HashMap<String, String>() {{
+				put("bogusArg", "bogusValue");
+			}});
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

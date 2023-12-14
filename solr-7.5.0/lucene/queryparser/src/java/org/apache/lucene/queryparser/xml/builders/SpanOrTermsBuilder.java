@@ -38,34 +38,33 @@ import java.util.List;
  */
 public class SpanOrTermsBuilder extends SpanBuilderBase {
 
-  private final Analyzer analyzer;
+	private final Analyzer analyzer;
 
-  public SpanOrTermsBuilder(Analyzer analyzer) {
-    this.analyzer = analyzer;
-  }
+	public SpanOrTermsBuilder(Analyzer analyzer) {
+		this.analyzer = analyzer;
+	}
 
-  @Override
-  public SpanQuery getSpanQuery(Element e) throws ParserException {
-    String fieldName = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
-    String value = DOMUtils.getNonBlankTextOrFail(e);
+	@Override
+	public SpanQuery getSpanQuery(Element e) throws ParserException {
+		String fieldName = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
+		String value = DOMUtils.getNonBlankTextOrFail(e);
 
-    List<SpanQuery> clausesList = new ArrayList<>();
+		List<SpanQuery> clausesList = new ArrayList<>();
 
-    try (TokenStream ts = analyzer.tokenStream(fieldName, value)) {
-      TermToBytesRefAttribute termAtt = ts.addAttribute(TermToBytesRefAttribute.class);
-      ts.reset();
-      while (ts.incrementToken()) {
-        SpanTermQuery stq = new SpanTermQuery(new Term(fieldName, BytesRef.deepCopyOf(termAtt.getBytesRef())));
-        clausesList.add(stq);
-      }
-      ts.end();
-      SpanOrQuery soq = new SpanOrQuery(clausesList.toArray(new SpanQuery[clausesList.size()]));
-      float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
-      return new SpanBoostQuery(soq, boost);
-    }
-    catch (IOException ioe) {
-      throw new ParserException("IOException parsing value:" + value);
-    }
-  }
+		try (TokenStream ts = analyzer.tokenStream(fieldName, value)) {
+			TermToBytesRefAttribute termAtt = ts.addAttribute(TermToBytesRefAttribute.class);
+			ts.reset();
+			while (ts.incrementToken()) {
+				SpanTermQuery stq = new SpanTermQuery(new Term(fieldName, BytesRef.deepCopyOf(termAtt.getBytesRef())));
+				clausesList.add(stq);
+			}
+			ts.end();
+			SpanOrQuery soq = new SpanOrQuery(clausesList.toArray(new SpanQuery[clausesList.size()]));
+			float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+			return new SpanBoostQuery(soq, boost);
+		} catch (IOException ioe) {
+			throw new ParserException("IOException parsing value:" + value);
+		}
+	}
 
 }

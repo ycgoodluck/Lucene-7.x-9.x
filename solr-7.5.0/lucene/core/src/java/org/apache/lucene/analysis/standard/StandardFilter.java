@@ -30,13 +30,15 @@ import org.apache.lucene.analysis.TokenStream;
 @Deprecated
 public class StandardFilter extends TokenFilter {
 
-  /** Sole constructor */
-  public StandardFilter(TokenStream in) {
-    super(in);
-  }
-  
-  @Override
-  public final boolean incrementToken() throws IOException {
-    return input.incrementToken(); // TODO: add some niceties for the new grammar
-  }
+	/**
+	 * Sole constructor
+	 */
+	public StandardFilter(TokenStream in) {
+		super(in);
+	}
+
+	@Override
+	public final boolean incrementToken() throws IOException {
+		return input.incrementToken(); // TODO: add some niceties for the new grammar
+	}
 }

@@ -31,34 +31,34 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestBooleanClauseWeightings extends LuceneTestCase {
 
-  private static QueryAnalyzer treeBuilder = new QueryAnalyzer();
+	private static QueryAnalyzer treeBuilder = new QueryAnalyzer();
 
-  public void testExactClausesPreferred() {
-    Query bq = new BooleanQuery.Builder()
-        .add(LongPoint.newRangeQuery("field2", 1, 2), BooleanClause.Occur.MUST)
-        .add(new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("field1", "term1")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term("field1", "term2")), BooleanClause.Occur.SHOULD)
-            .build(), BooleanClause.Occur.MUST)
-        .build();
-    QueryTree tree = treeBuilder.buildTree(bq, TermWeightor.DEFAULT);
-    Set<Term> terms = new HashSet<>();
-    tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
-    assertEquals(2, terms.size());
-  }
+	public void testExactClausesPreferred() {
+		Query bq = new BooleanQuery.Builder()
+			.add(LongPoint.newRangeQuery("field2", 1, 2), BooleanClause.Occur.MUST)
+			.add(new BooleanQuery.Builder()
+				.add(new TermQuery(new Term("field1", "term1")), BooleanClause.Occur.SHOULD)
+				.add(new TermQuery(new Term("field1", "term2")), BooleanClause.Occur.SHOULD)
+				.build(), BooleanClause.Occur.MUST)
+			.build();
+		QueryTree tree = treeBuilder.buildTree(bq, TermWeightor.DEFAULT);
+		Set<Term> terms = new HashSet<>();
+		tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
+		assertEquals(2, terms.size());
+	}
 
-  public void testLongerTermsPreferred() {
-    Query q = new BooleanQuery.Builder()
-        .add(new TermQuery(new Term("field1", "a")), BooleanClause.Occur.MUST)
-        .add(new TermQuery(new Term("field1", "supercalifragilisticexpialidocious")), BooleanClause.Occur.MUST)
-        .add(new TermQuery(new Term("field1", "b")), BooleanClause.Occur.MUST)
-        .build();
-    Set<Term> expected
-        = Collections.singleton(new Term("field1", "supercalifragilisticexpialidocious"));
-    QueryTree tree = treeBuilder.buildTree(q, TermWeightor.DEFAULT);
-    Set<Term> terms = new HashSet<>();
-    tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
-    assertEquals(expected, terms);
-  }
+	public void testLongerTermsPreferred() {
+		Query q = new BooleanQuery.Builder()
+			.add(new TermQuery(new Term("field1", "a")), BooleanClause.Occur.MUST)
+			.add(new TermQuery(new Term("field1", "supercalifragilisticexpialidocious")), BooleanClause.Occur.MUST)
+			.add(new TermQuery(new Term("field1", "b")), BooleanClause.Occur.MUST)
+			.build();
+		Set<Term> expected
+			= Collections.singleton(new Term("field1", "supercalifragilisticexpialidocious"));
+		QueryTree tree = treeBuilder.buildTree(q, TermWeightor.DEFAULT);
+		Set<Term> terms = new HashSet<>();
+		tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
+		assertEquals(expected, terms);
+	}
 
 }

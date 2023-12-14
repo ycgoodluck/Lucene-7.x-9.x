@@ -28,99 +28,101 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestDisjunctionScoreBlockBoundaryPropagator extends LuceneTestCase {
 
-  private static class FakeWeight extends Weight {
+	private static class FakeWeight extends Weight {
 
-    FakeWeight() {
-      super(new MatchNoDocsQuery());
-    }
+		FakeWeight() {
+			super(new MatchNoDocsQuery());
+		}
 
-    @Override
-    public void extractTerms(Set<Term> terms) {}
+		@Override
+		public void extractTerms(Set<Term> terms) {
+		}
 
-    @Override
-    public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-      return null;
-    }
+		@Override
+		public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+			return null;
+		}
 
-    @Override
-    public Scorer scorer(LeafReaderContext context) throws IOException {
-      return null;
-    }
+		@Override
+		public Scorer scorer(LeafReaderContext context) throws IOException {
+			return null;
+		}
 
-    @Override
-    public boolean isCacheable(LeafReaderContext ctx) {
-      return false;
-    }
-  }
+		@Override
+		public boolean isCacheable(LeafReaderContext ctx) {
+			return false;
+		}
+	}
 
-  private static class FakeScorer extends Scorer {
+	private static class FakeScorer extends Scorer {
 
-    final int boundary;
-    final float maxScore;
+		final int boundary;
+		final float maxScore;
 
-    FakeScorer(int boundary, float maxScore) throws IOException {
-      super(new FakeWeight());
-      this.boundary = boundary;
-      this.maxScore = maxScore;
-    }
+		FakeScorer(int boundary, float maxScore) throws IOException {
+			super(new FakeWeight());
+			this.boundary = boundary;
+			this.maxScore = maxScore;
+		}
 
-    @Override
-    public int docID() {
-      return 0;
-    }
+		@Override
+		public int docID() {
+			return 0;
+		}
 
-    @Override
-    public float score() {
-      throw new UnsupportedOperationException();
-    }
+		@Override
+		public float score() {
+			throw new UnsupportedOperationException();
+		}
 
-    @Override
-    public DocIdSetIterator iterator() {
-      throw new UnsupportedOperationException();
-    }
+		@Override
+		public DocIdSetIterator iterator() {
+			throw new UnsupportedOperationException();
+		}
 
-    @Override
-    public void setMinCompetitiveScore(float minCompetitiveScore) {}
+		@Override
+		public void setMinCompetitiveScore(float minCompetitiveScore) {
+		}
 
-    @Override
-    public float getMaxScore(int upTo) throws IOException {
-      return maxScore;
-    }
+		@Override
+		public float getMaxScore(int upTo) throws IOException {
+			return maxScore;
+		}
 
-    @Override
-    public int advanceShallow(int target) {
-      assert target <= boundary;
-      return boundary;
-    }
-  }
+		@Override
+		public int advanceShallow(int target) {
+			assert target <= boundary;
+			return boundary;
+		}
+	}
 
-  public void testBasics() throws IOException {
-    Scorer scorer1 = new FakeScorer(20, 0.5f);
-    Scorer scorer2 = new FakeScorer(50, 1.5f);
-    Scorer scorer3 = new FakeScorer(30, 2f);
-    Scorer scorer4 = new FakeScorer(80, 3f);
-    List<Scorer> scorers = Arrays.asList(scorer1, scorer2, scorer3, scorer4);
-    Collections.shuffle(scorers, random());
-    DisjunctionScoreBlockBoundaryPropagator propagator = new DisjunctionScoreBlockBoundaryPropagator(scorers);
-    assertEquals(20, propagator.advanceShallow(0));
+	public void testBasics() throws IOException {
+		Scorer scorer1 = new FakeScorer(20, 0.5f);
+		Scorer scorer2 = new FakeScorer(50, 1.5f);
+		Scorer scorer3 = new FakeScorer(30, 2f);
+		Scorer scorer4 = new FakeScorer(80, 3f);
+		List<Scorer> scorers = Arrays.asList(scorer1, scorer2, scorer3, scorer4);
+		Collections.shuffle(scorers, random());
+		DisjunctionScoreBlockBoundaryPropagator propagator = new DisjunctionScoreBlockBoundaryPropagator(scorers);
+		assertEquals(20, propagator.advanceShallow(0));
 
-    propagator.setMinCompetitiveScore(0.2f);
-    assertEquals(20, propagator.advanceShallow(0));
+		propagator.setMinCompetitiveScore(0.2f);
+		assertEquals(20, propagator.advanceShallow(0));
 
-    propagator.setMinCompetitiveScore(0.7f);
-    assertEquals(30, propagator.advanceShallow(0));
+		propagator.setMinCompetitiveScore(0.7f);
+		assertEquals(30, propagator.advanceShallow(0));
 
-    propagator.setMinCompetitiveScore(1.2f);
-    assertEquals(30, propagator.advanceShallow(0));
+		propagator.setMinCompetitiveScore(1.2f);
+		assertEquals(30, propagator.advanceShallow(0));
 
-    propagator.setMinCompetitiveScore(1.7f);
-    assertEquals(30, propagator.advanceShallow(0));
+		propagator.setMinCompetitiveScore(1.7f);
+		assertEquals(30, propagator.advanceShallow(0));
 
-    propagator.setMinCompetitiveScore(2.2f);
-    assertEquals(80, propagator.advanceShallow(0));
+		propagator.setMinCompetitiveScore(2.2f);
+		assertEquals(80, propagator.advanceShallow(0));
 
-    propagator.setMinCompetitiveScore(5f);
-    assertEquals(80, propagator.advanceShallow(0));
-  }
+		propagator.setMinCompetitiveScore(5f);
+		assertEquals(80, propagator.advanceShallow(0));
+	}
 
 }

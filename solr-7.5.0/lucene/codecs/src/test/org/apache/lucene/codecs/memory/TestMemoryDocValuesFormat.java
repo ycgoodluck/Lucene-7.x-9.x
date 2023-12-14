@@ -25,15 +25,15 @@ import org.apache.lucene.util.TestUtil;
  * Tests MemoryDocValuesFormat
  */
 public class TestMemoryDocValuesFormat extends BaseCompressingDocValuesFormatTestCase {
-  private final Codec codec = TestUtil.alwaysDocValuesFormat(new MemoryDocValuesFormat());
+	private final Codec codec = TestUtil.alwaysDocValuesFormat(new MemoryDocValuesFormat());
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 
-  @Override
-  protected boolean codecAcceptsHugeBinaryValues(String field) {
-    return false;
-  }
+	@Override
+	protected boolean codecAcceptsHugeBinaryValues(String field) {
+		return false;
+	}
 }

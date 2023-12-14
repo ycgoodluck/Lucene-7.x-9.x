@@ -24,39 +24,47 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestTurkishAnalyzer extends BaseTokenStreamTestCase {
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new TurkishAnalyzer().close();
-  }
-  
-  /** test stopwords and stemming */
-  public void testBasics() throws IOException {
-    Analyzer a = new TurkishAnalyzer();
-    // stemming
-    checkOneTerm(a, "ağacı", "ağaç");
-    checkOneTerm(a, "ağaç", "ağaç");
-    // stopword
-    assertAnalyzesTo(a, "dolayı", new String[] {});
-    // apostrophes
-    checkOneTerm(a, "Kıbrıs'ta", "kıbrıs");
-    assertAnalyzesTo(a, "Van Gölü'ne", new String[]{"van", "göl"});
-    a.close();
-  }
-  
-  /** test use of exclusion set */
-  public void testExclude() throws IOException {
-    CharArraySet exclusionSet = new CharArraySet(asSet("ağacı"), false);
-    Analyzer a = new TurkishAnalyzer(TurkishAnalyzer.getDefaultStopSet(), exclusionSet);
-    checkOneTerm(a, "ağacı", "ağacı");
-    checkOneTerm(a, "ağaç", "ağaç");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer analyzer = new TurkishAnalyzer();
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-    analyzer.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new TurkishAnalyzer().close();
+	}
+
+	/**
+	 * test stopwords and stemming
+	 */
+	public void testBasics() throws IOException {
+		Analyzer a = new TurkishAnalyzer();
+		// stemming
+		checkOneTerm(a, "ağacı", "ağaç");
+		checkOneTerm(a, "ağaç", "ağaç");
+		// stopword
+		assertAnalyzesTo(a, "dolayı", new String[]{});
+		// apostrophes
+		checkOneTerm(a, "Kıbrıs'ta", "kıbrıs");
+		assertAnalyzesTo(a, "Van Gölü'ne", new String[]{"van", "göl"});
+		a.close();
+	}
+
+	/**
+	 * test use of exclusion set
+	 */
+	public void testExclude() throws IOException {
+		CharArraySet exclusionSet = new CharArraySet(asSet("ağacı"), false);
+		Analyzer a = new TurkishAnalyzer(TurkishAnalyzer.getDefaultStopSet(), exclusionSet);
+		checkOneTerm(a, "ağacı", "ağacı");
+		checkOneTerm(a, "ağaç", "ağaç");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer analyzer = new TurkishAnalyzer();
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+		analyzer.close();
+	}
 }

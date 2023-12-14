@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** General utilities */
+/**
+ * General utilities
+ */
 package org.apache.lucene.luke.util;

@@ -36,121 +36,123 @@ import org.apache.lucene.util.TestUtil;
  */
 
 public final class AssertingPointsFormat extends PointsFormat {
-  private final PointsFormat in;
+	private final PointsFormat in;
 
-  /** Create a new AssertingPointsFormat */
-  public AssertingPointsFormat() {
-    this(TestUtil.getDefaultCodec().pointsFormat());
-  }
+	/**
+	 * Create a new AssertingPointsFormat
+	 */
+	public AssertingPointsFormat() {
+		this(TestUtil.getDefaultCodec().pointsFormat());
+	}
 
-  /**
-   * Expert: Create an AssertingPointsFormat.
-   * This is only intended to pass special parameters for testing.
-   */
-  // TODO: can we randomize this a cleaner way? e.g. stored fields and vectors do
-  // this with a separate codec...
-  public AssertingPointsFormat(PointsFormat in) {
-    this.in = in;
-  }
-  
-  @Override
-  public PointsWriter fieldsWriter(SegmentWriteState state) throws IOException {
-    return new AssertingPointsWriter(state, in.fieldsWriter(state));
-  }
+	/**
+	 * Expert: Create an AssertingPointsFormat.
+	 * This is only intended to pass special parameters for testing.
+	 */
+	// TODO: can we randomize this a cleaner way? e.g. stored fields and vectors do
+	// this with a separate codec...
+	public AssertingPointsFormat(PointsFormat in) {
+		this.in = in;
+	}
 
-  @Override
-  public PointsReader fieldsReader(SegmentReadState state) throws IOException {
-    return new AssertingPointsReader(state.segmentInfo.maxDoc(), in.fieldsReader(state));
-  }
+	@Override
+	public PointsWriter fieldsWriter(SegmentWriteState state) throws IOException {
+		return new AssertingPointsWriter(state, in.fieldsWriter(state));
+	}
 
-  
-  static class AssertingPointsReader extends PointsReader {
-    private final PointsReader in;
-    private final int maxDoc;
-    
-    AssertingPointsReader(int maxDoc, PointsReader in) {
-      this.in = in;
-      this.maxDoc = maxDoc;
-      // do a few simple checks on init
-      assert toString() != null;
-      assert ramBytesUsed() >= 0;
-      assert getChildResources() != null;
-    }
-    
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
+	@Override
+	public PointsReader fieldsReader(SegmentReadState state) throws IOException {
+		return new AssertingPointsReader(state.segmentInfo.maxDoc(), in.fieldsReader(state));
+	}
 
-    @Override
-    public PointValues getValues(String field) throws IOException {
-      PointValues values = this.in.getValues(field);
-      if (values == null) {
-        return null;
-      }
-      return new AssertingLeafReader.AssertingPointValues(values, maxDoc);
-    }
 
-    @Override
-    public long ramBytesUsed() {
-      long v = in.ramBytesUsed();
-      assert v >= 0;
-      return v;
-    }
-    
-    @Override
-    public Collection<Accountable> getChildResources() {
-      Collection<Accountable> res = in.getChildResources();
-      TestUtil.checkReadOnly(res);
-      return res;
-    }
+	static class AssertingPointsReader extends PointsReader {
+		private final PointsReader in;
+		private final int maxDoc;
 
-    @Override
-    public void checkIntegrity() throws IOException {
-      in.checkIntegrity();
-    }
-    
-    @Override
-    public PointsReader getMergeInstance() throws IOException {
-      return new AssertingPointsReader(maxDoc, in.getMergeInstance());
-    }
+		AssertingPointsReader(int maxDoc, PointsReader in) {
+			this.in = in;
+			this.maxDoc = maxDoc;
+			// do a few simple checks on init
+			assert toString() != null;
+			assert ramBytesUsed() >= 0;
+			assert getChildResources() != null;
+		}
 
-    @Override
-    public String toString() {
-      return getClass().getSimpleName() + "(" + in.toString() + ")";
-    }
-  }
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
 
-  static class AssertingPointsWriter extends PointsWriter {
-    private final PointsWriter in;
+		@Override
+		public PointValues getValues(String field) throws IOException {
+			PointValues values = this.in.getValues(field);
+			if (values == null) {
+				return null;
+			}
+			return new AssertingLeafReader.AssertingPointValues(values, maxDoc);
+		}
 
-    AssertingPointsWriter(SegmentWriteState writeState, PointsWriter in) {
-      this.in = in;
-    }
-    
-    @Override
-    public void writeField(FieldInfo fieldInfo, PointsReader values) throws IOException {
-      if (fieldInfo.getPointDimensionCount() == 0) {
-        throw new IllegalArgumentException("writing field=\"" + fieldInfo.name + "\" but pointDimensionalCount is 0");
-      }
-      in.writeField(fieldInfo, values);
-    }
+		@Override
+		public long ramBytesUsed() {
+			long v = in.ramBytesUsed();
+			assert v >= 0;
+			return v;
+		}
 
-    @Override
-    public void merge(MergeState mergeState) throws IOException {
-      in.merge(mergeState);
-    }
+		@Override
+		public Collection<Accountable> getChildResources() {
+			Collection<Accountable> res = in.getChildResources();
+			TestUtil.checkReadOnly(res);
+			return res;
+		}
 
-    @Override
-    public void finish() throws IOException {
-      in.finish();
-    }
+		@Override
+		public void checkIntegrity() throws IOException {
+			in.checkIntegrity();
+		}
 
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
-  }
+		@Override
+		public PointsReader getMergeInstance() throws IOException {
+			return new AssertingPointsReader(maxDoc, in.getMergeInstance());
+		}
+
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + "(" + in.toString() + ")";
+		}
+	}
+
+	static class AssertingPointsWriter extends PointsWriter {
+		private final PointsWriter in;
+
+		AssertingPointsWriter(SegmentWriteState writeState, PointsWriter in) {
+			this.in = in;
+		}
+
+		@Override
+		public void writeField(FieldInfo fieldInfo, PointsReader values) throws IOException {
+			if (fieldInfo.getPointDimensionCount() == 0) {
+				throw new IllegalArgumentException("writing field=\"" + fieldInfo.name + "\" but pointDimensionalCount is 0");
+			}
+			in.writeField(fieldInfo, values);
+		}
+
+		@Override
+		public void merge(MergeState mergeState) throws IOException {
+			in.merge(mergeState);
+		}
+
+		@Override
+		public void finish() throws IOException {
+			in.finish();
+		}
+
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
+	}
 }

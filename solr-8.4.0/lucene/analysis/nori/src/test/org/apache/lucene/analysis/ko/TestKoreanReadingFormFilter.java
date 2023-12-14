@@ -29,47 +29,47 @@ import org.apache.lucene.util.IOUtils;
  * Tests for {@link TestKoreanReadingFormFilter}
  */
 public class TestKoreanReadingFormFilter extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer =
-            new KoreanTokenizer(newAttributeFactory(), null, KoreanTokenizer.DecompoundMode.DISCARD, false);
-        return new TokenStreamComponents(tokenizer, new KoreanReadingFormFilter(tokenizer));
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    IOUtils.close(analyzer);
-    super.tearDown();
-  }
+	private Analyzer analyzer;
 
-  public void testReadings() throws IOException {
-    assertAnalyzesTo(analyzer, "車丞相",
-        new String[] { "차", "승상" }
-    );
-  }
-  
-  public void testRandomData() throws IOException {
-    Random random = random();
-    checkRandomData(random, analyzer, 1000*RANDOM_MULTIPLIER);
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new KoreanReadingFormFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer =
+					new KoreanTokenizer(newAttributeFactory(), null, KoreanTokenizer.DecompoundMode.DISCARD, false);
+				return new TokenStreamComponents(tokenizer, new KoreanReadingFormFilter(tokenizer));
+			}
+		};
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		IOUtils.close(analyzer);
+		super.tearDown();
+	}
+
+	public void testReadings() throws IOException {
+		assertAnalyzesTo(analyzer, "車丞相",
+			new String[]{"차", "승상"}
+		);
+	}
+
+	public void testRandomData() throws IOException {
+		Random random = random();
+		checkRandomData(random, analyzer, 1000 * RANDOM_MULTIPLIER);
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new KoreanReadingFormFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

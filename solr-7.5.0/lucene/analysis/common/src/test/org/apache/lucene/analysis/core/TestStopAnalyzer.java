@@ -30,78 +30,78 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 
 public class TestStopAnalyzer extends BaseTokenStreamTestCase {
-  
-  private StopAnalyzer stop;
-  private Set<Object> inValidTokens = new HashSet<>();
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    
-    Iterator<?> it = EnglishAnalyzer.ENGLISH_STOP_WORDS_SET.iterator();
-    while(it.hasNext()) {
-      inValidTokens.add(it.next());
-    }
-    stop = new StopAnalyzer(EnglishAnalyzer.ENGLISH_STOP_WORDS_SET);
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    stop.close();
-    super.tearDown();
-  }
+	private StopAnalyzer stop;
+	private Set<Object> inValidTokens = new HashSet<>();
 
-  public void testDefaults() throws IOException {
-    assertTrue(stop != null);
-    try (TokenStream stream = stop.tokenStream("test", "This is a test of the english stop analyzer")) {
-      assertTrue(stream != null);
-      CharTermAttribute termAtt = stream.getAttribute(CharTermAttribute.class);
-      stream.reset();
-    
-      while (stream.incrementToken()) {
-        assertFalse(inValidTokens.contains(termAtt.toString()));
-      }
-      stream.end();
-    }
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
 
-  public void testStopList() throws IOException {
-    CharArraySet stopWordsSet = new CharArraySet(asSet("good", "test", "analyzer"), false);
-    StopAnalyzer newStop = new StopAnalyzer(stopWordsSet);
-    try (TokenStream stream = newStop.tokenStream("test", "This is a good test of the english stop analyzer")) {
-      assertNotNull(stream);
-      CharTermAttribute termAtt = stream.getAttribute(CharTermAttribute.class);
-    
-      stream.reset();
-      while (stream.incrementToken()) {
-        String text = termAtt.toString();
-        assertFalse(stopWordsSet.contains(text));
-      }
-      stream.end();
-    }
-    newStop.close();
-  }
+		Iterator<?> it = EnglishAnalyzer.ENGLISH_STOP_WORDS_SET.iterator();
+		while (it.hasNext()) {
+			inValidTokens.add(it.next());
+		}
+		stop = new StopAnalyzer(EnglishAnalyzer.ENGLISH_STOP_WORDS_SET);
+	}
 
-  public void testStopListPositions() throws IOException {
-    CharArraySet stopWordsSet = new CharArraySet(asSet("good", "test", "analyzer"), false);
-    StopAnalyzer newStop = new StopAnalyzer(stopWordsSet);
-    String s =             "This is a good test of the english stop analyzer with positions";
-    int expectedIncr[] =  { 1,   1, 1,          3, 1,  1,      1,            2,   1};
-    try (TokenStream stream = newStop.tokenStream("test", s)) {
-      assertNotNull(stream);
-      int i = 0;
-      CharTermAttribute termAtt = stream.getAttribute(CharTermAttribute.class);
-      PositionIncrementAttribute posIncrAtt = stream.addAttribute(PositionIncrementAttribute.class);
+	@Override
+	public void tearDown() throws Exception {
+		stop.close();
+		super.tearDown();
+	}
 
-      stream.reset();
-      while (stream.incrementToken()) {
-        String text = termAtt.toString();
-        assertFalse(stopWordsSet.contains(text));
-        assertEquals(expectedIncr[i++],posIncrAtt.getPositionIncrement());
-      }
-      stream.end();
-    }
-    newStop.close();
-  }
+	public void testDefaults() throws IOException {
+		assertTrue(stop != null);
+		try (TokenStream stream = stop.tokenStream("test", "This is a test of the english stop analyzer")) {
+			assertTrue(stream != null);
+			CharTermAttribute termAtt = stream.getAttribute(CharTermAttribute.class);
+			stream.reset();
+
+			while (stream.incrementToken()) {
+				assertFalse(inValidTokens.contains(termAtt.toString()));
+			}
+			stream.end();
+		}
+	}
+
+	public void testStopList() throws IOException {
+		CharArraySet stopWordsSet = new CharArraySet(asSet("good", "test", "analyzer"), false);
+		StopAnalyzer newStop = new StopAnalyzer(stopWordsSet);
+		try (TokenStream stream = newStop.tokenStream("test", "This is a good test of the english stop analyzer")) {
+			assertNotNull(stream);
+			CharTermAttribute termAtt = stream.getAttribute(CharTermAttribute.class);
+
+			stream.reset();
+			while (stream.incrementToken()) {
+				String text = termAtt.toString();
+				assertFalse(stopWordsSet.contains(text));
+			}
+			stream.end();
+		}
+		newStop.close();
+	}
+
+	public void testStopListPositions() throws IOException {
+		CharArraySet stopWordsSet = new CharArraySet(asSet("good", "test", "analyzer"), false);
+		StopAnalyzer newStop = new StopAnalyzer(stopWordsSet);
+		String s = "This is a good test of the english stop analyzer with positions";
+		int expectedIncr[] = {1, 1, 1, 3, 1, 1, 1, 2, 1};
+		try (TokenStream stream = newStop.tokenStream("test", s)) {
+			assertNotNull(stream);
+			int i = 0;
+			CharTermAttribute termAtt = stream.getAttribute(CharTermAttribute.class);
+			PositionIncrementAttribute posIncrAtt = stream.addAttribute(PositionIncrementAttribute.class);
+
+			stream.reset();
+			while (stream.incrementToken()) {
+				String text = termAtt.toString();
+				assertFalse(stopWordsSet.contains(text));
+				assertEquals(expectedIncr[i++], posIncrAtt.getPositionIncrement());
+			}
+			stream.end();
+		}
+		newStop.close();
+	}
 
 }

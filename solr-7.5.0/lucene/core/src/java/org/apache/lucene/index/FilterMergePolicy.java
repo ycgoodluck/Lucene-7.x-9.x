@@ -28,79 +28,81 @@ import org.apache.lucene.util.IOSupplier;
  */
 public class FilterMergePolicy extends MergePolicy {
 
-  /** The wrapped {@link MergePolicy}. */
-  protected final MergePolicy in;
+	/**
+	 * The wrapped {@link MergePolicy}.
+	 */
+	protected final MergePolicy in;
 
-  /**
-   * Creates a new filter merge policy instance wrapping another.
-   *
-   * @param in the wrapped {@link MergePolicy}
-   */
-  public FilterMergePolicy(MergePolicy in) {
-    this.in = in;
-  }
+	/**
+	 * Creates a new filter merge policy instance wrapping another.
+	 *
+	 * @param in the wrapped {@link MergePolicy}
+	 */
+	public FilterMergePolicy(MergePolicy in) {
+		this.in = in;
+	}
 
-  @Override
-  public MergeSpecification findMerges(MergeTrigger mergeTrigger, SegmentInfos segmentInfos, MergeContext mergeContext)
-      throws IOException {
-    return in.findMerges(mergeTrigger, segmentInfos, mergeContext);
-  }
+	@Override
+	public MergeSpecification findMerges(MergeTrigger mergeTrigger, SegmentInfos segmentInfos, MergeContext mergeContext)
+		throws IOException {
+		return in.findMerges(mergeTrigger, segmentInfos, mergeContext);
+	}
 
-  @Override
-  public MergeSpecification findForcedMerges(SegmentInfos segmentInfos, int maxSegmentCount,
-                                             Map<SegmentCommitInfo,Boolean> segmentsToMerge, MergeContext mergeContext) throws IOException {
-    return in.findForcedMerges(segmentInfos, maxSegmentCount, segmentsToMerge, mergeContext);
-  }
+	@Override
+	public MergeSpecification findForcedMerges(SegmentInfos segmentInfos, int maxSegmentCount,
+																						 Map<SegmentCommitInfo, Boolean> segmentsToMerge, MergeContext mergeContext) throws IOException {
+		return in.findForcedMerges(segmentInfos, maxSegmentCount, segmentsToMerge, mergeContext);
+	}
 
-  @Override
-  public MergeSpecification findForcedDeletesMerges(SegmentInfos segmentInfos, MergeContext mergeContext) throws IOException {
-    return in.findForcedDeletesMerges(segmentInfos, mergeContext);
-  }
+	@Override
+	public MergeSpecification findForcedDeletesMerges(SegmentInfos segmentInfos, MergeContext mergeContext) throws IOException {
+		return in.findForcedDeletesMerges(segmentInfos, mergeContext);
+	}
 
-  @Override
-  public boolean useCompoundFile(SegmentInfos infos, SegmentCommitInfo mergedInfo, MergeContext mergeContext)
-      throws IOException {
-    return in.useCompoundFile(infos, mergedInfo, mergeContext);
-  }
+	@Override
+	public boolean useCompoundFile(SegmentInfos infos, SegmentCommitInfo mergedInfo, MergeContext mergeContext)
+		throws IOException {
+		return in.useCompoundFile(infos, mergedInfo, mergeContext);
+	}
 
-  @Override
-  protected long size(SegmentCommitInfo info, MergeContext context) throws IOException {
-    return in.size(info, context);
-  }
+	@Override
+	protected long size(SegmentCommitInfo info, MergeContext context) throws IOException {
+		return in.size(info, context);
+	}
 
-  @Override
-  public double getNoCFSRatio() {
-    return in.getNoCFSRatio();
-  }
+	@Override
+	public double getNoCFSRatio() {
+		return in.getNoCFSRatio();
+	}
 
-  @Override
-  public final void setNoCFSRatio(double noCFSRatio) {
-    in.setNoCFSRatio(noCFSRatio);
-  }
+	@Override
+	public final void setNoCFSRatio(double noCFSRatio) {
+		in.setNoCFSRatio(noCFSRatio);
+	}
 
-  @Override
-  public final void setMaxCFSSegmentSizeMB(double v) {
-    in.setMaxCFSSegmentSizeMB(v);
-  }
+	@Override
+	public final void setMaxCFSSegmentSizeMB(double v) {
+		in.setMaxCFSSegmentSizeMB(v);
+	}
 
-  @Override
-  public final double getMaxCFSSegmentSizeMB() {
-    return in.getMaxCFSSegmentSizeMB();
-  }
+	@Override
+	public final double getMaxCFSSegmentSizeMB() {
+		return in.getMaxCFSSegmentSizeMB();
+	}
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "(" + in + ")";
-  }
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(" + in + ")";
+	}
 
-  @Override
-  public boolean keepFullyDeletedSegment(IOSupplier<CodecReader> readerIOSupplier) throws IOException {
-    return in.keepFullyDeletedSegment(readerIOSupplier);
-  }
+	@Override
+	public boolean keepFullyDeletedSegment(IOSupplier<CodecReader> readerIOSupplier) throws IOException {
+		return in.keepFullyDeletedSegment(readerIOSupplier);
+	}
 
-  @Override
-  public int numDeletesToMerge(SegmentCommitInfo info, int delCount,
-                               IOSupplier<CodecReader> readerSupplier) throws IOException {
-    return in.numDeletesToMerge(info, delCount, readerSupplier);
-  }
+	@Override
+	public int numDeletesToMerge(SegmentCommitInfo info, int delCount,
+															 IOSupplier<CodecReader> readerSupplier) throws IOException {
+		return in.numDeletesToMerge(info, delCount, readerSupplier);
+	}
 }

@@ -29,50 +29,50 @@ import org.apache.lucene.util.TestUtil;
  * Tests the Terms.docCount statistic
  */
 public class TestDocCount extends LuceneTestCase {
-  public void testSimple() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
-    int numDocs = atLeast(100);
-    for (int i = 0; i < numDocs; i++) {
-      iw.addDocument(doc());
-    }
-    IndexReader ir = iw.getReader();
-    verifyCount(ir);
-    ir.close();
-    iw.forceMerge(1);
-    ir = iw.getReader();
-    verifyCount(ir);
-    ir.close();
-    iw.close();
-    dir.close();
-  }
-  
-  private Document doc() {
-    Document doc = new Document();
-    int numFields = TestUtil.nextInt(random(), 1, 10);
-    for (int i = 0; i < numFields; i++) {
-      doc.add(newStringField("" + TestUtil.nextInt(random(), 'a', 'z'), "" + TestUtil.nextInt(random(), 'a', 'z'), Field.Store.NO));
-    }
-    return doc;
-  }
-  
-  private void verifyCount(IndexReader ir) throws Exception {
-    Fields fields = MultiFields.getFields(ir);
-    for (String field : fields) {
-      Terms terms = fields.terms(field);
-      if (terms == null) {
-        continue;
-      }
-      int docCount = terms.getDocCount();
-      FixedBitSet visited = new FixedBitSet(ir.maxDoc());
-      TermsEnum te = terms.iterator();
-      while (te.next() != null) {
-        PostingsEnum de = TestUtil.docs(random(), te, null, PostingsEnum.NONE);
-        while (de.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
-          visited.set(de.docID());
-        }
-      }
-      assertEquals(visited.cardinality(), docCount);
-    }
-  }
+	public void testSimple() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
+		int numDocs = atLeast(100);
+		for (int i = 0; i < numDocs; i++) {
+			iw.addDocument(doc());
+		}
+		IndexReader ir = iw.getReader();
+		verifyCount(ir);
+		ir.close();
+		iw.forceMerge(1);
+		ir = iw.getReader();
+		verifyCount(ir);
+		ir.close();
+		iw.close();
+		dir.close();
+	}
+
+	private Document doc() {
+		Document doc = new Document();
+		int numFields = TestUtil.nextInt(random(), 1, 10);
+		for (int i = 0; i < numFields; i++) {
+			doc.add(newStringField("" + TestUtil.nextInt(random(), 'a', 'z'), "" + TestUtil.nextInt(random(), 'a', 'z'), Field.Store.NO));
+		}
+		return doc;
+	}
+
+	private void verifyCount(IndexReader ir) throws Exception {
+		Fields fields = MultiFields.getFields(ir);
+		for (String field : fields) {
+			Terms terms = fields.terms(field);
+			if (terms == null) {
+				continue;
+			}
+			int docCount = terms.getDocCount();
+			FixedBitSet visited = new FixedBitSet(ir.maxDoc());
+			TermsEnum te = terms.iterator();
+			while (te.next() != null) {
+				PostingsEnum de = TestUtil.docs(random(), te, null, PostingsEnum.NONE);
+				while (de.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
+					visited.set(de.docID());
+				}
+			}
+			assertEquals(visited.cardinality(), docCount);
+		}
+	}
 }

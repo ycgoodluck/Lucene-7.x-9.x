@@ -20,26 +20,28 @@ package org.apache.lucene.luke.app.desktop.util;
 import javax.swing.ImageIcon;
 import java.awt.Image;
 
-/** Image utilities */
+/**
+ * Image utilities
+ */
 public class ImageUtils {
 
-  private static final String IMAGE_BASE_DIR = "org/apache/lucene/luke/app/desktop/img/";
+	private static final String IMAGE_BASE_DIR = "org/apache/lucene/luke/app/desktop/img/";
 
-  public static ImageIcon createImageIcon(String name, int width, int height) {
-    return createImageIcon(name, "", width, height);
-  }
+	public static ImageIcon createImageIcon(String name, int width, int height) {
+		return createImageIcon(name, "", width, height);
+	}
 
-  public static ImageIcon createImageIcon(String name, String description, int width, int height) {
-    java.net.URL imgURL = ImageUtils.class.getClassLoader().getResource(IMAGE_BASE_DIR + name);
-    if (imgURL != null) {
-      ImageIcon originalIcon = new ImageIcon(imgURL, description);
-      ImageIcon icon = new ImageIcon(originalIcon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT));
-      return icon;
-    } else {
-      return null;
-    }
-  }
+	public static ImageIcon createImageIcon(String name, String description, int width, int height) {
+		java.net.URL imgURL = ImageUtils.class.getClassLoader().getResource(IMAGE_BASE_DIR + name);
+		if (imgURL != null) {
+			ImageIcon originalIcon = new ImageIcon(imgURL, description);
+			ImageIcon icon = new ImageIcon(originalIcon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT));
+			return icon;
+		} else {
+			return null;
+		}
+	}
 
-  private ImageUtils() {
-  }
+	private ImageUtils() {
+	}
 }

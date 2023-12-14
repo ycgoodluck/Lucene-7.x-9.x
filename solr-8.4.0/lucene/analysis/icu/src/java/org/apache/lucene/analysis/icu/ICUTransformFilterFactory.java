@@ -32,37 +32,43 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   <li>id (mandatory): A Transliterator ID, one from {@link Transliterator#getAvailableIDs()}
  *   <li>direction (optional): Either 'forward' or 'reverse'. Default is forward.
  * </ul>
+ *
+ * @lucene.spi {@value #NAME}
  * @see Transliterator
  * @since 3.1.0
- * @lucene.spi {@value #NAME}
  */
 public class ICUTransformFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "icuTransform";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "icuTransform";
 
-  private final Transliterator transliterator;
-  
-  // TODO: add support for custom rules
-  /** Creates a new ICUTransformFilterFactory */
-  public ICUTransformFilterFactory(Map<String,String> args) {
-    super(args);
-    String id = require(args, "id");
-    String direction = get(args, "direction", Arrays.asList("forward", "reverse"), "forward", false);
-    int dir = "forward".equals(direction) ? Transliterator.FORWARD : Transliterator.REVERSE;
-    transliterator = Transliterator.getInstance(id, dir);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private final Transliterator transliterator;
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new ICUTransformFilter(input, transliterator);
-  }
+	// TODO: add support for custom rules
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	/**
+	 * Creates a new ICUTransformFilterFactory
+	 */
+	public ICUTransformFilterFactory(Map<String, String> args) {
+		super(args);
+		String id = require(args, "id");
+		String direction = get(args, "direction", Arrays.asList("forward", "reverse"), "forward", false);
+		int dir = "forward".equals(direction) ? Transliterator.FORWARD : Transliterator.REVERSE;
+		transliterator = Transliterator.getInstance(id, dir);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new ICUTransformFilter(input, transliterator);
+	}
+
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

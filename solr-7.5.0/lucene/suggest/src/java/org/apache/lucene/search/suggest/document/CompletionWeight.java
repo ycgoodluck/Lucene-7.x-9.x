@@ -35,7 +35,7 @@ import org.apache.lucene.util.automaton.Automaton;
 /**
  * Expert: the Weight for CompletionQuery, used to
  * score and explain these queries.
- *
+ * <p>
  * Subclasses can override {@link #setNextMatch(IntsRef)},
  * {@link #boost()} and {@link #context()}
  * to calculate the boost and extract the context of
@@ -44,113 +44,113 @@ import org.apache.lucene.util.automaton.Automaton;
  * @lucene.experimental
  */
 public class CompletionWeight extends Weight {
-  private final CompletionQuery completionQuery;
-  private final Automaton automaton;
+	private final CompletionQuery completionQuery;
+	private final Automaton automaton;
 
-  /**
-   * Creates a weight for <code>query</code> with an <code>automaton</code>,
-   * using the <code>reader</code> for index stats
-   */
-  public CompletionWeight(final CompletionQuery query, final Automaton automaton) throws IOException {
-    super(query);
-    this.completionQuery = query;
-    this.automaton = automaton;
-  }
+	/**
+	 * Creates a weight for <code>query</code> with an <code>automaton</code>,
+	 * using the <code>reader</code> for index stats
+	 */
+	public CompletionWeight(final CompletionQuery query, final Automaton automaton) throws IOException {
+		super(query);
+		this.completionQuery = query;
+		this.automaton = automaton;
+	}
 
-  /**
-   * Returns the automaton specified
-   * by the {@link CompletionQuery}
-   *
-   * @return query automaton
-   */
-  public Automaton getAutomaton() {
-    return automaton;
-  }
+	/**
+	 * Returns the automaton specified
+	 * by the {@link CompletionQuery}
+	 *
+	 * @return query automaton
+	 */
+	public Automaton getAutomaton() {
+		return automaton;
+	}
 
-  @Override
-  public BulkScorer bulkScorer(final LeafReaderContext context) throws IOException {
-    final LeafReader reader = context.reader();
-    final Terms terms;
-    final NRTSuggester suggester;
-    if ((terms = reader.terms(completionQuery.getField())) == null) {
-      return null;
-    }
-    if (terms instanceof CompletionTerms) {
-      CompletionTerms completionTerms = (CompletionTerms) terms;
-      if ((suggester = completionTerms.suggester()) == null) {
-        // a segment can have a null suggester
-        // i.e. no FST was built
-        return null;
-      }
-    } else {
-      throw new IllegalArgumentException(completionQuery.getField() + " is not a SuggestField");
-    }
+	@Override
+	public BulkScorer bulkScorer(final LeafReaderContext context) throws IOException {
+		final LeafReader reader = context.reader();
+		final Terms terms;
+		final NRTSuggester suggester;
+		if ((terms = reader.terms(completionQuery.getField())) == null) {
+			return null;
+		}
+		if (terms instanceof CompletionTerms) {
+			CompletionTerms completionTerms = (CompletionTerms) terms;
+			if ((suggester = completionTerms.suggester()) == null) {
+				// a segment can have a null suggester
+				// i.e. no FST was built
+				return null;
+			}
+		} else {
+			throw new IllegalArgumentException(completionQuery.getField() + " is not a SuggestField");
+		}
 
-    BitsProducer filter = completionQuery.getFilter();
-    Bits filteredDocs = null;
-    if (filter != null) {
-      filteredDocs = filter.getBits(context);
-      if (filteredDocs.getClass() == Bits.MatchNoBits.class) {
-        return null;
-      }
-    }
-    return new CompletionScorer(this, suggester, reader, filteredDocs, filter != null, automaton);
-  }
+		BitsProducer filter = completionQuery.getFilter();
+		Bits filteredDocs = null;
+		if (filter != null) {
+			filteredDocs = filter.getBits(context);
+			if (filteredDocs.getClass() == Bits.MatchNoBits.class) {
+				return null;
+			}
+		}
+		return new CompletionScorer(this, suggester, reader, filteredDocs, filter != null, automaton);
+	}
 
-  /**
-   * Set for every partial path in the index that matched the query
-   * automaton.
-   *
-   * Subclasses should override {@link #boost()} and {@link #context()}
-   * to return an appropriate value with respect to the current pathPrefix.
-   *
-   * @param pathPrefix the prefix of a matched path
-   */
-  protected void setNextMatch(IntsRef pathPrefix) {
-  }
+	/**
+	 * Set for every partial path in the index that matched the query
+	 * automaton.
+	 * <p>
+	 * Subclasses should override {@link #boost()} and {@link #context()}
+	 * to return an appropriate value with respect to the current pathPrefix.
+	 *
+	 * @param pathPrefix the prefix of a matched path
+	 */
+	protected void setNextMatch(IntsRef pathPrefix) {
+	}
 
-  /**
-   * Returns the boost of the partial path set by {@link #setNextMatch(IntsRef)}
-   *
-   * @return suggestion query-time boost
-   */
-  protected float boost() {
-    return 0;
-  }
+	/**
+	 * Returns the boost of the partial path set by {@link #setNextMatch(IntsRef)}
+	 *
+	 * @return suggestion query-time boost
+	 */
+	protected float boost() {
+		return 0;
+	}
 
-  /**
-   * Returns the context of the partial path set by {@link #setNextMatch(IntsRef)}
-   *
-   * @return suggestion context
-   */
-  protected CharSequence context() {
-    return null;
-  }
+	/**
+	 * Returns the context of the partial path set by {@link #setNextMatch(IntsRef)}
+	 *
+	 * @return suggestion context
+	 */
+	protected CharSequence context() {
+		return null;
+	}
 
-  @Override
-  public Scorer scorer(LeafReaderContext context) throws IOException {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public Scorer scorer(LeafReaderContext context) throws IOException {
+		throw new UnsupportedOperationException();
+	}
 
-  /**
-   * This object can be cached
-   * 
-   * @see org.apache.lucene.search.SegmentCacheable#isCacheable(LeafReaderContext)
-   */
-  @Override
-  public boolean isCacheable(LeafReaderContext ctx) {
-    return true;
-  }
+	/**
+	 * This object can be cached
+	 *
+	 * @see org.apache.lucene.search.SegmentCacheable#isCacheable(LeafReaderContext)
+	 */
+	@Override
+	public boolean isCacheable(LeafReaderContext ctx) {
+		return true;
+	}
 
-  @Override
-  public void extractTerms(Set<Term> terms) {
-    // no-op
-  }
+	@Override
+	public void extractTerms(Set<Term> terms) {
+		// no-op
+	}
 
-  @Override
-  public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-    //TODO
-    return null;
-  }
+	@Override
+	public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+		//TODO
+		return null;
+	}
 
 }

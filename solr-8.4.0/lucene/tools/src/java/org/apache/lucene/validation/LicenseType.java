@@ -19,57 +19,56 @@ package org.apache.lucene.validation;
 
 /**
  * A list of accepted licenses.  See also http://www.apache.org/legal/3party.html
- *
  **/
 public enum LicenseType {
-  ASL("Apache Software License 2.0", true),
-  BSD("Berkeley Software Distribution", true),
-  BSD_LIKE("BSD like license", true),//BSD like just means someone has taken the BSD license and put in their name, copyright, or it's a very similar license.
-  CDDL("Common Development and Distribution License", false),
-  CPL("Common Public License", true),
-  EPL("Eclipse Public License Version 1.0", false),
-  MIT("Massachusetts Institute of Tech. License", false),
-  MPL("Mozilla Public License", false), //NOT SURE on the required notice
-  PD("Public Domain", false),
-  //SUNBCLA("Sun Binary Code License Agreement"),
-  SUN("Sun Open Source License", false),
-  COMPOUND("Compound license (see NOTICE).", true),
-  FAKE("FAKE license - not needed", false);
+	ASL("Apache Software License 2.0", true),
+	BSD("Berkeley Software Distribution", true),
+	BSD_LIKE("BSD like license", true),//BSD like just means someone has taken the BSD license and put in their name, copyright, or it's a very similar license.
+	CDDL("Common Development and Distribution License", false),
+	CPL("Common Public License", true),
+	EPL("Eclipse Public License Version 1.0", false),
+	MIT("Massachusetts Institute of Tech. License", false),
+	MPL("Mozilla Public License", false), //NOT SURE on the required notice
+	PD("Public Domain", false),
+	//SUNBCLA("Sun Binary Code License Agreement"),
+	SUN("Sun Open Source License", false),
+	COMPOUND("Compound license (see NOTICE).", true),
+	FAKE("FAKE license - not needed", false);
 
-  private String display;
-  private boolean noticeRequired;
+	private String display;
+	private boolean noticeRequired;
 
-  LicenseType(String display, boolean noticeRequired) {
-    this.display = display;
-    this.noticeRequired = noticeRequired;
-  }
+	LicenseType(String display, boolean noticeRequired) {
+		this.display = display;
+		this.noticeRequired = noticeRequired;
+	}
 
-  public boolean isNoticeRequired() {
-    return noticeRequired;
-  }
+	public boolean isNoticeRequired() {
+		return noticeRequired;
+	}
 
-  public String getDisplay() {
-    return display;
-  }
+	public String getDisplay() {
+		return display;
+	}
 
-  public String toString() {
-    return "LicenseType{" +
-            "display='" + display + '\'' +
-            '}';
-  }
+	public String toString() {
+		return "LicenseType{" +
+			"display='" + display + '\'' +
+			'}';
+	}
 
-  /**
-   * Expected license file suffix for a given license type.
-   */
-  public String licenseFileSuffix() {
-    return "-LICENSE-" + this.name() + ".txt";
-  }
+	/**
+	 * Expected license file suffix for a given license type.
+	 */
+	public String licenseFileSuffix() {
+		return "-LICENSE-" + this.name() + ".txt";
+	}
 
-  /**
-   * Expected notice file suffix for a given license type.
-   */
-  public String noticeFileSuffix() {
-    return "-NOTICE.txt";
-  }
+	/**
+	 * Expected notice file suffix for a given license type.
+	 */
+	public String noticeFileSuffix() {
+		return "-NOTICE.txt";
+	}
 }
 

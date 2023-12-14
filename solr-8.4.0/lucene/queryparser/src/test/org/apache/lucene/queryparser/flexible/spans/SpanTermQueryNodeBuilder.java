@@ -29,13 +29,13 @@ import org.apache.lucene.search.spans.SpanTermQuery;
  */
 public class SpanTermQueryNodeBuilder implements StandardQueryBuilder {
 
-  @Override
-  public SpanTermQuery build(QueryNode node) throws QueryNodeException {
-    FieldQueryNode fieldQueryNode = (FieldQueryNode) node;
+	@Override
+	public SpanTermQuery build(QueryNode node) throws QueryNodeException {
+		FieldQueryNode fieldQueryNode = (FieldQueryNode) node;
 
-    return new SpanTermQuery(new Term(fieldQueryNode.getFieldAsString(),
-        fieldQueryNode.getTextAsString()));
+		return new SpanTermQuery(new Term(fieldQueryNode.getFieldAsString(),
+			fieldQueryNode.getTextAsString()));
 
-  }
+	}
 
 }

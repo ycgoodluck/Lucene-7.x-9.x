@@ -32,56 +32,56 @@ import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfi
  * This processor iterates the query node tree looking for every
  * {@link FieldableNode} that has {@link ConfigurationKeys#BOOST} in its
  * config. If there is, the boost is applied to that {@link FieldableNode}.
- * 
+ *
  * @see ConfigurationKeys#BOOST
  * @see QueryConfigHandler
  * @see FieldableNode
  */
 public class BoostQueryNodeProcessor extends QueryNodeProcessorImpl {
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-    if (node instanceof FieldableNode && 
-        (node.getParent() == null || !(node.getParent() instanceof FieldableNode))) {
-      
-      FieldableNode fieldNode = (FieldableNode) node;
-      QueryConfigHandler config = getQueryConfigHandler();
+		if (node instanceof FieldableNode &&
+			(node.getParent() == null || !(node.getParent() instanceof FieldableNode))) {
 
-      if (config != null) {
-        CharSequence field = fieldNode.getField();
-        FieldConfig fieldConfig = config.getFieldConfig(StringUtils.toString(field));
+			FieldableNode fieldNode = (FieldableNode) node;
+			QueryConfigHandler config = getQueryConfigHandler();
 
-        if (fieldConfig != null) {
-          Float boost = fieldConfig.get(ConfigurationKeys.BOOST);
+			if (config != null) {
+				CharSequence field = fieldNode.getField();
+				FieldConfig fieldConfig = config.getFieldConfig(StringUtils.toString(field));
 
-          if (boost != null) {
-            return new BoostQueryNode(node, boost);
-          }
+				if (fieldConfig != null) {
+					Float boost = fieldConfig.get(ConfigurationKeys.BOOST);
 
-        }
+					if (boost != null) {
+						return new BoostQueryNode(node, boost);
+					}
 
-      }
+				}
 
-    }
+			}
 
-    return node;
+		}
 
-  }
+		return node;
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+	}
 
-    return node;
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
 
-  }
+		return node;
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
+	}
 
-    return children;
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
 
-  }
+		return children;
+
+	}
 
 }

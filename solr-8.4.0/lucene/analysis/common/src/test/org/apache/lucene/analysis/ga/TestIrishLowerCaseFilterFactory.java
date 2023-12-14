@@ -27,18 +27,20 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Irish lowercase filter factory is working.
  */
 public class TestIrishLowerCaseFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testCasing() throws Exception {
-    Reader reader = new StringReader("nAthair tUISCE hARD");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("IrishLowerCase").create(stream);
-    assertTokenStreamContents(stream, new String[] { "n-athair", "t-uisce", "hard" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("IrishLowerCase", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testCasing() throws Exception {
+		Reader reader = new StringReader("nAthair tUISCE hARD");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("IrishLowerCase").create(stream);
+		assertTokenStreamContents(stream, new String[]{"n-athair", "t-uisce", "hard"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("IrishLowerCase", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

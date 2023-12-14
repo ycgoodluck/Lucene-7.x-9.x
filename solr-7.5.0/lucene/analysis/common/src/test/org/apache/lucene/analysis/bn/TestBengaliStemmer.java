@@ -30,50 +30,50 @@ import java.io.IOException;
  */
 public class TestBengaliStemmer extends BaseTokenStreamTestCase {
 
-  /**
-   * Testing few verbal words
-   */
-  public void testVerbsInShadhuForm() throws IOException {
-    check("করেছিলাম", "কর");
-    check("করিতেছিলে", "কর");
-    check("খাইতাম", "খাই");
-    check("যাইবে", "যা");
-  }
+	/**
+	 * Testing few verbal words
+	 */
+	public void testVerbsInShadhuForm() throws IOException {
+		check("করেছিলাম", "কর");
+		check("করিতেছিলে", "কর");
+		check("খাইতাম", "খাই");
+		check("যাইবে", "যা");
+	}
 
-  public void testVerbsInCholitoForm() throws IOException {
-    check("করছিলাম", "কর");
-    check("করছিলে", "কর");
-    check("করতাম", "কর");
-    check("যাব", "যা");
-    check("যাবে", "যা");
-    check("করি", "কর");
-    check("করো", "কর");
-  }
+	public void testVerbsInCholitoForm() throws IOException {
+		check("করছিলাম", "কর");
+		check("করছিলে", "কর");
+		check("করতাম", "কর");
+		check("যাব", "যা");
+		check("যাবে", "যা");
+		check("করি", "কর");
+		check("করো", "কর");
+	}
 
-  public void testNouns() throws IOException {
-    check("মেয়েরা", "মে");
-    check("মেয়েদেরকে", "মে");
-    check("মেয়েদের", "মে");
+	public void testNouns() throws IOException {
+		check("মেয়েরা", "মে");
+		check("মেয়েদেরকে", "মে");
+		check("মেয়েদের", "মে");
 
-    check("একটি", "এক");
-    check("মানুষগুলি", "মানুষ");
-  }
+		check("একটি", "এক");
+		check("মানুষগুলি", "মানুষ");
+	}
 
-  private void check(String input, String output) throws IOException {
-    Tokenizer tokenizer = whitespaceMockTokenizer(input);
-    TokenFilter tf = new BengaliStemFilter(tokenizer);
-    assertTokenStreamContents(tf, new String[] { output });
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new BengaliStemFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	private void check(String input, String output) throws IOException {
+		Tokenizer tokenizer = whitespaceMockTokenizer(input);
+		TokenFilter tf = new BengaliStemFilter(tokenizer);
+		assertTokenStreamContents(tf, new String[]{output});
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new BengaliStemFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

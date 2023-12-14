@@ -19,39 +19,41 @@ package org.apache.lucene.search;
 import java.io.IOException;
 import java.util.Random;
 
-/** Wraps another Collector and checks that
- *  order is respected. */
+/**
+ * Wraps another Collector and checks that
+ * order is respected.
+ */
 class AssertingLeafCollector extends FilterLeafCollector {
 
-  private final Random random;
-  private final int min;
-  private final int max;
+	private final Random random;
+	private final int min;
+	private final int max;
 
-  private Scorer scorer;
-  private int lastCollected = -1;
+	private Scorer scorer;
+	private int lastCollected = -1;
 
-  AssertingLeafCollector(Random random, LeafCollector collector, int min, int max) {
-    super(collector);
-    this.random = random;
-    this.min = min;
-    this.max = max;
-  }
+	AssertingLeafCollector(Random random, LeafCollector collector, int min, int max) {
+		super(collector);
+		this.random = random;
+		this.min = min;
+		this.max = max;
+	}
 
-  @Override
-  public void setScorer(Scorer scorer) throws IOException {
-    this.scorer = scorer;
-    super.setScorer(AssertingScorer.wrap(random, scorer, true));
-  }
+	@Override
+	public void setScorer(Scorer scorer) throws IOException {
+		this.scorer = scorer;
+		super.setScorer(AssertingScorer.wrap(random, scorer, true));
+	}
 
-  @Override
-  public void collect(int doc) throws IOException {
-    assert doc > lastCollected : "Out of order : " + lastCollected + " " + doc;
-    assert doc >= min : "Out of range: " + doc + " < " + min;
-    assert doc < max : "Out of range: " + doc + " >= " + max;
-    assert scorer.docID() == doc : "Collected: " + doc + " but scorer: " + scorer.docID();
-    in.collect(doc);
-    lastCollected = doc;
-  }
+	@Override
+	public void collect(int doc) throws IOException {
+		assert doc > lastCollected : "Out of order : " + lastCollected + " " + doc;
+		assert doc >= min : "Out of range: " + doc + " < " + min;
+		assert doc < max : "Out of range: " + doc + " >= " + max;
+		assert scorer.docID() == doc : "Collected: " + doc + " but scorer: " + scorer.docID();
+		in.collect(doc);
+		lastCollected = doc;
+	}
 
 }
 

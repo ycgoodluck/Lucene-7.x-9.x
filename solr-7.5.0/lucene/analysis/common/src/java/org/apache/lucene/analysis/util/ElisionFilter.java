@@ -27,49 +27,50 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 /**
  * Removes elisions from a {@link TokenStream}. For example, "l'avion" (the plane) will be
  * tokenized as "avion" (plane).
- * 
+ *
  * @see <a href="http://fr.wikipedia.org/wiki/%C3%89lision">Elision in Wikipedia</a>
  */
 public final class ElisionFilter extends TokenFilter {
-  private final CharArraySet articles;
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  
-  /**
-   * Constructs an elision filter with a Set of stop words
-   * @param input the source {@link TokenStream}
-   * @param articles a set of stopword articles
-   */
-  public ElisionFilter(TokenStream input, CharArraySet articles) {
-    super(input);
-    this.articles = articles;
-  }
+	private final CharArraySet articles;
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
 
-  /**
-   * Increments the {@link TokenStream} with a {@link CharTermAttribute} without elisioned start
-   */
-  @Override
-  public final boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      char[] termBuffer = termAtt.buffer();
-      int termLength = termAtt.length();
+	/**
+	 * Constructs an elision filter with a Set of stop words
+	 *
+	 * @param input    the source {@link TokenStream}
+	 * @param articles a set of stopword articles
+	 */
+	public ElisionFilter(TokenStream input, CharArraySet articles) {
+		super(input);
+		this.articles = articles;
+	}
 
-      int index = -1;
-      for (int i = 0; i < termLength; i++) {
-        char ch = termBuffer[i];
-        if (ch == '\'' || ch == '\u2019') {
-          index = i;
-          break;
-        }
-      }
+	/**
+	 * Increments the {@link TokenStream} with a {@link CharTermAttribute} without elisioned start
+	 */
+	@Override
+	public final boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			char[] termBuffer = termAtt.buffer();
+			int termLength = termAtt.length();
 
-      // An apostrophe has been found. If the prefix is an article strip it off.
-      if (index >= 0 && articles.contains(termBuffer, 0, index)) {
-        termAtt.copyBuffer(termBuffer, index + 1, termLength - (index + 1));
-      }
+			int index = -1;
+			for (int i = 0; i < termLength; i++) {
+				char ch = termBuffer[i];
+				if (ch == '\'' || ch == '\u2019') {
+					index = i;
+					break;
+				}
+			}
 
-      return true;
-    } else {
-      return false;
-    }
-  }
+			// An apostrophe has been found. If the prefix is an article strip it off.
+			if (index >= 0 && articles.contains(termBuffer, 0, index)) {
+				termAtt.copyBuffer(termBuffer, index + 1, termLength - (index + 1));
+			}
+
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

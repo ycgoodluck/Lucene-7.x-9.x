@@ -32,53 +32,54 @@ import org.apache.lucene.search.LeafSimScorer;
  */
 public class AssertingSpanWeight extends SpanWeight {
 
-  final SpanWeight in;
+	final SpanWeight in;
 
-  /**
-   * Create an AssertingSpanWeight
-   * @param in the SpanWeight to wrap
-   * @throws IOException on error
-   */
-  public AssertingSpanWeight(IndexSearcher searcher, SpanWeight in) throws IOException {
-    super((SpanQuery) in.getQuery(), searcher, null, 1f);
-    this.in = in;
-  }
+	/**
+	 * Create an AssertingSpanWeight
+	 *
+	 * @param in the SpanWeight to wrap
+	 * @throws IOException on error
+	 */
+	public AssertingSpanWeight(IndexSearcher searcher, SpanWeight in) throws IOException {
+		super((SpanQuery) in.getQuery(), searcher, null, 1f);
+		this.in = in;
+	}
 
-  @Override
-  public void extractTermStates(Map<Term, TermStates> contexts) {
-    in.extractTermStates(contexts);
-  }
+	@Override
+	public void extractTermStates(Map<Term, TermStates> contexts) {
+		in.extractTermStates(contexts);
+	}
 
-  @Override
-  public Spans getSpans(LeafReaderContext context, Postings requiredPostings) throws IOException {
-    Spans spans = in.getSpans(context, requiredPostings);
-    if (spans == null)
-      return null;
-    return new AssertingSpans(spans);
-  }
+	@Override
+	public Spans getSpans(LeafReaderContext context, Postings requiredPostings) throws IOException {
+		Spans spans = in.getSpans(context, requiredPostings);
+		if (spans == null)
+			return null;
+		return new AssertingSpans(spans);
+	}
 
-  @Override
-  public LeafSimScorer getSimScorer(LeafReaderContext context) throws IOException {
-    return in.getSimScorer(context);
-  }
+	@Override
+	public LeafSimScorer getSimScorer(LeafReaderContext context) throws IOException {
+		return in.getSimScorer(context);
+	}
 
-  @Override
-  public void extractTerms(Set<Term> terms) {
-    in.extractTerms(terms);
-  }
+	@Override
+	public void extractTerms(Set<Term> terms) {
+		in.extractTerms(terms);
+	}
 
-  @Override
-  public SpanScorer scorer(LeafReaderContext context) throws IOException {
-    return in.scorer(context);
-  }
+	@Override
+	public SpanScorer scorer(LeafReaderContext context) throws IOException {
+		return in.scorer(context);
+	}
 
-  @Override
-  public boolean isCacheable(LeafReaderContext ctx) {
-    return in.isCacheable(ctx);
-  }
+	@Override
+	public boolean isCacheable(LeafReaderContext ctx) {
+		return in.isCacheable(ctx);
+	}
 
-  @Override
-  public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-    return in.explain(context, doc);
-  }
+	@Override
+	public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+		return in.explain(context, doc);
+	}
 }

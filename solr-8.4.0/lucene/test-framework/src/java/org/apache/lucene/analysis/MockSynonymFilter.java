@@ -27,71 +27,75 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 import org.apache.lucene.util.AttributeSource;
 
-/** adds synonym of "dog" for "dogs", and synonym of "cavy" for "guinea pig". */
+/**
+ * adds synonym of "dog" for "dogs", and synonym of "cavy" for "guinea pig".
+ */
 public class MockSynonymFilter extends TokenFilter {
-  CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
-  OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
-  PositionLengthAttribute posLenAtt = addAttribute(PositionLengthAttribute.class);
-  List<AttributeSource> tokenQueue = new ArrayList<>();
-  boolean endOfInput = false;
+	CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
+	OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
+	PositionLengthAttribute posLenAtt = addAttribute(PositionLengthAttribute.class);
+	List<AttributeSource> tokenQueue = new ArrayList<>();
+	boolean endOfInput = false;
 
-  public MockSynonymFilter(TokenStream input) {
-    super(input);
-  }
+	public MockSynonymFilter(TokenStream input) {
+		super(input);
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    tokenQueue.clear();
-    endOfInput = false;
-  }
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		tokenQueue.clear();
+		endOfInput = false;
+	}
 
-  @Override
-  public final boolean incrementToken() throws IOException {
-    if (tokenQueue.size() > 0) {
-      tokenQueue.remove(0).copyTo(this);
-      return true;
-    }
-    if (endOfInput == false && input.incrementToken()) {
-      if (termAtt.toString().equals("dogs")) {
-        addSynonymAndRestoreOrigToken("dog", 1, offsetAtt.endOffset());
-      } else if (termAtt.toString().equals("guinea")) {
-        AttributeSource firstSavedToken = cloneAttributes();
-        if (input.incrementToken()) {
-          if (termAtt.toString().equals("pig")) {
-            AttributeSource secondSavedToken = cloneAttributes();
-            int secondEndOffset = offsetAtt.endOffset();
-            firstSavedToken.copyTo(this);
-            addSynonym("cavy", 2, secondEndOffset);
-            tokenQueue.add(secondSavedToken);
-          } else if (termAtt.toString().equals("dogs")) {
-            tokenQueue.add(cloneAttributes());
-            addSynonym("dog", 1, offsetAtt.endOffset());
-          }
-        } else {
-          endOfInput = true;
-        }
-        firstSavedToken.copyTo(this);
-      }
-      return true;
-    } else {
-      endOfInput = true;
-      return false;
-    }
-  }
-  private void addSynonym(String synonymText, int posLen, int endOffset) {
-    termAtt.setEmpty().append(synonymText);
-    posIncAtt.setPositionIncrement(0);
-    posLenAtt.setPositionLength(posLen);
-    offsetAtt.setOffset(offsetAtt.startOffset(), endOffset);
-    tokenQueue.add(cloneAttributes());
-  }
-  private void addSynonymAndRestoreOrigToken(String synonymText, int posLen, int endOffset) {
-    AttributeSource origToken = cloneAttributes();
-    addSynonym(synonymText, posLen, endOffset);
-    origToken.copyTo(this);
-  }
+	@Override
+	public final boolean incrementToken() throws IOException {
+		if (tokenQueue.size() > 0) {
+			tokenQueue.remove(0).copyTo(this);
+			return true;
+		}
+		if (endOfInput == false && input.incrementToken()) {
+			if (termAtt.toString().equals("dogs")) {
+				addSynonymAndRestoreOrigToken("dog", 1, offsetAtt.endOffset());
+			} else if (termAtt.toString().equals("guinea")) {
+				AttributeSource firstSavedToken = cloneAttributes();
+				if (input.incrementToken()) {
+					if (termAtt.toString().equals("pig")) {
+						AttributeSource secondSavedToken = cloneAttributes();
+						int secondEndOffset = offsetAtt.endOffset();
+						firstSavedToken.copyTo(this);
+						addSynonym("cavy", 2, secondEndOffset);
+						tokenQueue.add(secondSavedToken);
+					} else if (termAtt.toString().equals("dogs")) {
+						tokenQueue.add(cloneAttributes());
+						addSynonym("dog", 1, offsetAtt.endOffset());
+					}
+				} else {
+					endOfInput = true;
+				}
+				firstSavedToken.copyTo(this);
+			}
+			return true;
+		} else {
+			endOfInput = true;
+			return false;
+		}
+	}
+
+	private void addSynonym(String synonymText, int posLen, int endOffset) {
+		termAtt.setEmpty().append(synonymText);
+		posIncAtt.setPositionIncrement(0);
+		posLenAtt.setPositionLength(posLen);
+		offsetAtt.setOffset(offsetAtt.startOffset(), endOffset);
+		tokenQueue.add(cloneAttributes());
+	}
+
+	private void addSynonymAndRestoreOrigToken(String synonymText, int posLen, int endOffset) {
+		AttributeSource origToken = cloneAttributes();
+		addSynonym(synonymText, posLen, endOffset);
+		origToken.copyTo(this);
+	}
 }
 
 

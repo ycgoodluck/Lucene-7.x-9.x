@@ -35,90 +35,90 @@ import org.apache.lucene.util.mutable.MutableValueDouble;
  */
 public class DoubleFieldSource extends FieldCacheSource {
 
-  public DoubleFieldSource(String field) {
-    super(field);
-  }
+	public DoubleFieldSource(String field) {
+		super(field);
+	}
 
-  @Override
-  public String description() {
-    return "double(" + field + ')';
-  }
+	@Override
+	public String description() {
+		return "double(" + field + ')';
+	}
 
-  @Override
-  public SortField getSortField(boolean reverse) {
-    return new SortField(field, Type.DOUBLE, reverse);
-  }
-  
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+	@Override
+	public SortField getSortField(boolean reverse) {
+		return new SortField(field, Type.DOUBLE, reverse);
+	}
 
-    final NumericDocValues values = getNumericDocValues(context, readerContext);
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
 
-    return new DoubleDocValues(this) {
-      int lastDocID;
+		final NumericDocValues values = getNumericDocValues(context, readerContext);
 
-      private double getValueForDoc(int doc) throws IOException {
-        if (doc < lastDocID) {
-          throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
-        }
-        lastDocID = doc;
-        int curDocID = values.docID();
-        if (doc > curDocID) {
-          curDocID = values.advance(doc);
-        }
-        if (doc == curDocID) {
-          return Double.longBitsToDouble(values.longValue());
-        } else {
-          return 0.0;
-        }
-      }
-      
-      @Override
-      public double doubleVal(int doc) throws IOException {
-        return getValueForDoc(doc);
-      }
+		return new DoubleDocValues(this) {
+			int lastDocID;
 
-      @Override
-      public boolean exists(int doc) throws IOException {
-        getValueForDoc(doc);
-        return doc == values.docID();
-      }
+			private double getValueForDoc(int doc) throws IOException {
+				if (doc < lastDocID) {
+					throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
+				}
+				lastDocID = doc;
+				int curDocID = values.docID();
+				if (doc > curDocID) {
+					curDocID = values.advance(doc);
+				}
+				if (doc == curDocID) {
+					return Double.longBitsToDouble(values.longValue());
+				} else {
+					return 0.0;
+				}
+			}
 
-      @Override
-      public ValueFiller getValueFiller() {
-        return new ValueFiller() {
-          private final MutableValueDouble mval = new MutableValueDouble();
+			@Override
+			public double doubleVal(int doc) throws IOException {
+				return getValueForDoc(doc);
+			}
 
-          @Override
-          public MutableValue getValue() {
-            return mval;
-          }
+			@Override
+			public boolean exists(int doc) throws IOException {
+				getValueForDoc(doc);
+				return doc == values.docID();
+			}
 
-          @Override
-          public void fillValue(int doc) throws IOException {
-            mval.value = getValueForDoc(doc);
-            mval.exists = exists(doc);
-          }
-        };
-      }
-    };
-  }
+			@Override
+			public ValueFiller getValueFiller() {
+				return new ValueFiller() {
+					private final MutableValueDouble mval = new MutableValueDouble();
 
-  protected NumericDocValues getNumericDocValues(Map context, LeafReaderContext readerContext) throws IOException {
-    return DocValues.getNumeric(readerContext.reader(), field);
-  }
+					@Override
+					public MutableValue getValue() {
+						return mval;
+					}
 
-  @Override
-  public boolean equals(Object o) {
-    if (o.getClass() != DoubleFieldSource.class) return false;
-    DoubleFieldSource other = (DoubleFieldSource) o;
-    return super.equals(other);
-  }
+					@Override
+					public void fillValue(int doc) throws IOException {
+						mval.value = getValueForDoc(doc);
+						mval.exists = exists(doc);
+					}
+				};
+			}
+		};
+	}
 
-  @Override
-  public int hashCode() {
-    int h = Double.class.hashCode();
-    h += super.hashCode();
-    return h;
-  }
+	protected NumericDocValues getNumericDocValues(Map context, LeafReaderContext readerContext) throws IOException {
+		return DocValues.getNumeric(readerContext.reader(), field);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o.getClass() != DoubleFieldSource.class) return false;
+		DoubleFieldSource other = (DoubleFieldSource) o;
+		return super.equals(other);
+	}
+
+	@Override
+	public int hashCode() {
+		int h = Double.class.hashCode();
+		h += super.hashCode();
+		return h;
+	}
 }

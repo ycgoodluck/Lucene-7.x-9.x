@@ -17,7 +17,7 @@
 
 /**
  * Lucene 8.4 file format.
- * 
+ *
  * <h1>Apache Lucene - Index File Formats</h1>
  * <div>
  * <ul>
@@ -61,7 +61,7 @@
  * <li>A field is a named sequence of terms.</li>
  * <li>A term is a sequence of bytes.</li>
  * </ul>
- * <p>The same sequence of bytes in two different fields is considered a different 
+ * <p>The same sequence of bytes in two different fields is considered a different
  * term. Thus terms are represented as a pair: the string naming the field, and the
  * bytes within the field.</p>
  * <a name="Inverted_Indexing"></a>
@@ -130,34 +130,34 @@
  * <li>
  * {@link org.apache.lucene.codecs.lucene70.Lucene70SegmentInfoFormat Segment info}.
  *    This contains metadata about a segment, such as the number of documents,
- *    what files it uses, 
+ *    what files it uses,
  * </li>
  * <li>
- * {@link org.apache.lucene.codecs.lucene60.Lucene60FieldInfosFormat Field names}. 
+ * {@link org.apache.lucene.codecs.lucene60.Lucene60FieldInfosFormat Field names}.
  *    This contains the set of field names used in the index.
  * </li>
  * <li>
- * {@link org.apache.lucene.codecs.lucene50.Lucene50StoredFieldsFormat Stored Field values}. 
- * This contains, for each document, a list of attribute-value pairs, where the attributes 
- * are field names. These are used to store auxiliary information about the document, such as 
- * its title, url, or an identifier to access a database. The set of stored fields are what is 
+ * {@link org.apache.lucene.codecs.lucene50.Lucene50StoredFieldsFormat Stored Field values}.
+ * This contains, for each document, a list of attribute-value pairs, where the attributes
+ * are field names. These are used to store auxiliary information about the document, such as
+ * its title, url, or an identifier to access a database. The set of stored fields are what is
  * returned for each hit when searching. This is keyed by document number.
  * </li>
  * <li>
- * {@link org.apache.lucene.codecs.lucene84.Lucene84PostingsFormat Term dictionary}. 
+ * {@link org.apache.lucene.codecs.lucene84.Lucene84PostingsFormat Term dictionary}.
  * A dictionary containing all of the terms used in all of the
  * indexed fields of all of the documents. The dictionary also contains the number
  * of documents which contain the term, and pointers to the term's frequency and
  * proximity data.
  * </li>
  * <li>
- * {@link org.apache.lucene.codecs.lucene84.Lucene84PostingsFormat Term Frequency data}. 
+ * {@link org.apache.lucene.codecs.lucene84.Lucene84PostingsFormat Term Frequency data}.
  * For each term in the dictionary, the numbers of all the
  * documents that contain that term, and the frequency of the term in that
  * document, unless frequencies are omitted (IndexOptions.DOCS_ONLY)
  * </li>
  * <li>
- * {@link org.apache.lucene.codecs.lucene84.Lucene84PostingsFormat Term Proximity data}. 
+ * {@link org.apache.lucene.codecs.lucene84.Lucene84PostingsFormat Term Proximity data}.
  * For each term in the dictionary, the positions that the
  * term occurs in each document. Note that this will not exist if all fields in
  * all documents omit position data.
@@ -168,10 +168,10 @@
  * that is multiplied into the score for hits on that field.
  * </li>
  * <li>
- * {@link org.apache.lucene.codecs.lucene50.Lucene50TermVectorsFormat Term Vectors}. 
+ * {@link org.apache.lucene.codecs.lucene50.Lucene50TermVectorsFormat Term Vectors}.
  * For each field in each document, the term vector (sometimes
  * called document vector) may be stored. A term vector consists of term text and
- * term frequency. To add Term Vectors to your index see the 
+ * term frequency. To add Term Vectors to your index see the
  * {@link org.apache.lucene.document.Field Field} constructors
  * </li>
  * <li>
@@ -182,7 +182,7 @@
  * searches, per-document values are useful for things like scoring factors.
  * </li>
  * <li>
- * {@link org.apache.lucene.codecs.lucene50.Lucene50LiveDocsFormat Live documents}. 
+ * {@link org.apache.lucene.codecs.lucene50.Lucene50LiveDocsFormat Live documents}.
  * An optional file indicating which documents are live.
  * </li>
  * <li>
@@ -200,7 +200,7 @@
  * <p>All files belonging to a segment have the same name with varying extensions.
  * The extensions correspond to the different file formats described below. When
  * using the Compound File format (default for small segments) these files (except
- * for the Segment info file, the Lock file, and Deleted documents file) are collapsed 
+ * for the Segment info file, the Lock file, and Deleted documents file) are collapsed
  * into a single .cfs file (see below for details)</p>
  * <p>Typically, all segments in an index are stored in a single directory,
  * although this is not required.</p>
@@ -350,12 +350,12 @@
  * <a href="http://issues.apache.org/jira/browse/LUCENE-1654">LUCENE-1654</a> for details.</li>
  * <li>In version 3.0, compressed fields are no longer written to the index (they
  * can still be read, but on merge the new segment will write them, uncompressed).
- * See issue <a href="http://issues.apache.org/jira/browse/LUCENE-1960">LUCENE-1960</a> 
+ * See issue <a href="http://issues.apache.org/jira/browse/LUCENE-1960">LUCENE-1960</a>
  * for details.</li>
  * <li>In version 3.1, segments records the code version that created them. See
- * <a href="http://issues.apache.org/jira/browse/LUCENE-2720">LUCENE-2720</a> for details. 
- * Additionally segments track explicitly whether or not they have term vectors. 
- * See <a href="http://issues.apache.org/jira/browse/LUCENE-2811">LUCENE-2811</a> 
+ * <a href="http://issues.apache.org/jira/browse/LUCENE-2720">LUCENE-2720</a> for details.
+ * Additionally segments track explicitly whether or not they have term vectors.
+ * See <a href="http://issues.apache.org/jira/browse/LUCENE-2811">LUCENE-2811</a>
  * for details.</li>
  * <li>In version 3.2, numeric fields are written as natively to stored fields
  * file, previously they were stored in text format only.</li>
@@ -363,22 +363,22 @@
  * frequencies.</li>
  * <li>In version 4.0, the format of the inverted index became extensible via
  * the {@link org.apache.lucene.codecs.Codec Codec} api. Fast per-document storage
- * ({@code DocValues}) was introduced. Normalization factors need no longer be a 
+ * ({@code DocValues}) was introduced. Normalization factors need no longer be a
  * single byte, they can be any {@link org.apache.lucene.index.NumericDocValues NumericDocValues}.
- * Terms need not be unicode strings, they can be any byte sequence. Term offsets 
- * can optionally be indexed into the postings lists. Payloads can be stored in the 
+ * Terms need not be unicode strings, they can be any byte sequence. Term offsets
+ * can optionally be indexed into the postings lists. Payloads can be stored in the
  * term vectors.</li>
  * <li>In version 4.1, the format of the postings list changed to use either
  * of FOR compression or variable-byte encoding, depending upon the frequency
  * of the term. Terms appearing only once were changed to inline directly into
  * the term dictionary. Stored fields are compressed by default. </li>
- * <li>In version 4.2, term vectors are compressed by default. DocValues has 
+ * <li>In version 4.2, term vectors are compressed by default. DocValues has
  * a new multi-valued type (SortedSet), that can be used for faceting/grouping/joining
  * on multi-valued fields.</li>
  * <li>In version 4.5, DocValues were extended to explicitly represent missing values.</li>
- * <li>In version 4.6, FieldInfos were extended to support per-field DocValues generation, to 
+ * <li>In version 4.6, FieldInfos were extended to support per-field DocValues generation, to
  * allow updating NumericDocValues fields.</li>
- * <li>In version 4.8, checksum footers were added to the end of each index file 
+ * <li>In version 4.8, checksum footers were added to the end of each index file
  * for improved data integrity. Specifically, the last 8 bytes of every index file
  * contain the zlib-crc32 checksum of the file.</li>
  * <li>In version 4.9, DocValues has a new multi-valued numeric type (SortedNumeric)

@@ -35,65 +35,66 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestOrdinalMap extends LuceneTestCase {
 
-  private static final Field ORDINAL_MAP_OWNER_FIELD;
-  static {
-    try {
-      ORDINAL_MAP_OWNER_FIELD = OrdinalMap.class.getDeclaredField("owner");
-    } catch (Exception e) {
-      throw new Error();
-    }
-  }
+	private static final Field ORDINAL_MAP_OWNER_FIELD;
 
-  private static final RamUsageTester.Accumulator ORDINAL_MAP_ACCUMULATOR = new RamUsageTester.Accumulator() {
+	static {
+		try {
+			ORDINAL_MAP_OWNER_FIELD = OrdinalMap.class.getDeclaredField("owner");
+		} catch (Exception e) {
+			throw new Error();
+		}
+	}
 
-    public long accumulateObject(Object o, long shallowSize, java.util.Map<Field,Object> fieldValues, java.util.Collection<Object> queue) {
-      if (o == LongValues.IDENTITY) {
-        return 0L;
-      }
-      if (o instanceof OrdinalMap) {
-        fieldValues = new HashMap<>(fieldValues);
-        fieldValues.remove(ORDINAL_MAP_OWNER_FIELD);
-      }
-      return super.accumulateObject(o, shallowSize, fieldValues, queue);
-    }
+	private static final RamUsageTester.Accumulator ORDINAL_MAP_ACCUMULATOR = new RamUsageTester.Accumulator() {
 
-  };
+		public long accumulateObject(Object o, long shallowSize, java.util.Map<Field, Object> fieldValues, java.util.Collection<Object> queue) {
+			if (o == LongValues.IDENTITY) {
+				return 0L;
+			}
+			if (o instanceof OrdinalMap) {
+				fieldValues = new HashMap<>(fieldValues);
+				fieldValues.remove(ORDINAL_MAP_OWNER_FIELD);
+			}
+			return super.accumulateObject(o, shallowSize, fieldValues, queue);
+		}
 
-  public void testRamBytesUsed() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriterConfig cfg = new IndexWriterConfig(new MockAnalyzer(random())).setCodec(TestUtil.alwaysDocValuesFormat(TestUtil.getDefaultDocValuesFormat()));
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir, cfg);
-    final int maxDoc = TestUtil.nextInt(random(), 10, 1000);
-    final int maxTermLength = TestUtil.nextInt(random(), 1, 4);
-    for (int i = 0; i < maxDoc; ++i) {
-      Document d = new Document();
-      if (random().nextBoolean()) {
-        d.add(new SortedDocValuesField("sdv", new BytesRef(TestUtil.randomSimpleString(random(), maxTermLength))));
-      }
-      final int numSortedSet = random().nextInt(3);
-      for (int j = 0; j < numSortedSet; ++j) {
-        d.add(new SortedSetDocValuesField("ssdv", new BytesRef(TestUtil.randomSimpleString(random(), maxTermLength))));
-      }
-      iw.addDocument(d);
-      if (rarely()) {
-        iw.getReader().close();
-      }
-    }
-    iw.commit();
-    DirectoryReader r = iw.getReader();
-    SortedDocValues sdv = MultiDocValues.getSortedValues(r, "sdv");
-    if (sdv instanceof MultiDocValues.MultiSortedDocValues) {
-      OrdinalMap map = ((MultiDocValues.MultiSortedDocValues) sdv).mapping;
-      assertEquals(RamUsageTester.sizeOf(map, ORDINAL_MAP_ACCUMULATOR), map.ramBytesUsed());
-    }
-    SortedSetDocValues ssdv = MultiDocValues.getSortedSetValues(r, "ssdv");
-    if (ssdv instanceof MultiDocValues.MultiSortedSetDocValues) {
-      OrdinalMap map = ((MultiDocValues.MultiSortedSetDocValues) ssdv).mapping;
-      assertEquals(RamUsageTester.sizeOf(map, ORDINAL_MAP_ACCUMULATOR), map.ramBytesUsed());
-    }
-    iw.close();
-    r.close();
-    dir.close();
-  }
+	};
+
+	public void testRamBytesUsed() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriterConfig cfg = new IndexWriterConfig(new MockAnalyzer(random())).setCodec(TestUtil.alwaysDocValuesFormat(TestUtil.getDefaultDocValuesFormat()));
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir, cfg);
+		final int maxDoc = TestUtil.nextInt(random(), 10, 1000);
+		final int maxTermLength = TestUtil.nextInt(random(), 1, 4);
+		for (int i = 0; i < maxDoc; ++i) {
+			Document d = new Document();
+			if (random().nextBoolean()) {
+				d.add(new SortedDocValuesField("sdv", new BytesRef(TestUtil.randomSimpleString(random(), maxTermLength))));
+			}
+			final int numSortedSet = random().nextInt(3);
+			for (int j = 0; j < numSortedSet; ++j) {
+				d.add(new SortedSetDocValuesField("ssdv", new BytesRef(TestUtil.randomSimpleString(random(), maxTermLength))));
+			}
+			iw.addDocument(d);
+			if (rarely()) {
+				iw.getReader().close();
+			}
+		}
+		iw.commit();
+		DirectoryReader r = iw.getReader();
+		SortedDocValues sdv = MultiDocValues.getSortedValues(r, "sdv");
+		if (sdv instanceof MultiDocValues.MultiSortedDocValues) {
+			OrdinalMap map = ((MultiDocValues.MultiSortedDocValues) sdv).mapping;
+			assertEquals(RamUsageTester.sizeOf(map, ORDINAL_MAP_ACCUMULATOR), map.ramBytesUsed());
+		}
+		SortedSetDocValues ssdv = MultiDocValues.getSortedSetValues(r, "ssdv");
+		if (ssdv instanceof MultiDocValues.MultiSortedSetDocValues) {
+			OrdinalMap map = ((MultiDocValues.MultiSortedSetDocValues) ssdv).mapping;
+			assertEquals(RamUsageTester.sizeOf(map, ORDINAL_MAP_ACCUMULATOR), map.ramBytesUsed());
+		}
+		iw.close();
+		r.close();
+		dir.close();
+	}
 
 }

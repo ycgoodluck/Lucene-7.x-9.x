@@ -52,72 +52,72 @@ import org.apache.lucene.util.StringHelper;
  */
 public class TermBytes implements Accountable {
 
-  private static final long BASE_RAM_USAGE = RamUsageEstimator.shallowSizeOfInstance(TermBytes.class);
+	private static final long BASE_RAM_USAGE = RamUsageEstimator.shallowSizeOfInstance(TermBytes.class);
 
-  protected int mdpLength;
-  protected BytesRef term;
+	protected int mdpLength;
+	protected BytesRef term;
 
-  public TermBytes(int mdpLength, BytesRef term) {
-    reset(mdpLength, term);
-  }
+	public TermBytes(int mdpLength, BytesRef term) {
+		reset(mdpLength, term);
+	}
 
-  public TermBytes reset(int mdpLength, BytesRef term) {
-    assert term.length > 0 && mdpLength > 0 || term.length == 0 && mdpLength == 0 : "Inconsistent mdpLength=" + mdpLength + ", term.length=" + term.length;
-    assert term.length == 0 || mdpLength <= term.length : "Too large mdpLength=" + mdpLength + ", term.length=" + term.length;
-    assert term.offset == 0;
-    this.mdpLength = mdpLength;
-    this.term = term;
-    return this;
-  }
+	public TermBytes reset(int mdpLength, BytesRef term) {
+		assert term.length > 0 && mdpLength > 0 || term.length == 0 && mdpLength == 0 : "Inconsistent mdpLength=" + mdpLength + ", term.length=" + term.length;
+		assert term.length == 0 || mdpLength <= term.length : "Too large mdpLength=" + mdpLength + ", term.length=" + term.length;
+		assert term.offset == 0;
+		this.mdpLength = mdpLength;
+		this.term = term;
+		return this;
+	}
 
-  /**
-   * @return This term MDP length.
-   * @see TermBytes
-   */
-  public int getMdpLength() {
-    return mdpLength;
-  }
+	/**
+	 * @return This term MDP length.
+	 * @see TermBytes
+	 */
+	public int getMdpLength() {
+		return mdpLength;
+	}
 
-  /**
-   * @return This term bytes.
-   */
-  public BytesRef getTerm() {
-    return term;
-  }
+	/**
+	 * @return This term bytes.
+	 */
+	public BytesRef getTerm() {
+		return term;
+	}
 
-  /**
-   * @return The offset of this term incremental encoding suffix.
-   * @see TermBytes
-   */
-  public int getSuffixOffset() {
-    return Math.max(mdpLength - 1, 0);
-  }
+	/**
+	 * @return The offset of this term incremental encoding suffix.
+	 * @see TermBytes
+	 */
+	public int getSuffixOffset() {
+		return Math.max(mdpLength - 1, 0);
+	}
 
-  /**
-   * @return The length of this term incremental encoding suffix.
-   * @see TermBytes
-   */
-  public int getSuffixLength() {
-    return term.length - getSuffixOffset();
-  }
+	/**
+	 * @return The length of this term incremental encoding suffix.
+	 * @see TermBytes
+	 */
+	public int getSuffixLength() {
+		return term.length - getSuffixOffset();
+	}
 
-  /**
-   * Computes the length of the minimal distinguishing prefix (MDP) between
-   * a current term and its previous term (terms are alphabetically sorted).
-   * <p>
-   * Example: If previous="car" and current="cartridge", then MDP length is
-   * 4. It is the length of the minimal prefix distinguishing "cartridge" from
-   * "car", that is, the length of "cart".
-   *
-   * @see TermBytes
-   */
-  public static int computeMdpLength(BytesRef previousTerm, BytesRef currentTerm) {
-    int mdpLength = previousTerm == null ? 1 : StringHelper.sortKeyLength(previousTerm, currentTerm);
-    return Math.min(mdpLength, currentTerm.length);
-  }
+	/**
+	 * Computes the length of the minimal distinguishing prefix (MDP) between
+	 * a current term and its previous term (terms are alphabetically sorted).
+	 * <p>
+	 * Example: If previous="car" and current="cartridge", then MDP length is
+	 * 4. It is the length of the minimal prefix distinguishing "cartridge" from
+	 * "car", that is, the length of "cart".
+	 *
+	 * @see TermBytes
+	 */
+	public static int computeMdpLength(BytesRef previousTerm, BytesRef currentTerm) {
+		int mdpLength = previousTerm == null ? 1 : StringHelper.sortKeyLength(previousTerm, currentTerm);
+		return Math.min(mdpLength, currentTerm.length);
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return BASE_RAM_USAGE + RamUsageUtil.ramBytesUsed(term);
-  }
+	@Override
+	public long ramBytesUsed() {
+		return BASE_RAM_USAGE + RamUsageUtil.ramBytesUsed(term);
+	}
 }

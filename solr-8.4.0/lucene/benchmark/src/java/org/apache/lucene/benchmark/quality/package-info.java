@@ -28,52 +28,52 @@
  *   <li>{@link org.apache.lucene.benchmark.quality.utils.SubmissionReport Reporting object}.</li>
  * </ul>
  * <p>
- * For benchmarking TREC collections with TREC QRels, take a look at the 
+ * For benchmarking TREC collections with TREC QRels, take a look at the
  * {@link org.apache.lucene.benchmark.quality.trec trec package}.
  * <p>
  * Here is a sample code used to run the TREC 2006 queries 701-850 on the .Gov2 collection:
- * 
+ *
  * <pre class="prettyprint">
  *     File topicsFile = new File("topics-701-850.txt");
  *     File qrelsFile = new File("qrels-701-850.txt");
  *     IndexReader ir = DirectoryReader.open(directory):
  *     IndexSearcher searcher = new IndexSearcher(ir);
- * 
+ *
  *     int maxResults = 1000;
- *     String docNameField = "docname"; 
- *     
- *     PrintWriter logger = new PrintWriter(System.out,true); 
- * 
+ *     String docNameField = "docname";
+ *
+ *     PrintWriter logger = new PrintWriter(System.out,true);
+ *
  *     // use trec utilities to read trec topics into quality queries
  *     TrecTopicsReader qReader = new TrecTopicsReader();
  *     QualityQuery qqs[] = qReader.readQueries(new BufferedReader(new FileReader(topicsFile)));
- *     
+ *
  *     // prepare judge, with trec utilities that read from a QRels file
  *     Judge judge = new TrecJudge(new BufferedReader(new FileReader(qrelsFile)));
- *     
+ *
  *     // validate topics &amp; judgments match each other
  *     judge.validateData(qqs, logger);
- *     
+ *
  *     // set the parsing of quality queries into Lucene queries.
  *     QualityQueryParser qqParser = new SimpleQQParser("title", "body");
- *     
+ *
  *     // run the benchmark
  *     QualityBenchmark qrun = new QualityBenchmark(qqs, qqParser, searcher, docNameField);
  *     SubmissionReport submitLog = null;
  *     QualityStats stats[] = qrun.execute(maxResults, judge, submitLog, logger);
- *     
+ *
  *     // print an average sum of the results
  *     QualityStats avg = QualityStats.average(stats);
  *     avg.log("SUMMARY",2,logger, "  ");
  * </pre>
- * 
+ *
  * <p>
  * Some immediate ways to modify this program to your needs are:
  * <ul>
- *   <li>To run on different formats of queries and judgements provide your own 
- *       {@link org.apache.lucene.benchmark.quality.Judge Judge} and 
+ *   <li>To run on different formats of queries and judgements provide your own
+ *       {@link org.apache.lucene.benchmark.quality.Judge Judge} and
  *       {@link org.apache.lucene.benchmark.quality.QualityQuery Quality queries}.</li>
- *   <li>Create sophisticated Lucene queries by supplying a different 
+ *   <li>Create sophisticated Lucene queries by supplying a different
  *   {@link org.apache.lucene.benchmark.quality.QualityQueryParser Quality query parser}.</li>
  * </ul>
  */

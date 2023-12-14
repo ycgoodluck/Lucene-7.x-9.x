@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.lucene.search;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,238 +39,241 @@ import com.carrotsearch.randomizedtesting.generators.RandomNumbers;
 
 public class TestBooleanOr extends LuceneTestCase {
 
-  private static String FIELD_T = "T";
-  private static String FIELD_C = "C";
+	private static String FIELD_T = "T";
+	private static String FIELD_C = "C";
 
-  private TermQuery t1 = new TermQuery(new Term(FIELD_T, "files"));
-  private TermQuery t2 = new TermQuery(new Term(FIELD_T, "deleting"));
-  private TermQuery c1 = new TermQuery(new Term(FIELD_C, "production"));
-  private TermQuery c2 = new TermQuery(new Term(FIELD_C, "optimize"));
+	private TermQuery t1 = new TermQuery(new Term(FIELD_T, "files"));
+	private TermQuery t2 = new TermQuery(new Term(FIELD_T, "deleting"));
+	private TermQuery c1 = new TermQuery(new Term(FIELD_C, "production"));
+	private TermQuery c2 = new TermQuery(new Term(FIELD_C, "optimize"));
 
-  private IndexSearcher searcher = null;
-  private Directory dir;
-  private IndexReader reader;
-  
-
-  private long search(Query q) throws IOException {
-    QueryUtils.check(random(), q,searcher);
-    return searcher.search(q, 1000).totalHits.value;
-  }
-
-  public void testElements() throws IOException {
-    assertEquals(1, search(t1));
-    assertEquals(1, search(t2));
-    assertEquals(1, search(c1));
-    assertEquals(1, search(c2));
-  }
-
-  /**
-   * <code>T:files T:deleting C:production C:optimize </code>
-   * it works.
-   */
-  public void testFlat() throws IOException {
-    BooleanQuery.Builder q = new BooleanQuery.Builder();
-    q.add(new BooleanClause(t1, BooleanClause.Occur.SHOULD));
-    q.add(new BooleanClause(t2, BooleanClause.Occur.SHOULD));
-    q.add(new BooleanClause(c1, BooleanClause.Occur.SHOULD));
-    q.add(new BooleanClause(c2, BooleanClause.Occur.SHOULD));
-    assertEquals(1, search(q.build()));
-  }
-
-  /**
-   * <code>(T:files T:deleting) (+C:production +C:optimize)</code>
-   * it works.
-   */
-  public void testParenthesisMust() throws IOException {
-    BooleanQuery.Builder q3 = new BooleanQuery.Builder();
-    q3.add(new BooleanClause(t1, BooleanClause.Occur.SHOULD));
-    q3.add(new BooleanClause(t2, BooleanClause.Occur.SHOULD));
-    BooleanQuery.Builder q4 = new BooleanQuery.Builder();
-    q4.add(new BooleanClause(c1, BooleanClause.Occur.MUST));
-    q4.add(new BooleanClause(c2, BooleanClause.Occur.MUST));
-    BooleanQuery.Builder q2 = new BooleanQuery.Builder();
-    q2.add(q3.build(), BooleanClause.Occur.SHOULD);
-    q2.add(q4.build(), BooleanClause.Occur.SHOULD);
-    assertEquals(1, search(q2.build()));
-  }
-
-  /**
-   * <code>(T:files T:deleting) +(C:production C:optimize)</code>
-   * not working. results NO HIT.
-   */
-  public void testParenthesisMust2() throws IOException {
-    BooleanQuery.Builder q3 = new BooleanQuery.Builder();
-    q3.add(new BooleanClause(t1, BooleanClause.Occur.SHOULD));
-    q3.add(new BooleanClause(t2, BooleanClause.Occur.SHOULD));
-    BooleanQuery.Builder q4 = new BooleanQuery.Builder();
-    q4.add(new BooleanClause(c1, BooleanClause.Occur.SHOULD));
-    q4.add(new BooleanClause(c2, BooleanClause.Occur.SHOULD));
-    BooleanQuery.Builder q2 = new BooleanQuery.Builder();
-    q2.add(q3.build(), BooleanClause.Occur.SHOULD);
-    q2.add(q4.build(), BooleanClause.Occur.MUST);
-    assertEquals(1, search(q2.build()));
-  }
-
-  /**
-   * <code>(T:files T:deleting) (C:production C:optimize)</code>
-   * not working. results NO HIT.
-   */
-  public void testParenthesisShould() throws IOException {
-    BooleanQuery.Builder q3 = new BooleanQuery.Builder();
-    q3.add(new BooleanClause(t1, BooleanClause.Occur.SHOULD));
-    q3.add(new BooleanClause(t2, BooleanClause.Occur.SHOULD));
-    BooleanQuery.Builder q4 = new BooleanQuery.Builder();
-    q4.add(new BooleanClause(c1, BooleanClause.Occur.SHOULD));
-    q4.add(new BooleanClause(c2, BooleanClause.Occur.SHOULD));
-    BooleanQuery.Builder q2 = new BooleanQuery.Builder();
-    q2.add(q3.build(), BooleanClause.Occur.SHOULD);
-    q2.add(q4.build(), BooleanClause.Occur.SHOULD);
-    assertEquals(1, search(q2.build()));
-  }
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-
-    //
-    dir = newDirectory();
+	private IndexSearcher searcher = null;
+	private Directory dir;
+	private IndexReader reader;
 
 
-    //
-    RandomIndexWriter writer = new RandomIndexWriter(random(), dir);
+	private long search(Query q) throws IOException {
+		QueryUtils.check(random(), q, searcher);
+		return searcher.search(q, 1000).totalHits.value;
+	}
 
-    //
-    Document d = new Document();
-    d.add(newField(
-        FIELD_T,
-        "Optimize not deleting all files",
-        TextField.TYPE_STORED));
-    d.add(newField(
-        FIELD_C,
-        "Deleted When I run an optimize in our production environment.",
-        TextField.TYPE_STORED));
+	public void testElements() throws IOException {
+		assertEquals(1, search(t1));
+		assertEquals(1, search(t2));
+		assertEquals(1, search(c1));
+		assertEquals(1, search(c2));
+	}
 
-    //
-    writer.addDocument(d);
+	/**
+	 * <code>T:files T:deleting C:production C:optimize </code>
+	 * it works.
+	 */
+	public void testFlat() throws IOException {
+		BooleanQuery.Builder q = new BooleanQuery.Builder();
+		q.add(new BooleanClause(t1, BooleanClause.Occur.SHOULD));
+		q.add(new BooleanClause(t2, BooleanClause.Occur.SHOULD));
+		q.add(new BooleanClause(c1, BooleanClause.Occur.SHOULD));
+		q.add(new BooleanClause(c2, BooleanClause.Occur.SHOULD));
+		assertEquals(1, search(q.build()));
+	}
 
-    reader = writer.getReader();
-    //
-    searcher = newSearcher(reader);
-    writer.close();
-  }
+	/**
+	 * <code>(T:files T:deleting) (+C:production +C:optimize)</code>
+	 * it works.
+	 */
+	public void testParenthesisMust() throws IOException {
+		BooleanQuery.Builder q3 = new BooleanQuery.Builder();
+		q3.add(new BooleanClause(t1, BooleanClause.Occur.SHOULD));
+		q3.add(new BooleanClause(t2, BooleanClause.Occur.SHOULD));
+		BooleanQuery.Builder q4 = new BooleanQuery.Builder();
+		q4.add(new BooleanClause(c1, BooleanClause.Occur.MUST));
+		q4.add(new BooleanClause(c2, BooleanClause.Occur.MUST));
+		BooleanQuery.Builder q2 = new BooleanQuery.Builder();
+		q2.add(q3.build(), BooleanClause.Occur.SHOULD);
+		q2.add(q4.build(), BooleanClause.Occur.SHOULD);
+		assertEquals(1, search(q2.build()));
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    reader.close();
-    dir.close();
-    super.tearDown();
-  }
+	/**
+	 * <code>(T:files T:deleting) +(C:production C:optimize)</code>
+	 * not working. results NO HIT.
+	 */
+	public void testParenthesisMust2() throws IOException {
+		BooleanQuery.Builder q3 = new BooleanQuery.Builder();
+		q3.add(new BooleanClause(t1, BooleanClause.Occur.SHOULD));
+		q3.add(new BooleanClause(t2, BooleanClause.Occur.SHOULD));
+		BooleanQuery.Builder q4 = new BooleanQuery.Builder();
+		q4.add(new BooleanClause(c1, BooleanClause.Occur.SHOULD));
+		q4.add(new BooleanClause(c2, BooleanClause.Occur.SHOULD));
+		BooleanQuery.Builder q2 = new BooleanQuery.Builder();
+		q2.add(q3.build(), BooleanClause.Occur.SHOULD);
+		q2.add(q4.build(), BooleanClause.Occur.MUST);
+		assertEquals(1, search(q2.build()));
+	}
 
-  public void testBooleanScorerMax() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter riw = new RandomIndexWriter(random(), dir, newIndexWriterConfig(new MockAnalyzer(random())));
+	/**
+	 * <code>(T:files T:deleting) (C:production C:optimize)</code>
+	 * not working. results NO HIT.
+	 */
+	public void testParenthesisShould() throws IOException {
+		BooleanQuery.Builder q3 = new BooleanQuery.Builder();
+		q3.add(new BooleanClause(t1, BooleanClause.Occur.SHOULD));
+		q3.add(new BooleanClause(t2, BooleanClause.Occur.SHOULD));
+		BooleanQuery.Builder q4 = new BooleanQuery.Builder();
+		q4.add(new BooleanClause(c1, BooleanClause.Occur.SHOULD));
+		q4.add(new BooleanClause(c2, BooleanClause.Occur.SHOULD));
+		BooleanQuery.Builder q2 = new BooleanQuery.Builder();
+		q2.add(q3.build(), BooleanClause.Occur.SHOULD);
+		q2.add(q4.build(), BooleanClause.Occur.SHOULD);
+		assertEquals(1, search(q2.build()));
+	}
 
-    int docCount = atLeast(10000);
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
 
-    for(int i=0;i<docCount;i++) {
-      Document doc = new Document();
-      doc.add(newField("field", "a", TextField.TYPE_NOT_STORED));
-      riw.addDocument(doc);
-    }
+		//
+		dir = newDirectory();
 
-    riw.forceMerge(1);
-    IndexReader r = riw.getReader();
-    riw.close();
 
-    IndexSearcher s = newSearcher(r);
-    BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
+		//
+		RandomIndexWriter writer = new RandomIndexWriter(random(), dir);
 
-    Weight w = s.createWeight(s.rewrite(bq.build()), ScoreMode.COMPLETE, 1);
+		//
+		Document d = new Document();
+		d.add(newField(
+			FIELD_T,
+			"Optimize not deleting all files",
+			TextField.TYPE_STORED));
+		d.add(newField(
+			FIELD_C,
+			"Deleted When I run an optimize in our production environment.",
+			TextField.TYPE_STORED));
 
-    assertEquals(1, s.getIndexReader().leaves().size());
-    BulkScorer scorer = w.bulkScorer(s.getIndexReader().leaves().get(0));
+		//
+		writer.addDocument(d);
 
-    final FixedBitSet hits = new FixedBitSet(docCount);
-    final AtomicInteger end = new AtomicInteger();
-    LeafCollector c = new SimpleCollector() {
+		reader = writer.getReader();
+		//
+		searcher = newSearcher(reader);
+		writer.close();
+	}
 
-        @Override
-        public void collect(int doc) {
-          assertTrue("collected doc=" + doc + " beyond max=" + end, doc < end.intValue());
-          hits.set(doc);
-        }
-        
-        @Override
-        public ScoreMode scoreMode() {
-          return ScoreMode.COMPLETE_NO_SCORES;
-        }
-      };
+	@Override
+	public void tearDown() throws Exception {
+		reader.close();
+		dir.close();
+		super.tearDown();
+	}
 
-    while (end.intValue() < docCount) {
-      final int min = end.intValue();
-      final int inc = TestUtil.nextInt(random(), 1, 1000);
-      final int max = end.addAndGet(inc);
-      scorer.score(c, null, min, max);
-    }
+	public void testBooleanScorerMax() throws IOException {
+		Directory dir = newDirectory();
+		RandomIndexWriter riw = new RandomIndexWriter(random(), dir, newIndexWriterConfig(new MockAnalyzer(random())));
 
-    assertEquals(docCount, hits.cardinality());
-    r.close();
-    dir.close();
-  }
+		int docCount = atLeast(10000);
 
-  private static BulkScorer scorer(int... matches) {
-    return new BulkScorer() {
-      final ScoreAndDoc scorer = new ScoreAndDoc();
-      int i = 0;
-      @Override
-      public int score(LeafCollector collector, Bits acceptDocs, int min, int max) throws IOException {
-        collector.setScorer(scorer);
-        while (i < matches.length && matches[i] < min) {
-          i += 1;
-        }
-        while (i < matches.length && matches[i] < max) {
-          scorer.doc = matches[i];
-          if (acceptDocs == null || acceptDocs.get(scorer.doc)) {
-            collector.collect(scorer.doc);
-          }
-          i += 1;
-        }
-        if (i == matches.length) {
-          return DocIdSetIterator.NO_MORE_DOCS;
-        }
-        return RandomNumbers.randomIntBetween(random(), max, matches[i]);
-      }
-      @Override
-      public long cost() {
-        return matches.length;
-      }
-    };
-  }
+		for (int i = 0; i < docCount; i++) {
+			Document doc = new Document();
+			doc.add(newField("field", "a", TextField.TYPE_NOT_STORED));
+			riw.addDocument(doc);
+		}
 
-  // Make sure that BooleanScorer keeps working even if the sub clauses return
-  // next matching docs which are less than the actual next match
-  public void testSubScorerNextIsNotMatch() throws IOException {
-    final List<BulkScorer> optionalScorers = Arrays.asList(
-        scorer(100000, 1000001, 9999999),
-        scorer(4000, 1000051),
-        scorer(5000, 100000, 9999998, 9999999)
-    );
-    Collections.shuffle(optionalScorers, random());
-    BooleanScorer scorer = new BooleanScorer(null, optionalScorers, 1, random().nextBoolean());
-    final List<Integer> matches = new ArrayList<>();
-    scorer.score(new LeafCollector() {
+		riw.forceMerge(1);
+		IndexReader r = riw.getReader();
+		riw.close();
 
-      @Override
-      public void setScorer(Scorable scorer) throws IOException {}
+		IndexSearcher s = newSearcher(r);
+		BooleanQuery.Builder bq = new BooleanQuery.Builder();
+		bq.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
+		bq.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
 
-      @Override
-      public void collect(int doc) throws IOException {
-        matches.add(doc);
-      }
-      
-    }, null);
-    assertEquals(Arrays.asList(4000, 5000, 100000, 1000001, 1000051, 9999998, 9999999), matches);
-  }
+		Weight w = s.createWeight(s.rewrite(bq.build()), ScoreMode.COMPLETE, 1);
+
+		assertEquals(1, s.getIndexReader().leaves().size());
+		BulkScorer scorer = w.bulkScorer(s.getIndexReader().leaves().get(0));
+
+		final FixedBitSet hits = new FixedBitSet(docCount);
+		final AtomicInteger end = new AtomicInteger();
+		LeafCollector c = new SimpleCollector() {
+
+			@Override
+			public void collect(int doc) {
+				assertTrue("collected doc=" + doc + " beyond max=" + end, doc < end.intValue());
+				hits.set(doc);
+			}
+
+			@Override
+			public ScoreMode scoreMode() {
+				return ScoreMode.COMPLETE_NO_SCORES;
+			}
+		};
+
+		while (end.intValue() < docCount) {
+			final int min = end.intValue();
+			final int inc = TestUtil.nextInt(random(), 1, 1000);
+			final int max = end.addAndGet(inc);
+			scorer.score(c, null, min, max);
+		}
+
+		assertEquals(docCount, hits.cardinality());
+		r.close();
+		dir.close();
+	}
+
+	private static BulkScorer scorer(int... matches) {
+		return new BulkScorer() {
+			final ScoreAndDoc scorer = new ScoreAndDoc();
+			int i = 0;
+
+			@Override
+			public int score(LeafCollector collector, Bits acceptDocs, int min, int max) throws IOException {
+				collector.setScorer(scorer);
+				while (i < matches.length && matches[i] < min) {
+					i += 1;
+				}
+				while (i < matches.length && matches[i] < max) {
+					scorer.doc = matches[i];
+					if (acceptDocs == null || acceptDocs.get(scorer.doc)) {
+						collector.collect(scorer.doc);
+					}
+					i += 1;
+				}
+				if (i == matches.length) {
+					return DocIdSetIterator.NO_MORE_DOCS;
+				}
+				return RandomNumbers.randomIntBetween(random(), max, matches[i]);
+			}
+
+			@Override
+			public long cost() {
+				return matches.length;
+			}
+		};
+	}
+
+	// Make sure that BooleanScorer keeps working even if the sub clauses return
+	// next matching docs which are less than the actual next match
+	public void testSubScorerNextIsNotMatch() throws IOException {
+		final List<BulkScorer> optionalScorers = Arrays.asList(
+			scorer(100000, 1000001, 9999999),
+			scorer(4000, 1000051),
+			scorer(5000, 100000, 9999998, 9999999)
+		);
+		Collections.shuffle(optionalScorers, random());
+		BooleanScorer scorer = new BooleanScorer(null, optionalScorers, 1, random().nextBoolean());
+		final List<Integer> matches = new ArrayList<>();
+		scorer.score(new LeafCollector() {
+
+			@Override
+			public void setScorer(Scorable scorer) throws IOException {
+			}
+
+			@Override
+			public void collect(int doc) throws IOException {
+				matches.add(doc);
+			}
+
+		}, null);
+		assertEquals(Arrays.asList(4000, 5000, 100000, 1000001, 1000051, 9999998, 9999999), matches);
+	}
 }

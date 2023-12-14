@@ -32,109 +32,109 @@ import org.apache.lucene.util.TimeUnits;
 import com.carrotsearch.randomizedtesting.annotations.TimeoutSuite;
 
 // e.g. run like this: ant test -Dtestcase=Test2BPoints -Dtests.nightly=true -Dtests.verbose=true -Dtests.monster=true
-// 
+//
 //   or: python -u /l/util/src/python/repeatLuceneTest.py -heap 6g -once -nolog -tmpDir /b/tmp -logDir /l/logs Test2BPoints.test2D -verbose
 
-@SuppressCodecs({ "SimpleText", "Memory", "Direct", "Compressing" })
+@SuppressCodecs({"SimpleText", "Memory", "Direct", "Compressing"})
 @TimeoutSuite(millis = 365 * 24 * TimeUnits.HOUR) // hopefully ~1 year is long enough ;)
 @Monster("takes at least 4 hours and consumes many GB of temp disk space")
 public class Test2BPoints extends LuceneTestCase {
-  public void test1D() throws Exception {
-    Directory dir = FSDirectory.open(createTempDir("2BPoints1D"));
+	public void test1D() throws Exception {
+		Directory dir = FSDirectory.open(createTempDir("2BPoints1D"));
 
-    IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()))
-      .setCodec(getCodec())
-      .setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH)
-      .setRAMBufferSizeMB(256.0)
-      .setMergeScheduler(new ConcurrentMergeScheduler())
-      .setMergePolicy(newLogMergePolicy(false, 10))
-      .setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+		IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()))
+			.setCodec(getCodec())
+			.setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH)
+			.setRAMBufferSizeMB(256.0)
+			.setMergeScheduler(new ConcurrentMergeScheduler())
+			.setMergePolicy(newLogMergePolicy(false, 10))
+			.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
 
-    ((ConcurrentMergeScheduler) iwc.getMergeScheduler()).setMaxMergesAndThreads(6, 3);
-    
-    IndexWriter w = new IndexWriter(dir, iwc);
+		((ConcurrentMergeScheduler) iwc.getMergeScheduler()).setMaxMergesAndThreads(6, 3);
 
-    MergePolicy mp = w.getConfig().getMergePolicy();
-    if (mp instanceof LogByteSizeMergePolicy) {
-     // 1 petabyte:
-     ((LogByteSizeMergePolicy) mp).setMaxMergeMB(1024*1024*1024);
-    }
+		IndexWriter w = new IndexWriter(dir, iwc);
 
-    final int numDocs = (Integer.MAX_VALUE / 26) + 1;
-    int counter = 0;
-    for (int i = 0; i < numDocs; i++) {
-      Document doc = new Document();
-      for (int j=0;j<26;j++) {
-        long x = (((long) random().nextInt() << 32)) | (long) counter;
-        doc.add(new LongPoint("long", x));
-        counter++;
-      }
-      w.addDocument(doc);
-      if (VERBOSE && i % 100000 == 0) {
-        System.out.println(i + " of " + numDocs + "...");
-      }
-    }
-    w.forceMerge(1);
-    DirectoryReader r = DirectoryReader.open(w);
-    IndexSearcher s = new IndexSearcher(r);
-    assertEquals(numDocs, s.count(LongPoint.newRangeQuery("long", Long.MIN_VALUE, Long.MAX_VALUE)));
-    assertTrue(r.leaves().get(0).reader().getPointValues("long").size() > Integer.MAX_VALUE);
-    r.close();
-    w.close();
-    System.out.println("TEST: now CheckIndex");
-    TestUtil.checkIndex(dir);
-    dir.close();
-  }
+		MergePolicy mp = w.getConfig().getMergePolicy();
+		if (mp instanceof LogByteSizeMergePolicy) {
+			// 1 petabyte:
+			((LogByteSizeMergePolicy) mp).setMaxMergeMB(1024 * 1024 * 1024);
+		}
 
-  public void test2D() throws Exception {
-    Directory dir = FSDirectory.open(createTempDir("2BPoints2D"));
+		final int numDocs = (Integer.MAX_VALUE / 26) + 1;
+		int counter = 0;
+		for (int i = 0; i < numDocs; i++) {
+			Document doc = new Document();
+			for (int j = 0; j < 26; j++) {
+				long x = (((long) random().nextInt() << 32)) | (long) counter;
+				doc.add(new LongPoint("long", x));
+				counter++;
+			}
+			w.addDocument(doc);
+			if (VERBOSE && i % 100000 == 0) {
+				System.out.println(i + " of " + numDocs + "...");
+			}
+		}
+		w.forceMerge(1);
+		DirectoryReader r = DirectoryReader.open(w);
+		IndexSearcher s = new IndexSearcher(r);
+		assertEquals(numDocs, s.count(LongPoint.newRangeQuery("long", Long.MIN_VALUE, Long.MAX_VALUE)));
+		assertTrue(r.leaves().get(0).reader().getPointValues("long").size() > Integer.MAX_VALUE);
+		r.close();
+		w.close();
+		System.out.println("TEST: now CheckIndex");
+		TestUtil.checkIndex(dir);
+		dir.close();
+	}
 
-    IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()))
-      .setCodec(getCodec())
-      .setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH)
-      .setRAMBufferSizeMB(256.0)
-      .setMergeScheduler(new ConcurrentMergeScheduler())
-      .setMergePolicy(newLogMergePolicy(false, 10))
-      .setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-    
-    ((ConcurrentMergeScheduler) iwc.getMergeScheduler()).setMaxMergesAndThreads(6, 3);
+	public void test2D() throws Exception {
+		Directory dir = FSDirectory.open(createTempDir("2BPoints2D"));
 
-    IndexWriter w = new IndexWriter(dir, iwc);
+		IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()))
+			.setCodec(getCodec())
+			.setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH)
+			.setRAMBufferSizeMB(256.0)
+			.setMergeScheduler(new ConcurrentMergeScheduler())
+			.setMergePolicy(newLogMergePolicy(false, 10))
+			.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
 
-    MergePolicy mp = w.getConfig().getMergePolicy();
-    if (mp instanceof LogByteSizeMergePolicy) {
-     // 1 petabyte:
-     ((LogByteSizeMergePolicy) mp).setMaxMergeMB(1024*1024*1024);
-    }
+		((ConcurrentMergeScheduler) iwc.getMergeScheduler()).setMaxMergesAndThreads(6, 3);
 
-    final int numDocs = (Integer.MAX_VALUE / 26) + 1;
-    int counter = 0;
-    for (int i = 0; i < numDocs; i++) {
-      Document doc = new Document();
-      for (int j=0;j<26;j++) {
-        long x = (((long) random().nextInt() << 32)) | (long) counter;
-        long y = (((long) random().nextInt() << 32)) | (long) random().nextInt();
-        doc.add(new LongPoint("long", x, y));
-        counter++;
-      }
-      w.addDocument(doc);
-      if (VERBOSE && i % 100000 == 0) {
-        System.out.println(i + " of " + numDocs + "...");
-      }
-    }
-    w.forceMerge(1);
-    DirectoryReader r = DirectoryReader.open(w);
-    IndexSearcher s = new IndexSearcher(r);
-    assertEquals(numDocs, s.count(LongPoint.newRangeQuery("long", new long[] {Long.MIN_VALUE, Long.MIN_VALUE}, new long[] {Long.MAX_VALUE, Long.MAX_VALUE})));
-    assertTrue(r.leaves().get(0).reader().getPointValues("long").size() > Integer.MAX_VALUE);
-    r.close();
-    w.close();
-    System.out.println("TEST: now CheckIndex");
-    TestUtil.checkIndex(dir);
-    dir.close();
-  }
+		IndexWriter w = new IndexWriter(dir, iwc);
 
-  private static Codec getCodec() {
-    return Codec.forName("Lucene70");
-  }
+		MergePolicy mp = w.getConfig().getMergePolicy();
+		if (mp instanceof LogByteSizeMergePolicy) {
+			// 1 petabyte:
+			((LogByteSizeMergePolicy) mp).setMaxMergeMB(1024 * 1024 * 1024);
+		}
+
+		final int numDocs = (Integer.MAX_VALUE / 26) + 1;
+		int counter = 0;
+		for (int i = 0; i < numDocs; i++) {
+			Document doc = new Document();
+			for (int j = 0; j < 26; j++) {
+				long x = (((long) random().nextInt() << 32)) | (long) counter;
+				long y = (((long) random().nextInt() << 32)) | (long) random().nextInt();
+				doc.add(new LongPoint("long", x, y));
+				counter++;
+			}
+			w.addDocument(doc);
+			if (VERBOSE && i % 100000 == 0) {
+				System.out.println(i + " of " + numDocs + "...");
+			}
+		}
+		w.forceMerge(1);
+		DirectoryReader r = DirectoryReader.open(w);
+		IndexSearcher s = new IndexSearcher(r);
+		assertEquals(numDocs, s.count(LongPoint.newRangeQuery("long", new long[]{Long.MIN_VALUE, Long.MIN_VALUE}, new long[]{Long.MAX_VALUE, Long.MAX_VALUE})));
+		assertTrue(r.leaves().get(0).reader().getPointValues("long").size() > Integer.MAX_VALUE);
+		r.close();
+		w.close();
+		System.out.println("TEST: now CheckIndex");
+		TestUtil.checkIndex(dir);
+		dir.close();
+	}
+
+	private static Codec getCodec() {
+		return Codec.forName("Lucene70");
+	}
 }

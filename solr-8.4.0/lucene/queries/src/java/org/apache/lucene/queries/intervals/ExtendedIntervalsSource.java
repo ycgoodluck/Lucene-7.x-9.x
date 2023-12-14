@@ -29,75 +29,75 @@ import org.apache.lucene.search.QueryVisitor;
 
 class ExtendedIntervalsSource extends IntervalsSource {
 
-  final IntervalsSource source;
-  private final int before;
-  private final int after;
+	final IntervalsSource source;
+	private final int before;
+	private final int after;
 
-  ExtendedIntervalsSource(IntervalsSource source, int before, int after) {
-    this.source = source;
-    this.before = before;
-    this.after = after;
-  }
+	ExtendedIntervalsSource(IntervalsSource source, int before, int after) {
+		this.source = source;
+		this.before = before;
+		this.after = after;
+	}
 
-  @Override
-  public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
-    IntervalIterator in = source.intervals(field, ctx);
-    if (in == null) {
-      return null;
-    }
-    return new ExtendedIntervalIterator(in, before, after);
-  }
+	@Override
+	public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
+		IntervalIterator in = source.intervals(field, ctx);
+		if (in == null) {
+			return null;
+		}
+		return new ExtendedIntervalIterator(in, before, after);
+	}
 
-  @Override
-  public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
-    MatchesIterator in = source.matches(field, ctx, doc);
-    if (in == null) {
-      return null;
-    }
-    IntervalIterator wrapped = new ExtendedIntervalIterator(IntervalMatches.wrapMatches(in, doc), before, after);
-    return IntervalMatches.asMatches(wrapped, in, doc);
-  }
+	@Override
+	public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
+		MatchesIterator in = source.matches(field, ctx, doc);
+		if (in == null) {
+			return null;
+		}
+		IntervalIterator wrapped = new ExtendedIntervalIterator(IntervalMatches.wrapMatches(in, doc), before, after);
+		return IntervalMatches.asMatches(wrapped, in, doc);
+	}
 
-  @Override
-  public void visit(String field, QueryVisitor visitor) {
-    source.visit(field, visitor);
-  }
+	@Override
+	public void visit(String field, QueryVisitor visitor) {
+		source.visit(field, visitor);
+	}
 
-  @Override
-  public int minExtent() {
-    int minExtent = before + source.minExtent() + after;
-    if (minExtent < 0) {
-      return Integer.MAX_VALUE;
-    }
-    return minExtent;
-  }
+	@Override
+	public int minExtent() {
+		int minExtent = before + source.minExtent() + after;
+		if (minExtent < 0) {
+			return Integer.MAX_VALUE;
+		}
+		return minExtent;
+	}
 
-  @Override
-  public Collection<IntervalsSource> pullUpDisjunctions() {
-    Collection<IntervalsSource> inner = source.pullUpDisjunctions();
-    if (inner.size() == 0) {
-      return Collections.singleton(this);
-    }
-    return inner.stream().map(s -> new ExtendedIntervalsSource(s, before, after)).collect(Collectors.toSet());
-  }
+	@Override
+	public Collection<IntervalsSource> pullUpDisjunctions() {
+		Collection<IntervalsSource> inner = source.pullUpDisjunctions();
+		if (inner.size() == 0) {
+			return Collections.singleton(this);
+		}
+		return inner.stream().map(s -> new ExtendedIntervalsSource(s, before, after)).collect(Collectors.toSet());
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    ExtendedIntervalsSource that = (ExtendedIntervalsSource) o;
-    return before == that.before &&
-        after == that.after &&
-        Objects.equals(source, that.source);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		ExtendedIntervalsSource that = (ExtendedIntervalsSource) o;
+		return before == that.before &&
+			after == that.after &&
+			Objects.equals(source, that.source);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(source, before, after);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(source, before, after);
+	}
 
-  @Override
-  public String toString() {
-    return "EXTEND(" + source + "," + before + "," + after + ")";
-  }
+	@Override
+	public String toString() {
+		return "EXTEND(" + source + "," + before + "," + after + ")";
+	}
 }

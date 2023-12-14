@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * Factory for {@link PatternReplaceFilter}. 
+ * Factory for {@link PatternReplaceFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_ptnreplace" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -38,23 +38,25 @@ import java.util.regex.Pattern;
  * @see PatternReplaceFilter
  */
 public class PatternReplaceFilterFactory extends TokenFilterFactory {
-  final Pattern pattern;
-  final String replacement;
-  final boolean replaceAll;
-  
-  /** Creates a new PatternReplaceFilterFactory */
-  public PatternReplaceFilterFactory(Map<String, String> args) {
-    super(args);
-    pattern = getPattern(args, "pattern");
-    replacement = get(args, "replacement");
-    replaceAll = "all".equals(get(args, "replace", Arrays.asList("all", "first"), "all"));
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	final Pattern pattern;
+	final String replacement;
+	final boolean replaceAll;
 
-  @Override
-  public PatternReplaceFilter create(TokenStream input) {
-    return new PatternReplaceFilter(input, pattern, replacement, replaceAll);
-  }
+	/**
+	 * Creates a new PatternReplaceFilterFactory
+	 */
+	public PatternReplaceFilterFactory(Map<String, String> args) {
+		super(args);
+		pattern = getPattern(args, "pattern");
+		replacement = get(args, "replacement");
+		replaceAll = "all".equals(get(args, "replace", Arrays.asList("all", "first"), "all"));
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public PatternReplaceFilter create(TokenStream input) {
+		return new PatternReplaceFilter(input, pattern, replacement, replaceAll);
+	}
 }

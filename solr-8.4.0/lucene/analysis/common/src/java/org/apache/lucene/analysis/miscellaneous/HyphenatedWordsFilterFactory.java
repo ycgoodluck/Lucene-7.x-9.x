@@ -32,24 +32,28 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class HyphenatedWordsFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "hyphenatedWords";
-  
-  /** Creates a new HyphenatedWordsFilterFactory */
-  public HyphenatedWordsFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public HyphenatedWordsFilter create(TokenStream input) {
-    return new HyphenatedWordsFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "hyphenatedWords";
+
+	/**
+	 * Creates a new HyphenatedWordsFilterFactory
+	 */
+	public HyphenatedWordsFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public HyphenatedWordsFilter create(TokenStream input) {
+		return new HyphenatedWordsFilter(input);
+	}
 }

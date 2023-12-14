@@ -31,13 +31,13 @@
  *        org.apache.lucene.facet.taxonomy.TaxonomyFacetSumValueSource}.  Add {@link org.apache.lucene.facet.FacetField} or
  *        {@link org.apache.lucene.facet.taxonomy.AssociationFacetField} to your documents at index time
  *        to use taxonomy-based methods.
- * 
+ *
  *   <li> Sorted-set doc values method does not require a separate
  *        taxonomy index, and computes counts based on sorted set doc
  *        values fields ({@link org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts}).  Add
  *        {@link org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField} to your documents at
  *        index time to use sorted set facet counts.
- * 
+ *
  *  <li> Range faceting {@link org.apache.lucene.facet.range.LongRangeFacetCounts}, {@link
  *       org.apache.lucene.facet.range.DoubleRangeFacetCounts} compute counts for a dynamic numeric
  *       range from a provided {@link org.apache.lucene.search.LongValuesSource} (previously indexed

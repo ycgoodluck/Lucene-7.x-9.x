@@ -30,51 +30,51 @@ import org.apache.lucene.queryparser.flexible.core.processors.QueryNodeProcessor
  * {@link UniqueFieldAttribute}. So, the {@link UniqueFieldAttribute} must be
  * defined in the {@link QueryConfigHandler} object set in this processor,
  * otherwise it throws an exception.
- * 
+ *
  * @see UniqueFieldAttribute
  */
 public class UniqueFieldQueryNodeProcessor extends QueryNodeProcessorImpl {
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-    return node;
+		return node;
 
-  }
+	}
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
 
-    if (node instanceof FieldableNode) {
-      FieldableNode fieldNode = (FieldableNode) node;
+		if (node instanceof FieldableNode) {
+			FieldableNode fieldNode = (FieldableNode) node;
 
-      QueryConfigHandler queryConfig = getQueryConfigHandler();
+			QueryConfigHandler queryConfig = getQueryConfigHandler();
 
-      if (queryConfig == null) {
-        throw new IllegalArgumentException(
-            "A config handler is expected by the processor UniqueFieldQueryNodeProcessor!");
-      }
+			if (queryConfig == null) {
+				throw new IllegalArgumentException(
+					"A config handler is expected by the processor UniqueFieldQueryNodeProcessor!");
+			}
 
-      if (!queryConfig.has(SpansQueryConfigHandler.UNIQUE_FIELD)) {
-        throw new IllegalArgumentException(
-            "UniqueFieldAttribute should be defined in the config handler!");
-      }
+			if (!queryConfig.has(SpansQueryConfigHandler.UNIQUE_FIELD)) {
+				throw new IllegalArgumentException(
+					"UniqueFieldAttribute should be defined in the config handler!");
+			}
 
-      String uniqueField = queryConfig.get(SpansQueryConfigHandler.UNIQUE_FIELD);
-      fieldNode.setField(uniqueField);
+			String uniqueField = queryConfig.get(SpansQueryConfigHandler.UNIQUE_FIELD);
+			fieldNode.setField(uniqueField);
 
-    }
+		}
 
-    return node;
+		return node;
 
-  }
+	}
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
 
-    return children;
+		return children;
 
-  }
+	}
 
 }

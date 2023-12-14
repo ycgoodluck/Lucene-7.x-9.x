@@ -29,26 +29,26 @@ import org.apache.lucene.util.BytesRefIterator;
  */
 class TermsEnumTokenStream extends TokenStream {
 
-  private final BytesRefIterator termsEnum;
-  private final CharTermAttribute charTerm = addAttribute(CharTermAttribute.class);
+	private final BytesRefIterator termsEnum;
+	private final CharTermAttribute charTerm = addAttribute(CharTermAttribute.class);
 
-  /**
-   * Create a new TermsEnumTokenStream using a TermsEnum
-   *
-   * @param termsEnum the TermsEnum to convert
-   */
-  public TermsEnumTokenStream(BytesRefIterator termsEnum) {
-    this.termsEnum = termsEnum;
-  }
+	/**
+	 * Create a new TermsEnumTokenStream using a TermsEnum
+	 *
+	 * @param termsEnum the TermsEnum to convert
+	 */
+	public TermsEnumTokenStream(BytesRefIterator termsEnum) {
+		this.termsEnum = termsEnum;
+	}
 
-  @Override
-  public final boolean incrementToken() throws IOException {
-    clearAttributes();
-    BytesRef bytes = termsEnum.next();
-    if (bytes == null)
-      return false;
-    charTerm.setEmpty();
-    charTerm.append(bytes.utf8ToString());
-    return true;
-  }
+	@Override
+	public final boolean incrementToken() throws IOException {
+		clearAttributes();
+		BytesRef bytes = termsEnum.next();
+		if (bytes == null)
+			return false;
+		charTerm.setEmpty();
+		charTerm.append(bytes.utf8ToString());
+		return true;
+	}
 }

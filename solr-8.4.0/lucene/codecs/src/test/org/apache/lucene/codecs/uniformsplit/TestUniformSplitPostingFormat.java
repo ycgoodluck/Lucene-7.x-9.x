@@ -28,32 +28,32 @@ import org.junit.Before;
  */
 public class TestUniformSplitPostingFormat extends BasePostingsFormatTestCase {
 
-  private final Codec codec = TestUtil.alwaysPostingsFormat(new UniformSplitRot13PostingsFormat());
+	private final Codec codec = TestUtil.alwaysPostingsFormat(new UniformSplitRot13PostingsFormat());
 
-  private boolean shouldCheckDecoderWasCalled = true;
+	private boolean shouldCheckDecoderWasCalled = true;
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 
-  @Before
-  public void initialize() {
-    UniformSplitRot13PostingsFormat.resetEncodingFlags();
-  }
+	@Before
+	public void initialize() {
+		UniformSplitRot13PostingsFormat.resetEncodingFlags();
+	}
 
-  @After
-  public void checkEncodingCalled() {
-    assertTrue(UniformSplitRot13PostingsFormat.blocksEncoded);
-    assertTrue(UniformSplitRot13PostingsFormat.dictionaryEncoded);
-    if (shouldCheckDecoderWasCalled) {
-      assertTrue(UniformSplitRot13PostingsFormat.decoderCalled);
-    }
-  }
+	@After
+	public void checkEncodingCalled() {
+		assertTrue(UniformSplitRot13PostingsFormat.blocksEncoded);
+		assertTrue(UniformSplitRot13PostingsFormat.dictionaryEncoded);
+		if (shouldCheckDecoderWasCalled) {
+			assertTrue(UniformSplitRot13PostingsFormat.decoderCalled);
+		}
+	}
 
-  @Override
-  public void testRandomExceptions() throws Exception {
-    shouldCheckDecoderWasCalled = false;
-    super.testRandomExceptions();
-  }
+	@Override
+	public void testRandomExceptions() throws Exception {
+		shouldCheckDecoderWasCalled = false;
+		super.testRandomExceptions();
+	}
 }

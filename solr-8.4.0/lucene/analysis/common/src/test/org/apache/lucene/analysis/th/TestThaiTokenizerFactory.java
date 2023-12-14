@@ -26,23 +26,25 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Thai word filter factory is working.
  */
 public class TestThaiTokenizerFactory extends BaseTokenStreamFactoryTestCase {
-  /**
-   * Ensure the filter actually decomposes text.
-   */
-  public void testWordBreak() throws Exception {
-    assumeTrue("JRE does not support Thai dictionary-based BreakIterator", ThaiTokenizer.DBBI_AVAILABLE);
-    Tokenizer tokenizer = tokenizerFactory("Thai").create(newAttributeFactory());
-    tokenizer.setReader(new StringReader("การที่ได้ต้องแสดงว่างานดี"));
-    assertTokenStreamContents(tokenizer, new String[] {"การ", "ที่", "ได้",
-        "ต้อง", "แสดง", "ว่า", "งาน", "ดี"});
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    assumeTrue("JRE does not support Thai dictionary-based BreakIterator", ThaiTokenizer.DBBI_AVAILABLE);
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenizerFactory("Thai", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Ensure the filter actually decomposes text.
+	 */
+	public void testWordBreak() throws Exception {
+		assumeTrue("JRE does not support Thai dictionary-based BreakIterator", ThaiTokenizer.DBBI_AVAILABLE);
+		Tokenizer tokenizer = tokenizerFactory("Thai").create(newAttributeFactory());
+		tokenizer.setReader(new StringReader("การที่ได้ต้องแสดงว่างานดี"));
+		assertTokenStreamContents(tokenizer, new String[]{"การ", "ที่", "ได้",
+			"ต้อง", "แสดง", "ว่า", "งาน", "ดี"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		assumeTrue("JRE does not support Thai dictionary-based BreakIterator", ThaiTokenizer.DBBI_AVAILABLE);
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenizerFactory("Thai", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

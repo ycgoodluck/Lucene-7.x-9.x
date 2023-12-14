@@ -37,88 +37,92 @@ import org.apache.lucene.index.SegmentWriteState;
  * {@link FixedGapTermsIndexWriter}.
  */
 public final class LuceneFixedGap extends PostingsFormat {
-  final int termIndexInterval;
-  
-  public LuceneFixedGap() {
-    this(FixedGapTermsIndexWriter.DEFAULT_TERM_INDEX_INTERVAL);
-  }
-  
-  public LuceneFixedGap(int termIndexInterval) {
-    super("LuceneFixedGap");
-    this.termIndexInterval = termIndexInterval;
-  }
+	final int termIndexInterval;
 
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    PostingsWriterBase docs = new Lucene84PostingsWriter(state);
+	public LuceneFixedGap() {
+		this(FixedGapTermsIndexWriter.DEFAULT_TERM_INDEX_INTERVAL);
+	}
 
-    // TODO: should we make the terms index more easily
-    // pluggable?  Ie so that this codec would record which
-    // index impl was used, and switch on loading?
-    // Or... you must make a new Codec for this?
-    TermsIndexWriterBase indexWriter;
-    boolean success = false;
-    try {
-      indexWriter = new FixedGapTermsIndexWriter(state, termIndexInterval);
-      success = true;
-    } finally {
-      if (!success) {
-        docs.close();
-      }
-    }
+	public LuceneFixedGap(int termIndexInterval) {
+		super("LuceneFixedGap");
+		this.termIndexInterval = termIndexInterval;
+	}
 
-    success = false;
-    try {
-      // Must use BlockTermsWriter (not BlockTree) because
-      // BlockTree doens't support ords (yet)...
-      FieldsConsumer ret = new BlockTermsWriter(indexWriter, state, docs);
-      success = true;
-      return ret;
-    } finally {
-      if (!success) {
-        try {
-          docs.close();
-        } finally {
-          indexWriter.close();
-        }
-      }
-    }
-  }
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		PostingsWriterBase docs = new Lucene84PostingsWriter(state);
 
-  @Override
-  public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
-    PostingsReaderBase postings = new Lucene84PostingsReader(state);
-    TermsIndexReaderBase indexReader;
+		// TODO: should we make the terms index more easily
+		// pluggable?  Ie so that this codec would record which
+		// index impl was used, and switch on loading?
+		// Or... you must make a new Codec for this?
+		TermsIndexWriterBase indexWriter;
+		boolean success = false;
+		try {
+			indexWriter = new FixedGapTermsIndexWriter(state, termIndexInterval);
+			success = true;
+		} finally {
+			if (!success) {
+				docs.close();
+			}
+		}
 
-    boolean success = false;
-    try {
-      indexReader = new FixedGapTermsIndexReader(state);
-      success = true;
-    } finally {
-      if (!success) {
-        postings.close();
-      }
-    }
+		success = false;
+		try {
+			// Must use BlockTermsWriter (not BlockTree) because
+			// BlockTree doens't support ords (yet)...
+			FieldsConsumer ret = new BlockTermsWriter(indexWriter, state, docs);
+			success = true;
+			return ret;
+		} finally {
+			if (!success) {
+				try {
+					docs.close();
+				} finally {
+					indexWriter.close();
+				}
+			}
+		}
+	}
 
-    success = false;
-    try {
-      FieldsProducer ret = new BlockTermsReader(indexReader, postings, state);
-      success = true;
-      return ret;
-    } finally {
-      if (!success) {
-        try {
-          postings.close();
-        } finally {
-          indexReader.close();
-        }
-      }
-    }
-  }
+	@Override
+	public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
+		PostingsReaderBase postings = new Lucene84PostingsReader(state);
+		TermsIndexReaderBase indexReader;
 
-  /** Extension of freq postings file */
-  static final String FREQ_EXTENSION = "frq";
+		boolean success = false;
+		try {
+			indexReader = new FixedGapTermsIndexReader(state);
+			success = true;
+		} finally {
+			if (!success) {
+				postings.close();
+			}
+		}
 
-  /** Extension of prox postings file */
-  static final String PROX_EXTENSION = "prx";
+		success = false;
+		try {
+			FieldsProducer ret = new BlockTermsReader(indexReader, postings, state);
+			success = true;
+			return ret;
+		} finally {
+			if (!success) {
+				try {
+					postings.close();
+				} finally {
+					indexReader.close();
+				}
+			}
+		}
+	}
+
+	/**
+	 * Extension of freq postings file
+	 */
+	static final String FREQ_EXTENSION = "frq";
+
+	/**
+	 * Extension of prox postings file
+	 */
+	static final String PROX_EXTENSION = "prx";
 }

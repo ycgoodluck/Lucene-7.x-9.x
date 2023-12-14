@@ -27,42 +27,42 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 
 public class ConnectionCostsBuilder {
-  
-  private ConnectionCostsBuilder() {
-  }
-  
-  public static ConnectionCostsWriter build(String filename) throws IOException {
-    FileInputStream inputStream = new FileInputStream(filename);
-    Charset cs = StandardCharsets.US_ASCII;
-    CharsetDecoder decoder = cs.newDecoder()
-        .onMalformedInput(CodingErrorAction.REPORT)
-        .onUnmappableCharacter(CodingErrorAction.REPORT);
-    InputStreamReader streamReader = new InputStreamReader(inputStream, decoder);
-    LineNumberReader lineReader = new LineNumberReader(streamReader);
-    
-    String line = lineReader.readLine();
-    String[] dimensions = line.split("\\s+");
-    
-    assert dimensions.length == 2;
-    
-    int forwardSize = Integer.parseInt(dimensions[0]);
-    int backwardSize = Integer.parseInt(dimensions[1]);
-    
-    assert forwardSize > 0 && backwardSize > 0;
-    
-    ConnectionCostsWriter costs = new ConnectionCostsWriter(forwardSize, backwardSize);
-    
-    while ((line = lineReader.readLine()) != null) {
-      String[] fields = line.split("\\s+");
-      
-      assert fields.length == 3;
-      
-      int forwardId = Integer.parseInt(fields[0]);
-      int backwardId = Integer.parseInt(fields[1]);
-      int cost = Integer.parseInt(fields[2]);
-      
-      costs.add(forwardId, backwardId, cost);
-    }
-    return costs;
-  }
+
+	private ConnectionCostsBuilder() {
+	}
+
+	public static ConnectionCostsWriter build(String filename) throws IOException {
+		FileInputStream inputStream = new FileInputStream(filename);
+		Charset cs = StandardCharsets.US_ASCII;
+		CharsetDecoder decoder = cs.newDecoder()
+			.onMalformedInput(CodingErrorAction.REPORT)
+			.onUnmappableCharacter(CodingErrorAction.REPORT);
+		InputStreamReader streamReader = new InputStreamReader(inputStream, decoder);
+		LineNumberReader lineReader = new LineNumberReader(streamReader);
+
+		String line = lineReader.readLine();
+		String[] dimensions = line.split("\\s+");
+
+		assert dimensions.length == 2;
+
+		int forwardSize = Integer.parseInt(dimensions[0]);
+		int backwardSize = Integer.parseInt(dimensions[1]);
+
+		assert forwardSize > 0 && backwardSize > 0;
+
+		ConnectionCostsWriter costs = new ConnectionCostsWriter(forwardSize, backwardSize);
+
+		while ((line = lineReader.readLine()) != null) {
+			String[] fields = line.split("\\s+");
+
+			assert fields.length == 3;
+
+			int forwardId = Integer.parseInt(fields[0]);
+			int backwardId = Integer.parseInt(fields[1]);
+			int cost = Integer.parseInt(fields[2]);
+
+			costs.add(forwardId, backwardId, cost);
+		}
+		return costs;
+	}
 }

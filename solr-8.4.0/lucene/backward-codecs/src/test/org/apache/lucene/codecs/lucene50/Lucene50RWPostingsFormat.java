@@ -26,22 +26,22 @@ import org.apache.lucene.util.IOUtils;
 
 public class Lucene50RWPostingsFormat extends Lucene50PostingsFormat {
 
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    PostingsWriterBase postingsWriter = new Lucene50PostingsWriter(state);
-    boolean success = false;
-    try {
-      FieldsConsumer ret = new BlockTreeTermsWriter(state, 
-                                                    postingsWriter,
-                                                    BlockTreeTermsWriter.DEFAULT_MIN_BLOCK_SIZE, 
-                                                    BlockTreeTermsWriter.DEFAULT_MAX_BLOCK_SIZE);
-      success = true;
-      return ret;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(postingsWriter);
-      }
-    }
-  }
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		PostingsWriterBase postingsWriter = new Lucene50PostingsWriter(state);
+		boolean success = false;
+		try {
+			FieldsConsumer ret = new BlockTreeTermsWriter(state,
+				postingsWriter,
+				BlockTreeTermsWriter.DEFAULT_MIN_BLOCK_SIZE,
+				BlockTreeTermsWriter.DEFAULT_MAX_BLOCK_SIZE);
+			success = true;
+			return ret;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(postingsWriter);
+			}
+		}
+	}
 
 }

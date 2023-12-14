@@ -21,19 +21,19 @@ import org.apache.lucene.search.Query;
 
 public class TestCorePlusQueriesParser extends TestCoreParser {
 
-  @Override
-  protected CoreParser newCoreParser(String defaultField, Analyzer analyzer) {
-    return new CorePlusQueriesParser(defaultField, analyzer);
-  }
+	@Override
+	protected CoreParser newCoreParser(String defaultField, Analyzer analyzer) {
+		return new CorePlusQueriesParser(defaultField, analyzer);
+	}
 
-  public void testLikeThisQueryXML() throws Exception {
-    Query q = parse("LikeThisQuery.xml");
-    dumpResults("like this", q, 5);
-  }
+	public void testLikeThisQueryXML() throws Exception {
+		Query q = parse("LikeThisQuery.xml");
+		dumpResults("like this", q, 5);
+	}
 
-  public void testBoostingQueryXML() throws Exception {
-    Query q = parse("BoostingQuery.xml");
-    dumpResults("boosting ", q, 5);
-  }
+	public void testBoostingQueryXML() throws Exception {
+		Query q = parse("BoostingQuery.xml");
+		dumpResults("boosting ", q, 5);
+	}
 
 }

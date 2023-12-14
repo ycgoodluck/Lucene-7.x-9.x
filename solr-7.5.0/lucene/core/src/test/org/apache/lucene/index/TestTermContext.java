@@ -24,13 +24,13 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestTermContext extends LuceneTestCase {
 
-  public void testToStringOnNullTermContext() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
-    w.addDocument(new Document());
-    IndexReader r = w.getReader();
-    TermContext context = TermContext.build(r.getContext(), new Term("foo", "bar"));
-    assertEquals("TermContext\n  state=null\n", context.toString());
-    IOUtils.close(r, w, dir);
-  }
+	public void testToStringOnNullTermContext() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+		w.addDocument(new Document());
+		IndexReader r = w.getReader();
+		TermContext context = TermContext.build(r.getContext(), new Term("foo", "bar"));
+		assertEquals("TermContext\n  state=null\n", context.toString());
+		IOUtils.close(r, w, dir);
+	}
 }

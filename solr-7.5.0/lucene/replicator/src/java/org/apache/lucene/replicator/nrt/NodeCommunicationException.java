@@ -24,9 +24,9 @@ package org.apache.lucene.replicator.nrt;
  * @lucene.experimental
  */
 public class NodeCommunicationException extends RuntimeException {
-  public NodeCommunicationException(String when, Throwable cause) {
-    super(when);
-    assert cause != null;
-    initCause(cause);
-  }
+	public NodeCommunicationException(String when, Throwable cause) {
+		super(when);
+		assert cause != null;
+		initCause(cause);
+	}
 }

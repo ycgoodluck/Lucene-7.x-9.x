@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Dialogs */
+/**
+ * Dialogs
+ */
 package org.apache.lucene.luke.app.desktop.components.dialog;

@@ -23,23 +23,25 @@ import java.util.Map;
 import org.apache.lucene.luke.app.desktop.components.ComponentOperatorRegistry;
 import org.apache.lucene.luke.models.analysis.Analysis;
 
-/** Operator of the custom analyzer panel */
+/**
+ * Operator of the custom analyzer panel
+ */
 public interface CustomAnalyzerPanelOperator extends ComponentOperatorRegistry.ComponentOperator {
-  void setAnalysisModel(Analysis analysisModel);
+	void setAnalysisModel(Analysis analysisModel);
 
-  void resetAnalysisComponents();
+	void resetAnalysisComponents();
 
-  void updateCharFilters(List<Integer> deletedIndexes);
+	void updateCharFilters(List<Integer> deletedIndexes);
 
-  void updateTokenFilters(List<Integer> deletedIndexes);
+	void updateTokenFilters(List<Integer> deletedIndexes);
 
-  Map<String, String> getCharFilterParams(int index);
+	Map<String, String> getCharFilterParams(int index);
 
-  void updateCharFilterParams(int index, Map<String, String> updatedParams);
+	void updateCharFilterParams(int index, Map<String, String> updatedParams);
 
-  void updateTokenizerParams(Map<String, String> updatedParams);
+	void updateTokenizerParams(Map<String, String> updatedParams);
 
-  Map<String, String> getTokenFilterParams(int index);
+	Map<String, String> getTokenFilterParams(int index);
 
-  void updateTokenFilterParams(int index, Map<String, String> updatedParams);
+	void updateTokenFilterParams(int index, Map<String, String> updatedParams);
 }

@@ -28,18 +28,18 @@ import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
  */
 public class OpenTaxonomyReaderTask extends PerfTask {
 
-  public OpenTaxonomyReaderTask(PerfRunData runData) {
-    super(runData);
-  }
+	public OpenTaxonomyReaderTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  public int doLogic() throws IOException {
-    PerfRunData runData = getRunData();
-    DirectoryTaxonomyReader taxoReader = new DirectoryTaxonomyReader(runData.getTaxonomyDir());
-    runData.setTaxonomyReader(taxoReader);
-    // We transfer reference to the run data
-    taxoReader.decRef();
-    return 1;
-  }
- 
+	@Override
+	public int doLogic() throws IOException {
+		PerfRunData runData = getRunData();
+		DirectoryTaxonomyReader taxoReader = new DirectoryTaxonomyReader(runData.getTaxonomyDir());
+		runData.setTaxonomyReader(taxoReader);
+		// We transfer reference to the run data
+		taxoReader.decRef();
+		return 1;
+	}
+
 }

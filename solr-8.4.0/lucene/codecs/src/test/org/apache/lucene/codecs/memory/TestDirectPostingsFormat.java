@@ -25,16 +25,16 @@ import org.apache.lucene.util.TestUtil;
  * Tests DirectPostingsFormat
  */
 public class TestDirectPostingsFormat extends BasePostingsFormatTestCase {
-  // TODO: randomize parameters
-  private final Codec codec = TestUtil.alwaysPostingsFormat(new DirectPostingsFormat());
+	// TODO: randomize parameters
+	private final Codec codec = TestUtil.alwaysPostingsFormat(new DirectPostingsFormat());
 
-  @Override
-  protected boolean isPostingsEnumReuseImplemented() {
-    return false;
-  }
+	@Override
+	protected boolean isPostingsEnumReuseImplemented() {
+		return false;
+	}
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

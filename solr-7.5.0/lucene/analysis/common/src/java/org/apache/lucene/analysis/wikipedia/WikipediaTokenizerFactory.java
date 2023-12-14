@@ -23,7 +23,7 @@ import java.util.Set;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.util.AttributeFactory;
 
-/** 
+/**
  * Factory for {@link WikipediaTokenizer}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_wiki" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -33,28 +33,30 @@ import org.apache.lucene.util.AttributeFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class WikipediaTokenizerFactory extends TokenizerFactory {
-  public static final String TOKEN_OUTPUT = "tokenOutput";
-  public static final String UNTOKENIZED_TYPES = "untokenizedTypes";
+	public static final String TOKEN_OUTPUT = "tokenOutput";
+	public static final String UNTOKENIZED_TYPES = "untokenizedTypes";
 
-  protected final int tokenOutput;
-  protected Set<String> untokenizedTypes;
+	protected final int tokenOutput;
+	protected Set<String> untokenizedTypes;
 
-  /** Creates a new WikipediaTokenizerFactory */
-  public WikipediaTokenizerFactory(Map<String,String> args) {
-    super(args);
-    tokenOutput = getInt(args, TOKEN_OUTPUT, WikipediaTokenizer.TOKENS_ONLY);
-    untokenizedTypes = getSet(args, UNTOKENIZED_TYPES);
+	/**
+	 * Creates a new WikipediaTokenizerFactory
+	 */
+	public WikipediaTokenizerFactory(Map<String, String> args) {
+		super(args);
+		tokenOutput = getInt(args, TOKEN_OUTPUT, WikipediaTokenizer.TOKENS_ONLY);
+		untokenizedTypes = getSet(args, UNTOKENIZED_TYPES);
 
-    if (untokenizedTypes == null) {
-      untokenizedTypes = Collections.emptySet();
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+		if (untokenizedTypes == null) {
+			untokenizedTypes = Collections.emptySet();
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public WikipediaTokenizer create(AttributeFactory factory) {
-    return new WikipediaTokenizer(factory, tokenOutput, untokenizedTypes);
-  }
+	@Override
+	public WikipediaTokenizer create(AttributeFactory factory) {
+		return new WikipediaTokenizer(factory, tokenOutput, untokenizedTypes);
+	}
 }

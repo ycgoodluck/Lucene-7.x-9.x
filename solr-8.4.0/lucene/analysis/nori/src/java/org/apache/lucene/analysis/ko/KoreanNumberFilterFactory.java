@@ -36,23 +36,26 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * <p>
  * It is important that punctuation is not discarded by the tokenizer so use
  * {@code discardPunctuation="false"} in your {@link KoreanTokenizerFactory}.
- * @since 8.2.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 8.2.0
  */
 public class KoreanNumberFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "koreanNumber";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "koreanNumber";
 
-  public KoreanNumberFilterFactory(Map<String, String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	public KoreanNumberFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new KoreanNumberFilter(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new KoreanNumberFilter(input);
+	}
 }

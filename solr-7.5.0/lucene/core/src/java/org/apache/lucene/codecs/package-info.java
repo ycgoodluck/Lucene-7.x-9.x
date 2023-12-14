@@ -17,9 +17,9 @@
 
 /**
  * Codecs API: API for customization of the encoding and structure of the index.
- * 
+ *
  * <p>
- *   The Codec API allows you to customise the way the following pieces of index information are stored:
+ * The Codec API allows you to customise the way the following pieces of index information are stored:
  * <ul>
  *   <li>Postings lists - see {@link org.apache.lucene.codecs.PostingsFormat}</li>
  *   <li>DocValues - see {@link org.apache.lucene.codecs.DocValuesFormat}</li>
@@ -31,27 +31,27 @@
  *   <li>Norms - see {@link org.apache.lucene.codecs.NormsFormat}</li>
  *   <li>Live documents - see {@link org.apache.lucene.codecs.LiveDocsFormat}</li>
  * </ul>
- *  
+ * <p>
  *   For some concrete implementations beyond Lucene's official index format, see
  *   the <a href="{@docRoot}/../codecs/overview-summary.html">Codecs module</a>.
- * 
+ *
  * <p>
  *   Codecs are identified by name through the Java Service Provider Interface.  To create your own codec, extend
  *   {@link org.apache.lucene.codecs.Codec} and pass the new codec's name to the super() constructor:
  * <pre class="prettyprint">
  * public class MyCodec extends Codec {
- * 
+ *
  *     public MyCodec() {
  *         super("MyCodecName");
  *     }
- * 
+ *
  *     ...
  * }
  * </pre>
  * You will need to register the Codec class so that the {@link java.util.ServiceLoader ServiceLoader} can find it, by including a
  * META-INF/services/org.apache.lucene.codecs.Codec file on your classpath that contains the package-qualified
  * name of your codec.
- * 
+ *
  * <p>
  *   If you just want to customise the {@link org.apache.lucene.codecs.PostingsFormat}, or use different postings
  *   formats for different fields, then you can register your custom postings format in the same way (in
@@ -61,7 +61,7 @@
  *   postings format.
  * </p>
  * <p>
- *   Similarly, if you just want to customise the {@link org.apache.lucene.codecs.DocValuesFormat} per-field, have 
+ *   Similarly, if you just want to customise the {@link org.apache.lucene.codecs.DocValuesFormat} per-field, have
  *   a look at {@code LuceneMNCodec.getDocValuesFormatForField(String)}.
  * </p>
  */

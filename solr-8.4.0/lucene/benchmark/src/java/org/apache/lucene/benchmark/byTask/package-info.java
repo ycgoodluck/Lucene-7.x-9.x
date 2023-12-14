@@ -24,7 +24,7 @@
  * <p>
  * Contained packages:
  * </p>
- * 
+ *
  * <table border=1 cellpadding=4 summary="table of benchmark packages">
  *  <tr>
  *    <td><b>Package</b></td>
@@ -51,7 +51,7 @@
  *    <td>Sample performance test written programmatically.</td>
  *  </tr>
  * </table>
- * 
+ *
  * <h2>Table Of Contents</h2>
  *     <ol>
  *         <li><a href="#concept">Benchmarking By Tasks</a></li>
@@ -68,7 +68,7 @@
  * <p>
  * Benchmark Lucene using task primitives.
  * </p>
- * 
+ *
  * <p>
  * A benchmark is composed of some predefined tasks, allowing for creating an
  * index, adding documents,
@@ -78,7 +78,7 @@
  * properties defining a few
  * additional characteristics of the benchmark run.
  * </p>
- * 
+ *
  * <a name="usage"></a>
  * <h2>How to use</h2>
  * <p>
@@ -98,13 +98,13 @@
  *      file. This is less readable, and less convenient, but possible.
  *  </li>
  * </ul>
- * 
+ *
  * <p>
  * You may find existing tasks sufficient for defining the benchmark <i>you</i>
  * need, otherwise, you can extend the framework to meet your needs, as explained
  * herein.
  * </p>
- * 
+ *
  * <p>
  * Each benchmark run has a DocMaker and a QueryMaker. These two should usually
  * match, so that "meaningful" queries are used for a certain collection.
@@ -112,15 +112,15 @@
  * used. You can also specify your own makers, extending DocMaker and implementing
  * QueryMaker.
  *   <blockquote>
- *     <b>Note:</b> since 2.9, DocMaker is a concrete class which accepts a 
- *     ContentSource. In most cases, you can use the DocMaker class to create 
- *     Documents, while providing your own ContentSource implementation. For 
- *     example, the current Benchmark package includes ContentSource 
- *     implementations for TREC, Enwiki and Reuters collections, as well as 
- *     others like LineDocSource which reads a 'line' file produced by 
+ *     <b>Note:</b> since 2.9, DocMaker is a concrete class which accepts a
+ *     ContentSource. In most cases, you can use the DocMaker class to create
+ *     Documents, while providing your own ContentSource implementation. For
+ *     example, the current Benchmark package includes ContentSource
+ *     implementations for TREC, Enwiki and Reuters collections, as well as
+ *     others like LineDocSource which reads a 'line' file produced by
  *     WriteLineDocTask.
  *   </blockquote>
- * 
+ *
  * <p>
  * Benchmark .alg file contains the benchmark "algorithm". The syntax is described
  * below. Within the algorithm, you can specify groups of commands, assign them
@@ -128,7 +128,7 @@
  * do commands in serial or in parallel,
  * and also control the speed of "firing" the commands.
  * </p>
- * 
+ *
  * <p>
  * This allows, for instance, to specify
  * that an index should be opened for update,
@@ -139,7 +139,7 @@
  * You can have the searches all share an index reader,
  * or have them each open its own reader and close it afterwords.
  * </p>
- * 
+ *
  * <p>
  * If the commands available for use in the algorithm do not meet your needs,
  * you can add commands by adding a new task under
@@ -149,7 +149,7 @@
  * Assume you added the class "WonderfulTask" - doing so also enables the
  * command "Wonderful" to be used in the algorithm.
  * </p>
- * 
+ *
  * <p>
  * <u>External classes</u>: It is sometimes useful to invoke the benchmark
  * package with your external alg file that configures the use of your own
@@ -162,17 +162,17 @@
  *       </span> -Dtask.mem=512M</li>
  * </ul>
  * <p>
- * <u>External tasks</u>: When writing your own tasks under a package other than 
+ * <u>External tasks</u>: When writing your own tasks under a package other than
  * <b>org.apache.lucene.benchmark.byTask.tasks</b> specify that package thru the
  * <span style="color: #FF0000">alt.tasks.packages</span> property.
- * 
+ *
  * <a name="algorithm"></a>
  * <h2>Benchmark "algorithm"</h2>
- * 
+ *
  * <p>
  * The following is an informal description of the supported syntax.
  * </p>
- * 
+ *
  * <ol>
  *  <li>
  *  <b>Measuring</b>: When a command is executed, statistics for the elapsed
@@ -310,18 +310,18 @@
  *  This allows to add new commands by just adding such classes.
  *  </li>
  * </ol>
- * 
- * 
+ *
+ *
  * <a name="tasks"></a>
  * <h2>Supported tasks/commands</h2>
- * 
+ *
  * <p>
  * Existing tasks can be divided into a few groups:
  * regular index/search work tasks, report tasks, and control tasks.
  * </p>
- * 
+ *
  * <ol>
- * 
+ *
  *  <li>
  *  <b>Report tasks</b>: There are a few Report commands for generating reports.
  *  Only task runs that were completed are reported.
@@ -368,7 +368,7 @@
  *  ReportTask, and by
  *  manipulating the statistics data in Points and TaskStats.
  *  </li>
- * 
+ *
  *  <li><b>Control tasks</b>: Few of the tasks control the benchmark algorithm
  *  all over:
  *  <ul>
@@ -430,7 +430,7 @@
  *      </li>
  *  </ul>
  *  </li>
- * 
+ *
  *  <li>
  *  Other existing tasks are quite straightforward and would
  *  just be briefly described here.
@@ -459,14 +459,14 @@
  *      Notice that each of the 3 search task types maintains
  *      its own queryMaker instance.
  *    <li>
- *    <span style="color: #FF0066">CommitIndex</span> and 
+ *    <span style="color: #FF0066">CommitIndex</span> and
  *    <span style="color: #FF0066">ForceMerge</span> can be used to commit
  *    changes to the index then merge the index segments. The integer
  *    parameter specifies how many segments to merge down to (default
  *    1).
  *    <li>
  *    <span style="color: #FF0066">WriteLineDoc</span> prepares a 'line'
- *    file where each line holds a document with <i>title</i>, 
+ *    file where each line holds a document with <i>title</i>,
  *    <i>date</i> and <i>body</i> elements, separated by [TAB].
  *    A line file is useful if one wants to measure pure indexing
  *    performance, without the overhead of parsing the data.<br>
@@ -480,10 +480,10 @@
  *  </ul>
  *  </li>
  *  </ol>
- * 
+ *
  * <a name="properties"></a>
  * <h2>Benchmark properties</h2>
- * 
+ *
  * <p>
  * Properties are read from the header of the .alg file, and
  * define several parameters of the performance test.
@@ -495,23 +495,23 @@
  * appear as a named column in the reports (column
  * name would be "mrg" in this example).
  * </p>
- * 
+ *
  * <p>
  * Some of the currently defined properties are:
  * </p>
- * 
+ *
  * <ol>
  *     <li>
  *     <span style="color: #FF0066">analyzer</span> - full
  *     class name for the analyzer to use.
  *     Same analyzer would be used in the entire test.
  *     </li>
- * 
+ *
  *     <li>
  *     <span style="color: #FF0066">directory</span> - valid values are
  *     This tells which directory to use for the performance test.
  *     </li>
- * 
+ *
  *     <li>
  *     <b>Index work parameters</b>:
  *     Multi int/boolean values would be iterated with calls to NewRound.
@@ -534,17 +534,17 @@
  *         </li>
  *     </ul>
  * </ol>
- * 
+ *
  * <p>
  * Here is a list of currently defined properties:
  * </p>
  * <ol>
- * 
+ *
  *   <li><b>Root directory for data and indexes:</b>
  *     <ul><li>work.dir (default is System property "benchmark.work.dir" or "work".)
  *     </li></ul>
  *   </li>
- * 
+ *
  *   <li><b>Docs and queries creation:</b>
  *     <ul><li>analyzer
  *     </li><li>doc.maker
@@ -563,7 +563,7 @@
  *     </li><li>search.num.hits
  *     </li></ul>
  *   </li>
- * 
+ *
  *   <li><b>Logging</b>:
  *     <ul><li>log.step
  *   </li><li>log.step.[class name]Task ie log.step.DeleteDoc (e.g. log.step.Wonderful for the WonderfulTask example above).
@@ -571,7 +571,7 @@
  *     </li><li>task.max.depth.log
  *     </li></ul>
  *   </li>
- * 
+ *
  *   <li><b>Index writing</b>:
  *     <ul><li>compound
  *     </li><li>merge.factor
@@ -581,29 +581,29 @@
  *     </li><li>codec.postingsFormat (eg Direct) Note: no codec should be specified through default.codec
  *     </li></ul>
  *   </li>
- * 
+ *
  *   <li><b>Doc deletion</b>:
  *     <ul><li>doc.delete.step
  *     </li></ul>
  *   </li>
- * 
+ *
  *   <li><b>Spatial</b>: Numerous; see spatial.alg
  *   </li>
- *   
+ *
  *   <li><b>Task alternative packages</b>:
  *     <ul><li>alt.tasks.packages
  *       - comma separated list of additional packages where tasks classes will be looked for
- *       when not found in the default package (that of PerfTask).  If the same task class 
+ *       when not found in the default package (that of PerfTask).  If the same task class
  *       appears in more than one package, the package indicated first in this list will be used.
- *     </li></ul> 
+ *     </li></ul>
  *   </li>
- * 
+ *
  * </ol>
- * 
+ *
  * <p>
  * For sample use of these properties see the *.alg files under conf.
  * </p>
- * 
+ *
  * <a name="example"></a>
  * <h2>Example input algorithm and the result benchmark report</h2>
  * <p>
@@ -626,60 +626,60 @@
  * merge.factor=mrg:10:20
  * max.buffered=buf:100:1000
  * compound=true
- * 
+ *
  * analyzer=org.apache.lucene.analysis.standard.StandardAnalyzer
  * directory=FSDirectory
- * 
+ *
  * doc.stored=true
  * doc.tokenized=true
  * doc.term.vector=false
  * doc.add.log.step=500
- * 
+ *
  * docs.dir=reuters-out
- * 
+ *
  * doc.maker=org.apache.lucene.benchmark.byTask.feeds.SimpleDocMaker
- * 
+ *
  * query.maker=org.apache.lucene.benchmark.byTask.feeds.SimpleQueryMaker
- * 
+ *
  * # task at this depth or less would print when they start
  * task.max.depth.log=2
- * 
+ *
  * log.queries=false
  * # -------------------------------------------------------------------------------------</span>
  * <span style="color: #3300FF">{
- * 
+ *
  *     { "PopulateShort"
  *         CreateIndex
  *         { AddDoc(4000) &gt; : 20000
  *         Optimize
  *         CloseIndex
  *     &gt;
- * 
+ *
  *     ResetSystemErase
- * 
+ *
  *     { "PopulateLong"
  *         CreateIndex
  *         { AddDoc(8000) &gt; : 10000
  *         Optimize
  *         CloseIndex
  *     &gt;
- * 
+ *
  *     ResetSystemErase
- * 
+ *
  *     NewRound
- * 
+ *
  * } : 2
- * 
+ *
  * RepSumByName
  * RepSelectByPref Populate
  * </span>
  * </pre>
- * 
+ *
  * <p>
  * The command line for running this sample:
  * <br><code>ant run-task -Dtask.alg=conf/sample.alg</code>
  * </p>
- * 
+ *
  * <p>
  * The output report from running this test contains the following:
  * <pre>
@@ -689,7 +689,7 @@
  * PopulateShort     1  20 1000        1        20003        143.5      139.39    63,982,040     94,756,864
  * PopulateLong -  - 1  20 1000 -  -   1 -  -   10003 -  -  - 77.0 -  - 129.92 -  87,309,608 -  100,831,232
  * </pre>
- * 
+ *
  * <a name="recsCounting"></a>
  * <h2>Results record counting clarified</h2>
  * <p>

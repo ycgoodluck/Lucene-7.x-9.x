@@ -36,18 +36,20 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * @since solr 1.4
  */
 public class ReverseStringFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new ReverseStringFilterFactory */
-  public ReverseStringFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public ReverseStringFilter create(TokenStream in) {
-    return new ReverseStringFilter(in);
-  }
+
+	/**
+	 * Creates a new ReverseStringFilterFactory
+	 */
+	public ReverseStringFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public ReverseStringFilter create(TokenStream in) {
+		return new ReverseStringFilter(in);
+	}
 }
 

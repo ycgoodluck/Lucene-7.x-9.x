@@ -23,24 +23,27 @@ package org.apache.lucene.search.similarities;
  * <p>
  * See http://trec.nist.gov/pubs/trec21/papers/irra.web.nb.pdf for more information
  * on different methods.
+ *
  * @lucene.experimental
  */
 public abstract class Independence {
 
-  /**
-   * Sole constructor. (For invocation by subclass 
-   * constructors, typically implicit.)
-   */
-  public Independence() {}
-  
-  /**
-   * Computes distance from independence
-   * @param freq actual term frequency
-   * @param expected expected term frequency
-   */
-  public abstract float score(float freq, float expected);
-  
-  // subclasses must provide a name
-  @Override
-  public abstract String toString();
+	/**
+	 * Sole constructor. (For invocation by subclass
+	 * constructors, typically implicit.)
+	 */
+	public Independence() {
+	}
+
+	/**
+	 * Computes distance from independence
+	 *
+	 * @param freq     actual term frequency
+	 * @param expected expected term frequency
+	 */
+	public abstract float score(float freq, float expected);
+
+	// subclasses must provide a name
+	@Override
+	public abstract String toString();
 }

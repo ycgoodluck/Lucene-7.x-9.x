@@ -2,8 +2,9 @@ package lucene.index;
 
 import io.FileOperation;
 import lucene.AnalyzerTest.PayloadAnalyzer;
-import org.apache.lucene.document.*;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
@@ -19,78 +20,79 @@ import java.nio.file.Paths;
  */
 public class TermVectorTest {
 
-  private Directory directory;
+	private Directory directory;
 
-  {
-    try {
-      FileOperation.deleteFile("./data");
-      directory = new MMapDirectory(Paths.get("./data"));
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-  IndexWriter indexWriter;
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-
-  public void doSearch() throws Exception {
-    PayloadAnalyzer analyzer = new PayloadAnalyzer();
-    IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-
-    conf.setUseCompoundFile(false);
-    indexWriter = new IndexWriter(directory, conf);
-
-    FieldType type = new FieldType();
-    type.setStored(true);
-    type.setStoreTermVectors(true);
-    type.setStoreTermVectorPositions(true);
-    type.setStoreTermVectorPayloads(true);
-    type.setStoreTermVectorOffsets(true);
-    type.setTokenized(true);
-    type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+	IndexWriter indexWriter;
 
 
-    analyzer.setPayloadData("content", "it is payload".getBytes(StandardCharsets.UTF_8), 0, 13);
-    Document doc ;
+	public void doSearch() throws Exception {
+		PayloadAnalyzer analyzer = new PayloadAnalyzer();
+		IndexWriterConfig conf = new IndexWriterConfig(analyzer);
 
-    int count = 0;
-    while (count++ < 170000){
+		conf.setUseCompoundFile(false);
+		indexWriter = new IndexWriter(directory, conf);
 
-      // 0
-      doc = new Document();
-      doc.add(new Field("content", "the book boo boo boo book", type));
-      doc.add(new Field("title", "book", type));
-      indexWriter.addDocument(doc);
-      // 1
-      doc = new Document();
-      doc.add(new Field("content", "the fake news is news", type));
-      doc.add(new Field("title", "news", type));
-      indexWriter.addDocument(doc);
-      // 2
-      doc = new Document();
-      doc.add(new Field("content", "the name is name", type));
-      indexWriter.addDocument(doc);
-    }
-    indexWriter.commit();
+		FieldType type = new FieldType();
+		type.setStored(true);
+		type.setStoreTermVectors(true);
+		type.setStoreTermVectorPositions(true);
+		type.setStoreTermVectorPayloads(true);
+		type.setStoreTermVectorOffsets(true);
+		type.setTokenized(true);
+		type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
 
 
-    IndexReader reader = DirectoryReader.open(indexWriter);
-    IndexSearcher searcher = new IndexSearcher(reader);
+		analyzer.setPayloadData("content", "it is payload".getBytes(StandardCharsets.UTF_8), 0, 13);
+		Document doc;
 
-    BooleanQuery.Builder builder = new BooleanQuery.Builder();
-    builder.add(new TermQuery(new Term("content", "a")), BooleanClause.Occur.SHOULD);
-    builder.add(new TermQuery(new Term("content", "b")), BooleanClause.Occur.SHOULD);
-    builder.add(new TermQuery(new Term("content", "c")), BooleanClause.Occur.SHOULD);
-    builder.add(new TermQuery(new Term("content", "h")), BooleanClause.Occur.SHOULD);
-    builder.setMinimumNumberShouldMatch(2);
+		int count = 0;
+		while (count++ < 170000) {
+
+			// 0
+			doc = new Document();
+			doc.add(new Field("content", "the book boo boo boo book", type));
+			doc.add(new Field("title", "book", type));
+			indexWriter.addDocument(doc);
+			// 1
+			doc = new Document();
+			doc.add(new Field("content", "the fake news is news", type));
+			doc.add(new Field("title", "news", type));
+			indexWriter.addDocument(doc);
+			// 2
+			doc = new Document();
+			doc.add(new Field("content", "the name is name", type));
+			indexWriter.addDocument(doc);
+		}
+		indexWriter.commit();
 
 
-    ScoreDoc[]docs = searcher.search(builder.build(), 10).scoreDocs;
+		IndexReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
 
-    System.out.println("hah");
-  }
+		BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		builder.add(new TermQuery(new Term("content", "a")), BooleanClause.Occur.SHOULD);
+		builder.add(new TermQuery(new Term("content", "b")), BooleanClause.Occur.SHOULD);
+		builder.add(new TermQuery(new Term("content", "c")), BooleanClause.Occur.SHOULD);
+		builder.add(new TermQuery(new Term("content", "h")), BooleanClause.Occur.SHOULD);
+		builder.setMinimumNumberShouldMatch(2);
 
-  public static void main(String[] args) throws Exception{
-    TermVectorTest termVectorTest = new TermVectorTest();
-    termVectorTest.doSearch();
-  }
+
+		ScoreDoc[] docs = searcher.search(builder.build(), 10).scoreDocs;
+
+		System.out.println("hah");
+	}
+
+	public static void main(String[] args) throws Exception {
+		TermVectorTest termVectorTest = new TermVectorTest();
+		termVectorTest.doSearch();
+	}
 }

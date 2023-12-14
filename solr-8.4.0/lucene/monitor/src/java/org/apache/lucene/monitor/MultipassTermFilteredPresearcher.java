@@ -54,108 +54,108 @@ import org.apache.lucene.util.BytesRefHash;
  */
 public class MultipassTermFilteredPresearcher extends TermFilteredPresearcher {
 
-  private final int passes;
-  private final float minWeight;
+	private final int passes;
+	private final float minWeight;
 
-  /**
-   * Construct a new MultipassTermFilteredPresearcher
-   *
-   * @param passes        the number of times a query should be indexed
-   * @param minWeight     the minimum weight a querytree should be advanced over
-   * @param weightor      the TreeWeightor to use
-   * @param queryHandlers a list of custom query handlers
-   * @param filterFields  a set of fields to use as filters
-   */
-  public MultipassTermFilteredPresearcher(int passes, float minWeight, TermWeightor weightor,
-                                          List<CustomQueryHandler> queryHandlers, Set<String> filterFields) {
-    super(weightor, queryHandlers, filterFields);
-    this.passes = passes;
-    this.minWeight = minWeight;
-  }
+	/**
+	 * Construct a new MultipassTermFilteredPresearcher
+	 *
+	 * @param passes        the number of times a query should be indexed
+	 * @param minWeight     the minimum weight a querytree should be advanced over
+	 * @param weightor      the TreeWeightor to use
+	 * @param queryHandlers a list of custom query handlers
+	 * @param filterFields  a set of fields to use as filters
+	 */
+	public MultipassTermFilteredPresearcher(int passes, float minWeight, TermWeightor weightor,
+																					List<CustomQueryHandler> queryHandlers, Set<String> filterFields) {
+		super(weightor, queryHandlers, filterFields);
+		this.passes = passes;
+		this.minWeight = minWeight;
+	}
 
-  /**
-   * Construct a new MultipassTermFilteredPresearcher using {@link TermFilteredPresearcher#DEFAULT_WEIGHTOR}
-   * <p>
-   * Note that this will be constructed with a minimum advance weight of zero
-   *
-   * @param passes     the number of times a query should be indexed
-   */
-  public MultipassTermFilteredPresearcher(int passes) {
-    this(passes, 0, DEFAULT_WEIGHTOR, Collections.emptyList(), Collections.emptySet());
-  }
+	/**
+	 * Construct a new MultipassTermFilteredPresearcher using {@link TermFilteredPresearcher#DEFAULT_WEIGHTOR}
+	 * <p>
+	 * Note that this will be constructed with a minimum advance weight of zero
+	 *
+	 * @param passes the number of times a query should be indexed
+	 */
+	public MultipassTermFilteredPresearcher(int passes) {
+		this(passes, 0, DEFAULT_WEIGHTOR, Collections.emptyList(), Collections.emptySet());
+	}
 
-  @Override
-  protected DocumentQueryBuilder getQueryBuilder() {
-    return new MultipassDocumentQueryBuilder();
-  }
+	@Override
+	protected DocumentQueryBuilder getQueryBuilder() {
+		return new MultipassDocumentQueryBuilder();
+	}
 
-  private static String field(String field, int pass) {
-    return field + "_" + pass;
-  }
+	private static String field(String field, int pass) {
+		return field + "_" + pass;
+	}
 
-  private class MultipassDocumentQueryBuilder implements DocumentQueryBuilder {
+	private class MultipassDocumentQueryBuilder implements DocumentQueryBuilder {
 
-    BooleanQuery.Builder[] queries = new BooleanQuery.Builder[passes];
-    Map<String, BytesRefHash> terms = new HashMap<>();
+		BooleanQuery.Builder[] queries = new BooleanQuery.Builder[passes];
+		Map<String, BytesRefHash> terms = new HashMap<>();
 
-    MultipassDocumentQueryBuilder() {
-      for (int i = 0; i < queries.length; i++) {
-        queries[i] = new BooleanQuery.Builder();
-      }
-    }
+		MultipassDocumentQueryBuilder() {
+			for (int i = 0; i < queries.length; i++) {
+				queries[i] = new BooleanQuery.Builder();
+			}
+		}
 
-    @Override
-    public void addTerm(String field, BytesRef term) {
-      BytesRefHash t = terms.computeIfAbsent(field, f -> new BytesRefHash());
-      t.add(term);
-    }
+		@Override
+		public void addTerm(String field, BytesRef term) {
+			BytesRefHash t = terms.computeIfAbsent(field, f -> new BytesRefHash());
+			t.add(term);
+		}
 
-    @Override
-    public Query build() {
-      Map<String, BytesRef[]> collectedTerms = new HashMap<>();
-      for (Map.Entry<String, BytesRefHash> entry : terms.entrySet()) {
-        collectedTerms.put(entry.getKey(), convertHash(entry.getValue()));
-      }
-      BooleanQuery.Builder parent = new BooleanQuery.Builder();
-      for (int i = 0; i < passes; i++) {
-        BooleanQuery.Builder child = new BooleanQuery.Builder();
-        for (String field : terms.keySet()) {
-          child.add(new TermInSetQuery(field(field, i), collectedTerms.get(field)), BooleanClause.Occur.SHOULD);
-        }
-        parent.add(child.build(), BooleanClause.Occur.MUST);
-      }
-      return parent.build();
-    }
-  }
+		@Override
+		public Query build() {
+			Map<String, BytesRef[]> collectedTerms = new HashMap<>();
+			for (Map.Entry<String, BytesRefHash> entry : terms.entrySet()) {
+				collectedTerms.put(entry.getKey(), convertHash(entry.getValue()));
+			}
+			BooleanQuery.Builder parent = new BooleanQuery.Builder();
+			for (int i = 0; i < passes; i++) {
+				BooleanQuery.Builder child = new BooleanQuery.Builder();
+				for (String field : terms.keySet()) {
+					child.add(new TermInSetQuery(field(field, i), collectedTerms.get(field)), BooleanClause.Occur.SHOULD);
+				}
+				parent.add(child.build(), BooleanClause.Occur.MUST);
+			}
+			return parent.build();
+		}
+	}
 
-  @Override
-  public Document buildQueryDocument(QueryTree querytree) {
+	@Override
+	public Document buildQueryDocument(QueryTree querytree) {
 
-    Document doc = new Document();
+		Document doc = new Document();
 
-    for (int i = 0; i < passes; i++) {
-      Map<String, BytesRefHash> fieldTerms = collectTerms(querytree);
-      for (Map.Entry<String, BytesRefHash> entry : fieldTerms.entrySet()) {
-        // we add the index terms once under a suffixed field for the multipass query, and
-        // once under the plan field name for the TermsEnumTokenFilter
-        doc.add(new Field(field(entry.getKey(), i),
-            new TermsEnumTokenStream(new BytesRefHashIterator(entry.getValue())), QUERYFIELDTYPE));
-        doc.add(new Field(entry.getKey(),
-            new TermsEnumTokenStream(new BytesRefHashIterator(entry.getValue())), QUERYFIELDTYPE));
-      }
-      querytree.advancePhase(minWeight);
-    }
+		for (int i = 0; i < passes; i++) {
+			Map<String, BytesRefHash> fieldTerms = collectTerms(querytree);
+			for (Map.Entry<String, BytesRefHash> entry : fieldTerms.entrySet()) {
+				// we add the index terms once under a suffixed field for the multipass query, and
+				// once under the plan field name for the TermsEnumTokenFilter
+				doc.add(new Field(field(entry.getKey(), i),
+					new TermsEnumTokenStream(new BytesRefHashIterator(entry.getValue())), QUERYFIELDTYPE));
+				doc.add(new Field(entry.getKey(),
+					new TermsEnumTokenStream(new BytesRefHashIterator(entry.getValue())), QUERYFIELDTYPE));
+			}
+			querytree.advancePhase(minWeight);
+		}
 
-    return doc;
-  }
+		return doc;
+	}
 
-  private static BytesRef[] convertHash(BytesRefHash hash) {
-    BytesRef[] terms = new BytesRef[hash.size()];
-    for (int i = 0; i < terms.length; i++) {
-      BytesRef t = new BytesRef();
-      terms[i] = hash.get(i, t);
-    }
-    return terms;
-  }
+	private static BytesRef[] convertHash(BytesRefHash hash) {
+		BytesRef[] terms = new BytesRef[hash.size()];
+		for (int i = 0; i < terms.length; i++) {
+			BytesRef t = new BytesRef();
+			terms[i] = hash.get(i, t);
+		}
+		return terms;
+	}
 
 }

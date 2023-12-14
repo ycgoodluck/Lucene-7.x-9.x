@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.br.BrazilianStemFilter;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link BrazilianStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_brstem" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -35,18 +35,20 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class BrazilianStemFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new BrazilianStemFilterFactory */
-  public BrazilianStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public BrazilianStemFilter create(TokenStream in) {
-    return new BrazilianStemFilter(in);
-  }
+
+	/**
+	 * Creates a new BrazilianStemFilterFactory
+	 */
+	public BrazilianStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public BrazilianStemFilter create(TokenStream in) {
+		return new BrazilianStemFilter(in);
+	}
 }
 

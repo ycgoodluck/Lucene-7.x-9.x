@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishMinimalStemFilter;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link EnglishMinimalStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_enminstem" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -33,20 +33,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.EnglishMinimalStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class EnglishMinimalStemFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new EnglishMinimalStemFilterFactory */
-  public EnglishMinimalStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new EnglishMinimalStemFilter(input);
-  }
+
+	/**
+	 * Creates a new EnglishMinimalStemFilterFactory
+	 */
+	public EnglishMinimalStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new EnglishMinimalStemFilter(input);
+	}
 }

@@ -37,301 +37,301 @@ import org.apache.lucene.util.UnicodeUtil;
 
 public class TestIndexWriterUnicode extends LuceneTestCase {
 
-  final String[] utf8Data = new String[] {
-    // unpaired low surrogate
-    "ab\udc17cd", "ab\ufffdcd",
-    "\udc17abcd", "\ufffdabcd",
-    "\udc17", "\ufffd",
-    "ab\udc17\udc17cd", "ab\ufffd\ufffdcd",
-    "\udc17\udc17abcd", "\ufffd\ufffdabcd",
-    "\udc17\udc17", "\ufffd\ufffd",
+	final String[] utf8Data = new String[]{
+		// unpaired low surrogate
+		"ab\udc17cd", "ab\ufffdcd",
+		"\udc17abcd", "\ufffdabcd",
+		"\udc17", "\ufffd",
+		"ab\udc17\udc17cd", "ab\ufffd\ufffdcd",
+		"\udc17\udc17abcd", "\ufffd\ufffdabcd",
+		"\udc17\udc17", "\ufffd\ufffd",
 
-    // unpaired high surrogate
-    "ab\ud917cd", "ab\ufffdcd",
-    "\ud917abcd", "\ufffdabcd",
-    "\ud917", "\ufffd",
-    "ab\ud917\ud917cd", "ab\ufffd\ufffdcd",
-    "\ud917\ud917abcd", "\ufffd\ufffdabcd",
-    "\ud917\ud917", "\ufffd\ufffd",
+		// unpaired high surrogate
+		"ab\ud917cd", "ab\ufffdcd",
+		"\ud917abcd", "\ufffdabcd",
+		"\ud917", "\ufffd",
+		"ab\ud917\ud917cd", "ab\ufffd\ufffdcd",
+		"\ud917\ud917abcd", "\ufffd\ufffdabcd",
+		"\ud917\ud917", "\ufffd\ufffd",
 
-    // backwards surrogates
-    "ab\udc17\ud917cd", "ab\ufffd\ufffdcd",
-    "\udc17\ud917abcd", "\ufffd\ufffdabcd",
-    "\udc17\ud917", "\ufffd\ufffd",
-    "ab\udc17\ud917\udc17\ud917cd", "ab\ufffd\ud917\udc17\ufffdcd",
-    "\udc17\ud917\udc17\ud917abcd", "\ufffd\ud917\udc17\ufffdabcd",
-    "\udc17\ud917\udc17\ud917", "\ufffd\ud917\udc17\ufffd"
-  };
-  
-  private int nextInt(int lim) {
-    return random().nextInt(lim);
-  }
+		// backwards surrogates
+		"ab\udc17\ud917cd", "ab\ufffd\ufffdcd",
+		"\udc17\ud917abcd", "\ufffd\ufffdabcd",
+		"\udc17\ud917", "\ufffd\ufffd",
+		"ab\udc17\ud917\udc17\ud917cd", "ab\ufffd\ud917\udc17\ufffdcd",
+		"\udc17\ud917\udc17\ud917abcd", "\ufffd\ud917\udc17\ufffdabcd",
+		"\udc17\ud917\udc17\ud917", "\ufffd\ud917\udc17\ufffd"
+	};
 
-  private int nextInt(int start, int end) {
-    return start + nextInt(end-start);
-  }
-  
-  private boolean fillUnicode(char[] buffer, char[] expected, int offset, int count) {
-    final int len = offset + count;
-    boolean hasIllegal = false;
+	private int nextInt(int lim) {
+		return random().nextInt(lim);
+	}
 
-    if (offset > 0 && buffer[offset] >= 0xdc00 && buffer[offset] < 0xe000)
-      // Don't start in the middle of a valid surrogate pair
-      offset--;
+	private int nextInt(int start, int end) {
+		return start + nextInt(end - start);
+	}
 
-    for(int i=offset;i<len;i++) {
-      int t = nextInt(6);
-      if (0 == t && i < len-1) {
-        // Make a surrogate pair
-        // High surrogate
-        expected[i] = buffer[i++] = (char) nextInt(0xd800, 0xdc00);
-        // Low surrogate
-        expected[i] = buffer[i] = (char) nextInt(0xdc00, 0xe000);
-      } else if (t <= 1)
-        expected[i] = buffer[i] = (char) nextInt(0x80);
-      else if (2 == t)
-        expected[i] = buffer[i] = (char) nextInt(0x80, 0x800);
-      else if (3 == t)
-        expected[i] = buffer[i] = (char) nextInt(0x800, 0xd800);
-      else if (4 == t)
-        expected[i] = buffer[i] = (char) nextInt(0xe000, 0xffff);
-      else if (5 == t && i < len-1) {
-        // Illegal unpaired surrogate
-        if (nextInt(10) == 7) {
-          if (random().nextBoolean())
-            buffer[i] = (char) nextInt(0xd800, 0xdc00);
-          else
-            buffer[i] = (char) nextInt(0xdc00, 0xe000);
-          expected[i++] = 0xfffd;
-          expected[i] = buffer[i] = (char) nextInt(0x800, 0xd800);
-          hasIllegal = true;
-        } else
-          expected[i] = buffer[i] = (char) nextInt(0x800, 0xd800);
-      } else {
-        expected[i] = buffer[i] = ' ';
-      }
-    }
+	private boolean fillUnicode(char[] buffer, char[] expected, int offset, int count) {
+		final int len = offset + count;
+		boolean hasIllegal = false;
 
-    return hasIllegal;
-  }
-  
-  // both start & end are inclusive
-  private final int getInt(Random r, int start, int end) {
-    return start + r.nextInt(1+end-start);
-  }
+		if (offset > 0 && buffer[offset] >= 0xdc00 && buffer[offset] < 0xe000)
+			// Don't start in the middle of a valid surrogate pair
+			offset--;
 
-  private final String asUnicodeChar(char c) {
-    return "U+" + Integer.toHexString(c);
-  }
+		for (int i = offset; i < len; i++) {
+			int t = nextInt(6);
+			if (0 == t && i < len - 1) {
+				// Make a surrogate pair
+				// High surrogate
+				expected[i] = buffer[i++] = (char) nextInt(0xd800, 0xdc00);
+				// Low surrogate
+				expected[i] = buffer[i] = (char) nextInt(0xdc00, 0xe000);
+			} else if (t <= 1)
+				expected[i] = buffer[i] = (char) nextInt(0x80);
+			else if (2 == t)
+				expected[i] = buffer[i] = (char) nextInt(0x80, 0x800);
+			else if (3 == t)
+				expected[i] = buffer[i] = (char) nextInt(0x800, 0xd800);
+			else if (4 == t)
+				expected[i] = buffer[i] = (char) nextInt(0xe000, 0xffff);
+			else if (5 == t && i < len - 1) {
+				// Illegal unpaired surrogate
+				if (nextInt(10) == 7) {
+					if (random().nextBoolean())
+						buffer[i] = (char) nextInt(0xd800, 0xdc00);
+					else
+						buffer[i] = (char) nextInt(0xdc00, 0xe000);
+					expected[i++] = 0xfffd;
+					expected[i] = buffer[i] = (char) nextInt(0x800, 0xd800);
+					hasIllegal = true;
+				} else
+					expected[i] = buffer[i] = (char) nextInt(0x800, 0xd800);
+			} else {
+				expected[i] = buffer[i] = ' ';
+			}
+		}
 
-  private final String termDesc(String s) {
-    final String s0;
-    assertTrue(s.length() <= 2);
-    if (s.length() == 1) {
-      s0 = asUnicodeChar(s.charAt(0));
-    } else {
-      s0 = asUnicodeChar(s.charAt(0)) + "," + asUnicodeChar(s.charAt(1));
-    }
-    return s0;
-  }
+		return hasIllegal;
+	}
 
-  private void checkTermsOrder(IndexReader r, Set<String> allTerms, boolean isTop) throws IOException {
-    TermsEnum terms = MultiTerms.getTerms(r, "f").iterator();
+	// both start & end are inclusive
+	private final int getInt(Random r, int start, int end) {
+		return start + r.nextInt(1 + end - start);
+	}
 
-    BytesRefBuilder last = new BytesRefBuilder();
+	private final String asUnicodeChar(char c) {
+		return "U+" + Integer.toHexString(c);
+	}
 
-    Set<String> seenTerms = new HashSet<>();
+	private final String termDesc(String s) {
+		final String s0;
+		assertTrue(s.length() <= 2);
+		if (s.length() == 1) {
+			s0 = asUnicodeChar(s.charAt(0));
+		} else {
+			s0 = asUnicodeChar(s.charAt(0)) + "," + asUnicodeChar(s.charAt(1));
+		}
+		return s0;
+	}
 
-    while(true) {
-      final BytesRef term = terms.next();
-      if (term == null) {
-        break;
-      }
+	private void checkTermsOrder(IndexReader r, Set<String> allTerms, boolean isTop) throws IOException {
+		TermsEnum terms = MultiTerms.getTerms(r, "f").iterator();
 
-      assertTrue(last.get().compareTo(term) < 0);
-      last.copyBytes(term);
+		BytesRefBuilder last = new BytesRefBuilder();
 
-      final String s = term.utf8ToString();
-      assertTrue("term " + termDesc(s) + " was not added to index (count=" + allTerms.size() + ")", allTerms.contains(s));
-      seenTerms.add(s);
-    }
+		Set<String> seenTerms = new HashSet<>();
 
-    if (isTop) {
-      assertTrue(allTerms.equals(seenTerms));
-    }
+		while (true) {
+			final BytesRef term = terms.next();
+			if (term == null) {
+				break;
+			}
 
-    // Test seeking:
-    Iterator<String> it = seenTerms.iterator();
-    while(it.hasNext()) {
-      BytesRef tr = new BytesRef(it.next());
-      assertEquals("seek failed for term=" + termDesc(tr.utf8ToString()),
-                   TermsEnum.SeekStatus.FOUND,
-                   terms.seekCeil(tr));
-    }
-  }
+			assertTrue(last.get().compareTo(term) < 0);
+			last.copyBytes(term);
 
-  // LUCENE-510
-  public void testRandomUnicodeStrings() throws Throwable {
-    char[] buffer = new char[20];
-    char[] expected = new char[20];
+			final String s = term.utf8ToString();
+			assertTrue("term " + termDesc(s) + " was not added to index (count=" + allTerms.size() + ")", allTerms.contains(s));
+			seenTerms.add(s);
+		}
 
-    CharsRefBuilder utf16 = new CharsRefBuilder();
+		if (isTop) {
+			assertTrue(allTerms.equals(seenTerms));
+		}
 
-    int num = atLeast(100000);
-    for (int iter = 0; iter < num; iter++) {
-      boolean hasIllegal = fillUnicode(buffer, expected, 0, 20);
+		// Test seeking:
+		Iterator<String> it = seenTerms.iterator();
+		while (it.hasNext()) {
+			BytesRef tr = new BytesRef(it.next());
+			assertEquals("seek failed for term=" + termDesc(tr.utf8ToString()),
+				TermsEnum.SeekStatus.FOUND,
+				terms.seekCeil(tr));
+		}
+	}
 
-      BytesRef utf8 = new BytesRef(CharBuffer.wrap(buffer, 0, 20));
-      if (!hasIllegal) {
-        byte[] b = new String(buffer, 0, 20).getBytes(StandardCharsets.UTF_8);
-        assertEquals(b.length, utf8.length);
-        for(int i=0;i<b.length;i++)
-          assertEquals(b[i], utf8.bytes[i]);
-      }
+	// LUCENE-510
+	public void testRandomUnicodeStrings() throws Throwable {
+		char[] buffer = new char[20];
+		char[] expected = new char[20];
 
-      utf16.copyUTF8Bytes(utf8.bytes, 0, utf8.length);
-      assertEquals(utf16.length(), 20);
-      for(int i=0;i<20;i++)
-        assertEquals(expected[i], utf16.charAt(i));
-    }
-  }
+		CharsRefBuilder utf16 = new CharsRefBuilder();
 
-  // LUCENE-510
-  public void testAllUnicodeChars() throws Throwable {
+		int num = atLeast(100000);
+		for (int iter = 0; iter < num; iter++) {
+			boolean hasIllegal = fillUnicode(buffer, expected, 0, 20);
 
-    CharsRefBuilder utf16 = new CharsRefBuilder();
-    char[] chars = new char[2];
-    for(int ch=0;ch<0x0010FFFF;ch++) {
+			BytesRef utf8 = new BytesRef(CharBuffer.wrap(buffer, 0, 20));
+			if (!hasIllegal) {
+				byte[] b = new String(buffer, 0, 20).getBytes(StandardCharsets.UTF_8);
+				assertEquals(b.length, utf8.length);
+				for (int i = 0; i < b.length; i++)
+					assertEquals(b[i], utf8.bytes[i]);
+			}
 
-      if (ch == 0xd800)
-        // Skip invalid code points
-        ch = 0xe000;
+			utf16.copyUTF8Bytes(utf8.bytes, 0, utf8.length);
+			assertEquals(utf16.length(), 20);
+			for (int i = 0; i < 20; i++)
+				assertEquals(expected[i], utf16.charAt(i));
+		}
+	}
 
-      int len = 0;
-      if (ch <= 0xffff) {
-        chars[len++] = (char) ch;
-      } else {
-        chars[len++] = (char) (((ch-0x0010000) >> 10) + UnicodeUtil.UNI_SUR_HIGH_START);
-        chars[len++] = (char) (((ch-0x0010000) & 0x3FFL) + UnicodeUtil.UNI_SUR_LOW_START);
-      }
+	// LUCENE-510
+	public void testAllUnicodeChars() throws Throwable {
 
-      BytesRef utf8 = new BytesRef(CharBuffer.wrap(chars, 0, len));
+		CharsRefBuilder utf16 = new CharsRefBuilder();
+		char[] chars = new char[2];
+		for (int ch = 0; ch < 0x0010FFFF; ch++) {
 
-      String s1 = new String(chars, 0, len);
-      String s2 = new String(utf8.bytes, 0, utf8.length, StandardCharsets.UTF_8);
-      assertEquals("codepoint " + ch, s1, s2);
+			if (ch == 0xd800)
+				// Skip invalid code points
+				ch = 0xe000;
 
-      utf16.copyUTF8Bytes(utf8.bytes, 0, utf8.length);
-      assertEquals("codepoint " + ch, s1, utf16.toString());
+			int len = 0;
+			if (ch <= 0xffff) {
+				chars[len++] = (char) ch;
+			} else {
+				chars[len++] = (char) (((ch - 0x0010000) >> 10) + UnicodeUtil.UNI_SUR_HIGH_START);
+				chars[len++] = (char) (((ch - 0x0010000) & 0x3FFL) + UnicodeUtil.UNI_SUR_LOW_START);
+			}
 
-      byte[] b = s1.getBytes(StandardCharsets.UTF_8);
-      assertEquals(utf8.length, b.length);
-      for(int j=0;j<utf8.length;j++)
-        assertEquals(utf8.bytes[j], b[j]);
-    }
-  }
-  
-  public void testEmbeddedFFFF() throws Throwable {
-    Directory d = newDirectory();
-    IndexWriter w = new IndexWriter(d, newIndexWriterConfig(new MockAnalyzer(random())));
-    Document doc = new Document();
-    doc.add(newTextField("field", "a a\uffffb", Field.Store.NO));
-    w.addDocument(doc);
-    doc = new Document();
-    doc.add(newTextField("field", "a", Field.Store.NO));
-    w.addDocument(doc);
-    IndexReader r = w.getReader();
-    assertEquals(1, r.docFreq(new Term("field", "a\uffffb")));
-    r.close();
-    w.close();
-    d.close();
-  }
+			BytesRef utf8 = new BytesRef(CharBuffer.wrap(chars, 0, len));
 
-  // LUCENE-510
-  public void testInvalidUTF16() throws Throwable {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig(new TestIndexWriter.StringSplitAnalyzer()));
-    Document doc = new Document();
+			String s1 = new String(chars, 0, len);
+			String s2 = new String(utf8.bytes, 0, utf8.length, StandardCharsets.UTF_8);
+			assertEquals("codepoint " + ch, s1, s2);
 
-    final int count = utf8Data.length/2;
-    for(int i=0;i<count;i++)
-      doc.add(newTextField("f" + i, utf8Data[2*i], Field.Store.YES));
-    w.addDocument(doc);
-    w.close();
+			utf16.copyUTF8Bytes(utf8.bytes, 0, utf8.length);
+			assertEquals("codepoint " + ch, s1, utf16.toString());
 
-    IndexReader ir = DirectoryReader.open(dir);
-    Document doc2 = ir.document(0);
-    for(int i=0;i<count;i++) {
-      assertEquals("field " + i + " was not indexed correctly", 1, ir.docFreq(new Term("f"+i, utf8Data[2*i+1])));
-      assertEquals("field " + i + " is incorrect", utf8Data[2*i+1], doc2.getField("f"+i).stringValue());
-    }
-    ir.close();
-    dir.close();
-  }
-  
-  // Make sure terms, including ones with surrogate pairs,
-  // sort in codepoint sort order by default
-  public void testTermUTF16SortOrder() throws Throwable {
-    Random rnd = random();
-    Directory dir = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(rnd, dir);
-    Document d = new Document();
-    // Single segment
-    Field f = newStringField("f", "", Field.Store.NO);
-    d.add(f);
-    char[] chars = new char[2];
-    final Set<String> allTerms = new HashSet<>();
+			byte[] b = s1.getBytes(StandardCharsets.UTF_8);
+			assertEquals(utf8.length, b.length);
+			for (int j = 0; j < utf8.length; j++)
+				assertEquals(utf8.bytes[j], b[j]);
+		}
+	}
 
-    int num = atLeast(200);
-    for (int i = 0; i < num; i++) {
+	public void testEmbeddedFFFF() throws Throwable {
+		Directory d = newDirectory();
+		IndexWriter w = new IndexWriter(d, newIndexWriterConfig(new MockAnalyzer(random())));
+		Document doc = new Document();
+		doc.add(newTextField("field", "a a\uffffb", Field.Store.NO));
+		w.addDocument(doc);
+		doc = new Document();
+		doc.add(newTextField("field", "a", Field.Store.NO));
+		w.addDocument(doc);
+		IndexReader r = w.getReader();
+		assertEquals(1, r.docFreq(new Term("field", "a\uffffb")));
+		r.close();
+		w.close();
+		d.close();
+	}
 
-      final String s;
-      if (rnd.nextBoolean()) {
-        // Single char
-        if (rnd.nextBoolean()) {
-          // Above surrogates
-          chars[0] = (char) getInt(rnd, 1+UnicodeUtil.UNI_SUR_LOW_END, 0xffff);
-        } else {
-          // Below surrogates
-          chars[0] = (char) getInt(rnd, 0, UnicodeUtil.UNI_SUR_HIGH_START-1);
-        }
-        s = new String(chars, 0, 1);
-      } else {
-        // Surrogate pair
-        chars[0] = (char) getInt(rnd, UnicodeUtil.UNI_SUR_HIGH_START, UnicodeUtil.UNI_SUR_HIGH_END);
-        assertTrue(((int) chars[0]) >= UnicodeUtil.UNI_SUR_HIGH_START && ((int) chars[0]) <= UnicodeUtil.UNI_SUR_HIGH_END);
-        chars[1] = (char) getInt(rnd, UnicodeUtil.UNI_SUR_LOW_START, UnicodeUtil.UNI_SUR_LOW_END);
-        s = new String(chars, 0, 2);
-      }
-      allTerms.add(s);
-      f.setStringValue(s);
+	// LUCENE-510
+	public void testInvalidUTF16() throws Throwable {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig(new TestIndexWriter.StringSplitAnalyzer()));
+		Document doc = new Document();
 
-      writer.addDocument(d);
+		final int count = utf8Data.length / 2;
+		for (int i = 0; i < count; i++)
+			doc.add(newTextField("f" + i, utf8Data[2 * i], Field.Store.YES));
+		w.addDocument(doc);
+		w.close();
 
-      if ((1+i) % 42 == 0) {
-        writer.commit();
-      }
-    }
+		IndexReader ir = DirectoryReader.open(dir);
+		Document doc2 = ir.document(0);
+		for (int i = 0; i < count; i++) {
+			assertEquals("field " + i + " was not indexed correctly", 1, ir.docFreq(new Term("f" + i, utf8Data[2 * i + 1])));
+			assertEquals("field " + i + " is incorrect", utf8Data[2 * i + 1], doc2.getField("f" + i).stringValue());
+		}
+		ir.close();
+		dir.close();
+	}
 
-    IndexReader r = writer.getReader();
+	// Make sure terms, including ones with surrogate pairs,
+	// sort in codepoint sort order by default
+	public void testTermUTF16SortOrder() throws Throwable {
+		Random rnd = random();
+		Directory dir = newDirectory();
+		RandomIndexWriter writer = new RandomIndexWriter(rnd, dir);
+		Document d = new Document();
+		// Single segment
+		Field f = newStringField("f", "", Field.Store.NO);
+		d.add(f);
+		char[] chars = new char[2];
+		final Set<String> allTerms = new HashSet<>();
 
-    // Test each sub-segment
-    for (LeafReaderContext ctx : r.leaves()) {
-      checkTermsOrder(ctx.reader(), allTerms, false);
-    }
-    checkTermsOrder(r, allTerms, true);
+		int num = atLeast(200);
+		for (int i = 0; i < num; i++) {
 
-    // Test multi segment
-    r.close();
+			final String s;
+			if (rnd.nextBoolean()) {
+				// Single char
+				if (rnd.nextBoolean()) {
+					// Above surrogates
+					chars[0] = (char) getInt(rnd, 1 + UnicodeUtil.UNI_SUR_LOW_END, 0xffff);
+				} else {
+					// Below surrogates
+					chars[0] = (char) getInt(rnd, 0, UnicodeUtil.UNI_SUR_HIGH_START - 1);
+				}
+				s = new String(chars, 0, 1);
+			} else {
+				// Surrogate pair
+				chars[0] = (char) getInt(rnd, UnicodeUtil.UNI_SUR_HIGH_START, UnicodeUtil.UNI_SUR_HIGH_END);
+				assertTrue(((int) chars[0]) >= UnicodeUtil.UNI_SUR_HIGH_START && ((int) chars[0]) <= UnicodeUtil.UNI_SUR_HIGH_END);
+				chars[1] = (char) getInt(rnd, UnicodeUtil.UNI_SUR_LOW_START, UnicodeUtil.UNI_SUR_LOW_END);
+				s = new String(chars, 0, 2);
+			}
+			allTerms.add(s);
+			f.setStringValue(s);
 
-    writer.forceMerge(1);
+			writer.addDocument(d);
 
-    // Test single segment
-    r = writer.getReader();
-    checkTermsOrder(r, allTerms, true);
-    r.close();
+			if ((1 + i) % 42 == 0) {
+				writer.commit();
+			}
+		}
 
-    writer.close();
-    dir.close();
-  }
+		IndexReader r = writer.getReader();
+
+		// Test each sub-segment
+		for (LeafReaderContext ctx : r.leaves()) {
+			checkTermsOrder(ctx.reader(), allTerms, false);
+		}
+		checkTermsOrder(r, allTerms, true);
+
+		// Test multi segment
+		r.close();
+
+		writer.forceMerge(1);
+
+		// Test single segment
+		r = writer.getReader();
+		checkTermsOrder(r, allTerms, true);
+		r.close();
+
+		writer.close();
+		dir.close();
+	}
 }

@@ -24,35 +24,36 @@ import java.util.Collections;
 /**
  * Filter a {@link Scorable}, intercepting methods and optionally changing
  * their return values
- *
+ * <p>
  * The default implementation simply passes all calls to its delegate, with
  * the exception of {@link #setMinCompetitiveScore(float)} which defaults
  * to a no-op.
  */
 public class FilterScorable extends Scorable {
 
-  protected final Scorable in;
+	protected final Scorable in;
 
-  /**
-   * Filter a scorer
-   * @param in  the scorer to filter
-   */
-  public FilterScorable(Scorable in) {
-    this.in = in;
-  }
+	/**
+	 * Filter a scorer
+	 *
+	 * @param in the scorer to filter
+	 */
+	public FilterScorable(Scorable in) {
+		this.in = in;
+	}
 
-  @Override
-  public float score() throws IOException {
-    return in.score();
-  }
+	@Override
+	public float score() throws IOException {
+		return in.score();
+	}
 
-  @Override
-  public int docID() {
-    return in.docID();
-  }
+	@Override
+	public int docID() {
+		return in.docID();
+	}
 
-  @Override
-  public Collection<ChildScorable> getChildren() throws IOException {
-    return Collections.singletonList(new ChildScorable(in, "FILTER"));
-  }
+	@Override
+	public Collection<ChildScorable> getChildren() throws IOException {
+		return Collections.singletonList(new ChildScorable(in, "FILTER"));
+	}
 }

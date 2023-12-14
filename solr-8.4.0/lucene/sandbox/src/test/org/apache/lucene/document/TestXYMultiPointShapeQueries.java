@@ -24,84 +24,87 @@ import org.apache.lucene.geo.Component2D;
 import org.apache.lucene.geo.XYRectangle;
 import org.apache.lucene.geo.XYRectangle2D;
 
-/** random cartesian bounding box, line, and polygon query tests for random indexed arrays of {@code x, y} points */
+/**
+ * random cartesian bounding box, line, and polygon query tests for random indexed arrays of {@code x, y} points
+ */
 public class TestXYMultiPointShapeQueries extends BaseXYShapeTestCase {
-  @Override
-  protected ShapeType getShapeType() {
-    return ShapeType.POINT;
-  }
+	@Override
+	protected ShapeType getShapeType() {
+		return ShapeType.POINT;
+	}
 
-  @Override
-  protected Point[] nextShape() {
-    int n = random().nextInt(4) + 1;
-    Point[] points = new Point[n];
-    for (int i =0; i < n; i++) {
-      points[i] = (Point)ShapeType.POINT.nextShape();
-    }
-    return points;
-  }
+	@Override
+	protected Point[] nextShape() {
+		int n = random().nextInt(4) + 1;
+		Point[] points = new Point[n];
+		for (int i = 0; i < n; i++) {
+			points[i] = (Point) ShapeType.POINT.nextShape();
+		}
+		return points;
+	}
 
-  @Override
-  protected Field[] createIndexableFields(String name, Object o) {
-    Point[] points = (Point[]) o;
-    List<Field> allFields = new ArrayList<>();
-    for (Point point : points) {
-      Field[] fields = XYShape.createIndexableFields(name, point.x, point.y);
-      for (Field field : fields) {
-        allFields.add(field);
-      }
-    }
-    return allFields.toArray(new Field[allFields.size()]);
-  }
+	@Override
+	protected Field[] createIndexableFields(String name, Object o) {
+		Point[] points = (Point[]) o;
+		List<Field> allFields = new ArrayList<>();
+		for (Point point : points) {
+			Field[] fields = XYShape.createIndexableFields(name, point.x, point.y);
+			for (Field field : fields) {
+				allFields.add(field);
+			}
+		}
+		return allFields.toArray(new Field[allFields.size()]);
+	}
 
-  @Override
-  public Validator getValidator() {
-    return new MultiPointValidator(ENCODER);
-  }
+	@Override
+	public Validator getValidator() {
+		return new MultiPointValidator(ENCODER);
+	}
 
-  protected class MultiPointValidator extends Validator {
-    TestXYPointShapeQueries.PointValidator POINTVALIDATOR;
-    MultiPointValidator(Encoder encoder) {
-      super(encoder);
-      POINTVALIDATOR = new TestXYPointShapeQueries.PointValidator(encoder);
-    }
+	protected class MultiPointValidator extends Validator {
+		TestXYPointShapeQueries.PointValidator POINTVALIDATOR;
 
-    @Override
-    public Validator setRelation(QueryRelation relation) {
-      super.setRelation(relation);
-      POINTVALIDATOR.queryRelation = relation;
-      return this;
-    }
+		MultiPointValidator(Encoder encoder) {
+			super(encoder);
+			POINTVALIDATOR = new TestXYPointShapeQueries.PointValidator(encoder);
+		}
 
-    @Override
-    public boolean testBBoxQuery(double minY, double maxY, double minX, double maxX, Object shape) {
-      Component2D rectangle2D = XYRectangle2D.create(new XYRectangle(minX, maxX, minY, maxY));
-      return testComponentQuery(rectangle2D, shape);
-    }
+		@Override
+		public Validator setRelation(QueryRelation relation) {
+			super.setRelation(relation);
+			POINTVALIDATOR.queryRelation = relation;
+			return this;
+		}
 
-    @Override
-    public boolean testComponentQuery(Component2D query, Object shape) {
-      Point[] points = (Point[]) shape;
-      for (Point p : points) {
-        boolean b = POINTVALIDATOR.testComponentQuery(query, p);
-        if (b == true && queryRelation == QueryRelation.INTERSECTS) {
-          return true;
-        } else if (b == true && queryRelation == QueryRelation.CONTAINS) {
-          return true;
-        } else if (b == false && queryRelation == QueryRelation.DISJOINT) {
-          return false;
-        } else if (b == false && queryRelation == QueryRelation.WITHIN) {
-          return false;
-        }
-      }
-      return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
-    }
-  }
+		@Override
+		public boolean testBBoxQuery(double minY, double maxY, double minX, double maxX, Object shape) {
+			Component2D rectangle2D = XYRectangle2D.create(new XYRectangle(minX, maxX, minY, maxY));
+			return testComponentQuery(rectangle2D, shape);
+		}
 
-  @Slow
-  @Nightly
-  @Override
-  public void testRandomBig() throws Exception {
-    doTestRandom(10000);
-  }
+		@Override
+		public boolean testComponentQuery(Component2D query, Object shape) {
+			Point[] points = (Point[]) shape;
+			for (Point p : points) {
+				boolean b = POINTVALIDATOR.testComponentQuery(query, p);
+				if (b == true && queryRelation == QueryRelation.INTERSECTS) {
+					return true;
+				} else if (b == true && queryRelation == QueryRelation.CONTAINS) {
+					return true;
+				} else if (b == false && queryRelation == QueryRelation.DISJOINT) {
+					return false;
+				} else if (b == false && queryRelation == QueryRelation.WITHIN) {
+					return false;
+				}
+			}
+			return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
+		}
+	}
+
+	@Slow
+	@Nightly
+	@Override
+	public void testRandomBig() throws Exception {
+		doTestRandom(10000);
+	}
 }

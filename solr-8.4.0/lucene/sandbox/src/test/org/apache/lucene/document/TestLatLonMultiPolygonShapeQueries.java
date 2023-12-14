@@ -24,133 +24,136 @@ import org.apache.lucene.geo.Component2D;
 import org.apache.lucene.geo.Polygon;
 import org.apache.lucene.geo.Tessellator;
 
-/** random bounding box, line, and polygon query tests for random indexed arrays of {@link Polygon} types */
+/**
+ * random bounding box, line, and polygon query tests for random indexed arrays of {@link Polygon} types
+ */
 public class TestLatLonMultiPolygonShapeQueries extends BaseLatLonShapeTestCase {
 
-  @Override
-  protected ShapeType getShapeType() {
-    return ShapeType.POLYGON;
-  }
+	@Override
+	protected ShapeType getShapeType() {
+		return ShapeType.POLYGON;
+	}
 
-  @Override
-  protected Polygon[] nextShape() {
-    int n = random().nextInt(4) + 1;
-    Polygon[] polygons = new Polygon[n];
-    for (int i =0; i < n; i++) {
-      int  repetitions =0;
-      while (true) {
-        // if we can't tessellate; then random polygon generator created a malformed shape
-        Polygon p = (Polygon) getShapeType().nextShape();
-        try {
-          Tessellator.tessellate(p);
-          //polygons are disjoint so CONTAINS works. Note that if we intersect
-          //any shape then contains return false.
-          if (isDisjoint(polygons, p)) {
-            polygons[i] = p;
-            break;
-          }
-          repetitions++;
-          if (repetitions > 50) {
-            //try again
-            return nextShape();
-          }
-        } catch (IllegalArgumentException e) {
-          continue;
-        }
-      }
-    }
-    return polygons;
-  }
+	@Override
+	protected Polygon[] nextShape() {
+		int n = random().nextInt(4) + 1;
+		Polygon[] polygons = new Polygon[n];
+		for (int i = 0; i < n; i++) {
+			int repetitions = 0;
+			while (true) {
+				// if we can't tessellate; then random polygon generator created a malformed shape
+				Polygon p = (Polygon) getShapeType().nextShape();
+				try {
+					Tessellator.tessellate(p);
+					//polygons are disjoint so CONTAINS works. Note that if we intersect
+					//any shape then contains return false.
+					if (isDisjoint(polygons, p)) {
+						polygons[i] = p;
+						break;
+					}
+					repetitions++;
+					if (repetitions > 50) {
+						//try again
+						return nextShape();
+					}
+				} catch (IllegalArgumentException e) {
+					continue;
+				}
+			}
+		}
+		return polygons;
+	}
 
-  private boolean isDisjoint(Polygon[] polygons, Polygon check) {
-    // we use bounding boxes so we do not get intersecting polygons.
-    for (Polygon polygon : polygons) {
-      if (polygon != null) {
-        if (getEncoder().quantizeY(polygon.minLat) > getEncoder().quantizeY(check.maxLat)
-            || getEncoder().quantizeY(polygon.maxLat) < getEncoder().quantizeY(check.minLat)
-            || getEncoder().quantizeX(polygon.minLon) > getEncoder().quantizeX(check.maxLon)
-            || getEncoder().quantizeX(polygon.maxLon) < getEncoder().quantizeX(check.minLon)) {
-          continue;
-        }
-        return false;
-      }
-    }
-    return true;
-  }
+	private boolean isDisjoint(Polygon[] polygons, Polygon check) {
+		// we use bounding boxes so we do not get intersecting polygons.
+		for (Polygon polygon : polygons) {
+			if (polygon != null) {
+				if (getEncoder().quantizeY(polygon.minLat) > getEncoder().quantizeY(check.maxLat)
+					|| getEncoder().quantizeY(polygon.maxLat) < getEncoder().quantizeY(check.minLat)
+					|| getEncoder().quantizeX(polygon.minLon) > getEncoder().quantizeX(check.maxLon)
+					|| getEncoder().quantizeX(polygon.maxLon) < getEncoder().quantizeX(check.minLon)) {
+					continue;
+				}
+				return false;
+			}
+		}
+		return true;
+	}
 
-  @Override
-  protected Field[] createIndexableFields(String name, Object o) {
-    Polygon[] polygons = (Polygon[]) o;
-    List<Field> allFields = new ArrayList<>();
-    for (Polygon polygon : polygons) {
-      Field[] fields = LatLonShape.createIndexableFields(name, polygon);
-      for (Field field : fields) {
-        allFields.add(field);
-      }
-    }
-    return allFields.toArray(new Field[allFields.size()]);
-  }
+	@Override
+	protected Field[] createIndexableFields(String name, Object o) {
+		Polygon[] polygons = (Polygon[]) o;
+		List<Field> allFields = new ArrayList<>();
+		for (Polygon polygon : polygons) {
+			Field[] fields = LatLonShape.createIndexableFields(name, polygon);
+			for (Field field : fields) {
+				allFields.add(field);
+			}
+		}
+		return allFields.toArray(new Field[allFields.size()]);
+	}
 
-  @Override
-  protected Validator getValidator() {
-    return new MultiPolygonValidator(ENCODER);
-  }
+	@Override
+	protected Validator getValidator() {
+		return new MultiPolygonValidator(ENCODER);
+	}
 
-  protected class MultiPolygonValidator extends Validator {
-    TestLatLonPolygonShapeQueries.PolygonValidator POLYGONVALIDATOR;
-    MultiPolygonValidator(Encoder encoder) {
-      super(encoder);
-      POLYGONVALIDATOR = new TestLatLonPolygonShapeQueries.PolygonValidator(encoder);
-    }
+	protected class MultiPolygonValidator extends Validator {
+		TestLatLonPolygonShapeQueries.PolygonValidator POLYGONVALIDATOR;
 
-    @Override
-    public Validator setRelation(QueryRelation relation) {
-      super.setRelation(relation);
-      POLYGONVALIDATOR.queryRelation = relation;
-      return this;
-    }
+		MultiPolygonValidator(Encoder encoder) {
+			super(encoder);
+			POLYGONVALIDATOR = new TestLatLonPolygonShapeQueries.PolygonValidator(encoder);
+		}
 
-    @Override
-    public boolean testBBoxQuery(double minLat, double maxLat, double minLon, double maxLon, Object shape) {
-      Polygon[] polygons = (Polygon[])shape;
-      for (Polygon p : polygons) {
-        boolean b = POLYGONVALIDATOR.testBBoxQuery(minLat, maxLat, minLon, maxLon, p);
-        if (b == true && queryRelation == QueryRelation.INTERSECTS) {
-          return true;
-        } else if (b == true && queryRelation == QueryRelation.CONTAINS) {
-          return true;
-        } else if (b == false && queryRelation == QueryRelation.DISJOINT) {
-          return false;
-        } else if (b == false && queryRelation == QueryRelation.WITHIN) {
-          return false;
-        }
-      }
-      return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
-    }
+		@Override
+		public Validator setRelation(QueryRelation relation) {
+			super.setRelation(relation);
+			POLYGONVALIDATOR.queryRelation = relation;
+			return this;
+		}
 
-    @Override
-    public boolean testComponentQuery(Component2D query, Object shape) {
-      Polygon[] polygons = (Polygon[])shape;
-      for (Polygon p : polygons) {
-        boolean b = POLYGONVALIDATOR.testComponentQuery(query, p);
-        if (b == true && queryRelation == QueryRelation.INTERSECTS) {
-          return true;
-        } else if (b == true && queryRelation == QueryRelation.CONTAINS) {
-          return true;
-        } else if (b == false && queryRelation == QueryRelation.DISJOINT) {
-          return false;
-        } else if (b == false && queryRelation == QueryRelation.WITHIN) {
-          return false;
-        }
-      }
-      return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
-    }
-  }
+		@Override
+		public boolean testBBoxQuery(double minLat, double maxLat, double minLon, double maxLon, Object shape) {
+			Polygon[] polygons = (Polygon[]) shape;
+			for (Polygon p : polygons) {
+				boolean b = POLYGONVALIDATOR.testBBoxQuery(minLat, maxLat, minLon, maxLon, p);
+				if (b == true && queryRelation == QueryRelation.INTERSECTS) {
+					return true;
+				} else if (b == true && queryRelation == QueryRelation.CONTAINS) {
+					return true;
+				} else if (b == false && queryRelation == QueryRelation.DISJOINT) {
+					return false;
+				} else if (b == false && queryRelation == QueryRelation.WITHIN) {
+					return false;
+				}
+			}
+			return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
+		}
 
-  @Slow
-  @Nightly
-  @Override
-  public void testRandomBig() throws Exception {
-    doTestRandom(10000);
-  }
+		@Override
+		public boolean testComponentQuery(Component2D query, Object shape) {
+			Polygon[] polygons = (Polygon[]) shape;
+			for (Polygon p : polygons) {
+				boolean b = POLYGONVALIDATOR.testComponentQuery(query, p);
+				if (b == true && queryRelation == QueryRelation.INTERSECTS) {
+					return true;
+				} else if (b == true && queryRelation == QueryRelation.CONTAINS) {
+					return true;
+				} else if (b == false && queryRelation == QueryRelation.DISJOINT) {
+					return false;
+				} else if (b == false && queryRelation == QueryRelation.WITHIN) {
+					return false;
+				}
+			}
+			return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
+		}
+	}
+
+	@Slow
+	@Nightly
+	@Override
+	public void testRandomBig() throws Exception {
+		doTestRandom(10000);
+	}
 }

@@ -38,10 +38,10 @@ import org.apache.lucene.search.Weight;
 /**
  * A query that retrieves documents containing intervals returned from an
  * {@link IntervalsSource}
- *
+ * <p>
  * Static constructor functions for various different sources can be found in the
  * {@link Intervals} class
- *
+ * <p>
  * Scores for this query are computed as a function of the sloppy frequency of
  * intervals appearing in a particular document.  Sloppy frequency is calculated
  * from the number of matching intervals, and their width, with wider intervals
@@ -53,155 +53,157 @@ import org.apache.lucene.search.Weight;
  *   <li>exp   - higher values of this parameter make the function grow more slowly
  *               below the pivot and faster higher than the pivot.  The default value is 1</li>
  * </ul>
- *
+ * <p>
  * Optimal values for both pivot and exp depend on the type of queries and corpus of
  * documents being queried.
- *
+ * <p>
  * Scores are bounded to between 0 and 1.  For higher contributions, wrap the query
  * in a {@link org.apache.lucene.search.BoostQuery}
  */
 public final class IntervalQuery extends Query {
 
-  private final String field;
-  private final IntervalsSource intervalsSource;
-  private final IntervalScoreFunction scoreFunction;
+	private final String field;
+	private final IntervalsSource intervalsSource;
+	private final IntervalScoreFunction scoreFunction;
 
-  /**
-   * Create a new IntervalQuery
-   * @param field             the field to query
-   * @param intervalsSource   an {@link IntervalsSource} to retrieve intervals from
-   */
-  public IntervalQuery(String field, IntervalsSource intervalsSource) {
-    this(field, intervalsSource, IntervalScoreFunction.saturationFunction(1));
-  }
+	/**
+	 * Create a new IntervalQuery
+	 *
+	 * @param field           the field to query
+	 * @param intervalsSource an {@link IntervalsSource} to retrieve intervals from
+	 */
+	public IntervalQuery(String field, IntervalsSource intervalsSource) {
+		this(field, intervalsSource, IntervalScoreFunction.saturationFunction(1));
+	}
 
-  /**
-   * Create a new IntervalQuery with a scoring pivot
-   *
-   * @param field             the field to query
-   * @param intervalsSource   an {@link IntervalsSource} to retrieve intervals from
-   * @param pivot             the sloppy frequency value at which the score will be 0.5, must be within (0, +Infinity)
-   */
-  public IntervalQuery(String field, IntervalsSource intervalsSource, float pivot) {
-    this(field, intervalsSource, IntervalScoreFunction.saturationFunction(pivot));
-  }
+	/**
+	 * Create a new IntervalQuery with a scoring pivot
+	 *
+	 * @param field           the field to query
+	 * @param intervalsSource an {@link IntervalsSource} to retrieve intervals from
+	 * @param pivot           the sloppy frequency value at which the score will be 0.5, must be within (0, +Infinity)
+	 */
+	public IntervalQuery(String field, IntervalsSource intervalsSource, float pivot) {
+		this(field, intervalsSource, IntervalScoreFunction.saturationFunction(pivot));
+	}
 
-  /**
-   * Create a new IntervalQuery with a scoring pivot and exponent
-   * @param field             the field to query
-   * @param intervalsSource   an {@link IntervalsSource} to retrieve intervals from
-   * @param pivot             the sloppy frequency value at which the score will be 0.5, must be within (0, +Infinity)
-   * @param exp               exponent, higher values make the function grow slower before 'pivot' and faster
-   *                          after 'pivot', must be in (0, +Infinity)
-   */
-  public IntervalQuery(String field, IntervalsSource intervalsSource, float pivot, float exp) {
-    this(field, intervalsSource, IntervalScoreFunction.sigmoidFunction(pivot, exp));
-  }
+	/**
+	 * Create a new IntervalQuery with a scoring pivot and exponent
+	 *
+	 * @param field           the field to query
+	 * @param intervalsSource an {@link IntervalsSource} to retrieve intervals from
+	 * @param pivot           the sloppy frequency value at which the score will be 0.5, must be within (0, +Infinity)
+	 * @param exp             exponent, higher values make the function grow slower before 'pivot' and faster
+	 *                        after 'pivot', must be in (0, +Infinity)
+	 */
+	public IntervalQuery(String field, IntervalsSource intervalsSource, float pivot, float exp) {
+		this(field, intervalsSource, IntervalScoreFunction.sigmoidFunction(pivot, exp));
+	}
 
-  private IntervalQuery(String field, IntervalsSource intervalsSource, IntervalScoreFunction scoreFunction) {
-    Objects.requireNonNull(field, "null field aren't accepted");
-    Objects.requireNonNull(intervalsSource, "null intervalsSource aren't accepted");
-    Objects.requireNonNull(scoreFunction, "null scoreFunction aren't accepted");
-    this.field = field;
-    this.intervalsSource = intervalsSource;
-    this.scoreFunction = scoreFunction;
-  }
+	private IntervalQuery(String field, IntervalsSource intervalsSource, IntervalScoreFunction scoreFunction) {
+		Objects.requireNonNull(field, "null field aren't accepted");
+		Objects.requireNonNull(intervalsSource, "null intervalsSource aren't accepted");
+		Objects.requireNonNull(scoreFunction, "null scoreFunction aren't accepted");
+		this.field = field;
+		this.intervalsSource = intervalsSource;
+		this.scoreFunction = scoreFunction;
+	}
 
-  /**
-   * The field to query
-   */
-  public String getField() {
-    return field;
-  }
+	/**
+	 * The field to query
+	 */
+	public String getField() {
+		return field;
+	}
 
-  @Override
-  public String toString(String field) {
-    return (!getField().equals(field) ? getField() + ":" : "") + intervalsSource.toString();
-  }
+	@Override
+	public String toString(String field) {
+		return (!getField().equals(field) ? getField() + ":" : "") + intervalsSource.toString();
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    return new IntervalWeight(this, boost, scoreMode);
-  }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		return new IntervalWeight(this, boost, scoreMode);
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    if (visitor.acceptField(field)) {
-      intervalsSource.visit(field, visitor);
-    }
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		if (visitor.acceptField(field)) {
+			intervalsSource.visit(field, visitor);
+		}
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    IntervalQuery that = (IntervalQuery) o;
-    return Objects.equals(field, that.field) &&
-        Objects.equals(intervalsSource, that.intervalsSource);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		IntervalQuery that = (IntervalQuery) o;
+		return Objects.equals(field, that.field) &&
+			Objects.equals(intervalsSource, that.intervalsSource);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(field, intervalsSource);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(field, intervalsSource);
+	}
 
-  private class IntervalWeight extends Weight {
+	private class IntervalWeight extends Weight {
 
-    final ScoreMode scoreMode;
-    final float boost;
+		final ScoreMode scoreMode;
+		final float boost;
 
-    public IntervalWeight(Query query, float boost, ScoreMode scoreMode) {
-      super(query);
-      this.scoreMode = scoreMode;
-      this.boost = boost;
-    }
+		public IntervalWeight(Query query, float boost, ScoreMode scoreMode) {
+			super(query);
+			this.scoreMode = scoreMode;
+			this.boost = boost;
+		}
 
-    @Override
-    public void extractTerms(Set<Term> terms) {
-      intervalsSource.visit(field, QueryVisitor.termCollector(terms));
-    }
+		@Override
+		public void extractTerms(Set<Term> terms) {
+			intervalsSource.visit(field, QueryVisitor.termCollector(terms));
+		}
 
-    @Override
-    public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-      IntervalScorer scorer = (IntervalScorer) scorer(context);
-      if (scorer != null) {
-        int newDoc = scorer.iterator().advance(doc);
-        if (newDoc == doc) {
-          float freq = scorer.freq();
-          return scoreFunction.explain(IntervalQuery.this.toString(), boost, freq);
-        }
-      }
-      return Explanation.noMatch("no matching intervals");
-    }
+		@Override
+		public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+			IntervalScorer scorer = (IntervalScorer) scorer(context);
+			if (scorer != null) {
+				int newDoc = scorer.iterator().advance(doc);
+				if (newDoc == doc) {
+					float freq = scorer.freq();
+					return scoreFunction.explain(IntervalQuery.this.toString(), boost, freq);
+				}
+			}
+			return Explanation.noMatch("no matching intervals");
+		}
 
-    @Override
-    public Matches matches(LeafReaderContext context, int doc) throws IOException {
-      return MatchesUtils.forField(field, () -> {
-        MatchesIterator mi = intervalsSource.matches(field, context, doc);
-        if (mi == null) {
-          return null;
-        }
-        return new FilterMatchesIterator(mi) {
-          @Override
-          public Query getQuery() {
-            return new IntervalQuery(field, intervalsSource);
-          }
-        };
-      });
-    }
+		@Override
+		public Matches matches(LeafReaderContext context, int doc) throws IOException {
+			return MatchesUtils.forField(field, () -> {
+				MatchesIterator mi = intervalsSource.matches(field, context, doc);
+				if (mi == null) {
+					return null;
+				}
+				return new FilterMatchesIterator(mi) {
+					@Override
+					public Query getQuery() {
+						return new IntervalQuery(field, intervalsSource);
+					}
+				};
+			});
+		}
 
-    @Override
-    public Scorer scorer(LeafReaderContext context) throws IOException {
-      IntervalIterator intervals = intervalsSource.intervals(field, context);
-      if (intervals == null)
-        return null;
-      return new IntervalScorer(this, intervals, intervalsSource.minExtent(), boost, scoreFunction);
-    }
+		@Override
+		public Scorer scorer(LeafReaderContext context) throws IOException {
+			IntervalIterator intervals = intervalsSource.intervals(field, context);
+			if (intervals == null)
+				return null;
+			return new IntervalScorer(this, intervals, intervalsSource.minExtent(), boost, scoreFunction);
+		}
 
-    @Override
-    public boolean isCacheable(LeafReaderContext ctx) {
-      return true;
-    }
-  }
+		@Override
+		public boolean isCacheable(LeafReaderContext ctx) {
+			return true;
+		}
+	}
 
 }

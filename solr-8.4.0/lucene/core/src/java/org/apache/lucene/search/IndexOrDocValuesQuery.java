@@ -47,150 +47,156 @@ import org.apache.lucene.index.Term;
  * to verify that some documents match.
  * <p><b>NOTE</b>This query currently only works well with point range/exact
  * queries and their equivalent doc values queries.
+ *
  * @lucene.experimental
  */
 public final class IndexOrDocValuesQuery extends Query {
 
-  private final Query indexQuery, dvQuery;
+	private final Query indexQuery, dvQuery;
 
-  /**
-   * Create an {@link IndexOrDocValuesQuery}. Both provided queries must match
-   * the same documents and give the same scores.
-   * @param indexQuery a query that has a good iterator but whose scorer may be costly to create
-   * @param dvQuery a query whose scorer is cheap to create that can quickly check whether a given document matches
-   */
-  public IndexOrDocValuesQuery(Query indexQuery, Query dvQuery) {
-    this.indexQuery = indexQuery;
-    this.dvQuery = dvQuery;
-  }
+	/**
+	 * Create an {@link IndexOrDocValuesQuery}. Both provided queries must match
+	 * the same documents and give the same scores.
+	 *
+	 * @param indexQuery a query that has a good iterator but whose scorer may be costly to create
+	 * @param dvQuery    a query whose scorer is cheap to create that can quickly check whether a given document matches
+	 */
+	public IndexOrDocValuesQuery(Query indexQuery, Query dvQuery) {
+		this.indexQuery = indexQuery;
+		this.dvQuery = dvQuery;
+	}
 
-  /** Return the wrapped query that may be costly to initialize but has a good
-   *  iterator. */
-  public Query getIndexQuery() {
-    return indexQuery;
-  }
+	/**
+	 * Return the wrapped query that may be costly to initialize but has a good
+	 * iterator.
+	 */
+	public Query getIndexQuery() {
+		return indexQuery;
+	}
 
-  /** Return the wrapped query that may be slow at identifying all matching
-   *  documents, but which is cheap to initialize and can efficiently
-   *  verify that some documents match. */
-  public Query getRandomAccessQuery() {
-    return dvQuery;
-  }
+	/**
+	 * Return the wrapped query that may be slow at identifying all matching
+	 * documents, but which is cheap to initialize and can efficiently
+	 * verify that some documents match.
+	 */
+	public Query getRandomAccessQuery() {
+		return dvQuery;
+	}
 
-  @Override
-  public String toString(String field) {
-    return indexQuery.toString(field);
-  }
+	@Override
+	public String toString(String field) {
+		return indexQuery.toString(field);
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (sameClassAs(obj) == false) {
-      return false;
-    }
-    IndexOrDocValuesQuery that = (IndexOrDocValuesQuery) obj;
-    return indexQuery.equals(that.indexQuery) && dvQuery.equals(that.dvQuery);
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (sameClassAs(obj) == false) {
+			return false;
+		}
+		IndexOrDocValuesQuery that = (IndexOrDocValuesQuery) obj;
+		return indexQuery.equals(that.indexQuery) && dvQuery.equals(that.dvQuery);
+	}
 
-  @Override
-  public int hashCode() {
-    int h = classHash();
-    h = 31 * h + indexQuery.hashCode();
-    h = 31 * h + dvQuery.hashCode();
-    return h;
-  }
+	@Override
+	public int hashCode() {
+		int h = classHash();
+		h = 31 * h + indexQuery.hashCode();
+		h = 31 * h + dvQuery.hashCode();
+		return h;
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    Query indexRewrite = indexQuery.rewrite(reader);
-    Query dvRewrite = dvQuery.rewrite(reader);
-    if (indexQuery != indexRewrite || dvQuery != dvRewrite) {
-      return new IndexOrDocValuesQuery(indexRewrite, dvRewrite);
-    }
-    return this;
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		Query indexRewrite = indexQuery.rewrite(reader);
+		Query dvRewrite = dvQuery.rewrite(reader);
+		if (indexQuery != indexRewrite || dvQuery != dvRewrite) {
+			return new IndexOrDocValuesQuery(indexRewrite, dvRewrite);
+		}
+		return this;
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    QueryVisitor v = visitor.getSubVisitor(BooleanClause.Occur.MUST, this);
-    indexQuery.visit(v);
-    dvQuery.visit(v);
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		QueryVisitor v = visitor.getSubVisitor(BooleanClause.Occur.MUST, this);
+		indexQuery.visit(v);
+		dvQuery.visit(v);
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    final Weight indexWeight = indexQuery.createWeight(searcher, scoreMode, boost);
-    final Weight dvWeight = dvQuery.createWeight(searcher, scoreMode, boost);
-    return new Weight(this) {
-      @Override
-      public void extractTerms(Set<Term> terms) {
-        indexWeight.extractTerms(terms);
-      }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		final Weight indexWeight = indexQuery.createWeight(searcher, scoreMode, boost);
+		final Weight dvWeight = dvQuery.createWeight(searcher, scoreMode, boost);
+		return new Weight(this) {
+			@Override
+			public void extractTerms(Set<Term> terms) {
+				indexWeight.extractTerms(terms);
+			}
 
-      @Override
-      public Matches matches(LeafReaderContext context, int doc) throws IOException {
-        // We need to check a single doc, so the dv query should perform better
-        return dvWeight.matches(context, doc);
-      }
+			@Override
+			public Matches matches(LeafReaderContext context, int doc) throws IOException {
+				// We need to check a single doc, so the dv query should perform better
+				return dvWeight.matches(context, doc);
+			}
 
-      @Override
-      public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-        // We need to check a single doc, so the dv query should perform better
-        return dvWeight.explain(context, doc);
-      }
+			@Override
+			public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+				// We need to check a single doc, so the dv query should perform better
+				return dvWeight.explain(context, doc);
+			}
 
-      @Override
-      public BulkScorer bulkScorer(LeafReaderContext context) throws IOException {
-        // Bulk scorers need to consume the entire set of docs, so using an
-        // index structure should perform better
-        return indexWeight.bulkScorer(context);
-      }
+			@Override
+			public BulkScorer bulkScorer(LeafReaderContext context) throws IOException {
+				// Bulk scorers need to consume the entire set of docs, so using an
+				// index structure should perform better
+				return indexWeight.bulkScorer(context);
+			}
 
-      @Override
-      public ScorerSupplier scorerSupplier(LeafReaderContext context) throws IOException {
-        final ScorerSupplier indexScorerSupplier = indexWeight.scorerSupplier(context);
-        final ScorerSupplier dvScorerSupplier = dvWeight.scorerSupplier(context);
-        if (indexScorerSupplier == null || dvScorerSupplier == null) {
-          return null;
-        }
-        return new ScorerSupplier() {
-          @Override
-          public Scorer get(long leadCost) throws IOException {
-            // At equal costs, doc values tend to be worse than points since they
-            // still need to perform one comparison per document while points can
-            // do much better than that given how values are organized. So we give
-            // an arbitrary 8x penalty to doc values.
-            final long threshold = cost() >>> 3;
-            if (threshold <= leadCost) {
-              return indexScorerSupplier.get(leadCost);
-            } else {
-              return dvScorerSupplier.get(leadCost);
-            }
-          }
+			@Override
+			public ScorerSupplier scorerSupplier(LeafReaderContext context) throws IOException {
+				final ScorerSupplier indexScorerSupplier = indexWeight.scorerSupplier(context);
+				final ScorerSupplier dvScorerSupplier = dvWeight.scorerSupplier(context);
+				if (indexScorerSupplier == null || dvScorerSupplier == null) {
+					return null;
+				}
+				return new ScorerSupplier() {
+					@Override
+					public Scorer get(long leadCost) throws IOException {
+						// At equal costs, doc values tend to be worse than points since they
+						// still need to perform one comparison per document while points can
+						// do much better than that given how values are organized. So we give
+						// an arbitrary 8x penalty to doc values.
+						final long threshold = cost() >>> 3;
+						if (threshold <= leadCost) {
+							return indexScorerSupplier.get(leadCost);
+						} else {
+							return dvScorerSupplier.get(leadCost);
+						}
+					}
 
-          @Override
-          public long cost() {
-            return indexScorerSupplier.cost();
-          }
-        };
-      }
+					@Override
+					public long cost() {
+						return indexScorerSupplier.cost();
+					}
+				};
+			}
 
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        ScorerSupplier scorerSupplier = scorerSupplier(context);
-        if (scorerSupplier == null) {
-          return null;
-        }
-        return scorerSupplier.get(Long.MAX_VALUE);
-      }
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				ScorerSupplier scorerSupplier = scorerSupplier(context);
+				if (scorerSupplier == null) {
+					return null;
+				}
+				return scorerSupplier.get(Long.MAX_VALUE);
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        // Both index and dv query should return the same values, so we can use
-        // the index query's cachehelper here
-        return indexWeight.isCacheable(ctx);
-      }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				// Both index and dv query should return the same values, so we can use
+				// the index query's cachehelper here
+				return indexWeight.isCacheable(ctx);
+			}
 
-    };
-  }
+		};
+	}
 
 }

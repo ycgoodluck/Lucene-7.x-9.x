@@ -29,24 +29,22 @@ import org.apache.lucene.search.Query;
  * the parser the {@link ParserExtension} can be customized and plugged into an
  * instance of {@link ExtendableQueryParser}, a direct subclass of
  * {@link org.apache.lucene.queryparser.classic.QueryParser}.
- * 
+ *
  * @see Extensions
  * @see ExtendableQueryParser
  */
 public abstract class ParserExtension {
 
-  /**
-   * Processes the given {@link ExtensionQuery} and returns a corresponding
-   * {@link Query} instance. Subclasses must either return a {@link Query}
-   * instance or raise a {@link ParseException}. This method must not return
-   * <code>null</code>.
-   * 
-   * @param query
-   *          the extension query
-   * @return a new query instance
-   * @throws ParseException
-   *           if the query can not be parsed.
-   */
-  public abstract Query parse(final ExtensionQuery query) throws ParseException;
+	/**
+	 * Processes the given {@link ExtensionQuery} and returns a corresponding
+	 * {@link Query} instance. Subclasses must either return a {@link Query}
+	 * instance or raise a {@link ParseException}. This method must not return
+	 * <code>null</code>.
+	 *
+	 * @param query the extension query
+	 * @return a new query instance
+	 * @throws ParseException if the query can not be parsed.
+	 */
+	public abstract Query parse(final ExtensionQuery query) throws ParseException;
 
 }

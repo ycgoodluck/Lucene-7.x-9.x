@@ -25,29 +25,29 @@ import org.apache.lucene.search.Explanation;
 
 public class TestExplainingMatcher extends MonitorTestBase {
 
-  public void testExplainingMatcher() throws IOException {
+	public void testExplainingMatcher() throws IOException {
 
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", parse("test")), new MonitorQuery("2", parse("wibble")));
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(new MonitorQuery("1", parse("test")), new MonitorQuery("2", parse("wibble")));
 
-      Document doc = new Document();
-      doc.add(newTextField("field", "test", Field.Store.NO));
+			Document doc = new Document();
+			doc.add(newTextField("field", "test", Field.Store.NO));
 
-      MatchingQueries<ExplainingMatch> matches = monitor.match(doc, ExplainingMatch.MATCHER);
-      assertNotNull(matches.matches("1"));
-      assertNotNull(matches.matches("1").getExplanation());
-    }
-  }
+			MatchingQueries<ExplainingMatch> matches = monitor.match(doc, ExplainingMatch.MATCHER);
+			assertNotNull(matches.matches("1"));
+			assertNotNull(matches.matches("1").getExplanation());
+		}
+	}
 
-  public void testHashcodeAndEquals() {
+	public void testHashcodeAndEquals() {
 
-    ExplainingMatch m1 = new ExplainingMatch("1", Explanation.match(0.1f, "an explanation"));
-    ExplainingMatch m3 = new ExplainingMatch("1", Explanation.match(0.1f, "another explanation"));
-    ExplainingMatch m4 = new ExplainingMatch("1", Explanation.match(0.1f, "an explanation"));
+		ExplainingMatch m1 = new ExplainingMatch("1", Explanation.match(0.1f, "an explanation"));
+		ExplainingMatch m3 = new ExplainingMatch("1", Explanation.match(0.1f, "another explanation"));
+		ExplainingMatch m4 = new ExplainingMatch("1", Explanation.match(0.1f, "an explanation"));
 
-    assertEquals(m1, m4);
-    assertEquals(m1.hashCode(), m4.hashCode());
-    assertNotEquals(m1, m3);
-    assertNotEquals(m3, m4);
-  }
+		assertEquals(m1, m4);
+		assertEquals(m1.hashCode(), m4.hashCode());
+		assertNotEquals(m1, m3);
+		assertNotEquals(m3, m4);
+	}
 }

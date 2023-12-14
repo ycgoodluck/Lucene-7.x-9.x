@@ -28,131 +28,132 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestLargeNumHitsTopDocsCollector extends LuceneTestCase {
-  private Directory dir;
-  private IndexReader reader;
-  private final Query testQuery = new BooleanQuery.Builder()
-      .add(new TermQuery(new Term("field", "5")), BooleanClause.Occur.SHOULD)
-      .add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
-      .build();
+	private Directory dir;
+	private IndexReader reader;
+	private final Query testQuery = new BooleanQuery.Builder()
+		.add(new TermQuery(new Term("field", "5")), BooleanClause.Occur.SHOULD)
+		.add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
+		.build();
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    dir = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(random(), dir);
-    for (int i = 0; i < 1_000; i++) {
-      Document doc = new Document();
-      doc.add(newStringField("field", "5", Field.Store.NO));
-      writer.addDocument(doc);
-      writer.addDocument(new Document());
-    }
-    reader = writer.getReader();
-    writer.close();
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		dir = newDirectory();
+		RandomIndexWriter writer = new RandomIndexWriter(random(), dir);
+		for (int i = 0; i < 1_000; i++) {
+			Document doc = new Document();
+			doc.add(newStringField("field", "5", Field.Store.NO));
+			writer.addDocument(doc);
+			writer.addDocument(new Document());
+		}
+		reader = writer.getReader();
+		writer.close();
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    reader.close();
-    dir.close();
-    dir = null;
-    super.tearDown();
-  }
-  public void testRequestMoreHitsThanCollected() throws Exception {
-    runNumHits(150);
-  }
+	@Override
+	public void tearDown() throws Exception {
+		reader.close();
+		dir.close();
+		dir = null;
+		super.tearDown();
+	}
 
-  public void testSingleNumHit() throws Exception {
-    runNumHits(1);
-  }
+	public void testRequestMoreHitsThanCollected() throws Exception {
+		runNumHits(150);
+	}
 
-  public void testRequestLessHitsThanCollected() throws Exception {
-    runNumHits(25);
-  }
+	public void testSingleNumHit() throws Exception {
+		runNumHits(1);
+	}
 
-  public void testIllegalArguments() throws IOException {
-    IndexSearcher searcher = newSearcher(reader);
-    LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(15);
-    TopScoreDocCollector regularCollector = TopScoreDocCollector.create(15, null, Integer.MAX_VALUE);
+	public void testRequestLessHitsThanCollected() throws Exception {
+		runNumHits(25);
+	}
 
-    searcher.search(testQuery, largeCollector);
-    searcher.search(testQuery, regularCollector);
+	public void testIllegalArguments() throws IOException {
+		IndexSearcher searcher = newSearcher(reader);
+		LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(15);
+		TopScoreDocCollector regularCollector = TopScoreDocCollector.create(15, null, Integer.MAX_VALUE);
 
-    assertEquals(largeCollector.totalHits, regularCollector.totalHits);
+		searcher.search(testQuery, largeCollector);
+		searcher.search(testQuery, regularCollector);
 
-    IllegalArgumentException expected  = expectThrows(IllegalArgumentException.class, () -> {
-      largeCollector.topDocs(350_000);
-    });
+		assertEquals(largeCollector.totalHits, regularCollector.totalHits);
 
-    assertTrue(expected.getMessage().contains("Incorrect number of hits requested"));
-  }
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			largeCollector.topDocs(350_000);
+		});
 
-  public void testNoPQBuild() throws IOException {
-    IndexSearcher searcher = newSearcher(reader);
-    LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(250_000);
-    TopScoreDocCollector regularCollector = TopScoreDocCollector.create(250_000, null, Integer.MAX_VALUE);
+		assertTrue(expected.getMessage().contains("Incorrect number of hits requested"));
+	}
 
-    searcher.search(testQuery, largeCollector);
-    searcher.search(testQuery, regularCollector);
+	public void testNoPQBuild() throws IOException {
+		IndexSearcher searcher = newSearcher(reader);
+		LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(250_000);
+		TopScoreDocCollector regularCollector = TopScoreDocCollector.create(250_000, null, Integer.MAX_VALUE);
 
-    assertEquals(largeCollector.totalHits, regularCollector.totalHits);
+		searcher.search(testQuery, largeCollector);
+		searcher.search(testQuery, regularCollector);
 
-    assertEquals(largeCollector.pq, null);
-    assertEquals(largeCollector.pqTop, null);
-  }
+		assertEquals(largeCollector.totalHits, regularCollector.totalHits);
 
-  public void testPQBuild() throws IOException {
-    IndexSearcher searcher = newSearcher(reader);
-    LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(50);
-    TopScoreDocCollector regularCollector = TopScoreDocCollector.create(50, null, Integer.MAX_VALUE);
+		assertEquals(largeCollector.pq, null);
+		assertEquals(largeCollector.pqTop, null);
+	}
 
-    searcher.search(testQuery, largeCollector);
-    searcher.search(testQuery, regularCollector);
+	public void testPQBuild() throws IOException {
+		IndexSearcher searcher = newSearcher(reader);
+		LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(50);
+		TopScoreDocCollector regularCollector = TopScoreDocCollector.create(50, null, Integer.MAX_VALUE);
 
-    assertEquals(largeCollector.totalHits, regularCollector.totalHits);
+		searcher.search(testQuery, largeCollector);
+		searcher.search(testQuery, regularCollector);
 
-    assertNotEquals(largeCollector.pq, null);
-    assertNotEquals(largeCollector.pqTop, null);
-  }
+		assertEquals(largeCollector.totalHits, regularCollector.totalHits);
 
-  public void testNoPQHitsOrder() throws IOException {
-    IndexSearcher searcher = newSearcher(reader);
-    LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(250_000);
-    TopScoreDocCollector regularCollector = TopScoreDocCollector.create(250_000, null, Integer.MAX_VALUE);
+		assertNotEquals(largeCollector.pq, null);
+		assertNotEquals(largeCollector.pqTop, null);
+	}
 
-    searcher.search(testQuery, largeCollector);
-    searcher.search(testQuery, regularCollector);
+	public void testNoPQHitsOrder() throws IOException {
+		IndexSearcher searcher = newSearcher(reader);
+		LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(250_000);
+		TopScoreDocCollector regularCollector = TopScoreDocCollector.create(250_000, null, Integer.MAX_VALUE);
 
-    assertEquals(largeCollector.totalHits, regularCollector.totalHits);
+		searcher.search(testQuery, largeCollector);
+		searcher.search(testQuery, regularCollector);
 
-    assertEquals(largeCollector.pq, null);
-    assertEquals(largeCollector.pqTop, null);
+		assertEquals(largeCollector.totalHits, regularCollector.totalHits);
 
-    TopDocs topDocs = largeCollector.topDocs();
+		assertEquals(largeCollector.pq, null);
+		assertEquals(largeCollector.pqTop, null);
 
-    if (topDocs.scoreDocs.length > 0) {
-      float preScore = topDocs.scoreDocs[0].score;
-      for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
-        assert scoreDoc.score <= preScore;
-        preScore = scoreDoc.score;
-      }
-    }
-  }
+		TopDocs topDocs = largeCollector.topDocs();
 
-  private void runNumHits(int numHits) throws IOException {
-    IndexSearcher searcher = newSearcher(reader);
-    LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(numHits);
-    TopScoreDocCollector regularCollector = TopScoreDocCollector.create(numHits, null, Integer.MAX_VALUE);
+		if (topDocs.scoreDocs.length > 0) {
+			float preScore = topDocs.scoreDocs[0].score;
+			for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+				assert scoreDoc.score <= preScore;
+				preScore = scoreDoc.score;
+			}
+		}
+	}
 
-    searcher.search(testQuery, largeCollector);
-    searcher.search(testQuery, regularCollector);
+	private void runNumHits(int numHits) throws IOException {
+		IndexSearcher searcher = newSearcher(reader);
+		LargeNumHitsTopDocsCollector largeCollector = new LargeNumHitsTopDocsCollector(numHits);
+		TopScoreDocCollector regularCollector = TopScoreDocCollector.create(numHits, null, Integer.MAX_VALUE);
 
-    assertEquals(largeCollector.totalHits, regularCollector.totalHits);
+		searcher.search(testQuery, largeCollector);
+		searcher.search(testQuery, regularCollector);
 
-    TopDocs firstTopDocs = largeCollector.topDocs();
-    TopDocs secondTopDocs = regularCollector.topDocs();
+		assertEquals(largeCollector.totalHits, regularCollector.totalHits);
 
-    assertEquals(firstTopDocs.scoreDocs.length, secondTopDocs.scoreDocs.length);
+		TopDocs firstTopDocs = largeCollector.topDocs();
+		TopDocs secondTopDocs = regularCollector.topDocs();
 
-    CheckHits.checkEqual(testQuery, firstTopDocs.scoreDocs, secondTopDocs.scoreDocs);
-  }
+		assertEquals(firstTopDocs.scoreDocs.length, secondTopDocs.scoreDocs.length);
+
+		CheckHits.checkEqual(testQuery, firstTopDocs.scoreDocs, secondTopDocs.scoreDocs);
+	}
 }

@@ -35,7 +35,7 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
  *  document.add(
  *   new ContextSuggestField(name, "suggestion", Arrays.asList("context1", "context2"),  4));
  * </pre>
- *
+ * <p>
  * Use {@link ContextQuery} to boost and/or filter suggestions
  * at query-time. Use {@link PrefixCompletionQuery}, {@link RegexCompletionQuery}
  * or {@link FuzzyCompletionQuery} if context boost/filtering
@@ -45,130 +45,129 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
  */
 public class ContextSuggestField extends SuggestField {
 
-  /**
-   * Separator used between context value and the suggest field value
-   */
-  public static final int CONTEXT_SEPARATOR = '\u001D';
-  static final byte TYPE = 1;
+	/**
+	 * Separator used between context value and the suggest field value
+	 */
+	public static final int CONTEXT_SEPARATOR = '\u001D';
+	static final byte TYPE = 1;
 
-  private final Set<CharSequence> contexts;
+	private final Set<CharSequence> contexts;
 
-  /**
-   * Creates a context-enabled suggest field
-   *
-   * @param name field name
-   * @param value field value to get suggestion on
-   * @param weight field weight
-   * @param contexts associated contexts
-   *
-   * @throws IllegalArgumentException if either the name or value is null,
-   * if value is an empty string, if the weight is negative, if value or
-   * contexts contains any reserved characters
-   */
-  public ContextSuggestField(String name, String value, int weight, CharSequence... contexts) {
-    super(name, value, weight);
-    validate(value);
-    this.contexts = new HashSet<>((contexts != null) ? contexts.length : 0);
-    if (contexts != null) {
-      Collections.addAll(this.contexts, contexts);
-    }
-  }
+	/**
+	 * Creates a context-enabled suggest field
+	 *
+	 * @param name     field name
+	 * @param value    field value to get suggestion on
+	 * @param weight   field weight
+	 * @param contexts associated contexts
+	 * @throws IllegalArgumentException if either the name or value is null,
+	 *                                  if value is an empty string, if the weight is negative, if value or
+	 *                                  contexts contains any reserved characters
+	 */
+	public ContextSuggestField(String name, String value, int weight, CharSequence... contexts) {
+		super(name, value, weight);
+		validate(value);
+		this.contexts = new HashSet<>((contexts != null) ? contexts.length : 0);
+		if (contexts != null) {
+			Collections.addAll(this.contexts, contexts);
+		}
+	}
 
-  /**
-   * Expert: Sub-classes can inject contexts at
-   * index-time
-   */
-  protected Iterable<CharSequence> contexts() {
-    return contexts;
-  }
+	/**
+	 * Expert: Sub-classes can inject contexts at
+	 * index-time
+	 */
+	protected Iterable<CharSequence> contexts() {
+		return contexts;
+	}
 
-  @Override
-  protected CompletionTokenStream wrapTokenStream(TokenStream stream) {
-    final Iterable<CharSequence> contexts = contexts();
-    for (CharSequence context : contexts) {
-      validate(context);
-    }
-    CompletionTokenStream completionTokenStream;
-    if (stream instanceof CompletionTokenStream) {
-      //TODO this is awkward; is there a better way avoiding re-creating the chain?
-      completionTokenStream = (CompletionTokenStream) stream;
-      PrefixTokenFilter prefixTokenFilter = new PrefixTokenFilter(completionTokenStream.inputTokenStream, (char) CONTEXT_SEPARATOR, contexts);
-      completionTokenStream = new CompletionTokenStream(prefixTokenFilter,
-          completionTokenStream.preserveSep,
-          completionTokenStream.preservePositionIncrements,
-          completionTokenStream.maxGraphExpansions);
-    } else {
-      completionTokenStream = new CompletionTokenStream(new PrefixTokenFilter(stream, (char) CONTEXT_SEPARATOR, contexts));
-    }
-    return completionTokenStream;
-  }
+	@Override
+	protected CompletionTokenStream wrapTokenStream(TokenStream stream) {
+		final Iterable<CharSequence> contexts = contexts();
+		for (CharSequence context : contexts) {
+			validate(context);
+		}
+		CompletionTokenStream completionTokenStream;
+		if (stream instanceof CompletionTokenStream) {
+			//TODO this is awkward; is there a better way avoiding re-creating the chain?
+			completionTokenStream = (CompletionTokenStream) stream;
+			PrefixTokenFilter prefixTokenFilter = new PrefixTokenFilter(completionTokenStream.inputTokenStream, (char) CONTEXT_SEPARATOR, contexts);
+			completionTokenStream = new CompletionTokenStream(prefixTokenFilter,
+				completionTokenStream.preserveSep,
+				completionTokenStream.preservePositionIncrements,
+				completionTokenStream.maxGraphExpansions);
+		} else {
+			completionTokenStream = new CompletionTokenStream(new PrefixTokenFilter(stream, (char) CONTEXT_SEPARATOR, contexts));
+		}
+		return completionTokenStream;
+	}
 
-  @Override
-  protected byte type() {
-    return TYPE;
-  }
+	@Override
+	protected byte type() {
+		return TYPE;
+	}
 
-  /**
-   * The {@link PrefixTokenFilter} wraps a {@link TokenStream} and adds a set
-   * prefixes ahead. The position attribute will not be incremented for the prefixes.
-   */
-  private static final class PrefixTokenFilter extends TokenFilter {
+	/**
+	 * The {@link PrefixTokenFilter} wraps a {@link TokenStream} and adds a set
+	 * prefixes ahead. The position attribute will not be incremented for the prefixes.
+	 */
+	private static final class PrefixTokenFilter extends TokenFilter {
 
-    private final char separator;
-    private final CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
-    private final PositionIncrementAttribute posAttr = addAttribute(PositionIncrementAttribute.class);
-    private final Iterable<CharSequence> prefixes;
+		private final char separator;
+		private final CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
+		private final PositionIncrementAttribute posAttr = addAttribute(PositionIncrementAttribute.class);
+		private final Iterable<CharSequence> prefixes;
 
-    private Iterator<CharSequence> currentPrefix;
+		private Iterator<CharSequence> currentPrefix;
 
-    /**
-     * Create a new {@link PrefixTokenFilter}
-     *
-     * @param input {@link TokenStream} to wrap
-     * @param separator Character used separate prefixes from other tokens
-     * @param prefixes {@link Iterable} of {@link CharSequence} which keeps all prefixes
-     */
-    public PrefixTokenFilter(TokenStream input, char separator, Iterable<CharSequence> prefixes) {
-      super(input);
-      this.prefixes = prefixes;
-      this.currentPrefix = null;
-      this.separator = separator;
-    }
+		/**
+		 * Create a new {@link PrefixTokenFilter}
+		 *
+		 * @param input     {@link TokenStream} to wrap
+		 * @param separator Character used separate prefixes from other tokens
+		 * @param prefixes  {@link Iterable} of {@link CharSequence} which keeps all prefixes
+		 */
+		public PrefixTokenFilter(TokenStream input, char separator, Iterable<CharSequence> prefixes) {
+			super(input);
+			this.prefixes = prefixes;
+			this.currentPrefix = null;
+			this.separator = separator;
+		}
 
-    @Override
-    public boolean incrementToken() throws IOException {
-      if (currentPrefix != null) {
-        if (!currentPrefix.hasNext()) {
-          return input.incrementToken();
-        } else {
-          posAttr.setPositionIncrement(0);
-        }
-      } else {
-        currentPrefix = prefixes.iterator();
-        termAttr.setEmpty();
-        posAttr.setPositionIncrement(1);
-      }
-      termAttr.setEmpty();
-      if (currentPrefix.hasNext()) {
-        termAttr.append(currentPrefix.next());
-      }
-      termAttr.append(separator);
-      return true;
-    }
+		@Override
+		public boolean incrementToken() throws IOException {
+			if (currentPrefix != null) {
+				if (!currentPrefix.hasNext()) {
+					return input.incrementToken();
+				} else {
+					posAttr.setPositionIncrement(0);
+				}
+			} else {
+				currentPrefix = prefixes.iterator();
+				termAttr.setEmpty();
+				posAttr.setPositionIncrement(1);
+			}
+			termAttr.setEmpty();
+			if (currentPrefix.hasNext()) {
+				termAttr.append(currentPrefix.next());
+			}
+			termAttr.append(separator);
+			return true;
+		}
 
-    @Override
-    public void reset() throws IOException {
-      super.reset();
-      currentPrefix = null;
-    }
-  }
+		@Override
+		public void reset() throws IOException {
+			super.reset();
+			currentPrefix = null;
+		}
+	}
 
-  private void validate(final CharSequence value) {
-    for (int i = 0; i < value.length(); i++) {
-      if (CONTEXT_SEPARATOR == value.charAt(i)) {
-        throw new IllegalArgumentException("Illegal value [" + value + "] UTF-16 codepoint [0x"
-            + Integer.toHexString((int) value.charAt(i))+ "] at position " + i + " is a reserved character");
-      }
-    }
-  }
+	private void validate(final CharSequence value) {
+		for (int i = 0; i < value.length(); i++) {
+			if (CONTEXT_SEPARATOR == value.charAt(i)) {
+				throw new IllegalArgumentException("Illegal value [" + value + "] UTF-16 codepoint [0x"
+					+ Integer.toHexString((int) value.charAt(i)) + "] at position " + i + " is a reserved character");
+			}
+		}
+	}
 }

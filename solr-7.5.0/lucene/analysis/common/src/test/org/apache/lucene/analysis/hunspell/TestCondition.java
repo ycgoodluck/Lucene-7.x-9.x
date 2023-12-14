@@ -20,23 +20,23 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestCondition extends StemmerTestBase {
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("condition.aff", "condition.dic");
-  }
-  
-  public void testStemming() {
-    assertStemsTo("hello", "hello");
-    assertStemsTo("try", "try");
-    assertStemsTo("tried", "try");
-    assertStemsTo("work", "work");
-    assertStemsTo("worked", "work");
-    assertStemsTo("rework", "work");
-    assertStemsTo("reworked", "work");
-    assertStemsTo("retried");
-    assertStemsTo("workied");
-    assertStemsTo("tryed");
-    assertStemsTo("tryied");
-    assertStemsTo("helloed");
-  }
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("condition.aff", "condition.dic");
+	}
+
+	public void testStemming() {
+		assertStemsTo("hello", "hello");
+		assertStemsTo("try", "try");
+		assertStemsTo("tried", "try");
+		assertStemsTo("work", "work");
+		assertStemsTo("worked", "work");
+		assertStemsTo("rework", "work");
+		assertStemsTo("reworked", "work");
+		assertStemsTo("retried");
+		assertStemsTo("workied");
+		assertStemsTo("tryed");
+		assertStemsTo("tryied");
+		assertStemsTo("helloed");
+	}
 }

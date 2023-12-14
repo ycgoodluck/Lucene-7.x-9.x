@@ -17,7 +17,7 @@
 package org.apache.lucene.util;
 
 public enum SoreType {
-  ASSUMPTION,
-  FAILURE,
-  ERROR
+	ASSUMPTION,
+	FAILURE,
+	ERROR
 }

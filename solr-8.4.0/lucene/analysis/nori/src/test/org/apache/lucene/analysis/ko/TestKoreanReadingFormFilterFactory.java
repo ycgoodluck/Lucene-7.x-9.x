@@ -28,24 +28,26 @@ import org.apache.lucene.analysis.Tokenizer;
  * Simple tests for {@link KoreanReadingFormFilterFactory}
  */
 public class TestKoreanReadingFormFilterFactory extends BaseTokenStreamTestCase {
-  public void testReadings() throws IOException {
-    KoreanTokenizerFactory tokenizerFactory = new KoreanTokenizerFactory(new HashMap<>());
-    tokenizerFactory.inform(new StringMockResourceLoader(""));
-    TokenStream tokenStream = tokenizerFactory.create();
-    ((Tokenizer)tokenStream).setReader(new StringReader("丞相"));
-    KoreanReadingFormFilterFactory filterFactory = new KoreanReadingFormFilterFactory(new HashMap<>());
-    assertTokenStreamContents(filterFactory.create(tokenStream),
-        new String[] { "승상" }
-    );
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new KoreanReadingFormFilterFactory(new HashMap<String,String>() {{
-        put("bogusArg", "bogusValue");
-      }});
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testReadings() throws IOException {
+		KoreanTokenizerFactory tokenizerFactory = new KoreanTokenizerFactory(new HashMap<>());
+		tokenizerFactory.inform(new StringMockResourceLoader(""));
+		TokenStream tokenStream = tokenizerFactory.create();
+		((Tokenizer) tokenStream).setReader(new StringReader("丞相"));
+		KoreanReadingFormFilterFactory filterFactory = new KoreanReadingFormFilterFactory(new HashMap<>());
+		assertTokenStreamContents(filterFactory.create(tokenStream),
+			new String[]{"승상"}
+		);
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new KoreanReadingFormFilterFactory(new HashMap<String, String>() {{
+				put("bogusArg", "bogusValue");
+			}});
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

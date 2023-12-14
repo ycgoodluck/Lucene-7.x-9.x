@@ -31,33 +31,33 @@ import java.util.Map;
  * including deletions.
  */
 public class MaxDocValueSource extends ValueSource {
-  public String name() {
-    return "maxdoc";
-  }
+	public String name() {
+		return "maxdoc";
+	}
 
-  @Override
-  public String description() {
-    return name() + "()";
-  }
+	@Override
+	public String description() {
+		return name() + "()";
+	}
 
-  @Override
-  public void createWeight(Map context, IndexSearcher searcher) throws IOException {
-    context.put("searcher",searcher);
-  }
+	@Override
+	public void createWeight(Map context, IndexSearcher searcher) throws IOException {
+		context.put("searcher", searcher);
+	}
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    IndexSearcher searcher = (IndexSearcher)context.get("searcher");
-    return new ConstIntDocValues(searcher.getIndexReader().maxDoc(), this);
-  }
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+		IndexSearcher searcher = (IndexSearcher) context.get("searcher");
+		return new ConstIntDocValues(searcher.getIndexReader().maxDoc(), this);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    return this.getClass() == o.getClass();
-  }
+	@Override
+	public boolean equals(Object o) {
+		return this.getClass() == o.getClass();
+	}
 
-  @Override
-  public int hashCode() {
-    return this.getClass().hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return this.getClass().hashCode();
+	}
 }

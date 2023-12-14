@@ -25,37 +25,39 @@ import org.apache.lucene.analysis.FilteringTokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
-/** Filters all tokens that cannot be parsed to a date, using the provided {@link DateFormat}. */
+/**
+ * Filters all tokens that cannot be parsed to a date, using the provided {@link DateFormat}.
+ */
 public class DateRecognizerFilter extends FilteringTokenFilter {
 
-  public static final String DATE_TYPE = "date";
+	public static final String DATE_TYPE = "date";
 
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final DateFormat dateFormat;
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final DateFormat dateFormat;
 
-  /**
-   * Uses {@link DateFormat#DEFAULT} and {@link Locale#ENGLISH} to create a {@link DateFormat} instance.
-   */
-  public DateRecognizerFilter(TokenStream input) {
-    this(input, null);
-  }
+	/**
+	 * Uses {@link DateFormat#DEFAULT} and {@link Locale#ENGLISH} to create a {@link DateFormat} instance.
+	 */
+	public DateRecognizerFilter(TokenStream input) {
+		this(input, null);
+	}
 
-  public DateRecognizerFilter(TokenStream input, DateFormat dateFormat) {
-    super(input);
-    this.dateFormat = dateFormat != null ? dateFormat : DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.ENGLISH);
-  }
+	public DateRecognizerFilter(TokenStream input, DateFormat dateFormat) {
+		super(input);
+		this.dateFormat = dateFormat != null ? dateFormat : DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.ENGLISH);
+	}
 
-  @Override
-  public boolean accept() {
-    try {
-      // We don't care about the date, just that the term can be parsed to one.
-      dateFormat.parse(termAtt.toString());
-      return true;
-    } catch (ParseException e) {
-      // This term is not a date.
-    }
+	@Override
+	public boolean accept() {
+		try {
+			// We don't care about the date, just that the term can be parsed to one.
+			dateFormat.parse(termAtt.toString());
+			return true;
+		} catch (ParseException e) {
+			// This term is not a date.
+		}
 
-    return false;
-  }
+		return false;
+	}
 
 }

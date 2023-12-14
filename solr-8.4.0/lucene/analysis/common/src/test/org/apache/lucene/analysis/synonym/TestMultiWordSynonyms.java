@@ -29,14 +29,14 @@ import java.io.StringReader;
  * @since solr 1.4
  */
 public class TestMultiWordSynonyms extends BaseTokenStreamFactoryTestCase {
-  
-  public void testMultiWordSynonyms() throws Exception {
-    Reader reader = new StringReader("a e");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("Synonym", Version.LATEST,
-        new StringMockResourceLoader("a b c,d"),
-        "synonyms", "synonyms.txt").create(stream);
-    // This fails because ["e","e"] is the value of the token stream
-    assertTokenStreamContents(stream, new String[] { "a", "e" });
-  }
+
+	public void testMultiWordSynonyms() throws Exception {
+		Reader reader = new StringReader("a e");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("Synonym", Version.LATEST,
+			new StringMockResourceLoader("a b c,d"),
+			"synonyms", "synonyms.txt").create(stream);
+		// This fails because ["e","e"] is the value of the token stream
+		assertTokenStreamContents(stream, new String[]{"a", "e"});
+	}
 }

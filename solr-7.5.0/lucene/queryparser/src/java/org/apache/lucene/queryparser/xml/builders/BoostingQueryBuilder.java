@@ -23,36 +23,37 @@ import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
 import org.w3c.dom.Element;
+
 /**
  * Builder for {@link BoostingQuery}
  */
 public class BoostingQueryBuilder implements QueryBuilder {
 
-  private static float DEFAULT_BOOST = 0.01f;
-  
-  private final QueryBuilder factory;
+	private static float DEFAULT_BOOST = 0.01f;
 
-  public BoostingQueryBuilder(QueryBuilder factory) {
-    this.factory = factory;
-  }
+	private final QueryBuilder factory;
 
-  @Override
-  public Query getQuery(Element e) throws ParserException {
-    Element mainQueryElem = DOMUtils.getChildByTagOrFail(e, "Query");
-    mainQueryElem = DOMUtils.getFirstChildOrFail(mainQueryElem);
-    Query mainQuery = factory.getQuery(mainQueryElem);
+	public BoostingQueryBuilder(QueryBuilder factory) {
+		this.factory = factory;
+	}
 
-    Element boostQueryElem = DOMUtils.getChildByTagOrFail(e, "BoostQuery");
-    float boost = DOMUtils.getAttribute(boostQueryElem, "boost", DEFAULT_BOOST);
-    boostQueryElem = DOMUtils.getFirstChildOrFail(boostQueryElem);
-    Query boostQuery = factory.getQuery(boostQueryElem);
+	@Override
+	public Query getQuery(Element e) throws ParserException {
+		Element mainQueryElem = DOMUtils.getChildByTagOrFail(e, "Query");
+		mainQueryElem = DOMUtils.getFirstChildOrFail(mainQueryElem);
+		Query mainQuery = factory.getQuery(mainQueryElem);
 
-    Query bq = new BoostingQuery(mainQuery, boostQuery, boost);
+		Element boostQueryElem = DOMUtils.getChildByTagOrFail(e, "BoostQuery");
+		float boost = DOMUtils.getAttribute(boostQueryElem, "boost", DEFAULT_BOOST);
+		boostQueryElem = DOMUtils.getFirstChildOrFail(boostQueryElem);
+		Query boostQuery = factory.getQuery(boostQueryElem);
 
-    boost = DOMUtils.getAttribute(e, "boost", 1.0f);
-    if (boost != 1f) {
-      return new BoostQuery(bq, boost);
-    }
-    return bq;
-  }
+		Query bq = new BoostingQuery(mainQuery, boostQuery, boost);
+
+		boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+		if (boost != 1f) {
+			return new BoostQuery(bq, boost);
+		}
+		return bq;
+	}
 }

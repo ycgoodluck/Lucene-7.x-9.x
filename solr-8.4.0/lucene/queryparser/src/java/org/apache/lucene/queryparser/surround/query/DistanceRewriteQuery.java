@@ -24,22 +24,22 @@ import org.apache.lucene.search.QueryVisitor;
 
 class DistanceRewriteQuery extends RewriteQuery<DistanceQuery> {
 
-  DistanceRewriteQuery(
-      DistanceQuery srndQuery,
-      String fieldName,
-      BasicQueryFactory qf) {
-    super(srndQuery, fieldName, qf);
-  }
+	DistanceRewriteQuery(
+		DistanceQuery srndQuery,
+		String fieldName,
+		BasicQueryFactory qf) {
+		super(srndQuery, fieldName, qf);
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    return srndQuery.getSpanNearQuery(reader, fieldName, qf);
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		return srndQuery.getSpanNearQuery(reader, fieldName, qf);
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    // TODO implement this
-    visitor.visitLeaf(this);
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		// TODO implement this
+		visitor.visitLeaf(this);
+	}
 }
 

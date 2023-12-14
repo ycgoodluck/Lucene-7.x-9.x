@@ -31,60 +31,60 @@ import org.junit.BeforeClass;
 
 public class TestParallelDrillSideways extends TestDrillSideways {
 
-  private static ExecutorService executor;
+	private static ExecutorService executor;
 
-  @BeforeClass
-  public static void prepareExecutor() {
-    executor = Executors.newCachedThreadPool(new NamedThreadFactory("TestParallelDrillSideways"));
-  }
+	@BeforeClass
+	public static void prepareExecutor() {
+		executor = Executors.newCachedThreadPool(new NamedThreadFactory("TestParallelDrillSideways"));
+	}
 
-  @AfterClass
-  public static void shutdownExecutor() {
-    executor.shutdown();
-    executor = null;
-  }
+	@AfterClass
+	public static void shutdownExecutor() {
+		executor.shutdown();
+		executor = null;
+	}
 
-  protected DrillSideways getNewDrillSideways(IndexSearcher searcher, FacetsConfig config,
-          SortedSetDocValuesReaderState state) {
-    return new DrillSideways(searcher, config, null, state, executor);
-  }
+	protected DrillSideways getNewDrillSideways(IndexSearcher searcher, FacetsConfig config,
+																							SortedSetDocValuesReaderState state) {
+		return new DrillSideways(searcher, config, null, state, executor);
+	}
 
-  protected DrillSideways getNewDrillSideways(IndexSearcher searcher, FacetsConfig config, TaxonomyReader taxoReader) {
-    return new DrillSideways(searcher, config, taxoReader, null, executor);
-  }
+	protected DrillSideways getNewDrillSideways(IndexSearcher searcher, FacetsConfig config, TaxonomyReader taxoReader) {
+		return new DrillSideways(searcher, config, taxoReader, null, executor);
+	}
 
-  protected DrillSideways getNewDrillSidewaysScoreSubdocsAtOnce(IndexSearcher searcher, FacetsConfig config,
-          TaxonomyReader taxoReader) {
-    return new DrillSideways(searcher, config, taxoReader, null, executor) {
-      @Override
-      protected boolean scoreSubDocsAtOnce() {
-        return true;
-      }
-    };
-  }
+	protected DrillSideways getNewDrillSidewaysScoreSubdocsAtOnce(IndexSearcher searcher, FacetsConfig config,
+																																TaxonomyReader taxoReader) {
+		return new DrillSideways(searcher, config, taxoReader, null, executor) {
+			@Override
+			protected boolean scoreSubDocsAtOnce() {
+				return true;
+			}
+		};
+	}
 
-  protected DrillSideways getNewDrillSidewaysBuildFacetsResult(IndexSearcher searcher, FacetsConfig config,
-          TaxonomyReader taxoReader) {
-    return new DrillSideways(searcher, config, taxoReader, null, executor) {
-      @Override
-      protected Facets buildFacetsResult(FacetsCollector drillDowns, FacetsCollector[] drillSideways,
-              String[] drillSidewaysDims) throws IOException {
-        Map<String, Facets> drillSidewaysFacets = new HashMap<>();
-        Facets drillDownFacets = getTaxonomyFacetCounts(taxoReader, config, drillDowns);
-        if (drillSideways != null) {
-          for (int i = 0; i < drillSideways.length; i++) {
-            drillSidewaysFacets.put(drillSidewaysDims[i], getTaxonomyFacetCounts(taxoReader, config, drillSideways[i]));
-          }
-        }
+	protected DrillSideways getNewDrillSidewaysBuildFacetsResult(IndexSearcher searcher, FacetsConfig config,
+																															 TaxonomyReader taxoReader) {
+		return new DrillSideways(searcher, config, taxoReader, null, executor) {
+			@Override
+			protected Facets buildFacetsResult(FacetsCollector drillDowns, FacetsCollector[] drillSideways,
+																				 String[] drillSidewaysDims) throws IOException {
+				Map<String, Facets> drillSidewaysFacets = new HashMap<>();
+				Facets drillDownFacets = getTaxonomyFacetCounts(taxoReader, config, drillDowns);
+				if (drillSideways != null) {
+					for (int i = 0; i < drillSideways.length; i++) {
+						drillSidewaysFacets.put(drillSidewaysDims[i], getTaxonomyFacetCounts(taxoReader, config, drillSideways[i]));
+					}
+				}
 
-        if (drillSidewaysFacets.isEmpty()) {
-          return drillDownFacets;
-        } else {
-          return new MultiFacets(drillSidewaysFacets, drillDownFacets);
-        }
+				if (drillSidewaysFacets.isEmpty()) {
+					return drillDownFacets;
+				} else {
+					return new MultiFacets(drillSidewaysFacets, drillDownFacets);
+				}
 
-      }
-    };
-  }
+			}
+		};
+	}
 
 }

@@ -21,9 +21,9 @@ package org.apache.lucene.codecs.lucene80;
  */
 public class TestLucene80NormsFormatMergeInstance extends TestLucene80NormsFormat {
 
-  @Override
-  protected boolean shouldTestMergeInstance() {
-    return true;
-  }
+	@Override
+	protected boolean shouldTestMergeInstance() {
+		return true;
+	}
 
 }

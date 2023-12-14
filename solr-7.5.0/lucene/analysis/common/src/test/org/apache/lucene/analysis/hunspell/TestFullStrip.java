@@ -20,12 +20,12 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestFullStrip extends StemmerTestBase {
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("fullstrip.aff", "fullstrip.dic");
-  }
-  
-  public void testStemming() {
-    assertStemsTo("tasty", "beer");
-  }
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("fullstrip.aff", "fullstrip.dic");
+	}
+
+	public void testStemming() {
+		assertStemsTo("tasty", "beer");
+	}
 }

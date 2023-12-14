@@ -39,76 +39,76 @@ import org.apache.lucene.spatial.util.ShapeValuesPredicate;
  */
 public class CompositeVerifyQuery extends Query {
 
-  private final Query indexQuery;//approximation (matches more than needed)
-  private final ShapeValuesPredicate predicateValueSource;
+	private final Query indexQuery;//approximation (matches more than needed)
+	private final ShapeValuesPredicate predicateValueSource;
 
-  public CompositeVerifyQuery(Query indexQuery, ShapeValuesPredicate predicateValueSource) {
-    this.indexQuery = indexQuery;
-    this.predicateValueSource = predicateValueSource;
-  }
+	public CompositeVerifyQuery(Query indexQuery, ShapeValuesPredicate predicateValueSource) {
+		this.indexQuery = indexQuery;
+		this.predicateValueSource = predicateValueSource;
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    final Query rewritten = indexQuery.rewrite(reader);
-    if (rewritten != indexQuery) {
-      return new CompositeVerifyQuery(rewritten, predicateValueSource);
-    }
-    return super.rewrite(reader);
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		final Query rewritten = indexQuery.rewrite(reader);
+		if (rewritten != indexQuery) {
+			return new CompositeVerifyQuery(rewritten, predicateValueSource);
+		}
+		return super.rewrite(reader);
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
-  
-  private boolean equalsTo(CompositeVerifyQuery other) {
-    return indexQuery.equals(other.indexQuery) &&
-           predicateValueSource.equals(other.predicateValueSource);
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
 
-  @Override
-  public int hashCode() {
-    int result = classHash();
-    result = 31 * result + indexQuery.hashCode();
-    result = 31 * result + predicateValueSource.hashCode();
-    return result;
-  }
+	private boolean equalsTo(CompositeVerifyQuery other) {
+		return indexQuery.equals(other.indexQuery) &&
+			predicateValueSource.equals(other.predicateValueSource);
+	}
 
-  @Override
-  public String toString(String field) {
-    //TODO verify this looks good
-    return getClass().getSimpleName() + "(" + indexQuery.toString(field) + ", " + predicateValueSource + ")";
-  }
+	@Override
+	public int hashCode() {
+		int result = classHash();
+		result = 31 * result + indexQuery.hashCode();
+		result = 31 * result + predicateValueSource.hashCode();
+		return result;
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    visitor.visitLeaf(this);
-  }
+	@Override
+	public String toString(String field) {
+		//TODO verify this looks good
+		return getClass().getSimpleName() + "(" + indexQuery.toString(field) + ", " + predicateValueSource + ")";
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    final Weight indexQueryWeight = indexQuery.createWeight(searcher, ScoreMode.COMPLETE_NO_SCORES, boost);//scores aren't unsupported
+	@Override
+	public void visit(QueryVisitor visitor) {
+		visitor.visitLeaf(this);
+	}
 
-    return new ConstantScoreWeight(this, boost) {
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		final Weight indexQueryWeight = indexQuery.createWeight(searcher, ScoreMode.COMPLETE_NO_SCORES, boost);//scores aren't unsupported
 
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
+		return new ConstantScoreWeight(this, boost) {
 
-        final Scorer indexQueryScorer = indexQueryWeight.scorer(context);
-        if (indexQueryScorer == null) {
-          return null;
-        }
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
 
-        final TwoPhaseIterator predFuncValues = predicateValueSource.iterator(context, indexQueryScorer.iterator());
-        return new ConstantScoreScorer(this, score(), scoreMode, predFuncValues);
-      }
+				final Scorer indexQueryScorer = indexQueryWeight.scorer(context);
+				if (indexQueryScorer == null) {
+					return null;
+				}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return predicateValueSource.isCacheable(ctx);
-      }
+				final TwoPhaseIterator predFuncValues = predicateValueSource.iterator(context, indexQueryScorer.iterator());
+				return new ConstantScoreScorer(this, score(), scoreMode, predFuncValues);
+			}
 
-    };
-  }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return predicateValueSource.isCacheable(ctx);
+			}
+
+		};
+	}
 }

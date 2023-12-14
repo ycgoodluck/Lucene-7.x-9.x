@@ -23,97 +23,100 @@ import org.apache.lucene.document.ShapeField.QueryRelation;
 import org.apache.lucene.geo.Component2D;
 import org.apache.lucene.geo.Line;
 
-/** random bounding box, line, and polygon query tests for random indexed arrays of {@link Line} types */
+/**
+ * random bounding box, line, and polygon query tests for random indexed arrays of {@link Line} types
+ */
 public class TestLatLonMultiLineShapeQueries extends BaseLatLonShapeTestCase {
 
-  @Override
-  protected ShapeType getShapeType() {
-    return ShapeType.LINE;
-  }
+	@Override
+	protected ShapeType getShapeType() {
+		return ShapeType.LINE;
+	}
 
-  @Override
-  protected Line[] nextShape() {
-    int n = random().nextInt(4) + 1;
-    Line[] lines = new Line[n];
-    for (int i =0; i < n; i++) {
-      lines[i] = nextLine();
-    }
-    return lines;
-  }
+	@Override
+	protected Line[] nextShape() {
+		int n = random().nextInt(4) + 1;
+		Line[] lines = new Line[n];
+		for (int i = 0; i < n; i++) {
+			lines[i] = nextLine();
+		}
+		return lines;
+	}
 
-  @Override
-  protected Field[] createIndexableFields(String name, Object o) {
-    Line[] lines = (Line[]) o;
-    List<Field> allFields = new ArrayList<>();
-    for (Line line : lines) {
-      Field[] fields = LatLonShape.createIndexableFields(name, line);
-      for (Field field : fields) {
-        allFields.add(field);
-      }
-    }
-    return allFields.toArray(new Field[allFields.size()]);
-  }
+	@Override
+	protected Field[] createIndexableFields(String name, Object o) {
+		Line[] lines = (Line[]) o;
+		List<Field> allFields = new ArrayList<>();
+		for (Line line : lines) {
+			Field[] fields = LatLonShape.createIndexableFields(name, line);
+			for (Field field : fields) {
+				allFields.add(field);
+			}
+		}
+		return allFields.toArray(new Field[allFields.size()]);
+	}
 
-  @Override
-  public Validator getValidator() {
-    return new MultiLineValidator(ENCODER);
-  }
+	@Override
+	public Validator getValidator() {
+		return new MultiLineValidator(ENCODER);
+	}
 
-  protected class MultiLineValidator extends Validator {
-    TestLatLonLineShapeQueries.LineValidator LINEVALIDATOR;
-    MultiLineValidator(Encoder encoder) {
-      super(encoder);
-      LINEVALIDATOR = new TestLatLonLineShapeQueries.LineValidator(encoder);
-    }
+	protected class MultiLineValidator extends Validator {
+		TestLatLonLineShapeQueries.LineValidator LINEVALIDATOR;
 
-    @Override
-    public Validator setRelation(QueryRelation relation) {
-      super.setRelation(relation);
-      LINEVALIDATOR.queryRelation = relation;
-      return this;
-    }
+		MultiLineValidator(Encoder encoder) {
+			super(encoder);
+			LINEVALIDATOR = new TestLatLonLineShapeQueries.LineValidator(encoder);
+		}
 
-    @Override
-    public boolean testBBoxQuery(double minLat, double maxLat, double minLon, double maxLon, Object shape) {
-      Line[] lines = (Line[])shape;
-      for (Line l : lines) {
-        boolean b = LINEVALIDATOR.testBBoxQuery(minLat, maxLat, minLon, maxLon, l);
-        if (b == true && queryRelation == QueryRelation.INTERSECTS) {
-          return true;
-        } else if (b == true && queryRelation == QueryRelation.CONTAINS) {
-          return true;
-        } else if (b == false && queryRelation == QueryRelation.DISJOINT) {
-          return false;
-        } else if (b == false && queryRelation == QueryRelation.WITHIN) {
-          return false;
-        }
-      }
-      return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
-    }
+		@Override
+		public Validator setRelation(QueryRelation relation) {
+			super.setRelation(relation);
+			LINEVALIDATOR.queryRelation = relation;
+			return this;
+		}
 
-    @Override
-    public boolean testComponentQuery(Component2D query, Object shape) {
-      Line[] lines = (Line[])shape;
-      for (Line l : lines) {
-        boolean b = LINEVALIDATOR.testComponentQuery(query, l);
-        if (b == true && queryRelation == QueryRelation.INTERSECTS) {
-          return true;
-        } else if (b == true && queryRelation == QueryRelation.CONTAINS) {
-          return true;
-        } else if (b == false && queryRelation == QueryRelation.DISJOINT) {
-          return false;
-        } else if (b == false && queryRelation == QueryRelation.WITHIN) {
-          return false;
-        }
-      }
-      return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
-    }
-  }
+		@Override
+		public boolean testBBoxQuery(double minLat, double maxLat, double minLon, double maxLon, Object shape) {
+			Line[] lines = (Line[]) shape;
+			for (Line l : lines) {
+				boolean b = LINEVALIDATOR.testBBoxQuery(minLat, maxLat, minLon, maxLon, l);
+				if (b == true && queryRelation == QueryRelation.INTERSECTS) {
+					return true;
+				} else if (b == true && queryRelation == QueryRelation.CONTAINS) {
+					return true;
+				} else if (b == false && queryRelation == QueryRelation.DISJOINT) {
+					return false;
+				} else if (b == false && queryRelation == QueryRelation.WITHIN) {
+					return false;
+				}
+			}
+			return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
+		}
 
-  @Slow
-  @Nightly
-  @Override
-  public void testRandomBig() throws Exception {
-    doTestRandom(10000);
-  }
+		@Override
+		public boolean testComponentQuery(Component2D query, Object shape) {
+			Line[] lines = (Line[]) shape;
+			for (Line l : lines) {
+				boolean b = LINEVALIDATOR.testComponentQuery(query, l);
+				if (b == true && queryRelation == QueryRelation.INTERSECTS) {
+					return true;
+				} else if (b == true && queryRelation == QueryRelation.CONTAINS) {
+					return true;
+				} else if (b == false && queryRelation == QueryRelation.DISJOINT) {
+					return false;
+				} else if (b == false && queryRelation == QueryRelation.WITHIN) {
+					return false;
+				}
+			}
+			return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
+		}
+	}
+
+	@Slow
+	@Nightly
+	@Override
+	public void testRandomBig() throws Exception {
+		doTestRandom(10000);
+	}
 }

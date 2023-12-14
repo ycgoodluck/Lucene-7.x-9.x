@@ -24,8 +24,8 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 import java.util.Map;
 
-/** 
- * Factory for {@link BengaliNormalizationFilter}. 
+/**
+ * Factory for {@link BengaliNormalizationFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_bnnormal" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -33,24 +33,25 @@ import java.util.Map;
  *     &lt;filter class="solr.BengaliNormalizationFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 7.1.0
  */
 public class BengaliNormalizationFilterFactory extends TokenFilterFactory implements MultiTermAwareComponent {
 
-  public BengaliNormalizationFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new BengaliNormalizationFilter(input);
-  }
-  
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	public BengaliNormalizationFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new BengaliNormalizationFilter(input);
+	}
+
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

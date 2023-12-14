@@ -33,95 +33,97 @@ import org.apache.lucene.util.TestUtil;
  */
 public class AssertingCodec extends FilterCodec {
 
-  static void assertThread(String object, Thread creationThread) {
-    if (creationThread != Thread.currentThread()) {
-      throw new AssertionError(object + " are only supposed to be consumed in "
-          + "the thread in which they have been acquired. But was acquired in "
-          + creationThread + " and consumed in " + Thread.currentThread() + ".");
-    }
-  }
+	static void assertThread(String object, Thread creationThread) {
+		if (creationThread != Thread.currentThread()) {
+			throw new AssertionError(object + " are only supposed to be consumed in "
+				+ "the thread in which they have been acquired. But was acquired in "
+				+ creationThread + " and consumed in " + Thread.currentThread() + ".");
+		}
+	}
 
-  private final PostingsFormat postings = new PerFieldPostingsFormat() {
-    @Override
-    public PostingsFormat getPostingsFormatForField(String field) {
-      return AssertingCodec.this.getPostingsFormatForField(field);
-    }
-  };
-  
-  private final DocValuesFormat docValues = new PerFieldDocValuesFormat() {
-    @Override
-    public DocValuesFormat getDocValuesFormatForField(String field) {
-      return AssertingCodec.this.getDocValuesFormatForField(field);
-    }
-  };
-  
-  private final TermVectorsFormat vectors = new AssertingTermVectorsFormat();
-  private final StoredFieldsFormat storedFields = new AssertingStoredFieldsFormat();
-  private final NormsFormat norms = new AssertingNormsFormat();
-  private final LiveDocsFormat liveDocs = new AssertingLiveDocsFormat();
-  private final PostingsFormat defaultFormat = new AssertingPostingsFormat();
-  private final DocValuesFormat defaultDVFormat = new AssertingDocValuesFormat();
-  private final PointsFormat pointsFormat = new AssertingPointsFormat();
+	private final PostingsFormat postings = new PerFieldPostingsFormat() {
+		@Override
+		public PostingsFormat getPostingsFormatForField(String field) {
+			return AssertingCodec.this.getPostingsFormatForField(field);
+		}
+	};
 
-  public AssertingCodec() {
-    super("Asserting", TestUtil.getDefaultCodec());
-  }
+	private final DocValuesFormat docValues = new PerFieldDocValuesFormat() {
+		@Override
+		public DocValuesFormat getDocValuesFormatForField(String field) {
+			return AssertingCodec.this.getDocValuesFormatForField(field);
+		}
+	};
 
-  @Override
-  public PostingsFormat postingsFormat() {
-    return postings;
-  }
+	private final TermVectorsFormat vectors = new AssertingTermVectorsFormat();
+	private final StoredFieldsFormat storedFields = new AssertingStoredFieldsFormat();
+	private final NormsFormat norms = new AssertingNormsFormat();
+	private final LiveDocsFormat liveDocs = new AssertingLiveDocsFormat();
+	private final PostingsFormat defaultFormat = new AssertingPostingsFormat();
+	private final DocValuesFormat defaultDVFormat = new AssertingDocValuesFormat();
+	private final PointsFormat pointsFormat = new AssertingPointsFormat();
 
-  @Override
-  public TermVectorsFormat termVectorsFormat() {
-    return vectors;
-  }
+	public AssertingCodec() {
+		super("Asserting", TestUtil.getDefaultCodec());
+	}
 
-  @Override
-  public StoredFieldsFormat storedFieldsFormat() {
-    return storedFields;
-  }
+	@Override
+	public PostingsFormat postingsFormat() {
+		return postings;
+	}
 
-  @Override
-  public DocValuesFormat docValuesFormat() {
-    return docValues;
-  }
+	@Override
+	public TermVectorsFormat termVectorsFormat() {
+		return vectors;
+	}
 
-  @Override
-  public NormsFormat normsFormat() {
-    return norms;
-  }
+	@Override
+	public StoredFieldsFormat storedFieldsFormat() {
+		return storedFields;
+	}
 
-  @Override
-  public LiveDocsFormat liveDocsFormat() {
-    return liveDocs;
-  }
+	@Override
+	public DocValuesFormat docValuesFormat() {
+		return docValues;
+	}
 
-  @Override
-  public PointsFormat pointsFormat() {
-    return pointsFormat;
-  }
+	@Override
+	public NormsFormat normsFormat() {
+		return norms;
+	}
 
-  @Override
-  public String toString() {
-    return "Asserting(" + delegate + ")";
-  }
-  
-  /** Returns the postings format that should be used for writing 
-   *  new segments of <code>field</code>.
-   *  
-   *  The default implementation always returns "Asserting"
-   */
-  public PostingsFormat getPostingsFormatForField(String field) {
-    return defaultFormat;
-  }
-  
-  /** Returns the docvalues format that should be used for writing 
-   *  new segments of <code>field</code>.
-   *  
-   *  The default implementation always returns "Asserting"
-   */
-  public DocValuesFormat getDocValuesFormatForField(String field) {
-    return defaultDVFormat;
-  }
+	@Override
+	public LiveDocsFormat liveDocsFormat() {
+		return liveDocs;
+	}
+
+	@Override
+	public PointsFormat pointsFormat() {
+		return pointsFormat;
+	}
+
+	@Override
+	public String toString() {
+		return "Asserting(" + delegate + ")";
+	}
+
+	/**
+	 * Returns the postings format that should be used for writing
+	 * new segments of <code>field</code>.
+	 * <p>
+	 * The default implementation always returns "Asserting"
+	 */
+	public PostingsFormat getPostingsFormatForField(String field) {
+		return defaultFormat;
+	}
+
+	/**
+	 * Returns the docvalues format that should be used for writing
+	 * new segments of <code>field</code>.
+	 * <p>
+	 * The default implementation always returns "Asserting"
+	 */
+	public DocValuesFormat getDocValuesFormatForField(String field) {
+		return defaultDVFormat;
+	}
 }

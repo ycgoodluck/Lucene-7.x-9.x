@@ -32,37 +32,41 @@ import org.apache.lucene.analysis.util.CharFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 4.0.0
  * @lucene.spi {@value #NAME}
+ * @since 4.0.0
  */
 public class JapaneseIterationMarkCharFilterFactory extends CharFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "japaneseIterationMark";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "japaneseIterationMark";
 
-  private static final String NORMALIZE_KANJI_PARAM = "normalizeKanji";
-  private static final String NORMALIZE_KANA_PARAM = "normalizeKana";
+	private static final String NORMALIZE_KANJI_PARAM = "normalizeKanji";
+	private static final String NORMALIZE_KANA_PARAM = "normalizeKana";
 
-  private final boolean normalizeKanji;
-  private final boolean normalizeKana;
-  
-  /** Creates a new JapaneseIterationMarkCharFilterFactory */
-  public JapaneseIterationMarkCharFilterFactory(Map<String,String> args) {
-    super(args);
-    normalizeKanji = getBoolean(args, NORMALIZE_KANJI_PARAM, JapaneseIterationMarkCharFilter.NORMALIZE_KANJI_DEFAULT);
-    normalizeKana = getBoolean(args, NORMALIZE_KANA_PARAM, JapaneseIterationMarkCharFilter.NORMALIZE_KANA_DEFAULT);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private final boolean normalizeKanji;
+	private final boolean normalizeKana;
 
-  @Override
-  public Reader create(Reader input) {
-    return new JapaneseIterationMarkCharFilter(input, normalizeKanji, normalizeKana);
-  }
+	/**
+	 * Creates a new JapaneseIterationMarkCharFilterFactory
+	 */
+	public JapaneseIterationMarkCharFilterFactory(Map<String, String> args) {
+		super(args);
+		normalizeKanji = getBoolean(args, NORMALIZE_KANJI_PARAM, JapaneseIterationMarkCharFilter.NORMALIZE_KANJI_DEFAULT);
+		normalizeKana = getBoolean(args, NORMALIZE_KANA_PARAM, JapaneseIterationMarkCharFilter.NORMALIZE_KANA_DEFAULT);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public Reader normalize(Reader input) {
-    return create(input);
-  }
+	@Override
+	public Reader create(Reader input) {
+		return new JapaneseIterationMarkCharFilter(input, normalizeKanji, normalizeKana);
+	}
+
+	@Override
+	public Reader normalize(Reader input) {
+		return create(input);
+	}
 }

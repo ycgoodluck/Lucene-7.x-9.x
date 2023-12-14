@@ -22,34 +22,40 @@ import org.apache.lucene.util.LuceneTestCase;
 import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 
 public class TestDocIdSetIterator extends LuceneTestCase {
-  public void testRangeBasic() throws Exception {
-    DocIdSetIterator disi = DocIdSetIterator.range(5, 8);
-    assertEquals(-1, disi.docID());
-    assertEquals(5, disi.nextDoc());
-    assertEquals(6, disi.nextDoc());
-    assertEquals(7, disi.nextDoc());
-    assertEquals(NO_MORE_DOCS, disi.nextDoc());
-  }
+	public void testRangeBasic() throws Exception {
+		DocIdSetIterator disi = DocIdSetIterator.range(5, 8);
+		assertEquals(-1, disi.docID());
+		assertEquals(5, disi.nextDoc());
+		assertEquals(6, disi.nextDoc());
+		assertEquals(7, disi.nextDoc());
+		assertEquals(NO_MORE_DOCS, disi.nextDoc());
+	}
 
-  public void testInvalidRange() throws Exception {
-    expectThrows(IllegalArgumentException.class, () -> {DocIdSetIterator.range(5, 4);});
-  }
+	public void testInvalidRange() throws Exception {
+		expectThrows(IllegalArgumentException.class, () -> {
+			DocIdSetIterator.range(5, 4);
+		});
+	}
 
-  public void testInvalidMin() throws Exception {
-    expectThrows(IllegalArgumentException.class, () -> {DocIdSetIterator.range(-1, 4);});
-  }
+	public void testInvalidMin() throws Exception {
+		expectThrows(IllegalArgumentException.class, () -> {
+			DocIdSetIterator.range(-1, 4);
+		});
+	}
 
-  public void testEmpty() throws Exception {
-    expectThrows(IllegalArgumentException.class, () -> {DocIdSetIterator.range(7, 7);});
-  }
+	public void testEmpty() throws Exception {
+		expectThrows(IllegalArgumentException.class, () -> {
+			DocIdSetIterator.range(7, 7);
+		});
+	}
 
-  public void testAdvance() throws Exception {
-    DocIdSetIterator disi = DocIdSetIterator.range(5, 20);
-    assertEquals(-1, disi.docID());
-    assertEquals(5, disi.nextDoc());
-    assertEquals(17, disi.advance(17));
-    assertEquals(18, disi.nextDoc());
-    assertEquals(19, disi.nextDoc());
-    assertEquals(NO_MORE_DOCS, disi.nextDoc());
-  }
+	public void testAdvance() throws Exception {
+		DocIdSetIterator disi = DocIdSetIterator.range(5, 20);
+		assertEquals(-1, disi.docID());
+		assertEquals(5, disi.nextDoc());
+		assertEquals(17, disi.advance(17));
+		assertEquals(18, disi.nextDoc());
+		assertEquals(19, disi.nextDoc());
+		assertEquals(NO_MORE_DOCS, disi.nextDoc());
+	}
 }

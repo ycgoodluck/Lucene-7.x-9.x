@@ -24,30 +24,33 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
  */
 public class TestBengaliAnalyzer extends BaseTokenStreamTestCase {
 
-  public void testResourcesAvailable() {
-    new BengaliAnalyzer().close();
-  }
-  
-  public void testBasics() throws Exception {
-    Analyzer a = new BengaliAnalyzer();
+	public void testResourcesAvailable() {
+		new BengaliAnalyzer().close();
+	}
 
-    checkOneTerm(a, "বাড়ী", "বার");
-    checkOneTerm(a, "বারী", "বার");
-    a.close();
-  }
-  /**
-   * test Digits
-   */
-  public void testDigits() throws Exception {
-    BengaliAnalyzer a = new BengaliAnalyzer();
-    checkOneTerm(a, "১২৩৪৫৬৭৮৯০", "1234567890");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer analyzer = new BengaliAnalyzer();
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-    analyzer.close();
-  }
+	public void testBasics() throws Exception {
+		Analyzer a = new BengaliAnalyzer();
+
+		checkOneTerm(a, "বাড়ী", "বার");
+		checkOneTerm(a, "বারী", "বার");
+		a.close();
+	}
+
+	/**
+	 * test Digits
+	 */
+	public void testDigits() throws Exception {
+		BengaliAnalyzer a = new BengaliAnalyzer();
+		checkOneTerm(a, "১২৩৪৫৬৭৮৯০", "1234567890");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer analyzer = new BengaliAnalyzer();
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+		analyzer.close();
+	}
 }

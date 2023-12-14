@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.lucene.queries.function.valuesource;
+
 import org.apache.lucene.queries.function.ValueSource;
 
 
@@ -24,5 +25,5 @@ import org.apache.lucene.queries.function.ValueSource;
  **/
 public abstract class MultiValueSource extends ValueSource {
 
-  public abstract int dimension();
+	public abstract int dimension();
 }

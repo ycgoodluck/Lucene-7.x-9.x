@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-/** 
+
+/**
  * <h1>Files replication framework</h1>
- *
+ * <p>
  * The
  * <a href="Replicator.html">Replicator</a> allows replicating files between a server and client(s). Producers publish
  * <a href="Revision.html">revisions</a> and consumers update to the latest revision available.
@@ -33,7 +33,7 @@
  * well as an index and taxonomy pair. For a single index, the application should publish an
  * <a href="IndexRevision.html">IndexRevision</a> and set
  * <a href="IndexReplicationHandler.html">IndexReplicationHandler</a> on the client. For an index and taxonomy pair, the
- * application should publish an <a href="IndexAndTaxonomyRevision.html">IndexAndTaxonomyRevision</a> and set 
+ * application should publish an <a href="IndexAndTaxonomyRevision.html">IndexAndTaxonomyRevision</a> and set
  * <a href="IndexAndTaxonomyReplicationHandler.html">IndexAndTaxonomyReplicationHandler</a> on the client.
  *
  * <p>
@@ -45,17 +45,17 @@
  *
  * <p>
  * An example usage of the Replicator:
- * 
+ *
  * <pre class="prettyprint lang-java">
- * // ++++++++++++++ SERVER SIDE ++++++++++++++ // 
+ * // ++++++++++++++ SERVER SIDE ++++++++++++++ //
  * IndexWriter publishWriter; // the writer used for indexing
  * Replicator replicator = new LocalReplicator();
  * replicator.publish(new IndexRevision(publishWriter));
  *
- * // ++++++++++++++ CLIENT SIDE ++++++++++++++ // 
+ * // ++++++++++++++ CLIENT SIDE ++++++++++++++ //
  * // either LocalReplictor, or HttpReplicator if client and server are on different nodes
  * Replicator replicator;
- * 
+ *
  * // callback invoked after handler finished handling the revision and e.g. can reopen the reader.
  * Callable&lt;Boolean&gt; callback = null; // can also be null if no callback is needed
  * ReplicationHandler handler = new IndexReplicationHandler(indexDir, callback);
@@ -64,7 +64,7 @@
  *
  * // invoke client manually
  * client.updateNow();
- * 
+ *
  * // or, periodically
  * client.startUpdateThread(100); // check for update every 100 milliseconds
  * </pre>

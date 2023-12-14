@@ -36,111 +36,111 @@ import org.apache.lucene.util.mutable.MutableValueStr;
  */
 public class BytesRefFieldSource extends FieldCacheSource {
 
-  public BytesRefFieldSource(String field) {
-    super(field);
-  }
+	public BytesRefFieldSource(String field) {
+		super(field);
+	}
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    final FieldInfo fieldInfo = readerContext.reader().getFieldInfos().fieldInfo(field);
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+		final FieldInfo fieldInfo = readerContext.reader().getFieldInfos().fieldInfo(field);
 
-    // To be sorted or not to be sorted, that is the question
-    // TODO: do it cleaner?
-    if (fieldInfo != null && fieldInfo.getDocValuesType() == DocValuesType.BINARY) {
-      final BinaryDocValues binaryValues = DocValues.getBinary(readerContext.reader(), field);
-      return new FunctionValues() {
-        int lastDocID = -1;
+		// To be sorted or not to be sorted, that is the question
+		// TODO: do it cleaner?
+		if (fieldInfo != null && fieldInfo.getDocValuesType() == DocValuesType.BINARY) {
+			final BinaryDocValues binaryValues = DocValues.getBinary(readerContext.reader(), field);
+			return new FunctionValues() {
+				int lastDocID = -1;
 
-        private BytesRef getValueForDoc(int doc) throws IOException {
-          if (doc < lastDocID) {
-            throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
-          }
-          lastDocID = doc;
-          int curDocID = binaryValues.docID();
-          if (doc > curDocID) {
-            curDocID = binaryValues.advance(doc);
-          }
-          if (doc == curDocID) {
-            return binaryValues.binaryValue();
-          } else {
-            return null;
-          }
-        }
+				private BytesRef getValueForDoc(int doc) throws IOException {
+					if (doc < lastDocID) {
+						throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
+					}
+					lastDocID = doc;
+					int curDocID = binaryValues.docID();
+					if (doc > curDocID) {
+						curDocID = binaryValues.advance(doc);
+					}
+					if (doc == curDocID) {
+						return binaryValues.binaryValue();
+					} else {
+						return null;
+					}
+				}
 
-        @Override
-        public boolean exists(int doc) throws IOException {
-          return getValueForDoc(doc) != null;
-        }
+				@Override
+				public boolean exists(int doc) throws IOException {
+					return getValueForDoc(doc) != null;
+				}
 
-        @Override
-        public boolean bytesVal(int doc, BytesRefBuilder target) throws IOException {
-          BytesRef value = getValueForDoc(doc);
-          if (value == null || value.length == 0) {
-            return false;
-          } else {
-            target.copyBytes(value);
-            return true;
-          }
-        }
+				@Override
+				public boolean bytesVal(int doc, BytesRefBuilder target) throws IOException {
+					BytesRef value = getValueForDoc(doc);
+					if (value == null || value.length == 0) {
+						return false;
+					} else {
+						target.copyBytes(value);
+						return true;
+					}
+				}
 
-        public String strVal(int doc) throws IOException {
-          final BytesRefBuilder bytes = new BytesRefBuilder();
-          return bytesVal(doc, bytes)
-              ? bytes.get().utf8ToString()
-              : null;
-        }
+				public String strVal(int doc) throws IOException {
+					final BytesRefBuilder bytes = new BytesRefBuilder();
+					return bytesVal(doc, bytes)
+						? bytes.get().utf8ToString()
+						: null;
+				}
 
-        @Override
-        public Object objectVal(int doc) throws IOException {
-          return strVal(doc);
-        }
+				@Override
+				public Object objectVal(int doc) throws IOException {
+					return strVal(doc);
+				}
 
-        @Override
-        public String toString(int doc) throws IOException {
-          return description() + '=' + strVal(doc);
-        }
+				@Override
+				public String toString(int doc) throws IOException {
+					return description() + '=' + strVal(doc);
+				}
 
-        @Override
-        public ValueFiller getValueFiller() {
-          return new ValueFiller() {
-            private final MutableValueStr mval = new MutableValueStr();
+				@Override
+				public ValueFiller getValueFiller() {
+					return new ValueFiller() {
+						private final MutableValueStr mval = new MutableValueStr();
 
-            @Override
-            public MutableValue getValue() {
-              return mval;
-            }
+						@Override
+						public MutableValue getValue() {
+							return mval;
+						}
 
-            @Override
-            public void fillValue(int doc) throws IOException {
-              BytesRef value = getValueForDoc(doc);
-              mval.exists = value != null;
-              mval.value.clear();
-              if (value != null) {
-                mval.value.copyBytes(value);
-              }
-            }
-          };
-        }
+						@Override
+						public void fillValue(int doc) throws IOException {
+							BytesRef value = getValueForDoc(doc);
+							mval.exists = value != null;
+							mval.value.clear();
+							if (value != null) {
+								mval.value.copyBytes(value);
+							}
+						}
+					};
+				}
 
-      };
-    } else {
-      return new DocTermsIndexDocValues(this, readerContext, field) {
+			};
+		} else {
+			return new DocTermsIndexDocValues(this, readerContext, field) {
 
-        @Override
-        protected String toTerm(String readableValue) {
-          return readableValue;
-        }
+				@Override
+				protected String toTerm(String readableValue) {
+					return readableValue;
+				}
 
-        @Override
-        public Object objectVal(int doc) throws IOException {
-          return strVal(doc);
-        }
+				@Override
+				public Object objectVal(int doc) throws IOException {
+					return strVal(doc);
+				}
 
-        @Override
-        public String toString(int doc) throws IOException {
-          return description() + '=' + strVal(doc);
-        }
-      };
-    }
-  }
+				@Override
+				public String toString(int doc) throws IOException {
+					return description() + '=' + strVal(doc);
+				}
+			};
+		}
+	}
 }

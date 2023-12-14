@@ -24,6 +24,7 @@ import org.apache.lucene.index.IndexCommit;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LogMergePolicy;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+
 import java.io.IOException;
 
 /**
@@ -39,42 +40,42 @@ import java.io.IOException;
  */
 public class OpenIndexTask extends PerfTask {
 
-  public static final int DEFAULT_MAX_BUFFERED = IndexWriterConfig.DEFAULT_MAX_BUFFERED_DOCS;
-  public static final int DEFAULT_MERGE_PFACTOR = LogMergePolicy.DEFAULT_MERGE_FACTOR;
-  public static final double DEFAULT_RAM_FLUSH_MB = (int) IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
-  private String commitUserData;
+	public static final int DEFAULT_MAX_BUFFERED = IndexWriterConfig.DEFAULT_MAX_BUFFERED_DOCS;
+	public static final int DEFAULT_MERGE_PFACTOR = LogMergePolicy.DEFAULT_MERGE_FACTOR;
+	public static final double DEFAULT_RAM_FLUSH_MB = (int) IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
+	private String commitUserData;
 
-  public OpenIndexTask(PerfRunData runData) {
-    super(runData);
-  }
+	public OpenIndexTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  public int doLogic() throws IOException {
-    PerfRunData runData = getRunData();
-    Config config = runData.getConfig();
-    final IndexCommit ic;
-    if (commitUserData != null) {
-      ic = OpenReaderTask.findIndexCommit(runData.getDirectory(), commitUserData);
-    } else {
-      ic = null;
-    }
-    
-    final IndexWriter writer = CreateIndexTask.configureWriter(config, runData, OpenMode.APPEND, ic);
-    runData.setIndexWriter(writer);
-    return 1;
-  }
+	@Override
+	public int doLogic() throws IOException {
+		PerfRunData runData = getRunData();
+		Config config = runData.getConfig();
+		final IndexCommit ic;
+		if (commitUserData != null) {
+			ic = OpenReaderTask.findIndexCommit(runData.getDirectory(), commitUserData);
+		} else {
+			ic = null;
+		}
 
-  @Override
-  public void setParams(String params) {
-    super.setParams(params);
-    if (params != null) {
-      // specifies which commit point to open
-      commitUserData = params;
-    }
-  }
+		final IndexWriter writer = CreateIndexTask.configureWriter(config, runData, OpenMode.APPEND, ic);
+		runData.setIndexWriter(writer);
+		return 1;
+	}
 
-  @Override
-  public boolean supportsParams() {
-    return true;
-  }
+	@Override
+	public void setParams(String params) {
+		super.setParams(params);
+		if (params != null) {
+			// specifies which commit point to open
+			commitUserData = params;
+		}
+	}
+
+	@Override
+	public boolean supportsParams() {
+		return true;
+	}
 }

@@ -25,112 +25,112 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.util.English;
 
 public class TestStopFilter extends BaseTokenStreamTestCase {
-  
-  // other StopFilter functionality is already tested by TestStopAnalyzer
 
-  public void testExactCase() throws IOException {
-    StringReader reader = new StringReader("Now is The Time");
-    CharArraySet stopWords = new CharArraySet(asSet("is", "the", "Time"), false);
-    final MockTokenizer in = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    in.setReader(reader);
-    TokenStream stream = new StopFilter(in, stopWords);
-    assertTokenStreamContents(stream, new String[] { "Now", "The" });
-  }
+	// other StopFilter functionality is already tested by TestStopAnalyzer
 
-  public void testStopFilt() throws IOException {
-    StringReader reader = new StringReader("Now is The Time");
-    String[] stopWords = new String[] { "is", "the", "Time" };
-    CharArraySet stopSet = StopFilter.makeStopSet(stopWords);
-    final MockTokenizer in = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    in.setReader(reader);
-    TokenStream stream = new StopFilter(in, stopSet);
-    assertTokenStreamContents(stream, new String[] { "Now", "The" });
-  }
+	public void testExactCase() throws IOException {
+		StringReader reader = new StringReader("Now is The Time");
+		CharArraySet stopWords = new CharArraySet(asSet("is", "the", "Time"), false);
+		final MockTokenizer in = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		in.setReader(reader);
+		TokenStream stream = new StopFilter(in, stopWords);
+		assertTokenStreamContents(stream, new String[]{"Now", "The"});
+	}
 
-  /**
-   * Test Position increments applied by StopFilter with and without enabling this option.
-   */
-  public void testStopPositons() throws IOException {
-    StringBuilder sb = new StringBuilder();
-    ArrayList<String> a = new ArrayList<>();
-    for (int i=0; i<20; i++) {
-      String w = English.intToEnglish(i).trim();
-      sb.append(w).append(" ");
-      if (i%3 != 0) a.add(w);
-    }
-    log(sb.toString());
-    String stopWords[] = a.toArray(new String[0]);
-    for (int i=0; i<a.size(); i++) log("Stop: "+stopWords[i]);
-    CharArraySet stopSet = StopFilter.makeStopSet(stopWords);
-    // with increments
-    StringReader reader = new StringReader(sb.toString());
-    final MockTokenizer in = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    in.setReader(reader);
-    StopFilter stpf = new StopFilter(in, stopSet);
-    doTestStopPositons(stpf);
-    // with increments, concatenating two stop filters
-    ArrayList<String> a0 = new ArrayList<>();
-    ArrayList<String> a1 = new ArrayList<>();
-    for (int i=0; i<a.size(); i++) {
-      if (i%2==0) { 
-        a0.add(a.get(i));
-      } else {
-        a1.add(a.get(i));
-      }
-    }
-    String stopWords0[] =  a0.toArray(new String[0]);
-    for (int i=0; i<a0.size(); i++) log("Stop0: "+stopWords0[i]);
-    String stopWords1[] =  a1.toArray(new String[0]);
-    for (int i=0; i<a1.size(); i++) log("Stop1: "+stopWords1[i]);
-    CharArraySet stopSet0 = StopFilter.makeStopSet(stopWords0);
-    CharArraySet stopSet1 = StopFilter.makeStopSet(stopWords1);
-    reader = new StringReader(sb.toString());
-    final MockTokenizer in1 = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    in1.setReader(reader);
-    StopFilter stpf0 = new StopFilter(in1, stopSet0); // first part of the set
-    StopFilter stpf01 = new StopFilter(stpf0, stopSet1); // two stop filters concatenated!
-    doTestStopPositons(stpf01);
-  }
+	public void testStopFilt() throws IOException {
+		StringReader reader = new StringReader("Now is The Time");
+		String[] stopWords = new String[]{"is", "the", "Time"};
+		CharArraySet stopSet = StopFilter.makeStopSet(stopWords);
+		final MockTokenizer in = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		in.setReader(reader);
+		TokenStream stream = new StopFilter(in, stopSet);
+		assertTokenStreamContents(stream, new String[]{"Now", "The"});
+	}
 
-  // LUCENE-3849: make sure after .end() we see the "ending" posInc
-  public void testEndStopword() throws Exception {
-    CharArraySet stopSet = StopFilter.makeStopSet("of");
-    final MockTokenizer in = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    in.setReader(new StringReader("test of"));
-    StopFilter stpf = new StopFilter(in, stopSet);
-    assertTokenStreamContents(stpf, new String[] { "test" },
-                              new int[] {0},
-                              new int[] {4},
-                              null,
-                              new int[] {1},
-                              null,
-                              7,
-                              1,
-                              null,
-                              true,
-                              null);
-  }
+	/**
+	 * Test Position increments applied by StopFilter with and without enabling this option.
+	 */
+	public void testStopPositons() throws IOException {
+		StringBuilder sb = new StringBuilder();
+		ArrayList<String> a = new ArrayList<>();
+		for (int i = 0; i < 20; i++) {
+			String w = English.intToEnglish(i).trim();
+			sb.append(w).append(" ");
+			if (i % 3 != 0) a.add(w);
+		}
+		log(sb.toString());
+		String stopWords[] = a.toArray(new String[0]);
+		for (int i = 0; i < a.size(); i++) log("Stop: " + stopWords[i]);
+		CharArraySet stopSet = StopFilter.makeStopSet(stopWords);
+		// with increments
+		StringReader reader = new StringReader(sb.toString());
+		final MockTokenizer in = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		in.setReader(reader);
+		StopFilter stpf = new StopFilter(in, stopSet);
+		doTestStopPositons(stpf);
+		// with increments, concatenating two stop filters
+		ArrayList<String> a0 = new ArrayList<>();
+		ArrayList<String> a1 = new ArrayList<>();
+		for (int i = 0; i < a.size(); i++) {
+			if (i % 2 == 0) {
+				a0.add(a.get(i));
+			} else {
+				a1.add(a.get(i));
+			}
+		}
+		String stopWords0[] = a0.toArray(new String[0]);
+		for (int i = 0; i < a0.size(); i++) log("Stop0: " + stopWords0[i]);
+		String stopWords1[] = a1.toArray(new String[0]);
+		for (int i = 0; i < a1.size(); i++) log("Stop1: " + stopWords1[i]);
+		CharArraySet stopSet0 = StopFilter.makeStopSet(stopWords0);
+		CharArraySet stopSet1 = StopFilter.makeStopSet(stopWords1);
+		reader = new StringReader(sb.toString());
+		final MockTokenizer in1 = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		in1.setReader(reader);
+		StopFilter stpf0 = new StopFilter(in1, stopSet0); // first part of the set
+		StopFilter stpf01 = new StopFilter(stpf0, stopSet1); // two stop filters concatenated!
+		doTestStopPositons(stpf01);
+	}
 
-  private void doTestStopPositons(StopFilter stpf) throws IOException {
-    CharTermAttribute termAtt = stpf.getAttribute(CharTermAttribute.class);
-    PositionIncrementAttribute posIncrAtt = stpf.getAttribute(PositionIncrementAttribute.class);
-    stpf.reset();
-    for (int i=0; i<20; i+=3) {
-      assertTrue(stpf.incrementToken());
-      log("Token "+i+": "+stpf);
-      String w = English.intToEnglish(i).trim();
-      assertEquals("expecting token "+i+" to be "+w,w,termAtt.toString());
-      assertEquals("all but first token must have position increment of 3",i==0?1:3,posIncrAtt.getPositionIncrement());
-    }
-    assertFalse(stpf.incrementToken());
-    stpf.end();
-    stpf.close();
-  }
-  
-  // print debug info depending on VERBOSE
-  private static void log(String s) {
-    if (VERBOSE) {
-      System.out.println(s);
-    }
-  }
+	// LUCENE-3849: make sure after .end() we see the "ending" posInc
+	public void testEndStopword() throws Exception {
+		CharArraySet stopSet = StopFilter.makeStopSet("of");
+		final MockTokenizer in = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		in.setReader(new StringReader("test of"));
+		StopFilter stpf = new StopFilter(in, stopSet);
+		assertTokenStreamContents(stpf, new String[]{"test"},
+			new int[]{0},
+			new int[]{4},
+			null,
+			new int[]{1},
+			null,
+			7,
+			1,
+			null,
+			true,
+			null);
+	}
+
+	private void doTestStopPositons(StopFilter stpf) throws IOException {
+		CharTermAttribute termAtt = stpf.getAttribute(CharTermAttribute.class);
+		PositionIncrementAttribute posIncrAtt = stpf.getAttribute(PositionIncrementAttribute.class);
+		stpf.reset();
+		for (int i = 0; i < 20; i += 3) {
+			assertTrue(stpf.incrementToken());
+			log("Token " + i + ": " + stpf);
+			String w = English.intToEnglish(i).trim();
+			assertEquals("expecting token " + i + " to be " + w, w, termAtt.toString());
+			assertEquals("all but first token must have position increment of 3", i == 0 ? 1 : 3, posIncrAtt.getPositionIncrement());
+		}
+		assertFalse(stpf.incrementToken());
+		stpf.end();
+		stpf.close();
+	}
+
+	// print debug info depending on VERBOSE
+	private static void log(String s) {
+		if (VERBOSE) {
+			System.out.println(s);
+		}
+	}
 }

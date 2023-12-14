@@ -33,54 +33,55 @@ import org.apache.lucene.util.mutable.MutableValue;
  */
 public class ValueSourceGroupSelector extends GroupSelector<MutableValue> {
 
-  private final ValueSource valueSource;
-  private final Map<?, ?> context;
+	private final ValueSource valueSource;
+	private final Map<?, ?> context;
 
-  private Set<MutableValue> secondPassGroups;
+	private Set<MutableValue> secondPassGroups;
 
-  /**
-   * Create a new ValueSourceGroupSelector
-   * @param valueSource the ValueSource to group by
-   * @param context     a context map for the ValueSource
-   */
-  public ValueSourceGroupSelector(ValueSource valueSource, Map<?, ?> context) {
-    this.valueSource = valueSource;
-    this.context = context;
-  }
+	/**
+	 * Create a new ValueSourceGroupSelector
+	 *
+	 * @param valueSource the ValueSource to group by
+	 * @param context     a context map for the ValueSource
+	 */
+	public ValueSourceGroupSelector(ValueSource valueSource, Map<?, ?> context) {
+		this.valueSource = valueSource;
+		this.context = context;
+	}
 
-  private FunctionValues.ValueFiller filler;
+	private FunctionValues.ValueFiller filler;
 
-  @Override
-  public void setNextReader(LeafReaderContext readerContext) throws IOException {
-    FunctionValues values = valueSource.getValues(context, readerContext);
-    this.filler = values.getValueFiller();
-  }
+	@Override
+	public void setNextReader(LeafReaderContext readerContext) throws IOException {
+		FunctionValues values = valueSource.getValues(context, readerContext);
+		this.filler = values.getValueFiller();
+	}
 
-  @Override
-  public State advanceTo(int doc) throws IOException {
-    this.filler.fillValue(doc);
-    if (secondPassGroups != null) {
-      if (secondPassGroups.contains(filler.getValue()) == false)
-        return State.SKIP;
-    }
-    return State.ACCEPT;
-  }
+	@Override
+	public State advanceTo(int doc) throws IOException {
+		this.filler.fillValue(doc);
+		if (secondPassGroups != null) {
+			if (secondPassGroups.contains(filler.getValue()) == false)
+				return State.SKIP;
+		}
+		return State.ACCEPT;
+	}
 
-  @Override
-  public MutableValue currentValue() {
-    return filler.getValue();
-  }
+	@Override
+	public MutableValue currentValue() {
+		return filler.getValue();
+	}
 
-  @Override
-  public MutableValue copyValue() {
-    return filler.getValue().duplicate();
-  }
+	@Override
+	public MutableValue copyValue() {
+		return filler.getValue().duplicate();
+	}
 
-  @Override
-  public void setGroups(Collection<SearchGroup<MutableValue>> searchGroups) {
-    secondPassGroups = new HashSet<>();
-    for (SearchGroup<MutableValue> group : searchGroups) {
-      secondPassGroups.add(group.groupValue);
-    }
-  }
+	@Override
+	public void setGroups(Collection<SearchGroup<MutableValue>> searchGroups) {
+		secondPassGroups = new HashSet<>();
+		for (SearchGroup<MutableValue> group : searchGroups) {
+			secondPassGroups.add(group.groupValue);
+		}
+	}
 }

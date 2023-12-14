@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link ASCIIFoldingFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_ascii" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -32,40 +32,44 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class ASCIIFoldingFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "asciiFolding";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "asciiFolding";
 
-  private static final String PRESERVE_ORIGINAL = "preserveOriginal";
+	private static final String PRESERVE_ORIGINAL = "preserveOriginal";
 
-  private final boolean preserveOriginal;
-  
-  /** Creates a new ASCIIFoldingFilterFactory */
-  public ASCIIFoldingFilterFactory(Map<String,String> args) {
-    super(args);
-    preserveOriginal = getBoolean(args, PRESERVE_ORIGINAL, false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new ASCIIFoldingFilter(input, preserveOriginal);
-  }
+	private final boolean preserveOriginal;
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    // The main use-case for using preserveOriginal is to match regardless of
-    // case and to give better scores to exact matches. Since most multi-term
-    // queries return constant scores anyway, for normalization we
-    // emit only the folded token
-    return new ASCIIFoldingFilter(input, false);
-  }
+	/**
+	 * Creates a new ASCIIFoldingFilterFactory
+	 */
+	public ASCIIFoldingFilterFactory(Map<String, String> args) {
+		super(args);
+		preserveOriginal = getBoolean(args, PRESERVE_ORIGINAL, false);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new ASCIIFoldingFilter(input, preserveOriginal);
+	}
+
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		// The main use-case for using preserveOriginal is to match regardless of
+		// case and to give better scores to exact matches. Since most multi-term
+		// queries return constant scores anyway, for normalization we
+		// emit only the folded token
+		return new ASCIIFoldingFilter(input, false);
+	}
 
 }
 

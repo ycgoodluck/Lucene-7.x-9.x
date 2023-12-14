@@ -8,21 +8,20 @@ import org.apache.lucene.util.FixedBitSet;
  */
 public class FixedBitSetTest {
 
-    public static void main(String[] args) {
+	public static void main(String[] args) {
 
-        FixedBitSet fixedBitSet = new FixedBitSet(300);
-        fixedBitSet.set(3);
-        fixedBitSet.set(67);
-        fixedBitSet.set(120);
-        fixedBitSet.set(179);
-        fixedBitSet.set(195);
-        fixedBitSet.set(313);
+		FixedBitSet fixedBitSet = new FixedBitSet(300);
+		fixedBitSet.set(3);
+		fixedBitSet.set(67);
+		fixedBitSet.set(120);
+		fixedBitSet.set(179);
+		fixedBitSet.set(195);
+		fixedBitSet.set(313);
 
 
-
-        boolean b = fixedBitSet.get(65);
-        System.out.println(""+b+"");
+		boolean b = fixedBitSet.get(65);
+		System.out.println("" + b + "");
 //        int a = fixedBitSet.nextSetBit(299);
-    }
+	}
 
 }

@@ -26,31 +26,33 @@ import java.io.IOException;
  */
 public abstract class FilterLeafCollector implements LeafCollector {
 
-  protected final LeafCollector in;
+	protected final LeafCollector in;
 
-  /** Sole constructor. */
-  public FilterLeafCollector(LeafCollector in) {
-    this.in = in;
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public FilterLeafCollector(LeafCollector in) {
+		this.in = in;
+	}
 
-  @Override
-  public void setScorer(Scorer scorer) throws IOException {
-    in.setScorer(scorer);
-  }
+	@Override
+	public void setScorer(Scorer scorer) throws IOException {
+		in.setScorer(scorer);
+	}
 
-  @Override
-  public void collect(int doc) throws IOException {
-    in.collect(doc);
-  }
+	@Override
+	public void collect(int doc) throws IOException {
+		in.collect(doc);
+	}
 
-  @Override
-  public String toString() {
-    String name = getClass().getSimpleName();
-    if (name.length() == 0) {
-      // an anonoymous subclass will have empty name?
-      name = "FilterLeafCollector";
-    }
-    return name + "(" + in + ")";
-  }
+	@Override
+	public String toString() {
+		String name = getClass().getSimpleName();
+		if (name.length() == 0) {
+			// an anonoymous subclass will have empty name?
+			name = "FilterLeafCollector";
+		}
+		return name + "(" + in + ")";
+	}
 
 }

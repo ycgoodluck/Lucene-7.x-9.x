@@ -36,131 +36,130 @@ import static org.apache.lucene.search.suggest.document.NRTSuggester.encode;
 
 /**
  * Builder for {@link NRTSuggester}
- *
  */
 final class NRTSuggesterBuilder {
 
-  /**
-   * Label used to separate surface form and docID
-   * in the output
-   */
-  public static final int PAYLOAD_SEP = ConcatenateGraphFilter.SEP_LABEL;
+	/**
+	 * Label used to separate surface form and docID
+	 * in the output
+	 */
+	public static final int PAYLOAD_SEP = ConcatenateGraphFilter.SEP_LABEL;
 
-  /**
-   * Marks end of the analyzed input and start of dedup
-   * byte.
-   */
-  public static final int END_BYTE = 0x0;
+	/**
+	 * Marks end of the analyzed input and start of dedup
+	 * byte.
+	 */
+	public static final int END_BYTE = 0x0;
 
-  private final PairOutputs<Long, BytesRef> outputs;
-  private final Builder<PairOutputs.Pair<Long, BytesRef>> builder;
-  private final IntsRefBuilder scratchInts = new IntsRefBuilder();
-  private final BytesRefBuilder analyzed = new BytesRefBuilder();
-  private final PriorityQueue<Entry> entries;
-  private final int payloadSep;
-  private final int endByte;
+	private final PairOutputs<Long, BytesRef> outputs;
+	private final Builder<PairOutputs.Pair<Long, BytesRef>> builder;
+	private final IntsRefBuilder scratchInts = new IntsRefBuilder();
+	private final BytesRefBuilder analyzed = new BytesRefBuilder();
+	private final PriorityQueue<Entry> entries;
+	private final int payloadSep;
+	private final int endByte;
 
-  private int maxAnalyzedPathsPerOutput = 0;
+	private int maxAnalyzedPathsPerOutput = 0;
 
-  /**
-   * Create a builder for {@link NRTSuggester}
-   */
-  public NRTSuggesterBuilder() {
-    this.payloadSep = PAYLOAD_SEP;
-    this.endByte = END_BYTE;
-    this.outputs = new PairOutputs<>(PositiveIntOutputs.getSingleton(), ByteSequenceOutputs.getSingleton());
-    this.entries = new PriorityQueue<>();
-    this.builder = new Builder<>(FST.INPUT_TYPE.BYTE1, outputs);
-  }
+	/**
+	 * Create a builder for {@link NRTSuggester}
+	 */
+	public NRTSuggesterBuilder() {
+		this.payloadSep = PAYLOAD_SEP;
+		this.endByte = END_BYTE;
+		this.outputs = new PairOutputs<>(PositiveIntOutputs.getSingleton(), ByteSequenceOutputs.getSingleton());
+		this.entries = new PriorityQueue<>();
+		this.builder = new Builder<>(FST.INPUT_TYPE.BYTE1, outputs);
+	}
 
-  /**
-   * Initializes an FST input term to add entries against
-   */
-  public void startTerm(BytesRef analyzed) {
-    this.analyzed.copyBytes(analyzed);
-    this.analyzed.append((byte) endByte);
-  }
+	/**
+	 * Initializes an FST input term to add entries against
+	 */
+	public void startTerm(BytesRef analyzed) {
+		this.analyzed.copyBytes(analyzed);
+		this.analyzed.append((byte) endByte);
+	}
 
-  /**
-   * Adds an entry for the latest input term, should be called after
-   * {@link #startTerm(org.apache.lucene.util.BytesRef)} on the desired input
-   */
-  public void addEntry(int docID, BytesRef surfaceForm, long weight) throws IOException {
-    BytesRef payloadRef = NRTSuggester.PayLoadProcessor.make(surfaceForm, docID, payloadSep);
-    entries.add(new Entry(payloadRef, encode(weight)));
-  }
+	/**
+	 * Adds an entry for the latest input term, should be called after
+	 * {@link #startTerm(org.apache.lucene.util.BytesRef)} on the desired input
+	 */
+	public void addEntry(int docID, BytesRef surfaceForm, long weight) throws IOException {
+		BytesRef payloadRef = NRTSuggester.PayLoadProcessor.make(surfaceForm, docID, payloadSep);
+		entries.add(new Entry(payloadRef, encode(weight)));
+	}
 
-  /**
-   * Writes all the entries for the FST input term
-   */
-  public void finishTerm() throws IOException {
-    int numArcs = 0;
-    int numDedupBytes = 1;
-    analyzed.grow(analyzed.length() + 1);
-    analyzed.setLength(analyzed.length() + 1);
-    for (Entry entry : entries) {
-      if (numArcs == maxNumArcsForDedupByte(numDedupBytes)) {
-        analyzed.setByteAt(analyzed.length() - 1, (byte) (numArcs));
-        analyzed.grow(analyzed.length() + 1);
-        analyzed.setLength(analyzed.length() + 1);
-        numArcs = 0;
-        numDedupBytes++;
-      }
-      analyzed.setByteAt(analyzed.length() - 1, (byte) numArcs++);
-      Util.toIntsRef(analyzed.get(), scratchInts);
-      builder.add(scratchInts.get(), outputs.newPair(entry.weight, entry.payload));
-    }
-    maxAnalyzedPathsPerOutput = Math.max(maxAnalyzedPathsPerOutput, entries.size());
-    entries.clear();
-  }
+	/**
+	 * Writes all the entries for the FST input term
+	 */
+	public void finishTerm() throws IOException {
+		int numArcs = 0;
+		int numDedupBytes = 1;
+		analyzed.grow(analyzed.length() + 1);
+		analyzed.setLength(analyzed.length() + 1);
+		for (Entry entry : entries) {
+			if (numArcs == maxNumArcsForDedupByte(numDedupBytes)) {
+				analyzed.setByteAt(analyzed.length() - 1, (byte) (numArcs));
+				analyzed.grow(analyzed.length() + 1);
+				analyzed.setLength(analyzed.length() + 1);
+				numArcs = 0;
+				numDedupBytes++;
+			}
+			analyzed.setByteAt(analyzed.length() - 1, (byte) numArcs++);
+			Util.toIntsRef(analyzed.get(), scratchInts);
+			builder.add(scratchInts.get(), outputs.newPair(entry.weight, entry.payload));
+		}
+		maxAnalyzedPathsPerOutput = Math.max(maxAnalyzedPathsPerOutput, entries.size());
+		entries.clear();
+	}
 
-  /**
-   * Builds and stores a FST that can be loaded with
-   * {@link NRTSuggester#load(IndexInput, CompletionPostingsFormat.FSTLoadMode)})}
-   */
-  public boolean store(DataOutput output) throws IOException {
-    final FST<PairOutputs.Pair<Long, BytesRef>> build = builder.finish();
-    if (build == null) {
-      return false;
-    }
-    build.save(output);
+	/**
+	 * Builds and stores a FST that can be loaded with
+	 * {@link NRTSuggester#load(IndexInput, CompletionPostingsFormat.FSTLoadMode)})}
+	 */
+	public boolean store(DataOutput output) throws IOException {
+		final FST<PairOutputs.Pair<Long, BytesRef>> build = builder.finish();
+		if (build == null) {
+			return false;
+		}
+		build.save(output);
 
-    /* write some more  meta-info */
-    assert maxAnalyzedPathsPerOutput > 0;
-    output.writeVInt(maxAnalyzedPathsPerOutput);
-    output.writeVInt(END_BYTE);
-    output.writeVInt(PAYLOAD_SEP);
-    return true;
-  }
+		/* write some more  meta-info */
+		assert maxAnalyzedPathsPerOutput > 0;
+		output.writeVInt(maxAnalyzedPathsPerOutput);
+		output.writeVInt(END_BYTE);
+		output.writeVInt(PAYLOAD_SEP);
+		return true;
+	}
 
-  /**
-   * Num arcs for nth dedup byte:
-   * if n <= 5: 1 + (2 * n)
-   * else: (1 + (2 * n)) * n
-   * <p>
-   * TODO: is there a better way to make the fst built to be
-   * more TopNSearcher friendly?
-   */
-  private static int maxNumArcsForDedupByte(int currentNumDedupBytes) {
-    int maxArcs = 1 + (2 * currentNumDedupBytes);
-    if (currentNumDedupBytes > 5) {
-      maxArcs *= currentNumDedupBytes;
-    }
-    return Math.min(maxArcs, 255);
-  }
+	/**
+	 * Num arcs for nth dedup byte:
+	 * if n <= 5: 1 + (2 * n)
+	 * else: (1 + (2 * n)) * n
+	 * <p>
+	 * TODO: is there a better way to make the fst built to be
+	 * more TopNSearcher friendly?
+	 */
+	private static int maxNumArcsForDedupByte(int currentNumDedupBytes) {
+		int maxArcs = 1 + (2 * currentNumDedupBytes);
+		if (currentNumDedupBytes > 5) {
+			maxArcs *= currentNumDedupBytes;
+		}
+		return Math.min(maxArcs, 255);
+	}
 
-  private final static class Entry implements Comparable<Entry> {
-    final BytesRef payload;
-    final long weight;
+	private final static class Entry implements Comparable<Entry> {
+		final BytesRef payload;
+		final long weight;
 
-    public Entry(BytesRef payload, long weight) {
-      this.payload = payload;
-      this.weight = weight;
-    }
+		public Entry(BytesRef payload, long weight) {
+			this.payload = payload;
+			this.weight = weight;
+		}
 
-    @Override
-    public int compareTo(Entry o) {
-      return Long.compare(weight, o.weight);
-    }
-  }
+		@Override
+		public int compareTo(Entry o) {
+			return Long.compare(weight, o.weight);
+		}
+	}
 }

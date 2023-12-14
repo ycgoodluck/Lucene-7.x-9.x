@@ -25,28 +25,28 @@ import java.nio.file.Paths;
  * Holder for a index file.
  */
 public final class File {
-  private String fileName;
-  private String displaySize;
+	private String fileName;
+	private String displaySize;
 
-  static File of(String indexPath, String name) {
-    File file = new File();
-    file.fileName = name;
-    try {
-      file.displaySize = CommitsImpl.toDisplaySize(Files.size(Paths.get(indexPath, name)));
-    } catch (IOException e) {
-      file.displaySize = "unknown";
-    }
-    return file;
-  }
+	static File of(String indexPath, String name) {
+		File file = new File();
+		file.fileName = name;
+		try {
+			file.displaySize = CommitsImpl.toDisplaySize(Files.size(Paths.get(indexPath, name)));
+		} catch (IOException e) {
+			file.displaySize = "unknown";
+		}
+		return file;
+	}
 
-  public String getFileName() {
-    return fileName;
-  }
+	public String getFileName() {
+		return fileName;
+	}
 
-  public String getDisplaySize() {
-    return displaySize;
-  }
+	public String getDisplaySize() {
+		return displaySize;
+	}
 
-  private File() {
-  }
+	private File() {
+	}
 }

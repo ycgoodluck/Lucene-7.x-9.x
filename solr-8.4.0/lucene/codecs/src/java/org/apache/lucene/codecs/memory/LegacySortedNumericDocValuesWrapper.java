@@ -28,73 +28,73 @@ import org.apache.lucene.index.SortedNumericDocValues;
  */
 @Deprecated
 final class LegacySortedNumericDocValuesWrapper extends SortedNumericDocValues {
-  private final LegacySortedNumericDocValues values;
-  private final int maxDoc;
-  private int docID = -1;
-  private int upto;
-  
-  public LegacySortedNumericDocValuesWrapper(LegacySortedNumericDocValues values, int maxDoc) {
-    this.values = values;
-    this.maxDoc = maxDoc;
-  }
+	private final LegacySortedNumericDocValues values;
+	private final int maxDoc;
+	private int docID = -1;
+	private int upto;
 
-  @Override
-  public int docID() {
-    return docID;
-  }
+	public LegacySortedNumericDocValuesWrapper(LegacySortedNumericDocValues values, int maxDoc) {
+		this.values = values;
+		this.maxDoc = maxDoc;
+	}
 
-  @Override
-  public int nextDoc() {
-    assert docID != NO_MORE_DOCS;
-    while (true) {
-      docID++;
-      if (docID == maxDoc) {
-        docID = NO_MORE_DOCS;
-        break;
-      }
-      values.setDocument(docID);
-      if (values.count() != 0) {
-        break;
-      }
-    }
-    upto = 0;
-    return docID;
-  }
+	@Override
+	public int docID() {
+		return docID;
+	}
 
-  @Override
-  public int advance(int target) {
-    if (target < docID) {
-      throw new IllegalArgumentException("cannot advance backwards: docID=" + docID + " target=" + target);
-    }
-    if (target >= maxDoc) {
-      docID = NO_MORE_DOCS;
-    } else {
-      docID = target-1;
-      nextDoc();
-    }
-    return docID;
-  }
+	@Override
+	public int nextDoc() {
+		assert docID != NO_MORE_DOCS;
+		while (true) {
+			docID++;
+			if (docID == maxDoc) {
+				docID = NO_MORE_DOCS;
+				break;
+			}
+			values.setDocument(docID);
+			if (values.count() != 0) {
+				break;
+			}
+		}
+		upto = 0;
+		return docID;
+	}
 
-  @Override
-  public boolean advanceExact(int target) throws IOException {
-    docID = target;
-    values.setDocument(docID);
-    upto = 0;
-    return values.count() != 0;
-  }
+	@Override
+	public int advance(int target) {
+		if (target < docID) {
+			throw new IllegalArgumentException("cannot advance backwards: docID=" + docID + " target=" + target);
+		}
+		if (target >= maxDoc) {
+			docID = NO_MORE_DOCS;
+		} else {
+			docID = target - 1;
+			nextDoc();
+		}
+		return docID;
+	}
 
-  @Override
-  public long cost() {
-    return 0;
-  }
+	@Override
+	public boolean advanceExact(int target) throws IOException {
+		docID = target;
+		values.setDocument(docID);
+		upto = 0;
+		return values.count() != 0;
+	}
 
-  @Override
-  public long nextValue() {
-    return values.valueAt(upto++);
-  }
+	@Override
+	public long cost() {
+		return 0;
+	}
 
-  @Override
-  public int docValueCount() {
-    return values.count();
-  }
+	@Override
+	public long nextValue() {
+		return values.valueAt(upto++);
+	}
+
+	@Override
+	public int docValueCount() {
+		return values.count();
+	}
 }

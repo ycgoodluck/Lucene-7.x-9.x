@@ -28,44 +28,44 @@ import org.apache.lucene.util.mutable.MutableValueStr;
  * Implementations can control how the String values are loaded through {@link #strVal(int)}}
  */
 public abstract class StrDocValues extends FunctionValues {
-  protected final ValueSource vs;
+	protected final ValueSource vs;
 
-  public StrDocValues(ValueSource vs) {
-    this.vs = vs;
-  }
+	public StrDocValues(ValueSource vs) {
+		this.vs = vs;
+	}
 
-  @Override
-  public abstract String strVal(int doc) throws IOException;
+	@Override
+	public abstract String strVal(int doc) throws IOException;
 
-  @Override
-  public Object objectVal(int doc) throws IOException {
-    return exists(doc) ? strVal(doc) : null;
-  }
+	@Override
+	public Object objectVal(int doc) throws IOException {
+		return exists(doc) ? strVal(doc) : null;
+	}
 
-  @Override
-  public boolean boolVal(int doc) throws IOException {
-    return exists(doc);
-  }
+	@Override
+	public boolean boolVal(int doc) throws IOException {
+		return exists(doc);
+	}
 
-  @Override
-  public String toString(int doc) throws IOException {
-    return vs.description() + "='" + strVal(doc) + "'";
-  }
+	@Override
+	public String toString(int doc) throws IOException {
+		return vs.description() + "='" + strVal(doc) + "'";
+	}
 
-  @Override
-  public ValueFiller getValueFiller() {
-    return new ValueFiller() {
-      private final MutableValueStr mval = new MutableValueStr();
+	@Override
+	public ValueFiller getValueFiller() {
+		return new ValueFiller() {
+			private final MutableValueStr mval = new MutableValueStr();
 
-      @Override
-      public MutableValue getValue() {
-        return mval;
-      }
+			@Override
+			public MutableValue getValue() {
+				return mval;
+			}
 
-      @Override
-      public void fillValue(int doc) throws IOException {
-        mval.exists = bytesVal(doc, mval.value);
-      }
-    };
-  }
+			@Override
+			public void fillValue(int doc) throws IOException {
+				mval.exists = bytesVal(doc, mval.value);
+			}
+		};
+	}
 }

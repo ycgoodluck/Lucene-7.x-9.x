@@ -29,22 +29,24 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the German stem filter factory is working.
  */
 public class TestGermanStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  /**
-   * Ensure the filter actually stems text.
-   */
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("Tischen");
-    TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("GermanStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "tisch" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("GermanStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Ensure the filter actually stems text.
+	 */
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("Tischen");
+		TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		((Tokenizer) stream).setReader(reader);
+		stream = tokenFilterFactory("GermanStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"tisch"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("GermanStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

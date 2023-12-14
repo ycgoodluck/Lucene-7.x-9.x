@@ -16,7 +16,7 @@
  */
 
 /**
- * Text analysis. 
+ * Text analysis.
  * <p>API and code to convert text into indexable/searchable tokens.  Covers {@link org.apache.lucene.analysis.Analyzer} and related classes.</p>
  * <h2>Parsing? Tokenization? Analysis!</h2>
  * <p>
@@ -24,57 +24,57 @@
  * <h2>Parsing</h2>
  * <p>
  * Applications that build their search capabilities upon Lucene may support documents in various formats &ndash; HTML, XML, PDF, Word &ndash; just to name a few.
- * Lucene does not care about the <i>Parsing</i> of these and other document formats, and it is the responsibility of the 
+ * Lucene does not care about the <i>Parsing</i> of these and other document formats, and it is the responsibility of the
  * application using Lucene to use an appropriate <i>Parser</i> to convert the original format into plain text before passing that plain text to Lucene.
  * <h2>Tokenization</h2>
  * <p>
  * Plain text passed to Lucene for indexing goes through a process generally called tokenization. Tokenization is the process
  * of breaking input text into small indexing elements &ndash; tokens.
- * The way input text is broken into tokens heavily influences how people will then be able to search for that text. 
- * For instance, sentences beginnings and endings can be identified to provide for more accurate phrase 
+ * The way input text is broken into tokens heavily influences how people will then be able to search for that text.
+ * For instance, sentences beginnings and endings can be identified to provide for more accurate phrase
  * and proximity searches (though sentence identification is not provided by Lucene).
  * <p>
- *   In some cases simply breaking the input text into tokens is not enough
- *   &ndash; a deeper <i>Analysis</i> may be needed. Lucene includes both
- *   pre- and post-tokenization analysis facilities.
+ * In some cases simply breaking the input text into tokens is not enough
+ * &ndash; a deeper <i>Analysis</i> may be needed. Lucene includes both
+ * pre- and post-tokenization analysis facilities.
  * </p>
  * <p>
- *   Pre-tokenization analysis can include (but is not limited to) stripping
- *   HTML markup, and transforming or removing text matching arbitrary patterns
- *   or sets of fixed strings.
+ * Pre-tokenization analysis can include (but is not limited to) stripping
+ * HTML markup, and transforming or removing text matching arbitrary patterns
+ * or sets of fixed strings.
  * </p>
  * <p>
- *   There are many post-tokenization steps that can be done, including 
- *   (but not limited to):
+ * There are many post-tokenization steps that can be done, including
+ * (but not limited to):
  * </p>
  * <ul>
- *   <li><a href="http://en.wikipedia.org/wiki/Stemming">Stemming</a> &ndash; 
- *       Replacing words with their stems. 
- *       For instance with English stemming "bikes" is replaced with "bike"; 
+ *   <li><a href="http://en.wikipedia.org/wiki/Stemming">Stemming</a> &ndash;
+ *       Replacing words with their stems.
+ *       For instance with English stemming "bikes" is replaced with "bike";
  *       now query "bike" can find both documents containing "bike" and those containing "bikes".
  *   </li>
- *   <li><a href="http://en.wikipedia.org/wiki/Stop_words">Stop Words Filtering</a> &ndash; 
+ *   <li><a href="http://en.wikipedia.org/wiki/Stop_words">Stop Words Filtering</a> &ndash;
  *       Common words like "the", "and" and "a" rarely add any value to a search.
  *       Removing them shrinks the index size and increases performance.
  *       It may also reduce some "noise" and actually improve search quality.
  *   </li>
- *   <li><a href="http://en.wikipedia.org/wiki/Text_normalization">Text Normalization</a> &ndash; 
+ *   <li><a href="http://en.wikipedia.org/wiki/Text_normalization">Text Normalization</a> &ndash;
  *       Stripping accents and other character markings can make for better searching.
  *   </li>
- *   <li><a href="http://en.wikipedia.org/wiki/Synonym">Synonym Expansion</a> &ndash; 
- *       Adding in synonyms at the same token position as the current word can mean better 
+ *   <li><a href="http://en.wikipedia.org/wiki/Synonym">Synonym Expansion</a> &ndash;
+ *       Adding in synonyms at the same token position as the current word can mean better
  *       matching when users search with words in the synonym set.
  *   </li>
  * </ul>
  * <h2>Core Analysis</h2>
  * <p>
  *   The analysis package provides the mechanism to convert Strings and Readers
- *   into tokens that can be indexed by Lucene.  There are four main classes in 
+ *   into tokens that can be indexed by Lucene.  There are four main classes in
  *   the package from which all analysis processes are derived.  These are:
  * </p>
  * <ul>
  *   <li>
- *     {@link org.apache.lucene.analysis.Analyzer} &ndash; An <code>Analyzer</code> is 
+ *     {@link org.apache.lucene.analysis.Analyzer} &ndash; An <code>Analyzer</code> is
  *     responsible for supplying a
  *     {@link org.apache.lucene.analysis.TokenStream} which can be consumed
  *     by the indexing and searching processes.  See below for more information
@@ -86,14 +86,14 @@
  *     {@link java.io.Reader} to transform the text before it is
  *     tokenized, while providing
  *     corrected character offsets to account for these modifications.  This
- *     capability allows highlighting to function over the original text when 
+ *     capability allows highlighting to function over the original text when
  *     indexed tokens are created from <code>CharFilter</code>-modified text with offsets
  *     that are not the same as those in the original text. {@link org.apache.lucene.analysis.Tokenizer#setReader(java.io.Reader)}
  *     accept <code>CharFilter</code>s.  <code>CharFilter</code>s may
  *     be chained to perform multiple pre-tokenization modifications.
  *   </li>
  *   <li>
- *     {@link org.apache.lucene.analysis.Tokenizer} &ndash; A <code>Tokenizer</code> is a 
+ *     {@link org.apache.lucene.analysis.Tokenizer} &ndash; A <code>Tokenizer</code> is a
  *     {@link org.apache.lucene.analysis.TokenStream} and is responsible for
  *     breaking up incoming text into tokens. In many cases, an {@link org.apache.lucene.analysis.Analyzer} will
  *     use a {@link org.apache.lucene.analysis.Tokenizer} as the first step in the analysis process.  However,
@@ -103,14 +103,14 @@
  *   <li>
  *     {@link org.apache.lucene.analysis.TokenFilter} &ndash; A <code>TokenFilter</code> is
  *     a {@link org.apache.lucene.analysis.TokenStream} and is responsible
- *     for modifying tokens that have been created by the <code>Tokenizer</code>. Common 
- *     modifications performed by a <code>TokenFilter</code> are: deletion, stemming, synonym 
+ *     for modifying tokens that have been created by the <code>Tokenizer</code>. Common
+ *     modifications performed by a <code>TokenFilter</code> are: deletion, stemming, synonym
  *     injection, and case folding.  Not all <code>Analyzer</code>s require <code>TokenFilter</code>s.
  *   </li>
  * </ul>
  * <h2>Hints, Tips and Traps</h2>
  * <p>
- *   The relationship between {@link org.apache.lucene.analysis.Analyzer} and 
+ *   The relationship between {@link org.apache.lucene.analysis.Analyzer} and
  *   {@link org.apache.lucene.analysis.CharFilter}s,
  *   {@link org.apache.lucene.analysis.Tokenizer}s,
  *   and {@link org.apache.lucene.analysis.TokenFilter}s is sometimes confusing. To ease
@@ -121,7 +121,7 @@
  *     The {@link org.apache.lucene.analysis.Analyzer} is a
  *     <strong>factory</strong> for analysis chains. <code>Analyzer</code>s don't
  *     process text, <code>Analyzer</code>s construct <code>CharFilter</code>s, <code>Tokenizer</code>s, and/or
- *     <code>TokenFilter</code>s that process text. An <code>Analyzer</code> has two tasks: 
+ *     <code>TokenFilter</code>s that process text. An <code>Analyzer</code> has two tasks:
  *     to produce {@link org.apache.lucene.analysis.TokenStream}s that accept a
  *     reader and produces tokens, and to wrap or otherwise
  *     pre-process {@link java.io.Reader} objects.
@@ -137,11 +137,11 @@
  *   stream of tokens and their contents.
  *   </li>
  *   <li>
- *     {@link org.apache.lucene.analysis.Tokenizer} is a {@link org.apache.lucene.analysis.TokenStream}, 
+ *     {@link org.apache.lucene.analysis.Tokenizer} is a {@link org.apache.lucene.analysis.TokenStream},
  *     but {@link org.apache.lucene.analysis.Analyzer} is not.
  *   </li>
  *   <li>
- *     {@link org.apache.lucene.analysis.Analyzer} is "field aware", but 
+ *     {@link org.apache.lucene.analysis.Analyzer} is "field aware", but
  *     {@link org.apache.lucene.analysis.Tokenizer} is not. {@link org.apache.lucene.analysis.Analyzer}s may
  *     take a field name into account when constructing the {@link org.apache.lucene.analysis.TokenStream}.
  *   </li>
@@ -178,7 +178,7 @@
  * </p>
  * <p>
  *   Analysis is one of the main causes of slow indexing.  Simply put, the more you analyze the slower the indexing (in most cases).
- *   Perhaps your application would be just fine using the simple WhitespaceTokenizer combined with a StopFilter. The benchmark/ library can be useful 
+ *   Perhaps your application would be just fine using the simple WhitespaceTokenizer combined with a StopFilter. The benchmark/ library can be useful
  *   for testing out the speed of the analysis process.
  * </p>
  * <h2>Invoking the Analyzer</h2>
@@ -189,7 +189,7 @@
  * </p>
  * <ul>
  *   <li>
- *     At indexing, as a consequence of 
+ *     At indexing, as a consequence of
  *     {@link org.apache.lucene.index.IndexWriter#addDocument(Iterable) addDocument(doc)},
  *     the <code>Analyzer</code> in effect for indexing is invoked for each indexed field of the added document.
  *   </li>
@@ -208,14 +208,14 @@
  *     // The Analyzer class will construct the Tokenizer, TokenFilter(s), and CharFilter(s),
  *     //   and pass the resulting Reader to the Tokenizer.
  *     OffsetAttribute offsetAtt = ts.addAttribute(OffsetAttribute.class);
- *     
+ * <p>
  *     try {
  *       ts.reset(); // Resets this stream to the beginning. (Required)
  *       while (ts.incrementToken()) {
  *         // Use {@link org.apache.lucene.util.AttributeSource#reflectAsString(boolean)}
  *         // for token stream debugging.
  *         System.out.println("token: " + ts.reflectAsString(true));
- * 
+ * <p>
  *         System.out.println("token start offset: " + offsetAtt.startOffset());
  *         System.out.println("  token end offset: " + offsetAtt.endOffset());
  *       }
@@ -230,8 +230,8 @@
  *   for search quality, and can also affect indexing and search performance.
  *   The "correct" analyzer for your application will depend on what your input text
  *   looks like and what problem you are trying to solve.
- *   Lucene java's wiki page 
- *   <a href="http://wiki.apache.org/lucene-java/AnalysisParalysis">AnalysisParalysis</a> 
+ *   Lucene java's wiki page
+ *   <a href="http://wiki.apache.org/lucene-java/AnalysisParalysis">AnalysisParalysis</a>
  *   provides some data on "analyzing your analyzer".
  *   Here are some rules of thumb:
  *   <ol>
@@ -253,7 +253,7 @@
  *   Tokenizer, and TokenFilter(s) <i>(optional)</i> &mdash; or components you
  *   create, or a combination of existing and newly created components.  Before
  *   pursuing this approach, you may find it worthwhile to explore the
- *   <a href="{@docRoot}/../analyzers-common/overview-summary.html">analyzers-common</a> library and/or ask on the 
+ *   <a href="{@docRoot}/../analyzers-common/overview-summary.html">analyzers-common</a> library and/or ask on the
  *   <a href="http://lucene.apache.org/core/discussion.html">java-user@lucene.apache.org mailing list</a> first to see if what you
  *   need already exists. If you are still committed to creating your own
  *   Analyzer, have a look at the source code of any one of the many samples
@@ -265,13 +265,13 @@
  * <h3>Field Section Boundaries</h3>
  * <p>
  *   When {@link org.apache.lucene.document.Document#add(org.apache.lucene.index.IndexableField) document.add(field)}
- *   is called multiple times for the same field name, we could say that each such call creates a new 
- *   section for that field in that document. 
- *   In fact, a separate call to 
+ *   is called multiple times for the same field name, we could say that each such call creates a new
+ *   section for that field in that document.
+ *   In fact, a separate call to
  *   {@link org.apache.lucene.analysis.Analyzer#tokenStream(java.lang.String, java.io.Reader) tokenStream(field,reader)}
  *   would take place for each of these so called "sections".
- *   However, the default Analyzer behavior is to treat all these sections as one large section. 
- *   This allows phrase search and proximity search to seamlessly cross 
+ *   However, the default Analyzer behavior is to treat all these sections as one large section.
+ *   This allows phrase search and proximity search to seamlessly cross
  *   boundaries between these "sections".
  *   In other words, if a certain field "f" is added like this:
  * </p>
@@ -282,8 +282,8 @@
  * </PRE>
  * <p>
  *   Then, a phrase search for "ends starts" would find that document.
- *   Where desired, this behavior can be modified by introducing a "position gap" between consecutive field "sections", 
- *   simply by overriding 
+ *   Where desired, this behavior can be modified by introducing a "position gap" between consecutive field "sections",
+ *   simply by overriding
  *   {@link org.apache.lucene.analysis.Analyzer#getPositionIncrementGap(java.lang.String) Analyzer.getPositionIncrementGap(fieldName)}:
  * </p>
  * <PRE class="prettyprint">
@@ -300,7 +300,7 @@
  *    The components of the token stream (the tokenizer and the token filters) <strong>must</strong>
  *    put accurate values into the token attributes to reflect the situation at the end of the field.
  *    The Offset attribute must contain the final offset (the total number of characters processed)
- *    in both start and end. Attributes like PositionLength must be correct. 
+ *    in both start and end. Attributes like PositionLength must be correct.
  * </p>
  * <p>
  *    The base method{@link org.apache.lucene.analysis.TokenStream#end()} sets PositionIncrement to 0, which is required.
@@ -308,21 +308,21 @@
  * </p>
  * <h3>Token Position Increments</h3>
  * <p>
- *    By default, TokenStream arranges for the 
+ *    By default, TokenStream arranges for the
  *    {@link org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute#getPositionIncrement() position increment} of all tokens to be one.
  *    This means that the position stored for that token in the index would be one more than
  *    that of the previous token.
  *    Recall that phrase and proximity searches rely on position info.
  * </p>
  * <p>
- *    If the selected analyzer filters the stop words "is" and "the", then for a document 
- *    containing the string "blue is the sky", only the tokens "blue", "sky" are indexed, 
+ *    If the selected analyzer filters the stop words "is" and "the", then for a document
+ *    containing the string "blue is the sky", only the tokens "blue", "sky" are indexed,
  *    with position("sky") = 3 + position("blue"). Now, a phrase query "blue is the sky"
  *    would find that document, because the same analyzer filters the same stop words from
  *    that query. But the phrase query "blue sky" would not find that document because the
  *    position increment between "blue" and "sky" is only 1.
  * </p>
- * <p>   
+ * <p>
  *    If this behavior does not fit the application needs, the query parser needs to be
  *    configured to not take position increments into account when generating phrase queries.
  * </p>
@@ -336,7 +336,7 @@
  *     TokenStream res = new TokenStream() {
  *       CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
  *       PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
- * 
+ * <p>
  *       public boolean incrementToken() throws IOException {
  *         int extraIncrement = 0;
  *         while (true) {
@@ -345,7 +345,7 @@
  *             if (stopWords.contains(termAtt.toString())) {
  *               extraIncrement += posIncrAtt.getPositionIncrement(); // filter this word
  *               continue;
- *             } 
+ *             }
  *             if (extraIncrement &gt; 0) {
  *               posIncrAtt.setPositionIncrement(posIncrAtt.getPositionIncrement()+extraIncrement);
  *             }
@@ -361,7 +361,7 @@
  *    A few more use cases for modifying position increments are:
  * </p>
  * <ol>
- *   <li>Inhibiting phrase and proximity matches in sentence boundaries &ndash; for this, a tokenizer that 
+ *   <li>Inhibiting phrase and proximity matches in sentence boundaries &ndash; for this, a tokenizer that
  *       identifies a new sentence can add 1 to the position increment of the first token of the new sentence.</li>
  *   <li>Injecting synonyms &ndash; synonyms of a token should be created at the same position as the
  *       original token, and the output order of the original token and the injected synonym is undefined
@@ -370,7 +370,7 @@
  *       phrase and proximity searches.  For multi-token synonyms to work correctly, you should use
  *       {@code SynoymGraphFilter} at search time only.</li>
  * </ol>
- * 
+ *
  * <h3>Token Position Length</h3>
  * <p>
  *    By default, all tokens created by Analyzers and Tokenizers have a
@@ -456,14 +456,14 @@
  * </p>
  * <h3>Attribute and AttributeSource</h3>
  * <p>
- *   Classes {@link org.apache.lucene.util.Attribute} and 
- *   {@link org.apache.lucene.util.AttributeSource} serve as the basis upon which 
- *   the analysis elements of "Flexible Indexing" are implemented. An Attribute 
- *   holds a particular piece of information about a text token. For example, 
- *   {@link org.apache.lucene.analysis.tokenattributes.CharTermAttribute} 
- *   contains the term text of a token, and 
+ *   Classes {@link org.apache.lucene.util.Attribute} and
+ *   {@link org.apache.lucene.util.AttributeSource} serve as the basis upon which
+ *   the analysis elements of "Flexible Indexing" are implemented. An Attribute
+ *   holds a particular piece of information about a text token. For example,
+ *   {@link org.apache.lucene.analysis.tokenattributes.CharTermAttribute}
+ *   contains the term text of a token, and
  *   {@link org.apache.lucene.analysis.tokenattributes.OffsetAttribute} contains
- *   the start and end character offsets of a token. An AttributeSource is a 
+ *   the start and end character offsets of a token. An AttributeSource is a
  *   collection of Attributes with a restriction: there may be only one instance
  *   of each attribute type. TokenStream now extends AttributeSource, which means
  *   that one can add Attributes to a TokenStream. Since TokenFilter extends
@@ -476,9 +476,9 @@
  *   <tr>
  *     <td>{@link org.apache.lucene.analysis.tokenattributes.CharTermAttribute}</td>
  *     <td>
- *       The term text of a token.  Implements {@link java.lang.CharSequence} 
+ *       The term text of a token.  Implements {@link java.lang.CharSequence}
  *       (providing methods length() and charAt(), and allowing e.g. for direct
- *       use with regular expression {@link java.util.regex.Matcher}s) and 
+ *       use with regular expression {@link java.util.regex.Matcher}s) and
  *       {@link java.lang.Appendable} (allowing the term text to be appended to.)
  *     </td>
  *   </tr>
@@ -510,7 +510,7 @@
  *     <td>{@link org.apache.lucene.analysis.tokenattributes.KeywordAttribute}</td>
  *     <td>
  *       Keyword-aware TokenStreams/-Filters skip modification of tokens that
- *       return true from this attribute's isKeyword() method. 
+ *       return true from this attribute's isKeyword() method.
  *     </td>
  *   </tr>
  * </table>
@@ -525,7 +525,7 @@
  * that token stream will, in fact, be discarded. The default is just the
  * opposite. {@link org.apache.lucene.analysis.Analyzer} applies a reuse
  * strategy to the tokenizer and the token filters. It will reuse
- * them. For each new input, it calls {@link org.apache.lucene.analysis.Tokenizer#setReader(java.io.Reader)} 
+ * them. For each new input, it calls {@link org.apache.lucene.analysis.Tokenizer#setReader(java.io.Reader)}
  * to set the input. Your components must be prepared for this scenario,
  * as described below.
  * <h4>Tokenizer</h4>
@@ -580,7 +580,7 @@
  * There are a few important things to know in order to use the new API efficiently which are summarized here. You may want
  * to walk through the example below first and come back to this section afterwards.
  * <ol><li>
- * Please keep in mind that an AttributeSource can only have one instance of a particular Attribute. Furthermore, if 
+ * Please keep in mind that an AttributeSource can only have one instance of a particular Attribute. Furthermore, if
  * a chain of a TokenStream and multiple TokenFilters is used, then all TokenFilters in that chain share the Attributes
  * with the TokenStream.
  * </li>
@@ -593,7 +593,7 @@
  * </li>
  * <li>
  * For performance reasons a TokenStream/-Filter should add/get Attributes during instantiation; i.e., create an attribute in the
- * constructor and store references to it in an instance variable.  Using an instance variable instead of calling addAttribute()/getAttribute() 
+ * constructor and store references to it in an instance variable.  Using an instance variable instead of calling addAttribute()/getAttribute()
  * in incrementToken() will avoid attribute lookups for every token in the document.
  * </li>
  * <li>
@@ -620,37 +620,37 @@
  * <h4>Whitespace tokenization</h4>
  * <pre class="prettyprint">
  * public class MyAnalyzer extends Analyzer {
- * 
+ *
  *   private Version matchVersion;
- *   
+ *
  *   public MyAnalyzer(Version matchVersion) {
  *     this.matchVersion = matchVersion;
  *   }
- * 
+ *
  *   {@literal @Override}
  *   protected TokenStreamComponents createComponents(String fieldName) {
  *     return new TokenStreamComponents(new WhitespaceTokenizer(matchVersion));
  *   }
- *   
+ *
  *   public static void main(String[] args) throws IOException {
  *     // text to tokenize
  *     final String text = "This is a demo of the TokenStream API";
- *     
+ *
  *     Version matchVersion = Version.LUCENE_XY; // Substitute desired Lucene version for XY
  *     MyAnalyzer analyzer = new MyAnalyzer(matchVersion);
  *     TokenStream stream = analyzer.tokenStream("field", new StringReader(text));
- *     
+ *
  *     // get the CharTermAttribute from the TokenStream
  *     CharTermAttribute termAtt = stream.addAttribute(CharTermAttribute.class);
- * 
+ *
  *     try {
  *       stream.reset();
- *     
+ *
  *       // print all tokens until stream is exhausted
  *       while (stream.incrementToken()) {
  *         System.out.println(termAtt.toString());
  *       }
- *     
+ *
  *       stream.end();
  *     } finally {
  *       stream.close();
@@ -659,7 +659,7 @@
  * }
  * </pre>
  * In this easy example a simple white space tokenization is performed. In main() a loop consumes the stream and
- * prints the term text of the tokens by accessing the CharTermAttribute that the WhitespaceTokenizer provides. 
+ * prints the term text of the tokens by accessing the CharTermAttribute that the WhitespaceTokenizer provides.
  * Here is the output:
  * <pre>
  * This
@@ -696,12 +696,12 @@
  * Now let's take a look how the LengthFilter is implemented:
  * <pre class="prettyprint">
  * public final class LengthFilter extends FilteringTokenFilter {
- * 
+ *
  *   private final int min;
  *   private final int max;
- *   
+ *
  *   private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
- * 
+ *
  *   &#47;**
  *    * Create a new LengthFilter. This will filter out tokens whose
  *    * CharTermAttribute is either too short
@@ -716,13 +716,13 @@
  *     this.min = min;
  *     this.max = max;
  *   }
- * 
+ *
  *   {@literal @Override}
  *   public boolean accept() {
  *     final int len = termAtt.length();
  *     return (len &gt;= min &amp;&amp; len &lt;= max);
  *   }
- * 
+ *
  * }
  * </pre>
  * <p>
@@ -733,24 +733,24 @@
  *   CharTermAttribute that the WhitespaceTokenizer already added.
  * </p>
  * <p>
- *   The tokens are retrieved from the input stream in FilteringTokenFilter's 
+ *   The tokens are retrieved from the input stream in FilteringTokenFilter's
  *   <code>incrementToken()</code> method (see below), which calls LengthFilter's
  *   <code>accept()</code> method. By looking at the term text in the
  *   CharTermAttribute, the length of the term can be determined and tokens that
  *   are either too short or too long are skipped.  Note how
- *   <code>accept()</code> can efficiently access the instance variable; no 
+ *   <code>accept()</code> can efficiently access the instance variable; no
  *   attribute lookup is necessary. The same is true for the consumer, which can
  *   simply use local references to the Attributes.
  * </p>
  * <p>
  *   LengthFilter extends FilteringTokenFilter:
  * </p>
- * 
+ *
  * <pre class="prettyprint">
  * public abstract class FilteringTokenFilter extends TokenFilter {
- * 
+ *
  *   private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
- * 
+ *
  *   &#47;**
  *    * Create a new FilteringTokenFilter.
  *    * {@literal @param} in      the TokenStream to consume
@@ -758,10 +758,10 @@
  *   public FilteringTokenFilter(Version version, TokenStream in) {
  *     super(in);
  *   }
- * 
+ *
  *   &#47;** Override this method and return if the current input token should be returned by incrementToken. *&#47;
  *   protected abstract boolean accept() throws IOException;
- * 
+ *
  *   {@literal @Override}
  *   public final boolean incrementToken() throws IOException {
  *     int skippedPositions = 0;
@@ -777,26 +777,26 @@
  *     // reached EOS -- return false
  *     return false;
  *   }
- * 
+ *
  *   {@literal @Override}
  *   public void reset() throws IOException {
  *     super.reset();
  *   }
- * 
+ *
  * }
  * </pre>
- * 
+ *
  * <h4>Adding a custom Attribute</h4>
- * Now we're going to implement our own custom Attribute for part-of-speech tagging and call it consequently 
+ * Now we're going to implement our own custom Attribute for part-of-speech tagging and call it consequently
  * <code>PartOfSpeechAttribute</code>. First we need to define the interface of the new Attribute:
  * <pre class="prettyprint">
  *   public interface PartOfSpeechAttribute extends Attribute {
  *     public static enum PartOfSpeech {
  *       Noun, Verb, Adjective, Adverb, Pronoun, Preposition, Conjunction, Article, Unknown
  *     }
- *   
+ *
  *     public void setPartOfSpeech(PartOfSpeech pos);
- *   
+ *
  *     public PartOfSpeech getPartOfSpeech();
  *   }
  * </pre>
@@ -815,24 +815,24 @@
  *   {@link org.apache.lucene.util.AttributeImpl}:
  * </p>
  * <pre class="prettyprint">
- * public final class PartOfSpeechAttributeImpl extends AttributeImpl 
+ * public final class PartOfSpeechAttributeImpl extends AttributeImpl
  *                                   implements PartOfSpeechAttribute {
- *   
+ *
  *   private PartOfSpeech pos = PartOfSpeech.Unknown;
- *   
+ *
  *   public void setPartOfSpeech(PartOfSpeech pos) {
  *     this.pos = pos;
  *   }
- *   
+ *
  *   public PartOfSpeech getPartOfSpeech() {
  *     return pos;
  *   }
- * 
+ *
  *   {@literal @Override}
  *   public void clear() {
  *     pos = PartOfSpeech.Unknown;
  *   }
- * 
+ *
  *   {@literal @Override}
  *   public void copyTo(AttributeImpl target) {
  *     ((PartOfSpeechAttribute) target).setPartOfSpeech(pos);
@@ -852,17 +852,17 @@
  *   public static class PartOfSpeechTaggingFilter extends TokenFilter {
  *     PartOfSpeechAttribute posAtt = addAttribute(PartOfSpeechAttribute.class);
  *     CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
- *     
+ *
  *     protected PartOfSpeechTaggingFilter(TokenStream input) {
  *       super(input);
  *     }
- *     
+ *
  *     public boolean incrementToken() throws IOException {
  *       if (!input.incrementToken()) {return false;}
  *       posAtt.setPartOfSpeech(determinePOS(termAtt.buffer(), 0, termAtt.length()));
  *       return true;
  *     }
- *     
+ *
  *     // determine the part of speech for the given term
  *     protected PartOfSpeech determinePOS(char[] term, int offset, int length) {
  *       // naive implementation that tags every uppercased word as noun
@@ -905,24 +905,24 @@
  *   public static void main(String[] args) throws IOException {
  *     // text to tokenize
  *     final String text = "This is a demo of the TokenStream API";
- *     
+ *
  *     MyAnalyzer analyzer = new MyAnalyzer();
  *     TokenStream stream = analyzer.tokenStream("field", new StringReader(text));
- *     
+ *
  *     // get the CharTermAttribute from the TokenStream
  *     CharTermAttribute termAtt = stream.addAttribute(CharTermAttribute.class);
- *     
+ *
  *     // get the PartOfSpeechAttribute from the TokenStream
  *     PartOfSpeechAttribute posAtt = stream.addAttribute(PartOfSpeechAttribute.class);
- * 
+ *
  *     try {
  *       stream.reset();
- * 
+ *
  *       // print all tokens until stream is exhausted
  *       while (stream.incrementToken()) {
  *         System.out.println(termAtt.toString() + ": " + posAtt.getPartOfSpeech());
  *       }
- *     
+ *
  *       stream.end();
  *     } finally {
  *       stream.close();
@@ -939,32 +939,32 @@
  * TokenStream: Noun
  * API: Noun
  * </pre>
- * Each word is now followed by its assigned PartOfSpeech tag. Of course this is a naive 
+ * Each word is now followed by its assigned PartOfSpeech tag. Of course this is a naive
  * part-of-speech tagging. The word 'This' should not even be tagged as noun; it is only spelled capitalized because it
  * is the first word of a sentence. Actually this is a good opportunity for an exercise. To practice the usage of the new
  * API the reader could now write an Attribute and TokenFilter that can specify for each word if it was the first token
  * of a sentence or not. Then the PartOfSpeechTaggingFilter can make use of this knowledge and only tag capitalized words
- * as nouns if not the first word of a sentence (we know, this is still not a correct behavior, but hey, it's a good exercise). 
+ * as nouns if not the first word of a sentence (we know, this is still not a correct behavior, but hey, it's a good exercise).
  * As a small hint, this is how the new Attribute class could begin:
  * <pre class="prettyprint">
  *   public class FirstTokenOfSentenceAttributeImpl extends AttributeImpl
  *                               implements FirstTokenOfSentenceAttribute {
- *     
+ *
  *     private boolean firstToken;
- *     
+ *
  *     public void setFirstToken(boolean firstToken) {
  *       this.firstToken = firstToken;
  *     }
- *     
+ *
  *     public boolean getFirstToken() {
  *       return firstToken;
  *     }
- * 
+ *
  *     {@literal @Override}
  *     public void clear() {
  *       firstToken = false;
  *     }
- * 
+ *
  *   ...
  * </pre>
  * <h4>Adding a CharFilter chain</h4>
@@ -979,12 +979,12 @@
  * Example:
  * <pre class="prettyprint">
  * public class MyAnalyzer extends Analyzer {
- * 
+ *
  *   {@literal @Override}
  *   protected TokenStreamComponents createComponents(String fieldName) {
  *     return new TokenStreamComponents(new MyTokenizer());
  *   }
- *   
+ *
  *   {@literal @Override}
  *   protected Reader initReader(String fieldName, Reader reader) {
  *     // wrap the Reader in a CharFilter chain.

@@ -22,83 +22,83 @@ import org.apache.lucene.util.BytesRef;
  * Utility class to read buffered points from in-heap arrays.
  *
  * @lucene.internal
- * */
+ */
 public final class HeapPointReader implements PointReader {
-  private int curRead;
-  final byte[] block;
-  final int packedBytesLength;
-  final int packedBytesDocIDLength;
-  final int end;
-  private final HeapPointValue pointValue;
+	private int curRead;
+	final byte[] block;
+	final int packedBytesLength;
+	final int packedBytesDocIDLength;
+	final int end;
+	private final HeapPointValue pointValue;
 
-  public HeapPointReader(byte[] block, int packedBytesLength, int start, int end) {
-    this.block = block;
-    curRead = start-1;
-    this.end = end;
-    this.packedBytesLength = packedBytesLength;
-    this.packedBytesDocIDLength = packedBytesLength + Integer.BYTES;
-    if (start < end) {
-      this.pointValue = new HeapPointValue(block, packedBytesLength);
-    } else {
-      //no values
-      this.pointValue = null;
-    }
-  }
+	public HeapPointReader(byte[] block, int packedBytesLength, int start, int end) {
+		this.block = block;
+		curRead = start - 1;
+		this.end = end;
+		this.packedBytesLength = packedBytesLength;
+		this.packedBytesDocIDLength = packedBytesLength + Integer.BYTES;
+		if (start < end) {
+			this.pointValue = new HeapPointValue(block, packedBytesLength);
+		} else {
+			//no values
+			this.pointValue = null;
+		}
+	}
 
-  @Override
-  public boolean next() {
-    curRead++;
-    return curRead < end;
-  }
+	@Override
+	public boolean next() {
+		curRead++;
+		return curRead < end;
+	}
 
-  @Override
-  public PointValue pointValue() {
-    pointValue.setOffset(curRead * packedBytesDocIDLength);
-    return pointValue;
-  }
+	@Override
+	public PointValue pointValue() {
+		pointValue.setOffset(curRead * packedBytesDocIDLength);
+		return pointValue;
+	}
 
-  @Override
-  public void close() {
-  }
+	@Override
+	public void close() {
+	}
 
-  /**
-   * Reusable implementation for a point value on-heap
-   */
-  static class HeapPointValue implements PointValue {
+	/**
+	 * Reusable implementation for a point value on-heap
+	 */
+	static class HeapPointValue implements PointValue {
 
-    final BytesRef packedValue;
-    final BytesRef packedValueDocID;
-    final int packedValueLength;
+		final BytesRef packedValue;
+		final BytesRef packedValueDocID;
+		final int packedValueLength;
 
-    HeapPointValue(byte[] value, int packedValueLength) {
-      this.packedValueLength = packedValueLength;
-      this.packedValue = new BytesRef(value, 0, packedValueLength);
-      this.packedValueDocID = new BytesRef(value, 0, packedValueLength + Integer.BYTES);
-    }
+		HeapPointValue(byte[] value, int packedValueLength) {
+			this.packedValueLength = packedValueLength;
+			this.packedValue = new BytesRef(value, 0, packedValueLength);
+			this.packedValueDocID = new BytesRef(value, 0, packedValueLength + Integer.BYTES);
+		}
 
-    /**
-     * Sets a new value by changing the offset.
-     */
-    public void setOffset(int offset) {
-      packedValue.offset = offset;
-      packedValueDocID.offset = offset;
-    }
+		/**
+		 * Sets a new value by changing the offset.
+		 */
+		public void setOffset(int offset) {
+			packedValue.offset = offset;
+			packedValueDocID.offset = offset;
+		}
 
-    @Override
-    public BytesRef packedValue() {
-      return packedValue;
-    }
+		@Override
+		public BytesRef packedValue() {
+			return packedValue;
+		}
 
-    @Override
-    public int docID() {
-      int position = packedValueDocID.offset + packedValueLength;
-      return ((packedValueDocID.bytes[position] & 0xFF) << 24) | ((packedValueDocID.bytes[++position] & 0xFF) << 16)
-          | ((packedValueDocID.bytes[++position] & 0xFF) <<  8) |  (packedValueDocID.bytes[++position] & 0xFF);
-    }
+		@Override
+		public int docID() {
+			int position = packedValueDocID.offset + packedValueLength;
+			return ((packedValueDocID.bytes[position] & 0xFF) << 24) | ((packedValueDocID.bytes[++position] & 0xFF) << 16)
+				| ((packedValueDocID.bytes[++position] & 0xFF) << 8) | (packedValueDocID.bytes[++position] & 0xFF);
+		}
 
-    @Override
-    public BytesRef packedValueDocIDBytes() {
-      return packedValueDocID;
-    }
-  }
+		@Override
+		public BytesRef packedValueDocIDBytes() {
+			return packedValueDocID;
+		}
+	}
 }

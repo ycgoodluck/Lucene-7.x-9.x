@@ -38,37 +38,40 @@ import com.ibm.icu.text.UnicodeSet;
  *     &lt;filter class="solr.ICUFoldingFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class ICUFoldingFilterFactory extends TokenFilterFactory implements MultiTermAwareComponent {
-  private final Normalizer2 normalizer;
+	private final Normalizer2 normalizer;
 
-  /** Creates a new ICUFoldingFilterFactory */
-  public ICUFoldingFilterFactory(Map<String,String> args) {
-    super(args);
+	/**
+	 * Creates a new ICUFoldingFilterFactory
+	 */
+	public ICUFoldingFilterFactory(Map<String, String> args) {
+		super(args);
 
-    Normalizer2 normalizer = ICUFoldingFilter.NORMALIZER;
-    String filter = get(args, "filter");
-    if (filter != null) {
-      UnicodeSet set = new UnicodeSet(filter);
-      if (!set.isEmpty()) {
-        set.freeze();
-        normalizer = new FilteredNormalizer2(normalizer, set);
-      }
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-    this.normalizer = normalizer;
-  }
+		Normalizer2 normalizer = ICUFoldingFilter.NORMALIZER;
+		String filter = get(args, "filter");
+		if (filter != null) {
+			UnicodeSet set = new UnicodeSet(filter);
+			if (!set.isEmpty()) {
+				set.freeze();
+				normalizer = new FilteredNormalizer2(normalizer, set);
+			}
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+		this.normalizer = normalizer;
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new ICUFoldingFilter(input, normalizer);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new ICUFoldingFilter(input, normalizer);
+	}
 
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

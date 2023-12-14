@@ -26,10 +26,10 @@ import org.apache.lucene.search.IndexSearcher;
  */
 public interface MatcherFactory<T extends QueryMatch> {
 
-  /**
-   * Create a new {@link CandidateMatcher} object, to select
-   * queries to match against the passed-in IndexSearcher
-   */
-  CandidateMatcher<T> createMatcher(IndexSearcher searcher);
+	/**
+	 * Create a new {@link CandidateMatcher} object, to select
+	 * queries to match against the passed-in IndexSearcher
+	 */
+	CandidateMatcher<T> createMatcher(IndexSearcher searcher);
 
 }

@@ -25,23 +25,34 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IOContext;
 import org.apache.lucene.util.Bits;
 
-/** Format for live/deleted documents
- * @lucene.experimental */
+/**
+ * Format for live/deleted documents
+ *
+ * @lucene.experimental
+ */
 public abstract class LiveDocsFormat {
 
-  /** Sole constructor. (For invocation by subclass 
-   *  constructors, typically implicit.) */
-  protected LiveDocsFormat() {
-  }
+	/**
+	 * Sole constructor. (For invocation by subclass
+	 * constructors, typically implicit.)
+	 */
+	protected LiveDocsFormat() {
+	}
 
-  /** Read live docs bits. */
-  public abstract Bits readLiveDocs(Directory dir, SegmentCommitInfo info, IOContext context) throws IOException;
+	/**
+	 * Read live docs bits.
+	 */
+	public abstract Bits readLiveDocs(Directory dir, SegmentCommitInfo info, IOContext context) throws IOException;
 
-  /** Persist live docs bits.  Use {@link
-   *  SegmentCommitInfo#getNextDelGen} to determine the
-   *  generation of the deletes file you should write to. */
-  public abstract void writeLiveDocs(Bits bits, Directory dir, SegmentCommitInfo info, int newDelCount, IOContext context) throws IOException;
+	/**
+	 * Persist live docs bits.  Use {@link
+	 * SegmentCommitInfo#getNextDelGen} to determine the
+	 * generation of the deletes file you should write to.
+	 */
+	public abstract void writeLiveDocs(Bits bits, Directory dir, SegmentCommitInfo info, int newDelCount, IOContext context) throws IOException;
 
-  /** Records all files in use by this {@link SegmentCommitInfo} into the files argument. */
-  public abstract void files(SegmentCommitInfo info, Collection<String> files) throws IOException;
+	/**
+	 * Records all files in use by this {@link SegmentCommitInfo} into the files argument.
+	 */
+	public abstract void files(SegmentCommitInfo info, Collection<String> files) throws IOException;
 }

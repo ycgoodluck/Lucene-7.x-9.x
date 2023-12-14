@@ -32,54 +32,54 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestPayloadFilteredInterval extends LuceneTestCase {
 
-  public void testPayloadFilteredInterval() throws Exception {
+	public void testPayloadFilteredInterval() throws Exception {
 
-    Analyzer analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tok = new MockTokenizer(MockTokenizer.SIMPLE, true);
-        return new TokenStreamComponents(tok, new SimplePayloadFilter(tok));
-      }
-    };
+		Analyzer analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tok = new MockTokenizer(MockTokenizer.SIMPLE, true);
+				return new TokenStreamComponents(tok, new SimplePayloadFilter(tok));
+			}
+		};
 
-    Directory directory = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(random(), directory,
-        newIndexWriterConfig(analyzer)
-            .setMaxBufferedDocs(TestUtil.nextInt(random(), 100, 1000)).setMergePolicy(newLogMergePolicy()));
+		Directory directory = newDirectory();
+		RandomIndexWriter writer = new RandomIndexWriter(random(), directory,
+			newIndexWriterConfig(analyzer)
+				.setMaxBufferedDocs(TestUtil.nextInt(random(), 100, 1000)).setMergePolicy(newLogMergePolicy()));
 
-    Document doc = new Document();
-    doc.add(newTextField("field", "a sentence with words repeated words words quite often words", Field.Store.NO));
-    writer.addDocument(doc);
-    IndexReader reader = writer.getReader();
-    writer.close();
+		Document doc = new Document();
+		doc.add(newTextField("field", "a sentence with words repeated words words quite often words", Field.Store.NO));
+		writer.addDocument(doc);
+		IndexReader reader = writer.getReader();
+		writer.close();
 
-    // SimplePayloadFilter stores a payload for each term at position n containing
-    // the bytes 'pos:n'
+		// SimplePayloadFilter stores a payload for each term at position n containing
+		// the bytes 'pos:n'
 
-    IntervalsSource source = Intervals.term("words", b -> b.utf8ToString().endsWith("5") == false);
-    assertEquals("PAYLOAD_FILTERED(words)", source.toString());
+		IntervalsSource source = Intervals.term("words", b -> b.utf8ToString().endsWith("5") == false);
+		assertEquals("PAYLOAD_FILTERED(words)", source.toString());
 
-    IntervalIterator it = source.intervals("field", reader.leaves().get(0));
+		IntervalIterator it = source.intervals("field", reader.leaves().get(0));
 
-    assertEquals(0, it.nextDoc());
-    assertEquals(3, it.nextInterval());
-    assertEquals(6, it.nextInterval());
-    assertEquals(9, it.nextInterval());
-    assertEquals(IntervalIterator.NO_MORE_INTERVALS, it.nextInterval());
+		assertEquals(0, it.nextDoc());
+		assertEquals(3, it.nextInterval());
+		assertEquals(6, it.nextInterval());
+		assertEquals(9, it.nextInterval());
+		assertEquals(IntervalIterator.NO_MORE_INTERVALS, it.nextInterval());
 
-    MatchesIterator mi = source.matches("field", reader.leaves().get(0), 0);
-    assertNotNull(mi);
-    assertTrue(mi.next());
-    assertEquals(3, mi.startPosition());
-    assertTrue(mi.next());
-    assertEquals(6, mi.startPosition());
-    assertTrue(mi.next());
-    assertEquals(9, mi.startPosition());
-    assertFalse(mi.next());
+		MatchesIterator mi = source.matches("field", reader.leaves().get(0), 0);
+		assertNotNull(mi);
+		assertTrue(mi.next());
+		assertEquals(3, mi.startPosition());
+		assertTrue(mi.next());
+		assertEquals(6, mi.startPosition());
+		assertTrue(mi.next());
+		assertEquals(9, mi.startPosition());
+		assertFalse(mi.next());
 
-    reader.close();
-    directory.close();
+		reader.close();
+		directory.close();
 
-  }
+	}
 
 }

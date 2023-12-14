@@ -34,63 +34,65 @@ import org.apache.lucene.luke.app.desktop.components.AnalysisTabOperator;
 import org.apache.lucene.luke.app.desktop.components.ComponentOperatorRegistry;
 import org.apache.lucene.luke.app.desktop.util.MessageUtils;
 
-/** Provider of the preset analyzer panel */
+/**
+ * Provider of the preset analyzer panel
+ */
 public final class PresetAnalyzerPanelProvider implements PresetAnalyzerPanelOperator {
 
-  private final ComponentOperatorRegistry operatorRegistry;
+	private final ComponentOperatorRegistry operatorRegistry;
 
-  private final JComboBox<String> analyzersCB = new JComboBox<>();
+	private final JComboBox<String> analyzersCB = new JComboBox<>();
 
-  private final ListenerFunctions listeners = new ListenerFunctions();
+	private final ListenerFunctions listeners = new ListenerFunctions();
 
-  public PresetAnalyzerPanelProvider() {
-    this.operatorRegistry = ComponentOperatorRegistry.getInstance();
-    operatorRegistry.register(PresetAnalyzerPanelOperator.class, this);
-  }
+	public PresetAnalyzerPanelProvider() {
+		this.operatorRegistry = ComponentOperatorRegistry.getInstance();
+		operatorRegistry.register(PresetAnalyzerPanelOperator.class, this);
+	}
 
-  public JPanel get() {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setOpaque(false);
-    panel.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
+	public JPanel get() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setOpaque(false);
+		panel.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
 
-    JLabel header = new JLabel(MessageUtils.getLocalizedMessage("analysis_preset.label.preset"));
-    panel.add(header, BorderLayout.PAGE_START);
+		JLabel header = new JLabel(MessageUtils.getLocalizedMessage("analysis_preset.label.preset"));
+		panel.add(header, BorderLayout.PAGE_START);
 
-    JPanel center = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    center.setOpaque(false);
-    center.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-    center.setPreferredSize(new Dimension(400, 40));
-    analyzersCB.addActionListener(listeners::setAnalyzer);
-    analyzersCB.setEnabled(false);
-    center.add(analyzersCB);
-    panel.add(center, BorderLayout.CENTER);
+		JPanel center = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		center.setOpaque(false);
+		center.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		center.setPreferredSize(new Dimension(400, 40));
+		analyzersCB.addActionListener(listeners::setAnalyzer);
+		analyzersCB.setEnabled(false);
+		center.add(analyzersCB);
+		panel.add(center, BorderLayout.CENTER);
 
-    return panel;
-  }
+		return panel;
+	}
 
-  // control methods
+	// control methods
 
-  @Override
-  public void setPresetAnalyzers(Collection<Class<? extends Analyzer>> presetAnalyzers) {
-    String[] analyzerNames = presetAnalyzers.stream().map(Class::getName).toArray(String[]::new);
-    ComboBoxModel<String> model = new DefaultComboBoxModel<>(analyzerNames);
-    analyzersCB.setModel(model);
-    analyzersCB.setEnabled(true);
-  }
+	@Override
+	public void setPresetAnalyzers(Collection<Class<? extends Analyzer>> presetAnalyzers) {
+		String[] analyzerNames = presetAnalyzers.stream().map(Class::getName).toArray(String[]::new);
+		ComboBoxModel<String> model = new DefaultComboBoxModel<>(analyzerNames);
+		analyzersCB.setModel(model);
+		analyzersCB.setEnabled(true);
+	}
 
-  @Override
-  public void setSelectedAnalyzer(Class<? extends Analyzer> analyzer) {
-    analyzersCB.setSelectedItem(analyzer.getName());
-  }
+	@Override
+	public void setSelectedAnalyzer(Class<? extends Analyzer> analyzer) {
+		analyzersCB.setSelectedItem(analyzer.getName());
+	}
 
-  private class ListenerFunctions {
+	private class ListenerFunctions {
 
-    void setAnalyzer(ActionEvent e) {
-      operatorRegistry.get(AnalysisTabOperator.class).ifPresent(operator ->
-          operator.setAnalyzerByType((String) analyzersCB.getSelectedItem())
-      );
-    }
+		void setAnalyzer(ActionEvent e) {
+			operatorRegistry.get(AnalysisTabOperator.class).ifPresent(operator ->
+				operator.setAnalyzerByType((String) analyzersCB.getSelectedItem())
+			);
+		}
 
-  }
+	}
 
 }

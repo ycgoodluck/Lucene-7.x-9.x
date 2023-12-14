@@ -34,105 +34,105 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class StreamUtilsTest extends BenchmarkTestCase {
-  private static final String TEXT = "Some-Text..."; 
-  private Path testDir;
-  
-  @Test
-  public void testGetInputStreamPlainText() throws Exception {
-    assertReadText(rawTextFile("txt"));
-    assertReadText(rawTextFile("TXT"));
-  }
+	private static final String TEXT = "Some-Text...";
+	private Path testDir;
 
-  @Test
-  public void testGetInputStreamGzip() throws Exception {
-    assertReadText(rawGzipFile("gz"));
-    assertReadText(rawGzipFile("gzip"));
-    assertReadText(rawGzipFile("GZ"));
-    assertReadText(rawGzipFile("GZIP"));
-  }
+	@Test
+	public void testGetInputStreamPlainText() throws Exception {
+		assertReadText(rawTextFile("txt"));
+		assertReadText(rawTextFile("TXT"));
+	}
 
-  @Test
-  public void testGetInputStreamBzip2() throws Exception {
-    assertReadText(rawBzip2File("bz2"));
-    assertReadText(rawBzip2File("bzip"));
-    assertReadText(rawBzip2File("BZ2"));
-    assertReadText(rawBzip2File("BZIP"));
-  }
+	@Test
+	public void testGetInputStreamGzip() throws Exception {
+		assertReadText(rawGzipFile("gz"));
+		assertReadText(rawGzipFile("gzip"));
+		assertReadText(rawGzipFile("GZ"));
+		assertReadText(rawGzipFile("GZIP"));
+	}
 
-  @Test
-  public void testGetOutputStreamBzip2() throws Exception {
-    assertReadText(autoOutFile("bz2"));
-    assertReadText(autoOutFile("bzip"));
-    assertReadText(autoOutFile("BZ2"));
-    assertReadText(autoOutFile("BZIP"));
-  }
-  
-  @Test
-  public void testGetOutputStreamGzip() throws Exception {
-    assertReadText(autoOutFile("gz"));
-    assertReadText(autoOutFile("gzip"));
-    assertReadText(autoOutFile("GZ"));
-    assertReadText(autoOutFile("GZIP"));
-  }
+	@Test
+	public void testGetInputStreamBzip2() throws Exception {
+		assertReadText(rawBzip2File("bz2"));
+		assertReadText(rawBzip2File("bzip"));
+		assertReadText(rawBzip2File("BZ2"));
+		assertReadText(rawBzip2File("BZIP"));
+	}
 
-  @Test
-  public void testGetOutputStreamPlain() throws Exception {
-    assertReadText(autoOutFile("txt"));
-    assertReadText(autoOutFile("text"));
-    assertReadText(autoOutFile("TXT"));
-    assertReadText(autoOutFile("TEXT"));
-  }
-  
-  private Path rawTextFile(String ext) throws Exception {
-    Path f = testDir.resolve("testfile." +  ext);
-    BufferedWriter w = Files.newBufferedWriter(f, StandardCharsets.UTF_8);
-    w.write(TEXT);
-    w.newLine();
-    w.close();
-    return f;
-  }
-  
-  private Path rawGzipFile(String ext) throws Exception {
-    Path f = testDir.resolve("testfile." +  ext);
-    OutputStream os = new CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.GZIP, Files.newOutputStream(f));
-    writeText(os);
-    return f;
-  }
+	@Test
+	public void testGetOutputStreamBzip2() throws Exception {
+		assertReadText(autoOutFile("bz2"));
+		assertReadText(autoOutFile("bzip"));
+		assertReadText(autoOutFile("BZ2"));
+		assertReadText(autoOutFile("BZIP"));
+	}
 
-  private Path rawBzip2File(String ext) throws Exception {
-    Path f = testDir.resolve("testfile." +  ext);
-    OutputStream os = new CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, Files.newOutputStream(f));
-    writeText(os);
-    return f;
-  }
+	@Test
+	public void testGetOutputStreamGzip() throws Exception {
+		assertReadText(autoOutFile("gz"));
+		assertReadText(autoOutFile("gzip"));
+		assertReadText(autoOutFile("GZ"));
+		assertReadText(autoOutFile("GZIP"));
+	}
 
-  private Path autoOutFile(String ext) throws Exception {
-    Path f = testDir.resolve("testfile." +  ext);
-    OutputStream os = StreamUtils.outputStream(f);
-    writeText(os);
-    return f;
-  }
+	@Test
+	public void testGetOutputStreamPlain() throws Exception {
+		assertReadText(autoOutFile("txt"));
+		assertReadText(autoOutFile("text"));
+		assertReadText(autoOutFile("TXT"));
+		assertReadText(autoOutFile("TEXT"));
+	}
 
-  private void writeText(OutputStream os) throws IOException {
-    BufferedWriter w = new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8));
-    w.write(TEXT);
-    w.newLine();
-    w.close();
-  }
+	private Path rawTextFile(String ext) throws Exception {
+		Path f = testDir.resolve("testfile." + ext);
+		BufferedWriter w = Files.newBufferedWriter(f, StandardCharsets.UTF_8);
+		w.write(TEXT);
+		w.newLine();
+		w.close();
+		return f;
+	}
 
-  private void assertReadText(Path f) throws Exception {
-    InputStream ir = StreamUtils.inputStream(f);
-    InputStreamReader in = new InputStreamReader(ir, StandardCharsets.UTF_8);
-    BufferedReader r = new BufferedReader(in);
-    String line = r.readLine();
-    assertEquals("Wrong text found in "+f.getFileName(), TEXT, line);
-    r.close();
-  }
-  
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    testDir = createTempDir("ContentSourceTest");
-  }
+	private Path rawGzipFile(String ext) throws Exception {
+		Path f = testDir.resolve("testfile." + ext);
+		OutputStream os = new CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.GZIP, Files.newOutputStream(f));
+		writeText(os);
+		return f;
+	}
+
+	private Path rawBzip2File(String ext) throws Exception {
+		Path f = testDir.resolve("testfile." + ext);
+		OutputStream os = new CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, Files.newOutputStream(f));
+		writeText(os);
+		return f;
+	}
+
+	private Path autoOutFile(String ext) throws Exception {
+		Path f = testDir.resolve("testfile." + ext);
+		OutputStream os = StreamUtils.outputStream(f);
+		writeText(os);
+		return f;
+	}
+
+	private void writeText(OutputStream os) throws IOException {
+		BufferedWriter w = new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8));
+		w.write(TEXT);
+		w.newLine();
+		w.close();
+	}
+
+	private void assertReadText(Path f) throws Exception {
+		InputStream ir = StreamUtils.inputStream(f);
+		InputStreamReader in = new InputStreamReader(ir, StandardCharsets.UTF_8);
+		BufferedReader r = new BufferedReader(in);
+		String line = r.readLine();
+		assertEquals("Wrong text found in " + f.getFileName(), TEXT, line);
+		r.close();
+	}
+
+	@Override
+	@Before
+	public void setUp() throws Exception {
+		super.setUp();
+		testDir = createTempDir("ContentSourceTest");
+	}
 }

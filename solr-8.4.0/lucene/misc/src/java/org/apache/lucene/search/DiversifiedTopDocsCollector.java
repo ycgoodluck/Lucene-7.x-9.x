@@ -30,10 +30,10 @@ import org.apache.lucene.util.PriorityQueue;
  * A {@link TopDocsCollector} that controls diversity in results by ensuring no
  * more than maxHitsPerKey results from a common source are collected in the
  * final results.
- * 
+ * <p>
  * An example application might be a product search in a marketplace where no
  * more than 3 results per retailer are permitted in search results.
- * 
+ *
  * <p>
  * To compare behaviour with other forms of collector, a useful analogy might be
  * the problem of making a compilation album of 1967's top hit records:
@@ -51,194 +51,194 @@ import org.apache.lucene.util.PriorityQueue;
  * <li>Not requiring the client to guess how many groups are required</li>
  * <li>Removing low-scoring "filler" which sits at the end of each group's hits</li>
  * </ul>
- * 
+ * <p>
  * This is an abstract class and subclasses have to provide a source of keys for
  * documents which is then used to help identify duplicate sources.
- * 
+ *
  * @lucene.experimental
- * 
  */
 public abstract class DiversifiedTopDocsCollector extends
-    TopDocsCollector<ScoreDocKey> {
-  ScoreDocKey spare;
-  private ScoreDocKeyQueue globalQueue;
-  private int numHits;
-  private Map<Long, ScoreDocKeyQueue> perKeyQueues;
-  protected int maxNumPerKey;
-  private Stack<ScoreDocKeyQueue> sparePerKeyQueues = new Stack<>();
+	TopDocsCollector<ScoreDocKey> {
+	ScoreDocKey spare;
+	private ScoreDocKeyQueue globalQueue;
+	private int numHits;
+	private Map<Long, ScoreDocKeyQueue> perKeyQueues;
+	protected int maxNumPerKey;
+	private Stack<ScoreDocKeyQueue> sparePerKeyQueues = new Stack<>();
 
-  public DiversifiedTopDocsCollector(int numHits, int maxHitsPerKey) {
-    super(new ScoreDocKeyQueue(numHits));
-    // Need to access pq.lessThan() which is protected so have to cast here...
-    this.globalQueue = (ScoreDocKeyQueue) pq;
-    perKeyQueues = new HashMap<Long, ScoreDocKeyQueue>();
-    this.numHits = numHits;
-    this.maxNumPerKey = maxHitsPerKey;
-  }
+	public DiversifiedTopDocsCollector(int numHits, int maxHitsPerKey) {
+		super(new ScoreDocKeyQueue(numHits));
+		// Need to access pq.lessThan() which is protected so have to cast here...
+		this.globalQueue = (ScoreDocKeyQueue) pq;
+		perKeyQueues = new HashMap<Long, ScoreDocKeyQueue>();
+		this.numHits = numHits;
+		this.maxNumPerKey = maxHitsPerKey;
+	}
 
-  /**
-   * Get a source of values used for grouping keys
-   */
-  protected abstract NumericDocValues getKeys(LeafReaderContext context);
+	/**
+	 * Get a source of values used for grouping keys
+	 */
+	protected abstract NumericDocValues getKeys(LeafReaderContext context);
 
-  @Override
-  public ScoreMode scoreMode() {
-    return ScoreMode.COMPLETE;
-  }
+	@Override
+	public ScoreMode scoreMode() {
+		return ScoreMode.COMPLETE;
+	}
 
-  @Override
-  protected TopDocs newTopDocs(ScoreDoc[] results, int start) {
-    if (results == null) {
-      return EMPTY_TOPDOCS;
-    }
+	@Override
+	protected TopDocs newTopDocs(ScoreDoc[] results, int start) {
+		if (results == null) {
+			return EMPTY_TOPDOCS;
+		}
 
-    return new TopDocs(new TotalHits(totalHits, TotalHits.Relation.EQUAL_TO), results);
-  }
+		return new TopDocs(new TotalHits(totalHits, TotalHits.Relation.EQUAL_TO), results);
+	}
 
-  protected ScoreDocKey insert(ScoreDocKey addition, int docBase,
-      NumericDocValues keys) throws IOException {
-    if ((globalQueue.size() >= numHits)
-        && (globalQueue.lessThan(addition, globalQueue.top()))) {
-      // Queue is full and proposed addition is not a globally
-      // competitive score
-      return addition;
-    }
-    // The addition stands a chance of being entered - check the
-    // key-specific restrictions.
-    // We delay fetching the key until we are certain the score is globally
-    // competitive. We need to adjust the ScoreDoc's global doc value to be
-    // a leaf reader value when looking up keys
-    int leafDocID = addition.doc - docBase;
-    long value;
-    if (keys.advanceExact(leafDocID)) {
-      value = keys.longValue();
-    } else {
-      value = 0;
-    }
-    addition.key = value;
+	protected ScoreDocKey insert(ScoreDocKey addition, int docBase,
+															 NumericDocValues keys) throws IOException {
+		if ((globalQueue.size() >= numHits)
+			&& (globalQueue.lessThan(addition, globalQueue.top()))) {
+			// Queue is full and proposed addition is not a globally
+			// competitive score
+			return addition;
+		}
+		// The addition stands a chance of being entered - check the
+		// key-specific restrictions.
+		// We delay fetching the key until we are certain the score is globally
+		// competitive. We need to adjust the ScoreDoc's global doc value to be
+		// a leaf reader value when looking up keys
+		int leafDocID = addition.doc - docBase;
+		long value;
+		if (keys.advanceExact(leafDocID)) {
+			value = keys.longValue();
+		} else {
+			value = 0;
+		}
+		addition.key = value;
 
-    // For this to work the choice of key class needs to implement
-    // hashcode and equals.
-    ScoreDocKeyQueue thisKeyQ = perKeyQueues.get(addition.key);
+		// For this to work the choice of key class needs to implement
+		// hashcode and equals.
+		ScoreDocKeyQueue thisKeyQ = perKeyQueues.get(addition.key);
 
-    if (thisKeyQ == null) {
-      if (sparePerKeyQueues.size() == 0) {
-        thisKeyQ = new ScoreDocKeyQueue(maxNumPerKey);
-      } else {
-        thisKeyQ = sparePerKeyQueues.pop();
-      }
-      perKeyQueues.put(addition.key, thisKeyQ);
-    }
-    ScoreDocKey perKeyOverflow = thisKeyQ.insertWithOverflow(addition);
-    if (perKeyOverflow == addition) {
-      // This key group has reached capacity and our proposed addition
-      // was not competitive in the group - do not insert into the
-      // main PQ or the key will be overly-populated in final results.
-      return addition;
-    }
-    if (perKeyOverflow == null) {
-      // This proposed addition is also locally competitive within the
-      // key group - make a global entry and return
-      ScoreDocKey globalOverflow = globalQueue.insertWithOverflow(addition);
-      perKeyGroupRemove(globalOverflow);
-      return globalOverflow;
-    }
-    // For the given key, we have reached max capacity but the new addition
-    // is better than a prior entry that still exists in the global results
-    // - request the weaker-scoring entry to be removed from the global
-    // queue.
-    globalQueue.remove(perKeyOverflow);
-    // Add the locally-competitive addition into the globally queue
-    globalQueue.add(addition);
-    return perKeyOverflow;
-  }
+		if (thisKeyQ == null) {
+			if (sparePerKeyQueues.size() == 0) {
+				thisKeyQ = new ScoreDocKeyQueue(maxNumPerKey);
+			} else {
+				thisKeyQ = sparePerKeyQueues.pop();
+			}
+			perKeyQueues.put(addition.key, thisKeyQ);
+		}
+		ScoreDocKey perKeyOverflow = thisKeyQ.insertWithOverflow(addition);
+		if (perKeyOverflow == addition) {
+			// This key group has reached capacity and our proposed addition
+			// was not competitive in the group - do not insert into the
+			// main PQ or the key will be overly-populated in final results.
+			return addition;
+		}
+		if (perKeyOverflow == null) {
+			// This proposed addition is also locally competitive within the
+			// key group - make a global entry and return
+			ScoreDocKey globalOverflow = globalQueue.insertWithOverflow(addition);
+			perKeyGroupRemove(globalOverflow);
+			return globalOverflow;
+		}
+		// For the given key, we have reached max capacity but the new addition
+		// is better than a prior entry that still exists in the global results
+		// - request the weaker-scoring entry to be removed from the global
+		// queue.
+		globalQueue.remove(perKeyOverflow);
+		// Add the locally-competitive addition into the globally queue
+		globalQueue.add(addition);
+		return perKeyOverflow;
+	}
 
-  private void perKeyGroupRemove(ScoreDocKey globalOverflow) {
-    if (globalOverflow == null) {
-      return;
-    }
-    ScoreDocKeyQueue q = perKeyQueues.get(globalOverflow.key);
-    ScoreDocKey perKeyLowest = q.pop();
-    // The least globally-competitive item should also always be the least
-    // key-local item
-    assert (globalOverflow == perKeyLowest);
-    if (q.size() == 0) {
-      perKeyQueues.remove(globalOverflow.key);
-      sparePerKeyQueues.push(q);
-    }
-  }
+	private void perKeyGroupRemove(ScoreDocKey globalOverflow) {
+		if (globalOverflow == null) {
+			return;
+		}
+		ScoreDocKeyQueue q = perKeyQueues.get(globalOverflow.key);
+		ScoreDocKey perKeyLowest = q.pop();
+		// The least globally-competitive item should also always be the least
+		// key-local item
+		assert (globalOverflow == perKeyLowest);
+		if (q.size() == 0) {
+			perKeyQueues.remove(globalOverflow.key);
+			sparePerKeyQueues.push(q);
+		}
+	}
 
-  @Override
-  public LeafCollector getLeafCollector(LeafReaderContext context)
-      throws IOException {
-    final int base = context.docBase;
-    final NumericDocValues keySource = getKeys(context);
+	@Override
+	public LeafCollector getLeafCollector(LeafReaderContext context)
+		throws IOException {
+		final int base = context.docBase;
+		final NumericDocValues keySource = getKeys(context);
 
-    return new LeafCollector() {
-      Scorable scorer;
+		return new LeafCollector() {
+			Scorable scorer;
 
-      @Override
-      public void setScorer(Scorable scorer) throws IOException {
-        this.scorer = scorer;
-      }
+			@Override
+			public void setScorer(Scorable scorer) throws IOException {
+				this.scorer = scorer;
+			}
 
-      @Override
-      public void collect(int doc) throws IOException {
-        float score = scorer.score();
+			@Override
+			public void collect(int doc) throws IOException {
+				float score = scorer.score();
 
-        // This collector cannot handle NaN
-        assert !Float.isNaN(score);
+				// This collector cannot handle NaN
+				assert !Float.isNaN(score);
 
-        totalHits++;
+				totalHits++;
 
-        doc += base;
+				doc += base;
 
-        if (spare == null) {
-          spare = new ScoreDocKey(doc, score);
-        } else {
-          spare.doc = doc;
-          spare.score = score;
-        }
-        spare = insert(spare, base, keySource);
-      }
-    };
-  }
+				if (spare == null) {
+					spare = new ScoreDocKey(doc, score);
+				} else {
+					spare.doc = doc;
+					spare.score = score;
+				}
+				spare = insert(spare, base, keySource);
+			}
+		};
+	}
 
-  static class ScoreDocKeyQueue extends PriorityQueue<ScoreDocKey> {
+	static class ScoreDocKeyQueue extends PriorityQueue<ScoreDocKey> {
 
-    ScoreDocKeyQueue(int size) {
-      super(size);
-    }
+		ScoreDocKeyQueue(int size) {
+			super(size);
+		}
 
-    @Override
-    protected final boolean lessThan(ScoreDocKey hitA, ScoreDocKey hitB) {
-      if (hitA.score == hitB.score)
-        return hitA.doc > hitB.doc;
-      else
-        return hitA.score < hitB.score;
-    }
-  }
+		@Override
+		protected final boolean lessThan(ScoreDocKey hitA, ScoreDocKey hitB) {
+			if (hitA.score == hitB.score)
+				return hitA.doc > hitB.doc;
+			else
+				return hitA.score < hitB.score;
+		}
+	}
 
-  // 
-  /**
-   * An extension to ScoreDoc that includes a key used for grouping purposes
-   */
-  static public class ScoreDocKey extends ScoreDoc {
-    Long key;
+	//
 
-    protected ScoreDocKey(int doc, float score) {
-      super(doc, score);
-    }
+	/**
+	 * An extension to ScoreDoc that includes a key used for grouping purposes
+	 */
+	static public class ScoreDocKey extends ScoreDoc {
+		Long key;
 
-    public Long getKey() {
-      return key;
-    }
+		protected ScoreDocKey(int doc, float score) {
+			super(doc, score);
+		}
 
-    @Override
-    public String toString() {
-      return "key:" + key + " doc=" + doc + " s=" + score;
-    }
+		public Long getKey() {
+			return key;
+		}
 
-  }
+		@Override
+		public String toString() {
+			return "key:" + key + " doc=" + doc + " s=" + score;
+		}
+
+	}
 
 }

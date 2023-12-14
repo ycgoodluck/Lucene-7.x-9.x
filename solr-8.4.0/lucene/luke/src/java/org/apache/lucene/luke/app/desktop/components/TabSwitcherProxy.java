@@ -17,33 +17,37 @@
 
 package org.apache.lucene.luke.app.desktop.components;
 
-/** An utility class for switching tabs. */
+/**
+ * An utility class for switching tabs.
+ */
 public class TabSwitcherProxy {
 
-  private static final TabSwitcherProxy instance = new TabSwitcherProxy();
+	private static final TabSwitcherProxy instance = new TabSwitcherProxy();
 
-  private TabSwitcher switcher;
+	private TabSwitcher switcher;
 
-  public static TabSwitcherProxy getInstance() {
-    return instance;
-  }
+	public static TabSwitcherProxy getInstance() {
+		return instance;
+	}
 
-  public void set(TabSwitcher switcher) {
-    if (this.switcher == null) {
-      this.switcher = switcher;
-    }
-  }
+	public void set(TabSwitcher switcher) {
+		if (this.switcher == null) {
+			this.switcher = switcher;
+		}
+	}
 
-  public void switchTab(TabbedPaneProvider.Tab tab) {
-    if (switcher == null) {
-      throw new IllegalStateException();
-    }
-    switcher.switchTab(tab);
-  }
+	public void switchTab(TabbedPaneProvider.Tab tab) {
+		if (switcher == null) {
+			throw new IllegalStateException();
+		}
+		switcher.switchTab(tab);
+	}
 
-  /** tab switcher */
-  public interface TabSwitcher {
-    void switchTab(TabbedPaneProvider.Tab tab);
-  }
+	/**
+	 * tab switcher
+	 */
+	public interface TabSwitcher {
+		void switchTab(TabbedPaneProvider.Tab tab);
+	}
 
 }

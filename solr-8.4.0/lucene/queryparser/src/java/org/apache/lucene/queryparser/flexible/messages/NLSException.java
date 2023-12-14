@@ -18,16 +18,15 @@ package org.apache.lucene.queryparser.flexible.messages;
 
 /**
  * Interface that exceptions should implement to support lazy loading of messages.
- * 
+ * <p>
  * For Native Language Support (NLS), system of software internationalization.
- * 
+ * <p>
  * This Interface should be implemented by all exceptions that require
  * translation
- * 
  */
 public interface NLSException {
-  /**
-   * @return a instance of a class that implements the Message interface
-   */
-  public Message getMessageObject();
+	/**
+	 * @return a instance of a class that implements the Message interface
+	 */
+	public Message getMessageObject();
 }

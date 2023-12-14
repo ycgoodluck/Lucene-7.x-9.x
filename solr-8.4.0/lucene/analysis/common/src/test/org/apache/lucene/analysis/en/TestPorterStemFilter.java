@@ -35,57 +35,59 @@ import static org.apache.lucene.analysis.VocabularyAssert.*;
  * Test the PorterStemFilter with Martin Porter's test data.
  */
 public class TestPorterStemFilter extends BaseTokenStreamTestCase {
-  private Analyzer a;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer t = new MockTokenizer( MockTokenizer.KEYWORD, false);
-        return new TokenStreamComponents(t, new PorterStemFilter(t));
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    a.close();
-    super.tearDown();
-  }
-  
-  /**
-   * Run the stemmer against all strings in voc.txt
-   * The output should be the same as the string in output.txt
-   */
-  public void testPorterStemFilter() throws Exception {
-    assertVocabulary(a, getDataPath("porterTestData.zip"), "voc.txt", "output.txt");
-  }
-  
-  public void testWithKeywordAttribute() throws IOException {
-    CharArraySet set = new CharArraySet( 1, true);
-    set.add("yourselves");
-    Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    tokenizer.setReader(new StringReader("yourselves yours"));
-    TokenStream filter = new PorterStemFilter(new SetKeywordMarkerFilter(tokenizer, set));   
-    assertTokenStreamContents(filter, new String[] {"yourselves", "your"});
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    checkRandomData(random(), a, 1000*RANDOM_MULTIPLIER);
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new PorterStemFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	private Analyzer a;
+
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer t = new MockTokenizer(MockTokenizer.KEYWORD, false);
+				return new TokenStreamComponents(t, new PorterStemFilter(t));
+			}
+		};
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		a.close();
+		super.tearDown();
+	}
+
+	/**
+	 * Run the stemmer against all strings in voc.txt
+	 * The output should be the same as the string in output.txt
+	 */
+	public void testPorterStemFilter() throws Exception {
+		assertVocabulary(a, getDataPath("porterTestData.zip"), "voc.txt", "output.txt");
+	}
+
+	public void testWithKeywordAttribute() throws IOException {
+		CharArraySet set = new CharArraySet(1, true);
+		set.add("yourselves");
+		Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		tokenizer.setReader(new StringReader("yourselves yours"));
+		TokenStream filter = new PorterStemFilter(new SetKeywordMarkerFilter(tokenizer, set));
+		assertTokenStreamContents(filter, new String[]{"yourselves", "your"});
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		checkRandomData(random(), a, 1000 * RANDOM_MULTIPLIER);
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new PorterStemFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

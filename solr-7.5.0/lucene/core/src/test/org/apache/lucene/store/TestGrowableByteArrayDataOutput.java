@@ -27,54 +27,54 @@ import org.junit.Test;
  */
 public class TestGrowableByteArrayDataOutput extends LuceneTestCase {
 
-  @Test
-  public void testWriteSmallStrings() throws Exception {
-    int minSizeForDoublePass = GrowableByteArrayDataOutput.MIN_UTF8_SIZE_TO_ENABLE_DOUBLE_PASS_ENCODING;
+	@Test
+	public void testWriteSmallStrings() throws Exception {
+		int minSizeForDoublePass = GrowableByteArrayDataOutput.MIN_UTF8_SIZE_TO_ENABLE_DOUBLE_PASS_ENCODING;
 
-    // a simple string encoding test
-    int num = atLeast(1000);
-    for (int i = 0; i < num; i++) {
-      // create a small string such that the single pass approach is used
-      int length = TestUtil.nextInt(random(), 1, minSizeForDoublePass - 1);
-      String unicode = TestUtil.randomFixedByteLengthUnicodeString(random(), length);
-      byte[] utf8 = new byte[UnicodeUtil.maxUTF8Length(unicode.length())];
-      int len = UnicodeUtil.UTF16toUTF8(unicode, 0, unicode.length(), utf8);
+		// a simple string encoding test
+		int num = atLeast(1000);
+		for (int i = 0; i < num; i++) {
+			// create a small string such that the single pass approach is used
+			int length = TestUtil.nextInt(random(), 1, minSizeForDoublePass - 1);
+			String unicode = TestUtil.randomFixedByteLengthUnicodeString(random(), length);
+			byte[] utf8 = new byte[UnicodeUtil.maxUTF8Length(unicode.length())];
+			int len = UnicodeUtil.UTF16toUTF8(unicode, 0, unicode.length(), utf8);
 
-      GrowableByteArrayDataOutput dataOutput = new GrowableByteArrayDataOutput(1 << 8);
-      //explicitly write utf8 len so that we know how many bytes it occupies
-      dataOutput.writeVInt(len);
-      int vintLen = dataOutput.getPosition();
-      // now write the string which will internally write number of bytes as a vint and then utf8 bytes
-      dataOutput.writeString(unicode);
+			GrowableByteArrayDataOutput dataOutput = new GrowableByteArrayDataOutput(1 << 8);
+			//explicitly write utf8 len so that we know how many bytes it occupies
+			dataOutput.writeVInt(len);
+			int vintLen = dataOutput.getPosition();
+			// now write the string which will internally write number of bytes as a vint and then utf8 bytes
+			dataOutput.writeString(unicode);
 
-      assertEquals("GrowableByteArrayDataOutput wrote the wrong length after encode", len + vintLen * 2, dataOutput.getPosition());
-      for (int j = 0, k = vintLen * 2; j < len; j++, k++) {
-        assertEquals(utf8[j], dataOutput.getBytes()[k]);
-      }
-    }
-  }
+			assertEquals("GrowableByteArrayDataOutput wrote the wrong length after encode", len + vintLen * 2, dataOutput.getPosition());
+			for (int j = 0, k = vintLen * 2; j < len; j++, k++) {
+				assertEquals(utf8[j], dataOutput.getBytes()[k]);
+			}
+		}
+	}
 
-  @Test
-  public void testWriteLargeStrings() throws Exception {
-    int minSizeForDoublePass = GrowableByteArrayDataOutput.MIN_UTF8_SIZE_TO_ENABLE_DOUBLE_PASS_ENCODING;
+	@Test
+	public void testWriteLargeStrings() throws Exception {
+		int minSizeForDoublePass = GrowableByteArrayDataOutput.MIN_UTF8_SIZE_TO_ENABLE_DOUBLE_PASS_ENCODING;
 
-    int num = atLeast(100);
-    for (int i = 0; i < num; i++) {
-      String unicode = TestUtil.randomRealisticUnicodeString(random(), minSizeForDoublePass, 10 * minSizeForDoublePass);
-      byte[] utf8 = new byte[UnicodeUtil.maxUTF8Length(unicode.length())];
-      int len = UnicodeUtil.UTF16toUTF8(unicode, 0, unicode.length(), utf8);
+		int num = atLeast(100);
+		for (int i = 0; i < num; i++) {
+			String unicode = TestUtil.randomRealisticUnicodeString(random(), minSizeForDoublePass, 10 * minSizeForDoublePass);
+			byte[] utf8 = new byte[UnicodeUtil.maxUTF8Length(unicode.length())];
+			int len = UnicodeUtil.UTF16toUTF8(unicode, 0, unicode.length(), utf8);
 
-      GrowableByteArrayDataOutput dataOutput = new GrowableByteArrayDataOutput(1 << 8);
-      //explicitly write utf8 len so that we know how many bytes it occupies
-      dataOutput.writeVInt(len);
-      int vintLen = dataOutput.getPosition();
-      // now write the string which will internally write number of bytes as a vint and then utf8 bytes
-      dataOutput.writeString(unicode);
+			GrowableByteArrayDataOutput dataOutput = new GrowableByteArrayDataOutput(1 << 8);
+			//explicitly write utf8 len so that we know how many bytes it occupies
+			dataOutput.writeVInt(len);
+			int vintLen = dataOutput.getPosition();
+			// now write the string which will internally write number of bytes as a vint and then utf8 bytes
+			dataOutput.writeString(unicode);
 
-      assertEquals("GrowableByteArrayDataOutput wrote the wrong length after encode", len + vintLen * 2, dataOutput.getPosition());
-      for (int j = 0, k = vintLen * 2; j < len; j++, k++) {
-        assertEquals(utf8[j], dataOutput.getBytes()[k]);
-      }
-    }
-  }
+			assertEquals("GrowableByteArrayDataOutput wrote the wrong length after encode", len + vintLen * 2, dataOutput.getPosition());
+			for (int j = 0, k = vintLen * 2; j < len; j++, k++) {
+				assertEquals(utf8[j], dataOutput.getBytes()[k]);
+			}
+		}
+	}
 }

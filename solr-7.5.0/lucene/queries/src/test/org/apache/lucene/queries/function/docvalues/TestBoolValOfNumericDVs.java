@@ -32,45 +32,45 @@ import org.apache.lucene.util.LuceneTestCase;
  */
 public class TestBoolValOfNumericDVs extends LuceneTestCase {
 
-  public void test() throws IOException {
-    check(true);
-    check(false);
-  }
-  
-  public void check(final boolean expected) throws IOException {
+	public void test() throws IOException {
+		check(true);
+		check(false);
+	}
 
-    // create "constant" based instances of each superclass that should returned the expected value based on
-    // the constant used
-    final FunctionValues[] values = new FunctionValues[] {
-      new FloatDocValues(null) {
-        @Override
-        public float floatVal(int doc) throws IOException {
-          return expected ? Float.MIN_VALUE : 0.0F;
-        }
-      },
-      new DoubleDocValues(null) {
-        @Override
-        public double doubleVal(int doc) throws IOException {
-          return expected ? Double.MIN_VALUE : 0.0D;
-        }
-      },
-      new IntDocValues(null) {
-        @Override
-        public int intVal(int doc) throws IOException {
-          return expected ? 1 : 0;
-        }
-      },
-      new LongDocValues(null) {
-        @Override
-        public long longVal(int doc) throws IOException {
-          return expected ? 1L : 0L;
-        }
-      },
-    };
-      
-    for (FunctionValues fv : values) {
-      // docId is irrelevant since all of our FunctionValues return a constant value.
-      assertEquals(fv.getClass().getSuperclass().toString(), expected, fv.boolVal(123));
-    }
-  }
+	public void check(final boolean expected) throws IOException {
+
+		// create "constant" based instances of each superclass that should returned the expected value based on
+		// the constant used
+		final FunctionValues[] values = new FunctionValues[]{
+			new FloatDocValues(null) {
+				@Override
+				public float floatVal(int doc) throws IOException {
+					return expected ? Float.MIN_VALUE : 0.0F;
+				}
+			},
+			new DoubleDocValues(null) {
+				@Override
+				public double doubleVal(int doc) throws IOException {
+					return expected ? Double.MIN_VALUE : 0.0D;
+				}
+			},
+			new IntDocValues(null) {
+				@Override
+				public int intVal(int doc) throws IOException {
+					return expected ? 1 : 0;
+				}
+			},
+			new LongDocValues(null) {
+				@Override
+				public long longVal(int doc) throws IOException {
+					return expected ? 1L : 0L;
+				}
+			},
+		};
+
+		for (FunctionValues fv : values) {
+			// docId is irrelevant since all of our FunctionValues return a constant value.
+			assertEquals(fv.getClass().getSuperclass().toString(), expected, fv.boolVal(123));
+		}
+	}
 }

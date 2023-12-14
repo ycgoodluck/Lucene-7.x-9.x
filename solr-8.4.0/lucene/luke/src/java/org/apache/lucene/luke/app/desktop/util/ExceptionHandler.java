@@ -24,21 +24,23 @@ import org.apache.lucene.luke.app.desktop.MessageBroker;
 import org.apache.lucene.luke.models.LukeException;
 import org.apache.lucene.luke.util.LoggerFactory;
 
-/** An utility class for handling exception */
+/**
+ * An utility class for handling exception
+ */
 public final class ExceptionHandler {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  public static void handle(Throwable t, MessageBroker messageBroker) {
-    if (t instanceof LukeException) {
-      Throwable cause = t.getCause();
-      String message = (cause == null) ? t.getMessage() : t.getMessage() + " " + cause.getMessage();
-      log.warn(t.getMessage(), t);
-      messageBroker.showStatusMessage(message);
-    } else {
-      log.error(t.getMessage(), t);
-      messageBroker.showUnknownErrorMessage();
-    }
-  }
+	public static void handle(Throwable t, MessageBroker messageBroker) {
+		if (t instanceof LukeException) {
+			Throwable cause = t.getCause();
+			String message = (cause == null) ? t.getMessage() : t.getMessage() + " " + cause.getMessage();
+			log.warn(t.getMessage(), t);
+			messageBroker.showStatusMessage(message);
+		} else {
+			log.error(t.getMessage(), t);
+			messageBroker.showUnknownErrorMessage();
+		}
+	}
 
 }

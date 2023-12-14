@@ -29,43 +29,43 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestIndexManyDocuments extends LuceneTestCase {
 
-  public void test() throws Exception {
-    Directory dir = newFSDirectory(createTempDir());
-    IndexWriterConfig iwc = new IndexWriterConfig();
-    iwc.setMaxBufferedDocs(TestUtil.nextInt(random(), 100, 2000));
+	public void test() throws Exception {
+		Directory dir = newFSDirectory(createTempDir());
+		IndexWriterConfig iwc = new IndexWriterConfig();
+		iwc.setMaxBufferedDocs(TestUtil.nextInt(random(), 100, 2000));
 
-    int numDocs = atLeast(10000);
+		int numDocs = atLeast(10000);
 
-    final IndexWriter w = new IndexWriter(dir, iwc);
-    final AtomicInteger count = new AtomicInteger();
-    Thread[] threads = new Thread[2];
-    for(int i=0;i<threads.length;i++) {
-      threads[i] = new Thread() {
-          @Override
-          public void run() {
-           while (count.getAndIncrement() < numDocs) {
-              Document doc = new Document();
-              doc.add(newTextField("field", "text", Field.Store.NO));
-              try {
-                w.addDocument(doc);
-              } catch (IOException ioe) {
-                throw new RuntimeException(ioe);
-              }
-            }
-          }
-        };
-      threads[i].start();
-    }
+		final IndexWriter w = new IndexWriter(dir, iwc);
+		final AtomicInteger count = new AtomicInteger();
+		Thread[] threads = new Thread[2];
+		for (int i = 0; i < threads.length; i++) {
+			threads[i] = new Thread() {
+				@Override
+				public void run() {
+					while (count.getAndIncrement() < numDocs) {
+						Document doc = new Document();
+						doc.add(newTextField("field", "text", Field.Store.NO));
+						try {
+							w.addDocument(doc);
+						} catch (IOException ioe) {
+							throw new RuntimeException(ioe);
+						}
+					}
+				}
+			};
+			threads[i].start();
+		}
 
-    for (Thread thread : threads) {
-      thread.join();
-    }
+		for (Thread thread : threads) {
+			thread.join();
+		}
 
-    assertEquals("lost " + (numDocs - w.maxDoc()) + " documents; maxBufferedDocs=" + iwc.getMaxBufferedDocs(), numDocs, w.maxDoc());
-    w.close();
-             
-    IndexReader r = DirectoryReader.open(dir);
-    assertEquals(numDocs, r.maxDoc());
-    IOUtils.close(r, dir);
-  }
+		assertEquals("lost " + (numDocs - w.maxDoc()) + " documents; maxBufferedDocs=" + iwc.getMaxBufferedDocs(), numDocs, w.maxDoc());
+		w.close();
+
+		IndexReader r = DirectoryReader.open(dir);
+		assertEquals(numDocs, r.maxDoc());
+		IOUtils.close(r, dir);
+	}
 }

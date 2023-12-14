@@ -25,45 +25,48 @@ import org.apache.lucene.analysis.CharArraySet;
 
 /**
  * Test the CzechAnalyzer
- * 
- * Before Lucene 3.1, CzechAnalyzer was a StandardAnalyzer with a custom 
+ * <p>
+ * Before Lucene 3.1, CzechAnalyzer was a StandardAnalyzer with a custom
  * stopword list. As of 3.1 it also includes a stemmer.
- *
  */
 public class TestCzechAnalyzer extends BaseTokenStreamTestCase {
-  
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new CzechAnalyzer().close();
-  }
-  
-  public void testStopWord() throws Exception {
-    Analyzer analyzer = new CzechAnalyzer();
-    assertAnalyzesTo(analyzer, "Pokud mluvime o volnem", 
-        new String[] { "mluvim", "voln" });
-    analyzer.close();
-  }
-  
-  public void testReusableTokenStream() throws Exception {
-    Analyzer analyzer = new CzechAnalyzer();
-    assertAnalyzesTo(analyzer, "Pokud mluvime o volnem", new String[] { "mluvim", "voln" });
-    assertAnalyzesTo(analyzer, "Česká Republika", new String[] { "česk", "republik" });
-    analyzer.close();
-  }
 
-  public void testWithStemExclusionSet() throws IOException{
-    CharArraySet set = new CharArraySet(1, true);
-    set.add("hole");
-    CzechAnalyzer cz = new CzechAnalyzer(CharArraySet.EMPTY_SET, set);
-    assertAnalyzesTo(cz, "hole desek", new String[] {"hole", "desk"});
-    cz.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer analyzer = new CzechAnalyzer();
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-    analyzer.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new CzechAnalyzer().close();
+	}
+
+	public void testStopWord() throws Exception {
+		Analyzer analyzer = new CzechAnalyzer();
+		assertAnalyzesTo(analyzer, "Pokud mluvime o volnem",
+			new String[]{"mluvim", "voln"});
+		analyzer.close();
+	}
+
+	public void testReusableTokenStream() throws Exception {
+		Analyzer analyzer = new CzechAnalyzer();
+		assertAnalyzesTo(analyzer, "Pokud mluvime o volnem", new String[]{"mluvim", "voln"});
+		assertAnalyzesTo(analyzer, "Česká Republika", new String[]{"česk", "republik"});
+		analyzer.close();
+	}
+
+	public void testWithStemExclusionSet() throws IOException {
+		CharArraySet set = new CharArraySet(1, true);
+		set.add("hole");
+		CzechAnalyzer cz = new CzechAnalyzer(CharArraySet.EMPTY_SET, set);
+		assertAnalyzesTo(cz, "hole desek", new String[]{"hole", "desk"});
+		cz.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer analyzer = new CzechAnalyzer();
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+		analyzer.close();
+	}
 }

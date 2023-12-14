@@ -18,9 +18,9 @@ package org.apache.lucene.search.similarities;
 
 public class TestDistributionSPL extends DistributionTestCase {
 
-  @Override
-  protected Distribution getDistribution() {
-    return new DistributionSPL();
-  }
+	@Override
+	protected Distribution getDistribution() {
+		return new DistributionSPL();
+	}
 
 }

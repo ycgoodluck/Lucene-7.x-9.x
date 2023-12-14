@@ -36,96 +36,96 @@ import org.apache.lucene.util.automaton.CompiledAutomaton;
 
 class MultiTermIntervalsSource extends IntervalsSource {
 
-  private final CompiledAutomaton automaton;
-  private final int maxExpansions;
-  private final String pattern;
+	private final CompiledAutomaton automaton;
+	private final int maxExpansions;
+	private final String pattern;
 
-  MultiTermIntervalsSource(CompiledAutomaton automaton, int maxExpansions, String pattern) {
-    this.automaton = automaton;
-    if (maxExpansions > BooleanQuery.getMaxClauseCount()) {
-      throw new IllegalArgumentException("maxExpansions [" + maxExpansions
-          + "] cannot be greater than BooleanQuery.getMaxClauseCount [" + BooleanQuery.getMaxClauseCount() + "]");
-    }
-    this.maxExpansions = maxExpansions;
-    this.pattern = pattern;
-  }
+	MultiTermIntervalsSource(CompiledAutomaton automaton, int maxExpansions, String pattern) {
+		this.automaton = automaton;
+		if (maxExpansions > BooleanQuery.getMaxClauseCount()) {
+			throw new IllegalArgumentException("maxExpansions [" + maxExpansions
+				+ "] cannot be greater than BooleanQuery.getMaxClauseCount [" + BooleanQuery.getMaxClauseCount() + "]");
+		}
+		this.maxExpansions = maxExpansions;
+		this.pattern = pattern;
+	}
 
-  @Override
-  public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
-    Terms terms = ctx.reader().terms(field);
-    if (terms == null) {
-      return null;
-    }
-    List<IntervalIterator> subSources = new ArrayList<>();
-    TermsEnum te = automaton.getTermsEnum(terms);
-    BytesRef term;
-    int count = 0;
-    while ((term = te.next()) != null) {
-      subSources.add(TermIntervalsSource.intervals(term, te));
-      if (++count > maxExpansions) {
-        throw new IllegalStateException("Automaton [" + this.pattern + "] expanded to too many terms (limit " + maxExpansions + ")");
-      }
-    }
-    if (subSources.size() == 0) {
-      return null;
-    }
-    return new DisjunctionIntervalsSource.DisjunctionIntervalIterator(subSources);
-  }
+	@Override
+	public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
+		Terms terms = ctx.reader().terms(field);
+		if (terms == null) {
+			return null;
+		}
+		List<IntervalIterator> subSources = new ArrayList<>();
+		TermsEnum te = automaton.getTermsEnum(terms);
+		BytesRef term;
+		int count = 0;
+		while ((term = te.next()) != null) {
+			subSources.add(TermIntervalsSource.intervals(term, te));
+			if (++count > maxExpansions) {
+				throw new IllegalStateException("Automaton [" + this.pattern + "] expanded to too many terms (limit " + maxExpansions + ")");
+			}
+		}
+		if (subSources.size() == 0) {
+			return null;
+		}
+		return new DisjunctionIntervalsSource.DisjunctionIntervalIterator(subSources);
+	}
 
-  @Override
-  public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
-    Terms terms = ctx.reader().terms(field);
-    if (terms == null) {
-      return null;
-    }
-    List<MatchesIterator> subMatches = new ArrayList<>();
-    TermsEnum te = automaton.getTermsEnum(terms);
-    BytesRef term;
-    int count = 0;
-    while ((term = te.next()) != null) {
-      MatchesIterator mi = TermIntervalsSource.matches(te, doc, field);
-      if (mi != null) {
-        subMatches.add(mi);
-        if (count++ > maxExpansions) {
-          throw new IllegalStateException("Automaton " + term + " expanded to too many terms (limit " + maxExpansions + ")");
-        }
-      }
-    }
-    return MatchesUtils.disjunction(subMatches);
-  }
+	@Override
+	public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
+		Terms terms = ctx.reader().terms(field);
+		if (terms == null) {
+			return null;
+		}
+		List<MatchesIterator> subMatches = new ArrayList<>();
+		TermsEnum te = automaton.getTermsEnum(terms);
+		BytesRef term;
+		int count = 0;
+		while ((term = te.next()) != null) {
+			MatchesIterator mi = TermIntervalsSource.matches(te, doc, field);
+			if (mi != null) {
+				subMatches.add(mi);
+				if (count++ > maxExpansions) {
+					throw new IllegalStateException("Automaton " + term + " expanded to too many terms (limit " + maxExpansions + ")");
+				}
+			}
+		}
+		return MatchesUtils.disjunction(subMatches);
+	}
 
-  @Override
-  public void visit(String field, QueryVisitor visitor) {
-    automaton.visit(visitor, new IntervalQuery(field, this), field);
-  }
+	@Override
+	public void visit(String field, QueryVisitor visitor) {
+		automaton.visit(visitor, new IntervalQuery(field, this), field);
+	}
 
-  @Override
-  public int minExtent() {
-    return 1;
-  }
+	@Override
+	public int minExtent() {
+		return 1;
+	}
 
-  @Override
-  public Collection<IntervalsSource> pullUpDisjunctions() {
-    return Collections.singleton(this);
-  }
+	@Override
+	public Collection<IntervalsSource> pullUpDisjunctions() {
+		return Collections.singleton(this);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    MultiTermIntervalsSource that = (MultiTermIntervalsSource) o;
-    return maxExpansions == that.maxExpansions &&
-        Objects.equals(automaton, that.automaton) &&
-        Objects.equals(pattern, that.pattern);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		MultiTermIntervalsSource that = (MultiTermIntervalsSource) o;
+		return maxExpansions == that.maxExpansions &&
+			Objects.equals(automaton, that.automaton) &&
+			Objects.equals(pattern, that.pattern);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(automaton, maxExpansions, pattern);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(automaton, maxExpansions, pattern);
+	}
 
-  @Override
-  public String toString() {
-    return "MultiTerm(" + pattern + ")";
-  }
+	@Override
+	public String toString() {
+		return "MultiTerm(" + pattern + ")";
+	}
 }

@@ -31,71 +31,73 @@ import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.TestUtil;
 
 public class TestFacetsConfig extends FacetTestCase {
-  
-  public void testPathToStringAndBack() throws Exception {
-    int iters = atLeast(1000);
-    for(int i=0;i<iters;i++) {
-      int numParts = TestUtil.nextInt(random(), 1, 6);
-      String[] parts = new String[numParts];
-      for(int j=0;j<numParts;j++) {
-        String s;
-        while (true) {
-          s = TestUtil.randomUnicodeString(random());
-          if (s.length() > 0) {
-            break;
-          }
-        }
-        parts[j] = s;
-      }
 
-      String s = FacetsConfig.pathToString(parts);
-      String[] parts2 = FacetsConfig.stringToPath(s);
-      assertTrue(Arrays.equals(parts, parts2));
-    }
-  }
-  
-  public void testAddSameDocTwice() throws Exception {
-    // LUCENE-5367: this was a problem with the previous code, making sure it
-    // works with the new code.
-    Directory indexDir = newDirectory(), taxoDir = newDirectory();
-    IndexWriter indexWriter = new IndexWriter(indexDir, newIndexWriterConfig(new MockAnalyzer(random())));
-    DirectoryTaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
-    FacetsConfig facetsConfig = new FacetsConfig();
-    Document doc = new Document();
-    doc.add(new FacetField("a", "b"));
-    doc = facetsConfig.build(taxoWriter, doc);
-    // these two addDocument() used to fail
-    indexWriter.addDocument(doc);
-    indexWriter.addDocument(doc);
-    indexWriter.close();
-    IOUtils.close(taxoWriter);
-    
-    DirectoryReader indexReader = DirectoryReader.open(indexDir);
-    DirectoryTaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
-    IndexSearcher searcher = newSearcher(indexReader);
-    FacetsCollector fc = new FacetsCollector();
-    searcher.search(new MatchAllDocsQuery(), fc);
-    
-    Facets facets = getTaxonomyFacetCounts(taxoReader, facetsConfig, fc);
-    FacetResult res = facets.getTopChildren(10, "a");
-    assertEquals(1, res.labelValues.length);
-    assertEquals(2, res.labelValues[0].value);
-    IOUtils.close(indexReader, taxoReader);
-    
-    IOUtils.close(indexDir, taxoDir);
-  }
+	public void testPathToStringAndBack() throws Exception {
+		int iters = atLeast(1000);
+		for (int i = 0; i < iters; i++) {
+			int numParts = TestUtil.nextInt(random(), 1, 6);
+			String[] parts = new String[numParts];
+			for (int j = 0; j < numParts; j++) {
+				String s;
+				while (true) {
+					s = TestUtil.randomUnicodeString(random());
+					if (s.length() > 0) {
+						break;
+					}
+				}
+				parts[j] = s;
+			}
 
-  /** LUCENE-5479 */
-  public void testCustomDefault() {
-    FacetsConfig config = new FacetsConfig() {
-        @Override
-        protected DimConfig getDefaultDimConfig() {
-          DimConfig config = new DimConfig();
-          config.hierarchical = true;
-          return config;
-        }
-      };
+			String s = FacetsConfig.pathToString(parts);
+			String[] parts2 = FacetsConfig.stringToPath(s);
+			assertTrue(Arrays.equals(parts, parts2));
+		}
+	}
 
-    assertTrue(config.getDimConfig("foobar").hierarchical);
-  }
+	public void testAddSameDocTwice() throws Exception {
+		// LUCENE-5367: this was a problem with the previous code, making sure it
+		// works with the new code.
+		Directory indexDir = newDirectory(), taxoDir = newDirectory();
+		IndexWriter indexWriter = new IndexWriter(indexDir, newIndexWriterConfig(new MockAnalyzer(random())));
+		DirectoryTaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
+		FacetsConfig facetsConfig = new FacetsConfig();
+		Document doc = new Document();
+		doc.add(new FacetField("a", "b"));
+		doc = facetsConfig.build(taxoWriter, doc);
+		// these two addDocument() used to fail
+		indexWriter.addDocument(doc);
+		indexWriter.addDocument(doc);
+		indexWriter.close();
+		IOUtils.close(taxoWriter);
+
+		DirectoryReader indexReader = DirectoryReader.open(indexDir);
+		DirectoryTaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
+		IndexSearcher searcher = newSearcher(indexReader);
+		FacetsCollector fc = new FacetsCollector();
+		searcher.search(new MatchAllDocsQuery(), fc);
+
+		Facets facets = getTaxonomyFacetCounts(taxoReader, facetsConfig, fc);
+		FacetResult res = facets.getTopChildren(10, "a");
+		assertEquals(1, res.labelValues.length);
+		assertEquals(2, res.labelValues[0].value);
+		IOUtils.close(indexReader, taxoReader);
+
+		IOUtils.close(indexDir, taxoDir);
+	}
+
+	/**
+	 * LUCENE-5479
+	 */
+	public void testCustomDefault() {
+		FacetsConfig config = new FacetsConfig() {
+			@Override
+			protected DimConfig getDefaultDimConfig() {
+				DimConfig config = new DimConfig();
+				config.hierarchical = true;
+				return config;
+			}
+		};
+
+		assertTrue(config.getDimConfig("foobar").hierarchical);
+	}
 }

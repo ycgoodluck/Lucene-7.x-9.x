@@ -29,7 +29,7 @@ import java.util.Map;
  * <code>ReciprocalFloatFunction</code> implements a reciprocal function f(x) = a/(mx+b), based on
  * the float value of a field or function as exported by {@link org.apache.lucene.queries.function.ValueSource}.
  * <br>
- *
+ * <p>
  * When a and b are equal, and x&gt;=0, this function has a maximum value of 1 that drops as x increases.
  * Increasing the value of a and b together results in a movement of the entire function to a flatter part of the curve.
  * <p>These properties make this an idea function for boosting more recent documents.
@@ -40,72 +40,72 @@ import java.util.Map;
  * and date two years old will yield 1/(2+1) or 1/3.
  *
  * @see org.apache.lucene.queries.function.FunctionQuery
- *
- *
  */
 public class ReciprocalFloatFunction extends ValueSource {
-  protected final ValueSource source;
-  protected final float m;
-  protected final float a;
-  protected final float b;
+	protected final ValueSource source;
+	protected final float m;
+	protected final float a;
+	protected final float b;
 
-  /**
-   *  f(source) = a/(m*float(source)+b)
-   */
-  public ReciprocalFloatFunction(ValueSource source, float m, float a, float b) {
-    this.source=source;
-    this.m=m;
-    this.a=a;
-    this.b=b;
-  }
+	/**
+	 * f(source) = a/(m*float(source)+b)
+	 */
+	public ReciprocalFloatFunction(ValueSource source, float m, float a, float b) {
+		this.source = source;
+		this.m = m;
+		this.a = a;
+		this.b = b;
+	}
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    final FunctionValues vals = source.getValues(context, readerContext);
-    return new FloatDocValues(this) {
-      @Override
-      public float floatVal(int doc) throws IOException {
-        return a/(m*vals.floatVal(doc) + b);
-      }
-      @Override
-      public boolean exists(int doc) throws IOException {
-        return vals.exists(doc);
-      }
-      @Override
-      public String toString(int doc) throws IOException {
-        return Float.toString(a) + "/("
-                + m + "*float(" + vals.toString(doc) + ')'
-                + '+' + b + ')';
-      }
-    };
-  }
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+		final FunctionValues vals = source.getValues(context, readerContext);
+		return new FloatDocValues(this) {
+			@Override
+			public float floatVal(int doc) throws IOException {
+				return a / (m * vals.floatVal(doc) + b);
+			}
 
-  @Override
-  public void createWeight(Map context, IndexSearcher searcher) throws IOException {
-    source.createWeight(context, searcher);
-  }
+			@Override
+			public boolean exists(int doc) throws IOException {
+				return vals.exists(doc);
+			}
 
-  @Override
-  public String description() {
-    return Float.toString(a) + "/("
-           + m + "*float(" + source.description() + ")"
-           + "+" + b + ')';
-  }
+			@Override
+			public String toString(int doc) throws IOException {
+				return Float.toString(a) + "/("
+					+ m + "*float(" + vals.toString(doc) + ')'
+					+ '+' + b + ')';
+			}
+		};
+	}
 
-  @Override
-  public int hashCode() {
-    int h = Float.floatToIntBits(a) + Float.floatToIntBits(m);
-    h ^= (h << 13) | (h >>> 20);
-    return h + (Float.floatToIntBits(b)) + source.hashCode();
-  }
+	@Override
+	public void createWeight(Map context, IndexSearcher searcher) throws IOException {
+		source.createWeight(context, searcher);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (ReciprocalFloatFunction.class != o.getClass()) return false;
-    ReciprocalFloatFunction other = (ReciprocalFloatFunction)o;
-    return this.m == other.m
-            && this.a == other.a
-            && this.b == other.b
-            && this.source.equals(other.source);
-  }
+	@Override
+	public String description() {
+		return Float.toString(a) + "/("
+			+ m + "*float(" + source.description() + ")"
+			+ "+" + b + ')';
+	}
+
+	@Override
+	public int hashCode() {
+		int h = Float.floatToIntBits(a) + Float.floatToIntBits(m);
+		h ^= (h << 13) | (h >>> 20);
+		return h + (Float.floatToIntBits(b)) + source.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (ReciprocalFloatFunction.class != o.getClass()) return false;
+		ReciprocalFloatFunction other = (ReciprocalFloatFunction) o;
+		return this.m == other.m
+			&& this.a == other.a
+			&& this.b == other.b
+			&& this.source.equals(other.source);
+	}
 }

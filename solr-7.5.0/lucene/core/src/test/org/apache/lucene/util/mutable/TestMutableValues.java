@@ -24,273 +24,273 @@ import org.apache.lucene.util.BytesRef;
  */
 public class TestMutableValues extends LuceneTestCase {
 
-  public void testStr() {
-    MutableValueStr xxx = new MutableValueStr();
-    assert xxx.value.get().equals(new BytesRef()) : "defaults have changed, test utility may not longer be as high";
-    assert xxx.exists : "defaults have changed, test utility may not longer be as high";
-    assertSanity(xxx);
-    MutableValueStr yyy = new MutableValueStr();
-    assertSanity(yyy);
+	public void testStr() {
+		MutableValueStr xxx = new MutableValueStr();
+		assert xxx.value.get().equals(new BytesRef()) : "defaults have changed, test utility may not longer be as high";
+		assert xxx.exists : "defaults have changed, test utility may not longer be as high";
+		assertSanity(xxx);
+		MutableValueStr yyy = new MutableValueStr();
+		assertSanity(yyy);
 
-    assertEquality(xxx, yyy);
+		assertEquality(xxx, yyy);
 
-    xxx.exists = false;
-    assertSanity(xxx);
+		xxx.exists = false;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.exists = false;
-    assertEquality(xxx, yyy);
+		yyy.exists = false;
+		assertEquality(xxx, yyy);
 
-    xxx.value.clear();
-    xxx.value.copyChars("zzz");
-    xxx.exists = true;
-    assertSanity(xxx);
+		xxx.value.clear();
+		xxx.value.copyChars("zzz");
+		xxx.exists = true;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.value.clear();
-    yyy.value.copyChars("aaa");
-    yyy.exists = true;
-    assertSanity(yyy);
+		yyy.value.clear();
+		yyy.value.copyChars("aaa");
+		yyy.exists = true;
+		assertSanity(yyy);
 
-    assertInEquality(xxx,yyy);
-    assertTrue(0 < xxx.compareTo(yyy));
-    assertTrue(yyy.compareTo(xxx) < 0);
+		assertInEquality(xxx, yyy);
+		assertTrue(0 < xxx.compareTo(yyy));
+		assertTrue(yyy.compareTo(xxx) < 0);
 
-    xxx.copy(yyy);
-    assertSanity(xxx);
-    assertEquality(xxx, yyy);
+		xxx.copy(yyy);
+		assertSanity(xxx);
+		assertEquality(xxx, yyy);
 
-    // special BytesRef considerations...
+		// special BytesRef considerations...
 
-    xxx.exists = false;
-    xxx.value.clear(); // but leave bytes alone
-    assertInEquality(xxx,yyy);
+		xxx.exists = false;
+		xxx.value.clear(); // but leave bytes alone
+		assertInEquality(xxx, yyy);
 
-    yyy.exists = false;
-    yyy.value.clear(); // but leave bytes alone
-    assertEquality(xxx, yyy);
+		yyy.exists = false;
+		yyy.value.clear(); // but leave bytes alone
+		assertEquality(xxx, yyy);
 
-  }
+	}
 
-  public void testDouble() {
-    MutableValueDouble xxx = new MutableValueDouble();
-    assert xxx.value == 0.0D : "defaults have changed, test utility may not longer be as high";
-    assert xxx.exists : "defaults have changed, test utility may not longer be as high";
-    assertSanity(xxx);
-    MutableValueDouble yyy = new MutableValueDouble();
-    assertSanity(yyy);
+	public void testDouble() {
+		MutableValueDouble xxx = new MutableValueDouble();
+		assert xxx.value == 0.0D : "defaults have changed, test utility may not longer be as high";
+		assert xxx.exists : "defaults have changed, test utility may not longer be as high";
+		assertSanity(xxx);
+		MutableValueDouble yyy = new MutableValueDouble();
+		assertSanity(yyy);
 
-    assertEquality(xxx, yyy);
+		assertEquality(xxx, yyy);
 
-    xxx.exists = false;
-    assertSanity(xxx);
+		xxx.exists = false;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.exists = false;
-    assertEquality(xxx, yyy);
+		yyy.exists = false;
+		assertEquality(xxx, yyy);
 
-    xxx.value = 42.0D;
-    xxx.exists = true;
-    assertSanity(xxx);
+		xxx.value = 42.0D;
+		xxx.exists = true;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.value = -99.0D;
-    yyy.exists = true;
-    assertSanity(yyy);
+		yyy.value = -99.0D;
+		yyy.exists = true;
+		assertSanity(yyy);
 
-    assertInEquality(xxx,yyy);
-    assertTrue(0 < xxx.compareTo(yyy));
-    assertTrue(yyy.compareTo(xxx) < 0);
+		assertInEquality(xxx, yyy);
+		assertTrue(0 < xxx.compareTo(yyy));
+		assertTrue(yyy.compareTo(xxx) < 0);
 
-    xxx.copy(yyy);
-    assertSanity(xxx);
-    assertEquality(xxx, yyy);
-  }
+		xxx.copy(yyy);
+		assertSanity(xxx);
+		assertEquality(xxx, yyy);
+	}
 
-  public void testInt() {
-    MutableValueInt xxx = new MutableValueInt();
-    assert xxx.value == 0 : "defaults have changed, test utility may not longer be as high";
-    assert xxx.exists : "defaults have changed, test utility may not longer be as high";
-    assertSanity(xxx);
-    MutableValueInt yyy = new MutableValueInt();
-    assertSanity(yyy);
+	public void testInt() {
+		MutableValueInt xxx = new MutableValueInt();
+		assert xxx.value == 0 : "defaults have changed, test utility may not longer be as high";
+		assert xxx.exists : "defaults have changed, test utility may not longer be as high";
+		assertSanity(xxx);
+		MutableValueInt yyy = new MutableValueInt();
+		assertSanity(yyy);
 
-    assertEquality(xxx, yyy);
+		assertEquality(xxx, yyy);
 
-    xxx.exists = false;
-    assertSanity(xxx);
+		xxx.exists = false;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.exists = false;
-    assertEquality(xxx, yyy);
+		yyy.exists = false;
+		assertEquality(xxx, yyy);
 
-    xxx.value = 42;
-    xxx.exists = true;
-    assertSanity(xxx);
+		xxx.value = 42;
+		xxx.exists = true;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.value = -99;
-    yyy.exists = true;
-    assertSanity(yyy);
+		yyy.value = -99;
+		yyy.exists = true;
+		assertSanity(yyy);
 
-    assertInEquality(xxx,yyy);
-    assertTrue(0 < xxx.compareTo(yyy));
-    assertTrue(yyy.compareTo(xxx) < 0);
+		assertInEquality(xxx, yyy);
+		assertTrue(0 < xxx.compareTo(yyy));
+		assertTrue(yyy.compareTo(xxx) < 0);
 
-    xxx.copy(yyy);
-    assertSanity(xxx);
-    assertEquality(xxx, yyy);
-  }
+		xxx.copy(yyy);
+		assertSanity(xxx);
+		assertEquality(xxx, yyy);
+	}
 
-  public void testFloat() {
-    MutableValueFloat xxx = new MutableValueFloat();
-    assert xxx.value == 0.0F : "defaults have changed, test utility may not longer be as high";
-    assert xxx.exists : "defaults have changed, test utility may not longer be as high";
-    assertSanity(xxx);
-    MutableValueFloat yyy = new MutableValueFloat();
-    assertSanity(yyy);
+	public void testFloat() {
+		MutableValueFloat xxx = new MutableValueFloat();
+		assert xxx.value == 0.0F : "defaults have changed, test utility may not longer be as high";
+		assert xxx.exists : "defaults have changed, test utility may not longer be as high";
+		assertSanity(xxx);
+		MutableValueFloat yyy = new MutableValueFloat();
+		assertSanity(yyy);
 
-    assertEquality(xxx, yyy);
+		assertEquality(xxx, yyy);
 
-    xxx.exists = false;
-    assertSanity(xxx);
+		xxx.exists = false;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.exists = false;
-    assertEquality(xxx, yyy);
+		yyy.exists = false;
+		assertEquality(xxx, yyy);
 
-    xxx.value = 42.0F;
-    xxx.exists = true;
-    assertSanity(xxx);
+		xxx.value = 42.0F;
+		xxx.exists = true;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.value = -99.0F;
-    yyy.exists = true;
-    assertSanity(yyy);
+		yyy.value = -99.0F;
+		yyy.exists = true;
+		assertSanity(yyy);
 
-    assertInEquality(xxx,yyy);
-    assertTrue(0 < xxx.compareTo(yyy));
-    assertTrue(yyy.compareTo(xxx) < 0);
+		assertInEquality(xxx, yyy);
+		assertTrue(0 < xxx.compareTo(yyy));
+		assertTrue(yyy.compareTo(xxx) < 0);
 
-    xxx.copy(yyy);
-    assertSanity(xxx);
-    assertEquality(xxx, yyy);
-  }
+		xxx.copy(yyy);
+		assertSanity(xxx);
+		assertEquality(xxx, yyy);
+	}
 
-  public void testLong() {
-    MutableValueLong xxx = new MutableValueLong();
-    assert xxx.value == 0L : "defaults have changed, test utility may not longer be as high";
-    assert xxx.exists : "defaults have changed, test utility may not longer be as high";
-    assertSanity(xxx);
-    MutableValueLong yyy = new MutableValueLong();
-    assertSanity(yyy);
+	public void testLong() {
+		MutableValueLong xxx = new MutableValueLong();
+		assert xxx.value == 0L : "defaults have changed, test utility may not longer be as high";
+		assert xxx.exists : "defaults have changed, test utility may not longer be as high";
+		assertSanity(xxx);
+		MutableValueLong yyy = new MutableValueLong();
+		assertSanity(yyy);
 
-    assertEquality(xxx, yyy);
+		assertEquality(xxx, yyy);
 
-    xxx.exists = false;
-    assertSanity(xxx);
+		xxx.exists = false;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.exists = false;
-    assertEquality(xxx, yyy);
+		yyy.exists = false;
+		assertEquality(xxx, yyy);
 
-    xxx.value = 42L;
-    xxx.exists = true;
-    assertSanity(xxx);
+		xxx.value = 42L;
+		xxx.exists = true;
+		assertSanity(xxx);
 
-    assertInEquality(xxx,yyy);
+		assertInEquality(xxx, yyy);
 
-    yyy.value = -99L;
-    yyy.exists = true;
-    assertSanity(yyy);
+		yyy.value = -99L;
+		yyy.exists = true;
+		assertSanity(yyy);
 
-    assertInEquality(xxx,yyy);
-    assertTrue(0 < xxx.compareTo(yyy));
-    assertTrue(yyy.compareTo(xxx) < 0);
+		assertInEquality(xxx, yyy);
+		assertTrue(0 < xxx.compareTo(yyy));
+		assertTrue(yyy.compareTo(xxx) < 0);
 
-    xxx.copy(yyy);
-    assertSanity(xxx);
-    assertEquality(xxx, yyy);
-  }
-  
-  public void testBool() {
-    MutableValueBool xxx = new MutableValueBool();
-    assert xxx.value == false : "defaults have changed, test utility may not longer be as high";
-    assert xxx.exists : "defaults have changed, test utility may not longer be as high";
-    assertSanity(xxx);
-    MutableValueBool yyy = new MutableValueBool();
-    assertSanity(yyy);
+		xxx.copy(yyy);
+		assertSanity(xxx);
+		assertEquality(xxx, yyy);
+	}
 
-    assertEquality(xxx, yyy);
+	public void testBool() {
+		MutableValueBool xxx = new MutableValueBool();
+		assert xxx.value == false : "defaults have changed, test utility may not longer be as high";
+		assert xxx.exists : "defaults have changed, test utility may not longer be as high";
+		assertSanity(xxx);
+		MutableValueBool yyy = new MutableValueBool();
+		assertSanity(yyy);
 
-    xxx.exists = false;
-    assertSanity(xxx);
+		assertEquality(xxx, yyy);
 
-    assertInEquality(xxx,yyy);
+		xxx.exists = false;
+		assertSanity(xxx);
 
-    yyy.exists = false;
-    assertEquality(xxx, yyy);
+		assertInEquality(xxx, yyy);
 
-    xxx.value = true;
-    xxx.exists = true;
-    assertSanity(xxx);
+		yyy.exists = false;
+		assertEquality(xxx, yyy);
 
-    assertInEquality(xxx,yyy);
+		xxx.value = true;
+		xxx.exists = true;
+		assertSanity(xxx);
 
-    yyy.value = false;
-    yyy.exists = true;
-    assertSanity(yyy);
+		assertInEquality(xxx, yyy);
 
-    assertInEquality(xxx,yyy);
-    assertTrue(0 < xxx.compareTo(yyy));
-    assertTrue(yyy.compareTo(xxx) < 0);
+		yyy.value = false;
+		yyy.exists = true;
+		assertSanity(yyy);
 
-    xxx.copy(yyy);
-    assertSanity(xxx);
-    assertEquality(xxx, yyy);
-  }
-  
+		assertInEquality(xxx, yyy);
+		assertTrue(0 < xxx.compareTo(yyy));
+		assertTrue(yyy.compareTo(xxx) < 0);
 
-  private void assertSanity(MutableValue x) {
-    assertEquality(x, x);
-    MutableValue y = x.duplicate();
-    assertEquality(x, y);
-  }   
-   
-  private void assertEquality(MutableValue x, MutableValue y) {
-    assertEquals(x.hashCode(), y.hashCode());
+		xxx.copy(yyy);
+		assertSanity(xxx);
+		assertEquality(xxx, yyy);
+	}
 
-    assertEquals(x, y); 
-    assertEquals(y, x);
 
-    assertTrue(x.equalsSameType(y));
-    assertTrue(y.equalsSameType(x));
+	private void assertSanity(MutableValue x) {
+		assertEquality(x, x);
+		MutableValue y = x.duplicate();
+		assertEquality(x, y);
+	}
 
-    assertEquals(0, x.compareTo(y));
-    assertEquals(0, y.compareTo(x));
+	private void assertEquality(MutableValue x, MutableValue y) {
+		assertEquals(x.hashCode(), y.hashCode());
 
-    assertEquals(0, x.compareSameType(y));
-    assertEquals(0, y.compareSameType(x));
-  } 
-     
-  private void assertInEquality(MutableValue x, MutableValue y) {
-    assertFalse(x.equals(y));
-    assertFalse(y.equals(x));
+		assertEquals(x, y);
+		assertEquals(y, x);
 
-    assertFalse(x.equalsSameType(y));
-    assertFalse(y.equalsSameType(x));
+		assertTrue(x.equalsSameType(y));
+		assertTrue(y.equalsSameType(x));
 
-    assertFalse(0 == x.compareTo(y));
-    assertFalse(0 == y.compareTo(x));
-  }      
+		assertEquals(0, x.compareTo(y));
+		assertEquals(0, y.compareTo(x));
+
+		assertEquals(0, x.compareSameType(y));
+		assertEquals(0, y.compareSameType(x));
+	}
+
+	private void assertInEquality(MutableValue x, MutableValue y) {
+		assertFalse(x.equals(y));
+		assertFalse(y.equals(x));
+
+		assertFalse(x.equalsSameType(y));
+		assertFalse(y.equalsSameType(x));
+
+		assertFalse(0 == x.compareTo(y));
+		assertFalse(0 == y.compareTo(x));
+	}
 
 }

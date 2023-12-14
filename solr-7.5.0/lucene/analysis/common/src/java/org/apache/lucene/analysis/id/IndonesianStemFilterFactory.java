@@ -23,8 +23,8 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.id.IndonesianStemFilter;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
- * Factory for {@link IndonesianStemFilter}. 
+/**
+ * Factory for {@link IndonesianStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_idstem" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -33,22 +33,25 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.IndonesianStemFilterFactory" stemDerivational="true"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class IndonesianStemFilterFactory extends TokenFilterFactory {
-  private final boolean stemDerivational;
+	private final boolean stemDerivational;
 
-  /** Creates a new IndonesianStemFilterFactory */
-  public IndonesianStemFilterFactory(Map<String,String> args) {
-    super(args);
-    stemDerivational = getBoolean(args, "stemDerivational", true);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new IndonesianStemFilterFactory
+	 */
+	public IndonesianStemFilterFactory(Map<String, String> args) {
+		super(args);
+		stemDerivational = getBoolean(args, "stemDerivational", true);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new IndonesianStemFilter(input, stemDerivational);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new IndonesianStemFilter(input, stemDerivational);
+	}
 }

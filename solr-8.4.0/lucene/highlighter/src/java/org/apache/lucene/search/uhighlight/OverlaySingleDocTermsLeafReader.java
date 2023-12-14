@@ -35,79 +35,79 @@ import org.apache.lucene.util.automaton.CompiledAutomaton;
  */
 public class OverlaySingleDocTermsLeafReader extends FilterLeafReader {
 
-  private final LeafReader in2;
-  private final String in2Field;
-  private final int in2TargetDocId;
+	private final LeafReader in2;
+	private final String in2Field;
+	private final int in2TargetDocId;
 
-  public OverlaySingleDocTermsLeafReader(LeafReader in, LeafReader in2, String in2Field, int in2TargetDocId) {
-    super(in);
-    this.in2 = in2;
-    this.in2Field = in2Field;
-    this.in2TargetDocId = in2TargetDocId;
-    assert in2.maxDoc() == 1;
-  }
+	public OverlaySingleDocTermsLeafReader(LeafReader in, LeafReader in2, String in2Field, int in2TargetDocId) {
+		super(in);
+		this.in2 = in2;
+		this.in2Field = in2Field;
+		this.in2TargetDocId = in2TargetDocId;
+		assert in2.maxDoc() == 1;
+	}
 
-  @Override
-  public Terms terms(String field) throws IOException {
-    if (!in2Field.equals(field)) {
-      return in.terms(field);
-    }
+	@Override
+	public Terms terms(String field) throws IOException {
+		if (!in2Field.equals(field)) {
+			return in.terms(field);
+		}
 
-    // Shifts leafReader in2 with only doc ID 0 to a target doc ID
-    final Terms terms = in2.terms(field);
-    if (terms == null) {
-      return null;
-    }
-    if (in2TargetDocId == 0) { // no doc ID remapping to do
-      return terms;
-    }
-    return new FilterTerms(terms) {
-      @Override
-      public TermsEnum iterator() throws IOException {
-        return filterTermsEnum(super.iterator());
-      }
+		// Shifts leafReader in2 with only doc ID 0 to a target doc ID
+		final Terms terms = in2.terms(field);
+		if (terms == null) {
+			return null;
+		}
+		if (in2TargetDocId == 0) { // no doc ID remapping to do
+			return terms;
+		}
+		return new FilterTerms(terms) {
+			@Override
+			public TermsEnum iterator() throws IOException {
+				return filterTermsEnum(super.iterator());
+			}
 
-      @Override
-      public TermsEnum intersect(CompiledAutomaton compiled, BytesRef startTerm) throws IOException {
-        return filterTermsEnum(super.intersect(compiled, startTerm));
-      }
+			@Override
+			public TermsEnum intersect(CompiledAutomaton compiled, BytesRef startTerm) throws IOException {
+				return filterTermsEnum(super.intersect(compiled, startTerm));
+			}
 
-      private TermsEnum filterTermsEnum(TermsEnum termsEnum) throws IOException {
-        return new FilterTermsEnum(termsEnum) {
-          @Override
-          public PostingsEnum postings(PostingsEnum reuse, int flags) throws IOException {
-            //TODO 'reuse' will always fail to reuse unless we unwrap it
-            return new FilterPostingsEnum(super.postings(reuse, flags)) {
-              @Override
-              public int nextDoc() throws IOException {
-                final int doc = super.nextDoc();
-                return doc == 0 ? in2TargetDocId : doc;
-              }
+			private TermsEnum filterTermsEnum(TermsEnum termsEnum) throws IOException {
+				return new FilterTermsEnum(termsEnum) {
+					@Override
+					public PostingsEnum postings(PostingsEnum reuse, int flags) throws IOException {
+						//TODO 'reuse' will always fail to reuse unless we unwrap it
+						return new FilterPostingsEnum(super.postings(reuse, flags)) {
+							@Override
+							public int nextDoc() throws IOException {
+								final int doc = super.nextDoc();
+								return doc == 0 ? in2TargetDocId : doc;
+							}
 
-              @Override
-              public int advance(int target) throws IOException {
-                return slowAdvance(target);
-              }
+							@Override
+							public int advance(int target) throws IOException {
+								return slowAdvance(target);
+							}
 
-              @Override
-              public int docID() {
-                final int doc = super.docID();
-                return doc == 0 ? in2TargetDocId : doc;
-              }
-            };
-          }
-        };
-      }
-    };
-  }
+							@Override
+							public int docID() {
+								final int doc = super.docID();
+								return doc == 0 ? in2TargetDocId : doc;
+							}
+						};
+					}
+				};
+			}
+		};
+	}
 
-  @Override
-  public CacheHelper getCoreCacheHelper() {
-    return null;
-  }
+	@Override
+	public CacheHelper getCoreCacheHelper() {
+		return null;
+	}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    return null;
-  }
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		return null;
+	}
 }

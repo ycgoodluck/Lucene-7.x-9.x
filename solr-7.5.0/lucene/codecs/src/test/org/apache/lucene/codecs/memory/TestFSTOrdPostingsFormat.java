@@ -22,13 +22,13 @@ import org.apache.lucene.index.BasePostingsFormatTestCase;
 import org.apache.lucene.util.TestUtil;
 
 /**
- * Tests FSTOrdPostingsFormat 
+ * Tests FSTOrdPostingsFormat
  */
 public class TestFSTOrdPostingsFormat extends BasePostingsFormatTestCase {
-  private final Codec codec = TestUtil.alwaysPostingsFormat(new FSTOrdPostingsFormat());
+	private final Codec codec = TestUtil.alwaysPostingsFormat(new FSTOrdPostingsFormat());
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

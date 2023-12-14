@@ -23,61 +23,62 @@ import java.nio.file.Paths;
 import java.util.Random;
 
 public class StringValueFacetTest {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private final Analyzer analyzer = new WhitespaceAnalyzer();
-    private final IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-    private IndexWriter writer;
+	private final Analyzer analyzer = new WhitespaceAnalyzer();
+	private final IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private IndexWriter writer;
 
-    public void doSearch() throws Exception {
-        conf.setUseCompoundFile(false);
-        writer = new IndexWriter(directory, conf);
+	public void doSearch() throws Exception {
+		conf.setUseCompoundFile(false);
+		writer = new IndexWriter(directory, conf);
 
-        Document doc = new Document();
-        doc.add(new StringField("abc", "abc", Field.Store.YES));
-        writer.addDocument(doc);
+		Document doc = new Document();
+		doc.add(new StringField("abc", "abc", Field.Store.YES));
+		writer.addDocument(doc);
 
-        doc = new Document();
-        doc.add(new SortedSetDocValuesField("field", new BytesRef("foo")));
-        writer.addDocument(doc);
+		doc = new Document();
+		doc.add(new SortedSetDocValuesField("field", new BytesRef("foo")));
+		writer.addDocument(doc);
 
-        doc = new Document();
-        doc.add(new SortedSetDocValuesField("field", new BytesRef("bar")));
-        writer.addDocument(doc);
+		doc = new Document();
+		doc.add(new SortedSetDocValuesField("field", new BytesRef("bar")));
+		writer.addDocument(doc);
 
-        doc = new Document();
-        doc.add(new SortedSetDocValuesField("field", new BytesRef("bar")));
-        writer.addDocument(doc);
+		doc = new Document();
+		doc.add(new SortedSetDocValuesField("field", new BytesRef("bar")));
+		writer.addDocument(doc);
 
-        doc = new Document();
-        doc.add(new SortedSetDocValuesField("field", new BytesRef("baz")));
-        writer.addDocument(doc);
+		doc = new Document();
+		doc.add(new SortedSetDocValuesField("field", new BytesRef("baz")));
+		writer.addDocument(doc);
 
-        DirectoryReader reader = DirectoryReader.open(writer);
-        IndexSearcher searcher = new IndexSearcher(reader);
+		DirectoryReader reader = DirectoryReader.open(writer);
+		IndexSearcher searcher = new IndexSearcher(reader);
 
-        StringDocValuesReaderState state =
-                new StringDocValuesReaderState(searcher.getIndexReader(), "field");
+		StringDocValuesReaderState state =
+			new StringDocValuesReaderState(searcher.getIndexReader(), "field");
 
-        FacetsCollector c = new FacetsCollector();
-        searcher.search(new MatchAllDocsQuery(), c);
+		FacetsCollector c = new FacetsCollector();
+		searcher.search(new MatchAllDocsQuery(), c);
 
-        StringValueFacetCounts facets = new StringValueFacetCounts(state, c);
+		StringValueFacetCounts facets = new StringValueFacetCounts(state, c);
 
 
-        System.out.println("DONE");
-    }
-    public static void main(String[] args) throws Exception{
-        StringValueFacetTest test = new StringValueFacetTest();
-        test.doSearch();
-    }
+		System.out.println("DONE");
+	}
+
+	public static void main(String[] args) throws Exception {
+		StringValueFacetTest test = new StringValueFacetTest();
+		test.doSearch();
+	}
 }

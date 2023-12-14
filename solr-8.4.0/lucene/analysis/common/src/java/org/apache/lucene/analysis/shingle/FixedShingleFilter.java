@@ -47,119 +47,120 @@ import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
  */
 public final class FixedShingleFilter extends GraphTokenFilter {
 
-  private static final int MAX_SHINGLE_SIZE = 4;
+	private static final int MAX_SHINGLE_SIZE = 4;
 
-  private final int shingleSize;
-  private final String tokenSeparator;
-  private final String fillerToken;
+	private final int shingleSize;
+	private final String tokenSeparator;
+	private final String fillerToken;
 
-  private final PositionIncrementAttribute incAtt = addAttribute(PositionIncrementAttribute.class);
-  private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final TypeAttribute typeAtt = addAttribute(TypeAttribute.class);
+	private final PositionIncrementAttribute incAtt = addAttribute(PositionIncrementAttribute.class);
+	private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final TypeAttribute typeAtt = addAttribute(TypeAttribute.class);
 
-  private final CharTermAttribute buffer = new CharTermAttributeImpl();
+	private final CharTermAttribute buffer = new CharTermAttributeImpl();
 
-  /**
-   * Creates a FixedShingleFilter over an input token stream
-   *
-   * @param input       the input stream
-   * @param shingleSize the shingle size
-   */
-  public FixedShingleFilter(TokenStream input, int shingleSize) {
-    this(input, shingleSize, " ", "_");
-  }
+	/**
+	 * Creates a FixedShingleFilter over an input token stream
+	 *
+	 * @param input       the input stream
+	 * @param shingleSize the shingle size
+	 */
+	public FixedShingleFilter(TokenStream input, int shingleSize) {
+		this(input, shingleSize, " ", "_");
+	}
 
-  /**
-   * Creates a FixedShingleFilter over an input token stream
-   *
-   * @param input          the input tokenstream
-   * @param shingleSize    the shingle size
-   * @param tokenSeparator a String to use as a token separator
-   * @param fillerToken    a String to use to represent gaps in the input stream (due to eg stopwords)
-   */
-  public FixedShingleFilter(TokenStream input, int shingleSize, String tokenSeparator, String fillerToken) {
-    super(input);
+	/**
+	 * Creates a FixedShingleFilter over an input token stream
+	 *
+	 * @param input          the input tokenstream
+	 * @param shingleSize    the shingle size
+	 * @param tokenSeparator a String to use as a token separator
+	 * @param fillerToken    a String to use to represent gaps in the input stream (due to eg stopwords)
+	 */
+	public FixedShingleFilter(TokenStream input, int shingleSize, String tokenSeparator, String fillerToken) {
+		super(input);
 
-    if (shingleSize <= 1 || shingleSize > MAX_SHINGLE_SIZE) {
-      throw new IllegalArgumentException("Shingle size must be between 2 and " + MAX_SHINGLE_SIZE + ", got " + shingleSize);
-    }
-    this.shingleSize = shingleSize;
-    this.tokenSeparator = tokenSeparator;
-    this.fillerToken = fillerToken;
-  }
+		if (shingleSize <= 1 || shingleSize > MAX_SHINGLE_SIZE) {
+			throw new IllegalArgumentException("Shingle size must be between 2 and " + MAX_SHINGLE_SIZE + ", got " + shingleSize);
+		}
+		this.shingleSize = shingleSize;
+		this.tokenSeparator = tokenSeparator;
+		this.fillerToken = fillerToken;
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
+	@Override
+	public boolean incrementToken() throws IOException {
 
-    int shinglePosInc, startOffset, endOffset;
+		int shinglePosInc, startOffset, endOffset;
 
-    outer: while (true) {
-      if (incrementGraph() == false) {
-        if (incrementBaseToken() == false) {
-          return false;
-        }
-        // starting a shingle at a new base position, use base position increment
-        shinglePosInc = incAtt.getPositionIncrement();
-      } else {
-        // starting a new shingle at the same base with a different graph, use a 0
-        // position increment
-        shinglePosInc = 0;
-      }
+		outer:
+		while (true) {
+			if (incrementGraph() == false) {
+				if (incrementBaseToken() == false) {
+					return false;
+				}
+				// starting a shingle at a new base position, use base position increment
+				shinglePosInc = incAtt.getPositionIncrement();
+			} else {
+				// starting a new shingle at the same base with a different graph, use a 0
+				// position increment
+				shinglePosInc = 0;
+			}
 
-      startOffset = offsetAtt.startOffset();
-      endOffset = offsetAtt.endOffset();
-      this.buffer.setEmpty();
-      this.buffer.append(termAtt);
+			startOffset = offsetAtt.startOffset();
+			endOffset = offsetAtt.endOffset();
+			this.buffer.setEmpty();
+			this.buffer.append(termAtt);
 
-      // build the shingle by iterating over the current graph, adding
-      // filler tokens if we encounter gaps
-      for (int i = 1; i < shingleSize; i++) {
-        if (incrementGraphToken() == false) {
-          // we've reached the end of the token stream, check for trailing
-          // positions and add fillers if necessary
-          int trailingPositions = getTrailingPositions();
-          if (i + trailingPositions < shingleSize) {
-            // not enough trailing positions to make a full shingle
-            // start again at a different graph
-            continue outer;
-          }
-          while (i < shingleSize) {
-            this.buffer.append(tokenSeparator).append(fillerToken);
-            i++;
-          }
-          break;
-        }
-        int posInc = incAtt.getPositionIncrement();
-        if (posInc > 1) {
-          // if we have a posInc > 1, we need to fill in the gaps
-          if (i + posInc > shingleSize) {
-            // if the posInc is greater than the shingle size, we need to add fillers
-            // up to the shingle size but no further
-            while (i < shingleSize) {
-              this.buffer.append(tokenSeparator).append(fillerToken);
-              i++;
-            }
-            break;
-          }
-          // otherwise just add them in as far as we need
-          while (posInc > 1) {
-            this.buffer.append(tokenSeparator).append(fillerToken);
-            posInc--;
-            i++;
-          }
-        }
-        this.buffer.append(tokenSeparator).append(termAtt);
-        endOffset = offsetAtt.endOffset();
-      }
-      break;
-    }
-    clearAttributes();
-    this.offsetAtt.setOffset(startOffset, endOffset);
-    this.incAtt.setPositionIncrement(shinglePosInc);
-    this.termAtt.setEmpty().append(buffer);
-    this.typeAtt.setType("shingle");
-    return true;
-  }
+			// build the shingle by iterating over the current graph, adding
+			// filler tokens if we encounter gaps
+			for (int i = 1; i < shingleSize; i++) {
+				if (incrementGraphToken() == false) {
+					// we've reached the end of the token stream, check for trailing
+					// positions and add fillers if necessary
+					int trailingPositions = getTrailingPositions();
+					if (i + trailingPositions < shingleSize) {
+						// not enough trailing positions to make a full shingle
+						// start again at a different graph
+						continue outer;
+					}
+					while (i < shingleSize) {
+						this.buffer.append(tokenSeparator).append(fillerToken);
+						i++;
+					}
+					break;
+				}
+				int posInc = incAtt.getPositionIncrement();
+				if (posInc > 1) {
+					// if we have a posInc > 1, we need to fill in the gaps
+					if (i + posInc > shingleSize) {
+						// if the posInc is greater than the shingle size, we need to add fillers
+						// up to the shingle size but no further
+						while (i < shingleSize) {
+							this.buffer.append(tokenSeparator).append(fillerToken);
+							i++;
+						}
+						break;
+					}
+					// otherwise just add them in as far as we need
+					while (posInc > 1) {
+						this.buffer.append(tokenSeparator).append(fillerToken);
+						posInc--;
+						i++;
+					}
+				}
+				this.buffer.append(tokenSeparator).append(termAtt);
+				endOffset = offsetAtt.endOffset();
+			}
+			break;
+		}
+		clearAttributes();
+		this.offsetAtt.setOffset(startOffset, endOffset);
+		this.incAtt.setPositionIncrement(shinglePosInc);
+		this.termAtt.setEmpty().append(buffer);
+		this.typeAtt.setType("shingle");
+		return true;
+	}
 
 }

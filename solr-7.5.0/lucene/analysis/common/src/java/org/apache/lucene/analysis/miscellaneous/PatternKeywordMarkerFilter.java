@@ -29,28 +29,26 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
  * {@link KeywordAttribute#setKeyword(boolean)} to <code>true</code>.
  */
 public final class PatternKeywordMarkerFilter extends KeywordMarkerFilter {
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final Matcher matcher;
-  
-  /**
-   * Create a new {@link PatternKeywordMarkerFilter}, that marks the current
-   * token as a keyword if the tokens term buffer matches the provided
-   * {@link Pattern} via the {@link KeywordAttribute}.
-   * 
-   * @param in
-   *          TokenStream to filter
-   * @param pattern
-   *          the pattern to apply to the incoming term buffer
-   **/
-  public PatternKeywordMarkerFilter(TokenStream in, Pattern pattern) {
-    super(in);
-    this.matcher = pattern.matcher("");
-  }
-  
-  @Override
-  protected boolean isKeyword() {
-    matcher.reset(termAtt);
-    return matcher.matches();
-  }
-  
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final Matcher matcher;
+
+	/**
+	 * Create a new {@link PatternKeywordMarkerFilter}, that marks the current
+	 * token as a keyword if the tokens term buffer matches the provided
+	 * {@link Pattern} via the {@link KeywordAttribute}.
+	 *
+	 * @param in      TokenStream to filter
+	 * @param pattern the pattern to apply to the incoming term buffer
+	 **/
+	public PatternKeywordMarkerFilter(TokenStream in, Pattern pattern) {
+		super(in);
+		this.matcher = pattern.matcher("");
+	}
+
+	@Override
+	protected boolean isKeyword() {
+		matcher.reset(termAtt);
+		return matcher.matches();
+	}
+
 }

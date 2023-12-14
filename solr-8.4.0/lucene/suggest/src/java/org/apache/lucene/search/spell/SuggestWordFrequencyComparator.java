@@ -17,36 +17,37 @@
 package org.apache.lucene.search.spell;
 
 import java.util.Comparator;
+
 /**
- *  Frequency first, then score.
- *
+ * Frequency first, then score.
  **/
 public class SuggestWordFrequencyComparator implements Comparator<SuggestWord> {
-  
-  /**
-   * Creates a new comparator that will compare by {@link SuggestWord#freq},
-   * then by {@link SuggestWord#score}, then by {@link SuggestWord#string}.
-   */
-  public SuggestWordFrequencyComparator() {}
 
-  @Override
-  public int compare(SuggestWord first, SuggestWord second) {
-    // first criteria: the frequency
-    if (first.freq > second.freq) {
-      return 1;
-    }
-    if (first.freq < second.freq) {
-      return -1;
-    }
+	/**
+	 * Creates a new comparator that will compare by {@link SuggestWord#freq},
+	 * then by {@link SuggestWord#score}, then by {@link SuggestWord#string}.
+	 */
+	public SuggestWordFrequencyComparator() {
+	}
 
-    // second criteria (if first criteria is equal): the score
-    if (first.score > second.score) {
-      return 1;
-    }
-    if (first.score < second.score) {
-      return -1;
-    }
-    // third criteria: term text
-    return second.string.compareTo(first.string);
-  }
+	@Override
+	public int compare(SuggestWord first, SuggestWord second) {
+		// first criteria: the frequency
+		if (first.freq > second.freq) {
+			return 1;
+		}
+		if (first.freq < second.freq) {
+			return -1;
+		}
+
+		// second criteria (if first criteria is equal): the score
+		if (first.score > second.score) {
+			return 1;
+		}
+		if (first.score < second.score) {
+			return -1;
+		}
+		// third criteria: term text
+		return second.string.compareTo(first.string);
+	}
 }

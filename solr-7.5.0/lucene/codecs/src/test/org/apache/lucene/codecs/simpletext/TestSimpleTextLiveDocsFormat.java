@@ -20,10 +20,10 @@ import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.index.BaseLiveDocsFormatTestCase;
 
 public class TestSimpleTextLiveDocsFormat extends BaseLiveDocsFormatTestCase {
-  private final Codec codec = new SimpleTextCodec();
+	private final Codec codec = new SimpleTextCodec();
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

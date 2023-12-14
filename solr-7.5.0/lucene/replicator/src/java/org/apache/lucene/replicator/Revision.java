@@ -33,42 +33,42 @@ import org.apache.lucene.store.IndexInput;
  * beween them. For example, an application which indexes facets will need to
  * replicate both the search and taxonomy indexes together, to guarantee that
  * they match at the client side.
- * 
+ *
  * @lucene.experimental
  */
 public interface Revision extends Comparable<Revision> {
-  
-  /**
-   * Compares the revision to the given version string. Behaves like
-   * {@link Comparable#compareTo(Object)}.
-   */
-  public int compareTo(String version);
-  
-  /**
-   * Returns a string representation of the version of this revision. The
-   * version is used by {@link #compareTo(String)} as well as to
-   * serialize/deserialize revision information. Therefore it must be self
-   * descriptive as well as be able to identify one revision from another.
-   */
-  public String getVersion();
-  
-  /**
-   * Returns the files that comprise this revision, as a mapping from a source
-   * to a list of files.
-   */
-  public Map<String,List<RevisionFile>> getSourceFiles();
-  
-  /**
-   * Returns an {@link IndexInput} for the given fileName and source. It is the
-   * caller's respnsibility to close the {@link IndexInput} when it has been
-   * consumed.
-   */
-  public InputStream open(String source, String fileName) throws IOException;
-  
-  /**
-   * Called when this revision can be safely released, i.e. where there are no
-   * more references to it.
-   */
-  public void release() throws IOException;
-  
+
+	/**
+	 * Compares the revision to the given version string. Behaves like
+	 * {@link Comparable#compareTo(Object)}.
+	 */
+	public int compareTo(String version);
+
+	/**
+	 * Returns a string representation of the version of this revision. The
+	 * version is used by {@link #compareTo(String)} as well as to
+	 * serialize/deserialize revision information. Therefore it must be self
+	 * descriptive as well as be able to identify one revision from another.
+	 */
+	public String getVersion();
+
+	/**
+	 * Returns the files that comprise this revision, as a mapping from a source
+	 * to a list of files.
+	 */
+	public Map<String, List<RevisionFile>> getSourceFiles();
+
+	/**
+	 * Returns an {@link IndexInput} for the given fileName and source. It is the
+	 * caller's respnsibility to close the {@link IndexInput} when it has been
+	 * consumed.
+	 */
+	public InputStream open(String source, String fileName) throws IOException;
+
+	/**
+	 * Called when this revision can be safely released, i.e. where there are no
+	 * more references to it.
+	 */
+	public void release() throws IOException;
+
 }

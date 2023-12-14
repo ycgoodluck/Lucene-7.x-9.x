@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link EnglishPossessiveFilter}. 
+ * Factory for {@link EnglishPossessiveFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_enpossessive" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -32,24 +32,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.EnglishPossessiveFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.1.0
  */
 public class EnglishPossessiveFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "englishPossessive";
-  
-  /** Creates a new EnglishPossessiveFilterFactory */
-  public EnglishPossessiveFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new EnglishPossessiveFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "englishPossessive";
+
+	/**
+	 * Creates a new EnglishPossessiveFilterFactory
+	 */
+	public EnglishPossessiveFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new EnglishPossessiveFilter(input);
+	}
 }

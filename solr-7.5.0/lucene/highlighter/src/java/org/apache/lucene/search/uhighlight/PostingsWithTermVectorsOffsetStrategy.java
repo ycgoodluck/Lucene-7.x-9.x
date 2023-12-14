@@ -28,23 +28,23 @@ import org.apache.lucene.index.Terms;
  */
 public class PostingsWithTermVectorsOffsetStrategy extends FieldOffsetStrategy {
 
-  public PostingsWithTermVectorsOffsetStrategy(UHComponents components) {
-    super(components);
-  }
+	public PostingsWithTermVectorsOffsetStrategy(UHComponents components) {
+		super(components);
+	}
 
-  @Override
-  public OffsetsEnum getOffsetsEnum(LeafReader leafReader, int docId, String content) throws IOException {
-    Terms docTerms = leafReader.getTermVector(docId, getField());
-    if (docTerms == null) {
-      return OffsetsEnum.EMPTY;
-    }
-    leafReader = new TermVectorFilteredLeafReader(leafReader, docTerms, getField());
+	@Override
+	public OffsetsEnum getOffsetsEnum(LeafReader leafReader, int docId, String content) throws IOException {
+		Terms docTerms = leafReader.getTermVector(docId, getField());
+		if (docTerms == null) {
+			return OffsetsEnum.EMPTY;
+		}
+		leafReader = new TermVectorFilteredLeafReader(leafReader, docTerms, getField());
 
-    return createOffsetsEnumFromReader(leafReader, docId);
-  }
+		return createOffsetsEnumFromReader(leafReader, docId);
+	}
 
-  @Override
-  public UnifiedHighlighter.OffsetSource getOffsetSource() {
-    return UnifiedHighlighter.OffsetSource.POSTINGS_WITH_TERM_VECTORS;
-  }
+	@Override
+	public UnifiedHighlighter.OffsetSource getOffsetSource() {
+		return UnifiedHighlighter.OffsetSource.POSTINGS_WITH_TERM_VECTORS;
+	}
 }

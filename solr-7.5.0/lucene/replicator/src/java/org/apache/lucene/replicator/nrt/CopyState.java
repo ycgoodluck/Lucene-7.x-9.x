@@ -23,35 +23,37 @@ import java.util.Set;
 
 import org.apache.lucene.index.SegmentInfos;
 
-/** Holds incRef'd file level details for one point-in-time segment infos on the primary node.
+/**
+ * Holds incRef'd file level details for one point-in-time segment infos on the primary node.
  *
- * @lucene.experimental */
+ * @lucene.experimental
+ */
 public class CopyState {
 
-  public final Map<String,FileMetaData> files;
-  public final long version;
-  public final long gen;
-  public final byte[] infosBytes;
-  public final Set<String> completedMergeFiles;
-  public final long primaryGen;
-  
-  // only non-null on the primary node
-  public final SegmentInfos infos;
+	public final Map<String, FileMetaData> files;
+	public final long version;
+	public final long gen;
+	public final byte[] infosBytes;
+	public final Set<String> completedMergeFiles;
+	public final long primaryGen;
 
-  public CopyState(Map<String,FileMetaData> files, long version, long gen, byte[] infosBytes,
-                   Set<String> completedMergeFiles, long primaryGen, SegmentInfos infos) {
-    assert completedMergeFiles != null;
-    this.files = Collections.unmodifiableMap(files);
-    this.version = version;
-    this.gen = gen;
-    this.infosBytes = infosBytes;
-    this.completedMergeFiles = Collections.unmodifiableSet(completedMergeFiles);
-    this.primaryGen = primaryGen;
-    this.infos = infos;
-  }
+	// only non-null on the primary node
+	public final SegmentInfos infos;
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "(version=" + version + ")";
-  }
+	public CopyState(Map<String, FileMetaData> files, long version, long gen, byte[] infosBytes,
+									 Set<String> completedMergeFiles, long primaryGen, SegmentInfos infos) {
+		assert completedMergeFiles != null;
+		this.files = Collections.unmodifiableMap(files);
+		this.version = version;
+		this.gen = gen;
+		this.infosBytes = infosBytes;
+		this.completedMergeFiles = Collections.unmodifiableSet(completedMergeFiles);
+		this.primaryGen = primaryGen;
+		this.infos = infos;
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(version=" + version + ")";
+	}
 }

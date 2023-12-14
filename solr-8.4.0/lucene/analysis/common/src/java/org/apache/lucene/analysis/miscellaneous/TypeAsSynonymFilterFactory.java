@@ -37,26 +37,28 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * to the type, e.g. with prefix="_type_", for a token "example.com" with type "&lt;URL&gt;",
  * the emitted synonym will have text "_type_&lt;URL&gt;".
  *
- * @since 7.3.0
  * @lucene.spi {@value #NAME}
+ * @since 7.3.0
  */
 public class TypeAsSynonymFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "typeAsSynonym";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "typeAsSynonym";
 
-  private final String prefix;
+	private final String prefix;
 
-  public TypeAsSynonymFilterFactory(Map<String,String> args) {
-    super(args);
-    prefix = get(args, "prefix");  // default value is null
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	public TypeAsSynonymFilterFactory(Map<String, String> args) {
+		super(args);
+		prefix = get(args, "prefix");  // default value is null
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new TypeAsSynonymFilter(input, prefix);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new TypeAsSynonymFilter(input, prefix);
+	}
 }

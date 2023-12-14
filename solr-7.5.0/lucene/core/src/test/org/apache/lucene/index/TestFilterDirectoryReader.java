@@ -30,50 +30,50 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestFilterDirectoryReader extends LuceneTestCase {
 
-  private static class DummySubReaderWrapper extends SubReaderWrapper {
+	private static class DummySubReaderWrapper extends SubReaderWrapper {
 
-    @Override
-    public LeafReader wrap(LeafReader reader) {
-      return reader;
-    }
-    
-  }
+		@Override
+		public LeafReader wrap(LeafReader reader) {
+			return reader;
+		}
 
-  private static class DummyFilterDirectoryReader extends FilterDirectoryReader {
+	}
 
-    public DummyFilterDirectoryReader(DirectoryReader in) throws IOException {
-      super(in, new DummySubReaderWrapper());
-    }
+	private static class DummyFilterDirectoryReader extends FilterDirectoryReader {
 
-    @Override
-    protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
-      return new DummyFilterDirectoryReader(in);
-    }
+		public DummyFilterDirectoryReader(DirectoryReader in) throws IOException {
+			super(in, new DummySubReaderWrapper());
+		}
 
-    @Override
-    public CacheHelper getReaderCacheHelper() {
-      return in.getReaderCacheHelper();
-    }
-    
-  }
+		@Override
+		protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
+			return new DummyFilterDirectoryReader(in);
+		}
 
-  public void testDoubleClose() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
-    w.addDocument(new Document());
+		@Override
+		public CacheHelper getReaderCacheHelper() {
+			return in.getReaderCacheHelper();
+		}
 
-    DirectoryReader reader = DirectoryReader.open(w);
-    DirectoryReader wrapped = new DummyFilterDirectoryReader(reader);
+	}
 
-    // Calling close() on the original reader and wrapped reader should only close
-    // the original reader once (as per Closeable.close() contract that close() is
-    // idempotent)
-    List<DirectoryReader> readers = Arrays.asList(reader, wrapped);
-    Collections.shuffle(readers, random());
-    IOUtils.close(readers);
+	public void testDoubleClose() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
+		w.addDocument(new Document());
 
-    w.close();
-    dir.close();
-  }
+		DirectoryReader reader = DirectoryReader.open(w);
+		DirectoryReader wrapped = new DummyFilterDirectoryReader(reader);
+
+		// Calling close() on the original reader and wrapped reader should only close
+		// the original reader once (as per Closeable.close() contract that close() is
+		// idempotent)
+		List<DirectoryReader> readers = Arrays.asList(reader, wrapped);
+		Collections.shuffle(readers, random());
+		IOUtils.close(readers);
+
+		w.close();
+		dir.close();
+	}
 
 }

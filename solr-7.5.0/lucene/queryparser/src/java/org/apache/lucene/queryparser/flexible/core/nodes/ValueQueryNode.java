@@ -21,9 +21,9 @@ package org.apache.lucene.queryparser.flexible.core.nodes;
  * arbitrary value.
  */
 public interface ValueQueryNode<T extends Object> extends QueryNode {
-  
-  public void setValue(T value);
-  
-  public T getValue();
-  
+
+	public void setValue(T value);
+
+	public T getValue();
+
 }

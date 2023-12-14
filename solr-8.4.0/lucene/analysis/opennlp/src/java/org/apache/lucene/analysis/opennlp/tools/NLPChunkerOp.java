@@ -18,6 +18,7 @@
 package org.apache.lucene.analysis.opennlp.tools;
 
 import java.io.IOException;
+
 import opennlp.tools.chunker.ChunkerME;
 import opennlp.tools.chunker.ChunkerModel;
 
@@ -26,16 +27,16 @@ import opennlp.tools.chunker.ChunkerModel;
  * Requires binary models from OpenNLP project on SourceForge.
  */
 public class NLPChunkerOp {
-  private ChunkerME chunker = null;
+	private ChunkerME chunker = null;
 
-  public NLPChunkerOp(ChunkerModel chunkerModel) throws IOException {
-    chunker = new ChunkerME(chunkerModel);
-  }
+	public NLPChunkerOp(ChunkerModel chunkerModel) throws IOException {
+		chunker = new ChunkerME(chunkerModel);
+	}
 
-  public synchronized String[] getChunks(String[] words, String[] tags, double[] probs) {
-    String[] chunks = chunker.chunk(words, tags);
-    if (probs != null)
-      chunker.probs(probs);
-    return chunks;
-  }
+	public synchronized String[] getChunks(String[] words, String[] tags, double[] probs) {
+		String[] chunks = chunker.chunk(words, tags);
+		if (probs != null)
+			chunker.probs(probs);
+		return chunks;
+	}
 }

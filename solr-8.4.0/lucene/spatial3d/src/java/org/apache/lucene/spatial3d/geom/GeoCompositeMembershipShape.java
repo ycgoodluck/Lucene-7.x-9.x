@@ -26,32 +26,33 @@ import java.io.IOException;
  */
 public class GeoCompositeMembershipShape extends GeoBaseCompositeMembershipShape<GeoMembershipShape> implements GeoMembershipShape {
 
-  /**
-   * Constructor.
-   */
-  public GeoCompositeMembershipShape(PlanetModel planetModel) {
-    super(planetModel);
-  }
+	/**
+	 * Constructor.
+	 */
+	public GeoCompositeMembershipShape(PlanetModel planetModel) {
+		super(planetModel);
+	}
 
-  /**
-   * Constructor for deserialization.
-   * @param planetModel is the planet model.
-   * @param inputStream is the input stream.
-   */
-  public GeoCompositeMembershipShape(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
-    super(planetModel, inputStream, GeoMembershipShape.class);
-  }
+	/**
+	 * Constructor for deserialization.
+	 *
+	 * @param planetModel is the planet model.
+	 * @param inputStream is the input stream.
+	 */
+	public GeoCompositeMembershipShape(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
+		super(planetModel, inputStream, GeoMembershipShape.class);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof GeoCompositeMembershipShape))
-      return false;
-    return super.equals(o);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof GeoCompositeMembershipShape))
+			return false;
+		return super.equals(o);
+	}
 
-  @Override
-  public String toString() {
-    return "GeoCompositeMembershipShape: {" + shapes + '}';
-  }
+	@Override
+	public String toString() {
+		return "GeoCompositeMembershipShape: {" + shapes + '}';
+	}
 }
-  
+

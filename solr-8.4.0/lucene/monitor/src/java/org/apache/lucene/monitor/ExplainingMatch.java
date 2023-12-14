@@ -29,53 +29,53 @@ import org.apache.lucene.search.Query;
  */
 public class ExplainingMatch extends QueryMatch {
 
-  /**
-   * A MatcherFactory for producing ExplainingMatches
-   */
-  public static final MatcherFactory<ExplainingMatch> MATCHER = searcher -> new CandidateMatcher<ExplainingMatch>(searcher) {
-    @Override
-    protected void matchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
-      int maxDocs = searcher.getIndexReader().maxDoc();
-      for (int i = 0; i < maxDocs; i++) {
-        Explanation explanation = searcher.explain(matchQuery, i);
-        if (explanation.isMatch())
-          addMatch(new ExplainingMatch(queryId, explanation), i);
-      }
-    }
+	/**
+	 * A MatcherFactory for producing ExplainingMatches
+	 */
+	public static final MatcherFactory<ExplainingMatch> MATCHER = searcher -> new CandidateMatcher<ExplainingMatch>(searcher) {
+		@Override
+		protected void matchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
+			int maxDocs = searcher.getIndexReader().maxDoc();
+			for (int i = 0; i < maxDocs; i++) {
+				Explanation explanation = searcher.explain(matchQuery, i);
+				if (explanation.isMatch())
+					addMatch(new ExplainingMatch(queryId, explanation), i);
+			}
+		}
 
-    @Override
-    public ExplainingMatch resolve(ExplainingMatch match1, ExplainingMatch match2) {
-      return new ExplainingMatch(match1.getQueryId(),
-          Explanation.match(match1.getExplanation().getValue().doubleValue() + match2.getExplanation().getValue().doubleValue(),
-              "sum of:", match1.getExplanation(), match2.getExplanation()));
-    }
-  };
+		@Override
+		public ExplainingMatch resolve(ExplainingMatch match1, ExplainingMatch match2) {
+			return new ExplainingMatch(match1.getQueryId(),
+				Explanation.match(match1.getExplanation().getValue().doubleValue() + match2.getExplanation().getValue().doubleValue(),
+					"sum of:", match1.getExplanation(), match2.getExplanation()));
+		}
+	};
 
-  private final Explanation explanation;
+	private final Explanation explanation;
 
-  ExplainingMatch(String queryId, Explanation explanation) {
-    super(queryId);
-    this.explanation = explanation;
-  }
+	ExplainingMatch(String queryId, Explanation explanation) {
+		super(queryId);
+		this.explanation = explanation;
+	}
 
-  /**
-   * @return the Explanation
-   */
-  public Explanation getExplanation() {
-    return explanation;
-  }
+	/**
+	 * @return the Explanation
+	 */
+	public Explanation getExplanation() {
+		return explanation;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    if (!super.equals(o)) return false;
-    ExplainingMatch that = (ExplainingMatch) o;
-    return Objects.equals(explanation, that.explanation);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+		ExplainingMatch that = (ExplainingMatch) o;
+		return Objects.equals(explanation, that.explanation);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), explanation);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), explanation);
+	}
 }

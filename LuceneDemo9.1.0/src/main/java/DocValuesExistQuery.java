@@ -26,32 +26,32 @@ import java.nio.file.Paths;
 import java.util.Random;
 
 public class DocValuesExistQuery {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("/Users/luxugang/Project/lucene_bench_home/indices/wikimedium500k.lucene_baseline.facets.taxonomy:Date.taxonomy:Month.taxonomy:DayOfYear.sortedset:Date.sortedset:Month.sortedset:DayOfYear.taxonomy:RandomLabel.sortedset:RandomLabel.Lucene90.Lucene90.nd0.5M/facets"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("/Users/luxugang/Project/lucene_bench_home/indices/wikimedium500k.lucene_baseline.facets.taxonomy:Date.taxonomy:Month.taxonomy:DayOfYear.sortedset:Date.sortedset:Month.sortedset:DayOfYear.taxonomy:RandomLabel.sortedset:RandomLabel.Lucene90.Lucene90.nd0.5M/facets"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private Analyzer analyzer = new WhitespaceAnalyzer();
-    private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-    private IndexWriter indexWriter;
+	private Analyzer analyzer = new WhitespaceAnalyzer();
+	private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private IndexWriter indexWriter;
 
-    public void doSearch() throws Exception {
-        SortField sortField = new SortedNumericSortField("number2", SortField.Type.LONG);
-        sortField.setMissingValue(1L);
-        Sort indexSort = new Sort(sortField);
+	public void doSearch() throws Exception {
+		SortField sortField = new SortedNumericSortField("number2", SortField.Type.LONG);
+		sortField.setMissingValue(1L);
+		Sort indexSort = new Sort(sortField);
 //        Sort indexSort = new Sort(new SortedNumericSortField("number", SortField.Type.LONG, true, SortedNumericSelector.Type.MAX));
-        conf.setUseCompoundFile(false);
-        conf.setMergeScheduler(new SerialMergeScheduler());
-        conf.setIndexSort(indexSort);
-        indexWriter = new IndexWriter(directory, conf);
-        Random random = new Random();
-        Document doc;
+		conf.setUseCompoundFile(false);
+		conf.setMergeScheduler(new SerialMergeScheduler());
+		conf.setIndexSort(indexSort);
+		indexWriter = new IndexWriter(directory, conf);
+		Random random = new Random();
+		Document doc;
 //
 //        int count = 0 ;
 //        while (count++ < 10000){
@@ -77,36 +77,36 @@ public class DocValuesExistQuery {
 //
 //
 //        indexWriter.commit();
-        DirectoryReader reader = DirectoryReader.open(indexWriter);
-        IndexSearcher searcher = new IndexSearcher(reader);
+		DirectoryReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
 
-        BooleanQuery booleanQuery =
-                new BooleanQuery.Builder()
-                        .add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.MUST)
-                        .add(new KnnVectorFieldExistsQuery("vector"), BooleanClause.Occur.MUST)
-                        .build();
+		BooleanQuery booleanQuery =
+			new BooleanQuery.Builder()
+				.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.MUST)
+				.add(new KnnVectorFieldExistsQuery("vector"), BooleanClause.Occur.MUST)
+				.build();
 
-        // 返回Top5的结果
-        int resultTopN = 10000000;
+		// 返回Top5的结果
+		int resultTopN = 10000000;
 
-        int hits = searcher.count(booleanQuery);
-        System.out.println("hits: "+hits+"");
+		int hits = searcher.count(booleanQuery);
+		System.out.println("hits: " + hits + "");
 
 
+		System.out.println("DONE");
+	}
 
-        System.out.println("DONE");
-    }
+	private float[] randomVector(int dim, Random random) {
+		float[] v = new float[dim];
+		for (int i = 0; i < dim; i++) {
+			v[i] = random.nextFloat();
+		}
+		VectorUtil.l2normalize(v);
+		return v;
+	}
 
-    private float[] randomVector(int dim, Random random) {
-        float[] v = new float[dim];
-        for (int i = 0; i < dim; i++) {
-            v[i] = random.nextFloat();
-        }
-        VectorUtil.l2normalize(v);
-        return v;
-    }
-    public static void main(String[] args) throws Exception{
-        DocValuesExistQuery test = new DocValuesExistQuery();
-        test.doSearch();
-    }
+	public static void main(String[] args) throws Exception {
+		DocValuesExistQuery test = new DocValuesExistQuery();
+		test.doSearch();
+	}
 }

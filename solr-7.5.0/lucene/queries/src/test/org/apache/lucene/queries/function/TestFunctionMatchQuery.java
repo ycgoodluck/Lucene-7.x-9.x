@@ -30,32 +30,32 @@ import org.junit.BeforeClass;
 
 public class TestFunctionMatchQuery extends FunctionTestSetup {
 
-  static IndexReader reader;
-  static IndexSearcher searcher;
+	static IndexReader reader;
+	static IndexSearcher searcher;
 
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    createIndex(true);
-    reader = DirectoryReader.open(dir);
-    searcher = new IndexSearcher(reader);
-  }
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		createIndex(true);
+		reader = DirectoryReader.open(dir);
+		searcher = new IndexSearcher(reader);
+	}
 
-  @AfterClass
-  public static void afterClass() throws Exception {
-    reader.close();
-  }
+	@AfterClass
+	public static void afterClass() throws Exception {
+		reader.close();
+	}
 
-  public void testRangeMatching() throws IOException {
-    DoubleValuesSource in = DoubleValuesSource.fromFloatField(FLOAT_FIELD);
-    FunctionMatchQuery fmq = new FunctionMatchQuery(in, d -> d >= 2 && d < 4);
-    TopDocs docs = searcher.search(fmq, 10);
+	public void testRangeMatching() throws IOException {
+		DoubleValuesSource in = DoubleValuesSource.fromFloatField(FLOAT_FIELD);
+		FunctionMatchQuery fmq = new FunctionMatchQuery(in, d -> d >= 2 && d < 4);
+		TopDocs docs = searcher.search(fmq, 10);
 
-    assertEquals(2, docs.totalHits);
-    assertEquals(9, docs.scoreDocs[0].doc);
-    assertEquals(13, docs.scoreDocs[1].doc);
+		assertEquals(2, docs.totalHits);
+		assertEquals(9, docs.scoreDocs[0].doc);
+		assertEquals(13, docs.scoreDocs[1].doc);
 
-    QueryUtils.check(random(), fmq, searcher, rarely());
+		QueryUtils.check(random(), fmq, searcher, rarely());
 
-  }
+	}
 
 }

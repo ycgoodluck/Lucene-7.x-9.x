@@ -23,8 +23,8 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.lv.LatvianStemFilter;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
- * Factory for {@link LatvianStemFilter}. 
+/**
+ * Factory for {@link LatvianStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_lvstem" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -33,20 +33,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.LatvianStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.2.0
  */
 public class LatvianStemFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new LatvianStemFilterFactory */
-  public LatvianStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new LatvianStemFilter(input);
-  }
+
+	/**
+	 * Creates a new LatvianStemFilterFactory
+	 */
+	public LatvianStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new LatvianStemFilter(input);
+	}
 }

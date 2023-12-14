@@ -39,75 +39,75 @@ import org.apache.lucene.util.NamedThreadFactory;
  */
 public class ClassScanner {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private final String packageName;
-  private final ClassLoader[] classLoaders;
+	private final String packageName;
+	private final ClassLoader[] classLoaders;
 
-  public ClassScanner(String packageName, ClassLoader... classLoaders) {
-    this.packageName = packageName;
-    this.classLoaders = classLoaders;
-  }
+	public ClassScanner(String packageName, ClassLoader... classLoaders) {
+		this.packageName = packageName;
+		this.classLoaders = classLoaders;
+	}
 
-  public <T> Set<Class<? extends T>> scanSubTypes(Class<T> superType) {
-    final int numThreads = Runtime.getRuntime().availableProcessors();
+	public <T> Set<Class<? extends T>> scanSubTypes(Class<T> superType) {
+		final int numThreads = Runtime.getRuntime().availableProcessors();
 
-    List<SubtypeCollector<T>> collectors = new ArrayList<>();
-    for (int i = 0; i < numThreads; i++) {
-      collectors.add(new SubtypeCollector<T>(superType, packageName, classLoaders));
-    }
+		List<SubtypeCollector<T>> collectors = new ArrayList<>();
+		for (int i = 0; i < numThreads; i++) {
+			collectors.add(new SubtypeCollector<T>(superType, packageName, classLoaders));
+		}
 
-    try {
-      List<URL> urls = getJarUrls();
-      for (int i = 0; i < urls.size(); i++) {
-        collectors.get(i % numThreads).addUrl(urls.get(i));
-      }
+		try {
+			List<URL> urls = getJarUrls();
+			for (int i = 0; i < urls.size(); i++) {
+				collectors.get(i % numThreads).addUrl(urls.get(i));
+			}
 
-      ExecutorService executorService = Executors.newFixedThreadPool(numThreads, new NamedThreadFactory("scanner-scan-subtypes"));
-      for (SubtypeCollector<T> collector : collectors) {
-        executorService.submit(collector);
-      }
+			ExecutorService executorService = Executors.newFixedThreadPool(numThreads, new NamedThreadFactory("scanner-scan-subtypes"));
+			for (SubtypeCollector<T> collector : collectors) {
+				executorService.submit(collector);
+			}
 
-      try {
-        executorService.shutdown();
-        executorService.awaitTermination(10, TimeUnit.SECONDS);
-      } catch (InterruptedException e) {
-      } finally {
-        executorService.shutdownNow();
-      }
+			try {
+				executorService.shutdown();
+				executorService.awaitTermination(10, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+			} finally {
+				executorService.shutdownNow();
+			}
 
-      Set<Class<? extends T>> types = new HashSet<>();
-      for (SubtypeCollector<T> collector : collectors) {
-        types.addAll(collector.getTypes());
-      }
-      return types;
-    } catch (IOException e) {
-      log.error("Cannot load jar file entries", e);
-    }
-    return Collections.emptySet();
-  }
+			Set<Class<? extends T>> types = new HashSet<>();
+			for (SubtypeCollector<T> collector : collectors) {
+				types.addAll(collector.getTypes());
+			}
+			return types;
+		} catch (IOException e) {
+			log.error("Cannot load jar file entries", e);
+		}
+		return Collections.emptySet();
+	}
 
-  private List<URL> getJarUrls() throws IOException {
-    List<URL> urls = new ArrayList<>();
-    String resourceName = resourceName(packageName);
-    for (ClassLoader loader : classLoaders) {
-      for (Enumeration<URL> e = loader.getResources(resourceName); e.hasMoreElements(); ) {
-        URL url = e.nextElement();
-        // extract jar file path from the resource name
-        int index = url.getPath().lastIndexOf(".jar");
-        if (index > 0) {
-          String path = url.getPath().substring(0, index + 4);
-          urls.add(new URL(path));
-        }
-      }
-    }
-    return  urls;
-  }
+	private List<URL> getJarUrls() throws IOException {
+		List<URL> urls = new ArrayList<>();
+		String resourceName = resourceName(packageName);
+		for (ClassLoader loader : classLoaders) {
+			for (Enumeration<URL> e = loader.getResources(resourceName); e.hasMoreElements(); ) {
+				URL url = e.nextElement();
+				// extract jar file path from the resource name
+				int index = url.getPath().lastIndexOf(".jar");
+				if (index > 0) {
+					String path = url.getPath().substring(0, index + 4);
+					urls.add(new URL(path));
+				}
+			}
+		}
+		return urls;
+	}
 
-  private static String resourceName(String packageName) {
-    if (packageName == null || packageName.equals("")) {
-      return packageName;
-    }
-    return packageName.replace('.', '/');
-  }
+	private static String resourceName(String packageName) {
+		if (packageName == null || packageName.equals("")) {
+			return packageName;
+		}
+		return packageName.replace('.', '/');
+	}
 }

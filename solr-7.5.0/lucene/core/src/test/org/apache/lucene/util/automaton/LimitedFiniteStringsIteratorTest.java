@@ -31,66 +31,66 @@ import static org.apache.lucene.util.automaton.FiniteStringsIteratorTest.getFini
  * Test for {@link FiniteStringsIterator}.
  */
 public class LimitedFiniteStringsIteratorTest extends LuceneTestCase {
- public void testRandomFiniteStrings() {
-    // Just makes sure we can run on any random finite
-    // automaton:
-    int iters = atLeast(100);
-    for(int i=0;i<iters;i++) {
-      Automaton a = AutomatonTestUtil.randomAutomaton(random());
-      try {
-        // Must pass a limit because the random automaton
-        // can accept MANY strings:
-        getFiniteStrings(new LimitedFiniteStringsIterator(a, TestUtil.nextInt(random(), 1, 1000)));
-        // NOTE: cannot do this, because the method is not
-        // guaranteed to detect cycles when you have a limit
-        //assertTrue(Operations.isFinite(a));
-      } catch (IllegalArgumentException iae) {
-        assertFalse(Operations.isFinite(a));
-      }
-    }
-  }
+	public void testRandomFiniteStrings() {
+		// Just makes sure we can run on any random finite
+		// automaton:
+		int iters = atLeast(100);
+		for (int i = 0; i < iters; i++) {
+			Automaton a = AutomatonTestUtil.randomAutomaton(random());
+			try {
+				// Must pass a limit because the random automaton
+				// can accept MANY strings:
+				getFiniteStrings(new LimitedFiniteStringsIterator(a, TestUtil.nextInt(random(), 1, 1000)));
+				// NOTE: cannot do this, because the method is not
+				// guaranteed to detect cycles when you have a limit
+				//assertTrue(Operations.isFinite(a));
+			} catch (IllegalArgumentException iae) {
+				assertFalse(Operations.isFinite(a));
+			}
+		}
+	}
 
-  public void testInvalidLimitNegative() {
-    Automaton a = AutomatonTestUtil.randomAutomaton(random());
-    expectThrows(IllegalArgumentException.class, () -> {
-      new LimitedFiniteStringsIterator(a, -7);
-      fail("did not hit exception");
-    });
-  }
+	public void testInvalidLimitNegative() {
+		Automaton a = AutomatonTestUtil.randomAutomaton(random());
+		expectThrows(IllegalArgumentException.class, () -> {
+			new LimitedFiniteStringsIterator(a, -7);
+			fail("did not hit exception");
+		});
+	}
 
-  public void testInvalidLimitNull() {
-    Automaton a = AutomatonTestUtil.randomAutomaton(random());
-    expectThrows(IllegalArgumentException.class, () -> {
-      new LimitedFiniteStringsIterator(a, 0);
-    });
-  }
+	public void testInvalidLimitNull() {
+		Automaton a = AutomatonTestUtil.randomAutomaton(random());
+		expectThrows(IllegalArgumentException.class, () -> {
+			new LimitedFiniteStringsIterator(a, 0);
+		});
+	}
 
-  public void testSingleton() {
-    Automaton a = Automata.makeString("foobar");
-    List<IntsRef> actual = getFiniteStrings(new LimitedFiniteStringsIterator(a, 1));
-    assertEquals(1, actual.size());
-    IntsRefBuilder scratch = new IntsRefBuilder();
-    Util.toUTF32("foobar".toCharArray(), 0, 6, scratch);
-    assertTrue(actual.contains(scratch.get()));
-  }
+	public void testSingleton() {
+		Automaton a = Automata.makeString("foobar");
+		List<IntsRef> actual = getFiniteStrings(new LimitedFiniteStringsIterator(a, 1));
+		assertEquals(1, actual.size());
+		IntsRefBuilder scratch = new IntsRefBuilder();
+		Util.toUTF32("foobar".toCharArray(), 0, 6, scratch);
+		assertTrue(actual.contains(scratch.get()));
+	}
 
-  public void testLimit() {
-    Automaton a = Operations.union(Automata.makeString("foo"), Automata.makeString("bar"));
+	public void testLimit() {
+		Automaton a = Operations.union(Automata.makeString("foo"), Automata.makeString("bar"));
 
-    // Test without limit
-    FiniteStringsIterator withoutLimit = new LimitedFiniteStringsIterator(a, -1);
-    assertEquals(2, getFiniteStrings(withoutLimit).size());
+		// Test without limit
+		FiniteStringsIterator withoutLimit = new LimitedFiniteStringsIterator(a, -1);
+		assertEquals(2, getFiniteStrings(withoutLimit).size());
 
-    // Test with limit
-    FiniteStringsIterator withLimit = new LimitedFiniteStringsIterator(a, 1);
-    assertEquals(1, getFiniteStrings(withLimit).size());
-  }
+		// Test with limit
+		FiniteStringsIterator withLimit = new LimitedFiniteStringsIterator(a, 1);
+		assertEquals(1, getFiniteStrings(withLimit).size());
+	}
 
-  public void testSize() {
-    Automaton a = Operations.union(Automata.makeString("foo"), Automata.makeString("bar"));
-    LimitedFiniteStringsIterator iterator = new LimitedFiniteStringsIterator(a, -1);
-    List<IntsRef> actual = getFiniteStrings(iterator);
-    assertEquals(2, actual.size());
-    assertEquals(2, iterator.size());
-  }
+	public void testSize() {
+		Automaton a = Operations.union(Automata.makeString("foo"), Automata.makeString("bar"));
+		LimitedFiniteStringsIterator iterator = new LimitedFiniteStringsIterator(a, -1);
+		List<IntsRef> actual = getFiniteStrings(iterator);
+		assertEquals(2, actual.size());
+		assertEquals(2, iterator.size());
+	}
 }

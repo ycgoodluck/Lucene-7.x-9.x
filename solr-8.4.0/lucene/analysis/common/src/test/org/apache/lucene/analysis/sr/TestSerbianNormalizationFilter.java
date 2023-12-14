@@ -30,55 +30,57 @@ import org.apache.lucene.analysis.core.KeywordTokenizer;
  * Tests {@link SerbianNormalizationFilter}
  */
 public class TestSerbianNormalizationFilter extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        final Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-        final TokenStream stream = new SerbianNormalizationFilter(tokenizer);
-        return new TokenStreamComponents(tokenizer, stream);
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    analyzer.close();
-    super.tearDown();
-  }
-  
-  /**
-   * Tests Cyrillic text.
-   */
-  public void testCyrillic() throws IOException {
-    checkOneTerm(analyzer, "абвгдђежзијклљмнњопрстћуфхцчџш", "abvgddjezzijklljmnnjoprstcufhccdzs");
-  }
+	private Analyzer analyzer;
 
-  /**
-   * Tests Latin text.
-   */
-  public void testLatin() throws IOException {
-    checkOneTerm(analyzer, "abcčćddžđefghijklljmnnjoprsštuvzž", "abcccddzdjefghijklljmnnjoprsstuvzz");
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				final Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+				final TokenStream stream = new SerbianNormalizationFilter(tokenizer);
+				return new TokenStreamComponents(tokenizer, stream);
+			}
+		};
+	}
 
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new SerbianNormalizationFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	@Override
+	public void tearDown() throws Exception {
+		analyzer.close();
+		super.tearDown();
+	}
+
+	/**
+	 * Tests Cyrillic text.
+	 */
+	public void testCyrillic() throws IOException {
+		checkOneTerm(analyzer, "абвгдђежзијклљмнњопрстћуфхцчџш", "abvgddjezzijklljmnnjoprstcufhccdzs");
+	}
+
+	/**
+	 * Tests Latin text.
+	 */
+	public void testLatin() throws IOException {
+		checkOneTerm(analyzer, "abcčćddžđefghijklljmnnjoprsštuvzž", "abcccddzdjefghijklljmnnjoprsstuvzz");
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new SerbianNormalizationFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

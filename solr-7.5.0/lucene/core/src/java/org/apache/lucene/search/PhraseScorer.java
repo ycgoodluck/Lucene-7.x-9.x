@@ -23,63 +23,63 @@ import org.apache.lucene.search.similarities.Similarity;
 
 class PhraseScorer extends Scorer {
 
-  final PhraseMatcher matcher;
-  final boolean needsScores;
-  private final Similarity.SimScorer simScorer;
-  final float matchCost;
+	final PhraseMatcher matcher;
+	final boolean needsScores;
+	private final Similarity.SimScorer simScorer;
+	final float matchCost;
 
-  private float freq = 0;
+	private float freq = 0;
 
-  PhraseScorer(Weight weight, PhraseMatcher matcher, boolean needsScores, Similarity.SimScorer simScorer) {
-    super(weight);
-    this.matcher = matcher;
-    this.needsScores = needsScores;
-    this.simScorer = simScorer;
-    this.matchCost = matcher.getMatchCost();
-  }
+	PhraseScorer(Weight weight, PhraseMatcher matcher, boolean needsScores, Similarity.SimScorer simScorer) {
+		super(weight);
+		this.matcher = matcher;
+		this.needsScores = needsScores;
+		this.simScorer = simScorer;
+		this.matchCost = matcher.getMatchCost();
+	}
 
-  @Override
-  public TwoPhaseIterator twoPhaseIterator() {
-    return new TwoPhaseIterator(matcher.approximation) {
-      @Override
-      public boolean matches() throws IOException {
-        matcher.reset();
-        freq = 0;
-        return matcher.nextMatch();
-      }
+	@Override
+	public TwoPhaseIterator twoPhaseIterator() {
+		return new TwoPhaseIterator(matcher.approximation) {
+			@Override
+			public boolean matches() throws IOException {
+				matcher.reset();
+				freq = 0;
+				return matcher.nextMatch();
+			}
 
-      @Override
-      public float matchCost() {
-        return matchCost;
-      }
-    };
-  }
+			@Override
+			public float matchCost() {
+				return matchCost;
+			}
+		};
+	}
 
-  @Override
-  public int docID() {
-    return matcher.approximation.docID();
-  }
+	@Override
+	public int docID() {
+		return matcher.approximation.docID();
+	}
 
-  @Override
-  public float score() throws IOException {
-    if (freq == 0) {
-      freq = matcher.sloppyWeight(simScorer);
-      while (matcher.nextMatch()) {
-        freq += matcher.sloppyWeight(simScorer);
-      }
-    }
-    return simScorer.score(docID(), freq);
-  }
+	@Override
+	public float score() throws IOException {
+		if (freq == 0) {
+			freq = matcher.sloppyWeight(simScorer);
+			while (matcher.nextMatch()) {
+				freq += matcher.sloppyWeight(simScorer);
+			}
+		}
+		return simScorer.score(docID(), freq);
+	}
 
-  @Override
-  public DocIdSetIterator iterator() {
-    return TwoPhaseIterator.asDocIdSetIterator(twoPhaseIterator());
-  }
+	@Override
+	public DocIdSetIterator iterator() {
+		return TwoPhaseIterator.asDocIdSetIterator(twoPhaseIterator());
+	}
 
-  @Override
-  public String toString() {
-    return "PhraseScorer(" + weight + ")";
-  }
+	@Override
+	public String toString() {
+		return "PhraseScorer(" + weight + ")";
+	}
 
 
 }

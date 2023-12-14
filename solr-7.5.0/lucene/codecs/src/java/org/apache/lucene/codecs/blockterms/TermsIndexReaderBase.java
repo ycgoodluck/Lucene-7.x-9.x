@@ -36,40 +36,50 @@ import org.apache.lucene.util.BytesRef;
  * indexed terms (many pairs of BytesRef text + long
  * fileOffset), and then this reader must be able to
  * retrieve the nearest index term to a provided term
- * text. 
- * @lucene.experimental */
+ * text.
+ *
+ * @lucene.experimental
+ */
 
 public abstract class TermsIndexReaderBase implements Closeable, Accountable {
 
-  public abstract FieldIndexEnum getFieldEnum(FieldInfo fieldInfo);
+	public abstract FieldIndexEnum getFieldEnum(FieldInfo fieldInfo);
 
-  @Override
-  public abstract void close() throws IOException;
+	@Override
+	public abstract void close() throws IOException;
 
-  public abstract boolean supportsOrd();
+	public abstract boolean supportsOrd();
 
-  /** 
-   * Similar to TermsEnum, except, the only "metadata" it
-   * reports for a given indexed term is the long fileOffset
-   * into the main terms dictionary file.
-   */
-  public static abstract class FieldIndexEnum {
+	/**
+	 * Similar to TermsEnum, except, the only "metadata" it
+	 * reports for a given indexed term is the long fileOffset
+	 * into the main terms dictionary file.
+	 */
+	public static abstract class FieldIndexEnum {
 
-    /** Seeks to "largest" indexed term that's &lt;=
-     *  term; returns file pointer index (into the main
-     *  terms index file) for that term */
-    public abstract long seek(BytesRef term) throws IOException;
+		/**
+		 * Seeks to "largest" indexed term that's &lt;=
+		 * term; returns file pointer index (into the main
+		 * terms index file) for that term
+		 */
+		public abstract long seek(BytesRef term) throws IOException;
 
-    /** Returns -1 at end */
-    public abstract long next() throws IOException;
+		/**
+		 * Returns -1 at end
+		 */
+		public abstract long next() throws IOException;
 
-    public abstract BytesRef term();
+		public abstract BytesRef term();
 
-    /** Only implemented if {@link TermsIndexReaderBase#supportsOrd()} returns true. */
-    public abstract long seek(long ord) throws IOException;
-    
-    /** Only implemented if {@link TermsIndexReaderBase#supportsOrd()} returns true. */
-    public abstract long ord();
-  }
+		/**
+		 * Only implemented if {@link TermsIndexReaderBase#supportsOrd()} returns true.
+		 */
+		public abstract long seek(long ord) throws IOException;
+
+		/**
+		 * Only implemented if {@link TermsIndexReaderBase#supportsOrd()} returns true.
+		 */
+		public abstract long ord();
+	}
 
 }

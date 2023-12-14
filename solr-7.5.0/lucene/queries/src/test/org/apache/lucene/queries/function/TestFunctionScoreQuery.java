@@ -38,144 +38,144 @@ import org.junit.BeforeClass;
 
 public class TestFunctionScoreQuery extends FunctionTestSetup {
 
-  static IndexReader reader;
-  static IndexSearcher searcher;
+	static IndexReader reader;
+	static IndexSearcher searcher;
 
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    createIndex(true);
-    reader = DirectoryReader.open(dir);
-    searcher = new IndexSearcher(reader);
-  }
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		createIndex(true);
+		reader = DirectoryReader.open(dir);
+		searcher = new IndexSearcher(reader);
+	}
 
-  @AfterClass
-  public static void afterClass() throws Exception {
-    reader.close();
-  }
+	@AfterClass
+	public static void afterClass() throws Exception {
+		reader.close();
+	}
 
-  public void testEqualities() {
+	public void testEqualities() {
 
-    Query q1 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(1));
-    Query q2 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(1));
-    Query q3 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(2));
-    Query q4 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(2));
+		Query q1 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(1));
+		Query q2 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(1));
+		Query q3 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(2));
+		Query q4 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(2));
 
-    QueryUtils.check(q1);
-    QueryUtils.checkUnequal(q1, q3);
-    QueryUtils.checkUnequal(q1, q2);
-    QueryUtils.checkUnequal(q2, q3);
-    QueryUtils.checkEqual(q3, q4);
+		QueryUtils.check(q1);
+		QueryUtils.checkUnequal(q1, q3);
+		QueryUtils.checkUnequal(q1, q2);
+		QueryUtils.checkUnequal(q2, q3);
+		QueryUtils.checkEqual(q3, q4);
 
-    Query bq1 = FunctionScoreQuery.boostByValue(new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(2));
-    QueryUtils.check(bq1);
-    Query bq2 = FunctionScoreQuery.boostByValue(new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(4));
-    QueryUtils.checkUnequal(bq1, bq2);
-    Query bq3 = FunctionScoreQuery.boostByValue(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(4));
-    QueryUtils.checkUnequal(bq1, bq3);
-    QueryUtils.checkUnequal(bq2, bq3);
-    Query bq4 = FunctionScoreQuery.boostByValue(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(4));
-    QueryUtils.checkEqual(bq3, bq4);
+		Query bq1 = FunctionScoreQuery.boostByValue(new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(2));
+		QueryUtils.check(bq1);
+		Query bq2 = FunctionScoreQuery.boostByValue(new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(4));
+		QueryUtils.checkUnequal(bq1, bq2);
+		Query bq3 = FunctionScoreQuery.boostByValue(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(4));
+		QueryUtils.checkUnequal(bq1, bq3);
+		QueryUtils.checkUnequal(bq2, bq3);
+		Query bq4 = FunctionScoreQuery.boostByValue(new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(4));
+		QueryUtils.checkEqual(bq3, bq4);
 
-    Query qq1 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "a")), new TermQuery(new Term(TEXT_FIELD, "z")), 0.1f);
-    QueryUtils.check(qq1);
-    Query qq2 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "a")), new TermQuery(new Term(TEXT_FIELD, "z")), 0.2f);
-    QueryUtils.checkUnequal(qq1, qq2);
-    Query qq3 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "b")), new TermQuery(new Term(TEXT_FIELD, "z")), 0.1f);
-    QueryUtils.checkUnequal(qq1, qq3);
-    QueryUtils.checkUnequal(qq2, qq3);
-    Query qq4 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "a")), new TermQuery(new Term(TEXT_FIELD, "zz")), 0.1f);
-    QueryUtils.checkUnequal(qq1, qq4);
-    QueryUtils.checkUnequal(qq2, qq4);
-    QueryUtils.checkUnequal(qq3, qq4);
-    Query qq5 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "a")), new TermQuery(new Term(TEXT_FIELD, "z")), 0.1f);
-    QueryUtils.checkEqual(qq1, qq5);
+		Query qq1 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "a")), new TermQuery(new Term(TEXT_FIELD, "z")), 0.1f);
+		QueryUtils.check(qq1);
+		Query qq2 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "a")), new TermQuery(new Term(TEXT_FIELD, "z")), 0.2f);
+		QueryUtils.checkUnequal(qq1, qq2);
+		Query qq3 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "b")), new TermQuery(new Term(TEXT_FIELD, "z")), 0.1f);
+		QueryUtils.checkUnequal(qq1, qq3);
+		QueryUtils.checkUnequal(qq2, qq3);
+		Query qq4 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "a")), new TermQuery(new Term(TEXT_FIELD, "zz")), 0.1f);
+		QueryUtils.checkUnequal(qq1, qq4);
+		QueryUtils.checkUnequal(qq2, qq4);
+		QueryUtils.checkUnequal(qq3, qq4);
+		Query qq5 = FunctionScoreQuery.boostByQuery(new TermQuery(new Term(TEXT_FIELD, "a")), new TermQuery(new Term(TEXT_FIELD, "z")), 0.1f);
+		QueryUtils.checkEqual(qq1, qq5);
 
-  }
+	}
 
-  // FunctionQuery equivalent
-  public void testSimpleSourceScore() throws Exception {
+	// FunctionQuery equivalent
+	public void testSimpleSourceScore() throws Exception {
 
-    FunctionScoreQuery q = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "first")),
-        DoubleValuesSource.fromIntField(INT_FIELD));
+		FunctionScoreQuery q = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "first")),
+			DoubleValuesSource.fromIntField(INT_FIELD));
 
-    QueryUtils.check(random(), q, searcher, rarely());
+		QueryUtils.check(random(), q, searcher, rarely());
 
-    int expectedDocs[] = new int[]{ 4, 7, 9 };
-    TopDocs docs = searcher.search(q, 4);
-    assertEquals(expectedDocs.length, docs.totalHits);
-    for (int i = 0; i < expectedDocs.length; i++) {
-      assertEquals(docs.scoreDocs[i].doc, expectedDocs[i]);
-    }
+		int expectedDocs[] = new int[]{4, 7, 9};
+		TopDocs docs = searcher.search(q, 4);
+		assertEquals(expectedDocs.length, docs.totalHits);
+		for (int i = 0; i < expectedDocs.length; i++) {
+			assertEquals(docs.scoreDocs[i].doc, expectedDocs[i]);
+		}
 
-  }
+	}
 
-  // CustomScoreQuery and BoostedQuery equivalent
-  public void testScoreModifyingSource() throws Exception {
+	// CustomScoreQuery and BoostedQuery equivalent
+	public void testScoreModifyingSource() throws Exception {
 
-    BooleanQuery bq = new BooleanQuery.Builder()
-        .add(new TermQuery(new Term(TEXT_FIELD, "first")), BooleanClause.Occur.SHOULD)
-        .add(new TermQuery(new Term(TEXT_FIELD, "text")), BooleanClause.Occur.SHOULD)
-        .build();
-    TopDocs plain = searcher.search(bq, 1);
+		BooleanQuery bq = new BooleanQuery.Builder()
+			.add(new TermQuery(new Term(TEXT_FIELD, "first")), BooleanClause.Occur.SHOULD)
+			.add(new TermQuery(new Term(TEXT_FIELD, "text")), BooleanClause.Occur.SHOULD)
+			.build();
+		TopDocs plain = searcher.search(bq, 1);
 
-    FunctionScoreQuery fq = FunctionScoreQuery.boostByValue(bq, DoubleValuesSource.fromIntField("iii"));
+		FunctionScoreQuery fq = FunctionScoreQuery.boostByValue(bq, DoubleValuesSource.fromIntField("iii"));
 
-    QueryUtils.check(random(), fq, searcher, rarely());
+		QueryUtils.check(random(), fq, searcher, rarely());
 
-    int[] expectedDocs = new int[]{ 4, 7, 9, 8, 12 };
-    TopDocs docs = searcher.search(fq, 5);
-    assertEquals(plain.totalHits, docs.totalHits);
-    for (int i = 0; i < expectedDocs.length; i++) {
-      assertEquals(expectedDocs[i], docs.scoreDocs[i].doc);
-    }
+		int[] expectedDocs = new int[]{4, 7, 9, 8, 12};
+		TopDocs docs = searcher.search(fq, 5);
+		assertEquals(plain.totalHits, docs.totalHits);
+		for (int i = 0; i < expectedDocs.length; i++) {
+			assertEquals(expectedDocs[i], docs.scoreDocs[i].doc);
+		}
 
-    Explanation expl = searcher.explain(fq, 4);
-    assertTrue(expl.toString().contains("first"));
-    assertTrue(expl.toString().contains("iii"));
+		Explanation expl = searcher.explain(fq, 4);
+		assertTrue(expl.toString().contains("first"));
+		assertTrue(expl.toString().contains("iii"));
 
-  }
+	}
 
-  // BoostingQuery equivalent
-  public void testCombiningMultipleQueryScores() throws Exception {
+	// BoostingQuery equivalent
+	public void testCombiningMultipleQueryScores() throws Exception {
 
-    TermQuery q = new TermQuery(new Term(TEXT_FIELD, "text"));
-    TopDocs plain = searcher.search(q, 1);
+		TermQuery q = new TermQuery(new Term(TEXT_FIELD, "text"));
+		TopDocs plain = searcher.search(q, 1);
 
-    FunctionScoreQuery fq
-        = FunctionScoreQuery.boostByQuery(q, new TermQuery(new Term(TEXT_FIELD, "rechecking")), 100f);
+		FunctionScoreQuery fq
+			= FunctionScoreQuery.boostByQuery(q, new TermQuery(new Term(TEXT_FIELD, "rechecking")), 100f);
 
-    QueryUtils.check(random(), fq, searcher, rarely());
+		QueryUtils.check(random(), fq, searcher, rarely());
 
-    int[] expectedDocs = new int[]{ 6, 1, 0, 2, 8 };
-    TopDocs docs = searcher.search(fq, 20);
-    assertEquals(plain.totalHits, docs.totalHits);
-    for (int i = 0; i < expectedDocs.length; i++) {
-      assertEquals(expectedDocs[i], docs.scoreDocs[i].doc);
-    }
+		int[] expectedDocs = new int[]{6, 1, 0, 2, 8};
+		TopDocs docs = searcher.search(fq, 20);
+		assertEquals(plain.totalHits, docs.totalHits);
+		for (int i = 0; i < expectedDocs.length; i++) {
+			assertEquals(expectedDocs[i], docs.scoreDocs[i].doc);
+		}
 
-    Explanation expl = searcher.explain(fq, 6);
-    assertTrue(expl.toString().contains("rechecking"));
-    assertTrue(expl.toString().contains("text"));
-  }
+		Explanation expl = searcher.explain(fq, 6);
+		assertTrue(expl.toString().contains("rechecking"));
+		assertTrue(expl.toString().contains("text"));
+	}
 
-  // check boosts with non-distributive score source
-  public void testBoostsAreAppliedLast() throws Exception {
+	// check boosts with non-distributive score source
+	public void testBoostsAreAppliedLast() throws Exception {
 
-    SimpleBindings bindings = new SimpleBindings();
-    bindings.add("score", DoubleValuesSource.SCORES);
-    Expression expr = JavascriptCompiler.compile("ln(score + 4)");
+		SimpleBindings bindings = new SimpleBindings();
+		bindings.add("score", DoubleValuesSource.SCORES);
+		Expression expr = JavascriptCompiler.compile("ln(score + 4)");
 
-    Query q1 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "text")), expr.getDoubleValuesSource(bindings));
-    TopDocs plain = searcher.search(q1, 5);
+		Query q1 = new FunctionScoreQuery(new TermQuery(new Term(TEXT_FIELD, "text")), expr.getDoubleValuesSource(bindings));
+		TopDocs plain = searcher.search(q1, 5);
 
-    Query boosted = new BoostQuery(q1, 2);
-    TopDocs afterboost = searcher.search(boosted, 5);
-    assertEquals(plain.totalHits, afterboost.totalHits);
-    for (int i = 0; i < 5; i++) {
-      assertEquals(plain.scoreDocs[i].doc, afterboost.scoreDocs[i].doc);
-      assertEquals(plain.scoreDocs[i].score, afterboost.scoreDocs[i].score / 2, 0.0001);
-    }
+		Query boosted = new BoostQuery(q1, 2);
+		TopDocs afterboost = searcher.search(boosted, 5);
+		assertEquals(plain.totalHits, afterboost.totalHits);
+		for (int i = 0; i < 5; i++) {
+			assertEquals(plain.scoreDocs[i].doc, afterboost.scoreDocs[i].doc);
+			assertEquals(plain.scoreDocs[i].score, afterboost.scoreDocs[i].score / 2, 0.0001);
+		}
 
-  }
+	}
 
 }

@@ -25,7 +25,7 @@ import org.apache.lucene.analysis.util.MultiTermAwareComponent;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link DecimalDigitFilter}. 
+ * Factory for {@link DecimalDigitFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_lwrcase" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -33,25 +33,28 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.DecimalDigitFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 5.4.0
  */
 public class DecimalDigitFilterFactory extends TokenFilterFactory implements MultiTermAwareComponent {
-  
-  /** Creates a new DecimalDigitFilterFactory */
-  public DecimalDigitFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
 
-  @Override
-  public DecimalDigitFilter create(TokenStream input) {
-    return new DecimalDigitFilter(input);
-  }
+	/**
+	 * Creates a new DecimalDigitFilterFactory
+	 */
+	public DecimalDigitFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	@Override
+	public DecimalDigitFilter create(TokenStream input) {
+		return new DecimalDigitFilter(input);
+	}
+
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

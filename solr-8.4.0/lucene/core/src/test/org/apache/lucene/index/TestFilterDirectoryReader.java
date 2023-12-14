@@ -31,121 +31,121 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestFilterDirectoryReader extends LuceneTestCase {
 
-  private static class DummySubReaderWrapper extends SubReaderWrapper {
+	private static class DummySubReaderWrapper extends SubReaderWrapper {
 
-    @Override
-    public LeafReader wrap(LeafReader reader) {
-      return reader;
-    }
-    
-  }
+		@Override
+		public LeafReader wrap(LeafReader reader) {
+			return reader;
+		}
 
-  private static class DummyFilterDirectoryReader extends FilterDirectoryReader {
+	}
 
-    public DummyFilterDirectoryReader(DirectoryReader in) throws IOException {
-      super(in, new DummySubReaderWrapper());
-    }
+	private static class DummyFilterDirectoryReader extends FilterDirectoryReader {
 
-    @Override
-    protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
-      return new DummyFilterDirectoryReader(in);
-    }
+		public DummyFilterDirectoryReader(DirectoryReader in) throws IOException {
+			super(in, new DummySubReaderWrapper());
+		}
 
-    @Override
-    public CacheHelper getReaderCacheHelper() {
-      return in.getReaderCacheHelper();
-    }
-    
-  }
+		@Override
+		protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
+			return new DummyFilterDirectoryReader(in);
+		}
 
-  public void testDoubleClose() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
-    w.addDocument(new Document());
+		@Override
+		public CacheHelper getReaderCacheHelper() {
+			return in.getReaderCacheHelper();
+		}
 
-    DirectoryReader reader = DirectoryReader.open(w);
-    DirectoryReader wrapped = new DummyFilterDirectoryReader(reader);
+	}
 
-    // Calling close() on the original reader and wrapped reader should only close
-    // the original reader once (as per Closeable.close() contract that close() is
-    // idempotent)
-    List<DirectoryReader> readers = Arrays.asList(reader, wrapped);
-    Collections.shuffle(readers, random());
-    IOUtils.close(readers);
+	public void testDoubleClose() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
+		w.addDocument(new Document());
 
-    w.close();
-    dir.close();
-  }
+		DirectoryReader reader = DirectoryReader.open(w);
+		DirectoryReader wrapped = new DummyFilterDirectoryReader(reader);
 
-  private static class NumDocsCountingSubReaderWrapper extends SubReaderWrapper {
+		// Calling close() on the original reader and wrapped reader should only close
+		// the original reader once (as per Closeable.close() contract that close() is
+		// idempotent)
+		List<DirectoryReader> readers = Arrays.asList(reader, wrapped);
+		Collections.shuffle(readers, random());
+		IOUtils.close(readers);
 
-    private final AtomicLong numDocsCallCount;
+		w.close();
+		dir.close();
+	}
 
-    NumDocsCountingSubReaderWrapper(AtomicLong numDocsCallCount) {
-      this.numDocsCallCount = numDocsCallCount;
-    }
+	private static class NumDocsCountingSubReaderWrapper extends SubReaderWrapper {
 
-    @Override
-    public LeafReader wrap(LeafReader reader) {
-      return new FilterLeafReader(reader) {
-        @Override
-        public int numDocs() {
-          numDocsCallCount.incrementAndGet();
-          return super.numDocs();
-        }
+		private final AtomicLong numDocsCallCount;
 
-        @Override
-        public CacheHelper getCoreCacheHelper() {
-          return in.getCoreCacheHelper();
-        }
+		NumDocsCountingSubReaderWrapper(AtomicLong numDocsCallCount) {
+			this.numDocsCallCount = numDocsCallCount;
+		}
 
-        @Override
-        public CacheHelper getReaderCacheHelper() {
-          return in.getReaderCacheHelper();
-        }
-      };
-    }
+		@Override
+		public LeafReader wrap(LeafReader reader) {
+			return new FilterLeafReader(reader) {
+				@Override
+				public int numDocs() {
+					numDocsCallCount.incrementAndGet();
+					return super.numDocs();
+				}
 
-  }
+				@Override
+				public CacheHelper getCoreCacheHelper() {
+					return in.getCoreCacheHelper();
+				}
 
-  private static class NumDocsCountingFilterDirectoryReader extends FilterDirectoryReader {
+				@Override
+				public CacheHelper getReaderCacheHelper() {
+					return in.getReaderCacheHelper();
+				}
+			};
+		}
 
-    private final AtomicLong numDocsCallCount;
+	}
 
-    public NumDocsCountingFilterDirectoryReader(DirectoryReader in, AtomicLong numDocsCallCount) throws IOException {
-      super(in, new NumDocsCountingSubReaderWrapper(numDocsCallCount));
-      this.numDocsCallCount = numDocsCallCount;
-    }
+	private static class NumDocsCountingFilterDirectoryReader extends FilterDirectoryReader {
 
-    @Override
-    protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
-      return new NumDocsCountingFilterDirectoryReader(in, numDocsCallCount);
-    }
+		private final AtomicLong numDocsCallCount;
 
-    @Override
-    public CacheHelper getReaderCacheHelper() {
-      return in.getReaderCacheHelper();
-    }
+		public NumDocsCountingFilterDirectoryReader(DirectoryReader in, AtomicLong numDocsCallCount) throws IOException {
+			super(in, new NumDocsCountingSubReaderWrapper(numDocsCallCount));
+			this.numDocsCallCount = numDocsCallCount;
+		}
 
-  }
+		@Override
+		protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
+			return new NumDocsCountingFilterDirectoryReader(in, numDocsCallCount);
+		}
 
-  public void testFilterDirectoryReaderNumDocsIsLazy() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
-    w.addDocument(new Document());
-    DirectoryReader directoryReader = DirectoryReader.open(w);
-    w.close();
+		@Override
+		public CacheHelper getReaderCacheHelper() {
+			return in.getReaderCacheHelper();
+		}
 
-    AtomicLong numDocsCallCount = new AtomicLong();
-    DirectoryReader directoryReaderWrapper = new NumDocsCountingFilterDirectoryReader(directoryReader, numDocsCallCount);
-    assertEquals(0L, numDocsCallCount.get());
-    assertEquals(1, directoryReaderWrapper.numDocs());
-    assertEquals(1L, numDocsCallCount.get()); // one segment, so called once
-    assertEquals(1, directoryReaderWrapper.numDocs());
-    assertEquals(1L, numDocsCallCount.get());
+	}
 
-    directoryReader.close();
-    dir.close();
-  }
+	public void testFilterDirectoryReaderNumDocsIsLazy() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
+		w.addDocument(new Document());
+		DirectoryReader directoryReader = DirectoryReader.open(w);
+		w.close();
+
+		AtomicLong numDocsCallCount = new AtomicLong();
+		DirectoryReader directoryReaderWrapper = new NumDocsCountingFilterDirectoryReader(directoryReader, numDocsCallCount);
+		assertEquals(0L, numDocsCallCount.get());
+		assertEquals(1, directoryReaderWrapper.numDocs());
+		assertEquals(1L, numDocsCallCount.get()); // one segment, so called once
+		assertEquals(1, directoryReaderWrapper.numDocs());
+		assertEquals(1L, numDocsCallCount.get());
+
+		directoryReader.close();
+		dir.close();
+	}
 
 }

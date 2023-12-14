@@ -25,29 +25,31 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 
-/** Simple tests for SingleInstanceLockFactory */
+/**
+ * Simple tests for SingleInstanceLockFactory
+ */
 public class TestSingleInstanceLockFactory extends BaseLockFactoryTestCase {
-  
-  @Override
-  protected Directory getDirectory(Path path) throws IOException {
-    return newDirectory(random(), new SingleInstanceLockFactory());
-  }
-  
-  // Verify: SingleInstanceLockFactory is the default lock for RAMDirectory
-  // Verify: RAMDirectory does basic locking correctly (can't create two IndexWriters)
-  public void testDefaultRAMDirectory() throws IOException {
-    RAMDirectory dir = new RAMDirectory();
-    
-    assertTrue("RAMDirectory did not use correct LockFactory: got " + dir.lockFactory,
-        dir.lockFactory instanceof SingleInstanceLockFactory);
-    
-    IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
-    
-    // Create a 2nd IndexWriter.  This should fail:
-    expectThrows(IOException.class, () -> {
-      new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())).setOpenMode(OpenMode.APPEND));
-    });
-    
-    writer.close();
-  }
+
+	@Override
+	protected Directory getDirectory(Path path) throws IOException {
+		return newDirectory(random(), new SingleInstanceLockFactory());
+	}
+
+	// Verify: SingleInstanceLockFactory is the default lock for RAMDirectory
+	// Verify: RAMDirectory does basic locking correctly (can't create two IndexWriters)
+	public void testDefaultRAMDirectory() throws IOException {
+		RAMDirectory dir = new RAMDirectory();
+
+		assertTrue("RAMDirectory did not use correct LockFactory: got " + dir.lockFactory,
+			dir.lockFactory instanceof SingleInstanceLockFactory);
+
+		IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+
+		// Create a 2nd IndexWriter.  This should fail:
+		expectThrows(IOException.class, () -> {
+			new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())).setOpenMode(OpenMode.APPEND));
+		});
+
+		writer.close();
+	}
 }

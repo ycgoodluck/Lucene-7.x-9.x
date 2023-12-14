@@ -21,53 +21,49 @@ import org.apache.lucene.queryparser.flexible.messages.NLSException;
 
 /**
  * Error class with NLS support
- * 
+ *
  * @see org.apache.lucene.queryparser.flexible.messages.NLS
  * @see org.apache.lucene.queryparser.flexible.messages.Message
  */
 public class QueryNodeError extends Error implements NLSException {
-  private Message message;
+	private Message message;
 
-  /**
-   * @param message
-   *          - NLS Message Object
-   */
-  public QueryNodeError(Message message) {
-    super(message.getKey());
+	/**
+	 * @param message - NLS Message Object
+	 */
+	public QueryNodeError(Message message) {
+		super(message.getKey());
 
-    this.message = message;
+		this.message = message;
 
-  }
+	}
 
-  /**
-   * @param throwable
-   *          - @see java.lang.Error
-   */
-  public QueryNodeError(Throwable throwable) {
-    super(throwable);
-  }
+	/**
+	 * @param throwable - @see java.lang.Error
+	 */
+	public QueryNodeError(Throwable throwable) {
+		super(throwable);
+	}
 
-  /**
-   * @param message
-   *          - NLS Message Object
-   * @param throwable
-   *          - @see java.lang.Error
-   */
-  public QueryNodeError(Message message, Throwable throwable) {
-    super(message.getKey(), throwable);
+	/**
+	 * @param message   - NLS Message Object
+	 * @param throwable - @see java.lang.Error
+	 */
+	public QueryNodeError(Message message, Throwable throwable) {
+		super(message.getKey(), throwable);
 
-    this.message = message;
+		this.message = message;
 
-  }
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.lucene.messages.NLSException#getMessageObject()
-   */
-  @Override
-  public Message getMessageObject() {
-    return this.message;
-  }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.apache.lucene.messages.NLSException#getMessageObject()
+	 */
+	@Override
+	public Message getMessageObject() {
+		return this.message;
+	}
 
 }

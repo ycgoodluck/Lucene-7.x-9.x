@@ -28,42 +28,51 @@ import org.apache.lucene.search.TermStatistics;
  */
 public class ClassicSimilarity extends TFIDFSimilarity {
 
-  /** Sole constructor: parameter-free */
-  public ClassicSimilarity() {}
+	/**
+	 * Sole constructor: parameter-free
+	 */
+	public ClassicSimilarity() {
+	}
 
-  /** Implemented as
-   *  <code>1/sqrt(length)</code>.
-   *
-   *  @lucene.experimental */
-  @Override
-  public float lengthNorm(int numTerms) {
-    return (float) (1.0 / Math.sqrt(numTerms));
-  }
+	/**
+	 * Implemented as
+	 * <code>1/sqrt(length)</code>.
+	 *
+	 * @lucene.experimental
+	 */
+	@Override
+	public float lengthNorm(int numTerms) {
+		return (float) (1.0 / Math.sqrt(numTerms));
+	}
 
-  /** Implemented as <code>sqrt(freq)</code>. */
-  @Override
-  public float tf(float freq) {
-    return (float)Math.sqrt(freq);
-  }
-  
-  @Override
-  public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats) {
-    final long df = termStats.docFreq();
-    final long docCount = collectionStats.docCount();
-    final float idf = idf(df, docCount);
-    return Explanation.match(idf, "idf, computed as log((docCount+1)/(docFreq+1)) + 1 from:",
-        Explanation.match(df, "docFreq, number of documents containing term"),
-        Explanation.match(docCount, "docCount, total number of documents with field"));
-  }
+	/**
+	 * Implemented as <code>sqrt(freq)</code>.
+	 */
+	@Override
+	public float tf(float freq) {
+		return (float) Math.sqrt(freq);
+	}
 
-  /** Implemented as <code>log((docCount+1)/(docFreq+1)) + 1</code>. */
-  @Override
-  public float idf(long docFreq, long docCount) {
-    return (float)(Math.log((docCount+1)/(double)(docFreq+1)) + 1.0);
-  }
+	@Override
+	public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats) {
+		final long df = termStats.docFreq();
+		final long docCount = collectionStats.docCount();
+		final float idf = idf(df, docCount);
+		return Explanation.match(idf, "idf, computed as log((docCount+1)/(docFreq+1)) + 1 from:",
+			Explanation.match(df, "docFreq, number of documents containing term"),
+			Explanation.match(docCount, "docCount, total number of documents with field"));
+	}
 
-  @Override
-  public String toString() {
-    return "ClassicSimilarity";
-  }
+	/**
+	 * Implemented as <code>log((docCount+1)/(docFreq+1)) + 1</code>.
+	 */
+	@Override
+	public float idf(long docFreq, long docCount) {
+		return (float) (Math.log((docCount + 1) / (double) (docFreq + 1)) + 1.0);
+	}
+
+	@Override
+	public String toString() {
+		return "ClassicSimilarity";
+	}
 }

@@ -25,10 +25,10 @@ import org.apache.lucene.index.BaseNormsFormatTestCase;
  * Tests Lucene70NormsFormat
  */
 public class TestLucene70NormsFormat extends BaseNormsFormatTestCase {
-  private final Codec codec = new Lucene70Codec();
-  
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	private final Codec codec = new Lucene70Codec();
+
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

@@ -17,7 +17,7 @@
 
 /**
  * Another highlighter implementation based on term vectors.
- * 
+ *
  * <h2>Features</h2>
  * <ul>
  * <li>fast for large docs</li>
@@ -30,11 +30,11 @@
  * <li>pluggable FragListBuilder / FieldFragList</li>
  * <li>pluggable FragmentsBuilder</li>
  * </ul>
- * 
+ *
  * <h2>Algorithm</h2>
  * <p>To explain the algorithm, let's use the following sample text
  *  (to be highlighted) and user query:</p>
- * 
+ *
  * <table border=1 summary="sample document and query">
  * <tr>
  * <td><b>Sample Text</b></td>
@@ -45,12 +45,12 @@
  * <td>Lucene^2 OR "search library"~1</td>
  * </tr>
  * </table>
- * 
- * <p>The user query is a BooleanQuery that consists of TermQuery("Lucene") 
+ *
+ * <p>The user query is a BooleanQuery that consists of TermQuery("Lucene")
  * with boost of 2 and PhraseQuery("search library") with slop of 1.</p>
- * <p>For your convenience, here is the offsets and positions info of the 
+ * <p>For your convenience, here is the offsets and positions info of the
  * sample text.</p>
- * 
+ *
  * <pre>
  * +--------+-----------------------------------+
  * |        |          1111111111222222222233333|
@@ -61,7 +61,7 @@
  * |position|0      1  2 3      4      5        |
  * +--------*-----------------------------------+
  * </pre>
- * 
+ *
  * <h3>Step 1.</h3>
  * <p>In Step 1, Fast Vector Highlighter generates {@link org.apache.lucene.search.vectorhighlight.FieldQuery.QueryPhraseMap} from the user query.
  * <code>QueryPhraseMap</code> consists of the following members:</p>
@@ -71,27 +71,27 @@
  *   int slop;   // valid if terminal == true and phraseHighlight == true
  *   float boost;  // valid if terminal == true
  *   Map&lt;String, QueryPhraseMap&gt; subMap;
- * } 
+ * }
  * </pre>
- * <p><code>QueryPhraseMap</code> has subMap. The key of the subMap is a term 
+ * <p><code>QueryPhraseMap</code> has subMap. The key of the subMap is a term
  * text in the user query and the value is a subsequent <code>QueryPhraseMap</code>.
  * If the query is a term (not phrase), then the subsequent <code>QueryPhraseMap</code>
  * is marked as terminal. If the query is a phrase, then the subsequent <code>QueryPhraseMap</code>
  * is not a terminal and it has the next term text in the phrase.</p>
- * 
- * <p>From the sample user query, the following <code>QueryPhraseMap</code> 
+ *
+ * <p>From the sample user query, the following <code>QueryPhraseMap</code>
  * will be generated:</p>
  * <pre>
  * QueryPhraseMap
  * +--------+-+  +-------+-+
  * |"Lucene"|o+-&gt;|boost=2|*|  * : terminal
  * +--------+-+  +-------+-+
- * 
+ *
  * +--------+-+  +---------+-+  +-------+------+-+
  * |"search"|o+-&gt;|"library"|o+-&gt;|boost=1|slop=1|*|
  * +--------+-+  +---------+-+  +-------+------+-+
  * </pre>
- * 
+ *
  * <h3>Step 2.</h3>
  * <p>In Step 2, Fast Vector Highlighter generates {@link org.apache.lucene.search.vectorhighlight.FieldTermStack}. Fast Vector Highlighter uses term vector data
  * (must be stored {@link org.apache.lucene.document.FieldType#setStoreTermVectorOffsets(boolean)} and {@link org.apache.lucene.document.FieldType#setStoreTermVectorPositions(boolean)})
@@ -120,7 +120,7 @@
  * +----------------+-----------------+---+
  * </pre>
  * <p>The type of each entry is <code>WeightedPhraseInfo</code> that consists of
- * an array of terms offsets and weight. 
+ * an array of terms offsets and weight.
  * </p>
  * <h3>Step 4.</h3>
  * <p>In Step 4, Fast Vector Highlighter creates <code>FieldFragList</code> by reference to
@@ -134,9 +134,9 @@
  * |totalBoost=3                     |
  * +---------------------------------+
  * </pre>
- * 
+ *
  * <p>
- * The calculation for each <code>FieldFragList.WeightedFragInfo.totalBoost</code> (weight)  
+ * The calculation for each <code>FieldFragList.WeightedFragInfo.totalBoost</code> (weight)
  * depends on the implementation of <code>FieldFragList.add( ... )</code>:
  * <pre class="prettyprint">
  *   public void add( int startOffset, int endOffset, List&lt;WeightedPhraseInfo&gt; phraseInfoList ) {
@@ -148,7 +148,7 @@
  *     }
  *     getFragInfos().add( new WeightedFragInfo( startOffset, endOffset, subInfos, totalBoost ) );
  *   }
- *   
+ *
  * </pre>
  * The used implementation of <code>FieldFragList</code> is noted in <code>BaseFragListBuilder.createFieldFragList( ... )</code>:
  * <pre class="prettyprint">
@@ -162,7 +162,7 @@
  * <ul>
  * <li><code>SimpleFragListBuilder using SimpleFieldFragList</code>: <i>sum-of-boosts</i>-approach. The totalBoost is calculated by summarizing the query-boosts per term. Per default a term is boosted by 1.0</li>
  * <li><code>WeightedFragListBuilder using WeightedFieldFragList</code>: <i>sum-of-distinct-weights</i>-approach. The totalBoost is calculated by summarizing the IDF-weights of distinct terms.</li>
- * </ul> 
+ * </ul>
  * <p>Comparison of the two approaches:</p>
  * <table border="1">
  * <caption>
@@ -186,7 +186,7 @@
  * <tr><td>das</td><td>0.7507678</td><td>1.0</td></tr>
  * <tr><td>das</td><td>0.7507678</td><td>1.0</td></tr>
  * </table>
- * 
+ *
  * <h3>Step 5.</h3>
  * <p>In Step 5, by using <code>FieldFragList</code> and the field stored data,
  * Fast Vector Highlighter creates highlighted snippets!</p>

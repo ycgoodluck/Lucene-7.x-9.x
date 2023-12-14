@@ -24,19 +24,21 @@ import java.io.StringReader;
 
 public class TestScandinavianFoldingFilterFactory extends BaseTokenStreamFactoryTestCase {
 
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("räksmörgås");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("ScandinavianFolding").create(stream);
-    assertTokenStreamContents(stream, new String[] { "raksmorgas" });
-  }
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("räksmörgås");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("ScandinavianFolding").create(stream);
+		assertTokenStreamContents(stream, new String[]{"raksmorgas"});
+	}
 
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("ScandinavianFolding",
-          "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("ScandinavianFolding",
+				"bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

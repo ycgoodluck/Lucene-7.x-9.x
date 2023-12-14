@@ -35,36 +35,34 @@ import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
  * to be processed, it should be set using
  * {@link QueryNodeProcessor#setQueryConfigHandler(QueryConfigHandler)} before
  * {@link QueryNodeProcessor#process(QueryNode)} is invoked.
- * 
+ *
  * @see QueryNode
  * @see QueryNodeProcessor
  * @see QueryConfigHandler
  */
 public interface QueryNodeProcessor {
 
-  /**
-   * Processes a query node tree. It may return the same or another query tree.
-   * I should never return <code>null</code>.
-   * 
-   * @param queryTree
-   *          tree root node
-   * 
-   * @return the processed query tree
-   */
-  public QueryNode process(QueryNode queryTree) throws QueryNodeException;
+	/**
+	 * Processes a query node tree. It may return the same or another query tree.
+	 * I should never return <code>null</code>.
+	 *
+	 * @param queryTree tree root node
+	 * @return the processed query tree
+	 */
+	public QueryNode process(QueryNode queryTree) throws QueryNodeException;
 
-  /**
-   * Sets the {@link QueryConfigHandler} associated to the query tree.
-   */
-  public void setQueryConfigHandler(QueryConfigHandler queryConfigHandler);
+	/**
+	 * Sets the {@link QueryConfigHandler} associated to the query tree.
+	 */
+	public void setQueryConfigHandler(QueryConfigHandler queryConfigHandler);
 
-  /**
-   * Returns the {@link QueryConfigHandler} associated to the query tree if any,
-   * otherwise it returns <code>null</code>
-   * 
-   * @return the {@link QueryConfigHandler} associated to the query tree if any,
-   *         otherwise it returns <code>null</code>
-   */
-  public QueryConfigHandler getQueryConfigHandler();
+	/**
+	 * Returns the {@link QueryConfigHandler} associated to the query tree if any,
+	 * otherwise it returns <code>null</code>
+	 *
+	 * @return the {@link QueryConfigHandler} associated to the query tree if any,
+	 * otherwise it returns <code>null</code>
+	 */
+	public QueryConfigHandler getQueryConfigHandler();
 
 }

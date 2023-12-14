@@ -32,118 +32,126 @@ import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestNeedsScores extends LuceneTestCase {
-  Directory dir;
-  IndexReader reader;
-  IndexSearcher searcher;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    dir = newDirectory();
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
-    for (int i = 0; i < 5; i++) {
-      Document doc = new Document();
-      doc.add(new TextField("field", "this is document " + i, Field.Store.NO));
-      iw.addDocument(doc);
-    }
-    reader = iw.getReader();
-    searcher = newSearcher(reader);
-    iw.close();
-  }
+	Directory dir;
+	IndexReader reader;
+	IndexSearcher searcher;
 
-  @Override
-  public void tearDown() throws Exception {
-    IOUtils.close(reader, dir);
-    super.tearDown();
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		dir = newDirectory();
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
+		for (int i = 0; i < 5; i++) {
+			Document doc = new Document();
+			doc.add(new TextField("field", "this is document " + i, Field.Store.NO));
+			iw.addDocument(doc);
+		}
+		reader = iw.getReader();
+		searcher = newSearcher(reader);
+		iw.close();
+	}
 
-  /** prohibited clauses in booleanquery don't need scoring */
-  public void testProhibitedClause() throws Exception {
-    Query required = new TermQuery(new Term("field", "this"));
-    Query prohibited = new TermQuery(new Term("field", "3"));
-    BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new AssertNeedsScores(required, true), BooleanClause.Occur.MUST);
-    bq.add(new AssertNeedsScores(prohibited, false), BooleanClause.Occur.MUST_NOT);
-    assertEquals(4, searcher.search(bq.build(), 5).totalHits); // we exclude 3
-  }
-  
-  /** nested inside constant score query */
-  public void testConstantScoreQuery() throws Exception {
-    Query term = new TermQuery(new Term("field", "this"));
-    Query constantScore = new ConstantScoreQuery(new AssertNeedsScores(term, false));
-    assertEquals(5, searcher.search(constantScore, 5).totalHits);
-  }
-  
-  /** when not sorting by score */
-  public void testSortByField() throws Exception {
-    Query query = new AssertNeedsScores(new MatchAllDocsQuery(), false);
-    assertEquals(5, searcher.search(query, 5, Sort.INDEXORDER).totalHits);
-  }
-  
-  /** when sorting by score */
-  public void testSortByScore() throws Exception {
-    Query query = new AssertNeedsScores(new MatchAllDocsQuery(), true);
-    assertEquals(5, searcher.search(query, 5, Sort.RELEVANCE).totalHits);
-  }
+	@Override
+	public void tearDown() throws Exception {
+		IOUtils.close(reader, dir);
+		super.tearDown();
+	}
 
-  /** 
-   * Wraps a query, checking that the needsScores param 
-   * passed to Weight.scorer is the expected value.
-   */
-  static class AssertNeedsScores extends Query {
-    final Query in;
-    final boolean value;
-    
-    AssertNeedsScores(Query in, boolean value) {
-      this.in = Objects.requireNonNull(in);
-      this.value = value;
-    }
+	/**
+	 * prohibited clauses in booleanquery don't need scoring
+	 */
+	public void testProhibitedClause() throws Exception {
+		Query required = new TermQuery(new Term("field", "this"));
+		Query prohibited = new TermQuery(new Term("field", "3"));
+		BooleanQuery.Builder bq = new BooleanQuery.Builder();
+		bq.add(new AssertNeedsScores(required, true), BooleanClause.Occur.MUST);
+		bq.add(new AssertNeedsScores(prohibited, false), BooleanClause.Occur.MUST_NOT);
+		assertEquals(4, searcher.search(bq.build(), 5).totalHits); // we exclude 3
+	}
 
-    @Override
-    public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-      final Weight w = in.createWeight(searcher, needsScores, boost);
-      return new FilterWeight(w) {
-        @Override
-        public Scorer scorer(LeafReaderContext context) throws IOException {
-          assertEquals("query=" + in, value, needsScores);
-          return w.scorer(context);
-        }
-      };
-    }
+	/**
+	 * nested inside constant score query
+	 */
+	public void testConstantScoreQuery() throws Exception {
+		Query term = new TermQuery(new Term("field", "this"));
+		Query constantScore = new ConstantScoreQuery(new AssertNeedsScores(term, false));
+		assertEquals(5, searcher.search(constantScore, 5).totalHits);
+	}
 
-    @Override
-    public Query rewrite(IndexReader reader) throws IOException {
-      Query in2 = in.rewrite(reader);
-      if (in2 == in) {
-        return super.rewrite(reader);
-      } else {
-        return new AssertNeedsScores(in2, value);
-      }
-    }
+	/**
+	 * when not sorting by score
+	 */
+	public void testSortByField() throws Exception {
+		Query query = new AssertNeedsScores(new MatchAllDocsQuery(), false);
+		assertEquals(5, searcher.search(query, 5, Sort.INDEXORDER).totalHits);
+	}
 
-    @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = classHash();
-      result = prime * result + in.hashCode();
-      result = prime * result + (value ? 1231 : 1237);
-      return result;
-    }
+	/**
+	 * when sorting by score
+	 */
+	public void testSortByScore() throws Exception {
+		Query query = new AssertNeedsScores(new MatchAllDocsQuery(), true);
+		assertEquals(5, searcher.search(query, 5, Sort.RELEVANCE).totalHits);
+	}
 
-    @Override
-    public boolean equals(Object other) {
-      return sameClassAs(other) &&
-             equalsTo(getClass().cast(other));
-    }
-    
-    private boolean equalsTo(AssertNeedsScores other) {
-      return in.equals(other.in) && 
-             value == other.value;
-    }
+	/**
+	 * Wraps a query, checking that the needsScores param
+	 * passed to Weight.scorer is the expected value.
+	 */
+	static class AssertNeedsScores extends Query {
+		final Query in;
+		final boolean value;
 
-    @Override
-    public String toString(String field) {
-      return "asserting(" + in.toString(field) + ")";
-    }
-  }
+		AssertNeedsScores(Query in, boolean value) {
+			this.in = Objects.requireNonNull(in);
+			this.value = value;
+		}
+
+		@Override
+		public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+			final Weight w = in.createWeight(searcher, needsScores, boost);
+			return new FilterWeight(w) {
+				@Override
+				public Scorer scorer(LeafReaderContext context) throws IOException {
+					assertEquals("query=" + in, value, needsScores);
+					return w.scorer(context);
+				}
+			};
+		}
+
+		@Override
+		public Query rewrite(IndexReader reader) throws IOException {
+			Query in2 = in.rewrite(reader);
+			if (in2 == in) {
+				return super.rewrite(reader);
+			} else {
+				return new AssertNeedsScores(in2, value);
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = classHash();
+			result = prime * result + in.hashCode();
+			result = prime * result + (value ? 1231 : 1237);
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			return sameClassAs(other) &&
+				equalsTo(getClass().cast(other));
+		}
+
+		private boolean equalsTo(AssertNeedsScores other) {
+			return in.equals(other.in) &&
+				value == other.value;
+		}
+
+		@Override
+		public String toString(String field) {
+			return "asserting(" + in.toString(field) + ")";
+		}
+	}
 }

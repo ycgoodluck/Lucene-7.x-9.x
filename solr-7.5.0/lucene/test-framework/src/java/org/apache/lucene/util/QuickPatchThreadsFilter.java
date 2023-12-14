@@ -22,26 +22,26 @@ import com.carrotsearch.randomizedtesting.ThreadFilter;
  * Last minute patches.
  */
 public class QuickPatchThreadsFilter implements ThreadFilter {
-  static final boolean isJ9;
-  
-  static {
-    isJ9 = Constants.JAVA_VENDOR.startsWith("IBM");
-  }
+	static final boolean isJ9;
 
-  @Override
-  public boolean reject(Thread t) {
-    if (isJ9) {
-      // LUCENE-6518
-      if ("ClassCache Reaper".equals(t.getName())) {
-        return true;
-      }
+	static {
+		isJ9 = Constants.JAVA_VENDOR.startsWith("IBM");
+	}
 
-      // LUCENE-4736
-      StackTraceElement [] stack = t.getStackTrace();
-      if (stack.length > 0 && stack[stack.length - 1].getClassName().equals("java.util.Timer$TimerImpl")) {
-        return true;
-      }
-    }
-    return false;
-  }
+	@Override
+	public boolean reject(Thread t) {
+		if (isJ9) {
+			// LUCENE-6518
+			if ("ClassCache Reaper".equals(t.getName())) {
+				return true;
+			}
+
+			// LUCENE-4736
+			StackTraceElement[] stack = t.getStackTrace();
+			if (stack.length > 0 && stack[stack.length - 1].getClassName().equals("java.util.Timer$TimerImpl")) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

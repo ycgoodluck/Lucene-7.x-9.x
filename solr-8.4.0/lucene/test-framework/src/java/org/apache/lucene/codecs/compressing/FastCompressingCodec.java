@@ -16,18 +16,24 @@
  */
 package org.apache.lucene.codecs.compressing;
 
-/** CompressionCodec that uses {@link CompressionMode#FAST} */
+/**
+ * CompressionCodec that uses {@link CompressionMode#FAST}
+ */
 public class FastCompressingCodec extends CompressingCodec {
 
-  /** Constructor that allows to configure the chunk size. */
-  public FastCompressingCodec(int chunkSize, int maxDocsPerChunk, boolean withSegmentSuffix, int blockSize) {
-    super("FastCompressingStoredFields", 
-          withSegmentSuffix ? "FastCompressingStoredFields" : "",
-          CompressionMode.FAST, chunkSize, maxDocsPerChunk, blockSize);
-  }
+	/**
+	 * Constructor that allows to configure the chunk size.
+	 */
+	public FastCompressingCodec(int chunkSize, int maxDocsPerChunk, boolean withSegmentSuffix, int blockSize) {
+		super("FastCompressingStoredFields",
+			withSegmentSuffix ? "FastCompressingStoredFields" : "",
+			CompressionMode.FAST, chunkSize, maxDocsPerChunk, blockSize);
+	}
 
-  /** Default constructor. */
-  public FastCompressingCodec() {
-    this(1 << 14, 128, false, 1024);
-  }
+	/**
+	 * Default constructor.
+	 */
+	public FastCompressingCodec() {
+		this(1 << 14, 128, false, 1024);
+	}
 }

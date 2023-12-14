@@ -34,17 +34,19 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class HyphenatedWordsFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new HyphenatedWordsFilterFactory */
-  public HyphenatedWordsFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public HyphenatedWordsFilter create(TokenStream input) {
-    return new HyphenatedWordsFilter(input);
-  }
+
+	/**
+	 * Creates a new HyphenatedWordsFilterFactory
+	 */
+	public HyphenatedWordsFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public HyphenatedWordsFilter create(TokenStream input) {
+		return new HyphenatedWordsFilter(input);
+	}
 }

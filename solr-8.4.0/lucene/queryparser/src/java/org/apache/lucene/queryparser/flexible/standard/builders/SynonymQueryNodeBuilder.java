@@ -24,25 +24,30 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 
-/** Builder for {@link SynonymQueryNode}. */
+/**
+ * Builder for {@link SynonymQueryNode}.
+ */
 public class SynonymQueryNodeBuilder implements StandardQueryBuilder {
 
-  /** Sole constructor. */
-  public SynonymQueryNodeBuilder() {}
+	/**
+	 * Sole constructor.
+	 */
+	public SynonymQueryNodeBuilder() {
+	}
 
-  @Override
-  public Query build(QueryNode queryNode) throws QueryNodeException {
-    // TODO: use SynonymQuery instead
-    SynonymQueryNode node = (SynonymQueryNode) queryNode;
-    BooleanQuery.Builder builder = new BooleanQuery.Builder();
-    for (QueryNode child : node.getChildren()) {
-      Object obj = child.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+	@Override
+	public Query build(QueryNode queryNode) throws QueryNodeException {
+		// TODO: use SynonymQuery instead
+		SynonymQueryNode node = (SynonymQueryNode) queryNode;
+		BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		for (QueryNode child : node.getChildren()) {
+			Object obj = child.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
 
-      if (obj != null) {
-        Query query = (Query) obj;
-        builder.add(query, Occur.SHOULD);
-      }
-    }
-    return builder.build();
-  }
+			if (obj != null) {
+				Query query = (Query) obj;
+				builder.add(query, Occur.SHOULD);
+			}
+		}
+		return builder.build();
+	}
 }

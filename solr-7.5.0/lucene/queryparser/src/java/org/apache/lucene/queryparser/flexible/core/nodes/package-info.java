@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-/** 
+
+/**
  * Query nodes commonly used by query parser implementations.
  *
  * <h2>Query Nodes</h2>
  * <p>
- * The package <tt>org.apache.lucene.queryParser.nodes</tt> contains all the basic query nodes. The interface 
+ * The package <tt>org.apache.lucene.queryParser.nodes</tt> contains all the basic query nodes. The interface
  * that represents a query node is {@link org.apache.lucene.queryparser.flexible.core.nodes.QueryNode}.
  * <p>
  * {@link org.apache.lucene.queryparser.flexible.core.nodes.QueryNode}s are used by the text parser to create a syntax tree.
@@ -61,7 +61,7 @@
  * <li>FieldQueryNode - field/value node</li>
  * <li>LegacyNumericQueryNode - used for numeric search</li>
  * <li>PathQueryNode - {@link org.apache.lucene.queryparser.flexible.core.nodes.QueryNode} object used with path-like queries</li>
- * <li>OpaqueQueryNode - Used as for part of the query that can be parsed by other parsers. schema/value</li> 
+ * <li>OpaqueQueryNode - Used as for part of the query that can be parsed by other parsers. schema/value</li>
  * <li>PrefixWildcardQueryNode - non-phrase wildcard query</li>
  * <li>QuotedFieldQUeryNode - regular phrase node</li>
  * <li>WildcardQueryNode - non-phrase wildcard query</li>

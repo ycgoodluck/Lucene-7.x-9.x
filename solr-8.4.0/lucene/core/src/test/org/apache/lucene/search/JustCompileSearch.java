@@ -35,238 +35,238 @@ import org.apache.lucene.util.PriorityQueue;
  */
 final class JustCompileSearch {
 
-  private static final String UNSUPPORTED_MSG = "unsupported: used for back-compat testing only !";
+	private static final String UNSUPPORTED_MSG = "unsupported: used for back-compat testing only !";
 
-  static final class JustCompileCollector extends SimpleCollector {
+	static final class JustCompileCollector extends SimpleCollector {
 
-    @Override
-    public void collect(int doc) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public void collect(int doc) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    protected void doSetNextReader(LeafReaderContext context) throws IOException {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		protected void doSetNextReader(LeafReaderContext context) throws IOException {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public void setScorer(Scorable scorer) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public void setScorer(Scorable scorer) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public ScoreMode scoreMode() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
-  }
+		@Override
+		public ScoreMode scoreMode() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
+	}
 
-  static final class JustCompileDocIdSet extends DocIdSet {
+	static final class JustCompileDocIdSet extends DocIdSet {
 
-    @Override
-    public DocIdSetIterator iterator() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public DocIdSetIterator iterator() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public long ramBytesUsed() {
-      return 0L;
-    }
-  }
+		@Override
+		public long ramBytesUsed() {
+			return 0L;
+		}
+	}
 
-  static final class JustCompileDocIdSetIterator extends DocIdSetIterator {
+	static final class JustCompileDocIdSetIterator extends DocIdSetIterator {
 
-    @Override
-    public int docID() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int docID() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int nextDoc() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int nextDoc() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int advance(int target) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int advance(int target) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public long cost() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
-  }
+		@Override
+		public long cost() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
+	}
 
-  static final class JustCompileFieldComparator extends FieldComparator<Object> {
+	static final class JustCompileFieldComparator extends FieldComparator<Object> {
 
-    @Override
-    public void setTopValue(Object value) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public void setTopValue(Object value) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public Object value(int slot) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public Object value(int slot) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public LeafFieldComparator getLeafComparator(LeafReaderContext context) throws IOException {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public LeafFieldComparator getLeafComparator(LeafReaderContext context) throws IOException {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int compare(int slot1, int slot2) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
-  }
+		@Override
+		public int compare(int slot1, int slot2) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
+	}
 
-  static final class JustCompileFieldComparatorSource extends FieldComparatorSource {
+	static final class JustCompileFieldComparatorSource extends FieldComparatorSource {
 
-    @Override
-    public FieldComparator<?> newComparator(String fieldname, int numHits,
-        int sortPos, boolean reversed) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public FieldComparator<?> newComparator(String fieldname, int numHits,
+																						int sortPos, boolean reversed) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-  }
+	}
 
-  static final class JustCompileFilteredDocIdSetIterator extends FilteredDocIdSetIterator {
+	static final class JustCompileFilteredDocIdSetIterator extends FilteredDocIdSetIterator {
 
-    public JustCompileFilteredDocIdSetIterator(DocIdSetIterator innerIter) {
-      super(innerIter);
-    }
+		public JustCompileFilteredDocIdSetIterator(DocIdSetIterator innerIter) {
+			super(innerIter);
+		}
 
-    @Override
-    protected boolean match(int doc) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		protected boolean match(int doc) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public long cost() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
-  }
+		@Override
+		public long cost() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
+	}
 
-  static final class JustCompileQuery extends Query {
+	static final class JustCompileQuery extends Query {
 
-    @Override
-    public String toString(String field) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public String toString(String field) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public void visit(QueryVisitor visitor) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public void visit(QueryVisitor visitor) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public boolean equals(Object obj) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public boolean equals(Object obj) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int hashCode() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
-  }
+		@Override
+		public int hashCode() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
+	}
 
-  static final class JustCompileScorer extends Scorer {
+	static final class JustCompileScorer extends Scorer {
 
-    protected JustCompileScorer(Weight weight) {
-      super(weight);
-    }
+		protected JustCompileScorer(Weight weight) {
+			super(weight);
+		}
 
-    @Override
-    public float score() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public float score() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public float getMaxScore(int upTo) throws IOException {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public float getMaxScore(int upTo) throws IOException {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public int docID() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public int docID() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public DocIdSetIterator iterator() {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
-  }
+		@Override
+		public DocIdSetIterator iterator() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
+	}
 
-  static final class JustCompileSimilarity extends Similarity {
+	static final class JustCompileSimilarity extends Similarity {
 
-    @Override
-    public SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public long computeNorm(FieldInvertState state) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
-  }
+		@Override
+		public long computeNorm(FieldInvertState state) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
+	}
 
-  static final class JustCompileTopDocsCollector extends TopDocsCollector<ScoreDoc> {
+	static final class JustCompileTopDocsCollector extends TopDocsCollector<ScoreDoc> {
 
-    protected JustCompileTopDocsCollector(PriorityQueue<ScoreDoc> pq) {
-      super(pq);
-    }
+		protected JustCompileTopDocsCollector(PriorityQueue<ScoreDoc> pq) {
+			super(pq);
+		}
 
-    @Override
-    public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
-      throw new UnsupportedOperationException( UNSUPPORTED_MSG );
-    }
+		@Override
+		public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public TopDocs topDocs() {
-        throw new UnsupportedOperationException( UNSUPPORTED_MSG );
-    }
+		@Override
+		public TopDocs topDocs() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public TopDocs topDocs( int start ) {
-        throw new UnsupportedOperationException( UNSUPPORTED_MSG );
-    }
+		@Override
+		public TopDocs topDocs(int start) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public TopDocs topDocs( int start, int end ) {
-        throw new UnsupportedOperationException( UNSUPPORTED_MSG );
-    }
+		@Override
+		public TopDocs topDocs(int start, int end) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public ScoreMode scoreMode() {
-      throw new UnsupportedOperationException( UNSUPPORTED_MSG );
-    }
-  }
+		@Override
+		public ScoreMode scoreMode() {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
+	}
 
-  static final class JustCompileWeight extends Weight {
+	static final class JustCompileWeight extends Weight {
 
-    protected JustCompileWeight() {
-      super(null);
-    }
+		protected JustCompileWeight() {
+			super(null);
+		}
 
-    @Override
-    public void extractTerms(Set<Term> terms) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public void extractTerms(Set<Term> terms) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public Explanation explain(LeafReaderContext context, int doc) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public Explanation explain(LeafReaderContext context, int doc) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public Scorer scorer(LeafReaderContext context) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public Scorer scorer(LeafReaderContext context) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-    @Override
-    public boolean isCacheable(LeafReaderContext ctx) {
-      throw new UnsupportedOperationException(UNSUPPORTED_MSG);
-    }
+		@Override
+		public boolean isCacheable(LeafReaderContext ctx) {
+			throw new UnsupportedOperationException(UNSUPPORTED_MSG);
+		}
 
-  }
+	}
 
 }

@@ -23,33 +23,35 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.util.BytesRef;
 
-/** Simple payload filter that sets the payload as pos: XXXX */
+/**
+ * Simple payload filter that sets the payload as pos: XXXX
+ */
 public final class SimplePayloadFilter extends TokenFilter {
-  int pos;
-  final PayloadAttribute payloadAttr;
-  final CharTermAttribute termAttr;
+	int pos;
+	final PayloadAttribute payloadAttr;
+	final CharTermAttribute termAttr;
 
-  public SimplePayloadFilter(TokenStream input) {
-    super(input);
-    pos = 0;
-    payloadAttr = input.addAttribute(PayloadAttribute.class);
-    termAttr = input.addAttribute(CharTermAttribute.class);
-  }
+	public SimplePayloadFilter(TokenStream input) {
+		super(input);
+		pos = 0;
+		payloadAttr = input.addAttribute(PayloadAttribute.class);
+		termAttr = input.addAttribute(CharTermAttribute.class);
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      payloadAttr.setPayload(new BytesRef(("pos: " + pos).getBytes(StandardCharsets.UTF_8)));
-      pos++;
-      return true;
-    } else {
-      return false;
-    }
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			payloadAttr.setPayload(new BytesRef(("pos: " + pos).getBytes(StandardCharsets.UTF_8)));
+			pos++;
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    pos = 0;
-  }
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		pos = 0;
+	}
 }

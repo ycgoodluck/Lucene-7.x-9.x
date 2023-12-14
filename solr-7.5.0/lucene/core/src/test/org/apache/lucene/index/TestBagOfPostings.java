@@ -35,111 +35,111 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;
 
 /**
- * Simple test that adds numeric terms, where each term has the 
- * docFreq of its integer value, and checks that the docFreq is correct. 
+ * Simple test that adds numeric terms, where each term has the
+ * docFreq of its integer value, and checks that the docFreq is correct.
  */
 @SuppressCodecs({"Direct", "Memory"}) // at night this makes like 200k/300k docs and will make Direct's heart beat!
 public class TestBagOfPostings extends LuceneTestCase {
-  public void test() throws Exception {
-    List<String> postingsList = new ArrayList<>();
-    int numTerms = atLeast(300);
-    final int maxTermsPerDoc = TestUtil.nextInt(random(), 10, 20);
+	public void test() throws Exception {
+		List<String> postingsList = new ArrayList<>();
+		int numTerms = atLeast(300);
+		final int maxTermsPerDoc = TestUtil.nextInt(random(), 10, 20);
 
-    boolean isSimpleText = "SimpleText".equals(TestUtil.getPostingsFormat("field"));
+		boolean isSimpleText = "SimpleText".equals(TestUtil.getPostingsFormat("field"));
 
-    IndexWriterConfig iwc = newIndexWriterConfig(random(), new MockAnalyzer(random()));
+		IndexWriterConfig iwc = newIndexWriterConfig(random(), new MockAnalyzer(random()));
 
-    if ((isSimpleText || iwc.getMergePolicy() instanceof MockRandomMergePolicy) && (TEST_NIGHTLY || RANDOM_MULTIPLIER > 1)) {
-      // Otherwise test can take way too long (> 2 hours)
-      numTerms /= 2;
-    }
+		if ((isSimpleText || iwc.getMergePolicy() instanceof MockRandomMergePolicy) && (TEST_NIGHTLY || RANDOM_MULTIPLIER > 1)) {
+			// Otherwise test can take way too long (> 2 hours)
+			numTerms /= 2;
+		}
 
-    if (VERBOSE) {
-      System.out.println("maxTermsPerDoc=" + maxTermsPerDoc);
-      System.out.println("numTerms=" + numTerms);
-    }
+		if (VERBOSE) {
+			System.out.println("maxTermsPerDoc=" + maxTermsPerDoc);
+			System.out.println("numTerms=" + numTerms);
+		}
 
-    for (int i = 0; i < numTerms; i++) {
-      String term = Integer.toString(i);
-      for (int j = 0; j < i; j++) {
-        postingsList.add(term);
-      }
-    }
-    Collections.shuffle(postingsList, random());
+		for (int i = 0; i < numTerms; i++) {
+			String term = Integer.toString(i);
+			for (int j = 0; j < i; j++) {
+				postingsList.add(term);
+			}
+		}
+		Collections.shuffle(postingsList, random());
 
-    final ConcurrentLinkedQueue<String> postings = new ConcurrentLinkedQueue<>(postingsList);
+		final ConcurrentLinkedQueue<String> postings = new ConcurrentLinkedQueue<>(postingsList);
 
-    Directory dir = newFSDirectory(createTempDir("bagofpostings"));
-    final RandomIndexWriter iw = new RandomIndexWriter(random(), dir, iwc);
+		Directory dir = newFSDirectory(createTempDir("bagofpostings"));
+		final RandomIndexWriter iw = new RandomIndexWriter(random(), dir, iwc);
 
-    int threadCount = TestUtil.nextInt(random(), 1, 5);
-    if (VERBOSE) {
-      System.out.println("config: " + iw.w.getConfig());
-      System.out.println("threadCount=" + threadCount);
-    }
+		int threadCount = TestUtil.nextInt(random(), 1, 5);
+		if (VERBOSE) {
+			System.out.println("config: " + iw.w.getConfig());
+			System.out.println("threadCount=" + threadCount);
+		}
 
-    Thread[] threads = new Thread[threadCount];
-    final CountDownLatch startingGun = new CountDownLatch(1);
+		Thread[] threads = new Thread[threadCount];
+		final CountDownLatch startingGun = new CountDownLatch(1);
 
-    for(int threadID=0;threadID<threadCount;threadID++) {
-      threads[threadID] = new Thread() {
-          @Override
-          public void run() {
-            try {
-              Document document = new Document();
-              Field field = newTextField("field", "", Field.Store.NO);
-              document.add(field);
-              startingGun.await();
-              while (!postings.isEmpty()) {
-                StringBuilder text = new StringBuilder();
-                Set<String> visited = new HashSet<>();
-                for (int i = 0; i < maxTermsPerDoc; i++) {
-                  String token = postings.poll();
-                  if (token == null) {
-                    break;
-                  }
-                  if (visited.contains(token)) {
-                    // Put it back:
-                    postings.add(token);
-                    break;
-                  }
-                  text.append(' ');
-                  text.append(token);
-                  visited.add(token);
-                }
-                field.setStringValue(text.toString());
-                iw.addDocument(document);
-              }
-            } catch (Exception e) {
-              throw new RuntimeException(e);
-            }
-          }
-        };
-      threads[threadID].start();
-    }
-    startingGun.countDown();
-    for(Thread t : threads) {
-      t.join();
-    }
-    
-    iw.forceMerge(1);
-    DirectoryReader ir = iw.getReader();
-    assertEquals(1, ir.leaves().size());
-    LeafReader air = ir.leaves().get(0).reader();
-    Terms terms = air.terms("field");
-    // numTerms-1 because there cannot be a term 0 with 0 postings:
-    assertEquals(numTerms-1, terms.size());
-    TermsEnum termsEnum = terms.iterator();
-    BytesRef term;
-    while ((term = termsEnum.next()) != null) {
-      int value = Integer.parseInt(term.utf8ToString());
-      assertEquals(value, termsEnum.docFreq());
-      // don't really need to check more than this, as CheckIndex
-      // will verify that docFreq == actual number of documents seen
-      // from a postingsEnum.
-    }
-    ir.close();
-    iw.close();
-    dir.close();
-  }
+		for (int threadID = 0; threadID < threadCount; threadID++) {
+			threads[threadID] = new Thread() {
+				@Override
+				public void run() {
+					try {
+						Document document = new Document();
+						Field field = newTextField("field", "", Field.Store.NO);
+						document.add(field);
+						startingGun.await();
+						while (!postings.isEmpty()) {
+							StringBuilder text = new StringBuilder();
+							Set<String> visited = new HashSet<>();
+							for (int i = 0; i < maxTermsPerDoc; i++) {
+								String token = postings.poll();
+								if (token == null) {
+									break;
+								}
+								if (visited.contains(token)) {
+									// Put it back:
+									postings.add(token);
+									break;
+								}
+								text.append(' ');
+								text.append(token);
+								visited.add(token);
+							}
+							field.setStringValue(text.toString());
+							iw.addDocument(document);
+						}
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
+			};
+			threads[threadID].start();
+		}
+		startingGun.countDown();
+		for (Thread t : threads) {
+			t.join();
+		}
+
+		iw.forceMerge(1);
+		DirectoryReader ir = iw.getReader();
+		assertEquals(1, ir.leaves().size());
+		LeafReader air = ir.leaves().get(0).reader();
+		Terms terms = air.terms("field");
+		// numTerms-1 because there cannot be a term 0 with 0 postings:
+		assertEquals(numTerms - 1, terms.size());
+		TermsEnum termsEnum = terms.iterator();
+		BytesRef term;
+		while ((term = termsEnum.next()) != null) {
+			int value = Integer.parseInt(term.utf8ToString());
+			assertEquals(value, termsEnum.docFreq());
+			// don't really need to check more than this, as CheckIndex
+			// will verify that docFreq == actual number of documents seen
+			// from a postingsEnum.
+		}
+		ir.close();
+		iw.close();
+		dir.close();
+	}
 }

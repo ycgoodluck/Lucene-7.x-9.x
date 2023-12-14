@@ -46,12 +46,12 @@ import org.apache.lucene.util.fst.FST;
 import org.apache.lucene.util.fst.PositiveIntOutputs;
 import org.apache.lucene.util.fst.Util;
 
-/** 
+/**
  * FST-based term dict, using ord as FST output.
- *
- * The FST holds the mapping between &lt;term, ord&gt;, and 
+ * <p>
+ * The FST holds the mapping between &lt;term, ord&gt;, and
  * term's metadata is delta encoded into a single byte block.
- *
+ * <p>
  * Typically the byte block consists of four parts:
  * 1. term statistics: docFreq, totalTermFreq;
  * 2. monotonic long[], e.g. the pointer to the postings list for that term;
@@ -71,7 +71,7 @@ import org.apache.lucene.util.fst.Util;
  *  The .tix contains a list of FSTs, one for each field.
  *  The FST maps a term to its corresponding order in current field.
  * </p>
- * 
+ *
  * <ul>
  *  <li>TermIndex(.tix) --&gt; Header, TermFST<sup>NumFields</sup>, Footer</li>
  *  <li>TermFST --&gt; {@link FST FST&lt;long&gt;}</li>
@@ -82,7 +82,7 @@ import org.apache.lucene.util.fst.Util;
  * <p>Notes:</p>
  * <ul>
  *  <li>
- *  Since terms are already sorted before writing to <a href="#Termblock">Term Block</a>, 
+ *  Since terms are already sorted before writing to <a href="#Termblock">Term Block</a>,
  *  their ords can directly used to seek term metadata from term block.
  *  </li>
  * </ul>
@@ -90,7 +90,7 @@ import org.apache.lucene.util.fst.Util;
  * <a name="Termblock"></a>
  * <h3>Term Block</h3>
  * <p>
- *  The .tbk contains all the statistics and metadata for terms, along with field summary (e.g. 
+ *  The .tbk contains all the statistics and metadata for terms, along with field summary (e.g.
  *  per-field data like number of documents in current field). For each field, there are four blocks:
  *  <ul>
  *   <li>statistics bytes block: contains term statistics; </li>
@@ -105,19 +105,19 @@ import org.apache.lucene.util.fst.Util;
  *  <li>FieldSummary --&gt; NumFields, &lt;FieldNumber, NumTerms, SumTotalTermFreq?, SumDocFreq,
  *                                         DocCount, LongsSize, DataBlock &gt; <sup>NumFields</sup>, Footer</li>
  *
- *  <li>DataBlock --&gt; StatsBlockLength, MetaLongsBlockLength, MetaBytesBlockLength, 
+ *  <li>DataBlock --&gt; StatsBlockLength, MetaLongsBlockLength, MetaBytesBlockLength,
  *                       SkipBlock, StatsBlock, MetaLongsBlock, MetaBytesBlock </li>
- *  <li>SkipBlock --&gt; &lt; StatsFPDelta, MetaLongsSkipFPDelta, MetaBytesSkipFPDelta, 
+ *  <li>SkipBlock --&gt; &lt; StatsFPDelta, MetaLongsSkipFPDelta, MetaBytesSkipFPDelta,
  *                            MetaLongsSkipDelta<sup>LongsSize</sup> &gt;<sup>NumTerms</sup>
  *  <li>StatsBlock --&gt; &lt; DocFreq[Same?], (TotalTermFreq-DocFreq) ? &gt; <sup>NumTerms</sup>
  *  <li>MetaLongsBlock --&gt; &lt; LongDelta<sup>LongsSize</sup>, BytesSize &gt; <sup>NumTerms</sup>
  *  <li>MetaBytesBlock --&gt; Byte <sup>MetaBytesBlockLength</sup>
  *  <li>Header --&gt; {@link CodecUtil#writeIndexHeader IndexHeader}</li>
  *  <li>DirOffset --&gt; {@link DataOutput#writeLong Uint64}</li>
- *  <li>NumFields, FieldNumber, DocCount, DocFreq, LongsSize, 
+ *  <li>NumFields, FieldNumber, DocCount, DocFreq, LongsSize,
  *        FieldNumber, DocCount --&gt; {@link DataOutput#writeVInt VInt}</li>
  *  <li>NumTerms, SumTotalTermFreq, SumDocFreq, StatsBlockLength, MetaLongsBlockLength, MetaBytesBlockLength,
- *        StatsFPDelta, MetaLongsSkipFPDelta, MetaBytesSkipFPDelta, MetaLongsSkipStart, TotalTermFreq, 
+ *        StatsFPDelta, MetaLongsSkipFPDelta, MetaBytesSkipFPDelta, MetaLongsSkipStart, TotalTermFreq,
  *        LongDelta,--&gt; {@link DataOutput#writeVLong VLong}</li>
  *  <li>Footer --&gt; {@link CodecUtil#writeFooter CodecFooter}</li>
  * </ul>
@@ -125,7 +125,7 @@ import org.apache.lucene.util.fst.Util;
  * <ul>
  *  <li>
  *   The format of PostingsHeader and MetaBytes are customized by the specific postings implementation:
- *   they contain arbitrary per-file data (such as parameters or versioning information), and per-term data 
+ *   they contain arbitrary per-file data (such as parameters or versioning information), and per-term data
  *   (non-monotonic ones like pulsed postings data).
  *  </li>
  *  <li>
@@ -135,253 +135,253 @@ import org.apache.lucene.util.fst.Util;
  *   the value of preceding metadata longs for every SkipInterval's term.
  *  </li>
  *  <li>
- *   DocFreq is the count of documents which contain the term. TotalTermFreq is the total number of occurrences of the term. 
+ *   DocFreq is the count of documents which contain the term. TotalTermFreq is the total number of occurrences of the term.
  *   Usually these two values are the same for long tail terms, therefore one bit is stole from DocFreq to check this case,
  *   so that encoding of TotalTermFreq may be omitted.
  *  </li>
  * </ul>
  *
- * @lucene.experimental 
+ * @lucene.experimental
  */
 
 public class FSTOrdTermsWriter extends FieldsConsumer {
-  static final String TERMS_INDEX_EXTENSION = "tix";
-  static final String TERMS_BLOCK_EXTENSION = "tbk";
-  static final String TERMS_CODEC_NAME = "FSTOrdTerms";
-  static final String TERMS_INDEX_CODEC_NAME = "FSTOrdIndex";
+	static final String TERMS_INDEX_EXTENSION = "tix";
+	static final String TERMS_BLOCK_EXTENSION = "tbk";
+	static final String TERMS_CODEC_NAME = "FSTOrdTerms";
+	static final String TERMS_INDEX_CODEC_NAME = "FSTOrdIndex";
 
-  public static final int VERSION_START = 2;
-  public static final int VERSION_CURRENT = VERSION_START;
-  public static final int SKIP_INTERVAL = 8;
-  
-  final PostingsWriterBase postingsWriter;
-  final FieldInfos fieldInfos;
-  final int maxDoc;
-  final List<FieldMetaData> fields = new ArrayList<>();
-  IndexOutput blockOut = null;
-  IndexOutput indexOut = null;
+	public static final int VERSION_START = 2;
+	public static final int VERSION_CURRENT = VERSION_START;
+	public static final int SKIP_INTERVAL = 8;
 
-  public FSTOrdTermsWriter(SegmentWriteState state, PostingsWriterBase postingsWriter) throws IOException {
-    final String termsIndexFileName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, TERMS_INDEX_EXTENSION);
-    final String termsBlockFileName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, TERMS_BLOCK_EXTENSION);
+	final PostingsWriterBase postingsWriter;
+	final FieldInfos fieldInfos;
+	final int maxDoc;
+	final List<FieldMetaData> fields = new ArrayList<>();
+	IndexOutput blockOut = null;
+	IndexOutput indexOut = null;
 
-    this.postingsWriter = postingsWriter;
-    this.fieldInfos = state.fieldInfos;
-    this.maxDoc = state.segmentInfo.maxDoc();
+	public FSTOrdTermsWriter(SegmentWriteState state, PostingsWriterBase postingsWriter) throws IOException {
+		final String termsIndexFileName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, TERMS_INDEX_EXTENSION);
+		final String termsBlockFileName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, TERMS_BLOCK_EXTENSION);
 
-    boolean success = false;
-    try {
-      this.indexOut = state.directory.createOutput(termsIndexFileName, state.context);
-      this.blockOut = state.directory.createOutput(termsBlockFileName, state.context);
-      CodecUtil.writeIndexHeader(indexOut, TERMS_INDEX_CODEC_NAME, VERSION_CURRENT, 
-                                             state.segmentInfo.getId(), state.segmentSuffix);
-      CodecUtil.writeIndexHeader(blockOut, TERMS_CODEC_NAME, VERSION_CURRENT, 
-                                             state.segmentInfo.getId(), state.segmentSuffix);
-      this.postingsWriter.init(blockOut, state); 
-      success = true;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(indexOut, blockOut);
-      }
-    }
-  }
+		this.postingsWriter = postingsWriter;
+		this.fieldInfos = state.fieldInfos;
+		this.maxDoc = state.segmentInfo.maxDoc();
 
-  @Override
-  public void write(Fields fields, NormsProducer norms) throws IOException {
-    for(String field : fields) {
-      Terms terms = fields.terms(field);
-      if (terms == null) {
-        continue;
-      }
-      FieldInfo fieldInfo = fieldInfos.fieldInfo(field);
-      boolean hasFreq = fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0;
-      TermsEnum termsEnum = terms.iterator();
-      TermsWriter termsWriter = new TermsWriter(fieldInfo);
+		boolean success = false;
+		try {
+			this.indexOut = state.directory.createOutput(termsIndexFileName, state.context);
+			this.blockOut = state.directory.createOutput(termsBlockFileName, state.context);
+			CodecUtil.writeIndexHeader(indexOut, TERMS_INDEX_CODEC_NAME, VERSION_CURRENT,
+				state.segmentInfo.getId(), state.segmentSuffix);
+			CodecUtil.writeIndexHeader(blockOut, TERMS_CODEC_NAME, VERSION_CURRENT,
+				state.segmentInfo.getId(), state.segmentSuffix);
+			this.postingsWriter.init(blockOut, state);
+			success = true;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(indexOut, blockOut);
+			}
+		}
+	}
 
-      long sumTotalTermFreq = 0;
-      long sumDocFreq = 0;
-      FixedBitSet docsSeen = new FixedBitSet(maxDoc);
-      while (true) {
-        BytesRef term = termsEnum.next();
-        if (term == null) {
-          break;
-        }
-        BlockTermState termState = postingsWriter.writeTerm(term, termsEnum, docsSeen, norms);
-        if (termState != null) {
-          termsWriter.finishTerm(term, termState);
-          sumTotalTermFreq += termState.totalTermFreq;
-          sumDocFreq += termState.docFreq;
-        }
-      }
+	@Override
+	public void write(Fields fields, NormsProducer norms) throws IOException {
+		for (String field : fields) {
+			Terms terms = fields.terms(field);
+			if (terms == null) {
+				continue;
+			}
+			FieldInfo fieldInfo = fieldInfos.fieldInfo(field);
+			boolean hasFreq = fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0;
+			TermsEnum termsEnum = terms.iterator();
+			TermsWriter termsWriter = new TermsWriter(fieldInfo);
 
-      termsWriter.finish(hasFreq ? sumTotalTermFreq : -1, sumDocFreq, docsSeen.cardinality());
-    }
-  }
+			long sumTotalTermFreq = 0;
+			long sumDocFreq = 0;
+			FixedBitSet docsSeen = new FixedBitSet(maxDoc);
+			while (true) {
+				BytesRef term = termsEnum.next();
+				if (term == null) {
+					break;
+				}
+				BlockTermState termState = postingsWriter.writeTerm(term, termsEnum, docsSeen, norms);
+				if (termState != null) {
+					termsWriter.finishTerm(term, termState);
+					sumTotalTermFreq += termState.totalTermFreq;
+					sumDocFreq += termState.docFreq;
+				}
+			}
 
-  @Override
-  public void close() throws IOException {
-    if (blockOut != null) {
-      boolean success = false;
-      try {
-        final long blockDirStart = blockOut.getFilePointer();
-        
-        // write field summary
-        blockOut.writeVInt(fields.size());
-        for (FieldMetaData field : fields) {
-          blockOut.writeVInt(field.fieldInfo.number);
-          blockOut.writeVLong(field.numTerms);
-          if (field.fieldInfo.getIndexOptions() != IndexOptions.DOCS) {
-            blockOut.writeVLong(field.sumTotalTermFreq);
-          }
-          blockOut.writeVLong(field.sumDocFreq);
-          blockOut.writeVInt(field.docCount);
-          blockOut.writeVInt(field.longsSize);
-          blockOut.writeVLong(field.statsOut.getFilePointer());
-          blockOut.writeVLong(field.metaLongsOut.getFilePointer());
-          blockOut.writeVLong(field.metaBytesOut.getFilePointer());
-          
-          field.skipOut.writeTo(blockOut);
-          field.statsOut.writeTo(blockOut);
-          field.metaLongsOut.writeTo(blockOut);
-          field.metaBytesOut.writeTo(blockOut);
-          field.dict.save(indexOut);
-        }
-        writeTrailer(blockOut, blockDirStart);
-        CodecUtil.writeFooter(indexOut);
-        CodecUtil.writeFooter(blockOut);
-        success = true;
-      } finally {
-        if (success) {
-          IOUtils.close(blockOut, indexOut, postingsWriter);
-        } else {
-          IOUtils.closeWhileHandlingException(blockOut, indexOut, postingsWriter);
-        }
-        blockOut = null;
-      }
-    }
-  }
+			termsWriter.finish(hasFreq ? sumTotalTermFreq : -1, sumDocFreq, docsSeen.cardinality());
+		}
+	}
 
-  private void writeTrailer(IndexOutput out, long dirStart) throws IOException {
-    out.writeLong(dirStart);
-  }
+	@Override
+	public void close() throws IOException {
+		if (blockOut != null) {
+			boolean success = false;
+			try {
+				final long blockDirStart = blockOut.getFilePointer();
 
-  private static class FieldMetaData {
-    public FieldInfo fieldInfo;
-    public long numTerms;
-    public long sumTotalTermFreq;
-    public long sumDocFreq;
-    public int docCount;
-    public int longsSize;
-    public FST<Long> dict;
+				// write field summary
+				blockOut.writeVInt(fields.size());
+				for (FieldMetaData field : fields) {
+					blockOut.writeVInt(field.fieldInfo.number);
+					blockOut.writeVLong(field.numTerms);
+					if (field.fieldInfo.getIndexOptions() != IndexOptions.DOCS) {
+						blockOut.writeVLong(field.sumTotalTermFreq);
+					}
+					blockOut.writeVLong(field.sumDocFreq);
+					blockOut.writeVInt(field.docCount);
+					blockOut.writeVInt(field.longsSize);
+					blockOut.writeVLong(field.statsOut.getFilePointer());
+					blockOut.writeVLong(field.metaLongsOut.getFilePointer());
+					blockOut.writeVLong(field.metaBytesOut.getFilePointer());
 
-    // TODO: block encode each part 
+					field.skipOut.writeTo(blockOut);
+					field.statsOut.writeTo(blockOut);
+					field.metaLongsOut.writeTo(blockOut);
+					field.metaBytesOut.writeTo(blockOut);
+					field.dict.save(indexOut);
+				}
+				writeTrailer(blockOut, blockDirStart);
+				CodecUtil.writeFooter(indexOut);
+				CodecUtil.writeFooter(blockOut);
+				success = true;
+			} finally {
+				if (success) {
+					IOUtils.close(blockOut, indexOut, postingsWriter);
+				} else {
+					IOUtils.closeWhileHandlingException(blockOut, indexOut, postingsWriter);
+				}
+				blockOut = null;
+			}
+		}
+	}
 
-    // vint encode next skip point (fully decoded when reading)
-    public RAMOutputStream skipOut;
-    // vint encode df, (ttf-df)
-    public RAMOutputStream statsOut;
-    // vint encode monotonic long[] and length for corresponding byte[]
-    public RAMOutputStream metaLongsOut;
-    // generic byte[]
-    public RAMOutputStream metaBytesOut;
-  }
+	private void writeTrailer(IndexOutput out, long dirStart) throws IOException {
+		out.writeLong(dirStart);
+	}
 
-  final class TermsWriter {
-    private final Builder<Long> builder;
-    private final PositiveIntOutputs outputs;
-    private final FieldInfo fieldInfo;
-    private final int longsSize;
-    private long numTerms;
+	private static class FieldMetaData {
+		public FieldInfo fieldInfo;
+		public long numTerms;
+		public long sumTotalTermFreq;
+		public long sumDocFreq;
+		public int docCount;
+		public int longsSize;
+		public FST<Long> dict;
 
-    private final IntsRefBuilder scratchTerm = new IntsRefBuilder();
-    private final RAMOutputStream statsOut = new RAMOutputStream();
-    private final RAMOutputStream metaLongsOut = new RAMOutputStream();
-    private final RAMOutputStream metaBytesOut = new RAMOutputStream();
+		// TODO: block encode each part
 
-    private final RAMOutputStream skipOut = new RAMOutputStream();
-    private long lastBlockStatsFP;
-    private long lastBlockMetaLongsFP;
-    private long lastBlockMetaBytesFP;
-    private long[] lastBlockLongs;
+		// vint encode next skip point (fully decoded when reading)
+		public RAMOutputStream skipOut;
+		// vint encode df, (ttf-df)
+		public RAMOutputStream statsOut;
+		// vint encode monotonic long[] and length for corresponding byte[]
+		public RAMOutputStream metaLongsOut;
+		// generic byte[]
+		public RAMOutputStream metaBytesOut;
+	}
 
-    private long[] lastLongs;
-    private long lastMetaBytesFP;
+	final class TermsWriter {
+		private final Builder<Long> builder;
+		private final PositiveIntOutputs outputs;
+		private final FieldInfo fieldInfo;
+		private final int longsSize;
+		private long numTerms;
 
-    TermsWriter(FieldInfo fieldInfo) {
-      this.numTerms = 0;
-      this.fieldInfo = fieldInfo;
-      this.longsSize = postingsWriter.setField(fieldInfo);
-      this.outputs = PositiveIntOutputs.getSingleton();
-      this.builder = new Builder<>(FST.INPUT_TYPE.BYTE1, outputs);
+		private final IntsRefBuilder scratchTerm = new IntsRefBuilder();
+		private final RAMOutputStream statsOut = new RAMOutputStream();
+		private final RAMOutputStream metaLongsOut = new RAMOutputStream();
+		private final RAMOutputStream metaBytesOut = new RAMOutputStream();
 
-      this.lastBlockStatsFP = 0;
-      this.lastBlockMetaLongsFP = 0;
-      this.lastBlockMetaBytesFP = 0;
-      this.lastBlockLongs = new long[longsSize];
+		private final RAMOutputStream skipOut = new RAMOutputStream();
+		private long lastBlockStatsFP;
+		private long lastBlockMetaLongsFP;
+		private long lastBlockMetaBytesFP;
+		private long[] lastBlockLongs;
 
-      this.lastLongs = new long[longsSize];
-      this.lastMetaBytesFP = 0;
-    }
+		private long[] lastLongs;
+		private long lastMetaBytesFP;
 
-    public void finishTerm(BytesRef text, BlockTermState state) throws IOException {
-      if (numTerms > 0 && numTerms % SKIP_INTERVAL == 0) {
-        bufferSkip();
-      }
-      // write term meta data into fst
-      final long longs[] = new long[longsSize];
-      final long delta = state.totalTermFreq - state.docFreq;
-      if (state.totalTermFreq > 0) {
-        if (delta == 0) {
-          statsOut.writeVInt(state.docFreq<<1|1);
-        } else {
-          statsOut.writeVInt(state.docFreq<<1);
-          statsOut.writeVLong(state.totalTermFreq-state.docFreq);
-        }
-      } else {
-        statsOut.writeVInt(state.docFreq);
-      }
-      postingsWriter.encodeTerm(longs, metaBytesOut, fieldInfo, state, true);
-      for (int i = 0; i < longsSize; i++) {
-        metaLongsOut.writeVLong(longs[i] - lastLongs[i]);
-        lastLongs[i] = longs[i];
-      }
-      metaLongsOut.writeVLong(metaBytesOut.getFilePointer() - lastMetaBytesFP);
+		TermsWriter(FieldInfo fieldInfo) {
+			this.numTerms = 0;
+			this.fieldInfo = fieldInfo;
+			this.longsSize = postingsWriter.setField(fieldInfo);
+			this.outputs = PositiveIntOutputs.getSingleton();
+			this.builder = new Builder<>(FST.INPUT_TYPE.BYTE1, outputs);
 
-      builder.add(Util.toIntsRef(text, scratchTerm), numTerms);
-      numTerms++;
+			this.lastBlockStatsFP = 0;
+			this.lastBlockMetaLongsFP = 0;
+			this.lastBlockMetaBytesFP = 0;
+			this.lastBlockLongs = new long[longsSize];
 
-      lastMetaBytesFP = metaBytesOut.getFilePointer();
-    }
+			this.lastLongs = new long[longsSize];
+			this.lastMetaBytesFP = 0;
+		}
 
-    public void finish(long sumTotalTermFreq, long sumDocFreq, int docCount) throws IOException {
-      if (numTerms > 0) {
-        final FieldMetaData metadata = new FieldMetaData();
-        metadata.fieldInfo = fieldInfo;
-        metadata.numTerms = numTerms;
-        metadata.sumTotalTermFreq = sumTotalTermFreq;
-        metadata.sumDocFreq = sumDocFreq;
-        metadata.docCount = docCount;
-        metadata.longsSize = longsSize;
-        metadata.skipOut = skipOut;
-        metadata.statsOut = statsOut;
-        metadata.metaLongsOut = metaLongsOut;
-        metadata.metaBytesOut = metaBytesOut;
-        metadata.dict = builder.finish();
-        fields.add(metadata);
-      }
-    }
+		public void finishTerm(BytesRef text, BlockTermState state) throws IOException {
+			if (numTerms > 0 && numTerms % SKIP_INTERVAL == 0) {
+				bufferSkip();
+			}
+			// write term meta data into fst
+			final long longs[] = new long[longsSize];
+			final long delta = state.totalTermFreq - state.docFreq;
+			if (state.totalTermFreq > 0) {
+				if (delta == 0) {
+					statsOut.writeVInt(state.docFreq << 1 | 1);
+				} else {
+					statsOut.writeVInt(state.docFreq << 1);
+					statsOut.writeVLong(state.totalTermFreq - state.docFreq);
+				}
+			} else {
+				statsOut.writeVInt(state.docFreq);
+			}
+			postingsWriter.encodeTerm(longs, metaBytesOut, fieldInfo, state, true);
+			for (int i = 0; i < longsSize; i++) {
+				metaLongsOut.writeVLong(longs[i] - lastLongs[i]);
+				lastLongs[i] = longs[i];
+			}
+			metaLongsOut.writeVLong(metaBytesOut.getFilePointer() - lastMetaBytesFP);
 
-    private void bufferSkip() throws IOException {
-      skipOut.writeVLong(statsOut.getFilePointer() - lastBlockStatsFP);
-      skipOut.writeVLong(metaLongsOut.getFilePointer() - lastBlockMetaLongsFP);
-      skipOut.writeVLong(metaBytesOut.getFilePointer() - lastBlockMetaBytesFP);
-      for (int i = 0; i < longsSize; i++) {
-        skipOut.writeVLong(lastLongs[i] - lastBlockLongs[i]);
-      }
-      lastBlockStatsFP = statsOut.getFilePointer();
-      lastBlockMetaLongsFP = metaLongsOut.getFilePointer();
-      lastBlockMetaBytesFP = metaBytesOut.getFilePointer();
-      System.arraycopy(lastLongs, 0, lastBlockLongs, 0, longsSize);
-    }
-  }
+			builder.add(Util.toIntsRef(text, scratchTerm), numTerms);
+			numTerms++;
+
+			lastMetaBytesFP = metaBytesOut.getFilePointer();
+		}
+
+		public void finish(long sumTotalTermFreq, long sumDocFreq, int docCount) throws IOException {
+			if (numTerms > 0) {
+				final FieldMetaData metadata = new FieldMetaData();
+				metadata.fieldInfo = fieldInfo;
+				metadata.numTerms = numTerms;
+				metadata.sumTotalTermFreq = sumTotalTermFreq;
+				metadata.sumDocFreq = sumDocFreq;
+				metadata.docCount = docCount;
+				metadata.longsSize = longsSize;
+				metadata.skipOut = skipOut;
+				metadata.statsOut = statsOut;
+				metadata.metaLongsOut = metaLongsOut;
+				metadata.metaBytesOut = metaBytesOut;
+				metadata.dict = builder.finish();
+				fields.add(metadata);
+			}
+		}
+
+		private void bufferSkip() throws IOException {
+			skipOut.writeVLong(statsOut.getFilePointer() - lastBlockStatsFP);
+			skipOut.writeVLong(metaLongsOut.getFilePointer() - lastBlockMetaLongsFP);
+			skipOut.writeVLong(metaBytesOut.getFilePointer() - lastBlockMetaBytesFP);
+			for (int i = 0; i < longsSize; i++) {
+				skipOut.writeVLong(lastLongs[i] - lastBlockLongs[i]);
+			}
+			lastBlockStatsFP = statsOut.getFilePointer();
+			lastBlockMetaLongsFP = metaLongsOut.getFilePointer();
+			lastBlockMetaBytesFP = metaBytesOut.getFilePointer();
+			System.arraycopy(lastLongs, 0, lastBlockLongs, 0, longsSize);
+		}
+	}
 }

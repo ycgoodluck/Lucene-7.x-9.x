@@ -31,80 +31,81 @@ import org.apache.lucene.util.CharsRefBuilder;
  * Parser for wordnet prolog format
  * <p>
  * See https://wordnet.princeton.edu/documentation/prologdb5wn for a description of the format.
+ *
  * @lucene.experimental
  */
 // TODO: allow you to specify syntactic categories (e.g. just nouns, etc)
 public class WordnetSynonymParser extends SynonymMap.Parser {
-  private final boolean expand;
-  
-  public WordnetSynonymParser(boolean dedup, boolean expand, Analyzer analyzer) {
-    super(dedup, analyzer);
-    this.expand = expand;
-  }
+	private final boolean expand;
 
-  @Override
-  public void parse(Reader in) throws IOException, ParseException {
-    LineNumberReader br = new LineNumberReader(in);
-    try {
-      String line = null;
-      String lastSynSetID = "";
-      CharsRef synset[] = new CharsRef[8];
-      int synsetSize = 0;
-      
-      while ((line = br.readLine()) != null) {
-        String synSetID = line.substring(2, 11);
+	public WordnetSynonymParser(boolean dedup, boolean expand, Analyzer analyzer) {
+		super(dedup, analyzer);
+		this.expand = expand;
+	}
 
-        if (!synSetID.equals(lastSynSetID)) {
-          addInternal(synset, synsetSize);
-          synsetSize = 0;
-        }
+	@Override
+	public void parse(Reader in) throws IOException, ParseException {
+		LineNumberReader br = new LineNumberReader(in);
+		try {
+			String line = null;
+			String lastSynSetID = "";
+			CharsRef synset[] = new CharsRef[8];
+			int synsetSize = 0;
 
-        synset = ArrayUtil.grow(synset, synsetSize + 1);
-        synset[synsetSize] = parseSynonym(line, new CharsRefBuilder());
-        synsetSize++;
-        lastSynSetID = synSetID;
-      }
-      
-      // final synset in the file
-      addInternal(synset, synsetSize);
-    } catch (IllegalArgumentException e) {
-      ParseException ex = new ParseException("Invalid synonym rule at line " + br.getLineNumber(), 0);
-      ex.initCause(e);
-      throw ex;
-    } finally {
-      br.close();
-    }
-  }
- 
-  private CharsRef parseSynonym(String line, CharsRefBuilder reuse) throws IOException {
-    if (reuse == null) {
-      reuse = new CharsRefBuilder();
-    }
-    
-    int start = line.indexOf('\'')+1;
-    int end = line.lastIndexOf('\'');
-    
-    String text = line.substring(start, end).replace("''", "'");
-    return analyze(text, reuse);
-  }
-  
-  private void addInternal(CharsRef synset[], int size) {
-    if (size <= 1) {
-      return; // nothing to do
-    }
-    
-    if (expand) {
-      for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-          if (i != j) {
-            add(synset[i], synset[j], true);
-          }
-        }
-      }
-    } else {
-      for (int i = 0; i < size; i++) {
-        add(synset[i], synset[0], false);
-      }
-    }
-  }
+			while ((line = br.readLine()) != null) {
+				String synSetID = line.substring(2, 11);
+
+				if (!synSetID.equals(lastSynSetID)) {
+					addInternal(synset, synsetSize);
+					synsetSize = 0;
+				}
+
+				synset = ArrayUtil.grow(synset, synsetSize + 1);
+				synset[synsetSize] = parseSynonym(line, new CharsRefBuilder());
+				synsetSize++;
+				lastSynSetID = synSetID;
+			}
+
+			// final synset in the file
+			addInternal(synset, synsetSize);
+		} catch (IllegalArgumentException e) {
+			ParseException ex = new ParseException("Invalid synonym rule at line " + br.getLineNumber(), 0);
+			ex.initCause(e);
+			throw ex;
+		} finally {
+			br.close();
+		}
+	}
+
+	private CharsRef parseSynonym(String line, CharsRefBuilder reuse) throws IOException {
+		if (reuse == null) {
+			reuse = new CharsRefBuilder();
+		}
+
+		int start = line.indexOf('\'') + 1;
+		int end = line.lastIndexOf('\'');
+
+		String text = line.substring(start, end).replace("''", "'");
+		return analyze(text, reuse);
+	}
+
+	private void addInternal(CharsRef synset[], int size) {
+		if (size <= 1) {
+			return; // nothing to do
+		}
+
+		if (expand) {
+			for (int i = 0; i < size; i++) {
+				for (int j = 0; j < size; j++) {
+					if (i != j) {
+						add(synset[i], synset[j], true);
+					}
+				}
+			}
+		} else {
+			for (int i = 0; i < size; i++) {
+				add(synset[i], synset[0], false);
+			}
+		}
+	}
 }

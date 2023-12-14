@@ -38,78 +38,78 @@ import java.io.PrintStream;
  * Test adding to the info stream when there's an exception thrown during field analysis.
  */
 public class TestDocInverterPerFieldErrorInfo extends LuceneTestCase {
-  private static final FieldType storedTextType = new FieldType(TextField.TYPE_NOT_STORED);
+	private static final FieldType storedTextType = new FieldType(TextField.TYPE_NOT_STORED);
 
-  private static class BadNews extends RuntimeException {
-    private BadNews(String message) {
-      super(message);
-    }
-  }
+	private static class BadNews extends RuntimeException {
+		private BadNews(String message) {
+			super(message);
+		}
+	}
 
-  private static class ThrowingAnalyzer extends Analyzer {
-    @Override
-    protected TokenStreamComponents createComponents(String fieldName) {
-      Tokenizer tokenizer = new MockTokenizer();
-      if (fieldName.equals("distinctiveFieldName")) {
-        TokenFilter tosser = new TokenFilter(tokenizer) {
-          @Override
-          public boolean incrementToken() throws IOException {
-            throw new BadNews("Something is icky.");
-          }
-        };
-        return new TokenStreamComponents(tokenizer, tosser);
-      } else {
-        return new TokenStreamComponents(tokenizer);
-      }
-    }
-  }
+	private static class ThrowingAnalyzer extends Analyzer {
+		@Override
+		protected TokenStreamComponents createComponents(String fieldName) {
+			Tokenizer tokenizer = new MockTokenizer();
+			if (fieldName.equals("distinctiveFieldName")) {
+				TokenFilter tosser = new TokenFilter(tokenizer) {
+					@Override
+					public boolean incrementToken() throws IOException {
+						throw new BadNews("Something is icky.");
+					}
+				};
+				return new TokenStreamComponents(tokenizer, tosser);
+			} else {
+				return new TokenStreamComponents(tokenizer);
+			}
+		}
+	}
 
-  @Test
-  public void testInfoStreamGetsFieldName() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter writer;
-    IndexWriterConfig c = new IndexWriterConfig(new ThrowingAnalyzer());
-    final ByteArrayOutputStream infoBytes = new ByteArrayOutputStream();
-    PrintStream infoPrintStream = new PrintStream(infoBytes, true, IOUtils.UTF_8);
-    PrintStreamInfoStream printStreamInfoStream = new PrintStreamInfoStream(infoPrintStream);
-    c.setInfoStream(printStreamInfoStream);
-    writer = new IndexWriter(dir, c);
-    Document doc = new Document();
-    doc.add(newField("distinctiveFieldName", "aaa ", storedTextType));
-    expectThrows(BadNews.class, () -> {
-      writer.addDocument(doc);
-    });
-    infoPrintStream.flush();
-    String infoStream = new String(infoBytes.toByteArray(), IOUtils.UTF_8);
-    assertTrue(infoStream.contains("distinctiveFieldName"));
+	@Test
+	public void testInfoStreamGetsFieldName() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter writer;
+		IndexWriterConfig c = new IndexWriterConfig(new ThrowingAnalyzer());
+		final ByteArrayOutputStream infoBytes = new ByteArrayOutputStream();
+		PrintStream infoPrintStream = new PrintStream(infoBytes, true, IOUtils.UTF_8);
+		PrintStreamInfoStream printStreamInfoStream = new PrintStreamInfoStream(infoPrintStream);
+		c.setInfoStream(printStreamInfoStream);
+		writer = new IndexWriter(dir, c);
+		Document doc = new Document();
+		doc.add(newField("distinctiveFieldName", "aaa ", storedTextType));
+		expectThrows(BadNews.class, () -> {
+			writer.addDocument(doc);
+		});
+		infoPrintStream.flush();
+		String infoStream = new String(infoBytes.toByteArray(), IOUtils.UTF_8);
+		assertTrue(infoStream.contains("distinctiveFieldName"));
 
-    writer.close();
-    dir.close();
-  }
+		writer.close();
+		dir.close();
+	}
 
-  @Test
-  public void testNoExtraNoise() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter writer;
-    IndexWriterConfig c = new IndexWriterConfig(new ThrowingAnalyzer());
-    final ByteArrayOutputStream infoBytes = new ByteArrayOutputStream();
-    PrintStream infoPrintStream = new PrintStream(infoBytes, true, IOUtils.UTF_8);
-    PrintStreamInfoStream printStreamInfoStream = new PrintStreamInfoStream(infoPrintStream);
-    c.setInfoStream(printStreamInfoStream);
-    writer = new IndexWriter(dir, c);
-    Document doc = new Document();
-    doc.add(newField("boringFieldName", "aaa ", storedTextType));
-    try {
-      writer.addDocument(doc);
-    } catch(BadNews badNews) {
-      fail("Unwanted exception");
-    }
-    infoPrintStream.flush();
-    String infoStream = new String(infoBytes.toByteArray(), IOUtils.UTF_8);
-    assertFalse(infoStream.contains("boringFieldName"));
+	@Test
+	public void testNoExtraNoise() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter writer;
+		IndexWriterConfig c = new IndexWriterConfig(new ThrowingAnalyzer());
+		final ByteArrayOutputStream infoBytes = new ByteArrayOutputStream();
+		PrintStream infoPrintStream = new PrintStream(infoBytes, true, IOUtils.UTF_8);
+		PrintStreamInfoStream printStreamInfoStream = new PrintStreamInfoStream(infoPrintStream);
+		c.setInfoStream(printStreamInfoStream);
+		writer = new IndexWriter(dir, c);
+		Document doc = new Document();
+		doc.add(newField("boringFieldName", "aaa ", storedTextType));
+		try {
+			writer.addDocument(doc);
+		} catch (BadNews badNews) {
+			fail("Unwanted exception");
+		}
+		infoPrintStream.flush();
+		String infoStream = new String(infoBytes.toByteArray(), IOUtils.UTF_8);
+		assertFalse(infoStream.contains("boringFieldName"));
 
-    writer.close();
-    dir.close();
-  }
+		writer.close();
+		dir.close();
+	}
 
 }

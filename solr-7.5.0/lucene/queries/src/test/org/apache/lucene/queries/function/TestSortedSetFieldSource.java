@@ -33,41 +33,41 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestSortedSetFieldSource extends LuceneTestCase {
-  public void testSimple() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    doc.add(new SortedSetDocValuesField("value", new BytesRef("baz")));
-    doc.add(newStringField("id", "2", Field.Store.YES));
-    writer.addDocument(doc);
-    doc = new Document();
-    doc.add(new SortedSetDocValuesField("value", new BytesRef("foo")));
-    doc.add(new SortedSetDocValuesField("value", new BytesRef("bar")));
-    doc.add(newStringField("id", "1", Field.Store.YES));
-    writer.addDocument(doc);
-    writer.forceMerge(1);
-    writer.close();
+	public void testSimple() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		doc.add(new SortedSetDocValuesField("value", new BytesRef("baz")));
+		doc.add(newStringField("id", "2", Field.Store.YES));
+		writer.addDocument(doc);
+		doc = new Document();
+		doc.add(new SortedSetDocValuesField("value", new BytesRef("foo")));
+		doc.add(new SortedSetDocValuesField("value", new BytesRef("bar")));
+		doc.add(newStringField("id", "1", Field.Store.YES));
+		writer.addDocument(doc);
+		writer.forceMerge(1);
+		writer.close();
 
-    DirectoryReader ir = DirectoryReader.open(dir);
-    IndexSearcher searcher = newSearcher(ir);
-    LeafReader ar = getOnlyLeafReader(ir);
-    
-    ValueSource vs = new SortedSetFieldSource("value");
-    FunctionValues values = vs.getValues(Collections.emptyMap(), ar.getContext());
-    assertEquals("baz", values.strVal(0));
-    assertEquals("bar", values.strVal(1));
+		DirectoryReader ir = DirectoryReader.open(dir);
+		IndexSearcher searcher = newSearcher(ir);
+		LeafReader ar = getOnlyLeafReader(ir);
 
-    // test SortField optimization
-    final boolean reverse = random().nextBoolean();
-    SortField vssf = vs.getSortField(reverse);
-    SortField sf = new SortedSetSortField("value", reverse);
-    assertEquals(sf, vssf);
+		ValueSource vs = new SortedSetFieldSource("value");
+		FunctionValues values = vs.getValues(Collections.emptyMap(), ar.getContext());
+		assertEquals("baz", values.strVal(0));
+		assertEquals("bar", values.strVal(1));
 
-    vssf = vssf.rewrite(searcher);
-    sf = sf.rewrite(searcher);
-    assertEquals(sf, vssf);
-      
-    ir.close();
-    dir.close();
-  }
+		// test SortField optimization
+		final boolean reverse = random().nextBoolean();
+		SortField vssf = vs.getSortField(reverse);
+		SortField sf = new SortedSetSortField("value", reverse);
+		assertEquals(sf, vssf);
+
+		vssf = vssf.rewrite(searcher);
+		sf = sf.rewrite(searcher);
+		assertEquals(sf, vssf);
+
+		ir.close();
+		dir.close();
+	}
 }

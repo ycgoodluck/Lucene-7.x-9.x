@@ -20,12 +20,14 @@ package org.apache.lucene.codecs.simpletext;
 import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.index.BaseNormsFormatTestCase;
 
-/** Tests SimpleTextNormsFormat */
+/**
+ * Tests SimpleTextNormsFormat
+ */
 public class TestSimpleTextNormsFormat extends BaseNormsFormatTestCase {
-  private final Codec codec = new SimpleTextCodec();
+	private final Codec codec = new SimpleTextCodec();
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

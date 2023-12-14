@@ -33,152 +33,151 @@ import org.apache.lucene.search.QueryVisitor;
  */
 class OffsetIntervalsSource extends IntervalsSource {
 
-  private final IntervalsSource in;
-  private final boolean before;
+	private final IntervalsSource in;
+	private final boolean before;
 
-  OffsetIntervalsSource(IntervalsSource in, boolean before) {
-    this.in = in;
-    this.before = before;
-  }
+	OffsetIntervalsSource(IntervalsSource in, boolean before) {
+		this.in = in;
+		this.before = before;
+	}
 
-  @Override
-  public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
-    IntervalIterator it = in.intervals(field, ctx);
-    if (it == null) {
-      return null;
-    }
-    return offset(it);
-  }
+	@Override
+	public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
+		IntervalIterator it = in.intervals(field, ctx);
+		if (it == null) {
+			return null;
+		}
+		return offset(it);
+	}
 
-  private IntervalIterator offset(IntervalIterator it) {
-    if (before) {
-      return new OffsetIntervalIterator(it) {
-        @Override
-        public int start() {
-          int pos = in.start();
-          if (pos == -1) {
-            return -1;
-          }
-          if (pos == NO_MORE_INTERVALS) {
-            return NO_MORE_INTERVALS;
-          }
-          return Math.max(0, pos - 1);
-        }
-      };
-    }
-    else {
-      return new OffsetIntervalIterator(it) {
-        @Override
-        public int start() {
-          int pos = in.end() + 1;
-          if (pos == 0) {
-            return -1;
-          }
-          if (pos < 0) { // overflow
-            return Integer.MAX_VALUE;
-          }
-          if (pos == Integer.MAX_VALUE) {
-            return Integer.MAX_VALUE - 1;
-          }
-          return pos;
-        }
-      };
-    }
-  }
+	private IntervalIterator offset(IntervalIterator it) {
+		if (before) {
+			return new OffsetIntervalIterator(it) {
+				@Override
+				public int start() {
+					int pos = in.start();
+					if (pos == -1) {
+						return -1;
+					}
+					if (pos == NO_MORE_INTERVALS) {
+						return NO_MORE_INTERVALS;
+					}
+					return Math.max(0, pos - 1);
+				}
+			};
+		} else {
+			return new OffsetIntervalIterator(it) {
+				@Override
+				public int start() {
+					int pos = in.end() + 1;
+					if (pos == 0) {
+						return -1;
+					}
+					if (pos < 0) { // overflow
+						return Integer.MAX_VALUE;
+					}
+					if (pos == Integer.MAX_VALUE) {
+						return Integer.MAX_VALUE - 1;
+					}
+					return pos;
+				}
+			};
+		}
+	}
 
-  private static abstract class OffsetIntervalIterator extends IntervalIterator {
+	private static abstract class OffsetIntervalIterator extends IntervalIterator {
 
-    final IntervalIterator in;
+		final IntervalIterator in;
 
-    OffsetIntervalIterator(IntervalIterator in) {
-      this.in = in;
-    }
+		OffsetIntervalIterator(IntervalIterator in) {
+			this.in = in;
+		}
 
-    @Override
-    public int end() {
-      return start();
-    }
+		@Override
+		public int end() {
+			return start();
+		}
 
-    @Override
-    public int gaps() {
-      return 0;
-    }
+		@Override
+		public int gaps() {
+			return 0;
+		}
 
-    @Override
-    public int nextInterval() throws IOException {
-      in.nextInterval();
-      return start();
-    }
+		@Override
+		public int nextInterval() throws IOException {
+			in.nextInterval();
+			return start();
+		}
 
-    @Override
-    public float matchCost() {
-      return in.matchCost();
-    }
+		@Override
+		public float matchCost() {
+			return in.matchCost();
+		}
 
-    @Override
-    public int docID() {
-      return in.docID();
-    }
+		@Override
+		public int docID() {
+			return in.docID();
+		}
 
-    @Override
-    public int nextDoc() throws IOException {
-      return in.nextDoc();
-    }
+		@Override
+		public int nextDoc() throws IOException {
+			return in.nextDoc();
+		}
 
-    @Override
-    public int advance(int target) throws IOException {
-      return in.advance(target);
-    }
+		@Override
+		public int advance(int target) throws IOException {
+			return in.advance(target);
+		}
 
-    @Override
-    public long cost() {
-      return in.cost();
-    }
-  }
+		@Override
+		public long cost() {
+			return in.cost();
+		}
+	}
 
-  @Override
-  public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
-    MatchesIterator mi = in.matches(field, ctx, doc);
-    if (mi == null) {
-      return null;
-    }
-    return IntervalMatches.asMatches(offset(IntervalMatches.wrapMatches(mi, doc)), mi, doc);
-  }
+	@Override
+	public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
+		MatchesIterator mi = in.matches(field, ctx, doc);
+		if (mi == null) {
+			return null;
+		}
+		return IntervalMatches.asMatches(offset(IntervalMatches.wrapMatches(mi, doc)), mi, doc);
+	}
 
-  @Override
-  public void visit(String field, QueryVisitor visitor) {
-    in.visit(field, visitor.getSubVisitor(BooleanClause.Occur.MUST, new IntervalQuery(field, this)));
-  }
+	@Override
+	public void visit(String field, QueryVisitor visitor) {
+		in.visit(field, visitor.getSubVisitor(BooleanClause.Occur.MUST, new IntervalQuery(field, this)));
+	}
 
-  @Override
-  public int minExtent() {
-    return 1;
-  }
+	@Override
+	public int minExtent() {
+		return 1;
+	}
 
-  @Override
-  public Collection<IntervalsSource> pullUpDisjunctions() {
-    return Collections.singleton(this);
-  }
+	@Override
+	public Collection<IntervalsSource> pullUpDisjunctions() {
+		return Collections.singleton(this);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    OffsetIntervalsSource that = (OffsetIntervalsSource) o;
-    return before == that.before &&
-        Objects.equals(in, that.in);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		OffsetIntervalsSource that = (OffsetIntervalsSource) o;
+		return before == that.before &&
+			Objects.equals(in, that.in);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(in, before);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(in, before);
+	}
 
-  @Override
-  public String toString() {
-    if (before) {
-      return ("PRECEDING(" + in + ")");
-    }
-    return ("FOLLOWING(" + in + ")");
-  }
+	@Override
+	public String toString() {
+		if (before) {
+			return ("PRECEDING(" + in + ")");
+		}
+		return ("FOLLOWING(" + in + ")");
+	}
 }

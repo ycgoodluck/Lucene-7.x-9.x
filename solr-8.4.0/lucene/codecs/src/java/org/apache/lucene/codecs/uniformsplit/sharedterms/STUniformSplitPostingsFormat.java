@@ -45,40 +45,40 @@ import org.apache.lucene.index.SegmentWriteState;
  */
 public class STUniformSplitPostingsFormat extends UniformSplitPostingsFormat {
 
-  /**
-   * Extension of the file containing the terms dictionary (the FST "trie").
-   */
-  public static final String TERMS_DICTIONARY_EXTENSION = "stustd";
-  /**
-   * Extension of the file containing the terms blocks for each field and the fields metadata.
-   */
-  public static final String TERMS_BLOCKS_EXTENSION = "stustb";
+	/**
+	 * Extension of the file containing the terms dictionary (the FST "trie").
+	 */
+	public static final String TERMS_DICTIONARY_EXTENSION = "stustd";
+	/**
+	 * Extension of the file containing the terms blocks for each field and the fields metadata.
+	 */
+	public static final String TERMS_BLOCKS_EXTENSION = "stustb";
 
-  public static final int VERSION_CURRENT = 0;
+	public static final int VERSION_CURRENT = 0;
 
-  public static final String NAME = "SharedTermsUniformSplit";
+	public static final String NAME = "SharedTermsUniformSplit";
 
-  public STUniformSplitPostingsFormat() {
-    this(UniformSplitTermsWriter.DEFAULT_TARGET_NUM_BLOCK_LINES, UniformSplitTermsWriter.DEFAULT_DELTA_NUM_LINES, null, null);
-  }
+	public STUniformSplitPostingsFormat() {
+		this(UniformSplitTermsWriter.DEFAULT_TARGET_NUM_BLOCK_LINES, UniformSplitTermsWriter.DEFAULT_DELTA_NUM_LINES, null, null);
+	}
 
-  public STUniformSplitPostingsFormat(int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder, BlockDecoder blockDecoder) {
-    this(NAME, targetNumBlockLines, deltaNumLines, blockEncoder, blockDecoder);
-  }
+	public STUniformSplitPostingsFormat(int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder, BlockDecoder blockDecoder) {
+		this(NAME, targetNumBlockLines, deltaNumLines, blockEncoder, blockDecoder);
+	}
 
-  protected STUniformSplitPostingsFormat(String name, int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder, BlockDecoder blockDecoder) {
-    super(name, targetNumBlockLines, deltaNumLines, blockEncoder, blockDecoder);
-  }
+	protected STUniformSplitPostingsFormat(String name, int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder, BlockDecoder blockDecoder) {
+		super(name, targetNumBlockLines, deltaNumLines, blockEncoder, blockDecoder);
+	}
 
-  @Override
-  protected FieldsConsumer createUniformSplitTermsWriter(PostingsWriterBase postingsWriter, SegmentWriteState state,
-                                               int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder) throws IOException {
-    return new STUniformSplitTermsWriter(postingsWriter, state, targetNumBlockLines, deltaNumLines, blockEncoder);
-  }
+	@Override
+	protected FieldsConsumer createUniformSplitTermsWriter(PostingsWriterBase postingsWriter, SegmentWriteState state,
+																												 int targetNumBlockLines, int deltaNumLines, BlockEncoder blockEncoder) throws IOException {
+		return new STUniformSplitTermsWriter(postingsWriter, state, targetNumBlockLines, deltaNumLines, blockEncoder);
+	}
 
-  @Override
-  protected FieldsProducer createUniformSplitTermsReader(PostingsReaderBase postingsReader, SegmentReadState state,
-                                               BlockDecoder blockDecoder) throws IOException {
-    return new STUniformSplitTermsReader(postingsReader, state, blockDecoder);
-  }
+	@Override
+	protected FieldsProducer createUniformSplitTermsReader(PostingsReaderBase postingsReader, SegmentReadState state,
+																												 BlockDecoder blockDecoder) throws IOException {
+		return new STUniformSplitTermsReader(postingsReader, state, blockDecoder);
+	}
 }

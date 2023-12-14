@@ -18,6 +18,7 @@ package org.apache.lucene.analysis.hi;
 
 
 import java.io.IOException;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.TokenFilter;
@@ -28,50 +29,51 @@ import org.apache.lucene.analysis.core.KeywordTokenizer;
  * Test HindiNormalizer
  */
 public class TestHindiNormalizer extends BaseTokenStreamTestCase {
-  /**
-   * Test some basic normalization, with an example from the paper.
-   */
-  public void testBasics() throws IOException {
-    check("अँगरेज़ी", "अंगरेजि");
-    check("अँगरेजी", "अंगरेजि");
-    check("अँग्रेज़ी", "अंगरेजि");
-    check("अँग्रेजी", "अंगरेजि");
-    check("अंगरेज़ी", "अंगरेजि");
-    check("अंगरेजी", "अंगरेजि");
-    check("अंग्रेज़ी", "अंगरेजि");
-    check("अंग्रेजी", "अंगरेजि");
-  }
-  
-  public void testDecompositions() throws IOException {
-    // removing nukta dot
-    check("क़िताब", "किताब");
-    check("फ़र्ज़", "फरज");
-    check("क़र्ज़", "करज");
-    // some other composed nukta forms
-    check("ऱऴख़ग़ड़ढ़य़", "रळखगडढय");
-    // removal of format (ZWJ/ZWNJ)
-    check("शार्‍मा", "शारमा");
-    check("शार्‌मा", "शारमा");
-    // removal of chandra
-    check("ॅॆॉॊऍऎऑऒ\u0972", "ेेोोएएओओअ");
-    // vowel shortening
-    check("आईऊॠॡऐऔीूॄॣैौ", "अइउऋऌएओिुृॢेो");
-  }
-  private void check(String input, String output) throws IOException {
-    Tokenizer tokenizer = whitespaceMockTokenizer(input);
-    TokenFilter tf = new HindiNormalizationFilter(tokenizer);
-    assertTokenStreamContents(tf, new String[] { output });
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new HindiNormalizationFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	/**
+	 * Test some basic normalization, with an example from the paper.
+	 */
+	public void testBasics() throws IOException {
+		check("अँगरेज़ी", "अंगरेजि");
+		check("अँगरेजी", "अंगरेजि");
+		check("अँग्रेज़ी", "अंगरेजि");
+		check("अँग्रेजी", "अंगरेजि");
+		check("अंगरेज़ी", "अंगरेजि");
+		check("अंगरेजी", "अंगरेजि");
+		check("अंग्रेज़ी", "अंगरेजि");
+		check("अंग्रेजी", "अंगरेजि");
+	}
+
+	public void testDecompositions() throws IOException {
+		// removing nukta dot
+		check("क़िताब", "किताब");
+		check("फ़र्ज़", "फरज");
+		check("क़र्ज़", "करज");
+		// some other composed nukta forms
+		check("ऱऴख़ग़ड़ढ़य़", "रळखगडढय");
+		// removal of format (ZWJ/ZWNJ)
+		check("शार्‍मा", "शारमा");
+		check("शार्‌मा", "शारमा");
+		// removal of chandra
+		check("ॅॆॉॊऍऎऑऒ\u0972", "ेेोोएएओओअ");
+		// vowel shortening
+		check("आईऊॠॡऐऔीूॄॣैौ", "अइउऋऌएओिुृॢेो");
+	}
+
+	private void check(String input, String output) throws IOException {
+		Tokenizer tokenizer = whitespaceMockTokenizer(input);
+		TokenFilter tf = new HindiNormalizationFilter(tokenizer);
+		assertTokenStreamContents(tf, new String[]{output});
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new HindiNormalizationFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

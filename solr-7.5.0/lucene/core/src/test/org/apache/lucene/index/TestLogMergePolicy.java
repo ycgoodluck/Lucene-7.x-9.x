@@ -23,25 +23,25 @@ import org.apache.lucene.index.MergePolicy.OneMerge;
 
 public class TestLogMergePolicy extends BaseMergePolicyTestCase {
 
-  public MergePolicy mergePolicy() {
-    return newLogMergePolicy(random());
-  }
+	public MergePolicy mergePolicy() {
+		return newLogMergePolicy(random());
+	}
 
-  public void testDefaultForcedMergeMB() {
-    LogByteSizeMergePolicy mp = new LogByteSizeMergePolicy();
-    assertTrue(mp.getMaxMergeMBForForcedMerge() > 0.0);
-  }
+	public void testDefaultForcedMergeMB() {
+		LogByteSizeMergePolicy mp = new LogByteSizeMergePolicy();
+		assertTrue(mp.getMaxMergeMBForForcedMerge() > 0.0);
+	}
 
-  @Override
-  protected void assertSegmentInfos(MergePolicy policy, SegmentInfos infos) throws IOException {
-    // TODO
-  }
+	@Override
+	protected void assertSegmentInfos(MergePolicy policy, SegmentInfos infos) throws IOException {
+		// TODO
+	}
 
-  @Override
-  protected void assertMerge(MergePolicy policy, MergeSpecification merge) throws IOException {
-    LogMergePolicy lmp = (LogMergePolicy) policy;
-    for (OneMerge oneMerge : merge.merges) {
-      assertEquals(lmp.getMergeFactor(), oneMerge.segments.size());
-    }
-  }
+	@Override
+	protected void assertMerge(MergePolicy policy, MergeSpecification merge) throws IOException {
+		LogMergePolicy lmp = (LogMergePolicy) policy;
+		for (OneMerge oneMerge : merge.merges) {
+			assertEquals(lmp.getMergeFactor(), oneMerge.segments.size());
+		}
+	}
 }

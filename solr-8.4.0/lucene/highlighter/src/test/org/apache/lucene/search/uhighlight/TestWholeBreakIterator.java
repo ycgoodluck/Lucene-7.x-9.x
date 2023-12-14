@@ -24,111 +24,117 @@ import java.util.Locale;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestWholeBreakIterator extends LuceneTestCase {
-  
-  /** For single sentences, we know WholeBreakIterator should break the same as a sentence iterator */
-  public void testSingleSentences() throws Exception {
-    BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
-    BreakIterator actual = new WholeBreakIterator();
-    assertSameBreaks("a", expected, actual);
-    assertSameBreaks("ab", expected, actual);
-    assertSameBreaks("abc", expected, actual);
-    assertSameBreaks("", expected, actual);
-  }
-  
-  public void testSliceEnd() throws Exception {
-    BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
-    BreakIterator actual = new WholeBreakIterator();
-    assertSameBreaks("a000", 0, 1, expected, actual);
-    assertSameBreaks("ab000", 0, 1, expected, actual);
-    assertSameBreaks("abc000", 0, 1, expected, actual);
-    assertSameBreaks("000", 0, 0, expected, actual);
-  }
-  
-  public void testSliceStart() throws Exception {
-    BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
-    BreakIterator actual = new WholeBreakIterator();
-    assertSameBreaks("000a", 3, 1, expected, actual);
-    assertSameBreaks("000ab", 3, 2, expected, actual);
-    assertSameBreaks("000abc", 3, 3, expected, actual);
-    assertSameBreaks("000", 3, 0, expected, actual);
-  }
-  
-  public void testSliceMiddle() throws Exception {
-    BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
-    BreakIterator actual = new WholeBreakIterator();
-    assertSameBreaks("000a000", 3, 1, expected, actual);
-    assertSameBreaks("000ab000", 3, 2, expected, actual);
-    assertSameBreaks("000abc000", 3, 3, expected, actual);
-    assertSameBreaks("000000", 3, 0, expected, actual);
-  }
-  
-  /** the current position must be ignored, initial position is always first() */
-  public void testFirstPosition() throws Exception {
-    BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
-    BreakIterator actual = new WholeBreakIterator();
-    assertSameBreaks("000ab000", 3, 2, 4, expected, actual);
-  }
 
-  public static void assertSameBreaks(String text, BreakIterator expected, BreakIterator actual) {
-    assertSameBreaks(new StringCharacterIterator(text), 
-                     new StringCharacterIterator(text), 
-                     expected, 
-                     actual);
-  }
-  
-  public static void assertSameBreaks(String text, int offset, int length, BreakIterator expected, BreakIterator actual) {
-    assertSameBreaks(text, offset, length, offset, expected, actual);
-  }
-  
-  public static void assertSameBreaks(String text, int offset, int length, int current, BreakIterator expected, BreakIterator actual) {
-    assertSameBreaks(new StringCharacterIterator(text, offset, offset+length, current), 
-                     new StringCharacterIterator(text, offset, offset+length, current), 
-                     expected, 
-                     actual);
-  }
+	/**
+	 * For single sentences, we know WholeBreakIterator should break the same as a sentence iterator
+	 */
+	public void testSingleSentences() throws Exception {
+		BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
+		BreakIterator actual = new WholeBreakIterator();
+		assertSameBreaks("a", expected, actual);
+		assertSameBreaks("ab", expected, actual);
+		assertSameBreaks("abc", expected, actual);
+		assertSameBreaks("", expected, actual);
+	}
 
-  /** Asserts that two breakiterators break the text the same way */
-  public static void assertSameBreaks(CharacterIterator one, CharacterIterator two, BreakIterator expected, BreakIterator actual) {
-    expected.setText(one);
-    actual.setText(two);
+	public void testSliceEnd() throws Exception {
+		BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
+		BreakIterator actual = new WholeBreakIterator();
+		assertSameBreaks("a000", 0, 1, expected, actual);
+		assertSameBreaks("ab000", 0, 1, expected, actual);
+		assertSameBreaks("abc000", 0, 1, expected, actual);
+		assertSameBreaks("000", 0, 0, expected, actual);
+	}
 
-    assertEquals(expected.current(), actual.current());
+	public void testSliceStart() throws Exception {
+		BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
+		BreakIterator actual = new WholeBreakIterator();
+		assertSameBreaks("000a", 3, 1, expected, actual);
+		assertSameBreaks("000ab", 3, 2, expected, actual);
+		assertSameBreaks("000abc", 3, 3, expected, actual);
+		assertSameBreaks("000", 3, 0, expected, actual);
+	}
 
-    // next()
-    int v = expected.current();
-    while (v != BreakIterator.DONE) {
-      assertEquals(v = expected.next(), actual.next());
-      assertEquals(expected.current(), actual.current());
-    }
-    
-    // first()
-    assertEquals(expected.first(), actual.first());
-    assertEquals(expected.current(), actual.current());
-    // last()
-    assertEquals(expected.last(), actual.last());
-    assertEquals(expected.current(), actual.current());
-    
-    // previous()
-    v = expected.current();
-    while (v != BreakIterator.DONE) {
-      assertEquals(v = expected.previous(), actual.previous());
-      assertEquals(expected.current(), actual.current());
-    }
-    
-    // following()
-    for (int i = one.getBeginIndex(); i <= one.getEndIndex(); i++) {
-      expected.first();
-      actual.first();
-      assertEquals(expected.following(i), actual.following(i));
-      assertEquals(expected.current(), actual.current());
-    }
-    
-    // preceding()
-    for (int i = one.getBeginIndex(); i <= one.getEndIndex(); i++) {
-      expected.last();
-      actual.last();
-      assertEquals(expected.preceding(i), actual.preceding(i));
-      assertEquals(expected.current(), actual.current());
-    }
-  }
+	public void testSliceMiddle() throws Exception {
+		BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
+		BreakIterator actual = new WholeBreakIterator();
+		assertSameBreaks("000a000", 3, 1, expected, actual);
+		assertSameBreaks("000ab000", 3, 2, expected, actual);
+		assertSameBreaks("000abc000", 3, 3, expected, actual);
+		assertSameBreaks("000000", 3, 0, expected, actual);
+	}
+
+	/**
+	 * the current position must be ignored, initial position is always first()
+	 */
+	public void testFirstPosition() throws Exception {
+		BreakIterator expected = BreakIterator.getSentenceInstance(Locale.ROOT);
+		BreakIterator actual = new WholeBreakIterator();
+		assertSameBreaks("000ab000", 3, 2, 4, expected, actual);
+	}
+
+	public static void assertSameBreaks(String text, BreakIterator expected, BreakIterator actual) {
+		assertSameBreaks(new StringCharacterIterator(text),
+			new StringCharacterIterator(text),
+			expected,
+			actual);
+	}
+
+	public static void assertSameBreaks(String text, int offset, int length, BreakIterator expected, BreakIterator actual) {
+		assertSameBreaks(text, offset, length, offset, expected, actual);
+	}
+
+	public static void assertSameBreaks(String text, int offset, int length, int current, BreakIterator expected, BreakIterator actual) {
+		assertSameBreaks(new StringCharacterIterator(text, offset, offset + length, current),
+			new StringCharacterIterator(text, offset, offset + length, current),
+			expected,
+			actual);
+	}
+
+	/**
+	 * Asserts that two breakiterators break the text the same way
+	 */
+	public static void assertSameBreaks(CharacterIterator one, CharacterIterator two, BreakIterator expected, BreakIterator actual) {
+		expected.setText(one);
+		actual.setText(two);
+
+		assertEquals(expected.current(), actual.current());
+
+		// next()
+		int v = expected.current();
+		while (v != BreakIterator.DONE) {
+			assertEquals(v = expected.next(), actual.next());
+			assertEquals(expected.current(), actual.current());
+		}
+
+		// first()
+		assertEquals(expected.first(), actual.first());
+		assertEquals(expected.current(), actual.current());
+		// last()
+		assertEquals(expected.last(), actual.last());
+		assertEquals(expected.current(), actual.current());
+
+		// previous()
+		v = expected.current();
+		while (v != BreakIterator.DONE) {
+			assertEquals(v = expected.previous(), actual.previous());
+			assertEquals(expected.current(), actual.current());
+		}
+
+		// following()
+		for (int i = one.getBeginIndex(); i <= one.getEndIndex(); i++) {
+			expected.first();
+			actual.first();
+			assertEquals(expected.following(i), actual.following(i));
+			assertEquals(expected.current(), actual.current());
+		}
+
+		// preceding()
+		for (int i = one.getBeginIndex(); i <= one.getEndIndex(); i++) {
+			expected.last();
+			actual.last();
+			assertEquals(expected.preceding(i), actual.preceding(i));
+			assertEquals(expected.current(), actual.current());
+		}
+	}
 }

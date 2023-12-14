@@ -23,24 +23,24 @@ import org.apache.lucene.facet.taxonomy.FacetLabel;
  * Used to cache Ordinals of category paths.
  * It uses as key, hash of the path instead of the path.
  * This way the cache takes less RAM, but correctness depends on
- * assuming no collisions. 
- * 
+ * assuming no collisions.
+ *
  * @lucene.experimental
  */
 public class NameHashIntCacheLRU extends NameIntCacheLRU {
 
-  NameHashIntCacheLRU(int maxCacheSize) {
-    super(maxCacheSize);
-  }
+	NameHashIntCacheLRU(int maxCacheSize) {
+		super(maxCacheSize);
+	}
 
-  @Override
-  Object key(FacetLabel name) {
-    return name.longHashCode();
-  }
+	@Override
+	Object key(FacetLabel name) {
+		return name.longHashCode();
+	}
 
-  @Override
-  Object key(FacetLabel name, int prefixLen) {
-    return name.subpath(prefixLen).longHashCode();
-  }
-  
+	@Override
+	Object key(FacetLabel name, int prefixLen) {
+		return name.subpath(prefixLen).longHashCode();
+	}
+
 }

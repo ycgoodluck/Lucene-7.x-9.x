@@ -27,43 +27,45 @@ import java.io.StringReader;
 
 public class TestSnowballPorterFilterFactory extends BaseTokenStreamFactoryTestCase {
 
-  public void test() throws Exception {
-    String text = "The fledgling banks were counting on a big boom in banking";
-    EnglishStemmer stemmer = new EnglishStemmer();
-    String[] test = text.split("\\s");
-    String[] gold = new String[test.length];
-    for (int i = 0; i < test.length; i++) {
-      stemmer.setCurrent(test[i]);
-      stemmer.stem();
-      gold[i] = stemmer.getCurrent();
-    }
-    
-    Reader reader = new StringReader(text);
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("SnowballPorter", "language", "English").create(stream);
-    assertTokenStreamContents(stream, gold);
-  }
-  
-  /**
-   * Test the protected words mechanism of SnowballPorterFilterFactory
-   */
-  public void testProtected() throws Exception {
-    Reader reader = new StringReader("ridding of some stemming");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("SnowballPorter", Version.LATEST,
-        new StringMockResourceLoader("ridding"),
-        "protected", "protwords.txt",
-        "language", "English").create(stream);
+	public void test() throws Exception {
+		String text = "The fledgling banks were counting on a big boom in banking";
+		EnglishStemmer stemmer = new EnglishStemmer();
+		String[] test = text.split("\\s");
+		String[] gold = new String[test.length];
+		for (int i = 0; i < test.length; i++) {
+			stemmer.setCurrent(test[i]);
+			stemmer.stem();
+			gold[i] = stemmer.getCurrent();
+		}
 
-    assertTokenStreamContents(stream, new String[] { "ridding", "of", "some", "stem" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("SnowballPorter", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+		Reader reader = new StringReader(text);
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("SnowballPorter", "language", "English").create(stream);
+		assertTokenStreamContents(stream, gold);
+	}
+
+	/**
+	 * Test the protected words mechanism of SnowballPorterFilterFactory
+	 */
+	public void testProtected() throws Exception {
+		Reader reader = new StringReader("ridding of some stemming");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("SnowballPorter", Version.LATEST,
+			new StringMockResourceLoader("ridding"),
+			"protected", "protwords.txt",
+			"language", "English").create(stream);
+
+		assertTokenStreamContents(stream, new String[]{"ridding", "of", "some", "stem"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("SnowballPorter", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }
 

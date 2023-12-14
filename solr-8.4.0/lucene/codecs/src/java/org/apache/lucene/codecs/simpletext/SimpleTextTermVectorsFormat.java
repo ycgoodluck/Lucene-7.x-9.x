@@ -31,17 +31,18 @@ import org.apache.lucene.store.IOContext;
  * plain text term vectors format.
  * <p>
  * <b>FOR RECREATIONAL USE ONLY</b>
+ *
  * @lucene.experimental
  */
 public class SimpleTextTermVectorsFormat extends TermVectorsFormat {
 
-  @Override
-  public TermVectorsReader vectorsReader(Directory directory, SegmentInfo segmentInfo, FieldInfos fieldInfos, IOContext context) throws IOException {
-    return new SimpleTextTermVectorsReader(directory, segmentInfo, context);
-  }
+	@Override
+	public TermVectorsReader vectorsReader(Directory directory, SegmentInfo segmentInfo, FieldInfos fieldInfos, IOContext context) throws IOException {
+		return new SimpleTextTermVectorsReader(directory, segmentInfo, context);
+	}
 
-  @Override
-  public TermVectorsWriter vectorsWriter(Directory directory, SegmentInfo segmentInfo, IOContext context) throws IOException {
-    return new SimpleTextTermVectorsWriter(directory, segmentInfo.name, context);
-  }
+	@Override
+	public TermVectorsWriter vectorsWriter(Directory directory, SegmentInfo segmentInfo, IOContext context) throws IOException {
+		return new SimpleTextTermVectorsWriter(directory, segmentInfo.name, context);
+	}
 }

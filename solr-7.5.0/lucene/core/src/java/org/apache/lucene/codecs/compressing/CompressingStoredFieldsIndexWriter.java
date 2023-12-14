@@ -68,153 +68,154 @@ import org.apache.lucene.util.packed.PackedInts;
  * of DocBase in order to find the right block, and then inside the block based
  * on DocBaseDeltas (by reconstructing the doc bases for every chunk).</li>
  * </ul>
+ *
  * @lucene.internal
  */
 public final class CompressingStoredFieldsIndexWriter implements Closeable {
-  
-  final IndexOutput fieldsIndexOut;
-  final int blockSize;
-  int totalDocs;
-  int blockDocs;
-  int blockChunks;
-  long firstStartPointer;
-  long maxStartPointer;
-  final int[] docBaseDeltas;
-  final long[] startPointerDeltas;
 
-  CompressingStoredFieldsIndexWriter(IndexOutput indexOutput, int blockSize) throws IOException {
-    if (blockSize <= 0) {
-      throw new IllegalArgumentException("blockSize must be positive");
-    }
-    this.blockSize = blockSize;
-    this.fieldsIndexOut = indexOutput;
-    reset();
-    totalDocs = 0;
-    docBaseDeltas = new int[blockSize];
-    startPointerDeltas = new long[blockSize];
-    fieldsIndexOut.writeVInt(PackedInts.VERSION_CURRENT);
-  }
+	final IndexOutput fieldsIndexOut;
+	final int blockSize;
+	int totalDocs;
+	int blockDocs;
+	int blockChunks;
+	long firstStartPointer;
+	long maxStartPointer;
+	final int[] docBaseDeltas;
+	final long[] startPointerDeltas;
 
-  private void reset() {
-    blockChunks = 0;
-    blockDocs = 0;
-    firstStartPointer = -1; // means unset
-  }
+	CompressingStoredFieldsIndexWriter(IndexOutput indexOutput, int blockSize) throws IOException {
+		if (blockSize <= 0) {
+			throw new IllegalArgumentException("blockSize must be positive");
+		}
+		this.blockSize = blockSize;
+		this.fieldsIndexOut = indexOutput;
+		reset();
+		totalDocs = 0;
+		docBaseDeltas = new int[blockSize];
+		startPointerDeltas = new long[blockSize];
+		fieldsIndexOut.writeVInt(PackedInts.VERSION_CURRENT);
+	}
 
-  private void writeBlock() throws IOException {
-    assert blockChunks > 0;
-    // block中包含的chunk的个数
-    fieldsIndexOut.writeVInt(blockChunks);
+	private void reset() {
+		blockChunks = 0;
+		blockDocs = 0;
+		firstStartPointer = -1; // means unset
+	}
 
-    // The trick here is that we only store the difference from the average start
-    // pointer or doc base, this helps save bits per value.
-    // And in order to prevent a few chunks that would be far from the average to
-    // raise the number of bits per value for all of them, we only encode blocks
-    // of 1024 chunks at once
-    // See LUCENE-4512
+	private void writeBlock() throws IOException {
+		assert blockChunks > 0;
+		// block中包含的chunk的个数
+		fieldsIndexOut.writeVInt(blockChunks);
 
-    // doc bases
-    // 平均一个chunk中包含的文档个数
-    final int avgChunkDocs;
-    if (blockChunks == 1) {
-      avgChunkDocs = 0;
-    } else {
-      avgChunkDocs = Math.round((float) (blockDocs - docBaseDeltas[blockChunks - 1]) / (blockChunks - 1));
-    }
-    fieldsIndexOut.writeVInt(totalDocs - blockDocs); // docBase
-    fieldsIndexOut.writeVInt(avgChunkDocs);
-    int docBase = 0;
-    long maxDelta = 0;
-    // 计算存储文档号需要的bit位
-    for (int i = 0; i < blockChunks; ++i) {
-      final int delta = docBase - avgChunkDocs * i;
-      maxDelta |= zigZagEncode(delta);
-      docBase += docBaseDeltas[i];
-    }
+		// The trick here is that we only store the difference from the average start
+		// pointer or doc base, this helps save bits per value.
+		// And in order to prevent a few chunks that would be far from the average to
+		// raise the number of bits per value for all of them, we only encode blocks
+		// of 1024 chunks at once
+		// See LUCENE-4512
 
-    final int bitsPerDocBase = PackedInts.bitsRequired(maxDelta);
-    fieldsIndexOut.writeVInt(bitsPerDocBase);
-    PackedInts.Writer writer = PackedInts.getWriterNoHeader(fieldsIndexOut,
-        PackedInts.Format.PACKED, blockChunks, bitsPerDocBase, 1);
-    docBase = 0;
-    for (int i = 0; i < blockChunks; ++i) {
-      final long delta = docBase - avgChunkDocs * i;
-      assert PackedInts.bitsRequired(zigZagEncode(delta)) <= writer.bitsPerValue();
-      writer.add(zigZagEncode(delta));
-      docBase += docBaseDeltas[i];
-    }
-    writer.finish();
+		// doc bases
+		// 平均一个chunk中包含的文档个数
+		final int avgChunkDocs;
+		if (blockChunks == 1) {
+			avgChunkDocs = 0;
+		} else {
+			avgChunkDocs = Math.round((float) (blockDocs - docBaseDeltas[blockChunks - 1]) / (blockChunks - 1));
+		}
+		fieldsIndexOut.writeVInt(totalDocs - blockDocs); // docBase
+		fieldsIndexOut.writeVInt(avgChunkDocs);
+		int docBase = 0;
+		long maxDelta = 0;
+		// 计算存储文档号需要的bit位
+		for (int i = 0; i < blockChunks; ++i) {
+			final int delta = docBase - avgChunkDocs * i;
+			maxDelta |= zigZagEncode(delta);
+			docBase += docBaseDeltas[i];
+		}
 
-    // start pointers
-    fieldsIndexOut.writeVLong(firstStartPointer);
-    final long avgChunkSize;
-    if (blockChunks == 1) {
-      avgChunkSize = 0;
-    } else {
-      avgChunkSize = (maxStartPointer - firstStartPointer) / (blockChunks - 1);
-    }
-    fieldsIndexOut.writeVLong(avgChunkSize);
-    long startPointer = 0;
-    maxDelta = 0;
-    for (int i = 0; i < blockChunks; ++i) {
-      startPointer += startPointerDeltas[i];
-      final long delta = startPointer - avgChunkSize * i;
-      maxDelta |= zigZagEncode(delta);
-    }
+		final int bitsPerDocBase = PackedInts.bitsRequired(maxDelta);
+		fieldsIndexOut.writeVInt(bitsPerDocBase);
+		PackedInts.Writer writer = PackedInts.getWriterNoHeader(fieldsIndexOut,
+			PackedInts.Format.PACKED, blockChunks, bitsPerDocBase, 1);
+		docBase = 0;
+		for (int i = 0; i < blockChunks; ++i) {
+			final long delta = docBase - avgChunkDocs * i;
+			assert PackedInts.bitsRequired(zigZagEncode(delta)) <= writer.bitsPerValue();
+			writer.add(zigZagEncode(delta));
+			docBase += docBaseDeltas[i];
+		}
+		writer.finish();
 
-    final int bitsPerStartPointer = PackedInts.bitsRequired(maxDelta);
-    fieldsIndexOut.writeVInt(bitsPerStartPointer);
-    writer = PackedInts.getWriterNoHeader(fieldsIndexOut, PackedInts.Format.PACKED,
-        blockChunks, bitsPerStartPointer, 1);
-    startPointer = 0;
-    for (int i = 0; i < blockChunks; ++i) {
-      startPointer += startPointerDeltas[i];
-      final long delta = startPointer - avgChunkSize * i;
-      assert PackedInts.bitsRequired(zigZagEncode(delta)) <= writer.bitsPerValue();
-      writer.add(zigZagEncode(delta));
-    }
-    writer.finish();
-  }
+		// start pointers
+		fieldsIndexOut.writeVLong(firstStartPointer);
+		final long avgChunkSize;
+		if (blockChunks == 1) {
+			avgChunkSize = 0;
+		} else {
+			avgChunkSize = (maxStartPointer - firstStartPointer) / (blockChunks - 1);
+		}
+		fieldsIndexOut.writeVLong(avgChunkSize);
+		long startPointer = 0;
+		maxDelta = 0;
+		for (int i = 0; i < blockChunks; ++i) {
+			startPointer += startPointerDeltas[i];
+			final long delta = startPointer - avgChunkSize * i;
+			maxDelta |= zigZagEncode(delta);
+		}
 
-  void writeIndex(int numDocs, long startPointer) throws IOException {
-    // 每一个块的大小是1024, 没1024个文档生成一个block
-    if (blockChunks == blockSize) {
-      writeBlock();
-      reset();
-    }
+		final int bitsPerStartPointer = PackedInts.bitsRequired(maxDelta);
+		fieldsIndexOut.writeVInt(bitsPerStartPointer);
+		writer = PackedInts.getWriterNoHeader(fieldsIndexOut, PackedInts.Format.PACKED,
+			blockChunks, bitsPerStartPointer, 1);
+		startPointer = 0;
+		for (int i = 0; i < blockChunks; ++i) {
+			startPointer += startPointerDeltas[i];
+			final long delta = startPointer - avgChunkSize * i;
+			assert PackedInts.bitsRequired(zigZagEncode(delta)) <= writer.bitsPerValue();
+			writer.add(zigZagEncode(delta));
+		}
+		writer.finish();
+	}
 
-    if (firstStartPointer == -1) {
-      firstStartPointer = maxStartPointer = startPointer;
-    }
-    assert firstStartPointer > 0 && startPointer >= firstStartPointer;
+	void writeIndex(int numDocs, long startPointer) throws IOException {
+		// 每一个块的大小是1024, 没1024个文档生成一个block
+		if (blockChunks == blockSize) {
+			writeBlock();
+			reset();
+		}
 
-    // 记录当前chunk中的文档个数
-    docBaseDeltas[blockChunks] = numDocs;
-    // 记录当前chunk在.fdt或者.tvd文件中的 起始位置
-    startPointerDeltas[blockChunks] = startPointer - maxStartPointer;
+		if (firstStartPointer == -1) {
+			firstStartPointer = maxStartPointer = startPointer;
+		}
+		assert firstStartPointer > 0 && startPointer >= firstStartPointer;
 
-    // 累加chunk个数，当达到blockSize时就会在.fdx或.tvx中建立索引
-    ++blockChunks;
-    blockDocs += numDocs;
-    totalDocs += numDocs;
-    maxStartPointer = startPointer;
-  }
+		// 记录当前chunk中的文档个数
+		docBaseDeltas[blockChunks] = numDocs;
+		// 记录当前chunk在.fdt或者.tvd文件中的 起始位置
+		startPointerDeltas[blockChunks] = startPointer - maxStartPointer;
 
-  void finish(int numDocs, long maxPointer) throws IOException {
-    if (numDocs != totalDocs) {
-      throw new IllegalStateException("Expected " + numDocs + " docs, but got " + totalDocs);
-    }
-    if (blockChunks > 0) {
-      writeBlock();
-    }
-    fieldsIndexOut.writeVInt(0); // end marker
-    fieldsIndexOut.writeVLong(maxPointer);
-    CodecUtil.writeFooter(fieldsIndexOut);
-  }
+		// 累加chunk个数，当达到blockSize时就会在.fdx或.tvx中建立索引
+		++blockChunks;
+		blockDocs += numDocs;
+		totalDocs += numDocs;
+		maxStartPointer = startPointer;
+	}
 
-  @Override
-  public void close() throws IOException {
-    fieldsIndexOut.close();
-  }
+	void finish(int numDocs, long maxPointer) throws IOException {
+		if (numDocs != totalDocs) {
+			throw new IllegalStateException("Expected " + numDocs + " docs, but got " + totalDocs);
+		}
+		if (blockChunks > 0) {
+			writeBlock();
+		}
+		fieldsIndexOut.writeVInt(0); // end marker
+		fieldsIndexOut.writeVLong(maxPointer);
+		CodecUtil.writeFooter(fieldsIndexOut);
+	}
+
+	@Override
+	public void close() throws IOException {
+		fieldsIndexOut.close();
+	}
 
 }

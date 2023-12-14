@@ -28,21 +28,21 @@ import org.apache.lucene.analysis.core.LowerCaseFilter;
 
 public class TestProtectedTermFilter extends BaseTokenStreamTestCase {
 
-  public void testBasic() throws IOException {
+	public void testBasic() throws IOException {
 
-    CannedTokenStream cts = new CannedTokenStream(
-        new Token("Alice", 1, 0, 5),
-        new Token("Bob", 1, 6, 9),
-        new Token("Clara", 1, 10, 15),
-        new Token("David", 1, 16, 21)
-    );
+		CannedTokenStream cts = new CannedTokenStream(
+			new Token("Alice", 1, 0, 5),
+			new Token("Bob", 1, 6, 9),
+			new Token("Clara", 1, 10, 15),
+			new Token("David", 1, 16, 21)
+		);
 
-    CharArraySet protectedTerms = new CharArraySet(5, true);
-    protectedTerms.add("bob");
+		CharArraySet protectedTerms = new CharArraySet(5, true);
+		protectedTerms.add("bob");
 
-    TokenStream ts = new ProtectedTermFilter(protectedTerms, cts, LowerCaseFilter::new);
-    assertTokenStreamContents(ts, new String[]{ "alice", "Bob", "clara", "david" });
+		TokenStream ts = new ProtectedTermFilter(protectedTerms, cts, LowerCaseFilter::new);
+		assertTokenStreamContents(ts, new String[]{"alice", "Bob", "clara", "david"});
 
-  }
+	}
 
 }

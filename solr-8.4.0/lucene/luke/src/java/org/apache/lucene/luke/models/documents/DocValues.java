@@ -28,57 +28,58 @@ import org.apache.lucene.util.BytesRef;
  */
 public final class DocValues {
 
-  private final DocValuesType dvType;
+	private final DocValuesType dvType;
 
-  private final List<BytesRef> values;
+	private final List<BytesRef> values;
 
-  private final List<Long> numericValues;
+	private final List<Long> numericValues;
 
-  /**
-   * Returns a new doc values entry representing the specified doc values type and values.
-   * @param dvType - doc values type
-   * @param values - (string) values
-   * @param numericValues numeric values
-   * @return doc values
-   */
-  static DocValues of(DocValuesType dvType, List<BytesRef> values, List<Long> numericValues) {
-    return new DocValues(dvType, values, numericValues);
-  }
+	/**
+	 * Returns a new doc values entry representing the specified doc values type and values.
+	 *
+	 * @param dvType        - doc values type
+	 * @param values        - (string) values
+	 * @param numericValues numeric values
+	 * @return doc values
+	 */
+	static DocValues of(DocValuesType dvType, List<BytesRef> values, List<Long> numericValues) {
+		return new DocValues(dvType, values, numericValues);
+	}
 
-  private DocValues(DocValuesType dvType, List<BytesRef> values, List<Long> numericValues) {
-    this.dvType = dvType;
-    this.values = values;
-    this.numericValues = numericValues;
-  }
+	private DocValues(DocValuesType dvType, List<BytesRef> values, List<Long> numericValues) {
+		this.dvType = dvType;
+		this.values = values;
+		this.numericValues = numericValues;
+	}
 
-  /**
-   * Returns the type of this doc values.
-   */
-  public DocValuesType getDvType() {
-    return dvType;
-  }
+	/**
+	 * Returns the type of this doc values.
+	 */
+	public DocValuesType getDvType() {
+		return dvType;
+	}
 
-  /**
-   * Returns the list of (string) values.
-   */
-  public List<BytesRef> getValues() {
-    return values;
-  }
+	/**
+	 * Returns the list of (string) values.
+	 */
+	public List<BytesRef> getValues() {
+		return values;
+	}
 
-  /**
-   * Returns the list of numeric values.
-   */
-  public List<Long> getNumericValues() {
-    return numericValues;
-  }
+	/**
+	 * Returns the list of numeric values.
+	 */
+	public List<Long> getNumericValues() {
+		return numericValues;
+	}
 
-  @Override
-  public String toString() {
-    String numValuesStr = numericValues.stream().map(String::valueOf).collect(Collectors.joining(","));
-    return "DocValues{" +
-        "dvType=" + dvType +
-        ", values=" + values +
-        ", numericValues=[" + numValuesStr + "]" +
-        '}';
-  }
+	@Override
+	public String toString() {
+		String numValuesStr = numericValues.stream().map(String::valueOf).collect(Collectors.joining(","));
+		return "DocValues{" +
+			"dvType=" + dvType +
+			", values=" + values +
+			", numericValues=[" + numValuesStr + "]" +
+			'}';
+	}
 }

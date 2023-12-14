@@ -26,7 +26,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
 
 /**
- * A {@link TokenFilter} that applies {@link GalicianStemmer} to stem 
+ * A {@link TokenFilter} that applies {@link GalicianStemmer} to stem
  * Galician words.
  * <p>
  * To prevent terms from being stemmed use an instance of
@@ -35,26 +35,26 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
  * </p>
  */
 public final class GalicianStemFilter extends TokenFilter {
-  private final GalicianStemmer stemmer = new GalicianStemmer();
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+	private final GalicianStemmer stemmer = new GalicianStemmer();
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
 
-  public GalicianStemFilter(TokenStream input) {
-    super(input);
-  }
-  
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if (!keywordAttr.isKeyword()) {
-        // this stemmer increases word length by 1: worst case '*çom' -> '*ción'
-        final int len = termAtt.length();
-        final int newlen = stemmer.stem(termAtt.resizeBuffer(len+1), len);
-        termAtt.setLength(newlen);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	public GalicianStemFilter(TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				// this stemmer increases word length by 1: worst case '*çom' -> '*ción'
+				final int len = termAtt.length();
+				final int newlen = stemmer.stem(termAtt.resizeBuffer(len + 1), len);
+				termAtt.setLength(newlen);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

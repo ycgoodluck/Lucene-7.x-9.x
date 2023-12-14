@@ -42,53 +42,57 @@ import org.tartarus.snowball.SnowballProgram;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class SnowballPorterFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
 
-  /** SPI name */
-  public static final String NAME = "snowballPorter";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "snowballPorter";
 
-  public static final String PROTECTED_TOKENS = "protected";
+	public static final String PROTECTED_TOKENS = "protected";
 
-  private final String language;
-  private final String wordFiles;
-  private Class<? extends SnowballProgram> stemClass;
-  private CharArraySet protectedWords = null;
-  
-  /** Creates a new SnowballPorterFilterFactory */
-  public SnowballPorterFilterFactory(Map<String,String> args) {
-    super(args);
-    language = get(args, "language", "English");
-    wordFiles = get(args, PROTECTED_TOKENS);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private final String language;
+	private final String wordFiles;
+	private Class<? extends SnowballProgram> stemClass;
+	private CharArraySet protectedWords = null;
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    String className = "org.tartarus.snowball.ext." + language + "Stemmer";
-    stemClass = loader.newInstance(className, SnowballProgram.class).getClass();
+	/**
+	 * Creates a new SnowballPorterFilterFactory
+	 */
+	public SnowballPorterFilterFactory(Map<String, String> args) {
+		super(args);
+		language = get(args, "language", "English");
+		wordFiles = get(args, PROTECTED_TOKENS);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-    if (wordFiles != null) {
-      protectedWords = getWordSet(loader, wordFiles, false);
-    }
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		String className = "org.tartarus.snowball.ext." + language + "Stemmer";
+		stemClass = loader.newInstance(className, SnowballProgram.class).getClass();
 
-  @Override
-  public TokenFilter create(TokenStream input) {
-    SnowballProgram program;
-    try {
-      program = stemClass.newInstance();
-    } catch (Exception e) {
-      throw new RuntimeException("Error instantiating stemmer for language " + language + "from class " + stemClass, e);
-    }
+		if (wordFiles != null) {
+			protectedWords = getWordSet(loader, wordFiles, false);
+		}
+	}
 
-    if (protectedWords != null)
-      input = new SetKeywordMarkerFilter(input, protectedWords);
-    return new SnowballFilter(input, program);
-  }
+	@Override
+	public TokenFilter create(TokenStream input) {
+		SnowballProgram program;
+		try {
+			program = stemClass.newInstance();
+		} catch (Exception e) {
+			throw new RuntimeException("Error instantiating stemmer for language " + language + "from class " + stemClass, e);
+		}
+
+		if (protectedWords != null)
+			input = new SetKeywordMarkerFilter(input, protectedWords);
+		return new SnowballFilter(input, program);
+	}
 }
 

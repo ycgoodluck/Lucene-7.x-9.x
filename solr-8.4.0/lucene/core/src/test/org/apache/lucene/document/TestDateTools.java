@@ -23,170 +23,170 @@ import java.util.*;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestDateTools extends LuceneTestCase {
-  public void testStringToDate() throws ParseException {
-    
-    Date d = null;
-    d = DateTools.stringToDate("2004");
-    assertEquals("2004-01-01 00:00:00:000", isoFormat(d));
-    d = DateTools.stringToDate("20040705");
-    assertEquals("2004-07-05 00:00:00:000", isoFormat(d));
-    d = DateTools.stringToDate("200407050910");
-    assertEquals("2004-07-05 09:10:00:000", isoFormat(d));
-    d = DateTools.stringToDate("20040705091055990");
-    assertEquals("2004-07-05 09:10:55:990", isoFormat(d));
+	public void testStringToDate() throws ParseException {
 
-    expectThrows(ParseException.class, () -> {
-      DateTools.stringToDate("97");    // no date
-    });
+		Date d = null;
+		d = DateTools.stringToDate("2004");
+		assertEquals("2004-01-01 00:00:00:000", isoFormat(d));
+		d = DateTools.stringToDate("20040705");
+		assertEquals("2004-07-05 00:00:00:000", isoFormat(d));
+		d = DateTools.stringToDate("200407050910");
+		assertEquals("2004-07-05 09:10:00:000", isoFormat(d));
+		d = DateTools.stringToDate("20040705091055990");
+		assertEquals("2004-07-05 09:10:55:990", isoFormat(d));
 
-    expectThrows(ParseException.class, () -> {
-      DateTools.stringToDate("200401011235009999");    // no date
-    });
+		expectThrows(ParseException.class, () -> {
+			DateTools.stringToDate("97");    // no date
+		});
 
-    expectThrows(ParseException.class, () -> {
-      DateTools.stringToDate("aaaa");    // no date
-    });
-  }
-  
-  public void testStringtoTime() throws ParseException {
-    long time = DateTools.stringToTime("197001010000");
-    // we use default locale since LuceneTestCase randomizes it
-    Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.getDefault());
-    cal.clear();
-    cal.set(1970, 0, 1,    // year=1970, month=january, day=1
-        0, 0, 0);          // hour, minute, second
-    cal.set(Calendar.MILLISECOND, 0);
-    assertEquals(cal.getTime().getTime(), time);
-    cal.set(1980, 1, 2,    // year=1980, month=february, day=2
-        11, 5, 0);          // hour, minute, second
-    cal.set(Calendar.MILLISECOND, 0);
-    time = DateTools.stringToTime("198002021105");
-    assertEquals(cal.getTime().getTime(), time);
-  }
-  
-  public void testDateAndTimetoString() throws ParseException {
-    // we use default locale since LuceneTestCase randomizes it
-    Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.getDefault());
-    cal.clear();
-    cal.set(2004, 1, 3,   // year=2004, month=february(!), day=3
-        22, 8, 56);       // hour, minute, second
-    cal.set(Calendar.MILLISECOND, 333);
-    
-    String dateString;
-    dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.YEAR);
-    assertEquals("2004", dateString);
-    assertEquals("2004-01-01 00:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
-    
-    dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.MONTH);
-    assertEquals("200402", dateString);
-    assertEquals("2004-02-01 00:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
+		expectThrows(ParseException.class, () -> {
+			DateTools.stringToDate("200401011235009999");    // no date
+		});
 
-    dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.DAY);
-    assertEquals("20040203", dateString);
-    assertEquals("2004-02-03 00:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
-    
-    dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.HOUR);
-    assertEquals("2004020322", dateString);
-    assertEquals("2004-02-03 22:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
-    
-    dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
-    assertEquals("200402032208", dateString);
-    assertEquals("2004-02-03 22:08:00:000", isoFormat(DateTools.stringToDate(dateString)));
-    
-    dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.SECOND);
-    assertEquals("20040203220856", dateString);
-    assertEquals("2004-02-03 22:08:56:000", isoFormat(DateTools.stringToDate(dateString)));
-    
-    dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.MILLISECOND);
-    assertEquals("20040203220856333", dateString);
-    assertEquals("2004-02-03 22:08:56:333", isoFormat(DateTools.stringToDate(dateString)));
+		expectThrows(ParseException.class, () -> {
+			DateTools.stringToDate("aaaa");    // no date
+		});
+	}
 
-    // date before 1970:
-    cal.set(1961, 2, 5,   // year=1961, month=march(!), day=5
-        23, 9, 51);       // hour, minute, second
-    cal.set(Calendar.MILLISECOND, 444);
-    dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.MILLISECOND);
-    assertEquals("19610305230951444", dateString);
-    assertEquals("1961-03-05 23:09:51:444", isoFormat(DateTools.stringToDate(dateString)));
+	public void testStringtoTime() throws ParseException {
+		long time = DateTools.stringToTime("197001010000");
+		// we use default locale since LuceneTestCase randomizes it
+		Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.getDefault());
+		cal.clear();
+		cal.set(1970, 0, 1,    // year=1970, month=january, day=1
+			0, 0, 0);          // hour, minute, second
+		cal.set(Calendar.MILLISECOND, 0);
+		assertEquals(cal.getTime().getTime(), time);
+		cal.set(1980, 1, 2,    // year=1980, month=february, day=2
+			11, 5, 0);          // hour, minute, second
+		cal.set(Calendar.MILLISECOND, 0);
+		time = DateTools.stringToTime("198002021105");
+		assertEquals(cal.getTime().getTime(), time);
+	}
 
-    dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.HOUR);
-    assertEquals("1961030523", dateString);
-    assertEquals("1961-03-05 23:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
+	public void testDateAndTimetoString() throws ParseException {
+		// we use default locale since LuceneTestCase randomizes it
+		Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.getDefault());
+		cal.clear();
+		cal.set(2004, 1, 3,   // year=2004, month=february(!), day=3
+			22, 8, 56);       // hour, minute, second
+		cal.set(Calendar.MILLISECOND, 333);
 
-    // timeToString:
-    cal.set(1970, 0, 1, // year=1970, month=january, day=1
-        0, 0, 0); // hour, minute, second
-    cal.set(Calendar.MILLISECOND, 0);
-    dateString = DateTools.timeToString(cal.getTime().getTime(),
-        DateTools.Resolution.MILLISECOND);
-    assertEquals("19700101000000000", dateString);
-        
-    cal.set(1970, 0, 1, // year=1970, month=january, day=1
-        1, 2, 3); // hour, minute, second
-    cal.set(Calendar.MILLISECOND, 0);
-    dateString = DateTools.timeToString(cal.getTime().getTime(),
-        DateTools.Resolution.MILLISECOND);
-    assertEquals("19700101010203000", dateString);
-  }
-  
-  public void testRound() {
-    // we use default locale since LuceneTestCase randomizes it
-    Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.getDefault());
-    cal.clear();
-    cal.set(2004, 1, 3,   // year=2004, month=february(!), day=3
-        22, 8, 56);       // hour, minute, second
-    cal.set(Calendar.MILLISECOND, 333);
-    Date date = cal.getTime();
-    assertEquals("2004-02-03 22:08:56:333", isoFormat(date));
+		String dateString;
+		dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.YEAR);
+		assertEquals("2004", dateString);
+		assertEquals("2004-01-01 00:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
 
-    Date dateYear = DateTools.round(date, DateTools.Resolution.YEAR);
-    assertEquals("2004-01-01 00:00:00:000", isoFormat(dateYear));
+		dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.MONTH);
+		assertEquals("200402", dateString);
+		assertEquals("2004-02-01 00:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
 
-    Date dateMonth = DateTools.round(date, DateTools.Resolution.MONTH);
-    assertEquals("2004-02-01 00:00:00:000", isoFormat(dateMonth));
+		dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.DAY);
+		assertEquals("20040203", dateString);
+		assertEquals("2004-02-03 00:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
 
-    Date dateDay = DateTools.round(date, DateTools.Resolution.DAY);
-    assertEquals("2004-02-03 00:00:00:000", isoFormat(dateDay));
+		dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.HOUR);
+		assertEquals("2004020322", dateString);
+		assertEquals("2004-02-03 22:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
 
-    Date dateHour = DateTools.round(date, DateTools.Resolution.HOUR);
-    assertEquals("2004-02-03 22:00:00:000", isoFormat(dateHour));
+		dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
+		assertEquals("200402032208", dateString);
+		assertEquals("2004-02-03 22:08:00:000", isoFormat(DateTools.stringToDate(dateString)));
 
-    Date dateMinute = DateTools.round(date, DateTools.Resolution.MINUTE);
-    assertEquals("2004-02-03 22:08:00:000", isoFormat(dateMinute));
+		dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.SECOND);
+		assertEquals("20040203220856", dateString);
+		assertEquals("2004-02-03 22:08:56:000", isoFormat(DateTools.stringToDate(dateString)));
 
-    Date dateSecond = DateTools.round(date, DateTools.Resolution.SECOND);
-    assertEquals("2004-02-03 22:08:56:000", isoFormat(dateSecond));
+		dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.MILLISECOND);
+		assertEquals("20040203220856333", dateString);
+		assertEquals("2004-02-03 22:08:56:333", isoFormat(DateTools.stringToDate(dateString)));
 
-    Date dateMillisecond = DateTools.round(date, DateTools.Resolution.MILLISECOND);
-    assertEquals("2004-02-03 22:08:56:333", isoFormat(dateMillisecond));
+		// date before 1970:
+		cal.set(1961, 2, 5,   // year=1961, month=march(!), day=5
+			23, 9, 51);       // hour, minute, second
+		cal.set(Calendar.MILLISECOND, 444);
+		dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.MILLISECOND);
+		assertEquals("19610305230951444", dateString);
+		assertEquals("1961-03-05 23:09:51:444", isoFormat(DateTools.stringToDate(dateString)));
 
-    // long parameter:
-    long dateYearLong = DateTools.round(date.getTime(), DateTools.Resolution.YEAR);
-    assertEquals("2004-01-01 00:00:00:000", isoFormat(new Date(dateYearLong)));
+		dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.HOUR);
+		assertEquals("1961030523", dateString);
+		assertEquals("1961-03-05 23:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
 
-    long dateMillisecondLong = DateTools.round(date.getTime(), DateTools.Resolution.MILLISECOND);
-    assertEquals("2004-02-03 22:08:56:333", isoFormat(new Date(dateMillisecondLong)));
-  }
+		// timeToString:
+		cal.set(1970, 0, 1, // year=1970, month=january, day=1
+			0, 0, 0); // hour, minute, second
+		cal.set(Calendar.MILLISECOND, 0);
+		dateString = DateTools.timeToString(cal.getTime().getTime(),
+			DateTools.Resolution.MILLISECOND);
+		assertEquals("19700101000000000", dateString);
 
-  private String isoFormat(Date date) {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS", Locale.ROOT);
-    sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-    return sdf.format(date);
-  }
+		cal.set(1970, 0, 1, // year=1970, month=january, day=1
+			1, 2, 3); // hour, minute, second
+		cal.set(Calendar.MILLISECOND, 0);
+		dateString = DateTools.timeToString(cal.getTime().getTime(),
+			DateTools.Resolution.MILLISECOND);
+		assertEquals("19700101010203000", dateString);
+	}
 
-  public void testDateToolsUTC() throws Exception {
-    // Sun, 30 Oct 2005 00:00:00 +0000 -- the last second of 2005's DST in Europe/London
-    long time = 1130630400;
-    try {
-        TimeZone.setDefault(TimeZone.getTimeZone(/* "GMT" */ "Europe/London"));
-        String d1 = DateTools.dateToString(new Date(time*1000), DateTools.Resolution.MINUTE);
-        String d2 = DateTools.dateToString(new Date((time+3600)*1000), DateTools.Resolution.MINUTE);
-        assertFalse("different times", d1.equals(d2));
-        assertEquals("midnight", DateTools.stringToTime(d1), time*1000);
-        assertEquals("later", DateTools.stringToTime(d2), (time+3600)*1000);
-    } finally {
-        TimeZone.setDefault(null);
-    }
-  }
+	public void testRound() {
+		// we use default locale since LuceneTestCase randomizes it
+		Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.getDefault());
+		cal.clear();
+		cal.set(2004, 1, 3,   // year=2004, month=february(!), day=3
+			22, 8, 56);       // hour, minute, second
+		cal.set(Calendar.MILLISECOND, 333);
+		Date date = cal.getTime();
+		assertEquals("2004-02-03 22:08:56:333", isoFormat(date));
+
+		Date dateYear = DateTools.round(date, DateTools.Resolution.YEAR);
+		assertEquals("2004-01-01 00:00:00:000", isoFormat(dateYear));
+
+		Date dateMonth = DateTools.round(date, DateTools.Resolution.MONTH);
+		assertEquals("2004-02-01 00:00:00:000", isoFormat(dateMonth));
+
+		Date dateDay = DateTools.round(date, DateTools.Resolution.DAY);
+		assertEquals("2004-02-03 00:00:00:000", isoFormat(dateDay));
+
+		Date dateHour = DateTools.round(date, DateTools.Resolution.HOUR);
+		assertEquals("2004-02-03 22:00:00:000", isoFormat(dateHour));
+
+		Date dateMinute = DateTools.round(date, DateTools.Resolution.MINUTE);
+		assertEquals("2004-02-03 22:08:00:000", isoFormat(dateMinute));
+
+		Date dateSecond = DateTools.round(date, DateTools.Resolution.SECOND);
+		assertEquals("2004-02-03 22:08:56:000", isoFormat(dateSecond));
+
+		Date dateMillisecond = DateTools.round(date, DateTools.Resolution.MILLISECOND);
+		assertEquals("2004-02-03 22:08:56:333", isoFormat(dateMillisecond));
+
+		// long parameter:
+		long dateYearLong = DateTools.round(date.getTime(), DateTools.Resolution.YEAR);
+		assertEquals("2004-01-01 00:00:00:000", isoFormat(new Date(dateYearLong)));
+
+		long dateMillisecondLong = DateTools.round(date.getTime(), DateTools.Resolution.MILLISECOND);
+		assertEquals("2004-02-03 22:08:56:333", isoFormat(new Date(dateMillisecondLong)));
+	}
+
+	private String isoFormat(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS", Locale.ROOT);
+		sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+		return sdf.format(date);
+	}
+
+	public void testDateToolsUTC() throws Exception {
+		// Sun, 30 Oct 2005 00:00:00 +0000 -- the last second of 2005's DST in Europe/London
+		long time = 1130630400;
+		try {
+			TimeZone.setDefault(TimeZone.getTimeZone(/* "GMT" */ "Europe/London"));
+			String d1 = DateTools.dateToString(new Date(time * 1000), DateTools.Resolution.MINUTE);
+			String d2 = DateTools.dateToString(new Date((time + 3600) * 1000), DateTools.Resolution.MINUTE);
+			assertFalse("different times", d1.equals(d2));
+			assertEquals("midnight", DateTools.stringToTime(d1), time * 1000);
+			assertEquals("later", DateTools.stringToTime(d2), (time + 3600) * 1000);
+		} finally {
+			TimeZone.setDefault(null);
+		}
+	}
 
 }

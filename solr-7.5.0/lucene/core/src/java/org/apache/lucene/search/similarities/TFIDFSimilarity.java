@@ -47,10 +47,10 @@ import org.apache.lucene.util.SmallFloat;
  *
  * <p>The following describes how Lucene scoring evolves from
  * underlying information retrieval models to (efficient) implementation.
- * We first brief on <i>VSM Score</i>, 
+ * We first brief on <i>VSM Score</i>,
  * then derive from it <i>Lucene's Conceptual Scoring Formula</i>,
- * from which, finally, evolves <i>Lucene's Practical Scoring Function</i> 
- * (the latter is connected directly with Lucene classes and methods).    
+ * from which, finally, evolves <i>Lucene's Practical Scoring Function</i>
+ * (the latter is connected directly with Lucene classes and methods).
  *
  * <p>Lucene combines
  * <a href="http://en.wikipedia.org/wiki/Standard_Boolean_model">
@@ -82,7 +82,7 @@ import org.apache.lucene.util.SmallFloat;
  * Cosine Similarity</a>
  * of the weighted query vectors <i>V(q)</i> and <i>V(d)</i>:
  *
- *  <br>&nbsp;<br>
+ * <br>&nbsp;<br>
  *  <table cellpadding="2" cellspacing="2" border="0" style="width:auto; margin-left:auto; margin-right:auto" summary="formatting only">
  *    <tr><td>
  *    <table cellpadding="1" cellspacing="0" border="1" style="margin-left:auto; margin-right:auto" summary="formatting only">
@@ -109,8 +109,8 @@ import org.apache.lucene.util.SmallFloat;
  *    </td></tr>
  *  </table>
  *  <br>&nbsp;<br>
- *   
- *
+ * <p>
+ * <p>
  * Where <i>V(q)</i> &middot; <i>V(d)</i> is the
  * <a href="http://en.wikipedia.org/wiki/Dot_product">dot product</a>
  * of the weighted vectors,
@@ -123,15 +123,15 @@ import org.apache.lucene.util.SmallFloat;
  *
  * <p>Lucene refines <i>VSM score</i> for both search quality and usability:
  * <ul>
- *  <li>Normalizing <i>V(d)</i> to the unit vector is known to be problematic in that 
- *  it removes all document length information. 
- *  For some documents removing this info is probably ok, 
+ *  <li>Normalizing <i>V(d)</i> to the unit vector is known to be problematic in that
+ *  it removes all document length information.
+ *  For some documents removing this info is probably ok,
  *  e.g. a document made by duplicating a certain paragraph <i>10</i> times,
- *  especially if that paragraph is made of distinct terms. 
- *  But for a document which contains no duplicated paragraphs, 
- *  this might be wrong. 
- *  To avoid this problem, a different document length normalization 
- *  factor is used, which normalizes to a vector equal to or larger 
+ *  especially if that paragraph is made of distinct terms.
+ *  But for a document which contains no duplicated paragraphs,
+ *  this might be wrong.
+ *  To avoid this problem, a different document length normalization
+ *  factor is used, which normalizes to a vector equal to or larger
  *  than the unit vector: <i>doc-len-norm(d)</i>.
  *  </li>
  *
@@ -202,7 +202,7 @@ import org.apache.lucene.util.SmallFloat;
  *
  * <p>We now describe how Lucene implements this conceptual scoring formula, and
  * derive from it <i>Lucene's Practical Scoring Function</i>.
- *  
+ *
  * <p>For efficient score computation some scoring components
  * are computed and aggregated in advance:
  *
@@ -376,308 +376,319 @@ import org.apache.lucene.util.SmallFloat;
  */
 public abstract class TFIDFSimilarity extends Similarity {
 
-  /** Cache of decoded bytes. */
-  static final float[] OLD_NORM_TABLE = new float[256];
+	/**
+	 * Cache of decoded bytes.
+	 */
+	static final float[] OLD_NORM_TABLE = new float[256];
 
-  static {
-    for (int i = 0; i < 256; i++) {
-      OLD_NORM_TABLE[i] = SmallFloat.byte315ToFloat((byte)i);
-    }
-  }
+	static {
+		for (int i = 0; i < 256; i++) {
+			OLD_NORM_TABLE[i] = SmallFloat.byte315ToFloat((byte) i);
+		}
+	}
 
-  /**
-   * Sole constructor. (For invocation by subclass 
-   * constructors, typically implicit.)
-   */
-  public TFIDFSimilarity() {}
+	/**
+	 * Sole constructor. (For invocation by subclass
+	 * constructors, typically implicit.)
+	 */
+	public TFIDFSimilarity() {
+	}
 
-  /** 
-   * True if overlap tokens (tokens with a position of increment of zero) are
-   * discounted from the document's length.
-   */
-  protected boolean discountOverlaps = true;
+	/**
+	 * True if overlap tokens (tokens with a position of increment of zero) are
+	 * discounted from the document's length.
+	 */
+	protected boolean discountOverlaps = true;
 
-  /** Determines whether overlap tokens (Tokens with
-   *  0 position increment) are ignored when computing
-   *  norm.  By default this is true, meaning overlap
-   *  tokens do not count when computing norms.
-   *
-   *  @lucene.experimental
-   *
-   *  @see #computeNorm
-   */
-  public void setDiscountOverlaps(boolean v) {
-    discountOverlaps = v;
-  }
+	/**
+	 * Determines whether overlap tokens (Tokens with
+	 * 0 position increment) are ignored when computing
+	 * norm.  By default this is true, meaning overlap
+	 * tokens do not count when computing norms.
+	 *
+	 * @lucene.experimental
+	 * @see #computeNorm
+	 */
+	public void setDiscountOverlaps(boolean v) {
+		discountOverlaps = v;
+	}
 
-  /**
-   * Returns true if overlap tokens are discounted from the document's length. 
-   * @see #setDiscountOverlaps 
-   */
-  public boolean getDiscountOverlaps() {
-    return discountOverlaps;
-  }
+	/**
+	 * Returns true if overlap tokens are discounted from the document's length.
+	 *
+	 * @see #setDiscountOverlaps
+	 */
+	public boolean getDiscountOverlaps() {
+		return discountOverlaps;
+	}
 
-  /** Computes a score factor based on a term or phrase's frequency in a
-   * document.  This value is multiplied by the {@link #idf(long, long)}
-   * factor for each term in the query and these products are then summed to
-   * form the initial score for a document.
-   *
-   * <p>Terms and phrases repeated in a document indicate the topic of the
-   * document, so implementations of this method usually return larger values
-   * when <code>freq</code> is large, and smaller values when <code>freq</code>
-   * is small.
-   *
-   * @param freq the frequency of a term within a document
-   * @return a score factor based on a term's within-document frequency
-   */
-  public abstract float tf(float freq);
+	/**
+	 * Computes a score factor based on a term or phrase's frequency in a
+	 * document.  This value is multiplied by the {@link #idf(long, long)}
+	 * factor for each term in the query and these products are then summed to
+	 * form the initial score for a document.
+	 *
+	 * <p>Terms and phrases repeated in a document indicate the topic of the
+	 * document, so implementations of this method usually return larger values
+	 * when <code>freq</code> is large, and smaller values when <code>freq</code>
+	 * is small.
+	 *
+	 * @param freq the frequency of a term within a document
+	 * @return a score factor based on a term's within-document frequency
+	 */
+	public abstract float tf(float freq);
 
-  /**
-   * Computes a score factor for a simple term and returns an explanation
-   * for that score factor.
-   * 
-   * <p>
-   * The default implementation uses:
-   * 
-   * <pre class="prettyprint">
-   * idf(docFreq, docCount);
-   * </pre>
-   * 
-   * Note that {@link CollectionStatistics#docCount()} is used instead of
-   * {@link org.apache.lucene.index.IndexReader#numDocs() IndexReader#numDocs()} because also 
-   * {@link TermStatistics#docFreq()} is used, and when the latter 
-   * is inaccurate, so is {@link CollectionStatistics#docCount()}, and in the same direction.
-   * In addition, {@link CollectionStatistics#docCount()} does not skew when fields are sparse.
-   *   
-   * @param collectionStats collection-level statistics
-   * @param termStats term-level statistics for the term
-   * @return an Explain object that includes both an idf score factor 
-             and an explanation for the term.
-   */
-  public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats) {
-    final long df = termStats.docFreq();
-    final long docCount = collectionStats.docCount() == -1 ? collectionStats.maxDoc() : collectionStats.docCount();
-    final float idf = idf(df, docCount);
-    return Explanation.match(idf, "idf(docFreq=" + df + ", docCount=" + docCount + ")");
-  }
+	/**
+	 * Computes a score factor for a simple term and returns an explanation
+	 * for that score factor.
+	 *
+	 * <p>
+	 * The default implementation uses:
+	 *
+	 * <pre class="prettyprint">
+	 * idf(docFreq, docCount);
+	 * </pre>
+	 * <p>
+	 * Note that {@link CollectionStatistics#docCount()} is used instead of
+	 * {@link org.apache.lucene.index.IndexReader#numDocs() IndexReader#numDocs()} because also
+	 * {@link TermStatistics#docFreq()} is used, and when the latter
+	 * is inaccurate, so is {@link CollectionStatistics#docCount()}, and in the same direction.
+	 * In addition, {@link CollectionStatistics#docCount()} does not skew when fields are sparse.
+	 *
+	 * @param collectionStats collection-level statistics
+	 * @param termStats       term-level statistics for the term
+	 * @return an Explain object that includes both an idf score factor
+	 * and an explanation for the term.
+	 */
+	public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats) {
+		final long df = termStats.docFreq();
+		final long docCount = collectionStats.docCount() == -1 ? collectionStats.maxDoc() : collectionStats.docCount();
+		final float idf = idf(df, docCount);
+		return Explanation.match(idf, "idf(docFreq=" + df + ", docCount=" + docCount + ")");
+	}
 
-  /**
-   * Computes a score factor for a phrase.
-   * 
-   * <p>
-   * The default implementation sums the idf factor for
-   * each term in the phrase.
-   * 
-   * @param collectionStats collection-level statistics
-   * @param termStats term-level statistics for the terms in the phrase
-   * @return an Explain object that includes both an idf 
-   *         score factor for the phrase and an explanation 
-   *         for each term.
-   */
-  public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats[]) {
-    double idf = 0d; // sum into a double before casting into a float
-    List<Explanation> subs = new ArrayList<>();
-    for (final TermStatistics stat : termStats ) {
-      Explanation idfExplain = idfExplain(collectionStats, stat);
-      subs.add(idfExplain);
-      idf += idfExplain.getValue();
-    }
-    return Explanation.match((float) idf, "idf(), sum of:", subs);
-  }
+	/**
+	 * Computes a score factor for a phrase.
+	 *
+	 * <p>
+	 * The default implementation sums the idf factor for
+	 * each term in the phrase.
+	 *
+	 * @param collectionStats collection-level statistics
+	 * @param termStats       term-level statistics for the terms in the phrase
+	 * @return an Explain object that includes both an idf
+	 * score factor for the phrase and an explanation
+	 * for each term.
+	 */
+	public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats[]) {
+		double idf = 0d; // sum into a double before casting into a float
+		List<Explanation> subs = new ArrayList<>();
+		for (final TermStatistics stat : termStats) {
+			Explanation idfExplain = idfExplain(collectionStats, stat);
+			subs.add(idfExplain);
+			idf += idfExplain.getValue();
+		}
+		return Explanation.match((float) idf, "idf(), sum of:", subs);
+	}
 
-  /** Computes a score factor based on a term's document frequency (the number
-   * of documents which contain the term).  This value is multiplied by the
-   * {@link #tf(float)} factor for each term in the query and these products are
-   * then summed to form the initial score for a document.
-   *
-   * <p>Terms that occur in fewer documents are better indicators of topic, so
-   * implementations of this method usually return larger values for rare terms,
-   * and smaller values for common terms.
-   *
-   * @param docFreq the number of documents which contain the term
-   * @param docCount the total number of documents in the collection
-   * @return a score factor based on the term's document frequency
-   */
-  public abstract float idf(long docFreq, long docCount);
+	/**
+	 * Computes a score factor based on a term's document frequency (the number
+	 * of documents which contain the term).  This value is multiplied by the
+	 * {@link #tf(float)} factor for each term in the query and these products are
+	 * then summed to form the initial score for a document.
+	 *
+	 * <p>Terms that occur in fewer documents are better indicators of topic, so
+	 * implementations of this method usually return larger values for rare terms,
+	 * and smaller values for common terms.
+	 *
+	 * @param docFreq  the number of documents which contain the term
+	 * @param docCount the total number of documents in the collection
+	 * @return a score factor based on the term's document frequency
+	 */
+	public abstract float idf(long docFreq, long docCount);
 
-  /**
-   * Compute an index-time normalization value for this field instance.
-   * 
-   * @param length the number of terms in the field, optionally {@link #setDiscountOverlaps(boolean) discounting overlaps}
-   * @return a length normalization value
-   */
-  public abstract float lengthNorm(int length);
-  
-  @Override
-  public final long computeNorm(FieldInvertState state) {
-    final int numTerms;
-    if (discountOverlaps)
-      numTerms = state.getLength() - state.getNumOverlap();
-    else
-      numTerms = state.getLength();
-    if (state.getIndexCreatedVersionMajor() >= 7) {
-      return SmallFloat.intToByte4(numTerms);
-    } else {
-      return SmallFloat.floatToByte315(lengthNorm(numTerms));
-    }
-  }
- 
-  /** Computes the amount of a sloppy phrase match, based on an edit distance.
-   * This value is summed for each sloppy phrase match in a document to form
-   * the frequency to be used in scoring instead of the exact term count.
-   *
-   * <p>A phrase match with a small edit distance to a document passage more
-   * closely matches the document, so implementations of this method usually
-   * return larger values when the edit distance is small and smaller values
-   * when it is large.
-   *
-   * @see PhraseQuery#getSlop()
-   * @param distance the edit distance of this sloppy phrase match
-   * @return the frequency increment for this match
-   */
-  @Deprecated
-  public abstract float sloppyFreq(int distance);
+	/**
+	 * Compute an index-time normalization value for this field instance.
+	 *
+	 * @param length the number of terms in the field, optionally {@link #setDiscountOverlaps(boolean) discounting overlaps}
+	 * @return a length normalization value
+	 */
+	public abstract float lengthNorm(int length);
 
-  /**
-   * Calculate a scoring factor based on the data in the payload.  Implementations
-   * are responsible for interpreting what is in the payload.  Lucene makes no assumptions about
-   * what is in the byte array.
-   *
-   * @param doc The docId currently being scored.
-   * @param start The start position of the payload
-   * @param end The end position of the payload
-   * @param payload The payload byte array to be scored
-   * @return An implementation dependent float to be used as a scoring factor
-   */
-  @Deprecated
-  public abstract float scorePayload(int doc, int start, int end, BytesRef payload);
+	@Override
+	public final long computeNorm(FieldInvertState state) {
+		final int numTerms;
+		if (discountOverlaps)
+			numTerms = state.getLength() - state.getNumOverlap();
+		else
+			numTerms = state.getLength();
+		if (state.getIndexCreatedVersionMajor() >= 7) {
+			return SmallFloat.intToByte4(numTerms);
+		} else {
+			return SmallFloat.floatToByte315(lengthNorm(numTerms));
+		}
+	}
 
-  @Override
-  public final SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-    final Explanation idf = termStats.length == 1
-    ? idfExplain(collectionStats, termStats[0])
-    : idfExplain(collectionStats, termStats);
-    float[] normTable = new float[256];
-    for (int i = 1; i < 256; ++i) {
-      int length = SmallFloat.byte4ToInt((byte) i);
-      float norm = lengthNorm(length);
-      normTable[i] = norm;
-    }
-    normTable[0] = 1f / normTable[255];
-    return new IDFStats(collectionStats.field(), boost, idf, normTable);
-  }
+	/**
+	 * Computes the amount of a sloppy phrase match, based on an edit distance.
+	 * This value is summed for each sloppy phrase match in a document to form
+	 * the frequency to be used in scoring instead of the exact term count.
+	 *
+	 * <p>A phrase match with a small edit distance to a document passage more
+	 * closely matches the document, so implementations of this method usually
+	 * return larger values when the edit distance is small and smaller values
+	 * when it is large.
+	 *
+	 * @param distance the edit distance of this sloppy phrase match
+	 * @return the frequency increment for this match
+	 * @see PhraseQuery#getSlop()
+	 */
+	@Deprecated
+	public abstract float sloppyFreq(int distance);
 
-  @Override
-  public final SimScorer simScorer(SimWeight stats, LeafReaderContext context) throws IOException {
-    IDFStats idfstats = (IDFStats) stats;
-    final float[] normTable;
-    if (context.reader().getMetaData().getCreatedVersionMajor() >= 7) {
-      // the norms only encode the length, we need a translation table that depends on how lengthNorm is implemented
-      normTable = idfstats.normTable;
-    } else {
-      // the norm is directly encoded in the index
-      normTable = OLD_NORM_TABLE;
-    }
-    return new TFIDFSimScorer(idfstats, context.reader().getNormValues(idfstats.field), normTable);
-  }
-  
-  private final class TFIDFSimScorer extends SimScorer {
-    private final IDFStats stats;
-    private final float weightValue;
-    private final NumericDocValues norms;
-    private final float[] normTable;
-    
-    TFIDFSimScorer(IDFStats stats, NumericDocValues norms, float[] normTable) throws IOException {
-      this.stats = stats;
-      this.weightValue = stats.queryWeight;
-      this.norms = norms;
-      this.normTable = normTable;
-    }
-    
-    @Override
-    public float score(int doc, float freq) throws IOException {
-      final float raw = tf(freq) * weightValue; // compute tf(f)*weight
+	/**
+	 * Calculate a scoring factor based on the data in the payload.  Implementations
+	 * are responsible for interpreting what is in the payload.  Lucene makes no assumptions about
+	 * what is in the byte array.
+	 *
+	 * @param doc     The docId currently being scored.
+	 * @param start   The start position of the payload
+	 * @param end     The end position of the payload
+	 * @param payload The payload byte array to be scored
+	 * @return An implementation dependent float to be used as a scoring factor
+	 */
+	@Deprecated
+	public abstract float scorePayload(int doc, int start, int end, BytesRef payload);
 
-      if (norms == null) {
-        return raw;
-      } else {
-        float normValue;
-        if (norms.advanceExact(doc)) {
-          normValue = normTable[(int) (norms.longValue() & 0xFF)];
-        } else {
-          normValue = 0;
-        }
-        return raw * normValue;  // normalize for field
-      }
-    }
-    
-    @Override
-    public float computeSlopFactor(int distance) {
-      return sloppyFreq(distance);
-    }
+	@Override
+	public final SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+		final Explanation idf = termStats.length == 1
+			? idfExplain(collectionStats, termStats[0])
+			: idfExplain(collectionStats, termStats);
+		float[] normTable = new float[256];
+		for (int i = 1; i < 256; ++i) {
+			int length = SmallFloat.byte4ToInt((byte) i);
+			float norm = lengthNorm(length);
+			normTable[i] = norm;
+		}
+		normTable[0] = 1f / normTable[255];
+		return new IDFStats(collectionStats.field(), boost, idf, normTable);
+	}
 
-    @Override
-    public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
-      return scorePayload(doc, start, end, payload);
-    }
+	@Override
+	public final SimScorer simScorer(SimWeight stats, LeafReaderContext context) throws IOException {
+		IDFStats idfstats = (IDFStats) stats;
+		final float[] normTable;
+		if (context.reader().getMetaData().getCreatedVersionMajor() >= 7) {
+			// the norms only encode the length, we need a translation table that depends on how lengthNorm is implemented
+			normTable = idfstats.normTable;
+		} else {
+			// the norm is directly encoded in the index
+			normTable = OLD_NORM_TABLE;
+		}
+		return new TFIDFSimScorer(idfstats, context.reader().getNormValues(idfstats.field), normTable);
+	}
 
-    @Override
-    public Explanation explain(int doc, Explanation freq) throws IOException {
-      return explainScore(doc, freq, stats, norms, normTable);
-    }
-  }
-  
-  /** Collection statistics for the TF-IDF model. The only statistic of interest
-   * to this model is idf. */
-  static class IDFStats extends SimWeight {
-    private final String field;
-    /** The idf and its explanation */
-    private final Explanation idf;
-    private final float boost;
-    private final float queryWeight;
-    final float[] normTable;
-    
-    public IDFStats(String field, float boost, Explanation idf, float[] normTable) {
-      // TODO: Validate?
-      this.field = field;
-      this.idf = idf;
-      this.boost = boost;
-      this.queryWeight = boost * idf.getValue();
-      this.normTable = normTable;
-    }
-  }  
+	private final class TFIDFSimScorer extends SimScorer {
+		private final IDFStats stats;
+		private final float weightValue;
+		private final NumericDocValues norms;
+		private final float[] normTable;
 
-  private Explanation explainField(int doc, Explanation freq, IDFStats stats, NumericDocValues norms, float[] normTable) throws IOException {
-    Explanation tfExplanation = Explanation.match(tf(freq.getValue()), "tf(freq="+freq.getValue()+"), with freq of:", freq);
-    float norm;
-    if (norms == null) {
-      norm = 1f;
-    } else if (norms.advanceExact(doc) == false) {
-      norm = 0f;
-    } else {
-      norm = normTable[(int) (norms.longValue() & 0xFF)];
-    }
-    
-    Explanation fieldNormExpl = Explanation.match(
-        norm,
-        "fieldNorm(doc=" + doc + ")");
+		TFIDFSimScorer(IDFStats stats, NumericDocValues norms, float[] normTable) throws IOException {
+			this.stats = stats;
+			this.weightValue = stats.queryWeight;
+			this.norms = norms;
+			this.normTable = normTable;
+		}
 
-    return Explanation.match(
-        tfExplanation.getValue() * stats.idf.getValue() * fieldNormExpl.getValue(),
-        "fieldWeight in " + doc + ", product of:",
-        tfExplanation, stats.idf, fieldNormExpl);
-  }
+		@Override
+		public float score(int doc, float freq) throws IOException {
+			final float raw = tf(freq) * weightValue; // compute tf(f)*weight
 
-  private Explanation explainScore(int doc, Explanation freq, IDFStats stats, NumericDocValues norms, float[] normTable) throws IOException {
-    Explanation queryExpl = Explanation.match(stats.boost, "boost");
-    Explanation fieldExpl = explainField(doc, freq, stats, norms, normTable);
-    if (stats.boost == 1f) {
-      return fieldExpl;
-    }
-    return Explanation.match(
-        queryExpl.getValue() * fieldExpl.getValue(),
-        "score(doc="+doc+",freq="+freq.getValue()+"), product of:",
-        queryExpl, fieldExpl);
-  }
+			if (norms == null) {
+				return raw;
+			} else {
+				float normValue;
+				if (norms.advanceExact(doc)) {
+					normValue = normTable[(int) (norms.longValue() & 0xFF)];
+				} else {
+					normValue = 0;
+				}
+				return raw * normValue;  // normalize for field
+			}
+		}
+
+		@Override
+		public float computeSlopFactor(int distance) {
+			return sloppyFreq(distance);
+		}
+
+		@Override
+		public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
+			return scorePayload(doc, start, end, payload);
+		}
+
+		@Override
+		public Explanation explain(int doc, Explanation freq) throws IOException {
+			return explainScore(doc, freq, stats, norms, normTable);
+		}
+	}
+
+	/**
+	 * Collection statistics for the TF-IDF model. The only statistic of interest
+	 * to this model is idf.
+	 */
+	static class IDFStats extends SimWeight {
+		private final String field;
+		/**
+		 * The idf and its explanation
+		 */
+		private final Explanation idf;
+		private final float boost;
+		private final float queryWeight;
+		final float[] normTable;
+
+		public IDFStats(String field, float boost, Explanation idf, float[] normTable) {
+			// TODO: Validate?
+			this.field = field;
+			this.idf = idf;
+			this.boost = boost;
+			this.queryWeight = boost * idf.getValue();
+			this.normTable = normTable;
+		}
+	}
+
+	private Explanation explainField(int doc, Explanation freq, IDFStats stats, NumericDocValues norms, float[] normTable) throws IOException {
+		Explanation tfExplanation = Explanation.match(tf(freq.getValue()), "tf(freq=" + freq.getValue() + "), with freq of:", freq);
+		float norm;
+		if (norms == null) {
+			norm = 1f;
+		} else if (norms.advanceExact(doc) == false) {
+			norm = 0f;
+		} else {
+			norm = normTable[(int) (norms.longValue() & 0xFF)];
+		}
+
+		Explanation fieldNormExpl = Explanation.match(
+			norm,
+			"fieldNorm(doc=" + doc + ")");
+
+		return Explanation.match(
+			tfExplanation.getValue() * stats.idf.getValue() * fieldNormExpl.getValue(),
+			"fieldWeight in " + doc + ", product of:",
+			tfExplanation, stats.idf, fieldNormExpl);
+	}
+
+	private Explanation explainScore(int doc, Explanation freq, IDFStats stats, NumericDocValues norms, float[] normTable) throws IOException {
+		Explanation queryExpl = Explanation.match(stats.boost, "boost");
+		Explanation fieldExpl = explainField(doc, freq, stats, norms, normTable);
+		if (stats.boost == 1f) {
+			return fieldExpl;
+		}
+		return Explanation.match(
+			queryExpl.getValue() * fieldExpl.getValue(),
+			"score(doc=" + doc + ",freq=" + freq.getValue() + "), product of:",
+			queryExpl, fieldExpl);
+	}
 }

@@ -34,17 +34,19 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class RemoveDuplicatesTokenFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new RemoveDuplicatesTokenFilterFactory */
-  public RemoveDuplicatesTokenFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public RemoveDuplicatesTokenFilter create(TokenStream input) {
-    return new RemoveDuplicatesTokenFilter(input);
-  }
+
+	/**
+	 * Creates a new RemoveDuplicatesTokenFilterFactory
+	 */
+	public RemoveDuplicatesTokenFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public RemoveDuplicatesTokenFilter create(TokenStream input) {
+		return new RemoveDuplicatesTokenFilter(input);
+	}
 }

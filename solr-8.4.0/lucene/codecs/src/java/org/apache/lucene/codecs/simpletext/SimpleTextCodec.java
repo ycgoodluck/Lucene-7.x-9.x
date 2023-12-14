@@ -33,71 +33,72 @@ import org.apache.lucene.codecs.TermVectorsFormat;
  * plain text index format.
  * <p>
  * <b>FOR RECREATIONAL USE ONLY</b>
+ *
  * @lucene.experimental
  */
 public final class SimpleTextCodec extends Codec {
-  private final PostingsFormat postings = new SimpleTextPostingsFormat();
-  private final StoredFieldsFormat storedFields = new SimpleTextStoredFieldsFormat();
-  private final SegmentInfoFormat segmentInfos = new SimpleTextSegmentInfoFormat();
-  private final FieldInfosFormat fieldInfosFormat = new SimpleTextFieldInfosFormat();
-  private final TermVectorsFormat vectorsFormat = new SimpleTextTermVectorsFormat();
-  private final NormsFormat normsFormat = new SimpleTextNormsFormat();
-  private final LiveDocsFormat liveDocs = new SimpleTextLiveDocsFormat();
-  private final DocValuesFormat dvFormat = new SimpleTextDocValuesFormat();
-  private final CompoundFormat compoundFormat = new SimpleTextCompoundFormat();
-  private final PointsFormat pointsFormat = new SimpleTextPointsFormat();
-  
-  public SimpleTextCodec() {
-    super("SimpleText");
-  }
+	private final PostingsFormat postings = new SimpleTextPostingsFormat();
+	private final StoredFieldsFormat storedFields = new SimpleTextStoredFieldsFormat();
+	private final SegmentInfoFormat segmentInfos = new SimpleTextSegmentInfoFormat();
+	private final FieldInfosFormat fieldInfosFormat = new SimpleTextFieldInfosFormat();
+	private final TermVectorsFormat vectorsFormat = new SimpleTextTermVectorsFormat();
+	private final NormsFormat normsFormat = new SimpleTextNormsFormat();
+	private final LiveDocsFormat liveDocs = new SimpleTextLiveDocsFormat();
+	private final DocValuesFormat dvFormat = new SimpleTextDocValuesFormat();
+	private final CompoundFormat compoundFormat = new SimpleTextCompoundFormat();
+	private final PointsFormat pointsFormat = new SimpleTextPointsFormat();
 
-  @Override
-  public PostingsFormat postingsFormat() {
-    return postings;
-  }
+	public SimpleTextCodec() {
+		super("SimpleText");
+	}
 
-  @Override
-  public StoredFieldsFormat storedFieldsFormat() {
-    return storedFields;
-  }
-  
-  @Override
-  public TermVectorsFormat termVectorsFormat() {
-    return vectorsFormat;
-  }
-  
-  @Override
-  public FieldInfosFormat fieldInfosFormat() {
-    return fieldInfosFormat;
-  }
+	@Override
+	public PostingsFormat postingsFormat() {
+		return postings;
+	}
 
-  @Override
-  public SegmentInfoFormat segmentInfoFormat() {
-    return segmentInfos;
-  }
+	@Override
+	public StoredFieldsFormat storedFieldsFormat() {
+		return storedFields;
+	}
 
-  @Override
-  public NormsFormat normsFormat() {
-    return normsFormat;
-  }
-  
-  @Override
-  public LiveDocsFormat liveDocsFormat() {
-    return liveDocs;
-  }
+	@Override
+	public TermVectorsFormat termVectorsFormat() {
+		return vectorsFormat;
+	}
 
-  @Override
-  public DocValuesFormat docValuesFormat() {
-    return dvFormat;
-  }
-  
-  @Override
-  public CompoundFormat compoundFormat() {
-    return compoundFormat;
-  }
+	@Override
+	public FieldInfosFormat fieldInfosFormat() {
+		return fieldInfosFormat;
+	}
 
-  @Override
-  public PointsFormat pointsFormat() {
-    return pointsFormat;
-  }
+	@Override
+	public SegmentInfoFormat segmentInfoFormat() {
+		return segmentInfos;
+	}
+
+	@Override
+	public NormsFormat normsFormat() {
+		return normsFormat;
+	}
+
+	@Override
+	public LiveDocsFormat liveDocsFormat() {
+		return liveDocs;
+	}
+
+	@Override
+	public DocValuesFormat docValuesFormat() {
+		return dvFormat;
+	}
+
+	@Override
+	public CompoundFormat compoundFormat() {
+		return compoundFormat;
+	}
+
+	@Override
+	public PointsFormat pointsFormat() {
+		return pointsFormat;
+	}
 }

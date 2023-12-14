@@ -26,27 +26,27 @@ import org.apache.lucene.util.LuceneTestCase;
  */
 public class TestCSVUtil extends LuceneTestCase {
 
-  public void testQuoteEscapeQuotes() throws IOException {
-    final String input = "\"Let It Be\" is a song and album by the The Beatles.";
-    final String expectedOutput = input.replace("\"", "\"\"");
-    implTestQuoteEscape(input, expectedOutput);
-  }
+	public void testQuoteEscapeQuotes() throws IOException {
+		final String input = "\"Let It Be\" is a song and album by the The Beatles.";
+		final String expectedOutput = input.replace("\"", "\"\"");
+		implTestQuoteEscape(input, expectedOutput);
+	}
 
-  public void testQuoteEscapeComma() throws IOException {
-    final String input = "To be, or not to be ...";
-    final String expectedOutput = '"'+input+'"';
-    implTestQuoteEscape(input, expectedOutput);
-  }
+	public void testQuoteEscapeComma() throws IOException {
+		final String input = "To be, or not to be ...";
+		final String expectedOutput = '"' + input + '"';
+		implTestQuoteEscape(input, expectedOutput);
+	}
 
-  public void testQuoteEscapeQuotesAndComma() throws IOException {
-    final String input = "\"To be, or not to be ...\" is a well-known phrase from Shakespeare's Hamlet.";
-    final String expectedOutput = '"'+input.replace("\"", "\"\"")+'"';
-    implTestQuoteEscape(input, expectedOutput);
-  }
+	public void testQuoteEscapeQuotesAndComma() throws IOException {
+		final String input = "\"To be, or not to be ...\" is a well-known phrase from Shakespeare's Hamlet.";
+		final String expectedOutput = '"' + input.replace("\"", "\"\"") + '"';
+		implTestQuoteEscape(input, expectedOutput);
+	}
 
-  private void implTestQuoteEscape(String input, String expectedOutput) throws IOException {
-    final String actualOutput = CSVUtil.quoteEscape(input);
-    assertEquals(expectedOutput, actualOutput);
-  }
+	private void implTestQuoteEscape(String input, String expectedOutput) throws IOException {
+		final String actualOutput = CSVUtil.quoteEscape(input);
+		assertEquals(expectedOutput, actualOutput);
+	}
 
 }

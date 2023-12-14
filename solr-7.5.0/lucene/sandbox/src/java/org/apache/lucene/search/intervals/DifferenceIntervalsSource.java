@@ -27,63 +27,63 @@ import org.apache.lucene.search.MatchesIterator;
 
 class DifferenceIntervalsSource extends IntervalsSource {
 
-  private final IntervalsSource minuend;
-  private final IntervalsSource subtrahend;
-  private final DifferenceIntervalFunction function;
+	private final IntervalsSource minuend;
+	private final IntervalsSource subtrahend;
+	private final DifferenceIntervalFunction function;
 
-  DifferenceIntervalsSource(IntervalsSource minuend, IntervalsSource subtrahend, DifferenceIntervalFunction function) {
-    this.minuend = minuend;
-    this.subtrahend = subtrahend;
-    this.function = function;
-  }
+	DifferenceIntervalsSource(IntervalsSource minuend, IntervalsSource subtrahend, DifferenceIntervalFunction function) {
+		this.minuend = minuend;
+		this.subtrahend = subtrahend;
+		this.function = function;
+	}
 
-  @Override
-  public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
-    IntervalIterator minIt = minuend.intervals(field, ctx);
-    if (minIt == null)
-      return null;
-    IntervalIterator subIt = subtrahend.intervals(field, ctx);
-    if (subIt == null)
-      return minIt;
-    return function.apply(minIt, subIt);
-  }
+	@Override
+	public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
+		IntervalIterator minIt = minuend.intervals(field, ctx);
+		if (minIt == null)
+			return null;
+		IntervalIterator subIt = subtrahend.intervals(field, ctx);
+		if (subIt == null)
+			return minIt;
+		return function.apply(minIt, subIt);
+	}
 
-  @Override
-  public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
-    MatchesIterator minIt = minuend.matches(field, ctx, doc);
-    if (minIt == null) {
-      return null;
-    }
-    MatchesIterator subIt = subtrahend.matches(field, ctx, doc);
-    if (subIt == null) {
-      return minIt;
-    }
-    IntervalIterator difference = function.apply(IntervalMatches.wrapMatches(minIt, doc), IntervalMatches.wrapMatches(subIt, doc));
-    return IntervalMatches.asMatches(difference, minIt, doc);
-  }
+	@Override
+	public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
+		MatchesIterator minIt = minuend.matches(field, ctx, doc);
+		if (minIt == null) {
+			return null;
+		}
+		MatchesIterator subIt = subtrahend.matches(field, ctx, doc);
+		if (subIt == null) {
+			return minIt;
+		}
+		IntervalIterator difference = function.apply(IntervalMatches.wrapMatches(minIt, doc), IntervalMatches.wrapMatches(subIt, doc));
+		return IntervalMatches.asMatches(difference, minIt, doc);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    DifferenceIntervalsSource that = (DifferenceIntervalsSource) o;
-    return Objects.equals(minuend, that.minuend) &&
-        Objects.equals(subtrahend, that.subtrahend) &&
-        Objects.equals(function, that.function);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		DifferenceIntervalsSource that = (DifferenceIntervalsSource) o;
+		return Objects.equals(minuend, that.minuend) &&
+			Objects.equals(subtrahend, that.subtrahend) &&
+			Objects.equals(function, that.function);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(minuend, subtrahend, function);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(minuend, subtrahend, function);
+	}
 
-  @Override
-  public String toString() {
-    return function + "(" + minuend + ", " + subtrahend + ")";
-  }
+	@Override
+	public String toString() {
+		return function + "(" + minuend + ", " + subtrahend + ")";
+	}
 
-  @Override
-  public void extractTerms(String field, Set<Term> terms) {
-    minuend.extractTerms(field, terms);
-  }
+	@Override
+	public void extractTerms(String field, Set<Term> terms) {
+		minuend.extractTerms(field, terms);
+	}
 }

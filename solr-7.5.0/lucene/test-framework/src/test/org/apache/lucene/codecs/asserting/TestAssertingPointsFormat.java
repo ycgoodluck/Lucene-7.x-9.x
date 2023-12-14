@@ -19,12 +19,14 @@ package org.apache.lucene.codecs.asserting;
 import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.index.BasePointsFormatTestCase;
 
-/** Test AssertingPointsFormat directly */
+/**
+ * Test AssertingPointsFormat directly
+ */
 public class TestAssertingPointsFormat extends BasePointsFormatTestCase {
-  private final Codec codec = new AssertingCodec();
+	private final Codec codec = new AssertingCodec();
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

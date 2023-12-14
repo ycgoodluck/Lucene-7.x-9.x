@@ -34,84 +34,84 @@ import org.apache.lucene.queryparser.flexible.standard.nodes.MultiPhraseQueryNod
  * not have any {@link SlopQueryNode} applied to it and creates an
  * {@link SlopQueryNode} and apply to it. The new {@link SlopQueryNode} has the
  * same slop value defined in the configuration.
- * 
+ *
  * @see SlopQueryNode
  * @see ConfigurationKeys#PHRASE_SLOP
  */
 public class DefaultPhraseSlopQueryNodeProcessor extends QueryNodeProcessorImpl {
 
-  private boolean processChildren = true;
+	private boolean processChildren = true;
 
-  private int defaultPhraseSlop;
+	private int defaultPhraseSlop;
 
-  public DefaultPhraseSlopQueryNodeProcessor() {
-    // empty constructor
-  }
+	public DefaultPhraseSlopQueryNodeProcessor() {
+		// empty constructor
+	}
 
-  @Override
-  public QueryNode process(QueryNode queryTree) throws QueryNodeException {
-    QueryConfigHandler queryConfig = getQueryConfigHandler();
+	@Override
+	public QueryNode process(QueryNode queryTree) throws QueryNodeException {
+		QueryConfigHandler queryConfig = getQueryConfigHandler();
 
-    if (queryConfig != null) {
-      Integer defaultPhraseSlop = queryConfig.get(ConfigurationKeys.PHRASE_SLOP); 
-      
-      if (defaultPhraseSlop != null) {
-        this.defaultPhraseSlop = defaultPhraseSlop;
+		if (queryConfig != null) {
+			Integer defaultPhraseSlop = queryConfig.get(ConfigurationKeys.PHRASE_SLOP);
 
-        return super.process(queryTree);
+			if (defaultPhraseSlop != null) {
+				this.defaultPhraseSlop = defaultPhraseSlop;
 
-      }
+				return super.process(queryTree);
 
-    }
+			}
 
-    return queryTree;
+		}
 
-  }
+		return queryTree;
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	}
 
-    if (node instanceof TokenizedPhraseQueryNode
-        || node instanceof MultiPhraseQueryNode) {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-      return new SlopQueryNode(node, this.defaultPhraseSlop);
+		if (node instanceof TokenizedPhraseQueryNode
+			|| node instanceof MultiPhraseQueryNode) {
 
-    }
+			return new SlopQueryNode(node, this.defaultPhraseSlop);
 
-    return node;
+		}
 
-  }
+		return node;
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+	}
 
-    if (node instanceof SlopQueryNode) {
-      this.processChildren = false;
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
 
-    }
+		if (node instanceof SlopQueryNode) {
+			this.processChildren = false;
 
-    return node;
+		}
 
-  }
+		return node;
 
-  @Override
-  protected void processChildren(QueryNode queryTree) throws QueryNodeException {
+	}
 
-    if (this.processChildren) {
-      super.processChildren(queryTree);
+	@Override
+	protected void processChildren(QueryNode queryTree) throws QueryNodeException {
 
-    } else {
-      this.processChildren = true;
-    }
+		if (this.processChildren) {
+			super.processChildren(queryTree);
 
-  }
+		} else {
+			this.processChildren = true;
+		}
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
+	}
 
-    return children;
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
 
-  }
+		return children;
+
+	}
 
 }

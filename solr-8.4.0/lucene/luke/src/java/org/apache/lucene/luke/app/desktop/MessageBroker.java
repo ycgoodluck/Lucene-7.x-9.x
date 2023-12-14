@@ -20,46 +20,50 @@ package org.apache.lucene.luke.app.desktop;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Message broker */
+/**
+ * Message broker
+ */
 public class MessageBroker {
 
-  private static final MessageBroker instance = new MessageBroker();
+	private static final MessageBroker instance = new MessageBroker();
 
-  private List<MessageReceiver> receivers = new ArrayList<>();
+	private List<MessageReceiver> receivers = new ArrayList<>();
 
-  public static MessageBroker getInstance() {
-    return instance;
-  }
+	public static MessageBroker getInstance() {
+		return instance;
+	}
 
-  public void registerReceiver(MessageReceiver receiver) {
-    receivers.add(receiver);
-  }
+	public void registerReceiver(MessageReceiver receiver) {
+		receivers.add(receiver);
+	}
 
-  public void showStatusMessage(String message) {
-    for (MessageReceiver receiver : receivers) {
-      receiver.showStatusMessage(message);
-    }
-  }
+	public void showStatusMessage(String message) {
+		for (MessageReceiver receiver : receivers) {
+			receiver.showStatusMessage(message);
+		}
+	}
 
-  public void showUnknownErrorMessage() {
-    for (MessageReceiver receiver : receivers) {
-      receiver.showUnknownErrorMessage();
-    }
-  }
+	public void showUnknownErrorMessage() {
+		for (MessageReceiver receiver : receivers) {
+			receiver.showUnknownErrorMessage();
+		}
+	}
 
-  public void clearStatusMessage() {
-    for (MessageReceiver receiver : receivers) {
-      receiver.clearStatusMessage();
-    }
-  }
+	public void clearStatusMessage() {
+		for (MessageReceiver receiver : receivers) {
+			receiver.clearStatusMessage();
+		}
+	}
 
-  /** Message receiver in charge of rendering the message. */
-  public interface MessageReceiver {
-    void showStatusMessage(String message);
+	/**
+	 * Message receiver in charge of rendering the message.
+	 */
+	public interface MessageReceiver {
+		void showStatusMessage(String message);
 
-    void showUnknownErrorMessage();
+		void showUnknownErrorMessage();
 
-    void clearStatusMessage();
-  }
+		void clearStatusMessage();
+	}
 
 }

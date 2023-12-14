@@ -24,7 +24,8 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
 
-/** A high-performance kstem filter for english.
+/**
+ * A high-performance kstem filter for english.
  * <p>
  * See <a href="http://ciir.cs.umass.edu/pubfiles/ir-35.pdf">
  * "Viewing Morphology as an Inference Process"</a>
@@ -38,38 +39,38 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
  * certain terms from being passed to the stemmer
  * {@link KeywordAttribute#isKeyword()} should be set to <code>true</code>
  * in a previous {@link TokenStream}.
- *
+ * <p>
  * Note: For including the original term as well as the stemmed version, see
  * {@link org.apache.lucene.analysis.miscellaneous.KeywordRepeatFilterFactory}
  * </p>
- *
- *
  */
 
 public final class KStemFilter extends TokenFilter {
-  private final KStemmer stemmer = new KStemmer();
-  private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
+	private final KStemmer stemmer = new KStemmer();
+	private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
 
-  public KStemFilter(TokenStream in) {
-    super(in);
-  }
+	public KStemFilter(TokenStream in) {
+		super(in);
+	}
 
-  /** Returns the next, stemmed, input Token.
-   *  @return The stemmed form of a token.
-   *  @throws IOException If there is a low-level I/O error.
-   */
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (!input.incrementToken())
-      return false;
+	/**
+	 * Returns the next, stemmed, input Token.
+	 *
+	 * @return The stemmed form of a token.
+	 * @throws IOException If there is a low-level I/O error.
+	 */
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (!input.incrementToken())
+			return false;
 
-    char[] term = termAttribute.buffer();
-    int len = termAttribute.length();
-    if ((!keywordAtt.isKeyword()) && stemmer.stem(term, len)) {
-      termAttribute.setEmpty().append(stemmer.asCharSequence());
-    }
+		char[] term = termAttribute.buffer();
+		int len = termAttribute.length();
+		if ((!keywordAtt.isKeyword()) && stemmer.stem(term, len)) {
+			termAttribute.setEmpty().append(stemmer.asCharSequence());
+		}
 
-    return true;
-  }
+		return true;
+	}
 }

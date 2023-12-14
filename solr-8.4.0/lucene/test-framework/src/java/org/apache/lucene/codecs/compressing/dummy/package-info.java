@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/** 
+/**
  * Dummy CompressingCodec implementation used for testing.
  */
 package org.apache.lucene.codecs.compressing.dummy;

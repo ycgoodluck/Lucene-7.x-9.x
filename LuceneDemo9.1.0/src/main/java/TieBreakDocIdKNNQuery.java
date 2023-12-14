@@ -19,43 +19,44 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 public class TieBreakDocIdKNNQuery {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private Analyzer analyzer = new WhitespaceAnalyzer();
-    private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private Analyzer analyzer = new WhitespaceAnalyzer();
+	private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
 
-    public void doSearch() throws Exception {
-        conf.setUseCompoundFile(false);
-        conf.setMergeScheduler(new SerialMergeScheduler());
-            try (IndexWriter w = new IndexWriter(directory, new IndexWriterConfig())) {
-                for (int j = 0; j < 5; j++) {
-                    Document doc = new Document();
-                    doc.add(
-                            new KnnVectorField("field", new float[] {0, 1}, VectorSimilarityFunction.DOT_PRODUCT));
-                    w.addDocument(doc);
-                }
-            }
-            try (IndexReader reader = DirectoryReader.open(directory)) {
-                IndexSearcher searcher = new IndexSearcher(reader);
-                KnnVectorQuery query = new KnnVectorQuery("field", new float[] {2, 3}, 100);
-                ScoreDoc[] scoreDocs = searcher.search(query, 30).scoreDocs;
-                for (ScoreDoc scoreDoc : scoreDocs) {
-                    System.out.println("docId: " + scoreDoc.doc + "");
-                }
-            }
+	public void doSearch() throws Exception {
+		conf.setUseCompoundFile(false);
+		conf.setMergeScheduler(new SerialMergeScheduler());
+		try (IndexWriter w = new IndexWriter(directory, new IndexWriterConfig())) {
+			for (int j = 0; j < 5; j++) {
+				Document doc = new Document();
+				doc.add(
+					new KnnVectorField("field", new float[]{0, 1}, VectorSimilarityFunction.DOT_PRODUCT));
+				w.addDocument(doc);
+			}
+		}
+		try (IndexReader reader = DirectoryReader.open(directory)) {
+			IndexSearcher searcher = new IndexSearcher(reader);
+			KnnVectorQuery query = new KnnVectorQuery("field", new float[]{2, 3}, 100);
+			ScoreDoc[] scoreDocs = searcher.search(query, 30).scoreDocs;
+			for (ScoreDoc scoreDoc : scoreDocs) {
+				System.out.println("docId: " + scoreDoc.doc + "");
+			}
+		}
 
-    }
-    public static void main(String[] args) throws Exception{
-        TieBreakDocIdKNNQuery test = new TieBreakDocIdKNNQuery();
-        test.doSearch();
-    }
+	}
+
+	public static void main(String[] args) throws Exception {
+		TieBreakDocIdKNNQuery test = new TieBreakDocIdKNNQuery();
+		test.doSearch();
+	}
 }

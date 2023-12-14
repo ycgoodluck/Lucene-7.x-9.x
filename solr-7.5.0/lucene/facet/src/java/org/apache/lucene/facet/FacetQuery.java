@@ -30,23 +30,23 @@ import org.apache.lucene.search.TermQuery;
  */
 public class FacetQuery extends TermQuery {
 
-  /**
-   * Creates a new {@code FacetQuery} filtering the query on the given dimension.
-   */
-  public FacetQuery(final FacetsConfig facetsConfig, final String dimension, final String... path) {
-    super(toTerm(facetsConfig.getDimConfig(dimension), dimension, path));
-  }
+	/**
+	 * Creates a new {@code FacetQuery} filtering the query on the given dimension.
+	 */
+	public FacetQuery(final FacetsConfig facetsConfig, final String dimension, final String... path) {
+		super(toTerm(facetsConfig.getDimConfig(dimension), dimension, path));
+	}
 
-  /**
-   * Creates a new {@code FacetQuery} filtering the query on the given dimension.
-   * <p>
-   * <b>NOTE:</b>Uses FacetsConfig.DEFAULT_DIM_CONFIG.
-   */
-  public FacetQuery(final String dimension, final String... path) {
-    super(toTerm(FacetsConfig.DEFAULT_DIM_CONFIG, dimension, path));
-  }
+	/**
+	 * Creates a new {@code FacetQuery} filtering the query on the given dimension.
+	 * <p>
+	 * <b>NOTE:</b>Uses FacetsConfig.DEFAULT_DIM_CONFIG.
+	 */
+	public FacetQuery(final String dimension, final String... path) {
+		super(toTerm(FacetsConfig.DEFAULT_DIM_CONFIG, dimension, path));
+	}
 
-  static Term toTerm(final FacetsConfig.DimConfig dimConfig, final String dimension, final String... path) {
-    return new Term(dimConfig.indexFieldName, FacetsConfig.pathToString(dimension, path));
-  }
+	static Term toTerm(final FacetsConfig.DimConfig dimConfig, final String dimension, final String... path) {
+		return new Term(dimConfig.indexFieldName, FacetsConfig.pathToString(dimension, path));
+	}
 }

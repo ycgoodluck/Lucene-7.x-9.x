@@ -25,47 +25,47 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestIndexWriterDeleteByQuery extends LuceneTestCase {
 
-  // LUCENE-6379
-  public void testDeleteMatchAllDocsQuery() throws Exception {
-    Directory dir = newMaybeVirusCheckingDirectory();
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
-    Document doc = new Document();
-    // Norms are disabled:
-    doc.add(newStringField("field", "foo", Field.Store.NO));
-    w.addDocument(doc);
-    DirectoryReader r = DirectoryReader.open(w);
-    FieldInfo fi = FieldInfos.getMergedFieldInfos(r).fieldInfo("field");
-    assertNotNull(fi);
-    assertFalse(fi.hasNorms());
-    assertEquals(1, r.numDocs());
-    assertEquals(1, r.maxDoc());
+	// LUCENE-6379
+	public void testDeleteMatchAllDocsQuery() throws Exception {
+		Directory dir = newMaybeVirusCheckingDirectory();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
+		Document doc = new Document();
+		// Norms are disabled:
+		doc.add(newStringField("field", "foo", Field.Store.NO));
+		w.addDocument(doc);
+		DirectoryReader r = DirectoryReader.open(w);
+		FieldInfo fi = FieldInfos.getMergedFieldInfos(r).fieldInfo("field");
+		assertNotNull(fi);
+		assertFalse(fi.hasNorms());
+		assertEquals(1, r.numDocs());
+		assertEquals(1, r.maxDoc());
 
-    w.deleteDocuments(new MatchAllDocsQuery());
-    DirectoryReader r2 = DirectoryReader.openIfChanged(r);
-    r.close();
+		w.deleteDocuments(new MatchAllDocsQuery());
+		DirectoryReader r2 = DirectoryReader.openIfChanged(r);
+		r.close();
 
-    assertNotNull(r2);
-    assertEquals(0, r2.numDocs());
-    assertEquals(0, r2.maxDoc());
+		assertNotNull(r2);
+		assertEquals(0, r2.numDocs());
+		assertEquals(0, r2.maxDoc());
 
-    // Confirm the omitNorms bit is in fact no longer set:
-    doc = new Document();
-    // Norms are disabled:
-    doc.add(newTextField("field", "foo", Field.Store.NO));
-    w.addDocument(doc);
+		// Confirm the omitNorms bit is in fact no longer set:
+		doc = new Document();
+		// Norms are disabled:
+		doc.add(newTextField("field", "foo", Field.Store.NO));
+		w.addDocument(doc);
 
-    DirectoryReader r3 = DirectoryReader.openIfChanged(r2);
-    r2.close();
-    assertNotNull(r3);
-    assertEquals(1, r3.numDocs());
-    assertEquals(1, r3.maxDoc());
+		DirectoryReader r3 = DirectoryReader.openIfChanged(r2);
+		r2.close();
+		assertNotNull(r3);
+		assertEquals(1, r3.numDocs());
+		assertEquals(1, r3.maxDoc());
 
-    // Make sure norms can come back to life for a field after deleting by MatchAllDocsQuery:
-    fi = FieldInfos.getMergedFieldInfos(r3).fieldInfo("field");
-    assertNotNull(fi);
-    assertTrue(fi.hasNorms());
-    r3.close();
-    w.close();
-    dir.close();
-  }
+		// Make sure norms can come back to life for a field after deleting by MatchAllDocsQuery:
+		fi = FieldInfos.getMergedFieldInfos(r3).fieldInfo("field");
+		assertNotNull(fi);
+		assertTrue(fi.hasNorms());
+		r3.close();
+		w.close();
+		dir.close();
+	}
 }

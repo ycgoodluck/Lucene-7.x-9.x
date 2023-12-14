@@ -27,54 +27,56 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Hindi filter Factories are working.
  */
 public class TestHindiFilters extends BaseTokenStreamFactoryTestCase {
-  /**
-   * Test IndicNormalizationFilterFactory
-   */
-  public void testIndicNormalizer() throws Exception {
-    Reader reader = new StringReader("ত্‍ अाैर");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("IndicNormalization").create(stream);
-    assertTokenStreamContents(stream, new String[] { "ৎ", "और" });
-  }
-  
-  /**
-   * Test HindiNormalizationFilterFactory
-   */
-  public void testHindiNormalizer() throws Exception {
-    Reader reader = new StringReader("क़िताब");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("IndicNormalization").create(stream);
-    stream = tokenFilterFactory("HindiNormalization").create(stream);
-    assertTokenStreamContents(stream, new String[] {"किताब"});
-  }
-  
-  /**
-   * Test HindiStemFilterFactory
-   */
-  public void testStemmer() throws Exception {
-    Reader reader = new StringReader("किताबें");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("IndicNormalization").create(stream);
-    stream = tokenFilterFactory("HindiNormalization").create(stream);
-    stream = tokenFilterFactory("HindiStem").create(stream);
-    assertTokenStreamContents(stream, new String[] {"किताब"});
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("IndicNormalization", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-    
-    expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("HindiNormalization", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-    
-    expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("HindiStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Test IndicNormalizationFilterFactory
+	 */
+	public void testIndicNormalizer() throws Exception {
+		Reader reader = new StringReader("ত্‍ अाैर");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("IndicNormalization").create(stream);
+		assertTokenStreamContents(stream, new String[]{"ৎ", "और"});
+	}
+
+	/**
+	 * Test HindiNormalizationFilterFactory
+	 */
+	public void testHindiNormalizer() throws Exception {
+		Reader reader = new StringReader("क़िताब");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("IndicNormalization").create(stream);
+		stream = tokenFilterFactory("HindiNormalization").create(stream);
+		assertTokenStreamContents(stream, new String[]{"किताब"});
+	}
+
+	/**
+	 * Test HindiStemFilterFactory
+	 */
+	public void testStemmer() throws Exception {
+		Reader reader = new StringReader("किताबें");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("IndicNormalization").create(stream);
+		stream = tokenFilterFactory("HindiNormalization").create(stream);
+		stream = tokenFilterFactory("HindiStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"किताब"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("IndicNormalization", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("HindiNormalization", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("HindiStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

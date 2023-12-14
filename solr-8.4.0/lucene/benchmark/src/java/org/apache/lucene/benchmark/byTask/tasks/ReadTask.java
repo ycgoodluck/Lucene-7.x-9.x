@@ -53,204 +53,207 @@ import org.apache.lucene.util.Bits;
  */
 public abstract class ReadTask extends PerfTask {
 
-  private final QueryMaker queryMaker;
+	private final QueryMaker queryMaker;
 
-  public ReadTask(PerfRunData runData) {
-    super(runData);
-    if (withSearch()) {
-      queryMaker = getQueryMaker();
-    } else {
-      queryMaker = null;
-    }
-  }
-  @Override
-  public int doLogic() throws Exception {
-    int res = 0;
+	public ReadTask(PerfRunData runData) {
+		super(runData);
+		if (withSearch()) {
+			queryMaker = getQueryMaker();
+		} else {
+			queryMaker = null;
+		}
+	}
 
-    // open reader or use existing one
-    IndexSearcher searcher = getRunData().getIndexSearcher(); // (will incRef the reader)
+	@Override
+	public int doLogic() throws Exception {
+		int res = 0;
 
-    IndexReader reader;
+		// open reader or use existing one
+		IndexSearcher searcher = getRunData().getIndexSearcher(); // (will incRef the reader)
 
-    final boolean closeSearcher;
-    if (searcher == null) {
-      // open our own reader
-      Directory dir = getRunData().getDirectory();
-      reader = DirectoryReader.open(dir);
-      searcher = new IndexSearcher(reader);
-      closeSearcher = true;
-    } else {
-      // use existing one; this passes +1 ref to us
-      reader = searcher.getIndexReader();
-      closeSearcher = false;
-    }
+		IndexReader reader;
 
-    // optionally warm and add num docs traversed to count
-    if (withWarm()) {
-      Document doc = null;
-      Bits liveDocs = MultiBits.getLiveDocs(reader);
-      for (int m = 0; m < reader.maxDoc(); m++) {
-        if (null == liveDocs || liveDocs.get(m)) {
-          doc = reader.document(m);
-          res += (doc == null ? 0 : 1);
-        }
-      }
-    }
+		final boolean closeSearcher;
+		if (searcher == null) {
+			// open our own reader
+			Directory dir = getRunData().getDirectory();
+			reader = DirectoryReader.open(dir);
+			searcher = new IndexSearcher(reader);
+			closeSearcher = true;
+		} else {
+			// use existing one; this passes +1 ref to us
+			reader = searcher.getIndexReader();
+			closeSearcher = false;
+		}
 
-    if (withSearch()) {
-      res++;
-      Query q = queryMaker.makeQuery();
-      Sort sort = getSort();
-      TopDocs hits = null;
-      final int numHits = numHits();
-      if (numHits > 0) {
-        if (withCollector() == false) {
-          if (sort != null) {
-            // TODO: instead of always passing false we
-            // should detect based on the query; if we make
-            // the IndexSearcher search methods that take
-            // Weight public again, we can go back to
-            // pulling the Weight ourselves:
-            TopFieldCollector collector = TopFieldCollector.create(sort, numHits,
-                                                                   withTotalHits() ? Integer.MAX_VALUE : 1);
-            searcher.search(q, collector);
-            hits = collector.topDocs();
-          } else {
-            hits = searcher.search(q, numHits);
-          }
-        } else {
-          Collector collector = createCollector();
-          searcher.search(q, collector);
-          //hits = collector.topDocs();
-        }
+		// optionally warm and add num docs traversed to count
+		if (withWarm()) {
+			Document doc = null;
+			Bits liveDocs = MultiBits.getLiveDocs(reader);
+			for (int m = 0; m < reader.maxDoc(); m++) {
+				if (null == liveDocs || liveDocs.get(m)) {
+					doc = reader.document(m);
+					res += (doc == null ? 0 : 1);
+				}
+			}
+		}
 
-        if (hits != null) {
-          final String printHitsField = getRunData().getConfig().get("print.hits.field", null);
-          if (printHitsField != null && printHitsField.length() > 0) {
-            System.out.println("totalHits = " + hits.totalHits);
-            System.out.println("maxDoc()  = " + reader.maxDoc());
-            System.out.println("numDocs() = " + reader.numDocs());
-            for(int i=0;i<hits.scoreDocs.length;i++) {
-              final int docID = hits.scoreDocs[i].doc;
-              final Document doc = reader.document(docID);
-              System.out.println("  " + i + ": doc=" + docID + " score=" + hits.scoreDocs[i].score + " " + printHitsField + " =" + doc.get(printHitsField));
-            }
-          }
+		if (withSearch()) {
+			res++;
+			Query q = queryMaker.makeQuery();
+			Sort sort = getSort();
+			TopDocs hits = null;
+			final int numHits = numHits();
+			if (numHits > 0) {
+				if (withCollector() == false) {
+					if (sort != null) {
+						// TODO: instead of always passing false we
+						// should detect based on the query; if we make
+						// the IndexSearcher search methods that take
+						// Weight public again, we can go back to
+						// pulling the Weight ourselves:
+						TopFieldCollector collector = TopFieldCollector.create(sort, numHits,
+							withTotalHits() ? Integer.MAX_VALUE : 1);
+						searcher.search(q, collector);
+						hits = collector.topDocs();
+					} else {
+						hits = searcher.search(q, numHits);
+					}
+				} else {
+					Collector collector = createCollector();
+					searcher.search(q, collector);
+					//hits = collector.topDocs();
+				}
 
-          res += withTopDocs(searcher, q, hits);
-        }
-      }
-    }
+				if (hits != null) {
+					final String printHitsField = getRunData().getConfig().get("print.hits.field", null);
+					if (printHitsField != null && printHitsField.length() > 0) {
+						System.out.println("totalHits = " + hits.totalHits);
+						System.out.println("maxDoc()  = " + reader.maxDoc());
+						System.out.println("numDocs() = " + reader.numDocs());
+						for (int i = 0; i < hits.scoreDocs.length; i++) {
+							final int docID = hits.scoreDocs[i].doc;
+							final Document doc = reader.document(docID);
+							System.out.println("  " + i + ": doc=" + docID + " score=" + hits.scoreDocs[i].score + " " + printHitsField + " =" + doc.get(printHitsField));
+						}
+					}
 
-    if (closeSearcher) {
-      reader.close();
-    } else {
-      // Release our +1 ref from above
-      reader.decRef();
-    }
-    return res;
-  }
+					res += withTopDocs(searcher, q, hits);
+				}
+			}
+		}
 
-  protected int withTopDocs(IndexSearcher searcher, Query q, TopDocs hits) throws Exception {
-    IndexReader reader = searcher.getIndexReader();
-    int res = 0;
-    if (withTraverse()) {
-      final ScoreDoc[] scoreDocs = hits.scoreDocs;
-      int traversalSize = Math.min(scoreDocs.length, traversalSize());
+		if (closeSearcher) {
+			reader.close();
+		} else {
+			// Release our +1 ref from above
+			reader.decRef();
+		}
+		return res;
+	}
 
-      if (traversalSize > 0) {
-        boolean retrieve = withRetrieve();
-        for (int m = 0; m < traversalSize; m++) {
-          int id = scoreDocs[m].doc;
-          res++;
-          if (retrieve) {
-            Document document = retrieveDoc(reader, id);
-            res += document != null ? 1 : 0;
-          }
-        }
-      }
-    }
-    return res;
-  }
+	protected int withTopDocs(IndexSearcher searcher, Query q, TopDocs hits) throws Exception {
+		IndexReader reader = searcher.getIndexReader();
+		int res = 0;
+		if (withTraverse()) {
+			final ScoreDoc[] scoreDocs = hits.scoreDocs;
+			int traversalSize = Math.min(scoreDocs.length, traversalSize());
 
-  protected Collector createCollector() throws Exception {
-    return TopScoreDocCollector.create(numHits(), withTotalHits() ? Integer.MAX_VALUE : 1);
-  }
+			if (traversalSize > 0) {
+				boolean retrieve = withRetrieve();
+				for (int m = 0; m < traversalSize; m++) {
+					int id = scoreDocs[m].doc;
+					res++;
+					if (retrieve) {
+						Document document = retrieveDoc(reader, id);
+						res += document != null ? 1 : 0;
+					}
+				}
+			}
+		}
+		return res;
+	}
+
+	protected Collector createCollector() throws Exception {
+		return TopScoreDocCollector.create(numHits(), withTotalHits() ? Integer.MAX_VALUE : 1);
+	}
 
 
-  protected Document retrieveDoc(IndexReader ir, int id) throws IOException {
-    return ir.document(id);
-  }
+	protected Document retrieveDoc(IndexReader ir, int id) throws IOException {
+		return ir.document(id);
+	}
 
-  /**
-   * Return query maker used for this task.
-   */
-  public abstract QueryMaker getQueryMaker();
+	/**
+	 * Return query maker used for this task.
+	 */
+	public abstract QueryMaker getQueryMaker();
 
-  /**
-   * Return true if search should be performed.
-   */
-  public abstract boolean withSearch();
+	/**
+	 * Return true if search should be performed.
+	 */
+	public abstract boolean withSearch();
 
-  public boolean withCollector(){
-    return false;
-  }
-  
+	public boolean withCollector() {
+		return false;
+	}
 
-  /**
-   * Return true if warming should be performed.
-   */
-  public abstract boolean withWarm();
 
-  /**
-   * Return true if, with search, results should be traversed.
-   */
-  public abstract boolean withTraverse();
+	/**
+	 * Return true if warming should be performed.
+	 */
+	public abstract boolean withWarm();
 
-  /** Whether totalHits should be computed (only useful with
-   *  field sort) */
-  public boolean withTotalHits() {
-    return false;
-  }
+	/**
+	 * Return true if, with search, results should be traversed.
+	 */
+	public abstract boolean withTraverse();
 
-  /**
-   * Specify the number of hits to traverse.  Tasks should override this if they want to restrict the number
-   * of hits that are traversed when {@link #withTraverse()} is true. Must be greater than 0.
-   * <p>
-   * Read task calculates the traversal as: Math.min(hits.length(), traversalSize())
-   *
-   * @return Integer.MAX_VALUE
-   */
-  public int traversalSize() {
-    return Integer.MAX_VALUE;
-  }
+	/**
+	 * Whether totalHits should be computed (only useful with
+	 * field sort)
+	 */
+	public boolean withTotalHits() {
+		return false;
+	}
 
-  static final int DEFAULT_SEARCH_NUM_HITS = 10;
-  private int numHits;
+	/**
+	 * Specify the number of hits to traverse.  Tasks should override this if they want to restrict the number
+	 * of hits that are traversed when {@link #withTraverse()} is true. Must be greater than 0.
+	 * <p>
+	 * Read task calculates the traversal as: Math.min(hits.length(), traversalSize())
+	 *
+	 * @return Integer.MAX_VALUE
+	 */
+	public int traversalSize() {
+		return Integer.MAX_VALUE;
+	}
 
-  @Override
-  public void setup() throws Exception {
-    super.setup();
-    numHits = getRunData().getConfig().get("search.num.hits", DEFAULT_SEARCH_NUM_HITS);
-  }
+	static final int DEFAULT_SEARCH_NUM_HITS = 10;
+	private int numHits;
 
-  /**
-   * Specify the number of hits to retrieve.  Tasks should override this if they want to restrict the number
-   * of hits that are collected during searching. Must be greater than 0.
-   *
-   * @return 10 by default, or search.num.hits config if set.
-   */
-  public int numHits() {
-    return numHits;
-  }
+	@Override
+	public void setup() throws Exception {
+		super.setup();
+		numHits = getRunData().getConfig().get("search.num.hits", DEFAULT_SEARCH_NUM_HITS);
+	}
 
-  /**
-   * Return true if, with search and results traversing, docs should be retrieved.
-   */
-  public abstract boolean withRetrieve();
+	/**
+	 * Specify the number of hits to retrieve.  Tasks should override this if they want to restrict the number
+	 * of hits that are collected during searching. Must be greater than 0.
+	 *
+	 * @return 10 by default, or search.num.hits config if set.
+	 */
+	public int numHits() {
+		return numHits;
+	}
 
-  protected Sort getSort() {
-    return null;
-  }
+	/**
+	 * Return true if, with search and results traversing, docs should be retrieved.
+	 */
+	public abstract boolean withRetrieve();
+
+	protected Sort getSort() {
+		return null;
+	}
 
 }

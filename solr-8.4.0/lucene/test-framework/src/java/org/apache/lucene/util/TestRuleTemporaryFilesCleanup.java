@@ -48,272 +48,276 @@ import com.carrotsearch.randomizedtesting.rules.TestRuleAdapter;
 
 /**
  * Checks and cleans up temporary files.
- * 
+ *
  * @see LuceneTestCase#createTempDir()
  * @see LuceneTestCase#createTempFile()
  */
 final class TestRuleTemporaryFilesCleanup extends TestRuleAdapter {
-  /**
-   * Retry to create temporary file name this many times.
-   */
-  private static final int TEMP_NAME_RETRY_THRESHOLD = 9999;
+	/**
+	 * Retry to create temporary file name this many times.
+	 */
+	private static final int TEMP_NAME_RETRY_THRESHOLD = 9999;
 
-  /**
-   * Writeable temporary base folder. 
-   */
-  private Path javaTempDir;
+	/**
+	 * Writeable temporary base folder.
+	 */
+	private Path javaTempDir;
 
-  /**
-   * Per-test class temporary folder.
-   */
-  private Path tempDirBase;
-  
-  /**
-   * Per-test filesystem
-   */
-  private FileSystem fileSystem;
+	/**
+	 * Per-test class temporary folder.
+	 */
+	private Path tempDirBase;
 
-  /**
-   * Suite failure marker.
-   */
-  private final TestRuleMarkFailure failureMarker;
+	/**
+	 * Per-test filesystem
+	 */
+	private FileSystem fileSystem;
 
-  /**
-   * A queue of temporary resources to be removed after the
-   * suite completes.
-   * @see #registerToRemoveAfterSuite(Path)
-   */
-  private final static List<Path> cleanupQueue = new ArrayList<Path>();
+	/**
+	 * Suite failure marker.
+	 */
+	private final TestRuleMarkFailure failureMarker;
 
-  public TestRuleTemporaryFilesCleanup(TestRuleMarkFailure failureMarker) {
-    this.failureMarker = failureMarker;
-  }
+	/**
+	 * A queue of temporary resources to be removed after the
+	 * suite completes.
+	 *
+	 * @see #registerToRemoveAfterSuite(Path)
+	 */
+	private final static List<Path> cleanupQueue = new ArrayList<Path>();
 
-  /**
-   * Register temporary folder for removal after the suite completes.
-   */
-  void registerToRemoveAfterSuite(Path f) {
-    assert f != null;
+	public TestRuleTemporaryFilesCleanup(TestRuleMarkFailure failureMarker) {
+		this.failureMarker = failureMarker;
+	}
 
-    if (LuceneTestCase.LEAVE_TEMPORARY) {
-      System.err.println("INFO: Will leave temporary file: " + f.toAbsolutePath());
-      return;
-    }
+	/**
+	 * Register temporary folder for removal after the suite completes.
+	 */
+	void registerToRemoveAfterSuite(Path f) {
+		assert f != null;
 
-    synchronized (cleanupQueue) {
-      cleanupQueue.add(f);
-    }
-  }
+		if (LuceneTestCase.LEAVE_TEMPORARY) {
+			System.err.println("INFO: Will leave temporary file: " + f.toAbsolutePath());
+			return;
+		}
 
-  @Override
-  protected void before() throws Throwable {
-    super.before();
+		synchronized (cleanupQueue) {
+			cleanupQueue.add(f);
+		}
+	}
 
-    assert tempDirBase == null;
-    fileSystem = initializeFileSystem();
-    javaTempDir = initializeJavaTempDir();
-  }
-  
-  // os/config-independent limit for too many open files
-  // TODO: can we make this lower?
-  private static final int MAX_OPEN_FILES = 2048;
-  
-  private boolean allowed(Set<String> avoid, Class<? extends FileSystemProvider> clazz) {
-    if (avoid.contains("*") || avoid.contains(clazz.getSimpleName())) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-  
-  private FileSystem initializeFileSystem() {
-    Class<?> targetClass = RandomizedContext.current().getTargetClass();
-    Set<String> avoid = new HashSet<>();
-    if (targetClass.isAnnotationPresent(SuppressFileSystems.class)) {
-      SuppressFileSystems a = targetClass.getAnnotation(SuppressFileSystems.class);
-      avoid.addAll(Arrays.asList(a.value()));
-    }
-    FileSystem fs = FileSystems.getDefault();
-    if (LuceneTestCase.VERBOSE && allowed(avoid, VerboseFS.class)) {
-      fs = new VerboseFS(fs, new TestRuleSetupAndRestoreClassEnv.ThreadNameFixingPrintStreamInfoStream(System.out)).getFileSystem(null);
-    }
-    
-    Random random = RandomizedContext.current().getRandom();
-    
-    // speed up tests by omitting actual fsync calls to the hardware most of the time.
-    if (targetClass.isAnnotationPresent(SuppressFsync.class) || random.nextInt(100) > 0) {
-      if (allowed(avoid, DisableFsyncFS.class)) {
-        fs = new DisableFsyncFS(fs).getFileSystem(null);
-      }
-    }
-    
-    // impacts test reproducibility across platforms.
-    if (random.nextInt(100) > 0) {
-      if (allowed(avoid, ShuffleFS.class)) {
-        fs = new ShuffleFS(fs, random.nextLong()).getFileSystem(null);
-      }
-    }
-    
-    // otherwise, wrap with mockfilesystems for additional checks. some 
-    // of these have side effects (e.g. concurrency) so it doesn't always happen.
-    if (random.nextInt(10) > 0) {
-      if (allowed(avoid, LeakFS.class)) {
-        fs = new LeakFS(fs).getFileSystem(null);
-      }
-      if (allowed(avoid, HandleLimitFS.class)) {
-        fs = new HandleLimitFS(fs, MAX_OPEN_FILES).getFileSystem(null);
-      }
-      // windows is currently slow
-      if (random.nextInt(10) == 0) {
-        // don't try to emulate windows on windows: they don't get along
-        if (!Constants.WINDOWS && allowed(avoid, WindowsFS.class)) {
-          fs = new WindowsFS(fs).getFileSystem(null);
-        }
-      }
-      if (allowed(avoid, ExtrasFS.class)) {
-        fs = new ExtrasFS(fs, random.nextInt(4) == 0, random.nextBoolean()).getFileSystem(null);
-      }
-    }
-    if (LuceneTestCase.VERBOSE) {
-      System.out.println("filesystem: " + fs.provider());
-    }
+	@Override
+	protected void before() throws Throwable {
+		super.before();
 
-    return fs.provider().getFileSystem(URI.create("file:///"));
-  }
+		assert tempDirBase == null;
+		fileSystem = initializeFileSystem();
+		javaTempDir = initializeJavaTempDir();
+	}
 
-  private Path initializeJavaTempDir() throws IOException {
-    Path javaTempDir = fileSystem.getPath(System.getProperty("tempDir", System.getProperty("java.io.tmpdir")));
-    
-    Files.createDirectories(javaTempDir);
+	// os/config-independent limit for too many open files
+	// TODO: can we make this lower?
+	private static final int MAX_OPEN_FILES = 2048;
 
-    assert Files.isDirectory(javaTempDir) &&
-           Files.isWritable(javaTempDir);
+	private boolean allowed(Set<String> avoid, Class<? extends FileSystemProvider> clazz) {
+		if (avoid.contains("*") || avoid.contains(clazz.getSimpleName())) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 
-    return javaTempDir.toRealPath();
-  }
+	private FileSystem initializeFileSystem() {
+		Class<?> targetClass = RandomizedContext.current().getTargetClass();
+		Set<String> avoid = new HashSet<>();
+		if (targetClass.isAnnotationPresent(SuppressFileSystems.class)) {
+			SuppressFileSystems a = targetClass.getAnnotation(SuppressFileSystems.class);
+			avoid.addAll(Arrays.asList(a.value()));
+		}
+		FileSystem fs = FileSystems.getDefault();
+		if (LuceneTestCase.VERBOSE && allowed(avoid, VerboseFS.class)) {
+			fs = new VerboseFS(fs, new TestRuleSetupAndRestoreClassEnv.ThreadNameFixingPrintStreamInfoStream(System.out)).getFileSystem(null);
+		}
 
-  @Override
-  protected void afterAlways(List<Throwable> errors) throws Throwable {
-    // Drain cleanup queue and clear it.
-    final Path [] everything;
-    final String tempDirBasePath;
-    synchronized (cleanupQueue) {
-      tempDirBasePath = (tempDirBase != null ? tempDirBase.toAbsolutePath().toString() : null);
-      tempDirBase = null;
+		Random random = RandomizedContext.current().getRandom();
 
-      Collections.reverse(cleanupQueue);
-      everything = new Path [cleanupQueue.size()];
-      cleanupQueue.toArray(everything);
-      cleanupQueue.clear();
-    }
+		// speed up tests by omitting actual fsync calls to the hardware most of the time.
+		if (targetClass.isAnnotationPresent(SuppressFsync.class) || random.nextInt(100) > 0) {
+			if (allowed(avoid, DisableFsyncFS.class)) {
+				fs = new DisableFsyncFS(fs).getFileSystem(null);
+			}
+		}
 
-    // Only check and throw an IOException on un-removable files if the test
-    // was successful. Otherwise just report the path of temporary files
-    // and leave them there.
-    if (failureMarker.wasSuccessful()) {
+		// impacts test reproducibility across platforms.
+		if (random.nextInt(100) > 0) {
+			if (allowed(avoid, ShuffleFS.class)) {
+				fs = new ShuffleFS(fs, random.nextLong()).getFileSystem(null);
+			}
+		}
 
-      try {
-        IOUtils.rm(everything);
-      } catch (IOException e) {
-        Class<?> suiteClass = RandomizedContext.current().getTargetClass();
-        if (suiteClass.isAnnotationPresent(SuppressTempFileChecks.class)) {
-          System.err.println("WARNING: Leftover undeleted temporary files (bugUrl: "
-              + suiteClass.getAnnotation(SuppressTempFileChecks.class).bugUrl() + "): "
-              + e.getMessage());
-          return;
-        }
-        throw e;
-      }
-      if (fileSystem != FileSystems.getDefault()) {
-        fileSystem.close();
-      }
-    } else {
-      if (tempDirBasePath != null) {
-        System.err.println("NOTE: leaving temporary files on disk at: " + tempDirBasePath);
-      }
-    }
-  }
-  
-  Path getPerTestClassTempDir() {
-    if (tempDirBase == null) {
-      RandomizedContext ctx = RandomizedContext.current();
-      Class<?> clazz = ctx.getTargetClass();
-      String prefix = clazz.getName();
-      prefix = prefix.replaceFirst("^org.apache.lucene.", "lucene.");
-      prefix = prefix.replaceFirst("^org.apache.solr.", "solr.");
+		// otherwise, wrap with mockfilesystems for additional checks. some
+		// of these have side effects (e.g. concurrency) so it doesn't always happen.
+		if (random.nextInt(10) > 0) {
+			if (allowed(avoid, LeakFS.class)) {
+				fs = new LeakFS(fs).getFileSystem(null);
+			}
+			if (allowed(avoid, HandleLimitFS.class)) {
+				fs = new HandleLimitFS(fs, MAX_OPEN_FILES).getFileSystem(null);
+			}
+			// windows is currently slow
+			if (random.nextInt(10) == 0) {
+				// don't try to emulate windows on windows: they don't get along
+				if (!Constants.WINDOWS && allowed(avoid, WindowsFS.class)) {
+					fs = new WindowsFS(fs).getFileSystem(null);
+				}
+			}
+			if (allowed(avoid, ExtrasFS.class)) {
+				fs = new ExtrasFS(fs, random.nextInt(4) == 0, random.nextBoolean()).getFileSystem(null);
+			}
+		}
+		if (LuceneTestCase.VERBOSE) {
+			System.out.println("filesystem: " + fs.provider());
+		}
 
-      int attempt = 0;
-      Path f;
-      boolean success = false;
-      do {
-        if (attempt++ >= TEMP_NAME_RETRY_THRESHOLD) {
-          throw new RuntimeException(
-              "Failed to get a temporary name too many times, check your temp directory and consider manually cleaning it: "
-                + javaTempDir.toAbsolutePath());            
-        }
-        f = javaTempDir.resolve(prefix + "_" + ctx.getRunnerSeedAsString() 
-              + "-" + String.format(Locale.ENGLISH, "%03d", attempt));
-        try {
-          Files.createDirectory(f);
-          success = true;
-        } catch (IOException ignore) {}
-      } while (!success);
+		return fs.provider().getFileSystem(URI.create("file:///"));
+	}
 
-      tempDirBase = f;
-      registerToRemoveAfterSuite(tempDirBase);
-    }
-    return tempDirBase;
-  }
-  
-  /**
-   * @see LuceneTestCase#createTempDir()
-   */
-  public Path createTempDir(String prefix) {
-    Path base = getPerTestClassTempDir();
+	private Path initializeJavaTempDir() throws IOException {
+		Path javaTempDir = fileSystem.getPath(System.getProperty("tempDir", System.getProperty("java.io.tmpdir")));
 
-    int attempt = 0;
-    Path f;
-    boolean success = false;
-    do {
-      if (attempt++ >= TEMP_NAME_RETRY_THRESHOLD) {
-        throw new RuntimeException(
-            "Failed to get a temporary name too many times, check your temp directory and consider manually cleaning it: "
-              + base.toAbsolutePath());            
-      }
-      f = base.resolve(prefix + "-" + String.format(Locale.ENGLISH, "%03d", attempt));
-      try {
-        Files.createDirectory(f);
-        success = true;
-      } catch (IOException ignore) {}
-    } while (!success);
+		Files.createDirectories(javaTempDir);
 
-    registerToRemoveAfterSuite(f);
-    return f;
-  }
+		assert Files.isDirectory(javaTempDir) &&
+			Files.isWritable(javaTempDir);
 
-  /**
-   * @see LuceneTestCase#createTempFile()
-   */
-  public Path createTempFile(String prefix, String suffix) throws IOException {
-    Path base = getPerTestClassTempDir();
+		return javaTempDir.toRealPath();
+	}
 
-    int attempt = 0;
-    Path f;
-    boolean success = false;
-    do {
-      if (attempt++ >= TEMP_NAME_RETRY_THRESHOLD) {
-        throw new RuntimeException(
-            "Failed to get a temporary name too many times, check your temp directory and consider manually cleaning it: "
-              + base.toAbsolutePath());            
-      }
-      f = base.resolve(prefix + "-" + String.format(Locale.ENGLISH, "%03d", attempt) + suffix);
-      try {
-        Files.createFile(f);
-        success = true;
-      } catch (IOException ignore) {}
-    } while (!success);
+	@Override
+	protected void afterAlways(List<Throwable> errors) throws Throwable {
+		// Drain cleanup queue and clear it.
+		final Path[] everything;
+		final String tempDirBasePath;
+		synchronized (cleanupQueue) {
+			tempDirBasePath = (tempDirBase != null ? tempDirBase.toAbsolutePath().toString() : null);
+			tempDirBase = null;
 
-    registerToRemoveAfterSuite(f);
-    return f;
-  }
+			Collections.reverse(cleanupQueue);
+			everything = new Path[cleanupQueue.size()];
+			cleanupQueue.toArray(everything);
+			cleanupQueue.clear();
+		}
+
+		// Only check and throw an IOException on un-removable files if the test
+		// was successful. Otherwise just report the path of temporary files
+		// and leave them there.
+		if (failureMarker.wasSuccessful()) {
+
+			try {
+				IOUtils.rm(everything);
+			} catch (IOException e) {
+				Class<?> suiteClass = RandomizedContext.current().getTargetClass();
+				if (suiteClass.isAnnotationPresent(SuppressTempFileChecks.class)) {
+					System.err.println("WARNING: Leftover undeleted temporary files (bugUrl: "
+						+ suiteClass.getAnnotation(SuppressTempFileChecks.class).bugUrl() + "): "
+						+ e.getMessage());
+					return;
+				}
+				throw e;
+			}
+			if (fileSystem != FileSystems.getDefault()) {
+				fileSystem.close();
+			}
+		} else {
+			if (tempDirBasePath != null) {
+				System.err.println("NOTE: leaving temporary files on disk at: " + tempDirBasePath);
+			}
+		}
+	}
+
+	Path getPerTestClassTempDir() {
+		if (tempDirBase == null) {
+			RandomizedContext ctx = RandomizedContext.current();
+			Class<?> clazz = ctx.getTargetClass();
+			String prefix = clazz.getName();
+			prefix = prefix.replaceFirst("^org.apache.lucene.", "lucene.");
+			prefix = prefix.replaceFirst("^org.apache.solr.", "solr.");
+
+			int attempt = 0;
+			Path f;
+			boolean success = false;
+			do {
+				if (attempt++ >= TEMP_NAME_RETRY_THRESHOLD) {
+					throw new RuntimeException(
+						"Failed to get a temporary name too many times, check your temp directory and consider manually cleaning it: "
+							+ javaTempDir.toAbsolutePath());
+				}
+				f = javaTempDir.resolve(prefix + "_" + ctx.getRunnerSeedAsString()
+					+ "-" + String.format(Locale.ENGLISH, "%03d", attempt));
+				try {
+					Files.createDirectory(f);
+					success = true;
+				} catch (IOException ignore) {
+				}
+			} while (!success);
+
+			tempDirBase = f;
+			registerToRemoveAfterSuite(tempDirBase);
+		}
+		return tempDirBase;
+	}
+
+	/**
+	 * @see LuceneTestCase#createTempDir()
+	 */
+	public Path createTempDir(String prefix) {
+		Path base = getPerTestClassTempDir();
+
+		int attempt = 0;
+		Path f;
+		boolean success = false;
+		do {
+			if (attempt++ >= TEMP_NAME_RETRY_THRESHOLD) {
+				throw new RuntimeException(
+					"Failed to get a temporary name too many times, check your temp directory and consider manually cleaning it: "
+						+ base.toAbsolutePath());
+			}
+			f = base.resolve(prefix + "-" + String.format(Locale.ENGLISH, "%03d", attempt));
+			try {
+				Files.createDirectory(f);
+				success = true;
+			} catch (IOException ignore) {
+			}
+		} while (!success);
+
+		registerToRemoveAfterSuite(f);
+		return f;
+	}
+
+	/**
+	 * @see LuceneTestCase#createTempFile()
+	 */
+	public Path createTempFile(String prefix, String suffix) throws IOException {
+		Path base = getPerTestClassTempDir();
+
+		int attempt = 0;
+		Path f;
+		boolean success = false;
+		do {
+			if (attempt++ >= TEMP_NAME_RETRY_THRESHOLD) {
+				throw new RuntimeException(
+					"Failed to get a temporary name too many times, check your temp directory and consider manually cleaning it: "
+						+ base.toAbsolutePath());
+			}
+			f = base.resolve(prefix + "-" + String.format(Locale.ENGLISH, "%03d", attempt) + suffix);
+			try {
+				Files.createFile(f);
+				success = true;
+			} catch (IOException ignore) {
+			}
+		} while (!success);
+
+		registerToRemoveAfterSuite(f);
+		return f;
+	}
 }

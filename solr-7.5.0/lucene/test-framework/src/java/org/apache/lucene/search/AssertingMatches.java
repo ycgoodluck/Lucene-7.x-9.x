@@ -22,22 +22,22 @@ import java.util.Iterator;
 
 class AssertingMatches implements Matches {
 
-  private final Matches in;
+	private final Matches in;
 
-  AssertingMatches(Matches matches) {
-    this.in = matches;
-  }
+	AssertingMatches(Matches matches) {
+		this.in = matches;
+	}
 
-  @Override
-  public MatchesIterator getMatches(String field) throws IOException {
-    MatchesIterator mi = in.getMatches(field);
-    if (mi == null)
-      return null;
-    return new AssertingMatchesIterator(mi);
-  }
+	@Override
+	public MatchesIterator getMatches(String field) throws IOException {
+		MatchesIterator mi = in.getMatches(field);
+		if (mi == null)
+			return null;
+		return new AssertingMatchesIterator(mi);
+	}
 
-  @Override
-  public Iterator<String> iterator() {
-    return in.iterator();
-  }
+	@Override
+	public Iterator<String> iterator() {
+		return in.iterator();
+	}
 }

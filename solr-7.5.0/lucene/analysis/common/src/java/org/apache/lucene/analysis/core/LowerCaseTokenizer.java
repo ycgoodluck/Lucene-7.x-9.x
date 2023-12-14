@@ -32,41 +32,42 @@ import org.apache.lucene.util.AttributeFactory;
  * </p>
  */
 public final class LowerCaseTokenizer extends LetterTokenizer {
-  
-  /**
-   * Construct a new LowerCaseTokenizer.
-   */
-  public LowerCaseTokenizer() {
-  }
 
-  /**
-   * Construct a new LowerCaseTokenizer using a given
-   * {@link org.apache.lucene.util.AttributeFactory}.
-   *
-   * @param factory
-   *          the attribute factory to use for this {@link Tokenizer}
-   */
-  public LowerCaseTokenizer(AttributeFactory factory) {
-    super(factory);
-  }
-  
-  /**
-   * Construct a new LowerCaseTokenizer using a given
-   * {@link org.apache.lucene.util.AttributeFactory}.
-   *
-   * @param factory the attribute factory to use for this {@link Tokenizer}
-   * @param maxTokenLen maximum token length the tokenizer will emit. 
-   *        Must be greater than 0 and less than MAX_TOKEN_LENGTH_LIMIT (1024*1024)
-   * @throws IllegalArgumentException if maxTokenLen is invalid.
-   */
-  public LowerCaseTokenizer(AttributeFactory factory, int maxTokenLen) {
-    super(factory, maxTokenLen);
-  }
-  
-  /** Converts char to lower case
-   * {@link Character#toLowerCase(int)}.*/
-  @Override
-  protected int normalize(int c) {
-    return Character.toLowerCase(c);
-  }
+	/**
+	 * Construct a new LowerCaseTokenizer.
+	 */
+	public LowerCaseTokenizer() {
+	}
+
+	/**
+	 * Construct a new LowerCaseTokenizer using a given
+	 * {@link org.apache.lucene.util.AttributeFactory}.
+	 *
+	 * @param factory the attribute factory to use for this {@link Tokenizer}
+	 */
+	public LowerCaseTokenizer(AttributeFactory factory) {
+		super(factory);
+	}
+
+	/**
+	 * Construct a new LowerCaseTokenizer using a given
+	 * {@link org.apache.lucene.util.AttributeFactory}.
+	 *
+	 * @param factory     the attribute factory to use for this {@link Tokenizer}
+	 * @param maxTokenLen maximum token length the tokenizer will emit.
+	 *                    Must be greater than 0 and less than MAX_TOKEN_LENGTH_LIMIT (1024*1024)
+	 * @throws IllegalArgumentException if maxTokenLen is invalid.
+	 */
+	public LowerCaseTokenizer(AttributeFactory factory, int maxTokenLen) {
+		super(factory, maxTokenLen);
+	}
+
+	/**
+	 * Converts char to lower case
+	 * {@link Character#toLowerCase(int)}.
+	 */
+	@Override
+	protected int normalize(int c) {
+		return Character.toLowerCase(c);
+	}
 }

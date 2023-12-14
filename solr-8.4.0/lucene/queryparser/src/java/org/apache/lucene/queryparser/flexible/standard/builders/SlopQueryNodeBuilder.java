@@ -32,40 +32,40 @@ import org.apache.lucene.search.Query;
  */
 public class SlopQueryNodeBuilder implements StandardQueryBuilder {
 
-  public SlopQueryNodeBuilder() {
-    // empty constructor
-  }
+	public SlopQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public Query build(QueryNode queryNode) throws QueryNodeException {
-    SlopQueryNode phraseSlopNode = (SlopQueryNode) queryNode;
+	@Override
+	public Query build(QueryNode queryNode) throws QueryNodeException {
+		SlopQueryNode phraseSlopNode = (SlopQueryNode) queryNode;
 
-    Query query = (Query) phraseSlopNode.getChild().getTag(
-        QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+		Query query = (Query) phraseSlopNode.getChild().getTag(
+			QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
 
-    if (query instanceof PhraseQuery) {
-      PhraseQuery.Builder builder = new PhraseQuery.Builder();
-      builder.setSlop(phraseSlopNode.getValue());
-      PhraseQuery pq = (PhraseQuery) query;
-      org.apache.lucene.index.Term[] terms = pq.getTerms();
-      int[] positions = pq.getPositions();
-      for (int i = 0; i < terms.length; ++i) {
-        builder.add(terms[i], positions[i]);
-      }
-      query = builder.build();
+		if (query instanceof PhraseQuery) {
+			PhraseQuery.Builder builder = new PhraseQuery.Builder();
+			builder.setSlop(phraseSlopNode.getValue());
+			PhraseQuery pq = (PhraseQuery) query;
+			org.apache.lucene.index.Term[] terms = pq.getTerms();
+			int[] positions = pq.getPositions();
+			for (int i = 0; i < terms.length; ++i) {
+				builder.add(terms[i], positions[i]);
+			}
+			query = builder.build();
 
-    } else {
-      MultiPhraseQuery mpq = (MultiPhraseQuery)query;
-      
-      int slop = phraseSlopNode.getValue();
-      
-      if (slop != mpq.getSlop()) {
-        query = new MultiPhraseQuery.Builder(mpq).setSlop(slop).build();
-      }
-    }
+		} else {
+			MultiPhraseQuery mpq = (MultiPhraseQuery) query;
 
-    return query;
+			int slop = phraseSlopNode.getValue();
 
-  }
+			if (slop != mpq.getSlop()) {
+				query = new MultiPhraseQuery.Builder(mpq).setSlop(slop).build();
+			}
+		}
+
+		return query;
+
+	}
 
 }

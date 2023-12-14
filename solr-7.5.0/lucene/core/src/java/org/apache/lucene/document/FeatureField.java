@@ -102,451 +102,465 @@ import org.apache.lucene.util.BytesRef;
  *     .build();
  * TopDocs topDocs = searcher.search(boostedQuery, 10);
  * </pre>
+ *
  * @lucene.experimental
  */
 public final class FeatureField extends Field {
 
-  private static final FieldType FIELD_TYPE = new FieldType();
-  static {
-    FIELD_TYPE.setTokenized(false);
-    FIELD_TYPE.setOmitNorms(true);
-    FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-  }
+	private static final FieldType FIELD_TYPE = new FieldType();
 
-  private float featureValue;
+	static {
+		FIELD_TYPE.setTokenized(false);
+		FIELD_TYPE.setOmitNorms(true);
+		FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+	}
 
-  /**
-   * Create a feature.
-   * @param fieldName The name of the field to store the information into. All features may be stored in the same field.
-   * @param featureName The name of the feature, eg. 'pagerank`. It will be indexed as a term.
-   * @param featureValue The value of the feature, must be a positive, finite, normal float.
-   */
-  public FeatureField(String fieldName, String featureName, float featureValue) {
-    super(fieldName, featureName, FIELD_TYPE);
-    setFeatureValue(featureValue);
-  }
+	private float featureValue;
 
-  /**
-   * Update the feature value of this field.
-   */
-  public void setFeatureValue(float featureValue) {
-    if (Float.isFinite(featureValue) == false) {
-      throw new IllegalArgumentException("featureValue must be finite, got: " + featureValue +
-          " for feature " + fieldsData + " on field " + name);
-    }
-    if (featureValue < Float.MIN_NORMAL) {
-      throw new IllegalArgumentException("featureValue must be a positive normal float, got: " +
-          featureValue + "for feature " + fieldsData + " on field " + name +
-          " which is less than the minimum positive normal float: " + Float.MIN_NORMAL);
-    }
-    this.featureValue = featureValue;
-  }
+	/**
+	 * Create a feature.
+	 *
+	 * @param fieldName    The name of the field to store the information into. All features may be stored in the same field.
+	 * @param featureName  The name of the feature, eg. 'pagerank`. It will be indexed as a term.
+	 * @param featureValue The value of the feature, must be a positive, finite, normal float.
+	 */
+	public FeatureField(String fieldName, String featureName, float featureValue) {
+		super(fieldName, featureName, FIELD_TYPE);
+		setFeatureValue(featureValue);
+	}
 
-  @Override
-  public TokenStream tokenStream(Analyzer analyzer, TokenStream reuse) {
-    FeatureTokenStream stream;
-    if (reuse instanceof FeatureTokenStream) {
-      stream = (FeatureTokenStream) reuse;
-    } else {
-      stream = new FeatureTokenStream();
-    }
+	/**
+	 * Update the feature value of this field.
+	 */
+	public void setFeatureValue(float featureValue) {
+		if (Float.isFinite(featureValue) == false) {
+			throw new IllegalArgumentException("featureValue must be finite, got: " + featureValue +
+				" for feature " + fieldsData + " on field " + name);
+		}
+		if (featureValue < Float.MIN_NORMAL) {
+			throw new IllegalArgumentException("featureValue must be a positive normal float, got: " +
+				featureValue + "for feature " + fieldsData + " on field " + name +
+				" which is less than the minimum positive normal float: " + Float.MIN_NORMAL);
+		}
+		this.featureValue = featureValue;
+	}
 
-    int freqBits = Float.floatToIntBits(featureValue);
-    stream.setValues((String) fieldsData, freqBits >>> 15);
-    return stream;
-  }
+	@Override
+	public TokenStream tokenStream(Analyzer analyzer, TokenStream reuse) {
+		FeatureTokenStream stream;
+		if (reuse instanceof FeatureTokenStream) {
+			stream = (FeatureTokenStream) reuse;
+		} else {
+			stream = new FeatureTokenStream();
+		}
 
-  private static final class FeatureTokenStream extends TokenStream {
-    private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
-    private final TermFrequencyAttribute freqAttribute = addAttribute(TermFrequencyAttribute.class);
-    private boolean used = true;
-    private String value = null;
-    private int freq = 0;
+		int freqBits = Float.floatToIntBits(featureValue);
+		stream.setValues((String) fieldsData, freqBits >>> 15);
+		return stream;
+	}
 
-    private FeatureTokenStream() {
-    }
+	private static final class FeatureTokenStream extends TokenStream {
+		private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
+		private final TermFrequencyAttribute freqAttribute = addAttribute(TermFrequencyAttribute.class);
+		private boolean used = true;
+		private String value = null;
+		private int freq = 0;
 
-    /** Sets the values */
-    void setValues(String value, int freq) {
-      this.value = value;
-      this.freq = freq;
-    }
+		private FeatureTokenStream() {
+		}
 
-    @Override
-    public boolean incrementToken() {
-      if (used) {
-        return false;
-      }
-      clearAttributes();
-      termAttribute.append(value);
-      freqAttribute.setTermFrequency(freq);
-      used = true;
-      return true;
-    }
+		/**
+		 * Sets the values
+		 */
+		void setValues(String value, int freq) {
+			this.value = value;
+			this.freq = freq;
+		}
 
-    @Override
-    public void reset() {
-      used = false;
-    }
+		@Override
+		public boolean incrementToken() {
+			if (used) {
+				return false;
+			}
+			clearAttributes();
+			termAttribute.append(value);
+			freqAttribute.setTermFrequency(freq);
+			used = true;
+			return true;
+		}
 
-    @Override
-    public void close() {
-      value = null;
-    }
-  }
+		@Override
+		public void reset() {
+			used = false;
+		}
 
-  private static final int MAX_FREQ = Float.floatToIntBits(Float.MAX_VALUE) >>> 15;
+		@Override
+		public void close() {
+			value = null;
+		}
+	}
 
-  private static float decodeFeatureValue(float freq) {
-    if (freq > MAX_FREQ) {
-      // This is never used in practice but callers of the SimScorer API might
-      // occasionally call it on eg. Float.MAX_VALUE to compute the max score
-      // so we need to be consistent.
-      return Float.MAX_VALUE;
-    }
-    int tf = (int) freq; // lossless
-    int featureBits = tf << 15;
-    return Float.intBitsToFloat(featureBits);
-  }
+	private static final int MAX_FREQ = Float.floatToIntBits(Float.MAX_VALUE) >>> 15;
 
-  static abstract class FeatureFunction {
-    abstract SimScorer scorer(String field, float w);
-    abstract Explanation explain(String field, String feature, float w, int doc, int freq) throws IOException;
-    FeatureFunction rewrite(IndexReader reader) throws IOException { return this; }
-  }
+	private static float decodeFeatureValue(float freq) {
+		if (freq > MAX_FREQ) {
+			// This is never used in practice but callers of the SimScorer API might
+			// occasionally call it on eg. Float.MAX_VALUE to compute the max score
+			// so we need to be consistent.
+			return Float.MAX_VALUE;
+		}
+		int tf = (int) freq; // lossless
+		int featureBits = tf << 15;
+		return Float.intBitsToFloat(featureBits);
+	}
 
-  static final class LogFunction extends FeatureFunction {
+	static abstract class FeatureFunction {
+		abstract SimScorer scorer(String field, float w);
 
-    private final float scalingFactor;
+		abstract Explanation explain(String field, String feature, float w, int doc, int freq) throws IOException;
 
-    LogFunction(float a) {
-      this.scalingFactor = a;
-    }
+		FeatureFunction rewrite(IndexReader reader) throws IOException {
+			return this;
+		}
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == null || getClass() != obj.getClass()) {
-        return false;
-      }
-      LogFunction that = (LogFunction) obj;
-      return scalingFactor == that.scalingFactor;
-    }
+	static final class LogFunction extends FeatureFunction {
 
-    @Override
-    public int hashCode() {
-      return Float.hashCode(scalingFactor);
-    }
+		private final float scalingFactor;
 
-    @Override
-    public String toString() {
-      return "LogFunction(scalingFactor=" + scalingFactor + ")";
-    }
+		LogFunction(float a) {
+			this.scalingFactor = a;
+		}
 
-    @Override
-    SimScorer scorer(String field, float weight) {
-      return new SimScorer() {
-        @Override
-        public float score(int doc, float freq) {
-          return (float) (weight * Math.log(scalingFactor + decodeFeatureValue(freq)));
-        }
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == null || getClass() != obj.getClass()) {
+				return false;
+			}
+			LogFunction that = (LogFunction) obj;
+			return scalingFactor == that.scalingFactor;
+		}
 
-        @Override
-        public float computeSlopFactor(int distance) {
-          throw new UnsupportedOperationException();
-        }
+		@Override
+		public int hashCode() {
+			return Float.hashCode(scalingFactor);
+		}
 
-        @Override
-        public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
-          throw new UnsupportedOperationException();
-        }
-      };
-    }
+		@Override
+		public String toString() {
+			return "LogFunction(scalingFactor=" + scalingFactor + ")";
+		}
 
-    @Override
-    Explanation explain(String field, String feature, float w, int doc, int freq) throws IOException {
-      float featureValue = decodeFeatureValue(freq);
-      float score = scorer(field, w).score(doc, freq);
-      return Explanation.match(score,
-          "Log function on the " + field + " field for the " + feature + " feature, computed as w * log(a + S) from:",
-          Explanation.match(w, "w, weight of this function"),
-          Explanation.match(scalingFactor, "a, scaling factor"),
-          Explanation.match(featureValue, "S, feature value"));
-    }
-  }
+		@Override
+		SimScorer scorer(String field, float weight) {
+			return new SimScorer() {
+				@Override
+				public float score(int doc, float freq) {
+					return (float) (weight * Math.log(scalingFactor + decodeFeatureValue(freq)));
+				}
 
-  static final class SaturationFunction extends FeatureFunction {
+				@Override
+				public float computeSlopFactor(int distance) {
+					throw new UnsupportedOperationException();
+				}
 
-    private final String field, feature;
-    private final Float pivot;
+				@Override
+				public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
 
-    SaturationFunction(String field, String feature, Float pivot) {
-      this.field = field;
-      this.feature = feature;
-      this.pivot = pivot;
-    }
+		@Override
+		Explanation explain(String field, String feature, float w, int doc, int freq) throws IOException {
+			float featureValue = decodeFeatureValue(freq);
+			float score = scorer(field, w).score(doc, freq);
+			return Explanation.match(score,
+				"Log function on the " + field + " field for the " + feature + " feature, computed as w * log(a + S) from:",
+				Explanation.match(w, "w, weight of this function"),
+				Explanation.match(scalingFactor, "a, scaling factor"),
+				Explanation.match(featureValue, "S, feature value"));
+		}
+	}
 
-    @Override
-    public FeatureFunction rewrite(IndexReader reader) throws IOException {
-      if (pivot != null) {
-        return super.rewrite(reader);
-      }
-      float newPivot = computePivotFeatureValue(reader, field, feature);
-      return new SaturationFunction(field, feature, newPivot);
-    }
+	static final class SaturationFunction extends FeatureFunction {
 
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == null || getClass() != obj.getClass()) {
-        return false;
-      }
-      SaturationFunction that = (SaturationFunction) obj;
-      return Objects.equals(field, that.field) &&
-          Objects.equals(feature, that.feature) &&
-          Objects.equals(pivot, that.pivot);
-    }
+		private final String field, feature;
+		private final Float pivot;
 
-    @Override
-    public int hashCode() {
-      return Objects.hash(field, feature, pivot);
-    }
+		SaturationFunction(String field, String feature, Float pivot) {
+			this.field = field;
+			this.feature = feature;
+			this.pivot = pivot;
+		}
 
-    @Override
-    public String toString() {
-      return "SaturationFunction(pivot=" + pivot + ")";
-    }
+		@Override
+		public FeatureFunction rewrite(IndexReader reader) throws IOException {
+			if (pivot != null) {
+				return super.rewrite(reader);
+			}
+			float newPivot = computePivotFeatureValue(reader, field, feature);
+			return new SaturationFunction(field, feature, newPivot);
+		}
 
-    @Override
-    SimScorer scorer(String field, float weight) {
-      if (pivot == null) {
-        throw new IllegalStateException("Rewrite first");
-      }
-      final float pivot = this.pivot; // unbox
-      return new SimScorer() {
-        @Override
-        public float score(int doc, float freq) {
-          float f = decodeFeatureValue(freq);
-          // should be f / (f + k) but we rewrite it to
-          // 1 - k / (f + k) to make sure it doesn't decrease
-          // with f in spite of rounding
-          return weight * (1 - pivot / (f + pivot));
-        }
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == null || getClass() != obj.getClass()) {
+				return false;
+			}
+			SaturationFunction that = (SaturationFunction) obj;
+			return Objects.equals(field, that.field) &&
+				Objects.equals(feature, that.feature) &&
+				Objects.equals(pivot, that.pivot);
+		}
 
-        @Override
-        public float computeSlopFactor(int distance) {
-          throw new UnsupportedOperationException();
-        }
+		@Override
+		public int hashCode() {
+			return Objects.hash(field, feature, pivot);
+		}
 
-        @Override
-        public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
-          throw new UnsupportedOperationException();
-        }
-      };
-    }
+		@Override
+		public String toString() {
+			return "SaturationFunction(pivot=" + pivot + ")";
+		}
 
-    @Override
-    Explanation explain(String field, String feature, float weight, int doc, int freq) throws IOException {
-      float featureValue = decodeFeatureValue(freq);
-      float score = scorer(field, weight).score(doc, freq);
-      return Explanation.match(score,
-          "Saturation function on the " + field + " field for the " + feature + " feature, computed as w * S / (S + k) from:",
-          Explanation.match(weight, "w, weight of this function"),
-          Explanation.match(pivot, "k, pivot feature value that would give a score contribution equal to w/2"),
-          Explanation.match(featureValue, "S, feature value"));
-    }
-  }
+		@Override
+		SimScorer scorer(String field, float weight) {
+			if (pivot == null) {
+				throw new IllegalStateException("Rewrite first");
+			}
+			final float pivot = this.pivot; // unbox
+			return new SimScorer() {
+				@Override
+				public float score(int doc, float freq) {
+					float f = decodeFeatureValue(freq);
+					// should be f / (f + k) but we rewrite it to
+					// 1 - k / (f + k) to make sure it doesn't decrease
+					// with f in spite of rounding
+					return weight * (1 - pivot / (f + pivot));
+				}
 
-  static final class SigmoidFunction extends FeatureFunction {
+				@Override
+				public float computeSlopFactor(int distance) {
+					throw new UnsupportedOperationException();
+				}
 
-    private final float pivot, a;
-    private final double pivotPa;
+				@Override
+				public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
 
-    SigmoidFunction(float pivot, float a) {
-      this.pivot = pivot;
-      this.a = a;
-      this.pivotPa = Math.pow(pivot, a);
-    }
+		@Override
+		Explanation explain(String field, String feature, float weight, int doc, int freq) throws IOException {
+			float featureValue = decodeFeatureValue(freq);
+			float score = scorer(field, weight).score(doc, freq);
+			return Explanation.match(score,
+				"Saturation function on the " + field + " field for the " + feature + " feature, computed as w * S / (S + k) from:",
+				Explanation.match(weight, "w, weight of this function"),
+				Explanation.match(pivot, "k, pivot feature value that would give a score contribution equal to w/2"),
+				Explanation.match(featureValue, "S, feature value"));
+		}
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == null || getClass() != obj.getClass()) {
-        return false;
-      }
-      SigmoidFunction that = (SigmoidFunction) obj;
-      return pivot == that.pivot
-          && a == that.a;
-    }
+	static final class SigmoidFunction extends FeatureFunction {
 
-    @Override
-    public int hashCode() {
-      int h = Float.hashCode(pivot);
-      h = 31 * h + Float.hashCode(a);
-      return h;
-    }
+		private final float pivot, a;
+		private final double pivotPa;
 
-    @Override
-    public String toString() {
-      return "SigmoidFunction(pivot=" + pivot + ", a=" + a + ")";
-    }
+		SigmoidFunction(float pivot, float a) {
+			this.pivot = pivot;
+			this.a = a;
+			this.pivotPa = Math.pow(pivot, a);
+		}
 
-    @Override
-    SimScorer scorer(String field, float weight) {
-      return new SimScorer() {
-        @Override
-        public float score(int doc, float freq) {
-          float f = decodeFeatureValue(freq);
-          // should be f^a / (f^a + k^a) but we rewrite it to
-          // 1 - k^a / (f + k^a) to make sure it doesn't decrease
-          // with f in spite of rounding
-          return (float) (weight * (1 - pivotPa / (Math.pow(f, a) + pivotPa)));
-        }
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == null || getClass() != obj.getClass()) {
+				return false;
+			}
+			SigmoidFunction that = (SigmoidFunction) obj;
+			return pivot == that.pivot
+				&& a == that.a;
+		}
 
-        @Override
-        public float computeSlopFactor(int distance) {
-          throw new UnsupportedOperationException();
-        }
+		@Override
+		public int hashCode() {
+			int h = Float.hashCode(pivot);
+			h = 31 * h + Float.hashCode(a);
+			return h;
+		}
 
-        @Override
-        public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
-          throw new UnsupportedOperationException();
-        }
-      };
-    }
+		@Override
+		public String toString() {
+			return "SigmoidFunction(pivot=" + pivot + ", a=" + a + ")";
+		}
 
-    @Override
-    Explanation explain(String field, String feature, float weight, int doc, int freq) throws IOException {
-      float featureValue = decodeFeatureValue(freq);
-      float score = scorer(field, weight).score(doc, freq);
-      return Explanation.match(score,
-          "Sigmoid function on the " + field + " field for the " + feature + " feature, computed as w * S^a / (S^a + k^a) from:",
-          Explanation.match(weight, "w, weight of this function"),
-          Explanation.match(pivot, "k, pivot feature value that would give a score contribution equal to w/2"),
-          Explanation.match(pivot, "a, exponent, higher values make the function grow slower before k and faster after k"),
-          Explanation.match(featureValue, "S, feature value"));
-    }
-  }
+		@Override
+		SimScorer scorer(String field, float weight) {
+			return new SimScorer() {
+				@Override
+				public float score(int doc, float freq) {
+					float f = decodeFeatureValue(freq);
+					// should be f^a / (f^a + k^a) but we rewrite it to
+					// 1 - k^a / (f + k^a) to make sure it doesn't decrease
+					// with f in spite of rounding
+					return (float) (weight * (1 - pivotPa / (Math.pow(f, a) + pivotPa)));
+				}
 
-  /**
-   * Given that IDFs are logs, similarities that incorporate term freq and
-   * document length in sane (ie. saturated) ways should have their score
-   * bounded by a log. So we reject weights that are too high as it would mean
-   * that this clause would completely dominate ranking, removing the need for
-   * query-dependent scores.
-   */
-  private static final float MAX_WEIGHT = Long.SIZE;
+				@Override
+				public float computeSlopFactor(int distance) {
+					throw new UnsupportedOperationException();
+				}
 
-  /**
-   * Return a new {@link Query} that will score documents as
-   * {@code weight * Math.log(scalingFactor + S)} where S is the value of the static feature.
-   * @param fieldName     field that stores features
-   * @param featureName   name of the feature
-   * @param weight        weight to give to this feature, must be in (0,64]
-   * @param scalingFactor scaling factor applied before taking the logarithm, must be in [1, +Infinity)
-   * @throws IllegalArgumentException if weight is not in (0,64] or scalingFactor is not in [1, +Infinity)
-   */
-  public static Query newLogQuery(String fieldName, String featureName, float weight, float scalingFactor) {
-    if (weight <= 0 || weight > MAX_WEIGHT) {
-      throw new IllegalArgumentException("weight must be in (0, " + MAX_WEIGHT + "], got: " + weight);
-    }
-    if (scalingFactor < 1 || Float.isFinite(scalingFactor) == false) {
-      throw new IllegalArgumentException("scalingFactor must be >= 1, got: " + scalingFactor);
-    }
-    Query q = new FeatureQuery(fieldName, featureName, new LogFunction(scalingFactor));
-    if (weight != 1f) {
-      q = new BoostQuery(q, weight);
-    }
-    return q;
-  }
+				@Override
+				public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
 
-  /**
-   * Return a new {@link Query} that will score documents as
-   * {@code weight * S / (S + pivot)} where S is the value of the static feature.
-   * @param fieldName   field that stores features
-   * @param featureName name of the feature
-   * @param weight      weight to give to this feature, must be in (0,64]
-   * @param pivot       feature value that would give a score contribution equal to weight/2, must be in (0, +Infinity)
-   * @throws IllegalArgumentException if weight is not in (0,64] or pivot is not in (0, +Infinity)
-   */
-  public static Query newSaturationQuery(String fieldName, String featureName, float weight, float pivot) {
-    return newSaturationQuery(fieldName, featureName, weight, Float.valueOf(pivot));
-  }
+		@Override
+		Explanation explain(String field, String feature, float weight, int doc, int freq) throws IOException {
+			float featureValue = decodeFeatureValue(freq);
+			float score = scorer(field, weight).score(doc, freq);
+			return Explanation.match(score,
+				"Sigmoid function on the " + field + " field for the " + feature + " feature, computed as w * S^a / (S^a + k^a) from:",
+				Explanation.match(weight, "w, weight of this function"),
+				Explanation.match(pivot, "k, pivot feature value that would give a score contribution equal to w/2"),
+				Explanation.match(pivot, "a, exponent, higher values make the function grow slower before k and faster after k"),
+				Explanation.match(featureValue, "S, feature value"));
+		}
+	}
 
-  /**
-   * Same as {@link #newSaturationQuery(String, String, float, float)} but
-   * {@code 1f} is used as a weight and a reasonably good default pivot value
-   * is computed based on index statistics and is approximately equal to the
-   * geometric mean of all values that exist in the index.
-   * @param fieldName   field that stores features
-   * @param featureName name of the feature
-   * @throws IllegalArgumentException if weight is not in (0,64] or pivot is not in (0, +Infinity)
-   */
-  public static Query newSaturationQuery(String fieldName, String featureName) {
-    return newSaturationQuery(fieldName, featureName, 1f, null);
-  }
+	/**
+	 * Given that IDFs are logs, similarities that incorporate term freq and
+	 * document length in sane (ie. saturated) ways should have their score
+	 * bounded by a log. So we reject weights that are too high as it would mean
+	 * that this clause would completely dominate ranking, removing the need for
+	 * query-dependent scores.
+	 */
+	private static final float MAX_WEIGHT = Long.SIZE;
 
-  private static Query newSaturationQuery(String fieldName, String featureName, float weight, Float pivot) {
-    if (weight <= 0 || weight > MAX_WEIGHT) {
-      throw new IllegalArgumentException("weight must be in (0, " + MAX_WEIGHT + "], got: " + weight);
-    }
-    if (pivot != null && (pivot <= 0 || Float.isFinite(pivot) == false)) {
-      throw new IllegalArgumentException("pivot must be > 0, got: " + pivot);
-    }
-    Query q = new FeatureQuery(fieldName, featureName, new SaturationFunction(fieldName, featureName, pivot));
-    if (weight != 1f) {
-      q = new BoostQuery(q, weight);
-    }
-    return q;
-  }
+	/**
+	 * Return a new {@link Query} that will score documents as
+	 * {@code weight * Math.log(scalingFactor + S)} where S is the value of the static feature.
+	 *
+	 * @param fieldName     field that stores features
+	 * @param featureName   name of the feature
+	 * @param weight        weight to give to this feature, must be in (0,64]
+	 * @param scalingFactor scaling factor applied before taking the logarithm, must be in [1, +Infinity)
+	 * @throws IllegalArgumentException if weight is not in (0,64] or scalingFactor is not in [1, +Infinity)
+	 */
+	public static Query newLogQuery(String fieldName, String featureName, float weight, float scalingFactor) {
+		if (weight <= 0 || weight > MAX_WEIGHT) {
+			throw new IllegalArgumentException("weight must be in (0, " + MAX_WEIGHT + "], got: " + weight);
+		}
+		if (scalingFactor < 1 || Float.isFinite(scalingFactor) == false) {
+			throw new IllegalArgumentException("scalingFactor must be >= 1, got: " + scalingFactor);
+		}
+		Query q = new FeatureQuery(fieldName, featureName, new LogFunction(scalingFactor));
+		if (weight != 1f) {
+			q = new BoostQuery(q, weight);
+		}
+		return q;
+	}
 
-  /**
-   * Return a new {@link Query} that will score documents as
-   * {@code weight * S^a / (S^a + pivot^a)} where S is the value of the static feature.
-   * @param fieldName   field that stores features
-   * @param featureName name of the feature
-   * @param weight      weight to give to this feature, must be in (0,64]
-   * @param pivot       feature value that would give a score contribution equal to weight/2, must be in (0, +Infinity)
-   * @param exp         exponent, higher values make the function grow slower before 'pivot' and faster after 'pivot', must be in (0, +Infinity)
-   * @throws IllegalArgumentException if w is not in (0,64] or either k or a are not in (0, +Infinity)
-   */
-  public static Query newSigmoidQuery(String fieldName, String featureName, float weight, float pivot, float exp) {
-    if (weight <= 0 || weight > MAX_WEIGHT) {
-      throw new IllegalArgumentException("weight must be in (0, " + MAX_WEIGHT + "], got: " + weight);
-    }
-    if (pivot <= 0 || Float.isFinite(pivot) == false) {
-      throw new IllegalArgumentException("pivot must be > 0, got: " + pivot);
-    }
-    if (exp <= 0 || Float.isFinite(exp) == false) {
-      throw new IllegalArgumentException("exp must be > 0, got: " + exp);
-    }
-    Query q = new FeatureQuery(fieldName, featureName, new SigmoidFunction(pivot, exp));
-    if (weight != 1f) {
-      q = new BoostQuery(q, weight);
-    }
-    return q;
-  }
+	/**
+	 * Return a new {@link Query} that will score documents as
+	 * {@code weight * S / (S + pivot)} where S is the value of the static feature.
+	 *
+	 * @param fieldName   field that stores features
+	 * @param featureName name of the feature
+	 * @param weight      weight to give to this feature, must be in (0,64]
+	 * @param pivot       feature value that would give a score contribution equal to weight/2, must be in (0, +Infinity)
+	 * @throws IllegalArgumentException if weight is not in (0,64] or pivot is not in (0, +Infinity)
+	 */
+	public static Query newSaturationQuery(String fieldName, String featureName, float weight, float pivot) {
+		return newSaturationQuery(fieldName, featureName, weight, Float.valueOf(pivot));
+	}
 
-  /**
-   * Compute a feature value that may be used as the {@code pivot} parameter of
-   * the {@link #newSaturationQuery(String, String, float, float)} and
-   * {@link #newSigmoidQuery(String, String, float, float, float)} factory
-   * methods. The implementation takes the average of the int bits of the float
-   * representation in practice before converting it back to a float. Given that
-   * floats store the exponent in the higher bits, it means that the result will
-   * be an approximation of the geometric mean of all feature values.
-   * @param reader       the {@link IndexReader} to search against
-   * @param featureField the field that stores features
-   * @param featureName  the name of the feature
-   */
-  static float computePivotFeatureValue(IndexReader reader, String featureField, String featureName) throws IOException {
-    Term term = new Term(featureField, featureName);
-    TermContext context = TermContext.build(reader.getContext(), term);
-    if (context.docFreq() == 0) {
-      // avoid division by 0
-      // The return value doesn't matter much here, the term doesn't exist,
-      // it will never be used for scoring. Just Make sure to return a legal
-      // value.
-      return 1;
-    }
-    float avgFreq = (float) ((double) context.totalTermFreq() / context.docFreq());
-    return decodeFeatureValue(avgFreq);
-  }
+	/**
+	 * Same as {@link #newSaturationQuery(String, String, float, float)} but
+	 * {@code 1f} is used as a weight and a reasonably good default pivot value
+	 * is computed based on index statistics and is approximately equal to the
+	 * geometric mean of all values that exist in the index.
+	 *
+	 * @param fieldName   field that stores features
+	 * @param featureName name of the feature
+	 * @throws IllegalArgumentException if weight is not in (0,64] or pivot is not in (0, +Infinity)
+	 */
+	public static Query newSaturationQuery(String fieldName, String featureName) {
+		return newSaturationQuery(fieldName, featureName, 1f, null);
+	}
+
+	private static Query newSaturationQuery(String fieldName, String featureName, float weight, Float pivot) {
+		if (weight <= 0 || weight > MAX_WEIGHT) {
+			throw new IllegalArgumentException("weight must be in (0, " + MAX_WEIGHT + "], got: " + weight);
+		}
+		if (pivot != null && (pivot <= 0 || Float.isFinite(pivot) == false)) {
+			throw new IllegalArgumentException("pivot must be > 0, got: " + pivot);
+		}
+		Query q = new FeatureQuery(fieldName, featureName, new SaturationFunction(fieldName, featureName, pivot));
+		if (weight != 1f) {
+			q = new BoostQuery(q, weight);
+		}
+		return q;
+	}
+
+	/**
+	 * Return a new {@link Query} that will score documents as
+	 * {@code weight * S^a / (S^a + pivot^a)} where S is the value of the static feature.
+	 *
+	 * @param fieldName   field that stores features
+	 * @param featureName name of the feature
+	 * @param weight      weight to give to this feature, must be in (0,64]
+	 * @param pivot       feature value that would give a score contribution equal to weight/2, must be in (0, +Infinity)
+	 * @param exp         exponent, higher values make the function grow slower before 'pivot' and faster after 'pivot', must be in (0, +Infinity)
+	 * @throws IllegalArgumentException if w is not in (0,64] or either k or a are not in (0, +Infinity)
+	 */
+	public static Query newSigmoidQuery(String fieldName, String featureName, float weight, float pivot, float exp) {
+		if (weight <= 0 || weight > MAX_WEIGHT) {
+			throw new IllegalArgumentException("weight must be in (0, " + MAX_WEIGHT + "], got: " + weight);
+		}
+		if (pivot <= 0 || Float.isFinite(pivot) == false) {
+			throw new IllegalArgumentException("pivot must be > 0, got: " + pivot);
+		}
+		if (exp <= 0 || Float.isFinite(exp) == false) {
+			throw new IllegalArgumentException("exp must be > 0, got: " + exp);
+		}
+		Query q = new FeatureQuery(fieldName, featureName, new SigmoidFunction(pivot, exp));
+		if (weight != 1f) {
+			q = new BoostQuery(q, weight);
+		}
+		return q;
+	}
+
+	/**
+	 * Compute a feature value that may be used as the {@code pivot} parameter of
+	 * the {@link #newSaturationQuery(String, String, float, float)} and
+	 * {@link #newSigmoidQuery(String, String, float, float, float)} factory
+	 * methods. The implementation takes the average of the int bits of the float
+	 * representation in practice before converting it back to a float. Given that
+	 * floats store the exponent in the higher bits, it means that the result will
+	 * be an approximation of the geometric mean of all feature values.
+	 *
+	 * @param reader       the {@link IndexReader} to search against
+	 * @param featureField the field that stores features
+	 * @param featureName  the name of the feature
+	 */
+	static float computePivotFeatureValue(IndexReader reader, String featureField, String featureName) throws IOException {
+		Term term = new Term(featureField, featureName);
+		TermContext context = TermContext.build(reader.getContext(), term);
+		if (context.docFreq() == 0) {
+			// avoid division by 0
+			// The return value doesn't matter much here, the term doesn't exist,
+			// it will never be used for scoring. Just Make sure to return a legal
+			// value.
+			return 1;
+		}
+		float avgFreq = (float) ((double) context.totalTermFreq() / context.docFreq());
+		return decodeFeatureValue(avgFreq);
+	}
 }

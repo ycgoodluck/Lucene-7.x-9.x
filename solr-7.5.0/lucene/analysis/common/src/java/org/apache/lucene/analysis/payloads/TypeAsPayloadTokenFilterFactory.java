@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.payloads.TypeAsPayloadTokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link TypeAsPayloadTokenFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_typeaspayload" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -34,18 +34,20 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class TypeAsPayloadTokenFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new TypeAsPayloadTokenFilterFactory */
-  public TypeAsPayloadTokenFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TypeAsPayloadTokenFilter create(TokenStream input) {
-    return new TypeAsPayloadTokenFilter(input);
-  }
+
+	/**
+	 * Creates a new TypeAsPayloadTokenFilterFactory
+	 */
+	public TypeAsPayloadTokenFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TypeAsPayloadTokenFilter create(TokenStream input) {
+		return new TypeAsPayloadTokenFilter(input);
+	}
 }
 

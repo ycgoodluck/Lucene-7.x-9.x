@@ -23,22 +23,23 @@ import org.apache.lucene.codecs.lucene62.Lucene62Codec;
 
 /**
  * Read-write version of 6.2 codec for testing
+ *
  * @deprecated for test purposes only
  */
 @Deprecated
 public class Lucene62RWCodec extends Lucene62Codec {
 
-  private final SegmentInfoFormat segmentInfoFormat = new Lucene62RWSegmentInfoFormat();
-  private final NormsFormat normsFormat = new Lucene53RWNormsFormat();
+	private final SegmentInfoFormat segmentInfoFormat = new Lucene62RWSegmentInfoFormat();
+	private final NormsFormat normsFormat = new Lucene53RWNormsFormat();
 
-  @Override
-  public SegmentInfoFormat segmentInfoFormat() {
-    return segmentInfoFormat;
-  }
-  
-  @Override
-  public NormsFormat normsFormat() {
-    return normsFormat;
-  }
+	@Override
+	public SegmentInfoFormat segmentInfoFormat() {
+		return segmentInfoFormat;
+	}
+
+	@Override
+	public NormsFormat normsFormat() {
+		return normsFormat;
+	}
 
 }

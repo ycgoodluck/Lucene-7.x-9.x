@@ -23,27 +23,31 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-/** Basic tests for DisableFsyncFS */
+/**
+ * Basic tests for DisableFsyncFS
+ */
 public class TestDisableFsyncFS extends MockFileSystemTestCase {
-  
-  @Override
-  protected Path wrap(Path path) {
-    FileSystem fs = new DisableFsyncFS(path.getFileSystem()).getFileSystem(URI.create("file:///"));
-    return new FilterPath(path, fs);
-  }
-  
-  /** Test that we don't corrumpt fsync: it just doesnt happen */
-  public void testFsyncWorks() throws Exception {
-    Path dir = wrap(createTempDir());
-    
-    FileChannel file = FileChannel.open(dir.resolve("file"), 
-                                        StandardOpenOption.CREATE_NEW, 
-                                        StandardOpenOption.READ, 
-                                        StandardOpenOption.WRITE);
-    byte bytes[] = new byte[128];
-    random().nextBytes(bytes);
-    file.write(ByteBuffer.wrap(bytes));
-    file.force(true);
-    file.close();
-  }
+
+	@Override
+	protected Path wrap(Path path) {
+		FileSystem fs = new DisableFsyncFS(path.getFileSystem()).getFileSystem(URI.create("file:///"));
+		return new FilterPath(path, fs);
+	}
+
+	/**
+	 * Test that we don't corrumpt fsync: it just doesnt happen
+	 */
+	public void testFsyncWorks() throws Exception {
+		Path dir = wrap(createTempDir());
+
+		FileChannel file = FileChannel.open(dir.resolve("file"),
+			StandardOpenOption.CREATE_NEW,
+			StandardOpenOption.READ,
+			StandardOpenOption.WRITE);
+		byte bytes[] = new byte[128];
+		random().nextBytes(bytes);
+		file.write(ByteBuffer.wrap(bytes));
+		file.force(true);
+		file.close();
+	}
 }

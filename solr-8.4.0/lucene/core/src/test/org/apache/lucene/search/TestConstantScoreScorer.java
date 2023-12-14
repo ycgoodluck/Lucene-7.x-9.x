@@ -37,221 +37,221 @@ import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 public class TestConstantScoreScorer extends LuceneTestCase {
-  private static final String FIELD = "f";
-  private static final String[] VALUES = new String[]{
-      "foo",
-      "bar",
-      "foo bar",
-      "bar foo",
-      "foo not bar",
-      "bar foo bar",
-      "azerty"
-  };
+	private static final String FIELD = "f";
+	private static final String[] VALUES = new String[]{
+		"foo",
+		"bar",
+		"foo bar",
+		"bar foo",
+		"foo not bar",
+		"bar foo bar",
+		"azerty"
+	};
 
-  private static final Query TERM_QUERY = new BooleanQuery.Builder()
-      .add(new TermQuery(new Term(FIELD, "foo")), Occur.MUST)
-      .add(new TermQuery(new Term(FIELD, "bar")), Occur.MUST)
-      .build();
-  private static final Query PHRASE_QUERY = new PhraseQuery(FIELD, "foo", "bar");
+	private static final Query TERM_QUERY = new BooleanQuery.Builder()
+		.add(new TermQuery(new Term(FIELD, "foo")), Occur.MUST)
+		.add(new TermQuery(new Term(FIELD, "bar")), Occur.MUST)
+		.build();
+	private static final Query PHRASE_QUERY = new PhraseQuery(FIELD, "foo", "bar");
 
-  public void testMatching_ScoreMode_COMPLETE() throws Exception {
-    testMatching(ScoreMode.COMPLETE);
-  }
+	public void testMatching_ScoreMode_COMPLETE() throws Exception {
+		testMatching(ScoreMode.COMPLETE);
+	}
 
-  public void testMatching_ScoreMode_COMPLETE_NO_SCORES() throws Exception {
-    testMatching(ScoreMode.COMPLETE_NO_SCORES);
-  }
+	public void testMatching_ScoreMode_COMPLETE_NO_SCORES() throws Exception {
+		testMatching(ScoreMode.COMPLETE_NO_SCORES);
+	}
 
-  private void testMatching(ScoreMode scoreMode) throws Exception {
+	private void testMatching(ScoreMode scoreMode) throws Exception {
 
-    try (TestConstantScoreScorerIndex index = new TestConstantScoreScorerIndex()) {
-      int doc;
-      ConstantScoreScorer scorer = index.constantScoreScorer(TERM_QUERY, 1f, scoreMode);
+		try (TestConstantScoreScorerIndex index = new TestConstantScoreScorerIndex()) {
+			int doc;
+			ConstantScoreScorer scorer = index.constantScoreScorer(TERM_QUERY, 1f, scoreMode);
 
-      // "foo bar" match
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(2));
-      assertThat(scorer.score(), equalTo(1f));
+			// "foo bar" match
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(2));
+			assertThat(scorer.score(), equalTo(1f));
 
-      // should not reset iterator
-      scorer.setMinCompetitiveScore(2f);
-      assertThat(scorer.docID(), equalTo(doc));
-      assertThat(scorer.iterator().docID(), equalTo(doc));
-      assertThat(scorer.score(), equalTo(1f));
-      
-      // "bar foo" match
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(3));
-      assertThat(scorer.score(), equalTo(1f));
+			// should not reset iterator
+			scorer.setMinCompetitiveScore(2f);
+			assertThat(scorer.docID(), equalTo(doc));
+			assertThat(scorer.iterator().docID(), equalTo(doc));
+			assertThat(scorer.score(), equalTo(1f));
 
-      // "foo not bar" match
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(4));
-      assertThat(scorer.score(), equalTo(1f));
+			// "bar foo" match
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(3));
+			assertThat(scorer.score(), equalTo(1f));
 
-      // "foo bar foo" match
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(5));
-      assertThat(scorer.score(), equalTo(1f));
-      
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(NO_MORE_DOCS));
-    }
-  }
+			// "foo not bar" match
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(4));
+			assertThat(scorer.score(), equalTo(1f));
 
-  public void testMatching_ScoreMode_TOP_SCORES() throws Exception {
-    try (TestConstantScoreScorerIndex index = new TestConstantScoreScorerIndex()) {
-      int doc;
-      ConstantScoreScorer scorer = index.constantScoreScorer(TERM_QUERY, 1f, ScoreMode.TOP_SCORES);
+			// "foo bar foo" match
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(5));
+			assertThat(scorer.score(), equalTo(1f));
 
-      // "foo bar" match
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(2));
-      assertThat(scorer.score(), equalTo(1f));
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(NO_MORE_DOCS));
+		}
+	}
 
-      scorer.setMinCompetitiveScore(2f);
-      assertThat(scorer.docID(), equalTo(doc));
-      assertThat(scorer.iterator().docID(), equalTo(doc));
-      assertThat(scorer.score(), equalTo(1f));
+	public void testMatching_ScoreMode_TOP_SCORES() throws Exception {
+		try (TestConstantScoreScorerIndex index = new TestConstantScoreScorerIndex()) {
+			int doc;
+			ConstantScoreScorer scorer = index.constantScoreScorer(TERM_QUERY, 1f, ScoreMode.TOP_SCORES);
 
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(NO_MORE_DOCS));
-    }
-  }
+			// "foo bar" match
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(2));
+			assertThat(scorer.score(), equalTo(1f));
 
-  public void testTwoPhaseMatching_ScoreMode_COMPLETE() throws Exception {
-    testTwoPhaseMatching(ScoreMode.COMPLETE);
-  }
+			scorer.setMinCompetitiveScore(2f);
+			assertThat(scorer.docID(), equalTo(doc));
+			assertThat(scorer.iterator().docID(), equalTo(doc));
+			assertThat(scorer.score(), equalTo(1f));
 
-  public void testTwoPhaseMatching_ScoreMode_COMPLETE_NO_SCORES() throws Exception {
-    testTwoPhaseMatching(ScoreMode.COMPLETE_NO_SCORES);
-  }
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(NO_MORE_DOCS));
+		}
+	}
 
-  private void testTwoPhaseMatching(ScoreMode scoreMode) throws Exception {
-    try (TestConstantScoreScorerIndex index = new TestConstantScoreScorerIndex()) {
-      int doc;
-      ConstantScoreScorer scorer = index.constantScoreScorer(PHRASE_QUERY, 1f, scoreMode);
+	public void testTwoPhaseMatching_ScoreMode_COMPLETE() throws Exception {
+		testTwoPhaseMatching(ScoreMode.COMPLETE);
+	}
 
-      // "foo bar" match
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(2));
-      assertThat(scorer.score(), equalTo(1f));
+	public void testTwoPhaseMatching_ScoreMode_COMPLETE_NO_SCORES() throws Exception {
+		testTwoPhaseMatching(ScoreMode.COMPLETE_NO_SCORES);
+	}
 
-      // should not reset iterator
-      scorer.setMinCompetitiveScore(2f);
-      assertThat(scorer.docID(), equalTo(doc));
-      assertThat(scorer.iterator().docID(), equalTo(doc));
-      assertThat(scorer.score(), equalTo(1f));
-      
-      // "foo not bar" will match the approximation but not the two phase iterator
+	private void testTwoPhaseMatching(ScoreMode scoreMode) throws Exception {
+		try (TestConstantScoreScorerIndex index = new TestConstantScoreScorerIndex()) {
+			int doc;
+			ConstantScoreScorer scorer = index.constantScoreScorer(PHRASE_QUERY, 1f, scoreMode);
 
-      // "foo bar foo" match
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(5));
-      assertThat(scorer.score(), equalTo(1f));
+			// "foo bar" match
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(2));
+			assertThat(scorer.score(), equalTo(1f));
 
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(NO_MORE_DOCS));
-    }
-  }
+			// should not reset iterator
+			scorer.setMinCompetitiveScore(2f);
+			assertThat(scorer.docID(), equalTo(doc));
+			assertThat(scorer.iterator().docID(), equalTo(doc));
+			assertThat(scorer.score(), equalTo(1f));
 
-  public void testTwoPhaseMatching_ScoreMode_TOP_SCORES() throws Exception {
-    try (TestConstantScoreScorerIndex index = new TestConstantScoreScorerIndex()) {
-      int doc;
-      ConstantScoreScorer scorer = index.constantScoreScorer(PHRASE_QUERY, 1f, ScoreMode.TOP_SCORES);
+			// "foo not bar" will match the approximation but not the two phase iterator
 
-      // "foo bar" match
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(2));
-      assertThat(scorer.score(), equalTo(1f));
+			// "foo bar foo" match
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(5));
+			assertThat(scorer.score(), equalTo(1f));
 
-      scorer.setMinCompetitiveScore(2f);
-      assertThat(scorer.docID(), equalTo(doc));
-      assertThat(scorer.iterator().docID(), equalTo(doc));
-      assertThat(scorer.score(), equalTo(1f));
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(NO_MORE_DOCS));
+		}
+	}
 
-      doc = scorer.iterator().nextDoc();
-      assertThat(doc, equalTo(NO_MORE_DOCS));
-    }
-  }
+	public void testTwoPhaseMatching_ScoreMode_TOP_SCORES() throws Exception {
+		try (TestConstantScoreScorerIndex index = new TestConstantScoreScorerIndex()) {
+			int doc;
+			ConstantScoreScorer scorer = index.constantScoreScorer(PHRASE_QUERY, 1f, ScoreMode.TOP_SCORES);
 
-  static class TestConstantScoreScorerIndex implements AutoCloseable {
-    private final Directory directory;
-    private final RandomIndexWriter writer;
-    private final IndexReader reader;
+			// "foo bar" match
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(2));
+			assertThat(scorer.score(), equalTo(1f));
 
-    TestConstantScoreScorerIndex() throws IOException {
-      directory = newDirectory();
+			scorer.setMinCompetitiveScore(2f);
+			assertThat(scorer.docID(), equalTo(doc));
+			assertThat(scorer.iterator().docID(), equalTo(doc));
+			assertThat(scorer.score(), equalTo(1f));
 
-      writer = new RandomIndexWriter(random(), directory,
-          newIndexWriterConfig().setMergePolicy(newLogMergePolicy(random().nextBoolean())));
+			doc = scorer.iterator().nextDoc();
+			assertThat(doc, equalTo(NO_MORE_DOCS));
+		}
+	}
 
-      for (String VALUE : VALUES) {
-        Document doc = new Document();
-        doc.add(newTextField(FIELD, VALUE, Field.Store.YES));
-        writer.addDocument(doc);
-      }
-      writer.forceMerge(1);
+	static class TestConstantScoreScorerIndex implements AutoCloseable {
+		private final Directory directory;
+		private final RandomIndexWriter writer;
+		private final IndexReader reader;
 
-      reader = writer.getReader();
-      writer.close();
-    }
+		TestConstantScoreScorerIndex() throws IOException {
+			directory = newDirectory();
 
-    ConstantScoreScorer constantScoreScorer(Query query, float score, ScoreMode scoreMode) throws IOException {
-      IndexSearcher searcher = newSearcher(reader);
-      Weight weight = searcher.createWeight(new ConstantScoreQuery(query), scoreMode, 1);
-      List<LeafReaderContext> leaves = searcher.getIndexReader().leaves();
+			writer = new RandomIndexWriter(random(), directory,
+				newIndexWriterConfig().setMergePolicy(newLogMergePolicy(random().nextBoolean())));
 
-      assertThat(leaves.size(), equalTo(1));
+			for (String VALUE : VALUES) {
+				Document doc = new Document();
+				doc.add(newTextField(FIELD, VALUE, Field.Store.YES));
+				writer.addDocument(doc);
+			}
+			writer.forceMerge(1);
 
-      LeafReaderContext context = leaves.get(0);
-      Scorer scorer = weight.scorer(context);
+			reader = writer.getReader();
+			writer.close();
+		}
 
-      if (scorer.twoPhaseIterator() == null) {
-        return new ConstantScoreScorer(scorer.getWeight(), score, scoreMode, scorer.iterator());
-      } else {
-        return new ConstantScoreScorer(scorer.getWeight(), score, scoreMode, scorer.twoPhaseIterator());
-      }
-    }
+		ConstantScoreScorer constantScoreScorer(Query query, float score, ScoreMode scoreMode) throws IOException {
+			IndexSearcher searcher = newSearcher(reader);
+			Weight weight = searcher.createWeight(new ConstantScoreQuery(query), scoreMode, 1);
+			List<LeafReaderContext> leaves = searcher.getIndexReader().leaves();
 
-    @Override
-    public void close() throws Exception {
-      reader.close();
-      directory.close();
-    }
-  }
+			assertThat(leaves.size(), equalTo(1));
 
-  public void testEarlyTermination() throws IOException {
-    Analyzer analyzer = new MockAnalyzer(random());
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(analyzer).setMaxBufferedDocs(2).setMergePolicy(newLogMergePolicy()));
-    final int numDocs = 50;
-    for (int i = 0; i < numDocs; i++) {
-      Document doc = new Document();
-      Field f = newTextField("key", i % 2 == 0 ? "foo bar" : "baz", Field.Store.YES);
-      doc.add(f);
-      iw.addDocument(doc);
-    }
-    IndexReader ir = DirectoryReader.open(iw);
+			LeafReaderContext context = leaves.get(0);
+			Scorer scorer = weight.scorer(context);
 
-    IndexSearcher is = newSearcher(ir);
+			if (scorer.twoPhaseIterator() == null) {
+				return new ConstantScoreScorer(scorer.getWeight(), score, scoreMode, scorer.iterator());
+			} else {
+				return new ConstantScoreScorer(scorer.getWeight(), score, scoreMode, scorer.twoPhaseIterator());
+			}
+		}
 
-    TopScoreDocCollector c = TopScoreDocCollector.create(10, null, 10);
-    is.search(new ConstantScoreQuery(new TermQuery(new Term("key", "foo"))), c);
-    assertEquals(11, c.totalHits);
-    assertEquals(TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO, c.totalHitsRelation);
+		@Override
+		public void close() throws Exception {
+			reader.close();
+			directory.close();
+		}
+	}
 
-    c = TopScoreDocCollector.create(10, null, 10);
-    Query query = new BooleanQuery.Builder()
-        .add(new ConstantScoreQuery(new TermQuery(new Term("key", "foo"))), Occur.SHOULD)
-        .add(new ConstantScoreQuery(new TermQuery(new Term("key", "bar"))), Occur.FILTER)
-        .build();
-    is.search(query, c);
-    assertEquals(11, c.totalHits);
-    assertEquals(TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO, c.totalHitsRelation);
+	public void testEarlyTermination() throws IOException {
+		Analyzer analyzer = new MockAnalyzer(random());
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(analyzer).setMaxBufferedDocs(2).setMergePolicy(newLogMergePolicy()));
+		final int numDocs = 50;
+		for (int i = 0; i < numDocs; i++) {
+			Document doc = new Document();
+			Field f = newTextField("key", i % 2 == 0 ? "foo bar" : "baz", Field.Store.YES);
+			doc.add(f);
+			iw.addDocument(doc);
+		}
+		IndexReader ir = DirectoryReader.open(iw);
 
-    iw.close();
-    ir.close();
-    dir.close();
-  }
+		IndexSearcher is = newSearcher(ir);
+
+		TopScoreDocCollector c = TopScoreDocCollector.create(10, null, 10);
+		is.search(new ConstantScoreQuery(new TermQuery(new Term("key", "foo"))), c);
+		assertEquals(11, c.totalHits);
+		assertEquals(TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO, c.totalHitsRelation);
+
+		c = TopScoreDocCollector.create(10, null, 10);
+		Query query = new BooleanQuery.Builder()
+			.add(new ConstantScoreQuery(new TermQuery(new Term("key", "foo"))), Occur.SHOULD)
+			.add(new ConstantScoreQuery(new TermQuery(new Term("key", "bar"))), Occur.FILTER)
+			.build();
+		is.search(query, c);
+		assertEquals(11, c.totalHits);
+		assertEquals(TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO, c.totalHitsRelation);
+
+		iw.close();
+		ir.close();
+		dir.close();
+	}
 }

@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Utilities for indexing 20 Newsgroups data */
+/**
+ * Utilities for indexing 20 Newsgroups data
+ */
 package org.apache.lucene.luke.models.util.twentynewsgroups;

@@ -26,63 +26,63 @@ import java.util.List;
  */
 public class SlowLog implements Iterable<SlowLog.Entry> {
 
-  private final List<Entry> slowQueries = new ArrayList<>();
+	private final List<Entry> slowQueries = new ArrayList<>();
 
-  /**
-   * Add a query and time taken to the slow log.
-   * <p>
-   * The query will only be recorded if the time is above the configured limit
-   *
-   * @param query the query id
-   * @param time  the time taken by the query in ns
-   */
-  void addQuery(String query, long time) {
-    slowQueries.add(new Entry(query, time));
-  }
+	/**
+	 * Add a query and time taken to the slow log.
+	 * <p>
+	 * The query will only be recorded if the time is above the configured limit
+	 *
+	 * @param query the query id
+	 * @param time  the time taken by the query in ns
+	 */
+	void addQuery(String query, long time) {
+		slowQueries.add(new Entry(query, time));
+	}
 
-  /**
-   * Add all entries to this slow log
-   *
-   * @param queries the entries to add
-   */
-  void addAll(Iterable<SlowLog.Entry> queries) {
-    for (SlowLog.Entry query : queries) {
-      slowQueries.add(query);
-    }
-  }
+	/**
+	 * Add all entries to this slow log
+	 *
+	 * @param queries the entries to add
+	 */
+	void addAll(Iterable<SlowLog.Entry> queries) {
+		for (SlowLog.Entry query : queries) {
+			slowQueries.add(query);
+		}
+	}
 
-  @Override
-  public Iterator<Entry> iterator() {
-    return slowQueries.iterator();
-  }
+	@Override
+	public Iterator<Entry> iterator() {
+		return slowQueries.iterator();
+	}
 
-  /**
-   * An individual entry in the slow log
-   */
-  public static class Entry {
+	/**
+	 * An individual entry in the slow log
+	 */
+	public static class Entry {
 
-    /**
-     * The query id
-     */
-    final String queryId;
+		/**
+		 * The query id
+		 */
+		final String queryId;
 
-    /**
-     * The time taken to execute the query in ms
-     */
-    final long time;
+		/**
+		 * The time taken to execute the query in ms
+		 */
+		final long time;
 
-    Entry(String queryId, long time) {
-      this.queryId = queryId;
-      this.time = time;
-    }
-  }
+		Entry(String queryId, long time) {
+			this.queryId = queryId;
+			this.time = time;
+		}
+	}
 
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    for (Entry entry : slowQueries) {
-      sb.append(entry.queryId).append(" [").append(entry.time).append("ns]\n");
-    }
-    return sb.toString();
-  }
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Entry entry : slowQueries) {
+			sb.append(entry.queryId).append(" [").append(entry.time).append("ns]\n");
+		}
+		return sb.toString();
+	}
 }

@@ -31,264 +31,270 @@ import java.util.Iterator;
 
 import org.apache.lucene.util.SuppressForbidden;
 
-/**  
- * A {@code FilterPath} contains another 
- * {@code Path}, which it uses as its basic 
- * source of data, possibly transforming the data along the 
- * way or providing additional functionality. 
+/**
+ * A {@code FilterPath} contains another
+ * {@code Path}, which it uses as its basic
+ * source of data, possibly transforming the data along the
+ * way or providing additional functionality.
  */
 public class FilterPath implements Path {
-  
-  /** 
-   * The underlying {@code Path} instance. 
-   */
-  protected final Path delegate;
-  
-  /** 
-   * The parent {@code FileSystem} for this path. 
-   */
-  protected final FileSystem fileSystem;
-  
-  /**
-   * Construct a {@code FilterPath} with parent
-   * {@code fileSystem}, based on the specified base path.
-   * @param delegate specified base path.
-   * @param fileSystem parent fileSystem.
-   */
-  public FilterPath(Path delegate, FileSystem fileSystem) {
-    this.delegate = delegate;
-    this.fileSystem = fileSystem;
-  }
-  
-  /** 
-   * Get the underlying wrapped path.
-   * @return wrapped path.
-   */
-  public Path getDelegate() {
-    return delegate;
-  }
 
-  @Override
-  public FileSystem getFileSystem() {
-    return fileSystem;
-  }
+	/**
+	 * The underlying {@code Path} instance.
+	 */
+	protected final Path delegate;
 
-  @Override
-  public boolean isAbsolute() {
-    return delegate.isAbsolute();
-  }
+	/**
+	 * The parent {@code FileSystem} for this path.
+	 */
+	protected final FileSystem fileSystem;
 
-  @Override
-  public Path getRoot() {
-    Path root = delegate.getRoot();
-    if (root == null) {
-      return null;
-    }
-    return wrap(root);
-  }
+	/**
+	 * Construct a {@code FilterPath} with parent
+	 * {@code fileSystem}, based on the specified base path.
+	 *
+	 * @param delegate   specified base path.
+	 * @param fileSystem parent fileSystem.
+	 */
+	public FilterPath(Path delegate, FileSystem fileSystem) {
+		this.delegate = delegate;
+		this.fileSystem = fileSystem;
+	}
 
-  @Override
-  public Path getFileName() {
-    Path fileName = delegate.getFileName();
-    if (fileName == null) {
-      return null;
-    }
-    return wrap(fileName);
-  }
+	/**
+	 * Get the underlying wrapped path.
+	 *
+	 * @return wrapped path.
+	 */
+	public Path getDelegate() {
+		return delegate;
+	}
 
-  @Override
-  public Path getParent() {
-    Path parent = delegate.getParent();
-    if (parent == null) {
-      return null;
-    }
-    return wrap(parent);
-  }
+	@Override
+	public FileSystem getFileSystem() {
+		return fileSystem;
+	}
 
-  @Override
-  public int getNameCount() {
-    return delegate.getNameCount();
-  }
+	@Override
+	public boolean isAbsolute() {
+		return delegate.isAbsolute();
+	}
 
-  @Override
-  public Path getName(int index) {
-    return wrap(delegate.getName(index));
-  }
+	@Override
+	public Path getRoot() {
+		Path root = delegate.getRoot();
+		if (root == null) {
+			return null;
+		}
+		return wrap(root);
+	}
 
-  @Override
-  public Path subpath(int beginIndex, int endIndex) {
-    return wrap(delegate.subpath(beginIndex, endIndex));
-  }
+	@Override
+	public Path getFileName() {
+		Path fileName = delegate.getFileName();
+		if (fileName == null) {
+			return null;
+		}
+		return wrap(fileName);
+	}
 
-  @Override
-  public boolean startsWith(Path other) {
-    return delegate.startsWith(toDelegate(other));
-  }
+	@Override
+	public Path getParent() {
+		Path parent = delegate.getParent();
+		if (parent == null) {
+			return null;
+		}
+		return wrap(parent);
+	}
 
-  @Override
-  public boolean startsWith(String other) {
-    return delegate.startsWith(other);
-  }
+	@Override
+	public int getNameCount() {
+		return delegate.getNameCount();
+	}
 
-  @Override
-  public boolean endsWith(Path other) {
-    return delegate.endsWith(toDelegate(other));
-  }
+	@Override
+	public Path getName(int index) {
+		return wrap(delegate.getName(index));
+	}
 
-  @Override
-  public boolean endsWith(String other) {
-    return delegate.startsWith(other);
-  }
+	@Override
+	public Path subpath(int beginIndex, int endIndex) {
+		return wrap(delegate.subpath(beginIndex, endIndex));
+	}
 
-  @Override
-  public Path normalize() {
-    return wrap(delegate.normalize());
-  }
+	@Override
+	public boolean startsWith(Path other) {
+		return delegate.startsWith(toDelegate(other));
+	}
 
-  @Override
-  public Path resolve(Path other) {
-    return wrap(delegate.resolve(toDelegate(other)));
-  }
+	@Override
+	public boolean startsWith(String other) {
+		return delegate.startsWith(other);
+	}
 
-  @Override
-  public Path resolve(String other) {
-    return wrap(delegate.resolve(other));
-  }
+	@Override
+	public boolean endsWith(Path other) {
+		return delegate.endsWith(toDelegate(other));
+	}
 
-  @Override
-  public Path resolveSibling(Path other) {
-    return wrap(delegate.resolveSibling(toDelegate(other)));
-  }
+	@Override
+	public boolean endsWith(String other) {
+		return delegate.startsWith(other);
+	}
 
-  @Override
-  public Path resolveSibling(String other) {
-    return wrap(delegate.resolveSibling(other));
-  }
+	@Override
+	public Path normalize() {
+		return wrap(delegate.normalize());
+	}
 
-  @Override
-  public Path relativize(Path other) {
-    return wrap(delegate.relativize(toDelegate(other)));
-  }
+	@Override
+	public Path resolve(Path other) {
+		return wrap(delegate.resolve(toDelegate(other)));
+	}
 
-  // TODO: should these methods not expose delegate result directly?
-  // it could allow code to "escape" the sandbox... 
+	@Override
+	public Path resolve(String other) {
+		return wrap(delegate.resolve(other));
+	}
 
-  @Override
-  public URI toUri() {
-    return delegate.toUri();
-  }
-  
-  @Override
-  public String toString() {
-    return delegate.toString();
-  }
+	@Override
+	public Path resolveSibling(Path other) {
+		return wrap(delegate.resolveSibling(toDelegate(other)));
+	}
 
-  @Override
-  public Path toAbsolutePath() {
-    return wrap(delegate.toAbsolutePath());
-  }
+	@Override
+	public Path resolveSibling(String other) {
+		return wrap(delegate.resolveSibling(other));
+	}
 
-  @Override
-  public Path toRealPath(LinkOption... options) throws IOException {
-    return wrap(delegate.toRealPath(options));
-  }
+	@Override
+	public Path relativize(Path other) {
+		return wrap(delegate.relativize(toDelegate(other)));
+	}
 
-  @Override
-  @SuppressForbidden(reason = "Abstract API requires to use java.io.File")
-  public File toFile() {
-    // TODO: should we throw exception here?
-    return delegate.toFile();
-  }
+	// TODO: should these methods not expose delegate result directly?
+	// it could allow code to "escape" the sandbox...
 
-  @Override
-  public WatchKey register(WatchService watcher, Kind<?>[] events, Modifier... modifiers) throws IOException {
-    return delegate.register(watcher, events, modifiers);
-  }
+	@Override
+	public URI toUri() {
+		return delegate.toUri();
+	}
 
-  @Override
-  public WatchKey register(WatchService watcher, Kind<?>... events) throws IOException {
-    return delegate.register(watcher, events);
-  }
+	@Override
+	public String toString() {
+		return delegate.toString();
+	}
 
-  @Override
-  public Iterator<Path> iterator() {
-    final Iterator<Path> iterator = delegate.iterator();
-    return new Iterator<Path>() {
-      @Override
-      public boolean hasNext() {
-        return iterator.hasNext();
-      }
+	@Override
+	public Path toAbsolutePath() {
+		return wrap(delegate.toAbsolutePath());
+	}
 
-      @Override
-      public Path next() {
-        return wrap(iterator.next());
-      }
+	@Override
+	public Path toRealPath(LinkOption... options) throws IOException {
+		return wrap(delegate.toRealPath(options));
+	}
 
-      @Override
-      public void remove() {
-        iterator.remove();
-      }
-    };
-  }
+	@Override
+	@SuppressForbidden(reason = "Abstract API requires to use java.io.File")
+	public File toFile() {
+		// TODO: should we throw exception here?
+		return delegate.toFile();
+	}
 
-  @Override
-  public int compareTo(Path other) {
-    return delegate.compareTo(toDelegate(other));
-  }
-  
-  @Override
-  public int hashCode() {
-    return delegate.hashCode();
-  }
+	@Override
+	public WatchKey register(WatchService watcher, Kind<?>[] events, Modifier... modifiers) throws IOException {
+		return delegate.register(watcher, events, modifiers);
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
-    FilterPath other = (FilterPath) obj;
-    if (delegate == null) {
-      if (other.delegate != null) return false;
-    } else if (!delegate.equals(other.delegate)) return false;
-    if (fileSystem == null) {
-      if (other.fileSystem != null) return false;
-    } else if (!fileSystem.equals(other.fileSystem)) return false;
-    return true;
-  }
+	@Override
+	public WatchKey register(WatchService watcher, Kind<?>... events) throws IOException {
+		return delegate.register(watcher, events);
+	}
 
-  /**
-   * Unwraps all {@code FilterPath}s, returning
-   * the innermost {@code Path}.
-   * <p>
-   * WARNING: this is exposed for testing only!
-   * @param path specified path.
-   * @return innermost Path instance
-   */
-  public static Path unwrap(Path path) {
-    while (path instanceof FilterPath) {
-      path = ((FilterPath)path).delegate;
-    }
-    return path;
-  }
-  
-  /** Override this to customize the return wrapped
-   *  path from various operations */
-  protected Path wrap(Path other) {
-    return new FilterPath(other, fileSystem);
-  }
-  
-  /** Override this to customize the unboxing of Path
-   *  from various operations
-   */
-  protected Path toDelegate(Path path) {
-    if (path instanceof FilterPath) {
-      FilterPath fp = (FilterPath) path;
-      if (fp.fileSystem != fileSystem) {
-        throw new ProviderMismatchException("mismatch, expected: " + fileSystem.provider().getClass() + ", got: " + fp.fileSystem.provider().getClass());
-      }
-      return fp.delegate;
-    } else {
-      throw new ProviderMismatchException("mismatch, expected: FilterPath, got: " + path.getClass());
-    }
-  }
+	@Override
+	public Iterator<Path> iterator() {
+		final Iterator<Path> iterator = delegate.iterator();
+		return new Iterator<Path>() {
+			@Override
+			public boolean hasNext() {
+				return iterator.hasNext();
+			}
+
+			@Override
+			public Path next() {
+				return wrap(iterator.next());
+			}
+
+			@Override
+			public void remove() {
+				iterator.remove();
+			}
+		};
+	}
+
+	@Override
+	public int compareTo(Path other) {
+		return delegate.compareTo(toDelegate(other));
+	}
+
+	@Override
+	public int hashCode() {
+		return delegate.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		FilterPath other = (FilterPath) obj;
+		if (delegate == null) {
+			if (other.delegate != null) return false;
+		} else if (!delegate.equals(other.delegate)) return false;
+		if (fileSystem == null) {
+			if (other.fileSystem != null) return false;
+		} else if (!fileSystem.equals(other.fileSystem)) return false;
+		return true;
+	}
+
+	/**
+	 * Unwraps all {@code FilterPath}s, returning
+	 * the innermost {@code Path}.
+	 * <p>
+	 * WARNING: this is exposed for testing only!
+	 *
+	 * @param path specified path.
+	 * @return innermost Path instance
+	 */
+	public static Path unwrap(Path path) {
+		while (path instanceof FilterPath) {
+			path = ((FilterPath) path).delegate;
+		}
+		return path;
+	}
+
+	/**
+	 * Override this to customize the return wrapped
+	 * path from various operations
+	 */
+	protected Path wrap(Path other) {
+		return new FilterPath(other, fileSystem);
+	}
+
+	/**
+	 * Override this to customize the unboxing of Path
+	 * from various operations
+	 */
+	protected Path toDelegate(Path path) {
+		if (path instanceof FilterPath) {
+			FilterPath fp = (FilterPath) path;
+			if (fp.fileSystem != fileSystem) {
+				throw new ProviderMismatchException("mismatch, expected: " + fileSystem.provider().getClass() + ", got: " + fp.fileSystem.provider().getClass());
+			}
+			return fp.delegate;
+		} else {
+			throw new ProviderMismatchException("mismatch, expected: FilterPath, got: " + path.getClass());
+		}
+	}
 }

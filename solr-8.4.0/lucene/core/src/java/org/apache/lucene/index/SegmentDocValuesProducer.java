@@ -33,132 +33,135 @@ import org.apache.lucene.util.Accountable;
 import org.apache.lucene.util.Accountables;
 import org.apache.lucene.util.RamUsageEstimator;
 
-/** Encapsulates multiple producers when there are docvalues updates as one producer */
+/**
+ * Encapsulates multiple producers when there are docvalues updates as one producer
+ */
 // TODO: try to clean up close? no-op?
 // TODO: add shared base class (also used by per-field-pf?) to allow "punching thru" to low level producer?
 class SegmentDocValuesProducer extends DocValuesProducer {
-  
-  private static final long LONG_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(Long.class);
-  private static final long BASE_RAM_BYTES_USED =
-      RamUsageEstimator.shallowSizeOfInstance(SegmentDocValuesProducer.class);
 
-  final Map<String,DocValuesProducer> dvProducersByField = new HashMap<>();
-  final Set<DocValuesProducer> dvProducers = Collections.newSetFromMap(new IdentityHashMap<DocValuesProducer,Boolean>());
-  final List<Long> dvGens = new ArrayList<>();
-  
-  /**
-   * Creates a new producer that handles updated docvalues fields
-   * @param si commit point
-   * @param dir directory
-   * @param coreInfos fieldinfos for the segment
-   * @param allInfos all fieldinfos including updated ones
-   * @param segDocValues producer map
-   */
-  SegmentDocValuesProducer(SegmentCommitInfo si, Directory dir, FieldInfos coreInfos, FieldInfos allInfos, SegmentDocValues segDocValues) throws IOException {
-    try {
-      DocValuesProducer baseProducer = null;
-      for (FieldInfo fi : allInfos) {
-        if (fi.getDocValuesType() == DocValuesType.NONE) {
-          continue;
-        }
-        long docValuesGen = fi.getDocValuesGen();
-        if (docValuesGen == -1) {
-          if (baseProducer == null) {
-            // the base producer gets the original fieldinfos it wrote
-            baseProducer = segDocValues.getDocValuesProducer(docValuesGen, si, dir, coreInfos);
-            dvGens.add(docValuesGen);
-            dvProducers.add(baseProducer);
-          }
-          dvProducersByField.put(fi.name, baseProducer);
-        } else {
-          assert !dvGens.contains(docValuesGen);
-          // otherwise, producer sees only the one fieldinfo it wrote
-          final DocValuesProducer dvp = segDocValues.getDocValuesProducer(docValuesGen, si, dir, new FieldInfos(new FieldInfo[]{fi}));
-          dvGens.add(docValuesGen);
-          dvProducers.add(dvp);
-          dvProducersByField.put(fi.name, dvp);
-        }
-      }
-    } catch (Throwable t) {
-      try {
-        segDocValues.decRef(dvGens);
-      } catch (Throwable t1) {
-        t.addSuppressed(t1);
-      }
-      throw t;
-    }
-  }
+	private static final long LONG_RAM_BYTES_USED = RamUsageEstimator.shallowSizeOfInstance(Long.class);
+	private static final long BASE_RAM_BYTES_USED =
+		RamUsageEstimator.shallowSizeOfInstance(SegmentDocValuesProducer.class);
 
-  @Override
-  public NumericDocValues getNumeric(FieldInfo field) throws IOException {
-    DocValuesProducer dvProducer = dvProducersByField.get(field.name);
-    assert dvProducer != null;
-    return dvProducer.getNumeric(field);
-  }
+	final Map<String, DocValuesProducer> dvProducersByField = new HashMap<>();
+	final Set<DocValuesProducer> dvProducers = Collections.newSetFromMap(new IdentityHashMap<DocValuesProducer, Boolean>());
+	final List<Long> dvGens = new ArrayList<>();
 
-  @Override
-  public BinaryDocValues getBinary(FieldInfo field) throws IOException {
-    DocValuesProducer dvProducer = dvProducersByField.get(field.name);
-    assert dvProducer != null;
-    return dvProducer.getBinary(field);
-  }
+	/**
+	 * Creates a new producer that handles updated docvalues fields
+	 *
+	 * @param si           commit point
+	 * @param dir          directory
+	 * @param coreInfos    fieldinfos for the segment
+	 * @param allInfos     all fieldinfos including updated ones
+	 * @param segDocValues producer map
+	 */
+	SegmentDocValuesProducer(SegmentCommitInfo si, Directory dir, FieldInfos coreInfos, FieldInfos allInfos, SegmentDocValues segDocValues) throws IOException {
+		try {
+			DocValuesProducer baseProducer = null;
+			for (FieldInfo fi : allInfos) {
+				if (fi.getDocValuesType() == DocValuesType.NONE) {
+					continue;
+				}
+				long docValuesGen = fi.getDocValuesGen();
+				if (docValuesGen == -1) {
+					if (baseProducer == null) {
+						// the base producer gets the original fieldinfos it wrote
+						baseProducer = segDocValues.getDocValuesProducer(docValuesGen, si, dir, coreInfos);
+						dvGens.add(docValuesGen);
+						dvProducers.add(baseProducer);
+					}
+					dvProducersByField.put(fi.name, baseProducer);
+				} else {
+					assert !dvGens.contains(docValuesGen);
+					// otherwise, producer sees only the one fieldinfo it wrote
+					final DocValuesProducer dvp = segDocValues.getDocValuesProducer(docValuesGen, si, dir, new FieldInfos(new FieldInfo[]{fi}));
+					dvGens.add(docValuesGen);
+					dvProducers.add(dvp);
+					dvProducersByField.put(fi.name, dvp);
+				}
+			}
+		} catch (Throwable t) {
+			try {
+				segDocValues.decRef(dvGens);
+			} catch (Throwable t1) {
+				t.addSuppressed(t1);
+			}
+			throw t;
+		}
+	}
 
-  @Override
-  public SortedDocValues getSorted(FieldInfo field) throws IOException {
-    DocValuesProducer dvProducer = dvProducersByField.get(field.name);
-    assert dvProducer != null;
-    return dvProducer.getSorted(field);
-  }
+	@Override
+	public NumericDocValues getNumeric(FieldInfo field) throws IOException {
+		DocValuesProducer dvProducer = dvProducersByField.get(field.name);
+		assert dvProducer != null;
+		return dvProducer.getNumeric(field);
+	}
 
-  @Override
-  public SortedNumericDocValues getSortedNumeric(FieldInfo field) throws IOException {
-    DocValuesProducer dvProducer = dvProducersByField.get(field.name);
-    assert dvProducer != null;
-    return dvProducer.getSortedNumeric(field);
-  }
+	@Override
+	public BinaryDocValues getBinary(FieldInfo field) throws IOException {
+		DocValuesProducer dvProducer = dvProducersByField.get(field.name);
+		assert dvProducer != null;
+		return dvProducer.getBinary(field);
+	}
 
-  @Override
-  public SortedSetDocValues getSortedSet(FieldInfo field) throws IOException {
-    DocValuesProducer dvProducer = dvProducersByField.get(field.name);
-    assert dvProducer != null;
-    return dvProducer.getSortedSet(field);
-  }
+	@Override
+	public SortedDocValues getSorted(FieldInfo field) throws IOException {
+		DocValuesProducer dvProducer = dvProducersByField.get(field.name);
+		assert dvProducer != null;
+		return dvProducer.getSorted(field);
+	}
 
-  @Override
-  public void checkIntegrity() throws IOException {
-    for (DocValuesProducer producer : dvProducers) {
-      producer.checkIntegrity();
-    }
-  }
-  
-  @Override
-  public void close() throws IOException {
-    throw new UnsupportedOperationException(); // there is separate ref tracking
-  }
+	@Override
+	public SortedNumericDocValues getSortedNumeric(FieldInfo field) throws IOException {
+		DocValuesProducer dvProducer = dvProducersByField.get(field.name);
+		assert dvProducer != null;
+		return dvProducer.getSortedNumeric(field);
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    long ramBytesUsed = BASE_RAM_BYTES_USED;
-    ramBytesUsed += dvGens.size() * LONG_RAM_BYTES_USED;
-    ramBytesUsed += dvProducers.size() * RamUsageEstimator.NUM_BYTES_OBJECT_REF;
-    ramBytesUsed += dvProducersByField.size() * 2 * RamUsageEstimator.NUM_BYTES_OBJECT_REF;
-    for (DocValuesProducer producer : dvProducers) {
-      ramBytesUsed += producer.ramBytesUsed();
-    }
-    return ramBytesUsed;
-  }
+	@Override
+	public SortedSetDocValues getSortedSet(FieldInfo field) throws IOException {
+		DocValuesProducer dvProducer = dvProducersByField.get(field.name);
+		assert dvProducer != null;
+		return dvProducer.getSortedSet(field);
+	}
 
-  @Override
-  public Collection<Accountable> getChildResources() {
-    final List<Accountable> resources = new ArrayList<>(dvProducers.size());
-    for (Accountable producer : dvProducers) {
-      resources.add(Accountables.namedAccountable("delegate", producer));
-    }
-    return Collections.unmodifiableList(resources);
-  }
+	@Override
+	public void checkIntegrity() throws IOException {
+		for (DocValuesProducer producer : dvProducers) {
+			producer.checkIntegrity();
+		}
+	}
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "(producers=" + dvProducers.size() + ")";
-  }
+	@Override
+	public void close() throws IOException {
+		throw new UnsupportedOperationException(); // there is separate ref tracking
+	}
+
+	@Override
+	public long ramBytesUsed() {
+		long ramBytesUsed = BASE_RAM_BYTES_USED;
+		ramBytesUsed += dvGens.size() * LONG_RAM_BYTES_USED;
+		ramBytesUsed += dvProducers.size() * RamUsageEstimator.NUM_BYTES_OBJECT_REF;
+		ramBytesUsed += dvProducersByField.size() * 2 * RamUsageEstimator.NUM_BYTES_OBJECT_REF;
+		for (DocValuesProducer producer : dvProducers) {
+			ramBytesUsed += producer.ramBytesUsed();
+		}
+		return ramBytesUsed;
+	}
+
+	@Override
+	public Collection<Accountable> getChildResources() {
+		final List<Accountable> resources = new ArrayList<>(dvProducers.size());
+		for (Accountable producer : dvProducers) {
+			resources.add(Accountables.namedAccountable("delegate", producer));
+		}
+		return Collections.unmodifiableList(resources);
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(producers=" + dvProducers.size() + ")";
+	}
 }

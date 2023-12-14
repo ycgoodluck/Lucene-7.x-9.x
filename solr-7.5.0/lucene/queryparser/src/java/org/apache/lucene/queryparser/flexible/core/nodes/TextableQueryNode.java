@@ -21,8 +21,8 @@ package org.apache.lucene.queryparser.flexible.core.nodes;
  */
 public interface TextableQueryNode {
 
-  CharSequence getText();
+	CharSequence getText();
 
-  void setText(CharSequence text);
+	void setText(CharSequence text);
 
 }

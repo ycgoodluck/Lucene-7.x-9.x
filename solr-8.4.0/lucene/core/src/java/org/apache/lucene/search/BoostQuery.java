@@ -27,102 +27,104 @@ import org.apache.lucene.index.IndexReader;
  * Boost values that are less than one will give less importance to this
  * query compared to other ones while values that are greater than one will
  * give more importance to the scores returned by this query.
- *
+ * <p>
  * More complex boosts can be applied by using FunctionScoreQuery in the
  * lucene-queries module
  */
 public final class BoostQuery extends Query {
 
-  private final Query query;
-  private final float boost;
+	private final Query query;
+	private final float boost;
 
-  /** Sole constructor: wrap {@code query} in such a way that the produced
-   *  scores will be boosted by {@code boost}. */
-  public BoostQuery(Query query, float boost) {
-    this.query = Objects.requireNonNull(query);
-    if (Float.isFinite(boost) == false || Float.compare(boost, 0f) < 0) {
-      throw new IllegalArgumentException("boost must be a positive float, got " + boost);
-    }
-    this.boost = boost;
-  }
+	/**
+	 * Sole constructor: wrap {@code query} in such a way that the produced
+	 * scores will be boosted by {@code boost}.
+	 */
+	public BoostQuery(Query query, float boost) {
+		this.query = Objects.requireNonNull(query);
+		if (Float.isFinite(boost) == false || Float.compare(boost, 0f) < 0) {
+			throw new IllegalArgumentException("boost must be a positive float, got " + boost);
+		}
+		this.boost = boost;
+	}
 
-  /**
-   * Return the wrapped {@link Query}.
-   */
-  public Query getQuery() {
-    return query;
-  }
+	/**
+	 * Return the wrapped {@link Query}.
+	 */
+	public Query getQuery() {
+		return query;
+	}
 
-  /**
-   * Return the applied boost.
-   */
-  public float getBoost() {
-    return boost;
-  }
+	/**
+	 * Return the applied boost.
+	 */
+	public float getBoost() {
+		return boost;
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
-  
-  private boolean equalsTo(BoostQuery other) {
-    return query.equals(other.query) && 
-           Float.floatToIntBits(boost) == Float.floatToIntBits(other.boost);
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
 
-  @Override
-  public int hashCode() {
-    int h = classHash();
-    h = 31 * h + query.hashCode();
-    h = 31 * h + Float.floatToIntBits(boost);
-    return h;
-  }
+	private boolean equalsTo(BoostQuery other) {
+		return query.equals(other.query) &&
+			Float.floatToIntBits(boost) == Float.floatToIntBits(other.boost);
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    final Query rewritten = query.rewrite(reader);
+	@Override
+	public int hashCode() {
+		int h = classHash();
+		h = 31 * h + query.hashCode();
+		h = 31 * h + Float.floatToIntBits(boost);
+		return h;
+	}
 
-    if (boost == 1f) {
-      return rewritten;
-    }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		final Query rewritten = query.rewrite(reader);
 
-    if (rewritten.getClass() == BoostQuery.class) {
-      BoostQuery in = (BoostQuery) rewritten;
-      return new BoostQuery(in.query, boost * in.boost);
-    }
+		if (boost == 1f) {
+			return rewritten;
+		}
 
-    if (boost == 0f && rewritten.getClass() != ConstantScoreQuery.class) {
-      // so that we pass needScores=false
-      return new BoostQuery(new ConstantScoreQuery(rewritten), 0f);
-    }
+		if (rewritten.getClass() == BoostQuery.class) {
+			BoostQuery in = (BoostQuery) rewritten;
+			return new BoostQuery(in.query, boost * in.boost);
+		}
 
-    if (query != rewritten) {
-      return new BoostQuery(rewritten, boost);
-    }
+		if (boost == 0f && rewritten.getClass() != ConstantScoreQuery.class) {
+			// so that we pass needScores=false
+			return new BoostQuery(new ConstantScoreQuery(rewritten), 0f);
+		}
 
-    return super.rewrite(reader);
-  }
+		if (query != rewritten) {
+			return new BoostQuery(rewritten, boost);
+		}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    query.visit(visitor.getSubVisitor(BooleanClause.Occur.MUST, this));
-  }
+		return super.rewrite(reader);
+	}
 
-  @Override
-  public String toString(String field) {
-    StringBuilder builder = new StringBuilder();
-    builder.append("(");
-    builder.append(query.toString(field));
-    builder.append(")");
-    builder.append("^");
-    builder.append(boost);
-    return builder.toString();
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		query.visit(visitor.getSubVisitor(BooleanClause.Occur.MUST, this));
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    return query.createWeight(searcher, scoreMode, BoostQuery.this.boost * boost);
-  }
+	@Override
+	public String toString(String field) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("(");
+		builder.append(query.toString(field));
+		builder.append(")");
+		builder.append("^");
+		builder.append(boost);
+		return builder.toString();
+	}
+
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		return query.createWeight(searcher, scoreMode, BoostQuery.this.boost * boost);
+	}
 
 }

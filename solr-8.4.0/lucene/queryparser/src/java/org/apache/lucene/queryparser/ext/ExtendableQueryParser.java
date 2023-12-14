@@ -48,7 +48,7 @@ import org.apache.lucene.search.Query;
  * <pre>
  *   title_customExt:"Apache Lucene\?" OR content_customExt:prefix\*
  * </pre>
- * 
+ * <p>
  * Search on the default field:
  * <pre>
  *   _customExt:"Apache Lucene\?" OR _customExt:prefix\*
@@ -63,71 +63,66 @@ import org.apache.lucene.search.Query;
  * <p>
  * For details about the default encoding scheme see {@link Extensions}.
  * </p>
- * 
+ *
  * @see Extensions
  * @see ParserExtension
  * @see ExtensionQuery
  */
 public class ExtendableQueryParser extends QueryParser {
 
-  private final String defaultField;
-  private final Extensions extensions;
+	private final String defaultField;
+	private final Extensions extensions;
 
-  /**
-   * Default empty extensions instance
-   */
-  private static final Extensions DEFAULT_EXTENSION = new Extensions();
+	/**
+	 * Default empty extensions instance
+	 */
+	private static final Extensions DEFAULT_EXTENSION = new Extensions();
 
-  /**
-   * Creates a new {@link ExtendableQueryParser} instance
-   * 
-   * @param f
-   *          the default query field
-   * @param a
-   *          the analyzer used to find terms in a query string
-   */
-  public ExtendableQueryParser(final String f, final Analyzer a) {
-    this(f, a, DEFAULT_EXTENSION);
-  }
+	/**
+	 * Creates a new {@link ExtendableQueryParser} instance
+	 *
+	 * @param f the default query field
+	 * @param a the analyzer used to find terms in a query string
+	 */
+	public ExtendableQueryParser(final String f, final Analyzer a) {
+		this(f, a, DEFAULT_EXTENSION);
+	}
 
-  /**
-   * Creates a new {@link ExtendableQueryParser} instance
-   * 
-   * @param f
-   *          the default query field
-   * @param a
-   *          the analyzer used to find terms in a query string
-   * @param ext
-   *          the query parser extensions
-   */
-  public ExtendableQueryParser(final String f,
-      final Analyzer a, final Extensions ext) {
-    super(f, a);
-    this.defaultField = f;
-    this.extensions = ext;
-  }
+	/**
+	 * Creates a new {@link ExtendableQueryParser} instance
+	 *
+	 * @param f   the default query field
+	 * @param a   the analyzer used to find terms in a query string
+	 * @param ext the query parser extensions
+	 */
+	public ExtendableQueryParser(final String f,
+															 final Analyzer a, final Extensions ext) {
+		super(f, a);
+		this.defaultField = f;
+		this.extensions = ext;
+	}
 
-  /**
-   * Returns the extension field delimiter character.
-   * 
-   * @return the extension field delimiter character.
-   */
-  public char getExtensionFieldDelimiter() {
-    return extensions.getExtensionFieldDelimiter();
-  }
+	/**
+	 * Returns the extension field delimiter character.
+	 *
+	 * @return the extension field delimiter character.
+	 */
+	public char getExtensionFieldDelimiter() {
+		return extensions.getExtensionFieldDelimiter();
+	}
 
-  @Override
-  protected Query getFieldQuery(final String field, final String queryText, boolean quoted)
-      throws ParseException {
-    final Pair<String,String> splitExtensionField = this.extensions
-        .splitExtensionField(defaultField, field);
-    final ParserExtension extension = this.extensions
-        .getExtension(splitExtensionField.cud);
-    if (extension != null) {
-      return extension.parse(new ExtensionQuery(this, splitExtensionField.cur,
-          queryText));
-    }
-    return super.getFieldQuery(field, queryText, quoted);
-  }
+	@Override
+	protected Query getFieldQuery(final String field, final String queryText, boolean quoted)
+		throws ParseException {
+		final Pair<String, String> splitExtensionField = this.extensions
+			.splitExtensionField(defaultField, field);
+		final ParserExtension extension = this.extensions
+			.getExtension(splitExtensionField.cud);
+		if (extension != null) {
+			return extension.parse(new ExtensionQuery(this, splitExtensionField.cur,
+				queryText));
+		}
+		return super.getFieldQuery(field, queryText, quoted);
+	}
 
 }

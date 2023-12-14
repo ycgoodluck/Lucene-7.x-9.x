@@ -22,22 +22,24 @@ package org.apache.lucene.search.similarities;
  * <p>
  * Described as:
  * "for tasks that require high recall against long queries"
+ *
  * @lucene.experimental
  */
 public class IndependenceSaturated extends Independence {
 
-  /**
-   * Sole constructor.
-   */
-  public IndependenceSaturated() {}
-  
-  @Override
-  public double score(double freq, double expected) {
-    return (freq - expected) / expected;
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public IndependenceSaturated() {
+	}
 
-  @Override
-  public String toString() {
-    return "Saturated";
-  }
+	@Override
+	public double score(double freq, double expected) {
+		return (freq - expected) / expected;
+	}
+
+	@Override
+	public String toString() {
+		return "Saturated";
+	}
 }

@@ -30,78 +30,80 @@ import org.apache.lucene.search.Query;
  */
 public interface IndexTools {
 
-  /**
-   * Execute force merges.
-   *
-   * <p>
-   * Merges are executed until there are <i>maxNumSegments</i> segments. <br>
-   * When <i>expunge</i> is true, <i>maxNumSegments</i> parameter is ignored.
-   * </p>
-   *
-   * @param expunge - if true, only segments having deleted documents are merged
-   * @param maxNumSegments - max number of segments
-   * @param ps - information stream
-   * @throws LukeException - if an internal error occurs when accessing index
-   */
-  void optimize(boolean expunge, int maxNumSegments, PrintStream ps);
+	/**
+	 * Execute force merges.
+	 *
+	 * <p>
+	 * Merges are executed until there are <i>maxNumSegments</i> segments. <br>
+	 * When <i>expunge</i> is true, <i>maxNumSegments</i> parameter is ignored.
+	 * </p>
+	 *
+	 * @param expunge        - if true, only segments having deleted documents are merged
+	 * @param maxNumSegments - max number of segments
+	 * @param ps             - information stream
+	 * @throws LukeException - if an internal error occurs when accessing index
+	 */
+	void optimize(boolean expunge, int maxNumSegments, PrintStream ps);
 
-  /**
-   * Check the current index status.
-   *
-   * @param ps information stream
-   * @return index status
-   * @throws LukeException - if an internal error occurs when accessing index
-   */
-  CheckIndex.Status checkIndex(PrintStream ps);
+	/**
+	 * Check the current index status.
+	 *
+	 * @param ps information stream
+	 * @return index status
+	 * @throws LukeException - if an internal error occurs when accessing index
+	 */
+	CheckIndex.Status checkIndex(PrintStream ps);
 
-  /**
-   * Try to repair the corrupted index using previously returned index status.
-   *
-   * <p>This method must be called with the return value from {@link IndexTools#checkIndex(PrintStream)}.</p>
-   *
-   * @param st - index status
-   * @param ps - information stream
-   * @throws LukeException - if an internal error occurs when accessing index
-   */
-  void repairIndex(CheckIndex.Status st, PrintStream ps);
+	/**
+	 * Try to repair the corrupted index using previously returned index status.
+	 *
+	 * <p>This method must be called with the return value from {@link IndexTools#checkIndex(PrintStream)}.</p>
+	 *
+	 * @param st - index status
+	 * @param ps - information stream
+	 * @throws LukeException - if an internal error occurs when accessing index
+	 */
+	void repairIndex(CheckIndex.Status st, PrintStream ps);
 
-  /**
-   * Add new document to this index.
-   *
-   * @param doc - document to be added
-   * @param analyzer - analyzer for parsing to document
-   * @throws LukeException - if an internal error occurs when accessing index
-   */
-  void addDocument(Document doc, Analyzer analyzer);
+	/**
+	 * Add new document to this index.
+	 *
+	 * @param doc      - document to be added
+	 * @param analyzer - analyzer for parsing to document
+	 * @throws LukeException - if an internal error occurs when accessing index
+	 */
+	void addDocument(Document doc, Analyzer analyzer);
 
-  /**
-   * Delete documents from this index by the specified query.
-   *
-   * @param query - query for deleting
-   * @throws LukeException - if an internal error occurs when accessing index
-   */
-  void deleteDocuments(Query query);
+	/**
+	 * Delete documents from this index by the specified query.
+	 *
+	 * @param query - query for deleting
+	 * @throws LukeException - if an internal error occurs when accessing index
+	 */
+	void deleteDocuments(Query query);
 
-  /**
-   * Create a new index.
-   *
-   * @throws LukeException - if an internal error occurs when accessing index
-   */
-  void createNewIndex();
+	/**
+	 * Create a new index.
+	 *
+	 * @throws LukeException - if an internal error occurs when accessing index
+	 */
+	void createNewIndex();
 
-  /**
-   * Create a new index with sample documents.
-   * @param dataDir - the directory path which contains sample documents (20 Newsgroups).
-   */
-  void createNewIndex(String dataDir);
+	/**
+	 * Create a new index with sample documents.
+	 *
+	 * @param dataDir - the directory path which contains sample documents (20 Newsgroups).
+	 */
+	void createNewIndex(String dataDir);
 
 
-  /**
-   * Export terms from given field into a new file on the destination directory
-   * @param destDir - destination directory
-   * @param field - field name
-   * @param delimiter - delimiter to separate terms and their frequency
-   * @return The file containing the export
-   */
-  String exportTerms(String destDir, String field, String delimiter);
+	/**
+	 * Export terms from given field into a new file on the destination directory
+	 *
+	 * @param destDir   - destination directory
+	 * @param field     - field name
+	 * @param delimiter - delimiter to separate terms and their frequency
+	 * @return The file containing the export
+	 */
+	String exportTerms(String destDir, String field, String delimiter);
 }

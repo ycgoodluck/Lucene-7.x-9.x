@@ -61,151 +61,151 @@ import org.junit.Test;
  */
 public class TestUnifiedHighlighterTermVec extends LuceneTestCase {
 
-  private Analyzer indexAnalyzer;
-  private Directory dir;
+	private Analyzer indexAnalyzer;
+	private Directory dir;
 
-  @Before
-  public void doBefore() throws IOException {
-    indexAnalyzer = new MockAnalyzer(random(), MockTokenizer.SIMPLE, true);//whitespace, punctuation, lowercase
-    dir = newDirectory();
-  }
+	@Before
+	public void doBefore() throws IOException {
+		indexAnalyzer = new MockAnalyzer(random(), MockTokenizer.SIMPLE, true);//whitespace, punctuation, lowercase
+		dir = newDirectory();
+	}
 
-  @After
-  public void doAfter() throws IOException {
-    dir.close();
-  }
+	@After
+	public void doAfter() throws IOException {
+		dir.close();
+	}
 
-  public void testFetchTermVecsOncePerDoc() throws IOException {
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir, indexAnalyzer);
+	public void testFetchTermVecsOncePerDoc() throws IOException {
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir, indexAnalyzer);
 
-    // Declare some number of fields with random field type; but at least one will have term vectors.
-    final int numTvFields = 1 + random().nextInt(3);
-    List<String> fields = new ArrayList<>(numTvFields);
-    List<FieldType> fieldTypes = new ArrayList<>(numTvFields);
-    for (int i = 0; i < numTvFields; i++) {
-      fields.add("body" + i);
-      fieldTypes.add(UHTestHelper.randomFieldType(random()));
-    }
-    //ensure at least one has TVs by setting one randomly to it:
-    fieldTypes.set(random().nextInt(fieldTypes.size()), UHTestHelper.tvType);
+		// Declare some number of fields with random field type; but at least one will have term vectors.
+		final int numTvFields = 1 + random().nextInt(3);
+		List<String> fields = new ArrayList<>(numTvFields);
+		List<FieldType> fieldTypes = new ArrayList<>(numTvFields);
+		for (int i = 0; i < numTvFields; i++) {
+			fields.add("body" + i);
+			fieldTypes.add(UHTestHelper.randomFieldType(random()));
+		}
+		//ensure at least one has TVs by setting one randomly to it:
+		fieldTypes.set(random().nextInt(fieldTypes.size()), UHTestHelper.tvType);
 
-    final int numDocs = 1 + random().nextInt(3);
-    for (int i = 0; i < numDocs; i++) {
-      Document doc = new Document();
-      for (String field : fields) {
-        doc.add(new Field(field, "some test text", UHTestHelper.tvType));
-      }
-      iw.addDocument(doc);
-    }
+		final int numDocs = 1 + random().nextInt(3);
+		for (int i = 0; i < numDocs; i++) {
+			Document doc = new Document();
+			for (String field : fields) {
+				doc.add(new Field(field, "some test text", UHTestHelper.tvType));
+			}
+			iw.addDocument(doc);
+		}
 
-    // Wrap the reader to ensure we only fetch TVs once per doc
-    DirectoryReader originalReader = iw.getReader();
-    IndexReader ir = new AssertOnceTermVecDirectoryReader(originalReader);
-    iw.close();
+		// Wrap the reader to ensure we only fetch TVs once per doc
+		DirectoryReader originalReader = iw.getReader();
+		IndexReader ir = new AssertOnceTermVecDirectoryReader(originalReader);
+		iw.close();
 
-    IndexSearcher searcher = newSearcher(ir);
-    UnifiedHighlighter highlighter = new UnifiedHighlighter(searcher, indexAnalyzer);
-    BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-    for (String field : fields) {
-      queryBuilder.add(new TermQuery(new Term(field, "test")), BooleanClause.Occur.MUST);
-    }
-    BooleanQuery query = queryBuilder.build();
-    TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
-    assertEquals(numDocs, topDocs.totalHits.value);
-    Map<String, String[]> fieldToSnippets =
-        highlighter.highlightFields(fields.toArray(new String[numTvFields]), query, topDocs);
-    String[] expectedSnippetsByDoc = new String[numDocs];
-    Arrays.fill(expectedSnippetsByDoc, "some <b>test</b> text");
-    for (String field : fields) {
-      assertArrayEquals(expectedSnippetsByDoc, fieldToSnippets.get(field));
-    }
+		IndexSearcher searcher = newSearcher(ir);
+		UnifiedHighlighter highlighter = new UnifiedHighlighter(searcher, indexAnalyzer);
+		BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
+		for (String field : fields) {
+			queryBuilder.add(new TermQuery(new Term(field, "test")), BooleanClause.Occur.MUST);
+		}
+		BooleanQuery query = queryBuilder.build();
+		TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
+		assertEquals(numDocs, topDocs.totalHits.value);
+		Map<String, String[]> fieldToSnippets =
+			highlighter.highlightFields(fields.toArray(new String[numTvFields]), query, topDocs);
+		String[] expectedSnippetsByDoc = new String[numDocs];
+		Arrays.fill(expectedSnippetsByDoc, "some <b>test</b> text");
+		for (String field : fields) {
+			assertArrayEquals(expectedSnippetsByDoc, fieldToSnippets.get(field));
+		}
 
-    ir.close();
-  }
+		ir.close();
+	}
 
-  private static class AssertOnceTermVecDirectoryReader extends FilterDirectoryReader {
-    static final SubReaderWrapper SUB_READER_WRAPPER = new SubReaderWrapper() {
-      @Override
-      public LeafReader wrap(LeafReader reader) {
-        return new FilterLeafReader(reader) {
-          BitSet seenDocIDs = new BitSet();
+	private static class AssertOnceTermVecDirectoryReader extends FilterDirectoryReader {
+		static final SubReaderWrapper SUB_READER_WRAPPER = new SubReaderWrapper() {
+			@Override
+			public LeafReader wrap(LeafReader reader) {
+				return new FilterLeafReader(reader) {
+					BitSet seenDocIDs = new BitSet();
 
-          @Override
-          public Fields getTermVectors(int docID) throws IOException {
-            // if we're invoked by ParallelLeafReader then we can't do our assertion. TODO see LUCENE-6868
-            if (calledBy(ParallelLeafReader.class) == false
-                && calledBy(CheckIndex.class) == false) {
-              assertFalse("Should not request TVs for doc more than once.", seenDocIDs.get(docID));
-              seenDocIDs.set(docID);
-            }
+					@Override
+					public Fields getTermVectors(int docID) throws IOException {
+						// if we're invoked by ParallelLeafReader then we can't do our assertion. TODO see LUCENE-6868
+						if (calledBy(ParallelLeafReader.class) == false
+							&& calledBy(CheckIndex.class) == false) {
+							assertFalse("Should not request TVs for doc more than once.", seenDocIDs.get(docID));
+							seenDocIDs.set(docID);
+						}
 
-            return super.getTermVectors(docID);
-          }
+						return super.getTermVectors(docID);
+					}
 
-          @Override
-          public CacheHelper getCoreCacheHelper() {
-            return null;
-          }
+					@Override
+					public CacheHelper getCoreCacheHelper() {
+						return null;
+					}
 
-          @Override
-          public CacheHelper getReaderCacheHelper() {
-            return null;
-          }
-        };
-      }
-    };
+					@Override
+					public CacheHelper getReaderCacheHelper() {
+						return null;
+					}
+				};
+			}
+		};
 
-    AssertOnceTermVecDirectoryReader(DirectoryReader in) throws IOException {
-      super(in, SUB_READER_WRAPPER);
-    }
+		AssertOnceTermVecDirectoryReader(DirectoryReader in) throws IOException {
+			super(in, SUB_READER_WRAPPER);
+		}
 
-    @Override
-    protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
-      return new AssertOnceTermVecDirectoryReader(in);
-    }
+		@Override
+		protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
+			return new AssertOnceTermVecDirectoryReader(in);
+		}
 
-    @Override
-    public CacheHelper getReaderCacheHelper() {
-      return null;
-    }
-  }
+		@Override
+		public CacheHelper getReaderCacheHelper() {
+			return null;
+		}
+	}
 
-  private static boolean calledBy(Class<?> clazz) {
-    for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
-      if (stackTraceElement.getClassName().equals(clazz.getName()))
-        return true;
-    }
-    return false;
-  }
+	private static boolean calledBy(Class<?> clazz) {
+		for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
+			if (stackTraceElement.getClassName().equals(clazz.getName()))
+				return true;
+		}
+		return false;
+	}
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testUserFailedToIndexOffsets() throws IOException {
-    FieldType fieldType = new FieldType(UHTestHelper.tvType); // note: it's indexed too
-    fieldType.setStoreTermVectorPositions(random().nextBoolean());
-    fieldType.setStoreTermVectorOffsets(false);
+	@Test(expected = IllegalArgumentException.class)
+	public void testUserFailedToIndexOffsets() throws IOException {
+		FieldType fieldType = new FieldType(UHTestHelper.tvType); // note: it's indexed too
+		fieldType.setStoreTermVectorPositions(random().nextBoolean());
+		fieldType.setStoreTermVectorOffsets(false);
 
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir, indexAnalyzer);
-    Document doc = new Document();
-    doc.add(new Field("body", "term vectors", fieldType));
-    iw.addDocument(doc);
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir, indexAnalyzer);
+		Document doc = new Document();
+		doc.add(new Field("body", "term vectors", fieldType));
+		iw.addDocument(doc);
 
-    IndexReader ir = iw.getReader();
-    iw.close();
+		IndexReader ir = iw.getReader();
+		iw.close();
 
-    IndexSearcher searcher = newSearcher(ir);
-    UnifiedHighlighter highlighter = new UnifiedHighlighter(searcher, indexAnalyzer) {
-      @Override
-      protected Set<HighlightFlag> getFlags(String field) {
-        return Collections.emptySet();//no WEIGHT_MATCHES
-      }
-    };
-    TermQuery query = new TermQuery(new Term("body", "vectors"));
-    TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
-    try {
-      highlighter.highlight("body", query, topDocs, 1);//should throw
-    } finally {
-      ir.close();
-    }
-  }
+		IndexSearcher searcher = newSearcher(ir);
+		UnifiedHighlighter highlighter = new UnifiedHighlighter(searcher, indexAnalyzer) {
+			@Override
+			protected Set<HighlightFlag> getFlags(String field) {
+				return Collections.emptySet();//no WEIGHT_MATCHES
+			}
+		};
+		TermQuery query = new TermQuery(new Term("body", "vectors"));
+		TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
+		try {
+			highlighter.highlight("body", query, topDocs, 1);//should throw
+		} finally {
+			ir.close();
+		}
+	}
 
 }

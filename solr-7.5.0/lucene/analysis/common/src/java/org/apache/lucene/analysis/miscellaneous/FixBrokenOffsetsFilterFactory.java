@@ -24,17 +24,20 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
  * Factory for {@link FixBrokenOffsetsFilter}.
+ *
  * @since 7.0.0
  */
 public class FixBrokenOffsetsFilterFactory extends TokenFilterFactory {
 
-  /** Sole constructor */
-  public FixBrokenOffsetsFilterFactory(Map<String,String> args) {
-    super(args);
-  }
+	/**
+	 * Sole constructor
+	 */
+	public FixBrokenOffsetsFilterFactory(Map<String, String> args) {
+		super(args);
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new FixBrokenOffsetsFilter(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new FixBrokenOffsetsFilter(input);
+	}
 }

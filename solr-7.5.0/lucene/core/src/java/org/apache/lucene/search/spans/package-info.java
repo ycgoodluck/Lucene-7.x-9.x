@@ -17,20 +17,20 @@
 
 /**
  * The calculus of spans.
- * 
+ *
  * <p>A span is a <code>&lt;doc,startPosition,endPosition&gt;</code> tuple  that is enumerated by
- *    class {@link org.apache.lucene.search.spans.Spans Spans}.
- *  </p>
- * 
+ * class {@link org.apache.lucene.search.spans.Spans Spans}.
+ * </p>
+ *
  * <p>The following span query operators are implemented:
- * 
+ *
  * <ul>
- * 
+ *
  * <li>A {@link org.apache.lucene.search.spans.SpanTermQuery SpanTermQuery} matches all spans
  *    containing a particular {@link org.apache.lucene.index.Term Term}.
  *    This should not be used for terms that are indexed at position Integer.MAX_VALUE.
  * </li>
- * 
+ *
  * <li> A {@link org.apache.lucene.search.spans.SpanNearQuery SpanNearQuery} matches spans
  * which occur near one another, and can be used to implement things like
  * phrase search (when constructed from {@link org.apache.lucene.search.spans.SpanTermQuery}s)
@@ -41,29 +41,29 @@
  *
  * <li> A {@link org.apache.lucene.search.spans.SpanContainingQuery SpanContainingQuery} matches spans
  * which contain another spans. </li>
- * 
+ *
  * <li>A {@link org.apache.lucene.search.spans.SpanOrQuery SpanOrQuery} merges spans from a
  * number of other {@link org.apache.lucene.search.spans.SpanQuery}s.</li>
- * 
+ *
  * <li>A {@link org.apache.lucene.search.spans.SpanNotQuery SpanNotQuery} removes spans
  * matching one {@link org.apache.lucene.search.spans.SpanQuery SpanQuery} which overlap (or comes
  * near) another.  This can be used, e.g., to implement within-paragraph
  * search.</li>
- * 
+ *
  * <li>A {@link org.apache.lucene.search.spans.SpanFirstQuery SpanFirstQuery} matches spans
  * matching <code>q</code> whose end position is less than
  * <code>n</code>.  This can be used to constrain matches to the first
  * part of the document.</li>
- * 
+ *
  * <li>A {@link org.apache.lucene.search.spans.SpanPositionRangeQuery SpanPositionRangeQuery} is
  * a more general form of SpanFirstQuery that can constrain matches to arbitrary portions of the document.</li>
- * 
+ *
  * </ul>
- * 
+ * <p>
  * In all cases, output spans are minimally inclusive.  In other words, a
  * span formed by matching a span in x and y starts at the lesser of the
  * two starts and ends at the greater of the two ends.
- * 
+ *
  * <p>For example, a span query which matches "John Kerry" within ten
  * words of "George Bush" within the first 100 words of the document
  * could be constructed with:
@@ -72,24 +72,24 @@
  * SpanQuery kerry  = new SpanTermQuery(new Term("content", "kerry"));
  * SpanQuery george = new SpanTermQuery(new Term("content", "george"));
  * SpanQuery bush   = new SpanTermQuery(new Term("content", "bush"));
- * 
+ *
  * SpanQuery johnKerry =
  *    new SpanNearQuery(new SpanQuery[] {john, kerry}, 0, true);
- * 
+ *
  * SpanQuery georgeBush =
  *    new SpanNearQuery(new SpanQuery[] {george, bush}, 0, true);
- * 
+ *
  * SpanQuery johnKerryNearGeorgeBush =
  *    new SpanNearQuery(new SpanQuery[] {johnKerry, georgeBush}, 10, false);
- * 
+ *
  * SpanQuery johnKerryNearGeorgeBushAtStart =
  *    new SpanFirstQuery(johnKerryNearGeorgeBush, 100);
  * </pre>
- * 
+ *
  * <p>Span queries may be freely intermixed with other Lucene queries.
  * So, for example, the above query can be restricted to documents which
  * also use the word "iraq" with:
- * 
+ *
  * <pre class="prettyprint">
  * Query query = new BooleanQuery();
  * query.add(johnKerryNearGeorgeBushAtStart, true, false);

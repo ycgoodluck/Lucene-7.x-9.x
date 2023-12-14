@@ -37,67 +37,67 @@ import java.io.IOException;
 
 public class TestFacetQuery extends FacetTestCase {
 
-  private static Directory indexDirectory;
-  private static RandomIndexWriter indexWriter;
-  private static IndexReader indexReader;
-  private static IndexSearcher searcher;
-  private static FacetsConfig config;
+	private static Directory indexDirectory;
+	private static RandomIndexWriter indexWriter;
+	private static IndexReader indexReader;
+	private static IndexSearcher searcher;
+	private static FacetsConfig config;
 
-  private static final IndexableField[] DOC_SINGLEVALUED =
-          new IndexableField[] { new SortedSetDocValuesFacetField("Author", "Mark Twain") };
+	private static final IndexableField[] DOC_SINGLEVALUED =
+		new IndexableField[]{new SortedSetDocValuesFacetField("Author", "Mark Twain")};
 
-  private static final IndexableField[] DOC_MULTIVALUED =
-          new SortedSetDocValuesFacetField[] { new SortedSetDocValuesFacetField("Author", "Kurt Vonnegut") };
+	private static final IndexableField[] DOC_MULTIVALUED =
+		new SortedSetDocValuesFacetField[]{new SortedSetDocValuesFacetField("Author", "Kurt Vonnegut")};
 
-  private static final IndexableField[] DOC_NOFACET =
-          new IndexableField[] { new TextField("Hello", "World", Field.Store.YES) };
+	private static final IndexableField[] DOC_NOFACET =
+		new IndexableField[]{new TextField("Hello", "World", Field.Store.YES)};
 
-  @BeforeClass
-  public static void createTestIndex() throws IOException {
-    indexDirectory = newDirectory();
-    // create and open an index writer
-    indexWriter = new RandomIndexWriter(random(), indexDirectory,
-            newIndexWriterConfig(new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
+	@BeforeClass
+	public static void createTestIndex() throws IOException {
+		indexDirectory = newDirectory();
+		// create and open an index writer
+		indexWriter = new RandomIndexWriter(random(), indexDirectory,
+			newIndexWriterConfig(new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
 
-    config = new FacetsConfig();
+		config = new FacetsConfig();
 
-    indexDocuments(DOC_SINGLEVALUED, DOC_MULTIVALUED, DOC_NOFACET);
+		indexDocuments(DOC_SINGLEVALUED, DOC_MULTIVALUED, DOC_NOFACET);
 
-    indexReader = indexWriter.getReader();
-    // prepare searcher to search against
-    searcher = newSearcher(indexReader);
-  }
+		indexReader = indexWriter.getReader();
+		// prepare searcher to search against
+		searcher = newSearcher(indexReader);
+	}
 
-  private static void indexDocuments(IndexableField[]... docs) throws IOException {
-    for (IndexableField[] fields : docs) {
-      for (IndexableField field : fields) {
-        Document doc = new Document();
-        doc.add(field);
-        indexWriter.addDocument(config.build(doc));
-      }
-    }
-  }
+	private static void indexDocuments(IndexableField[]... docs) throws IOException {
+		for (IndexableField[] fields : docs) {
+			for (IndexableField field : fields) {
+				Document doc = new Document();
+				doc.add(field);
+				indexWriter.addDocument(config.build(doc));
+			}
+		}
+	}
 
-  @AfterClass
-  public static void closeTestIndex() throws IOException {
-    IOUtils.close(indexReader, indexWriter, indexDirectory);
-    indexReader = null;
-    indexWriter = null;
-    indexDirectory = null;
-    searcher = null;
-    config = null;
-  }
+	@AfterClass
+	public static void closeTestIndex() throws IOException {
+		IOUtils.close(indexReader, indexWriter, indexDirectory);
+		indexReader = null;
+		indexWriter = null;
+		indexDirectory = null;
+		searcher = null;
+		config = null;
+	}
 
-  @Test
-  public void testSingleValued() throws Exception {
-    TopDocs topDocs = searcher.search(new FacetQuery("Author", "Mark Twain"), 10);
-    assertEquals(1, topDocs.totalHits.value);
-  }
+	@Test
+	public void testSingleValued() throws Exception {
+		TopDocs topDocs = searcher.search(new FacetQuery("Author", "Mark Twain"), 10);
+		assertEquals(1, topDocs.totalHits.value);
+	}
 
-  @Test
-  public void testMultiValued() throws Exception {
-    TopDocs topDocs = searcher.search(
-            new MultiFacetQuery("Author", new String[] { "Mark Twain" }, new String[] { "Kurt Vonnegut" }), 10);
-    assertEquals(2, topDocs.totalHits.value);
-  }
+	@Test
+	public void testMultiValued() throws Exception {
+		TopDocs topDocs = searcher.search(
+			new MultiFacetQuery("Author", new String[]{"Mark Twain"}, new String[]{"Kurt Vonnegut"}), 10);
+		assertEquals(2, topDocs.totalHits.value);
+	}
 }

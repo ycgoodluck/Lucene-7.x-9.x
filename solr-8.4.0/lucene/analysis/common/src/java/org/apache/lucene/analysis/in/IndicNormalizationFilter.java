@@ -28,20 +28,20 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  * in Indian Languages.
  */
 public final class IndicNormalizationFilter extends TokenFilter {
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final IndicNormalizer normalizer = new IndicNormalizer();
-  
-  public IndicNormalizationFilter(TokenStream input) {
-    super(input);
-  }
-  
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      termAtt.setLength(normalizer.normalize(termAtt.buffer(), termAtt.length()));
-      return true;
-    } else {
-      return false;
-    }
-  }
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final IndicNormalizer normalizer = new IndicNormalizer();
+
+	public IndicNormalizationFilter(TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			termAtt.setLength(normalizer.normalize(termAtt.buffer(), termAtt.length()));
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

@@ -25,64 +25,66 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.QueryVisitor;
 import org.apache.lucene.search.ScoreMode;
 
-/** Wraps a span query with asserts */
+/**
+ * Wraps a span query with asserts
+ */
 public class AssertingSpanQuery extends SpanQuery {
-  private final SpanQuery in;
-  
-  public AssertingSpanQuery(SpanQuery in) {
-    this.in = in;
-  }
+	private final SpanQuery in;
 
-  @Override
-  public String getField() {
-    return in.getField();
-  }
+	public AssertingSpanQuery(SpanQuery in) {
+		this.in = in;
+	}
 
-  @Override
-  public String toString(String field) {
-    return "AssertingSpanQuery(" + in.toString(field) + ")";
-  }
+	@Override
+	public String getField() {
+		return in.getField();
+	}
 
-  @Override
-  public SpanWeight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    SpanWeight weight = in.createWeight(searcher, scoreMode, boost);
-    return new AssertingSpanWeight(searcher, weight);
-  }
+	@Override
+	public String toString(String field) {
+		return "AssertingSpanQuery(" + in.toString(field) + ")";
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    Query q = in.rewrite(reader);
-    if (q == in) {
-      return super.rewrite(reader);
-    } else if (q instanceof SpanQuery) {
-      return new AssertingSpanQuery((SpanQuery) q);
-    } else {
-      return q;
-    }
-  }
+	@Override
+	public SpanWeight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		SpanWeight weight = in.createWeight(searcher, scoreMode, boost);
+		return new AssertingSpanWeight(searcher, weight);
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    in.visit(visitor);
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		Query q = in.rewrite(reader);
+		if (q == in) {
+			return super.rewrite(reader);
+		} else if (q instanceof SpanQuery) {
+			return new AssertingSpanQuery((SpanQuery) q);
+		} else {
+			return q;
+		}
+	}
 
-  @Override
-  public Query clone() {
-    return new AssertingSpanQuery(in);
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		in.visit(visitor);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    return sameClassAs(o) &&
-           equalsTo(getClass().cast(o));
-  }
+	@Override
+	public Query clone() {
+		return new AssertingSpanQuery(in);
+	}
 
-  private boolean equalsTo(AssertingSpanQuery other) {
-    return Objects.equals(in, other.in);
-  }
+	@Override
+	public boolean equals(Object o) {
+		return sameClassAs(o) &&
+			equalsTo(getClass().cast(o));
+	}
 
-  @Override
-  public int hashCode() {
-    return (in == null) ? 0 : in.hashCode();
-  }
+	private boolean equalsTo(AssertingSpanQuery other) {
+		return Objects.equals(in, other.in);
+	}
+
+	@Override
+	public int hashCode() {
+		return (in == null) ? 0 : in.hashCode();
+	}
 }

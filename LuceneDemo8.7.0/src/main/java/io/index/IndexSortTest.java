@@ -17,68 +17,70 @@ import java.util.List;
  * @date 2020/11/16 10:20
  */
 public class IndexSortTest {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    IndexWriter indexWriter;
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    public void doIndexAndSearch() throws Exception {
-        WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
-        IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-        String sortedField = "sortByNumber";
-        SortField indexSortField = new SortField(sortedField, SortField.Type.LONG);
-        Sort indexSort = new Sort(indexSortField);;
-        conf.setIndexSort(indexSort);
-        conf.setUseCompoundFile(false);
-        indexWriter = new IndexWriter(directory, conf);
-        FieldType type = new FieldType();
-        type.setStored(true);
-        type.setTokenized(true);
-        type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
-        Document doc ;
-        int count = 0;
-        while (count++ < 1){
-            // 文档0
-            doc = new Document();
-            doc.add(new Field("content", "abc", type));
-            doc.add(new Field("content", "cd", type));
-            doc.add(new StringField("attachment", "cd", Field.Store.NO));
-            doc.add(new NumericDocValuesField(sortedField, 5));
-            doc.add(new StoredField("author", 3));
-            indexWriter.addDocument(doc)    ;
-            // 文档1
-            doc = new Document();
-            doc.add(new StringField("attachment", "cd", Field.Store.NO));
-            doc.add(new NumericDocValuesField(sortedField, 2));
-            indexWriter.addDocument(doc);
-            // 文档2
-            doc = new Document();
-            doc.add(new Field("content", "the name is name", type));
-            doc.add(new NumericDocValuesField(sortedField, 7));
-            indexWriter.addDocument(doc);
-            indexWriter.flush();
-        }
-        indexWriter.commit();
-        Document document;
-        List<IndexableField> fields;
+	IndexWriter indexWriter;
 
-        IndexReader reader = DirectoryReader.open(directory);
-        reader.document(0);
+	public void doIndexAndSearch() throws Exception {
+		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
+		IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+		String sortedField = "sortByNumber";
+		SortField indexSortField = new SortField(sortedField, SortField.Type.LONG);
+		Sort indexSort = new Sort(indexSortField);
+		;
+		conf.setIndexSort(indexSort);
+		conf.setUseCompoundFile(false);
+		indexWriter = new IndexWriter(directory, conf);
+		FieldType type = new FieldType();
+		type.setStored(true);
+		type.setTokenized(true);
+		type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+		Document doc;
+		int count = 0;
+		while (count++ < 1) {
+			// 文档0
+			doc = new Document();
+			doc.add(new Field("content", "abc", type));
+			doc.add(new Field("content", "cd", type));
+			doc.add(new StringField("attachment", "cd", Field.Store.NO));
+			doc.add(new NumericDocValuesField(sortedField, 5));
+			doc.add(new StoredField("author", 3));
+			indexWriter.addDocument(doc);
+			// 文档1
+			doc = new Document();
+			doc.add(new StringField("attachment", "cd", Field.Store.NO));
+			doc.add(new NumericDocValuesField(sortedField, 2));
+			indexWriter.addDocument(doc);
+			// 文档2
+			doc = new Document();
+			doc.add(new Field("content", "the name is name", type));
+			doc.add(new NumericDocValuesField(sortedField, 7));
+			indexWriter.addDocument(doc);
+			indexWriter.flush();
+		}
+		indexWriter.commit();
+		Document document;
+		List<IndexableField> fields;
 
-        IndexSearcher searcher = new IndexSearcher(reader);
-        Query query = new TermQuery(new Term("content", "name"));
-        searcher.search(query, 1000);
-    }
+		IndexReader reader = DirectoryReader.open(directory);
+		reader.document(0);
 
-    public static void main(String[] args) throws Exception{
-        IndexSortTest test = new IndexSortTest();
-        test.doIndexAndSearch();
-    }
+		IndexSearcher searcher = new IndexSearcher(reader);
+		Query query = new TermQuery(new Term("content", "name"));
+		searcher.search(query, 1000);
+	}
+
+	public static void main(String[] args) throws Exception {
+		IndexSortTest test = new IndexSortTest();
+		test.doIndexAndSearch();
+	}
 }

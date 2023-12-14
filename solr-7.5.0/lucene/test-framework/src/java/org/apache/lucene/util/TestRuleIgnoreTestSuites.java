@@ -21,45 +21,46 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**
- * This rule will cause the suite to be assumption-ignored if 
+ * This rule will cause the suite to be assumption-ignored if
  * the test class implements a given marker interface and a special
  * property is not set.
- * 
+ *
  * <p>This is a workaround for problems with certain JUnit containers (IntelliJ)
  * which automatically discover test suites and attempt to run nested classes
  * that we use for testing the test framework itself.
  */
 public final class TestRuleIgnoreTestSuites implements TestRule {
-  /** 
-   * Marker interface for nested suites that should be ignored
-   * if executed in stand-alone mode.
-   */
-  public static interface NestedTestSuite {}
-  
-  /**
-   * A boolean system property indicating nested suites should be executed
-   * normally.
-   */
-  public final static String PROPERTY_RUN_NESTED = "tests.runnested"; 
-  
-  @Override
-  public Statement apply(final Statement s, final Description d) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        if (NestedTestSuite.class.isAssignableFrom(d.getTestClass())) {
-          LuceneTestCase.assumeTrue("Nested suite class ignored (started as stand-alone).",
-              isRunningNested());
-        }
-        s.evaluate();
-      }
-    };
-  }
+	/**
+	 * Marker interface for nested suites that should be ignored
+	 * if executed in stand-alone mode.
+	 */
+	public static interface NestedTestSuite {
+	}
 
-  /**
-   * Check if a suite class is running as a nested test.
-   */
-  public static boolean isRunningNested() {
-    return Boolean.getBoolean(PROPERTY_RUN_NESTED);
-  }
+	/**
+	 * A boolean system property indicating nested suites should be executed
+	 * normally.
+	 */
+	public final static String PROPERTY_RUN_NESTED = "tests.runnested";
+
+	@Override
+	public Statement apply(final Statement s, final Description d) {
+		return new Statement() {
+			@Override
+			public void evaluate() throws Throwable {
+				if (NestedTestSuite.class.isAssignableFrom(d.getTestClass())) {
+					LuceneTestCase.assumeTrue("Nested suite class ignored (started as stand-alone).",
+						isRunningNested());
+				}
+				s.evaluate();
+			}
+		};
+	}
+
+	/**
+	 * Check if a suite class is running as a nested test.
+	 */
+	public static boolean isRunningNested() {
+		return Boolean.getBoolean(PROPERTY_RUN_NESTED);
+	}
 }

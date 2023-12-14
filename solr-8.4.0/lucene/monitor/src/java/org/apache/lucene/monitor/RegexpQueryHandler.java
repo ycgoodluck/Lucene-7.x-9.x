@@ -39,117 +39,117 @@ import org.apache.lucene.util.BytesRef;
  */
 public class RegexpQueryHandler implements CustomQueryHandler {
 
-  /**
-   * The default suffix with which to mark ngrams
-   */
-  public static final String DEFAULT_NGRAM_SUFFIX = "XX";
+	/**
+	 * The default suffix with which to mark ngrams
+	 */
+	public static final String DEFAULT_NGRAM_SUFFIX = "XX";
 
-  /**
-   * The default maximum length of an input token before ANYTOKENS are generated
-   */
-  public static final int DEFAULT_MAX_TOKEN_SIZE = 30;
+	/**
+	 * The default maximum length of an input token before ANYTOKENS are generated
+	 */
+	public static final int DEFAULT_MAX_TOKEN_SIZE = 30;
 
-  /**
-   * The default token to emit if a term is longer than MAX_TOKEN_SIZE
-   */
-  public static final String DEFAULT_WILDCARD_TOKEN = "__WILDCARD__";
+	/**
+	 * The default token to emit if a term is longer than MAX_TOKEN_SIZE
+	 */
+	public static final String DEFAULT_WILDCARD_TOKEN = "__WILDCARD__";
 
-  private final String ngramSuffix;
+	private final String ngramSuffix;
 
-  private final String wildcardToken;
-  private final BytesRef wildcardTokenBytes;
+	private final String wildcardToken;
+	private final BytesRef wildcardTokenBytes;
 
-  private final int maxTokenSize;
+	private final int maxTokenSize;
 
-  private final Set<String> excludedFields;
+	private final Set<String> excludedFields;
 
-  /**
-   * Creates a new RegexpQueryHandler
-   *
-   * @param ngramSuffix    the suffix with which to mark ngrams
-   * @param maxTokenSize   the maximum length of an input token before WILDCARD tokens are generated
-   * @param wildcardToken  the token to emit if a token is longer than maxTokenSize in length
-   * @param excludedFields a Set of fields to ignore when generating ngrams
-   */
-  public RegexpQueryHandler(String ngramSuffix, int maxTokenSize, String wildcardToken, Set<String> excludedFields) {
-    this.ngramSuffix = ngramSuffix;
-    this.maxTokenSize = maxTokenSize;
-    this.wildcardTokenBytes = new BytesRef(wildcardToken);
-    this.wildcardToken = wildcardToken;
-    this.excludedFields = excludedFields == null ? Collections.emptySet() : excludedFields;
-  }
+	/**
+	 * Creates a new RegexpQueryHandler
+	 *
+	 * @param ngramSuffix    the suffix with which to mark ngrams
+	 * @param maxTokenSize   the maximum length of an input token before WILDCARD tokens are generated
+	 * @param wildcardToken  the token to emit if a token is longer than maxTokenSize in length
+	 * @param excludedFields a Set of fields to ignore when generating ngrams
+	 */
+	public RegexpQueryHandler(String ngramSuffix, int maxTokenSize, String wildcardToken, Set<String> excludedFields) {
+		this.ngramSuffix = ngramSuffix;
+		this.maxTokenSize = maxTokenSize;
+		this.wildcardTokenBytes = new BytesRef(wildcardToken);
+		this.wildcardToken = wildcardToken;
+		this.excludedFields = excludedFields == null ? Collections.emptySet() : excludedFields;
+	}
 
-  /**
-   * Creates a new RegexpQueryHandler using default settings
-   */
-  public RegexpQueryHandler() {
-    this(DEFAULT_NGRAM_SUFFIX, DEFAULT_MAX_TOKEN_SIZE, DEFAULT_WILDCARD_TOKEN, null);
-  }
+	/**
+	 * Creates a new RegexpQueryHandler using default settings
+	 */
+	public RegexpQueryHandler() {
+		this(DEFAULT_NGRAM_SUFFIX, DEFAULT_MAX_TOKEN_SIZE, DEFAULT_WILDCARD_TOKEN, null);
+	}
 
-  /**
-   * Creates a new RegexpQueryHandler with a maximum token size
-   *
-   * @param maxTokenSize the maximum length of an input token before WILDCARD tokens are generated
-   */
-  public RegexpQueryHandler(int maxTokenSize) {
-    this(DEFAULT_NGRAM_SUFFIX, maxTokenSize, DEFAULT_WILDCARD_TOKEN, null);
-  }
+	/**
+	 * Creates a new RegexpQueryHandler with a maximum token size
+	 *
+	 * @param maxTokenSize the maximum length of an input token before WILDCARD tokens are generated
+	 */
+	public RegexpQueryHandler(int maxTokenSize) {
+		this(DEFAULT_NGRAM_SUFFIX, maxTokenSize, DEFAULT_WILDCARD_TOKEN, null);
+	}
 
-  @Override
-  public TokenStream wrapTermStream(String field, TokenStream ts) {
-    if (excludedFields.contains(field))
-      return ts;
-    return new SuffixingNGramTokenFilter(ts, ngramSuffix, wildcardToken, maxTokenSize);
-  }
+	@Override
+	public TokenStream wrapTermStream(String field, TokenStream ts) {
+		if (excludedFields.contains(field))
+			return ts;
+		return new SuffixingNGramTokenFilter(ts, ngramSuffix, wildcardToken, maxTokenSize);
+	}
 
-  @Override
-  public QueryTree handleQuery(Query q, TermWeightor termWeightor) {
-    if (q instanceof RegexpQuery == false) {
-      return null;
-    }
-    RegexpQuery query = (RegexpQuery) q;
-    String regexp = parseOutRegexp(query.toString(""));
-    String selected = selectLongestSubstring(regexp);
-    Term term = new Term(query.getField(), selected + ngramSuffix);
-    double weight = termWeightor.applyAsDouble(term);
-    return new QueryTree() {
-      @Override
-      public double weight() {
-        return weight;
-      }
+	@Override
+	public QueryTree handleQuery(Query q, TermWeightor termWeightor) {
+		if (q instanceof RegexpQuery == false) {
+			return null;
+		}
+		RegexpQuery query = (RegexpQuery) q;
+		String regexp = parseOutRegexp(query.toString(""));
+		String selected = selectLongestSubstring(regexp);
+		Term term = new Term(query.getField(), selected + ngramSuffix);
+		double weight = termWeightor.applyAsDouble(term);
+		return new QueryTree() {
+			@Override
+			public double weight() {
+				return weight;
+			}
 
-      @Override
-      public void collectTerms(BiConsumer<String, BytesRef> termCollector) {
-        termCollector.accept(term.field(), term.bytes());
-        termCollector.accept(term.field(), wildcardTokenBytes);
-      }
+			@Override
+			public void collectTerms(BiConsumer<String, BytesRef> termCollector) {
+				termCollector.accept(term.field(), term.bytes());
+				termCollector.accept(term.field(), wildcardTokenBytes);
+			}
 
-      @Override
-      public boolean advancePhase(double minWeight) {
-        return false;
-      }
+			@Override
+			public boolean advancePhase(double minWeight) {
+				return false;
+			}
 
-      @Override
-      public String toString(int depth) {
-        return space(depth) + "WILDCARD_NGRAM[" + term.toString() + "]^" + weight;
-      }
-    };
-  }
+			@Override
+			public String toString(int depth) {
+				return space(depth) + "WILDCARD_NGRAM[" + term.toString() + "]^" + weight;
+			}
+		};
+	}
 
-  private static String parseOutRegexp(String rep) {
-    int fieldSepPos = rep.indexOf(":");
-    int firstSlash = rep.indexOf("/", fieldSepPos);
-    int lastSlash = rep.lastIndexOf("/");
-    return rep.substring(firstSlash + 1, lastSlash);
-  }
+	private static String parseOutRegexp(String rep) {
+		int fieldSepPos = rep.indexOf(":");
+		int firstSlash = rep.indexOf("/", fieldSepPos);
+		int lastSlash = rep.lastIndexOf("/");
+		return rep.substring(firstSlash + 1, lastSlash);
+	}
 
-  private static String selectLongestSubstring(String regexp) {
-    String selected = "";
-    for (String substr : regexp.split("\\.|\\*|.\\?")) {
-      if (substr.length() > selected.length()) {
-        selected = substr;
-      }
-    }
-    return selected;
-  }
+	private static String selectLongestSubstring(String regexp) {
+		String selected = "";
+		for (String substr : regexp.split("\\.|\\*|.\\?")) {
+			if (substr.length() > selected.length()) {
+				selected = substr;
+			}
+		}
+		return selected;
+	}
 }

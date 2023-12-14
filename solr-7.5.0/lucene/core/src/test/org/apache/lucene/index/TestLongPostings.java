@@ -35,60 +35,60 @@ import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;
 
-@SuppressCodecs({ "SimpleText", "Memory", "Direct" })
+@SuppressCodecs({"SimpleText", "Memory", "Direct"})
 public class TestLongPostings extends LuceneTestCase {
 
-  // Produces a realistic unicode random string that
-  // survives MockAnalyzer unchanged:
-  private String getRandomTerm(String other) throws IOException {
-    Analyzer a = new MockAnalyzer(random());
-    while(true) {
-      String s = TestUtil.randomRealisticUnicodeString(random());
-      if (other != null && s.equals(other)) {
-        continue;
-      }
-      try (TokenStream ts = a.tokenStream("foo", s)) {
-        final TermToBytesRefAttribute termAtt = ts.getAttribute(TermToBytesRefAttribute.class);
-        ts.reset();
+	// Produces a realistic unicode random string that
+	// survives MockAnalyzer unchanged:
+	private String getRandomTerm(String other) throws IOException {
+		Analyzer a = new MockAnalyzer(random());
+		while (true) {
+			String s = TestUtil.randomRealisticUnicodeString(random());
+			if (other != null && s.equals(other)) {
+				continue;
+			}
+			try (TokenStream ts = a.tokenStream("foo", s)) {
+				final TermToBytesRefAttribute termAtt = ts.getAttribute(TermToBytesRefAttribute.class);
+				ts.reset();
 
-        int count = 0;
-        boolean changed = false;
+				int count = 0;
+				boolean changed = false;
 
-        while(ts.incrementToken()) {
-          final BytesRef termBytes = termAtt.getBytesRef();
-          if (count == 0 && !termBytes.utf8ToString().equals(s)) {
-            // The value was changed during analysis.  Keep iterating so the
-            // tokenStream is exhausted.
-            changed = true;
-          }
-          count++;
-        }
+				while (ts.incrementToken()) {
+					final BytesRef termBytes = termAtt.getBytesRef();
+					if (count == 0 && !termBytes.utf8ToString().equals(s)) {
+						// The value was changed during analysis.  Keep iterating so the
+						// tokenStream is exhausted.
+						changed = true;
+					}
+					count++;
+				}
 
-        ts.end();
-        // Did we iterate just once and the value was unchanged?
-        if (!changed && count == 1) {
-          return s;
-        }
-      }
-    }
-  }
+				ts.end();
+				// Did we iterate just once and the value was unchanged?
+				if (!changed && count == 1) {
+					return s;
+				}
+			}
+		}
+	}
 
-  public void testLongPostings() throws Exception {
-    // Don't use _TestUtil.getTempDir so that we own the
-    // randomness (ie same seed will point to same dir):
-    Directory dir = newFSDirectory(createTempDir("longpostings" + "." + random().nextLong()));
+	public void testLongPostings() throws Exception {
+		// Don't use _TestUtil.getTempDir so that we own the
+		// randomness (ie same seed will point to same dir):
+		Directory dir = newFSDirectory(createTempDir("longpostings" + "." + random().nextLong()));
 
-    final int NUM_DOCS = atLeast(2000);
+		final int NUM_DOCS = atLeast(2000);
 
-    if (VERBOSE) {
-      System.out.println("TEST: NUM_DOCS=" + NUM_DOCS);
-    }
+		if (VERBOSE) {
+			System.out.println("TEST: NUM_DOCS=" + NUM_DOCS);
+		}
 
-    final String s1 = getRandomTerm(null);
-    final String s2 = getRandomTerm(s1);
+		final String s1 = getRandomTerm(null);
+		final String s2 = getRandomTerm(s1);
 
-    if (VERBOSE) {
-      System.out.println("\nTEST: s1=" + s1 + " s2=" + s2);
+		if (VERBOSE) {
+			System.out.println("\nTEST: s1=" + s1 + " s2=" + s2);
       /*
       for(int idx=0;idx<s1.length();idx++) {
         System.out.println("  s1 ch=0x" + Integer.toHexString(s1.charAt(idx)));
@@ -97,36 +97,36 @@ public class TestLongPostings extends LuceneTestCase {
         System.out.println("  s2 ch=0x" + Integer.toHexString(s2.charAt(idx)));
       }
       */
-    }
+		}
 
-    final FixedBitSet isS1 = new FixedBitSet(NUM_DOCS);
-    for(int idx=0;idx<NUM_DOCS;idx++) {
-      if (random().nextBoolean()) {
-        isS1.set(idx);
-      }
-    }
+		final FixedBitSet isS1 = new FixedBitSet(NUM_DOCS);
+		for (int idx = 0; idx < NUM_DOCS; idx++) {
+			if (random().nextBoolean()) {
+				isS1.set(idx);
+			}
+		}
 
-    final IndexReader r;
-    final IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()))
-      .setOpenMode(IndexWriterConfig.OpenMode.CREATE)
-      .setMergePolicy(newLogMergePolicy());
-    iwc.setRAMBufferSizeMB(16.0 + 16.0 * random().nextDouble());
-    iwc.setMaxBufferedDocs(-1);
-    final RandomIndexWriter riw = new RandomIndexWriter(random(), dir, iwc);
+		final IndexReader r;
+		final IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()))
+			.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
+			.setMergePolicy(newLogMergePolicy());
+		iwc.setRAMBufferSizeMB(16.0 + 16.0 * random().nextDouble());
+		iwc.setMaxBufferedDocs(-1);
+		final RandomIndexWriter riw = new RandomIndexWriter(random(), dir, iwc);
 
-    for(int idx=0;idx<NUM_DOCS;idx++) {
-      final Document doc = new Document();
-      String s = isS1.get(idx) ? s1 : s2;
-      final Field f = newTextField("field", s, Field.Store.NO);
-      final int count = TestUtil.nextInt(random(), 1, 4);
-      for(int ct=0;ct<count;ct++) {
-        doc.add(f);
-      }
-      riw.addDocument(doc);
-    }
+		for (int idx = 0; idx < NUM_DOCS; idx++) {
+			final Document doc = new Document();
+			String s = isS1.get(idx) ? s1 : s2;
+			final Field f = newTextField("field", s, Field.Store.NO);
+			final int count = TestUtil.nextInt(random(), 1, 4);
+			for (int ct = 0; ct < count; ct++) {
+				doc.add(f);
+			}
+			riw.addDocument(doc);
+		}
 
-    r = riw.getReader();
-    riw.close();
+		r = riw.getReader();
+		riw.close();
 
     /*
     if (VERBOSE) {
@@ -145,147 +145,147 @@ public class TestLongPostings extends LuceneTestCase {
     }
     */
 
-    assertEquals(NUM_DOCS, r.numDocs());
-    assertTrue(r.docFreq(new Term("field", s1)) > 0);
-    assertTrue(r.docFreq(new Term("field", s2)) > 0);
+		assertEquals(NUM_DOCS, r.numDocs());
+		assertTrue(r.docFreq(new Term("field", s1)) > 0);
+		assertTrue(r.docFreq(new Term("field", s2)) > 0);
 
-    int num = atLeast(1000);
-    for(int iter=0;iter<num;iter++) {
+		int num = atLeast(1000);
+		for (int iter = 0; iter < num; iter++) {
 
-      final String term;
-      final boolean doS1;
-      if (random().nextBoolean()) {
-        term = s1;
-        doS1 = true;
-      } else {
-        term = s2;
-        doS1 = false;
-      }
+			final String term;
+			final boolean doS1;
+			if (random().nextBoolean()) {
+				term = s1;
+				doS1 = true;
+			} else {
+				term = s2;
+				doS1 = false;
+			}
 
-      if (VERBOSE) {
-        System.out.println("\nTEST: iter=" + iter + " doS1=" + doS1);
-      }
-        
-      final PostingsEnum postings = MultiFields.getTermPositionsEnum(r, "field", new BytesRef(term));
+			if (VERBOSE) {
+				System.out.println("\nTEST: iter=" + iter + " doS1=" + doS1);
+			}
 
-      int docID = -1;
-      while(docID < DocIdSetIterator.NO_MORE_DOCS) {
-        final int what = random().nextInt(3);
-        if (what == 0) {
-          if (VERBOSE) {
-            System.out.println("TEST: docID=" + docID + "; do next()");
-          }
-          // nextDoc
-          int expected = docID+1;
-          while(true) {
-            if (expected == NUM_DOCS) {
-              expected = Integer.MAX_VALUE;
-              break;
-            } else if (isS1.get(expected) == doS1) {
-              break;
-            } else {
-              expected++;
-            }
-          }
-          docID = postings.nextDoc();
-          if (VERBOSE) {
-            System.out.println("  got docID=" + docID);
-          }
-          assertEquals(expected, docID);
-          if (docID == DocIdSetIterator.NO_MORE_DOCS) {
-            break;
-          }
+			final PostingsEnum postings = MultiFields.getTermPositionsEnum(r, "field", new BytesRef(term));
 
-          if (random().nextInt(6) == 3) {
-            if (VERBOSE) {
-              System.out.println("    check positions");
-            }
-            final int freq = postings.freq();
-            assertTrue(freq >=1 && freq <= 4);
-            for(int pos=0;pos<freq;pos++) {
-              assertEquals(pos, postings.nextPosition());
-              if (random().nextBoolean()) {
-                postings.getPayload();
-                if (random().nextBoolean()) {
-                  postings.getPayload(); // get it again
-                }
-              }
-            }
-          }
-        } else {
-          // advance
-          final int targetDocID;
-          if (docID == -1) {
-            targetDocID = random().nextInt(NUM_DOCS+1);
-          } else {
-            targetDocID = docID + TestUtil.nextInt(random(), 1, NUM_DOCS - docID);
-          }
-          if (VERBOSE) {
-            System.out.println("TEST: docID=" + docID + "; do advance(" + targetDocID + ")");
-          }
-          int expected = targetDocID;
-          while(true) {
-            if (expected == NUM_DOCS) {
-              expected = Integer.MAX_VALUE;
-              break;
-            } else if (isS1.get(expected) == doS1) {
-              break;
-            } else {
-              expected++;
-            }
-          }
-          
-          docID = postings.advance(targetDocID);
-          if (VERBOSE) {
-            System.out.println("  got docID=" + docID);
-          }
-          assertEquals(expected, docID);
-          if (docID == DocIdSetIterator.NO_MORE_DOCS) {
-            break;
-          }
-          
-          if (random().nextInt(6) == 3) {
-            final int freq = postings.freq();
-            assertTrue(freq >=1 && freq <= 4);
-            for(int pos=0;pos<freq;pos++) {
-              assertEquals(pos, postings.nextPosition());
-              if (random().nextBoolean()) {
-                postings.getPayload();
-                if (random().nextBoolean()) {
-                  postings.getPayload(); // get it again
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    r.close();
-    dir.close();
-  }
-  
-  // a weaker form of testLongPostings, that doesnt check positions
-  public void testLongPostingsNoPositions() throws Exception {
-    doTestLongPostingsNoPositions(IndexOptions.DOCS);
-    doTestLongPostingsNoPositions(IndexOptions.DOCS_AND_FREQS);
-  }
-  
-  public void doTestLongPostingsNoPositions(IndexOptions options) throws Exception {
-    // Don't use _TestUtil.getTempDir so that we own the
-    // randomness (ie same seed will point to same dir):
-    Directory dir = newFSDirectory(createTempDir("longpostings" + "." + random().nextLong()));
+			int docID = -1;
+			while (docID < DocIdSetIterator.NO_MORE_DOCS) {
+				final int what = random().nextInt(3);
+				if (what == 0) {
+					if (VERBOSE) {
+						System.out.println("TEST: docID=" + docID + "; do next()");
+					}
+					// nextDoc
+					int expected = docID + 1;
+					while (true) {
+						if (expected == NUM_DOCS) {
+							expected = Integer.MAX_VALUE;
+							break;
+						} else if (isS1.get(expected) == doS1) {
+							break;
+						} else {
+							expected++;
+						}
+					}
+					docID = postings.nextDoc();
+					if (VERBOSE) {
+						System.out.println("  got docID=" + docID);
+					}
+					assertEquals(expected, docID);
+					if (docID == DocIdSetIterator.NO_MORE_DOCS) {
+						break;
+					}
 
-    final int NUM_DOCS = atLeast(2000);
+					if (random().nextInt(6) == 3) {
+						if (VERBOSE) {
+							System.out.println("    check positions");
+						}
+						final int freq = postings.freq();
+						assertTrue(freq >= 1 && freq <= 4);
+						for (int pos = 0; pos < freq; pos++) {
+							assertEquals(pos, postings.nextPosition());
+							if (random().nextBoolean()) {
+								postings.getPayload();
+								if (random().nextBoolean()) {
+									postings.getPayload(); // get it again
+								}
+							}
+						}
+					}
+				} else {
+					// advance
+					final int targetDocID;
+					if (docID == -1) {
+						targetDocID = random().nextInt(NUM_DOCS + 1);
+					} else {
+						targetDocID = docID + TestUtil.nextInt(random(), 1, NUM_DOCS - docID);
+					}
+					if (VERBOSE) {
+						System.out.println("TEST: docID=" + docID + "; do advance(" + targetDocID + ")");
+					}
+					int expected = targetDocID;
+					while (true) {
+						if (expected == NUM_DOCS) {
+							expected = Integer.MAX_VALUE;
+							break;
+						} else if (isS1.get(expected) == doS1) {
+							break;
+						} else {
+							expected++;
+						}
+					}
 
-    if (VERBOSE) {
-      System.out.println("TEST: NUM_DOCS=" + NUM_DOCS);
-    }
+					docID = postings.advance(targetDocID);
+					if (VERBOSE) {
+						System.out.println("  got docID=" + docID);
+					}
+					assertEquals(expected, docID);
+					if (docID == DocIdSetIterator.NO_MORE_DOCS) {
+						break;
+					}
 
-    final String s1 = getRandomTerm(null);
-    final String s2 = getRandomTerm(s1);
+					if (random().nextInt(6) == 3) {
+						final int freq = postings.freq();
+						assertTrue(freq >= 1 && freq <= 4);
+						for (int pos = 0; pos < freq; pos++) {
+							assertEquals(pos, postings.nextPosition());
+							if (random().nextBoolean()) {
+								postings.getPayload();
+								if (random().nextBoolean()) {
+									postings.getPayload(); // get it again
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		r.close();
+		dir.close();
+	}
 
-    if (VERBOSE) {
-      System.out.println("\nTEST: s1=" + s1 + " s2=" + s2);
+	// a weaker form of testLongPostings, that doesnt check positions
+	public void testLongPostingsNoPositions() throws Exception {
+		doTestLongPostingsNoPositions(IndexOptions.DOCS);
+		doTestLongPostingsNoPositions(IndexOptions.DOCS_AND_FREQS);
+	}
+
+	public void doTestLongPostingsNoPositions(IndexOptions options) throws Exception {
+		// Don't use _TestUtil.getTempDir so that we own the
+		// randomness (ie same seed will point to same dir):
+		Directory dir = newFSDirectory(createTempDir("longpostings" + "." + random().nextLong()));
+
+		final int NUM_DOCS = atLeast(2000);
+
+		if (VERBOSE) {
+			System.out.println("TEST: NUM_DOCS=" + NUM_DOCS);
+		}
+
+		final String s1 = getRandomTerm(null);
+		final String s2 = getRandomTerm(s1);
+
+		if (VERBOSE) {
+			System.out.println("\nTEST: s1=" + s1 + " s2=" + s2);
       /*
       for(int idx=0;idx<s1.length();idx++) {
         System.out.println("  s1 ch=0x" + Integer.toHexString(s1.charAt(idx)));
@@ -294,42 +294,42 @@ public class TestLongPostings extends LuceneTestCase {
         System.out.println("  s2 ch=0x" + Integer.toHexString(s2.charAt(idx)));
       }
       */
-    }
+		}
 
-    final FixedBitSet isS1 = new FixedBitSet(NUM_DOCS);
-    for(int idx=0;idx<NUM_DOCS;idx++) {
-      if (random().nextBoolean()) {
-        isS1.set(idx);
-      }
-    }
+		final FixedBitSet isS1 = new FixedBitSet(NUM_DOCS);
+		for (int idx = 0; idx < NUM_DOCS; idx++) {
+			if (random().nextBoolean()) {
+				isS1.set(idx);
+			}
+		}
 
-    final IndexReader r;
-    if (true) { 
-      final IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()))
-        .setOpenMode(IndexWriterConfig.OpenMode.CREATE)
-        .setMergePolicy(newLogMergePolicy());
-      iwc.setRAMBufferSizeMB(16.0 + 16.0 * random().nextDouble());
-      iwc.setMaxBufferedDocs(-1);
-      final RandomIndexWriter riw = new RandomIndexWriter(random(), dir, iwc);
+		final IndexReader r;
+		if (true) {
+			final IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()))
+				.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
+				.setMergePolicy(newLogMergePolicy());
+			iwc.setRAMBufferSizeMB(16.0 + 16.0 * random().nextDouble());
+			iwc.setMaxBufferedDocs(-1);
+			final RandomIndexWriter riw = new RandomIndexWriter(random(), dir, iwc);
 
-      FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-      ft.setIndexOptions(options);
-      for(int idx=0;idx<NUM_DOCS;idx++) {
-        final Document doc = new Document();
-        String s = isS1.get(idx) ? s1 : s2;
-        final Field f = newField("field", s, ft);
-        final int count = TestUtil.nextInt(random(), 1, 4);
-        for(int ct=0;ct<count;ct++) {
-          doc.add(f);
-        }
-        riw.addDocument(doc);
-      }
+			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
+			ft.setIndexOptions(options);
+			for (int idx = 0; idx < NUM_DOCS; idx++) {
+				final Document doc = new Document();
+				String s = isS1.get(idx) ? s1 : s2;
+				final Field f = newField("field", s, ft);
+				final int count = TestUtil.nextInt(random(), 1, 4);
+				for (int ct = 0; ct < count; ct++) {
+					doc.add(f);
+				}
+				riw.addDocument(doc);
+			}
 
-      r = riw.getReader();
-      riw.close();
-    } else {
-      r = DirectoryReader.open(dir);
-    }
+			r = riw.getReader();
+			riw.close();
+		} else {
+			r = DirectoryReader.open(dir);
+		}
 
     /*
     if (VERBOSE) {
@@ -348,111 +348,111 @@ public class TestLongPostings extends LuceneTestCase {
     }
     */
 
-    assertEquals(NUM_DOCS, r.numDocs());
-    assertTrue(r.docFreq(new Term("field", s1)) > 0);
-    assertTrue(r.docFreq(new Term("field", s2)) > 0);
+		assertEquals(NUM_DOCS, r.numDocs());
+		assertTrue(r.docFreq(new Term("field", s1)) > 0);
+		assertTrue(r.docFreq(new Term("field", s2)) > 0);
 
-    int num = atLeast(1000);
-    for(int iter=0;iter<num;iter++) {
+		int num = atLeast(1000);
+		for (int iter = 0; iter < num; iter++) {
 
-      final String term;
-      final boolean doS1;
-      if (random().nextBoolean()) {
-        term = s1;
-        doS1 = true;
-      } else {
-        term = s2;
-        doS1 = false;
-      }
+			final String term;
+			final boolean doS1;
+			if (random().nextBoolean()) {
+				term = s1;
+				doS1 = true;
+			} else {
+				term = s2;
+				doS1 = false;
+			}
 
-      if (VERBOSE) {
-        System.out.println("\nTEST: iter=" + iter + " doS1=" + doS1 + " term=" + term);
-      }
-        
-      final PostingsEnum docs;
-      final PostingsEnum postings;
+			if (VERBOSE) {
+				System.out.println("\nTEST: iter=" + iter + " doS1=" + doS1 + " term=" + term);
+			}
 
-      if (options == IndexOptions.DOCS) {
-        docs = TestUtil.docs(random(), r, "field", new BytesRef(term), null, PostingsEnum.NONE);
-        postings = null;
-      } else {
-        docs = postings = TestUtil.docs(random(), r, "field", new BytesRef(term), null, PostingsEnum.FREQS);
-        assert postings != null;
-      }
-      assert docs != null;
+			final PostingsEnum docs;
+			final PostingsEnum postings;
 
-      int docID = -1;
-      while(docID < DocIdSetIterator.NO_MORE_DOCS) {
-        final int what = random().nextInt(3);
-        if (what == 0) {
-          if (VERBOSE) {
-            System.out.println("TEST: docID=" + docID + "; do next()");
-          }
-          // nextDoc
-          int expected = docID+1;
-          while(true) {
-            if (expected == NUM_DOCS) {
-              expected = Integer.MAX_VALUE;
-              break;
-            } else if (isS1.get(expected) == doS1) {
-              break;
-            } else {
-              expected++;
-            }
-          }
-          docID = docs.nextDoc();
-          if (VERBOSE) {
-            System.out.println("  got docID=" + docID);
-          }
-          assertEquals(expected, docID);
-          if (docID == DocIdSetIterator.NO_MORE_DOCS) {
-            break;
-          }
+			if (options == IndexOptions.DOCS) {
+				docs = TestUtil.docs(random(), r, "field", new BytesRef(term), null, PostingsEnum.NONE);
+				postings = null;
+			} else {
+				docs = postings = TestUtil.docs(random(), r, "field", new BytesRef(term), null, PostingsEnum.FREQS);
+				assert postings != null;
+			}
+			assert docs != null;
 
-          if (random().nextInt(6) == 3 && postings != null) {
-            final int freq = postings.freq();
-            assertTrue(freq >=1 && freq <= 4);
-          }
-        } else {
-          // advance
-          final int targetDocID;
-          if (docID == -1) {
-            targetDocID = random().nextInt(NUM_DOCS+1);
-          } else {
-            targetDocID = docID + TestUtil.nextInt(random(), 1, NUM_DOCS - docID);
-          }
-          if (VERBOSE) {
-            System.out.println("TEST: docID=" + docID + "; do advance(" + targetDocID + ")");
-          }
-          int expected = targetDocID;
-          while(true) {
-            if (expected == NUM_DOCS) {
-              expected = Integer.MAX_VALUE;
-              break;
-            } else if (isS1.get(expected) == doS1) {
-              break;
-            } else {
-              expected++;
-            }
-          }
-          
-          docID = docs.advance(targetDocID);
-          if (VERBOSE) {
-            System.out.println("  got docID=" + docID);
-          }
-          assertEquals(expected, docID);
-          if (docID == DocIdSetIterator.NO_MORE_DOCS) {
-            break;
-          }
-          
-          if (random().nextInt(6) == 3 && postings != null) {
-            final int freq = postings.freq();
-            assertTrue("got invalid freq=" + freq, freq >=1 && freq <= 4);
-          }
-        }
-      }
-    }
-    r.close();
-    dir.close();
-  }
+			int docID = -1;
+			while (docID < DocIdSetIterator.NO_MORE_DOCS) {
+				final int what = random().nextInt(3);
+				if (what == 0) {
+					if (VERBOSE) {
+						System.out.println("TEST: docID=" + docID + "; do next()");
+					}
+					// nextDoc
+					int expected = docID + 1;
+					while (true) {
+						if (expected == NUM_DOCS) {
+							expected = Integer.MAX_VALUE;
+							break;
+						} else if (isS1.get(expected) == doS1) {
+							break;
+						} else {
+							expected++;
+						}
+					}
+					docID = docs.nextDoc();
+					if (VERBOSE) {
+						System.out.println("  got docID=" + docID);
+					}
+					assertEquals(expected, docID);
+					if (docID == DocIdSetIterator.NO_MORE_DOCS) {
+						break;
+					}
+
+					if (random().nextInt(6) == 3 && postings != null) {
+						final int freq = postings.freq();
+						assertTrue(freq >= 1 && freq <= 4);
+					}
+				} else {
+					// advance
+					final int targetDocID;
+					if (docID == -1) {
+						targetDocID = random().nextInt(NUM_DOCS + 1);
+					} else {
+						targetDocID = docID + TestUtil.nextInt(random(), 1, NUM_DOCS - docID);
+					}
+					if (VERBOSE) {
+						System.out.println("TEST: docID=" + docID + "; do advance(" + targetDocID + ")");
+					}
+					int expected = targetDocID;
+					while (true) {
+						if (expected == NUM_DOCS) {
+							expected = Integer.MAX_VALUE;
+							break;
+						} else if (isS1.get(expected) == doS1) {
+							break;
+						} else {
+							expected++;
+						}
+					}
+
+					docID = docs.advance(targetDocID);
+					if (VERBOSE) {
+						System.out.println("  got docID=" + docID);
+					}
+					assertEquals(expected, docID);
+					if (docID == DocIdSetIterator.NO_MORE_DOCS) {
+						break;
+					}
+
+					if (random().nextInt(6) == 3 && postings != null) {
+						final int freq = postings.freq();
+						assertTrue("got invalid freq=" + freq, freq >= 1 && freq <= 4);
+					}
+				}
+			}
+		}
+		r.close();
+		dir.close();
+	}
 }

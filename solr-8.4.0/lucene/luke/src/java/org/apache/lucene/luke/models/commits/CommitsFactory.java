@@ -20,15 +20,17 @@ package org.apache.lucene.luke.models.commits;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.store.Directory;
 
-/** Factory of {@link Commits} */
+/**
+ * Factory of {@link Commits}
+ */
 public class CommitsFactory {
 
-  public Commits newInstance(Directory dir, String indexPath) {
-    return new CommitsImpl(dir, indexPath);
-  }
+	public Commits newInstance(Directory dir, String indexPath) {
+		return new CommitsImpl(dir, indexPath);
+	}
 
-  public Commits newInstance(DirectoryReader reader, String indexPath) {
-    return new CommitsImpl(reader, indexPath);
-  }
+	public Commits newInstance(DirectoryReader reader, String indexPath) {
+		return new CommitsImpl(reader, indexPath);
+	}
 
 }

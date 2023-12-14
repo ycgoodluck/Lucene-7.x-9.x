@@ -23,29 +23,30 @@ import org.w3c.dom.Element;
 
 import java.util.HashMap;
 import java.util.Map;
+
 /**
  * Factory for {@link SpanQueryBuilder}s
  */
 public class SpanQueryBuilderFactory implements SpanQueryBuilder {
 
-  private final Map<String, SpanQueryBuilder> builders = new HashMap<>();
+	private final Map<String, SpanQueryBuilder> builders = new HashMap<>();
 
-  @Override
-  public Query getQuery(Element e) throws ParserException {
-    return getSpanQuery(e);
-  }
+	@Override
+	public Query getQuery(Element e) throws ParserException {
+		return getSpanQuery(e);
+	}
 
-  public void addBuilder(String nodeName, SpanQueryBuilder builder) {
-    builders.put(nodeName, builder);
-  }
+	public void addBuilder(String nodeName, SpanQueryBuilder builder) {
+		builders.put(nodeName, builder);
+	}
 
-  @Override
-  public SpanQuery getSpanQuery(Element e) throws ParserException {
-    SpanQueryBuilder builder = builders.get(e.getNodeName());
-    if (builder == null) {
-      throw new ParserException("No SpanQueryObjectBuilder defined for node " + e.getNodeName());
-    }
-    return builder.getSpanQuery(e);
-  }
+	@Override
+	public SpanQuery getSpanQuery(Element e) throws ParserException {
+		SpanQueryBuilder builder = builders.get(e.getNodeName());
+		if (builder == null) {
+			throw new ParserException("No SpanQueryObjectBuilder defined for node " + e.getNodeName());
+		}
+		return builder.getSpanQuery(e);
+	}
 
 }

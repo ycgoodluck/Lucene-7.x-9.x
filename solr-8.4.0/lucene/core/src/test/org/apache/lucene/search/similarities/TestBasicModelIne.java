@@ -18,9 +18,9 @@ package org.apache.lucene.search.similarities;
 
 public class TestBasicModelIne extends BasicModelTestCase {
 
-  @Override
-  protected BasicModel getBasicModel() {
-    return new BasicModelIne();
-  }
+	@Override
+	protected BasicModel getBasicModel() {
+		return new BasicModelIne();
+	}
 
 }

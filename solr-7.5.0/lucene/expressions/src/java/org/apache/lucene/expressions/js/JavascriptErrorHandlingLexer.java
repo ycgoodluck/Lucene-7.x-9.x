@@ -27,27 +27,29 @@ import org.antlr.v4.runtime.misc.Interval;
  * Overrides the ANTLR 4 generated JavascriptLexer to allow for proper error handling
  */
 class JavascriptErrorHandlingLexer extends JavascriptLexer {
-  /**
-   * Constructor for JavascriptErrorHandlingLexer
-   * @param charStream the stream for the source text
-   */
-  public JavascriptErrorHandlingLexer(CharStream charStream) {
-    super(charStream);
-  }
+	/**
+	 * Constructor for JavascriptErrorHandlingLexer
+	 *
+	 * @param charStream the stream for the source text
+	 */
+	public JavascriptErrorHandlingLexer(CharStream charStream) {
+		super(charStream);
+	}
 
-  /**
-   * Ensures the ANTLR lexer will throw an exception after the first error
-   * @param lnvae the lexer exception
-   */
-  @Override
-  public void recover(LexerNoViableAltException lnvae) {
-    CharStream charStream = lnvae.getInputStream();
-    int startIndex = lnvae.getStartIndex();
-    String text = charStream.getText(Interval.of(startIndex, charStream.index()));
+	/**
+	 * Ensures the ANTLR lexer will throw an exception after the first error
+	 *
+	 * @param lnvae the lexer exception
+	 */
+	@Override
+	public void recover(LexerNoViableAltException lnvae) {
+		CharStream charStream = lnvae.getInputStream();
+		int startIndex = lnvae.getStartIndex();
+		String text = charStream.getText(Interval.of(startIndex, charStream.index()));
 
-    ParseException parseException = new ParseException("unexpected character '" + getErrorDisplay(text) + "'" +
-        " on line (" + _tokenStartLine + ") position (" + _tokenStartCharPositionInLine + ")", _tokenStartCharIndex);
-    parseException.initCause(lnvae);
-    throw new RuntimeException(parseException);
-  }
+		ParseException parseException = new ParseException("unexpected character '" + getErrorDisplay(text) + "'" +
+			" on line (" + _tokenStartLine + ") position (" + _tokenStartCharPositionInLine + ")", _tokenStartCharIndex);
+		parseException.initCause(lnvae);
+		throw new RuntimeException(parseException);
+	}
 }

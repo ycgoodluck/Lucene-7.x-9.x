@@ -37,37 +37,37 @@ import org.apache.lucene.luke.app.desktop.util.TextAreaAppender;
  */
 public class LoggerFactory {
 
-  public static void initGuiLogging(String logFile) {
-    ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
-    builder.add(builder.newRootLogger(Level.INFO));
-    LoggerContext context = Configurator.initialize(builder.build());
+	public static void initGuiLogging(String logFile) {
+		ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
+		builder.add(builder.newRootLogger(Level.INFO));
+		LoggerContext context = Configurator.initialize(builder.build());
 
-    PatternLayout layout = PatternLayout.newBuilder()
-        .withPattern("[%d{ISO8601}] %5p (%F:%L) - %m%n")
-        .withCharset(StandardCharsets.UTF_8)
-        .build();
+		PatternLayout layout = PatternLayout.newBuilder()
+			.withPattern("[%d{ISO8601}] %5p (%F:%L) - %m%n")
+			.withCharset(StandardCharsets.UTF_8)
+			.build();
 
-    Appender fileAppender = FileAppender.newBuilder()
-        .setName("File")
-        .setLayout(layout)
-        .withFileName(logFile)
-        .withAppend(false)
-          .build();
-    fileAppender.start();
+		Appender fileAppender = FileAppender.newBuilder()
+			.setName("File")
+			.setLayout(layout)
+			.withFileName(logFile)
+			.withAppend(false)
+			.build();
+		fileAppender.start();
 
-    Appender textAreaAppender = TextAreaAppender.newBuilder()
-        .setName("TextArea")
-        .setLayout(layout)
-        .build();
-    textAreaAppender.start();
+		Appender textAreaAppender = TextAreaAppender.newBuilder()
+			.setName("TextArea")
+			.setLayout(layout)
+			.build();
+		textAreaAppender.start();
 
-    context.getRootLogger().addAppender(fileAppender);
-    context.getRootLogger().addAppender(textAreaAppender);
-    context.updateLoggers();
-  }
+		context.getRootLogger().addAppender(fileAppender);
+		context.getRootLogger().addAppender(textAreaAppender);
+		context.updateLoggers();
+	}
 
-  public static Logger getLogger(Class<?> clazz) {
-    return LogManager.getLogger(clazz);
-  }
+	public static Logger getLogger(Class<?> clazz) {
+		return LogManager.getLogger(clazz);
+	}
 
 }

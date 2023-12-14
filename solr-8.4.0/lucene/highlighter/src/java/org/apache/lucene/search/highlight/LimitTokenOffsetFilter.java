@@ -28,25 +28,25 @@ import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
  */
 final class LimitTokenOffsetFilter extends TokenFilter {
 
-  private final OffsetAttribute offsetAttrib = addAttribute(OffsetAttribute.class);
-  private int maxStartOffset;
+	private final OffsetAttribute offsetAttrib = addAttribute(OffsetAttribute.class);
+	private int maxStartOffset;
 
-  LimitTokenOffsetFilter(TokenStream input, int maxStartOffset) {
-    super(input);
-    if (maxStartOffset < 0) {
-      throw new IllegalArgumentException("maxStartOffset must be >= zero");
-    }
-    this.maxStartOffset = maxStartOffset;
-  }
+	LimitTokenOffsetFilter(TokenStream input, int maxStartOffset) {
+		super(input);
+		if (maxStartOffset < 0) {
+			throw new IllegalArgumentException("maxStartOffset must be >= zero");
+		}
+		this.maxStartOffset = maxStartOffset;
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (!input.incrementToken()) {
-      return false;
-    }
-    if (offsetAttrib.startOffset() <= maxStartOffset) {
-      return true;
-    }
-    return false;
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (!input.incrementToken()) {
+			return false;
+		}
+		if (offsetAttrib.startOffset() <= maxStartOffset) {
+			return true;
+		}
+		return false;
+	}
 }

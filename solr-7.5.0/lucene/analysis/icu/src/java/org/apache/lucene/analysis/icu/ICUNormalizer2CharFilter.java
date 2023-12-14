@@ -31,189 +31,190 @@ import com.ibm.icu.text.Normalizer2;
  */
 public final class ICUNormalizer2CharFilter extends BaseCharFilter {
 
-  private final Normalizer2 normalizer;
-  private final StringBuilder inputBuffer = new StringBuilder();
-  private final StringBuilder resultBuffer = new StringBuilder();
+	private final Normalizer2 normalizer;
+	private final StringBuilder inputBuffer = new StringBuilder();
+	private final StringBuilder resultBuffer = new StringBuilder();
 
-  private boolean inputFinished;
-  private boolean afterQuickCheckYes;
-  private int checkedInputBoundary;
-  private int charCount;
+	private boolean inputFinished;
+	private boolean afterQuickCheckYes;
+	private int checkedInputBoundary;
+	private int charCount;
 
 
-  /**
-   * Create a new Normalizer2CharFilter that combines NFKC normalization, Case
-   * Folding, and removes Default Ignorables (NFKC_Casefold)
-   */
-  public ICUNormalizer2CharFilter(Reader in) {
-    this(in, Normalizer2.getInstance(null, "nfkc_cf", Normalizer2.Mode.COMPOSE));
-  }
+	/**
+	 * Create a new Normalizer2CharFilter that combines NFKC normalization, Case
+	 * Folding, and removes Default Ignorables (NFKC_Casefold)
+	 */
+	public ICUNormalizer2CharFilter(Reader in) {
+		this(in, Normalizer2.getInstance(null, "nfkc_cf", Normalizer2.Mode.COMPOSE));
+	}
 
-  /**
-   * Create a new Normalizer2CharFilter with the specified Normalizer2
-   * @param in text
-   * @param normalizer normalizer to use
-   */
-  public ICUNormalizer2CharFilter(Reader in, Normalizer2 normalizer) {
-    this(in, normalizer, 128);
-  }
-  
-  // for testing ONLY
-  ICUNormalizer2CharFilter(Reader in, Normalizer2 normalizer, int bufferSize) {
-    super(in);
-    this.normalizer = Objects.requireNonNull(normalizer);
-    this.tmpBuffer = CharacterUtils.newCharacterBuffer(bufferSize);
-  }
+	/**
+	 * Create a new Normalizer2CharFilter with the specified Normalizer2
+	 *
+	 * @param in         text
+	 * @param normalizer normalizer to use
+	 */
+	public ICUNormalizer2CharFilter(Reader in, Normalizer2 normalizer) {
+		this(in, normalizer, 128);
+	}
 
-  @Override
-  public int read(char[] cbuf, int off, int len) throws IOException {
-    if (off < 0) throw new IllegalArgumentException("off < 0");
-    if (off >= cbuf.length) throw new IllegalArgumentException("off >= cbuf.length");
-    if (len <= 0) throw new IllegalArgumentException("len <= 0");
+	// for testing ONLY
+	ICUNormalizer2CharFilter(Reader in, Normalizer2 normalizer, int bufferSize) {
+		super(in);
+		this.normalizer = Objects.requireNonNull(normalizer);
+		this.tmpBuffer = CharacterUtils.newCharacterBuffer(bufferSize);
+	}
 
-    while (!inputFinished || inputBuffer.length() > 0 || resultBuffer.length() > 0) {
-      int retLen;
+	@Override
+	public int read(char[] cbuf, int off, int len) throws IOException {
+		if (off < 0) throw new IllegalArgumentException("off < 0");
+		if (off >= cbuf.length) throw new IllegalArgumentException("off >= cbuf.length");
+		if (len <= 0) throw new IllegalArgumentException("len <= 0");
 
-      if (resultBuffer.length() > 0) {
-        retLen = outputFromResultBuffer(cbuf, off, len);
-        if (retLen > 0) {
-          return retLen;
-        }
-      }
+		while (!inputFinished || inputBuffer.length() > 0 || resultBuffer.length() > 0) {
+			int retLen;
 
-      int resLen = readAndNormalizeFromInput();
-      if (resLen > 0) {
-        retLen = outputFromResultBuffer(cbuf, off, len);
-        if (retLen > 0) {
-          return retLen;
-        }
-      }
+			if (resultBuffer.length() > 0) {
+				retLen = outputFromResultBuffer(cbuf, off, len);
+				if (retLen > 0) {
+					return retLen;
+				}
+			}
 
-      readInputToBuffer();
-    }
+			int resLen = readAndNormalizeFromInput();
+			if (resLen > 0) {
+				retLen = outputFromResultBuffer(cbuf, off, len);
+				if (retLen > 0) {
+					return retLen;
+				}
+			}
 
-    return -1;
-  }
+			readInputToBuffer();
+		}
 
-  private final CharacterUtils.CharacterBuffer tmpBuffer;
+		return -1;
+	}
 
-  private void readInputToBuffer() throws IOException {
-    while (true) {
-      // CharacterUtils.fill is supplementary char aware
-      final boolean hasRemainingChars = CharacterUtils.fill(tmpBuffer, input);
+	private final CharacterUtils.CharacterBuffer tmpBuffer;
 
-      assert tmpBuffer.getOffset() == 0;
-      inputBuffer.append(tmpBuffer.getBuffer(), 0, tmpBuffer.getLength());
+	private void readInputToBuffer() throws IOException {
+		while (true) {
+			// CharacterUtils.fill is supplementary char aware
+			final boolean hasRemainingChars = CharacterUtils.fill(tmpBuffer, input);
 
-      if (hasRemainingChars == false) {
-        inputFinished = true;
-        break;
-      }
+			assert tmpBuffer.getOffset() == 0;
+			inputBuffer.append(tmpBuffer.getBuffer(), 0, tmpBuffer.getLength());
 
-      final int lastCodePoint = Character.codePointBefore(tmpBuffer.getBuffer(), tmpBuffer.getLength(), 0);
-      if (normalizer.isInert(lastCodePoint)) {
-        // we require an inert char so that we can normalize content before and
-        // after this character independently
-        break;
-      }
-    }
+			if (hasRemainingChars == false) {
+				inputFinished = true;
+				break;
+			}
 
-    // if checkedInputBoundary was at the end of a buffer, we need to check that char again
-    checkedInputBoundary = Math.max(checkedInputBoundary - 1, 0);
-  }
+			final int lastCodePoint = Character.codePointBefore(tmpBuffer.getBuffer(), tmpBuffer.getLength(), 0);
+			if (normalizer.isInert(lastCodePoint)) {
+				// we require an inert char so that we can normalize content before and
+				// after this character independently
+				break;
+			}
+		}
 
-  private int readAndNormalizeFromInput() {
-    if (inputBuffer.length() <= 0) {
-      afterQuickCheckYes = false;
-      return 0;
-    }
-    if (!afterQuickCheckYes) {
-      int resLen = readFromInputWhileSpanQuickCheckYes();
-      afterQuickCheckYes = true;
-      if (resLen > 0) return resLen;
-    }
-    int resLen = readFromIoNormalizeUptoBoundary();
-    if(resLen > 0){
-      afterQuickCheckYes = false;
-    }
-    return resLen;
-  }
+		// if checkedInputBoundary was at the end of a buffer, we need to check that char again
+		checkedInputBoundary = Math.max(checkedInputBoundary - 1, 0);
+	}
 
-  private int readFromInputWhileSpanQuickCheckYes() {
-    int end = normalizer.spanQuickCheckYes(inputBuffer);
-    if (end > 0) {
-      resultBuffer.append(inputBuffer.subSequence(0, end));
-      inputBuffer.delete(0, end);
-      checkedInputBoundary = Math.max(checkedInputBoundary - end, 0);
-      charCount += end;
-    }
-    return end;
-  }
+	private int readAndNormalizeFromInput() {
+		if (inputBuffer.length() <= 0) {
+			afterQuickCheckYes = false;
+			return 0;
+		}
+		if (!afterQuickCheckYes) {
+			int resLen = readFromInputWhileSpanQuickCheckYes();
+			afterQuickCheckYes = true;
+			if (resLen > 0) return resLen;
+		}
+		int resLen = readFromIoNormalizeUptoBoundary();
+		if (resLen > 0) {
+			afterQuickCheckYes = false;
+		}
+		return resLen;
+	}
 
-  private int readFromIoNormalizeUptoBoundary() {
-    // if there's no buffer to normalize, return 0
-    if (inputBuffer.length() <= 0) {
-      return 0;
-    }
+	private int readFromInputWhileSpanQuickCheckYes() {
+		int end = normalizer.spanQuickCheckYes(inputBuffer);
+		if (end > 0) {
+			resultBuffer.append(inputBuffer.subSequence(0, end));
+			inputBuffer.delete(0, end);
+			checkedInputBoundary = Math.max(checkedInputBoundary - end, 0);
+			charCount += end;
+		}
+		return end;
+	}
 
-    boolean foundBoundary = false;
-    final int bufLen = inputBuffer.length();
+	private int readFromIoNormalizeUptoBoundary() {
+		// if there's no buffer to normalize, return 0
+		if (inputBuffer.length() <= 0) {
+			return 0;
+		}
 
-    while (checkedInputBoundary <= bufLen - 1) {
-      int charLen = Character.charCount(inputBuffer.codePointAt(checkedInputBoundary));
-      checkedInputBoundary += charLen;
-      if (checkedInputBoundary < bufLen && normalizer.hasBoundaryBefore(inputBuffer
-        .codePointAt(checkedInputBoundary))) {
-        foundBoundary = true;
-        break;
-      }
-    }
-    if (!foundBoundary && checkedInputBoundary >= bufLen && inputFinished) {
-      foundBoundary = true;
-      checkedInputBoundary = bufLen;
-    }
+		boolean foundBoundary = false;
+		final int bufLen = inputBuffer.length();
 
-    if (!foundBoundary) {
-      return 0;
-    }
+		while (checkedInputBoundary <= bufLen - 1) {
+			int charLen = Character.charCount(inputBuffer.codePointAt(checkedInputBoundary));
+			checkedInputBoundary += charLen;
+			if (checkedInputBoundary < bufLen && normalizer.hasBoundaryBefore(inputBuffer
+				.codePointAt(checkedInputBoundary))) {
+				foundBoundary = true;
+				break;
+			}
+		}
+		if (!foundBoundary && checkedInputBoundary >= bufLen && inputFinished) {
+			foundBoundary = true;
+			checkedInputBoundary = bufLen;
+		}
 
-    return normalizeInputUpto(checkedInputBoundary);
-  }
+		if (!foundBoundary) {
+			return 0;
+		}
 
-  private int normalizeInputUpto(final int length) {
-    final int destOrigLen = resultBuffer.length();
-    normalizer.normalizeSecondAndAppend(resultBuffer,
-      inputBuffer.subSequence(0, length));
-    inputBuffer.delete(0, length);
-    checkedInputBoundary = Math.max(checkedInputBoundary - length, 0);
-    final int resultLength = resultBuffer.length() - destOrigLen;
-    recordOffsetDiff(length, resultLength);
-    return resultLength;
-  }
+		return normalizeInputUpto(checkedInputBoundary);
+	}
 
-  private void recordOffsetDiff(int inputLength, int outputLength) {
-    if (inputLength == outputLength) {
-      charCount += outputLength;
-      return;
-    }
-    final int diff = inputLength - outputLength;
-    final int cumuDiff = getLastCumulativeDiff();
-    if (diff < 0) {
-      for (int i = 1;  i <= -diff; ++i) {
-        addOffCorrectMap(charCount + i, cumuDiff - i);
-      }
-    } else {
-      addOffCorrectMap(charCount + outputLength, cumuDiff + diff);
-    }
-    charCount += outputLength;
-  }
+	private int normalizeInputUpto(final int length) {
+		final int destOrigLen = resultBuffer.length();
+		normalizer.normalizeSecondAndAppend(resultBuffer,
+			inputBuffer.subSequence(0, length));
+		inputBuffer.delete(0, length);
+		checkedInputBoundary = Math.max(checkedInputBoundary - length, 0);
+		final int resultLength = resultBuffer.length() - destOrigLen;
+		recordOffsetDiff(length, resultLength);
+		return resultLength;
+	}
 
-  private int outputFromResultBuffer(char[] cbuf, int begin, int len) {
-    len = Math.min(resultBuffer.length(), len);
-    resultBuffer.getChars(0, len, cbuf, begin);
-    if (len > 0) {
-      resultBuffer.delete(0, len);
-    }
-    return len;
-  }
+	private void recordOffsetDiff(int inputLength, int outputLength) {
+		if (inputLength == outputLength) {
+			charCount += outputLength;
+			return;
+		}
+		final int diff = inputLength - outputLength;
+		final int cumuDiff = getLastCumulativeDiff();
+		if (diff < 0) {
+			for (int i = 1; i <= -diff; ++i) {
+				addOffCorrectMap(charCount + i, cumuDiff - i);
+			}
+		} else {
+			addOffCorrectMap(charCount + outputLength, cumuDiff + diff);
+		}
+		charCount += outputLength;
+	}
+
+	private int outputFromResultBuffer(char[] cbuf, int begin, int len) {
+		len = Math.min(resultBuffer.length(), len);
+		resultBuffer.getChars(0, len, cbuf, begin);
+		if (len > 0) {
+			resultBuffer.delete(0, len);
+		}
+		return len;
+	}
 }

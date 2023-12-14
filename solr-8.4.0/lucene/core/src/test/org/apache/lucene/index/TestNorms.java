@@ -43,102 +43,102 @@ import org.apache.lucene.util.TestUtil;
  * Test that norms info is preserved during index life - including
  * separate norms, addDocument, addIndexes, forceMerge.
  */
-@SuppressCodecs({ "Direct", "SimpleText" })
+@SuppressCodecs({"Direct", "SimpleText"})
 @Slow
 public class TestNorms extends LuceneTestCase {
-  static final String BYTE_TEST_FIELD = "normsTestByte";
-  
-  public void testMaxByteNorms() throws IOException {
-    Directory dir = newFSDirectory(createTempDir("TestNorms.testMaxByteNorms"));
-    buildIndex(dir);
-    DirectoryReader open = DirectoryReader.open(dir);
-    NumericDocValues normValues = MultiDocValues.getNormValues(open, BYTE_TEST_FIELD);
-    assertNotNull(normValues);
-    for (int i = 0; i < open.maxDoc(); i++) {
-      Document document = open.document(i);
-      int expected = Integer.parseInt(document.get(BYTE_TEST_FIELD).split(" ")[0]);
-      assertEquals(i, normValues.nextDoc());
-      assertEquals(expected, normValues.longValue());
-    }
-    open.close();
-    dir.close();
-  }
-  
-  // TODO: create a testNormsNotPresent ourselves by adding/deleting/merging docs
+	static final String BYTE_TEST_FIELD = "normsTestByte";
 
-  public void buildIndex(Directory dir) throws IOException {
-    Random random = random();
-    MockAnalyzer analyzer = new MockAnalyzer(random());
-    // we need at least 3 for maxTokenLength otherwise norms are messed up
-    analyzer.setMaxTokenLength(TestUtil.nextInt(random(), 3, IndexWriter.MAX_TERM_LENGTH));
-    IndexWriterConfig config = newIndexWriterConfig(analyzer);
-    Similarity provider = new MySimProvider();
-    config.setSimilarity(provider);
-    RandomIndexWriter writer = new RandomIndexWriter(random, dir, config);
-    final LineFileDocs docs = new LineFileDocs(random);
-    int num = atLeast(100);
-    for (int i = 0; i < num; i++) {
-      Document doc = docs.nextDoc();
-      int boost = TestUtil.nextInt(random, 1, 255);
-      String value = IntStream.range(0, boost).mapToObj(k -> Integer.toString(boost)).collect(Collectors.joining(" "));
-      Field f = new TextField(BYTE_TEST_FIELD, value, Field.Store.YES);
-      doc.add(f);
-      writer.addDocument(doc);
-      doc.removeField(BYTE_TEST_FIELD);
-      if (rarely()) {
-        writer.commit();
-      }
-    }
-    writer.commit();
-    writer.close();
-    docs.close();
-  }
+	public void testMaxByteNorms() throws IOException {
+		Directory dir = newFSDirectory(createTempDir("TestNorms.testMaxByteNorms"));
+		buildIndex(dir);
+		DirectoryReader open = DirectoryReader.open(dir);
+		NumericDocValues normValues = MultiDocValues.getNormValues(open, BYTE_TEST_FIELD);
+		assertNotNull(normValues);
+		for (int i = 0; i < open.maxDoc(); i++) {
+			Document document = open.document(i);
+			int expected = Integer.parseInt(document.get(BYTE_TEST_FIELD).split(" ")[0]);
+			assertEquals(i, normValues.nextDoc());
+			assertEquals(expected, normValues.longValue());
+		}
+		open.close();
+		dir.close();
+	}
+
+	// TODO: create a testNormsNotPresent ourselves by adding/deleting/merging docs
+
+	public void buildIndex(Directory dir) throws IOException {
+		Random random = random();
+		MockAnalyzer analyzer = new MockAnalyzer(random());
+		// we need at least 3 for maxTokenLength otherwise norms are messed up
+		analyzer.setMaxTokenLength(TestUtil.nextInt(random(), 3, IndexWriter.MAX_TERM_LENGTH));
+		IndexWriterConfig config = newIndexWriterConfig(analyzer);
+		Similarity provider = new MySimProvider();
+		config.setSimilarity(provider);
+		RandomIndexWriter writer = new RandomIndexWriter(random, dir, config);
+		final LineFileDocs docs = new LineFileDocs(random);
+		int num = atLeast(100);
+		for (int i = 0; i < num; i++) {
+			Document doc = docs.nextDoc();
+			int boost = TestUtil.nextInt(random, 1, 255);
+			String value = IntStream.range(0, boost).mapToObj(k -> Integer.toString(boost)).collect(Collectors.joining(" "));
+			Field f = new TextField(BYTE_TEST_FIELD, value, Field.Store.YES);
+			doc.add(f);
+			writer.addDocument(doc);
+			doc.removeField(BYTE_TEST_FIELD);
+			if (rarely()) {
+				writer.commit();
+			}
+		}
+		writer.commit();
+		writer.close();
+		docs.close();
+	}
 
 
-  public class MySimProvider extends PerFieldSimilarityWrapper {
-    Similarity delegate = new ClassicSimilarity();
+	public class MySimProvider extends PerFieldSimilarityWrapper {
+		Similarity delegate = new ClassicSimilarity();
 
-    @Override
-    public Similarity get(String field) {
-      if (BYTE_TEST_FIELD.equals(field)) {
-        return new ByteEncodingBoostSimilarity();
-      } else {
-        return delegate;
-      }
-    }
-  }
+		@Override
+		public Similarity get(String field) {
+			if (BYTE_TEST_FIELD.equals(field)) {
+				return new ByteEncodingBoostSimilarity();
+			} else {
+				return delegate;
+			}
+		}
+	}
 
-  
-  public static class ByteEncodingBoostSimilarity extends Similarity {
 
-    @Override
-    public long computeNorm(FieldInvertState state) {
-      return state.getLength();
-    }
+	public static class ByteEncodingBoostSimilarity extends Similarity {
 
-    @Override
-    public SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-      throw new UnsupportedOperationException();
-    }
-  } 
+		@Override
+		public long computeNorm(FieldInvertState state) {
+			return state.getLength();
+		}
 
-  public void testEmptyValueVsNoValue() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriterConfig cfg = newIndexWriterConfig().setMergePolicy(newLogMergePolicy());
-    IndexWriter w = new IndexWriter(dir, cfg);
-    Document doc = new Document();
-    w.addDocument(doc);
-    doc.add(newTextField("foo", "", Store.NO));
-    w.addDocument(doc);
-    w.forceMerge(1);
-    IndexReader reader = DirectoryReader.open(w);
-    w.close();
-    LeafReader leafReader = getOnlyLeafReader(reader);
-    NumericDocValues normValues = leafReader.getNormValues("foo");
-    assertNotNull(normValues);
-    assertEquals(1, normValues.nextDoc()); // doc 0 does not have norms
-    assertEquals(0, normValues.longValue());
-    reader.close();
-    dir.close();
-  }
+		@Override
+		public SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public void testEmptyValueVsNoValue() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriterConfig cfg = newIndexWriterConfig().setMergePolicy(newLogMergePolicy());
+		IndexWriter w = new IndexWriter(dir, cfg);
+		Document doc = new Document();
+		w.addDocument(doc);
+		doc.add(newTextField("foo", "", Store.NO));
+		w.addDocument(doc);
+		w.forceMerge(1);
+		IndexReader reader = DirectoryReader.open(w);
+		w.close();
+		LeafReader leafReader = getOnlyLeafReader(reader);
+		NumericDocValues normValues = leafReader.getNormValues("foo");
+		assertNotNull(normValues);
+		assertEquals(1, normValues.nextDoc()); // doc 0 does not have norms
+		assertEquals(0, normValues.longValue());
+		reader.close();
+		dir.close();
+	}
 }

@@ -31,161 +31,166 @@ import org.apache.lucene.util.LongBitSet;
  * Rewrites MultiTermQueries into a filter, using DocValues for term enumeration.
  * <p>
  * This can be used to perform these queries against an unindexed docvalues field.
+ *
  * @lucene.experimental
  */
 public final class DocValuesRewriteMethod extends MultiTermQuery.RewriteMethod {
-  
-  @Override
-  public Query rewrite(IndexReader reader, MultiTermQuery query) {
-    return new ConstantScoreQuery(new MultiTermQueryDocValuesWrapper(query));
-  }
-  
-  static class MultiTermQueryDocValuesWrapper extends Query {
-    
-    protected final MultiTermQuery query;
-    
-    /**
-     * Wrap a {@link MultiTermQuery} as a Filter.
-     */
-    protected MultiTermQueryDocValuesWrapper(MultiTermQuery query) {
-      this.query = query;
-    }
-    
-    @Override
-    public String toString(String field) {
-      // query.toString should be ok for the filter, too, if the query boost is 1.0f
-      return query.toString(field);
-    }
-    
-    @Override
-    public final boolean equals(final Object other) {
-      return sameClassAs(other) &&
-             query.equals(((MultiTermQueryDocValuesWrapper) other).query);
-    }
 
-    @Override
-    public final int hashCode() {
-      return 31 * classHash() + query.hashCode();
-    }
-    
-    /** Returns the field name for this query */
-    public final String getField() { return query.getField(); }
-    
-    @Override
-    public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-      return new ConstantScoreWeight(this, boost) {
+	@Override
+	public Query rewrite(IndexReader reader, MultiTermQuery query) {
+		return new ConstantScoreQuery(new MultiTermQueryDocValuesWrapper(query));
+	}
 
-        @Override
-        public Matches matches(LeafReaderContext context, int doc) throws IOException {
-          final SortedSetDocValues fcsi = DocValues.getSortedSet(context.reader(), query.field);
-          return MatchesUtils.forField(query.field, () -> DisjunctionMatchesIterator.fromTermsEnum(context, doc, query, query.field, getTermsEnum(fcsi)));
-        }
+	static class MultiTermQueryDocValuesWrapper extends Query {
 
-        private TermsEnum getTermsEnum(SortedSetDocValues fcsi) throws IOException {
-          return query.getTermsEnum(new Terms() {
+		protected final MultiTermQuery query;
 
-            @Override
-            public TermsEnum iterator() throws IOException {
-              return fcsi.termsEnum();
-            }
+		/**
+		 * Wrap a {@link MultiTermQuery} as a Filter.
+		 */
+		protected MultiTermQueryDocValuesWrapper(MultiTermQuery query) {
+			this.query = query;
+		}
 
-            @Override
-            public long getSumTotalTermFreq() {
-              return -1;
-            }
+		@Override
+		public String toString(String field) {
+			// query.toString should be ok for the filter, too, if the query boost is 1.0f
+			return query.toString(field);
+		}
 
-            @Override
-            public long getSumDocFreq() {
-              return -1;
-            }
+		@Override
+		public final boolean equals(final Object other) {
+			return sameClassAs(other) &&
+				query.equals(((MultiTermQueryDocValuesWrapper) other).query);
+		}
 
-            @Override
-            public int getDocCount() {
-              return -1;
-            }
+		@Override
+		public final int hashCode() {
+			return 31 * classHash() + query.hashCode();
+		}
 
-            @Override
-            public long size() {
-              return -1;
-            }
+		/**
+		 * Returns the field name for this query
+		 */
+		public final String getField() {
+			return query.getField();
+		}
 
-            @Override
-            public boolean hasFreqs() {
-              return false;
-            }
+		@Override
+		public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+			return new ConstantScoreWeight(this, boost) {
 
-            @Override
-            public boolean hasOffsets() {
-              return false;
-            }
+				@Override
+				public Matches matches(LeafReaderContext context, int doc) throws IOException {
+					final SortedSetDocValues fcsi = DocValues.getSortedSet(context.reader(), query.field);
+					return MatchesUtils.forField(query.field, () -> DisjunctionMatchesIterator.fromTermsEnum(context, doc, query, query.field, getTermsEnum(fcsi)));
+				}
 
-            @Override
-            public boolean hasPositions() {
-              return false;
-            }
+				private TermsEnum getTermsEnum(SortedSetDocValues fcsi) throws IOException {
+					return query.getTermsEnum(new Terms() {
 
-            @Override
-            public boolean hasPayloads() {
-              return false;
-            }
-          });
-        }
+						@Override
+						public TermsEnum iterator() throws IOException {
+							return fcsi.termsEnum();
+						}
 
-        @Override
-        public Scorer scorer(LeafReaderContext context) throws IOException {
-          final SortedSetDocValues fcsi = DocValues.getSortedSet(context.reader(), query.field);
-          TermsEnum termsEnum = getTermsEnum(fcsi);
-          assert termsEnum != null;
-          if (termsEnum.next() == null) {
-            // no matching terms
-            return null;
-          }
-          // fill into a bitset
-          // Cannot use FixedBitSet because we require long index (ord):
-          final LongBitSet termSet = new LongBitSet(fcsi.getValueCount());
-          do {
-            long ord = termsEnum.ord();
-            if (ord >= 0) {
-              termSet.set(ord);
-            }
-          } while (termsEnum.next() != null);
+						@Override
+						public long getSumTotalTermFreq() {
+							return -1;
+						}
 
-          return new ConstantScoreScorer(this, score(), new TwoPhaseIterator(fcsi) {
+						@Override
+						public long getSumDocFreq() {
+							return -1;
+						}
 
-            @Override
-            public boolean matches() throws IOException {
-              for (long ord = fcsi.nextOrd(); ord != SortedSetDocValues.NO_MORE_ORDS; ord = fcsi.nextOrd()) {
-                if (termSet.get(ord)) {
-                  return true;
-                }
-              }
-              return false;
-            }
+						@Override
+						public int getDocCount() {
+							return -1;
+						}
 
-            @Override
-            public float matchCost() {
-              return 3; // lookup in a bitset
-            }
-          });
-        }
+						@Override
+						public long size() {
+							return -1;
+						}
 
-        @Override
-        public boolean isCacheable(LeafReaderContext ctx) {
-          return DocValues.isCacheable(ctx, query.field);
-        }
+						@Override
+						public boolean hasFreqs() {
+							return false;
+						}
 
-      };
-    }
-  }
+						@Override
+						public boolean hasOffsets() {
+							return false;
+						}
 
-  @Override
-  public boolean equals(Object other) {
-    return other != null &&
-           getClass() == other.getClass();
-  }
+						@Override
+						public boolean hasPositions() {
+							return false;
+						}
 
-  @Override
-  public int hashCode() {
-    return 641;
-  }
+						@Override
+						public boolean hasPayloads() {
+							return false;
+						}
+					});
+				}
+
+				@Override
+				public Scorer scorer(LeafReaderContext context) throws IOException {
+					final SortedSetDocValues fcsi = DocValues.getSortedSet(context.reader(), query.field);
+					TermsEnum termsEnum = getTermsEnum(fcsi);
+					assert termsEnum != null;
+					if (termsEnum.next() == null) {
+						// no matching terms
+						return null;
+					}
+					// fill into a bitset
+					// Cannot use FixedBitSet because we require long index (ord):
+					final LongBitSet termSet = new LongBitSet(fcsi.getValueCount());
+					do {
+						long ord = termsEnum.ord();
+						if (ord >= 0) {
+							termSet.set(ord);
+						}
+					} while (termsEnum.next() != null);
+
+					return new ConstantScoreScorer(this, score(), new TwoPhaseIterator(fcsi) {
+
+						@Override
+						public boolean matches() throws IOException {
+							for (long ord = fcsi.nextOrd(); ord != SortedSetDocValues.NO_MORE_ORDS; ord = fcsi.nextOrd()) {
+								if (termSet.get(ord)) {
+									return true;
+								}
+							}
+							return false;
+						}
+
+						@Override
+						public float matchCost() {
+							return 3; // lookup in a bitset
+						}
+					});
+				}
+
+				@Override
+				public boolean isCacheable(LeafReaderContext ctx) {
+					return DocValues.isCacheable(ctx, query.field);
+				}
+
+			};
+		}
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other != null &&
+			getClass() == other.getClass();
+	}
+
+	@Override
+	public int hashCode() {
+		return 641;
+	}
 }

@@ -25,29 +25,28 @@ import org.apache.lucene.util.BytesRef;
 
 
 /**
- *  Does nothing other than convert the char array to a byte array using the specified encoding.
- *
+ * Does nothing other than convert the char array to a byte array using the specified encoding.
  **/
-public class IdentityEncoder extends AbstractEncoder implements PayloadEncoder{
-  protected Charset charset = StandardCharsets.UTF_8;
-  
-  public IdentityEncoder() {
-  }
+public class IdentityEncoder extends AbstractEncoder implements PayloadEncoder {
+	protected Charset charset = StandardCharsets.UTF_8;
 
-  public IdentityEncoder(Charset charset) {
-    this.charset = charset;
-  }
+	public IdentityEncoder() {
+	}
 
-  @Override
-  public BytesRef encode(char[] buffer, int offset, int length) {
-    final ByteBuffer bb = charset.encode(CharBuffer.wrap(buffer, offset, length));
-    if (bb.hasArray()) {
-      return new BytesRef(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining());
-    } else {
-      // normally it should always have an array, but who knows?
-      final byte[] b = new byte[bb.remaining()];
-      bb.get(b);
-      return new BytesRef(b);
-    }
-  }
+	public IdentityEncoder(Charset charset) {
+		this.charset = charset;
+	}
+
+	@Override
+	public BytesRef encode(char[] buffer, int offset, int length) {
+		final ByteBuffer bb = charset.encode(CharBuffer.wrap(buffer, offset, length));
+		if (bb.hasArray()) {
+			return new BytesRef(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining());
+		} else {
+			// normally it should always have an array, but who knows?
+			final byte[] b = new byte[bb.remaining()];
+			bb.get(b);
+			return new BytesRef(b);
+		}
+	}
 }

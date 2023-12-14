@@ -29,90 +29,96 @@ import org.apache.lucene.index.Term;
  * NGramPhraseQuery rather than {@link PhraseQuery}, because NGramPhraseQuery
  * will {@link #rewrite(IndexReader)} the query to "AB/0 CD/2", while {@link PhraseQuery}
  * will query "AB/0 BC/1 CD/2" (where term/position).
- *
  */
 public class NGramPhraseQuery extends Query {
 
-  private final int n;
-  private final PhraseQuery phraseQuery;
-  
-  /**
-   * Constructor that takes gram size.
-   * @param n n-gram size
-   */
-  public NGramPhraseQuery(int n, PhraseQuery query) {
-    super();
-    this.n = n;
-    this.phraseQuery = Objects.requireNonNull(query);
-  }
+	private final int n;
+	private final PhraseQuery phraseQuery;
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    final Term[] terms = phraseQuery.getTerms();
-    final int[] positions = phraseQuery.getPositions();
+	/**
+	 * Constructor that takes gram size.
+	 *
+	 * @param n n-gram size
+	 */
+	public NGramPhraseQuery(int n, PhraseQuery query) {
+		super();
+		this.n = n;
+		this.phraseQuery = Objects.requireNonNull(query);
+	}
 
-    boolean isOptimizable = phraseQuery.getSlop() == 0
-        && n >= 2 // non-overlap n-gram cannot be optimized
-        && terms.length >= 3; // short ones can't be optimized
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		final Term[] terms = phraseQuery.getTerms();
+		final int[] positions = phraseQuery.getPositions();
 
-    if (isOptimizable) {
-      for (int i = 1; i < positions.length; ++i) {
-        if (positions[i] != positions[i-1] + 1) {
-          isOptimizable = false;
-          break;
-        }
-      }
-    }
-    
-    if (isOptimizable == false) {
-      return phraseQuery.rewrite(reader);
-    }
+		boolean isOptimizable = phraseQuery.getSlop() == 0
+			&& n >= 2 // non-overlap n-gram cannot be optimized
+			&& terms.length >= 3; // short ones can't be optimized
 
-    PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    for (int i = 0; i < terms.length; ++i) {
-      if (i % n == 0 || i == terms.length - 1) {
-        builder.add(terms[i], i);
-      }
-    }
-    return builder.build();
-  }
+		if (isOptimizable) {
+			for (int i = 1; i < positions.length; ++i) {
+				if (positions[i] != positions[i - 1] + 1) {
+					isOptimizable = false;
+					break;
+				}
+			}
+		}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
+		if (isOptimizable == false) {
+			return phraseQuery.rewrite(reader);
+		}
 
-  private boolean equalsTo(NGramPhraseQuery other) {
-    return n == other.n && 
-           phraseQuery.equals(other.phraseQuery);
-  }
+		PhraseQuery.Builder builder = new PhraseQuery.Builder();
+		for (int i = 0; i < terms.length; ++i) {
+			if (i % n == 0 || i == terms.length - 1) {
+				builder.add(terms[i], i);
+			}
+		}
+		return builder.build();
+	}
 
-  @Override
-  public int hashCode() {
-    int h = classHash();
-    h = 31 * h + phraseQuery.hashCode();
-    h = 31 * h + n;
-    return h;
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
 
-  /** Return the n in n-gram */
-  public int getN() {
-    return n;
-  }
+	private boolean equalsTo(NGramPhraseQuery other) {
+		return n == other.n &&
+			phraseQuery.equals(other.phraseQuery);
+	}
 
-  /** Return the list of terms. */
-  public Term[] getTerms() {
-    return phraseQuery.getTerms();
-  }
+	@Override
+	public int hashCode() {
+		int h = classHash();
+		h = 31 * h + phraseQuery.hashCode();
+		h = 31 * h + n;
+		return h;
+	}
 
-  /** Return the list of relative positions that each term should appear at. */
-  public int[] getPositions() {
-    return phraseQuery.getPositions();
-  }
+	/**
+	 * Return the n in n-gram
+	 */
+	public int getN() {
+		return n;
+	}
 
-  @Override
-  public String toString(String field) {
-    return phraseQuery.toString(field);
-  }
+	/**
+	 * Return the list of terms.
+	 */
+	public Term[] getTerms() {
+		return phraseQuery.getTerms();
+	}
+
+	/**
+	 * Return the list of relative positions that each term should appear at.
+	 */
+	public int[] getPositions() {
+		return phraseQuery.getPositions();
+	}
+
+	@Override
+	public String toString(String field) {
+		return phraseQuery.toString(field);
+	}
 }

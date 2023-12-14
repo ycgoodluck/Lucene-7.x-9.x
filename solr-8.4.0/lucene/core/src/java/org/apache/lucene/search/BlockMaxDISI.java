@@ -24,71 +24,72 @@ import java.io.IOException;
  * the max score of the provided {@link Scorer} for the current block.
  * Call {@link #setMinCompetitiveScore(float)} in order to give this iterator the ability
  * to skip low-scoring documents.
+ *
  * @lucene.internal
  */
 public class BlockMaxDISI extends DocIdSetIterator {
-  protected final Scorer scorer;
-  private final DocIdSetIterator in;
-  private float minScore;
-  private float maxScore;
-  private int upTo = -1;
+	protected final Scorer scorer;
+	private final DocIdSetIterator in;
+	private float minScore;
+	private float maxScore;
+	private int upTo = -1;
 
-  public BlockMaxDISI(DocIdSetIterator iterator, Scorer scorer) {
-    this.in = iterator;
-    this.scorer = scorer;
-  }
+	public BlockMaxDISI(DocIdSetIterator iterator, Scorer scorer) {
+		this.in = iterator;
+		this.scorer = scorer;
+	}
 
-  @Override
-  public int docID() {
-    return in.docID();
-  }
+	@Override
+	public int docID() {
+		return in.docID();
+	}
 
-  @Override
-  public int nextDoc() throws IOException {
-    return advance(docID()+1);
-  }
+	@Override
+	public int nextDoc() throws IOException {
+		return advance(docID() + 1);
+	}
 
-  @Override
-  public int advance(int target) throws IOException {
-    int doc = advanceImpacts(target);
-    return in.advance(doc);
-  }
+	@Override
+	public int advance(int target) throws IOException {
+		int doc = advanceImpacts(target);
+		return in.advance(doc);
+	}
 
-  @Override
-  public long cost() {
-    return in.cost();
-  }
+	@Override
+	public long cost() {
+		return in.cost();
+	}
 
-  public void setMinCompetitiveScore(float minScore) {
-    this.minScore = minScore;
-  }
+	public void setMinCompetitiveScore(float minScore) {
+		this.minScore = minScore;
+	}
 
-  private void moveToNextBlock(int target) throws IOException {
-    upTo = scorer.advanceShallow(target);
-    maxScore = scorer.getMaxScore(upTo);
-  }
+	private void moveToNextBlock(int target) throws IOException {
+		upTo = scorer.advanceShallow(target);
+		maxScore = scorer.getMaxScore(upTo);
+	}
 
-  private int advanceImpacts(int target) throws IOException {
-    if (minScore == -1 || target == NO_MORE_DOCS) {
-      return target;
-    }
+	private int advanceImpacts(int target) throws IOException {
+		if (minScore == -1 || target == NO_MORE_DOCS) {
+			return target;
+		}
 
-    if (target > upTo) {
-      moveToNextBlock(target);
-    }
+		if (target > upTo) {
+			moveToNextBlock(target);
+		}
 
-    while (true) {
-      if (maxScore >= minScore) {
-        return target;
-      }
+		while (true) {
+			if (maxScore >= minScore) {
+				return target;
+			}
 
-      if (upTo == NO_MORE_DOCS) {
-        return NO_MORE_DOCS;
-      }
+			if (upTo == NO_MORE_DOCS) {
+				return NO_MORE_DOCS;
+			}
 
-      target = upTo + 1;
+			target = upTo + 1;
 
-      moveToNextBlock(target);
-    }
-  }
+			moveToNextBlock(target);
+		}
+	}
 }

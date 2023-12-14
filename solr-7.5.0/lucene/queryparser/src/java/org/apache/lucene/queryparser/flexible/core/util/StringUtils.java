@@ -21,15 +21,15 @@ package org.apache.lucene.queryparser.flexible.core.util;
  */
 final public class StringUtils {
 
-  public static String toString(Object obj) {
-    
-    if (obj != null) {
-      return obj.toString();
-      
-    } else {
-      return null;
-    }
-    
-  }
-  
+	public static String toString(Object obj) {
+
+		if (obj != null) {
+			return obj.toString();
+
+		} else {
+			return null;
+		}
+
+	}
+
 }

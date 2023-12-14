@@ -26,111 +26,109 @@ import org.apache.lucene.util.ArrayUtil;
 
 class CachingMatchesIterator extends FilterMatchesIterator {
 
-  private boolean positioned = false;
-  private int[] posAndOffsets = new int[4*4];
-  private Query[] matchingQueries = new Query[4];
-  private int count = 0; 
+	private boolean positioned = false;
+	private int[] posAndOffsets = new int[4 * 4];
+	private Query[] matchingQueries = new Query[4];
+	private int count = 0;
 
-  CachingMatchesIterator(MatchesIterator in) {
-    super(in);
-  }
+	CachingMatchesIterator(MatchesIterator in) {
+		super(in);
+	}
 
-  private void cache() throws IOException {
-    count = 0;
-    MatchesIterator mi = in.getSubMatches();
-    if (mi == null) {
-      count = 1;
-      posAndOffsets[0] = in.startPosition();
-      posAndOffsets[1] = in.endPosition();
-      posAndOffsets[2] = in.startOffset();
-      posAndOffsets[3] = in.endOffset();
-      matchingQueries [0] = in.getQuery();
-    }
-    else {
-      while (mi.next()) {
-        if (count * 4 >= posAndOffsets.length) {
-          posAndOffsets = ArrayUtil.grow(posAndOffsets, (count + 1) * 4);
-          matchingQueries = ArrayUtil.grow(matchingQueries, (count + 1));
-        }
-        posAndOffsets[count * 4] = mi.startPosition();
-        posAndOffsets[count * 4 + 1] = mi.endPosition();
-        posAndOffsets[count * 4 + 2] = mi.startOffset();
-        posAndOffsets[count * 4 + 3] = mi.endOffset();
-        matchingQueries[count] = mi.getQuery();
-        count++;
-      }
-    }
-  }
+	private void cache() throws IOException {
+		count = 0;
+		MatchesIterator mi = in.getSubMatches();
+		if (mi == null) {
+			count = 1;
+			posAndOffsets[0] = in.startPosition();
+			posAndOffsets[1] = in.endPosition();
+			posAndOffsets[2] = in.startOffset();
+			posAndOffsets[3] = in.endOffset();
+			matchingQueries[0] = in.getQuery();
+		} else {
+			while (mi.next()) {
+				if (count * 4 >= posAndOffsets.length) {
+					posAndOffsets = ArrayUtil.grow(posAndOffsets, (count + 1) * 4);
+					matchingQueries = ArrayUtil.grow(matchingQueries, (count + 1));
+				}
+				posAndOffsets[count * 4] = mi.startPosition();
+				posAndOffsets[count * 4 + 1] = mi.endPosition();
+				posAndOffsets[count * 4 + 2] = mi.startOffset();
+				posAndOffsets[count * 4 + 3] = mi.endOffset();
+				matchingQueries[count] = mi.getQuery();
+				count++;
+			}
+		}
+	}
 
-  @Override
-  public boolean next() throws IOException {
-    if (positioned == false) {
-      positioned = true;
-    }
-    else {
-      cache();
-    }
-    return in.next();
-  }
+	@Override
+	public boolean next() throws IOException {
+		if (positioned == false) {
+			positioned = true;
+		} else {
+			cache();
+		}
+		return in.next();
+	}
 
-  int startOffset(int endPos) throws IOException {
-    if (endPosition() <= endPos) {
-      return in.startOffset();
-    }
-    return posAndOffsets[2];
-  }
+	int startOffset(int endPos) throws IOException {
+		if (endPosition() <= endPos) {
+			return in.startOffset();
+		}
+		return posAndOffsets[2];
+	}
 
-  int endOffset(int endPos) throws IOException {
-    if (endPosition() <= endPos) {
-      return in.endOffset();
-    }
-    return posAndOffsets[count * 4 + 3];
-  }
+	int endOffset(int endPos) throws IOException {
+		if (endPosition() <= endPos) {
+			return in.endOffset();
+		}
+		return posAndOffsets[count * 4 + 3];
+	}
 
-  MatchesIterator getSubMatches(int endPos) throws IOException {
-    if (endPosition() <= endPos) {
-      cache();
-    }
-    return new MatchesIterator() {
+	MatchesIterator getSubMatches(int endPos) throws IOException {
+		if (endPosition() <= endPos) {
+			cache();
+		}
+		return new MatchesIterator() {
 
-      int upto = -1;
+			int upto = -1;
 
-      @Override
-      public boolean next() {
-        upto++;
-        return upto < count;
-      }
+			@Override
+			public boolean next() {
+				upto++;
+				return upto < count;
+			}
 
-      @Override
-      public int startPosition() {
-        return posAndOffsets[upto * 4];
-      }
+			@Override
+			public int startPosition() {
+				return posAndOffsets[upto * 4];
+			}
 
-      @Override
-      public int endPosition() {
-        return posAndOffsets[upto * 4 + 1];
-      }
+			@Override
+			public int endPosition() {
+				return posAndOffsets[upto * 4 + 1];
+			}
 
-      @Override
-      public int startOffset() {
-        return posAndOffsets[upto * 4 + 2];
-      }
+			@Override
+			public int startOffset() {
+				return posAndOffsets[upto * 4 + 2];
+			}
 
-      @Override
-      public int endOffset() {
-        return posAndOffsets[upto * 4 + 3];
-      }
+			@Override
+			public int endOffset() {
+				return posAndOffsets[upto * 4 + 3];
+			}
 
-      @Override
-      public MatchesIterator getSubMatches() {
-        return null;
-      }
+			@Override
+			public MatchesIterator getSubMatches() {
+				return null;
+			}
 
-      @Override
-      public Query getQuery() {
-        return matchingQueries[upto];
-      }
-    };
-  }
+			@Override
+			public Query getQuery() {
+				return matchingQueries[upto];
+			}
+		};
+	}
 
 }

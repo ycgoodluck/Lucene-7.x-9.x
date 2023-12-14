@@ -30,63 +30,63 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestSameTokenSamePosition extends LuceneTestCase {
 
-  /**
-   * Attempt to reproduce an assertion error that happens
-   * only with the trunk version around April 2011.
-   */
-  public void test() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter riw = new RandomIndexWriter(random(), dir);
-    Document doc = new Document();
-    doc.add(new TextField("eng", new BugReproTokenStream()));
-    riw.addDocument(doc);
-    riw.close();
-    dir.close();
-  }
-  
-  /**
-   * Same as the above, but with more docs
-   */
-  public void testMoreDocs() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter riw = new RandomIndexWriter(random(), dir);
-    for (int i = 0; i < 100; i++) {
-      Document doc = new Document();
-      doc.add(new TextField("eng", new BugReproTokenStream()));
-      riw.addDocument(doc);
-    }
-    riw.close();
-    dir.close();
-  }
+	/**
+	 * Attempt to reproduce an assertion error that happens
+	 * only with the trunk version around April 2011.
+	 */
+	public void test() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter riw = new RandomIndexWriter(random(), dir);
+		Document doc = new Document();
+		doc.add(new TextField("eng", new BugReproTokenStream()));
+		riw.addDocument(doc);
+		riw.close();
+		dir.close();
+	}
+
+	/**
+	 * Same as the above, but with more docs
+	 */
+	public void testMoreDocs() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter riw = new RandomIndexWriter(random(), dir);
+		for (int i = 0; i < 100; i++) {
+			Document doc = new Document();
+			doc.add(new TextField("eng", new BugReproTokenStream()));
+			riw.addDocument(doc);
+		}
+		riw.close();
+		dir.close();
+	}
 }
 
 final class BugReproTokenStream extends TokenStream {
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
-  private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
-  private static final int TOKEN_COUNT = 4;
-  private int nextTokenIndex = 0;
-  private final String terms[] = new String[]{"six", "six", "drunken", "drunken"};
-  private final int starts[] = new int[]{0, 0, 4, 4};
-  private final int ends[] = new int[]{3, 3, 11, 11};
-  private final int incs[] = new int[]{1, 0, 1, 0};
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
+	private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
+	private static final int TOKEN_COUNT = 4;
+	private int nextTokenIndex = 0;
+	private final String terms[] = new String[]{"six", "six", "drunken", "drunken"};
+	private final int starts[] = new int[]{0, 0, 4, 4};
+	private final int ends[] = new int[]{3, 3, 11, 11};
+	private final int incs[] = new int[]{1, 0, 1, 0};
 
-  @Override
-  public boolean incrementToken() {
-    if (nextTokenIndex < TOKEN_COUNT) {
-      termAtt.setEmpty().append(terms[nextTokenIndex]);
-      offsetAtt.setOffset(starts[nextTokenIndex], ends[nextTokenIndex]);
-      posIncAtt.setPositionIncrement(incs[nextTokenIndex]);
-      nextTokenIndex++;
-      return true;
-    } else {
-      return false;
-    }
-  }
+	@Override
+	public boolean incrementToken() {
+		if (nextTokenIndex < TOKEN_COUNT) {
+			termAtt.setEmpty().append(terms[nextTokenIndex]);
+			offsetAtt.setOffset(starts[nextTokenIndex], ends[nextTokenIndex]);
+			posIncAtt.setPositionIncrement(incs[nextTokenIndex]);
+			nextTokenIndex++;
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    this.nextTokenIndex = 0;
-  }
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		this.nextTokenIndex = 0;
+	}
 }

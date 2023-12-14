@@ -28,15 +28,18 @@ import org.apache.lucene.index.LeafReaderContext;
  */
 public abstract class SimpleFieldComparator<T> extends FieldComparator<T> implements LeafFieldComparator {
 
-  /** This method is called before collecting <code>context</code>. */
-  protected abstract void doSetNextReader(LeafReaderContext context) throws IOException;
+	/**
+	 * This method is called before collecting <code>context</code>.
+	 */
+	protected abstract void doSetNextReader(LeafReaderContext context) throws IOException;
 
-  @Override
-  public final LeafFieldComparator getLeafComparator(LeafReaderContext context) throws IOException {
-    doSetNextReader(context);
-    return this;
-  }
+	@Override
+	public final LeafFieldComparator getLeafComparator(LeafReaderContext context) throws IOException {
+		doSetNextReader(context);
+		return this;
+	}
 
-  @Override
-  public void setScorer(Scorer scorer) throws IOException {}
+	@Override
+	public void setScorer(Scorer scorer) throws IOException {
+	}
 }

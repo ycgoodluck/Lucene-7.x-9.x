@@ -25,32 +25,31 @@ import org.apache.lucene.index.RandomIndexWriter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.document.Document;
 
-/** Similarity unit test.
- *
- *
+/**
+ * Similarity unit test.
  */
 public class TestNot extends LuceneTestCase {
 
-  public void testNot() throws Exception {
-    Directory store = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(random(), store);
+	public void testNot() throws Exception {
+		Directory store = newDirectory();
+		RandomIndexWriter writer = new RandomIndexWriter(random(), store);
 
-    Document d1 = new Document();
-    d1.add(newTextField("field", "a b", Field.Store.YES));
+		Document d1 = new Document();
+		d1.add(newTextField("field", "a b", Field.Store.YES));
 
-    writer.addDocument(d1);
-    IndexReader reader = writer.getReader();
+		writer.addDocument(d1);
+		IndexReader reader = writer.getReader();
 
-    IndexSearcher searcher = newSearcher(reader);
+		IndexSearcher searcher = newSearcher(reader);
 
-    BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term("field", "b")), BooleanClause.Occur.MUST_NOT);
+		BooleanQuery.Builder query = new BooleanQuery.Builder();
+		query.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
+		query.add(new TermQuery(new Term("field", "b")), BooleanClause.Occur.MUST_NOT);
 
-    ScoreDoc[] hits = searcher.search(query.build(), 1000).scoreDocs;
-    assertEquals(0, hits.length);
-    writer.close();
-    reader.close();
-    store.close();
-  }
+		ScoreDoc[] hits = searcher.search(query.build(), 1000).scoreDocs;
+		assertEquals(0, hits.length);
+		writer.close();
+		reader.close();
+		store.close();
+	}
 }

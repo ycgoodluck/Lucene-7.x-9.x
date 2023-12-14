@@ -24,18 +24,19 @@ import org.apache.lucene.analysis.TokenStream;
  * <p>
  * This class moved to Lucene Core, but a reference in the {@code analysis/common} module
  * is preserved for documentation purposes and consistency with filter factory.
+ *
  * @see org.apache.lucene.analysis.LowerCaseFilter
  * @see LowerCaseFilterFactory
  */
 public final class LowerCaseFilter extends org.apache.lucene.analysis.LowerCaseFilter {
-  
-  /**
-   * Create a new LowerCaseFilter, that normalizes token text to lower case.
-   * 
-   * @param in TokenStream to filter
-   */
-  public LowerCaseFilter(TokenStream in) {
-    super(in);
-  }
-  
+
+	/**
+	 * Create a new LowerCaseFilter, that normalizes token text to lower case.
+	 *
+	 * @param in TokenStream to filter
+	 */
+	public LowerCaseFilter(TokenStream in) {
+		super(in);
+	}
+
 }

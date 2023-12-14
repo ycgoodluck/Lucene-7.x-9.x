@@ -22,15 +22,22 @@ import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.util.Bits;
 
-/** A producer of {@link Bits} per segment. */
+/**
+ * A producer of {@link Bits} per segment.
+ */
 public abstract class BitsProducer {
 
-  /** Sole constructor, typically invoked by sub-classes. */
-  protected BitsProducer() {}
+	/**
+	 * Sole constructor, typically invoked by sub-classes.
+	 */
+	protected BitsProducer() {
+	}
 
-  /** Return {@link Bits} for the given leaf. The returned instance must
-   *  be non-null and have a {@link Bits#length() length} equal to
-   *  {@link LeafReader#maxDoc() maxDoc}. */
-  public abstract Bits getBits(LeafReaderContext context) throws IOException;
+	/**
+	 * Return {@link Bits} for the given leaf. The returned instance must
+	 * be non-null and have a {@link Bits#length() length} equal to
+	 * {@link LeafReader#maxDoc() maxDoc}.
+	 */
+	public abstract Bits getBits(LeafReaderContext context) throws IOException;
 
 }

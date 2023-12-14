@@ -32,25 +32,25 @@ import java.util.Collection;
  *       collected.</li>
  * </ul>
  *
- * @see IndexSearcher#search(Query, CollectorManager)
  * @lucene.experimental
+ * @see IndexSearcher#search(Query, CollectorManager)
  */
 public interface CollectorManager<C extends Collector, T> {
-  
-  /**
-   * Return a new {@link Collector}. This must return a different instance on
-   * each call.
-   */
-  C newCollector() throws IOException;
 
-  /**
-   * Reduce the results of individual collectors into a meaningful result.
-   * For instance a {@link TopDocsCollector} would compute the
-   * {@link TopDocsCollector#topDocs() top docs} of each collector and then
-   * merge them using {@link TopDocs#merge(int, TopDocs[])}.
-   * This method must be called after collection is finished on all provided
-   * collectors.
-   */
-  T reduce(Collection<C> collectors) throws IOException;
-  
+	/**
+	 * Return a new {@link Collector}. This must return a different instance on
+	 * each call.
+	 */
+	C newCollector() throws IOException;
+
+	/**
+	 * Reduce the results of individual collectors into a meaningful result.
+	 * For instance a {@link TopDocsCollector} would compute the
+	 * {@link TopDocsCollector#topDocs() top docs} of each collector and then
+	 * merge them using {@link TopDocs#merge(int, TopDocs[])}.
+	 * This method must be called after collection is finished on all provided
+	 * collectors.
+	 */
+	T reduce(Collection<C> collectors) throws IOException;
+
 }

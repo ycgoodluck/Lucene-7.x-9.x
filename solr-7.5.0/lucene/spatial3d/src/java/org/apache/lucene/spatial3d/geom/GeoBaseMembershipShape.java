@@ -24,33 +24,37 @@ package org.apache.lucene.spatial3d.geom;
  */
 public abstract class GeoBaseMembershipShape extends GeoBaseShape implements GeoMembershipShape {
 
-  /** Constructor.
-   *@param planetModel is the planet model to use.
-   */
-  public GeoBaseMembershipShape(final PlanetModel planetModel) {
-    super(planetModel);
-  }
+	/**
+	 * Constructor.
+	 *
+	 * @param planetModel is the planet model to use.
+	 */
+	public GeoBaseMembershipShape(final PlanetModel planetModel) {
+		super(planetModel);
+	}
 
-  @Override
-  public boolean isWithin(Vector point) {
-    return isWithin(point.x, point.y, point.z);
-  }
+	@Override
+	public boolean isWithin(Vector point) {
+		return isWithin(point.x, point.y, point.z);
+	}
 
-  @Override
-  public double computeOutsideDistance(final DistanceStyle distanceStyle, final GeoPoint point) {
-    return computeOutsideDistance(distanceStyle, point.x, point.y, point.z);
-  }
+	@Override
+	public double computeOutsideDistance(final DistanceStyle distanceStyle, final GeoPoint point) {
+		return computeOutsideDistance(distanceStyle, point.x, point.y, point.z);
+	}
 
-  @Override
-  public double computeOutsideDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z) {
-    if (isWithin(x,y,z)) {
-      return 0.0;
-    }
-    return outsideDistance(distanceStyle, x,y,z);
-  }
+	@Override
+	public double computeOutsideDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z) {
+		if (isWithin(x, y, z)) {
+			return 0.0;
+		}
+		return outsideDistance(distanceStyle, x, y, z);
+	}
 
-  /** Called by a {@code computeOutsideDistance} method if X/Y/Z is not within this shape. */
-  protected abstract double outsideDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z);
+	/**
+	 * Called by a {@code computeOutsideDistance} method if X/Y/Z is not within this shape.
+	 */
+	protected abstract double outsideDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z);
 
 }
 

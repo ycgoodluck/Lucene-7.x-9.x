@@ -24,13 +24,13 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestTermStates extends LuceneTestCase {
 
-  public void testToStringOnNullTermState() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
-    w.addDocument(new Document());
-    IndexReader r = w.getReader();
-    TermStates states = TermStates.build(r.getContext(), new Term("foo", "bar"), random().nextBoolean());
-    assertEquals("TermStates\n  state=null\n", states.toString());
-    IOUtils.close(r, w, dir);
-  }
+	public void testToStringOnNullTermState() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+		w.addDocument(new Document());
+		IndexReader r = w.getReader();
+		TermStates states = TermStates.build(r.getContext(), new Term("foo", "bar"), random().nextBoolean());
+		assertEquals("TermStates\n  state=null\n", states.toString());
+		IOUtils.close(r, w, dir);
+	}
 }

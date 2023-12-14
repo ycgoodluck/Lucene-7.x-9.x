@@ -27,30 +27,30 @@ import org.apache.lucene.store.IOContext;
 import org.apache.lucene.util.Bits;
 
 class CrankyLiveDocsFormat extends LiveDocsFormat {
-  final LiveDocsFormat delegate;
-  final Random random;
-  
-  CrankyLiveDocsFormat(LiveDocsFormat delegate, Random random) {
-    this.delegate = delegate;
-    this.random = random;
-  }
+	final LiveDocsFormat delegate;
+	final Random random;
 
-  @Override
-  public Bits readLiveDocs(Directory dir, SegmentCommitInfo info, IOContext context) throws IOException {
-    return delegate.readLiveDocs(dir, info, context);
-  }
+	CrankyLiveDocsFormat(LiveDocsFormat delegate, Random random) {
+		this.delegate = delegate;
+		this.random = random;
+	}
 
-  @Override
-  public void writeLiveDocs(Bits bits, Directory dir, SegmentCommitInfo info, int newDelCount, IOContext context) throws IOException {
-    if (random.nextInt(100) == 0) {
-      throw new IOException("Fake IOException from LiveDocsFormat.writeLiveDocs()");
-    }
-    delegate.writeLiveDocs(bits, dir, info, newDelCount, context);
-  }
+	@Override
+	public Bits readLiveDocs(Directory dir, SegmentCommitInfo info, IOContext context) throws IOException {
+		return delegate.readLiveDocs(dir, info, context);
+	}
 
-  @Override
-  public void files(SegmentCommitInfo info, Collection<String> files) throws IOException {
-    // TODO: is this called only from write? if so we should throw exception!
-    delegate.files(info, files);
-  }
+	@Override
+	public void writeLiveDocs(Bits bits, Directory dir, SegmentCommitInfo info, int newDelCount, IOContext context) throws IOException {
+		if (random.nextInt(100) == 0) {
+			throw new IOException("Fake IOException from LiveDocsFormat.writeLiveDocs()");
+		}
+		delegate.writeLiveDocs(bits, dir, info, newDelCount, context);
+	}
+
+	@Override
+	public void files(SegmentCommitInfo info, Collection<String> files) throws IOException {
+		// TODO: is this called only from write? if so we should throw exception!
+		delegate.files(info, files);
+	}
 }

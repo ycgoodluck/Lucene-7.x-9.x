@@ -23,22 +23,24 @@ package org.apache.lucene.geo;
  */
 public class XYPolygon2D extends Polygon2D {
 
-  protected XYPolygon2D(XYPolygon polygon, Component2D holes) {
-    super(polygon.minX, polygon.maxX, polygon.minY, polygon.maxY, polygon.getPolyX(), polygon.getPolyY(), holes);
-  }
+	protected XYPolygon2D(XYPolygon polygon, Component2D holes) {
+		super(polygon.minX, polygon.maxX, polygon.minY, polygon.maxY, polygon.getPolyX(), polygon.getPolyY(), holes);
+	}
 
-  /** Builds a Polygon2D from multipolygon */
-  public static Component2D create(XYPolygon... polygons) {
-    XYPolygon2D components[] = new XYPolygon2D[polygons.length];
-    for (int i = 0; i < components.length; i++) {
-      XYPolygon gon = polygons[i];
-      XYPolygon gonHoles[] = gon.getHoles();
-      Component2D holes = null;
-      if (gonHoles.length > 0) {
-        holes = create(gonHoles);
-      }
-      components[i] = new XYPolygon2D(gon, holes);
-    }
-    return ComponentTree.create(components);
-  }
+	/**
+	 * Builds a Polygon2D from multipolygon
+	 */
+	public static Component2D create(XYPolygon... polygons) {
+		XYPolygon2D components[] = new XYPolygon2D[polygons.length];
+		for (int i = 0; i < components.length; i++) {
+			XYPolygon gon = polygons[i];
+			XYPolygon gonHoles[] = gon.getHoles();
+			Component2D holes = null;
+			if (gonHoles.length > 0) {
+				holes = create(gonHoles);
+			}
+			components[i] = new XYPolygon2D(gon, holes);
+		}
+		return ComponentTree.create(components);
+	}
 }

@@ -17,8 +17,10 @@
 
 package org.apache.lucene.luke.app.desktop.util.lang;
 
-/** Functional interface which provides sole method call() */
+/**
+ * Functional interface which provides sole method call()
+ */
 @FunctionalInterface
 public interface Callable {
-  void call();
+	void call();
 }

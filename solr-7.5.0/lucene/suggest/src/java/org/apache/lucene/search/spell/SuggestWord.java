@@ -22,26 +22,27 @@ package org.apache.lucene.search.spell;
  * <p>
  * Default sort is first by score, then by frequency.
  */
-public final class SuggestWord{
-  
-  /**
-   * Creates a new empty suggestion with null text.
-   */
-  public SuggestWord() {}
-  
-  /**
-   * the score of the word
-   */
-  public float score;
+public final class SuggestWord {
 
-  /**
-   * The freq of the word
-   */
-  public int freq;
+	/**
+	 * Creates a new empty suggestion with null text.
+	 */
+	public SuggestWord() {
+	}
 
-  /**
-   * the suggested word
-   */
-  public String string;
+	/**
+	 * the score of the word
+	 */
+	public float score;
+
+	/**
+	 * The freq of the word
+	 */
+	public int freq;
+
+	/**
+	 * the suggested word
+	 */
+	public String string;
 
 }

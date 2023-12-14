@@ -26,16 +26,17 @@ import org.apache.lucene.util.ThreadInterruptedException;
  */
 class SlowOpeningMockIndexInputWrapper extends MockIndexInputWrapper {
 
-  public SlowOpeningMockIndexInputWrapper(MockDirectoryWrapper dir,
-      String name, IndexInput delegate) throws IOException {
-    super(dir, name, delegate, null);
-    try {
-      Thread.sleep(50);
-    } catch (InterruptedException ie) {
-      try {
-        super.close();
-      } catch (Throwable ignore) {} // we didnt open successfully
-      throw new ThreadInterruptedException(ie);
-    }
-  }
+	public SlowOpeningMockIndexInputWrapper(MockDirectoryWrapper dir,
+																					String name, IndexInput delegate) throws IOException {
+		super(dir, name, delegate, null);
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException ie) {
+			try {
+				super.close();
+			} catch (Throwable ignore) {
+			} // we didnt open successfully
+			throw new ThreadInterruptedException(ie);
+		}
+	}
 }

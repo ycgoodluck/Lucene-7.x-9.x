@@ -18,38 +18,46 @@ package org.apache.lucene.util;
 
 import java.util.Comparator;
 
-/** Specialized {@link BytesRef} comparator that
+/**
+ * Specialized {@link BytesRef} comparator that
  * {@link FixedLengthBytesRefArray#iterator(Comparator)} has optimizations
  * for.
- * @lucene.internal */
+ *
+ * @lucene.internal
+ */
 public abstract class BytesRefComparator implements Comparator<BytesRef> {
 
-  final int comparedBytesCount;
+	final int comparedBytesCount;
 
-  /** Sole constructor.
-   * @param comparedBytesCount the maximum number of bytes to compare. */
-  protected BytesRefComparator(int comparedBytesCount) {
-    this.comparedBytesCount = comparedBytesCount;
-  }
+	/**
+	 * Sole constructor.
+	 *
+	 * @param comparedBytesCount the maximum number of bytes to compare.
+	 */
+	protected BytesRefComparator(int comparedBytesCount) {
+		this.comparedBytesCount = comparedBytesCount;
+	}
 
-  /** Return the unsigned byte to use for comparison at index {@code i}, or
-   * {@code -1} if all bytes that are useful for comparisons are exhausted.
-   * This may only be called with a value of {@code i} between {@code 0}
-   * included and {@code comparedBytesCount} excluded. */
-  protected abstract int byteAt(BytesRef ref, int i);
+	/**
+	 * Return the unsigned byte to use for comparison at index {@code i}, or
+	 * {@code -1} if all bytes that are useful for comparisons are exhausted.
+	 * This may only be called with a value of {@code i} between {@code 0}
+	 * included and {@code comparedBytesCount} excluded.
+	 */
+	protected abstract int byteAt(BytesRef ref, int i);
 
-  @Override
-  public int compare(BytesRef o1, BytesRef o2) {
-    for (int i = 0; i < comparedBytesCount; ++i) {
-      final int b1 = byteAt(o1, i);
-      final int b2 = byteAt(o2, i);
-      if (b1 != b2) {
-        return b1 - b2;
-      } else if (b1 == -1) {
-        break;
-      }
-    }
-    return 0;
-  }
+	@Override
+	public int compare(BytesRef o1, BytesRef o2) {
+		for (int i = 0; i < comparedBytesCount; ++i) {
+			final int b1 = byteAt(o1, i);
+			final int b2 = byteAt(o2, i);
+			if (b1 != b2) {
+				return b1 - b2;
+			} else if (b1 == -1) {
+				break;
+			}
+		}
+		return 0;
+	}
 
 }

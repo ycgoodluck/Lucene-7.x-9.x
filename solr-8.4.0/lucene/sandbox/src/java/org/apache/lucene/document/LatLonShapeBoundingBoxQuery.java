@@ -28,86 +28,92 @@ import org.apache.lucene.index.PointValues.Relation;
  * <p>The field must be indexed using
  * {@link org.apache.lucene.document.LatLonShape#createIndexableFields} added per document.
  *
- *  @lucene.experimental
+ * @lucene.experimental
  **/
 final class LatLonShapeBoundingBoxQuery extends ShapeQuery {
-  final Rectangle rectangle;
-  final Rectangle2D rectangle2D;
+	final Rectangle rectangle;
+	final Rectangle2D rectangle2D;
 
-  public LatLonShapeBoundingBoxQuery(String field, QueryRelation queryRelation, double minLat, double maxLat, double minLon, double maxLon) {
-    super(field, queryRelation);
-    this.rectangle = new Rectangle(minLat, maxLat, minLon, maxLon);
-    this.rectangle2D = Rectangle2D.create(this.rectangle);
-  }
+	public LatLonShapeBoundingBoxQuery(String field, QueryRelation queryRelation, double minLat, double maxLat, double minLon, double maxLon) {
+		super(field, queryRelation);
+		this.rectangle = new Rectangle(minLat, maxLat, minLon, maxLon);
+		this.rectangle2D = Rectangle2D.create(this.rectangle);
+	}
 
-  @Override
-  protected Relation relateRangeBBoxToQuery(int minXOffset, int minYOffset, byte[] minTriangle,
-                                            int maxXOffset, int maxYOffset, byte[] maxTriangle) {
-    if (queryRelation == QueryRelation.INTERSECTS || queryRelation == QueryRelation.DISJOINT) {
-      return rectangle2D.intersectRangeBBox(minXOffset, minYOffset, minTriangle, maxXOffset, maxYOffset, maxTriangle);
-    }
-    return rectangle2D.relateRangeBBox(minXOffset, minYOffset, minTriangle, maxXOffset, maxYOffset, maxTriangle);
-  }
+	@Override
+	protected Relation relateRangeBBoxToQuery(int minXOffset, int minYOffset, byte[] minTriangle,
+																						int maxXOffset, int maxYOffset, byte[] maxTriangle) {
+		if (queryRelation == QueryRelation.INTERSECTS || queryRelation == QueryRelation.DISJOINT) {
+			return rectangle2D.intersectRangeBBox(minXOffset, minYOffset, minTriangle, maxXOffset, maxYOffset, maxTriangle);
+		}
+		return rectangle2D.relateRangeBBox(minXOffset, minYOffset, minTriangle, maxXOffset, maxYOffset, maxTriangle);
+	}
 
-  /** returns true if the query matches the encoded triangle */
-  @Override
-  protected boolean queryMatches(byte[] t, ShapeField.DecodedTriangle scratchTriangle, QueryRelation queryRelation) {
-    // decode indexed triangle
-    ShapeField.decodeTriangle(t, scratchTriangle);
+	/**
+	 * returns true if the query matches the encoded triangle
+	 */
+	@Override
+	protected boolean queryMatches(byte[] t, ShapeField.DecodedTriangle scratchTriangle, QueryRelation queryRelation) {
+		// decode indexed triangle
+		ShapeField.decodeTriangle(t, scratchTriangle);
 
-    int aY = scratchTriangle.aY;
-    int aX = scratchTriangle.aX;
-    int bY = scratchTriangle.bY;
-    int bX = scratchTriangle.bX;
-    int cY = scratchTriangle.cY;
-    int cX = scratchTriangle.cX;
+		int aY = scratchTriangle.aY;
+		int aX = scratchTriangle.aX;
+		int bY = scratchTriangle.bY;
+		int bX = scratchTriangle.bX;
+		int cY = scratchTriangle.cY;
+		int cX = scratchTriangle.cX;
 
-    switch (queryRelation) {
-      case INTERSECTS: return rectangle2D.intersectsTriangle(aX, aY, bX, bY, cX, cY);
-      case WITHIN: return rectangle2D.containsTriangle(aX, aY, bX, bY, cX, cY);
-      case DISJOINT: return rectangle2D.intersectsTriangle(aX, aY, bX, bY, cX, cY) == false;
-      default: throw new IllegalArgumentException("Unsupported query type :[" + queryRelation + "]");
-    }
-  }
+		switch (queryRelation) {
+			case INTERSECTS:
+				return rectangle2D.intersectsTriangle(aX, aY, bX, bY, cX, cY);
+			case WITHIN:
+				return rectangle2D.containsTriangle(aX, aY, bX, bY, cX, cY);
+			case DISJOINT:
+				return rectangle2D.intersectsTriangle(aX, aY, bX, bY, cX, cY) == false;
+			default:
+				throw new IllegalArgumentException("Unsupported query type :[" + queryRelation + "]");
+		}
+	}
 
-  @Override
-  protected Component2D.WithinRelation queryWithin(byte[] t, ShapeField.DecodedTriangle scratchTriangle) {
-    // decode indexed triangle
-    ShapeField.decodeTriangle(t, scratchTriangle);
+	@Override
+	protected Component2D.WithinRelation queryWithin(byte[] t, ShapeField.DecodedTriangle scratchTriangle) {
+		// decode indexed triangle
+		ShapeField.decodeTriangle(t, scratchTriangle);
 
-    return rectangle2D.withinTriangle(scratchTriangle.aX, scratchTriangle.aY, scratchTriangle.ab,
-                                      scratchTriangle.bX, scratchTriangle.bY, scratchTriangle.bc,
-                                      scratchTriangle.cX, scratchTriangle.cY, scratchTriangle.ca);
-  }
+		return rectangle2D.withinTriangle(scratchTriangle.aX, scratchTriangle.aY, scratchTriangle.ab,
+			scratchTriangle.bX, scratchTriangle.bY, scratchTriangle.bc,
+			scratchTriangle.cX, scratchTriangle.cY, scratchTriangle.ca);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    return sameClassAs(o) && equalsTo(getClass().cast(o));
-  }
+	@Override
+	public boolean equals(Object o) {
+		return sameClassAs(o) && equalsTo(getClass().cast(o));
+	}
 
-  @Override
-  protected boolean equalsTo(Object o) {
-    return super.equalsTo(o) && rectangle.equals(((LatLonShapeBoundingBoxQuery)o).rectangle);
-  }
+	@Override
+	protected boolean equalsTo(Object o) {
+		return super.equalsTo(o) && rectangle.equals(((LatLonShapeBoundingBoxQuery) o).rectangle);
+	}
 
-  @Override
-  public int hashCode() {
-    int hash = super.hashCode();
-    hash = 31 * hash + rectangle.hashCode();
-    return hash;
-  }
+	@Override
+	public int hashCode() {
+		int hash = super.hashCode();
+		hash = 31 * hash + rectangle.hashCode();
+		return hash;
+	}
 
-  @Override
-  public String toString(String field) {
-    final StringBuilder sb = new StringBuilder();
-    sb.append(getClass().getSimpleName());
-    sb.append(':');
-    if (this.field.equals(field) == false) {
-      sb.append(" field=");
-      sb.append(this.field);
-      sb.append(':');
-    }
-    sb.append(rectangle.toString());
-    return sb.toString();
-  }
+	@Override
+	public String toString(String field) {
+		final StringBuilder sb = new StringBuilder();
+		sb.append(getClass().getSimpleName());
+		sb.append(':');
+		if (this.field.equals(field) == false) {
+			sb.append(" field=");
+			sb.append(this.field);
+			sb.append(':');
+		}
+		sb.append(rectangle.toString());
+		return sb.toString();
+	}
 }

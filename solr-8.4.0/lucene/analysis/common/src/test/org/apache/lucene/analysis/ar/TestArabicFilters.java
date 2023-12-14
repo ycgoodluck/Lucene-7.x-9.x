@@ -28,52 +28,54 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Arabic filter Factories are working.
  */
 public class TestArabicFilters extends BaseTokenStreamFactoryTestCase {
-  
-  /**
-   * Test ArabicNormalizationFilterFactory
-   */
-  public void testNormalizer() throws Exception {
-    Reader reader = new StringReader("الذين مَلكت أيمانكم");
-    Tokenizer tokenizer = whitespaceMockTokenizer(reader);
-    TokenStream stream = tokenFilterFactory("ArabicNormalization").create(tokenizer);
-    assertTokenStreamContents(stream, new String[] {"الذين", "ملكت", "ايمانكم"});
-  }
-  
-  /**
-   * Test ArabicStemFilterFactory
-   */
-  public void testStemmer() throws Exception {
-    Reader reader = new StringReader("الذين مَلكت أيمانكم");
-    Tokenizer tokenizer = whitespaceMockTokenizer(reader);
-    TokenStream stream = tokenFilterFactory("ArabicNormalization").create(tokenizer);
-    stream = tokenFilterFactory("ArabicStem").create(stream);
-    assertTokenStreamContents(stream, new String[] {"ذين", "ملكت", "ايمانكم"});
-  }
-  
-  /**
-   * Test PersianCharFilterFactory
-   */
-  public void testPersianCharFilter() throws Exception {
-    Reader reader = charFilterFactory("Persian").create(new StringReader("می‌خورد"));
-    Tokenizer tokenizer = whitespaceMockTokenizer(reader);
-    assertTokenStreamContents(tokenizer, new String[] { "می", "خورد" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {      
-      tokenFilterFactory("ArabicNormalization", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-    
-    expected = expectThrows(IllegalArgumentException.class, () -> {      
-      tokenFilterFactory("Arabicstem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-    
-    expected = expectThrows(IllegalArgumentException.class, () -> {      
-      charFilterFactory("Persian", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+
+	/**
+	 * Test ArabicNormalizationFilterFactory
+	 */
+	public void testNormalizer() throws Exception {
+		Reader reader = new StringReader("الذين مَلكت أيمانكم");
+		Tokenizer tokenizer = whitespaceMockTokenizer(reader);
+		TokenStream stream = tokenFilterFactory("ArabicNormalization").create(tokenizer);
+		assertTokenStreamContents(stream, new String[]{"الذين", "ملكت", "ايمانكم"});
+	}
+
+	/**
+	 * Test ArabicStemFilterFactory
+	 */
+	public void testStemmer() throws Exception {
+		Reader reader = new StringReader("الذين مَلكت أيمانكم");
+		Tokenizer tokenizer = whitespaceMockTokenizer(reader);
+		TokenStream stream = tokenFilterFactory("ArabicNormalization").create(tokenizer);
+		stream = tokenFilterFactory("ArabicStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"ذين", "ملكت", "ايمانكم"});
+	}
+
+	/**
+	 * Test PersianCharFilterFactory
+	 */
+	public void testPersianCharFilter() throws Exception {
+		Reader reader = charFilterFactory("Persian").create(new StringReader("می‌خورد"));
+		Tokenizer tokenizer = whitespaceMockTokenizer(reader);
+		assertTokenStreamContents(tokenizer, new String[]{"می", "خورد"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("ArabicNormalization", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("Arabicstem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			charFilterFactory("Persian", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

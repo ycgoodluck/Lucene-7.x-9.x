@@ -21,30 +21,31 @@ import java.text.BreakIterator;
 /**
  * A {@link BoundaryScanner} implementation that uses {@link BreakIterator} to find
  * boundaries in the text.
+ *
  * @see BreakIterator
  */
 public class BreakIteratorBoundaryScanner implements BoundaryScanner {
-  
-  final BreakIterator bi;
 
-  public BreakIteratorBoundaryScanner(BreakIterator bi){
-    this.bi = bi;
-  }
+	final BreakIterator bi;
 
-  @Override
-  public int findStartOffset(StringBuilder buffer, int start) {
-    // avoid illegal start offset
-    if( start > buffer.length() || start < 1 ) return start;
-    bi.setText(buffer.substring(0, start));
-    bi.last();
-    return bi.previous();
-  }
+	public BreakIteratorBoundaryScanner(BreakIterator bi) {
+		this.bi = bi;
+	}
 
-  @Override
-  public int findEndOffset(StringBuilder buffer, int start) {
-    // avoid illegal start offset
-    if( start > buffer.length() || start < 0 ) return start;
-    bi.setText(buffer.substring(start));
-    return bi.next() + start;
-  }
+	@Override
+	public int findStartOffset(StringBuilder buffer, int start) {
+		// avoid illegal start offset
+		if (start > buffer.length() || start < 1) return start;
+		bi.setText(buffer.substring(0, start));
+		bi.last();
+		return bi.previous();
+	}
+
+	@Override
+	public int findEndOffset(StringBuilder buffer, int start) {
+		// avoid illegal start offset
+		if (start > buffer.length() || start < 0) return start;
+		bi.setText(buffer.substring(start));
+		return bi.next() + start;
+	}
 }

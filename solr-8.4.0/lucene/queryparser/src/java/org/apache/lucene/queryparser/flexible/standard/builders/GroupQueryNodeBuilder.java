@@ -29,17 +29,17 @@ import org.apache.lucene.search.Query;
  */
 public class GroupQueryNodeBuilder implements StandardQueryBuilder {
 
-  public GroupQueryNodeBuilder() {
-    // empty constructor
-  }
+	public GroupQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public Query build(QueryNode queryNode) throws QueryNodeException {
-    GroupQueryNode groupNode = (GroupQueryNode) queryNode;
+	@Override
+	public Query build(QueryNode queryNode) throws QueryNodeException {
+		GroupQueryNode groupNode = (GroupQueryNode) queryNode;
 
-    return (Query) (groupNode).getChild().getTag(
-        QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+		return (Query) (groupNode).getChild().getTag(
+			QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
 
-  }
+	}
 
 }

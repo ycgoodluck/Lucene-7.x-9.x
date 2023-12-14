@@ -24,12 +24,12 @@ import java.util.Locale;
  */
 public interface Message {
 
-  public String getKey();
+	public String getKey();
 
-  public Object[] getArguments();
+	public Object[] getArguments();
 
-  public String getLocalizedMessage();
+	public String getLocalizedMessage();
 
-  public String getLocalizedMessage(Locale locale);
+	public String getLocalizedMessage(Locale locale);
 
 }

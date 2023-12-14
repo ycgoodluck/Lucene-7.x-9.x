@@ -29,74 +29,74 @@ import java.util.Collections;
 
 public class TestSegmentInfos extends LuceneTestCase {
 
-  public void testIllegalCreatedVersion() {
-    IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> new SegmentInfos(5));
-    assertEquals("indexCreatedVersionMajor must be >= 6, got: 5", e.getMessage());
-    e = expectThrows(IllegalArgumentException.class, () -> new SegmentInfos(8));
-    assertEquals("indexCreatedVersionMajor is in the future: 8", e.getMessage());
-  }
+	public void testIllegalCreatedVersion() {
+		IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> new SegmentInfos(5));
+		assertEquals("indexCreatedVersionMajor must be >= 6, got: 5", e.getMessage());
+		e = expectThrows(IllegalArgumentException.class, () -> new SegmentInfos(8));
+		assertEquals("indexCreatedVersionMajor is in the future: 8", e.getMessage());
+	}
 
-  // LUCENE-5954
-  public void testVersionsNoSegments() throws IOException {
-    SegmentInfos sis = new SegmentInfos(Version.LATEST.major);
-    BaseDirectoryWrapper dir = newDirectory();
-    dir.setCheckIndexOnClose(false);
-    sis.commit(dir);
-    sis = SegmentInfos.readLatestCommit(dir);
-    assertNull(sis.getMinSegmentLuceneVersion());
-    assertEquals(Version.LATEST, sis.getCommitLuceneVersion());
-    dir.close();
-  }
+	// LUCENE-5954
+	public void testVersionsNoSegments() throws IOException {
+		SegmentInfos sis = new SegmentInfos(Version.LATEST.major);
+		BaseDirectoryWrapper dir = newDirectory();
+		dir.setCheckIndexOnClose(false);
+		sis.commit(dir);
+		sis = SegmentInfos.readLatestCommit(dir);
+		assertNull(sis.getMinSegmentLuceneVersion());
+		assertEquals(Version.LATEST, sis.getCommitLuceneVersion());
+		dir.close();
+	}
 
-  // LUCENE-5954
-  public void testVersionsOneSegment() throws IOException {
-    BaseDirectoryWrapper dir = newDirectory();
-    dir.setCheckIndexOnClose(false);
-    byte id[] = StringHelper.randomId();
-    Codec codec = Codec.getDefault();
+	// LUCENE-5954
+	public void testVersionsOneSegment() throws IOException {
+		BaseDirectoryWrapper dir = newDirectory();
+		dir.setCheckIndexOnClose(false);
+		byte id[] = StringHelper.randomId();
+		Codec codec = Codec.getDefault();
 
-    SegmentInfos sis = new SegmentInfos(Version.LATEST.major);
-    SegmentInfo info = new SegmentInfo(dir, Version.LUCENE_7_0_0, Version.LUCENE_7_0_0, "_0", 1, false, Codec.getDefault(), 
-                                       Collections.<String,String>emptyMap(), id, Collections.<String,String>emptyMap(), null);
-    info.setFiles(Collections.<String>emptySet());
-    codec.segmentInfoFormat().write(dir, info, IOContext.DEFAULT);
-    SegmentCommitInfo commitInfo = new SegmentCommitInfo(info, 0, 0, -1, -1, -1);
+		SegmentInfos sis = new SegmentInfos(Version.LATEST.major);
+		SegmentInfo info = new SegmentInfo(dir, Version.LUCENE_7_0_0, Version.LUCENE_7_0_0, "_0", 1, false, Codec.getDefault(),
+			Collections.<String, String>emptyMap(), id, Collections.<String, String>emptyMap(), null);
+		info.setFiles(Collections.<String>emptySet());
+		codec.segmentInfoFormat().write(dir, info, IOContext.DEFAULT);
+		SegmentCommitInfo commitInfo = new SegmentCommitInfo(info, 0, 0, -1, -1, -1);
 
-    sis.add(commitInfo);
-    sis.commit(dir);
-    sis = SegmentInfos.readLatestCommit(dir);
-    assertEquals(Version.LUCENE_7_0_0, sis.getMinSegmentLuceneVersion());
-    assertEquals(Version.LATEST, sis.getCommitLuceneVersion());
-    dir.close();
-  }
+		sis.add(commitInfo);
+		sis.commit(dir);
+		sis = SegmentInfos.readLatestCommit(dir);
+		assertEquals(Version.LUCENE_7_0_0, sis.getMinSegmentLuceneVersion());
+		assertEquals(Version.LATEST, sis.getCommitLuceneVersion());
+		dir.close();
+	}
 
-  // LUCENE-5954
-  public void testVersionsTwoSegments() throws IOException {
-    BaseDirectoryWrapper dir = newDirectory();
-    dir.setCheckIndexOnClose(false);
-    byte id[] = StringHelper.randomId();
-    Codec codec = Codec.getDefault();
+	// LUCENE-5954
+	public void testVersionsTwoSegments() throws IOException {
+		BaseDirectoryWrapper dir = newDirectory();
+		dir.setCheckIndexOnClose(false);
+		byte id[] = StringHelper.randomId();
+		Codec codec = Codec.getDefault();
 
-    SegmentInfos sis = new SegmentInfos(Version.LATEST.major);
-    SegmentInfo info = new SegmentInfo(dir, Version.LUCENE_7_0_0, Version.LUCENE_7_0_0, "_0", 1, false, Codec.getDefault(), 
-                                       Collections.<String,String>emptyMap(), id, Collections.<String,String>emptyMap(), null);
-    info.setFiles(Collections.<String>emptySet());
-    codec.segmentInfoFormat().write(dir, info, IOContext.DEFAULT);
-    SegmentCommitInfo commitInfo = new SegmentCommitInfo(info, 0, 0, -1, -1, -1);
-    sis.add(commitInfo);
+		SegmentInfos sis = new SegmentInfos(Version.LATEST.major);
+		SegmentInfo info = new SegmentInfo(dir, Version.LUCENE_7_0_0, Version.LUCENE_7_0_0, "_0", 1, false, Codec.getDefault(),
+			Collections.<String, String>emptyMap(), id, Collections.<String, String>emptyMap(), null);
+		info.setFiles(Collections.<String>emptySet());
+		codec.segmentInfoFormat().write(dir, info, IOContext.DEFAULT);
+		SegmentCommitInfo commitInfo = new SegmentCommitInfo(info, 0, 0, -1, -1, -1);
+		sis.add(commitInfo);
 
-    info = new SegmentInfo(dir, Version.LUCENE_7_0_0, Version.LUCENE_7_0_0, "_1", 1, false, Codec.getDefault(), 
-                           Collections.<String,String>emptyMap(), id, Collections.<String,String>emptyMap(), null);
-    info.setFiles(Collections.<String>emptySet());
-    codec.segmentInfoFormat().write(dir, info, IOContext.DEFAULT);
-    commitInfo = new SegmentCommitInfo(info, 0, 0,-1, -1, -1);
-    sis.add(commitInfo);
+		info = new SegmentInfo(dir, Version.LUCENE_7_0_0, Version.LUCENE_7_0_0, "_1", 1, false, Codec.getDefault(),
+			Collections.<String, String>emptyMap(), id, Collections.<String, String>emptyMap(), null);
+		info.setFiles(Collections.<String>emptySet());
+		codec.segmentInfoFormat().write(dir, info, IOContext.DEFAULT);
+		commitInfo = new SegmentCommitInfo(info, 0, 0, -1, -1, -1);
+		sis.add(commitInfo);
 
-    sis.commit(dir);
-    sis = SegmentInfos.readLatestCommit(dir);
-    assertEquals(Version.LUCENE_7_0_0, sis.getMinSegmentLuceneVersion());
-    assertEquals(Version.LATEST, sis.getCommitLuceneVersion());
-    dir.close();
-  }
+		sis.commit(dir);
+		sis = SegmentInfos.readLatestCommit(dir);
+		assertEquals(Version.LUCENE_7_0_0, sis.getMinSegmentLuceneVersion());
+		assertEquals(Version.LATEST, sis.getCommitLuceneVersion());
+		dir.close();
+	}
 }
 

@@ -50,92 +50,91 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  *  &lt;/analyzer&gt;
  * &lt;/fieldtype&gt;
  * </pre>
- * 
  */
 public final class HyphenatedWordsFilter extends TokenFilter {
 
-  private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
-  private final OffsetAttribute offsetAttribute = addAttribute(OffsetAttribute.class);
-  
-  private final StringBuilder hyphenated = new StringBuilder();
-  private State savedState;
-  private boolean exhausted = false;
-  private int lastEndOffset = 0;
+	private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
+	private final OffsetAttribute offsetAttribute = addAttribute(OffsetAttribute.class);
 
-  /**
-   * Creates a new HyphenatedWordsFilter
-   *
-   * @param in TokenStream that will be filtered
-   */
-  public HyphenatedWordsFilter(TokenStream in) {
-    super(in);
-  }
+	private final StringBuilder hyphenated = new StringBuilder();
+	private State savedState;
+	private boolean exhausted = false;
+	private int lastEndOffset = 0;
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    while (!exhausted && input.incrementToken()) {
-      char[] term = termAttribute.buffer();
-      int termLength = termAttribute.length();
-      lastEndOffset = offsetAttribute.endOffset();
-      
-      if (termLength > 0 && term[termLength - 1] == '-') {
-        // a hyphenated word
-        // capture the state of the first token only
-        if (savedState == null) {
-          savedState = captureState();
-        }
-        hyphenated.append(term, 0, termLength - 1);
-      } else if (savedState == null) {
-        // not part of a hyphenated word.
-        return true;
-      } else {
-        // the final portion of a hyphenated word
-        hyphenated.append(term, 0, termLength);
-        unhyphenate();
-        return true;
-      }
-    }
-    
-    exhausted = true;
+	/**
+	 * Creates a new HyphenatedWordsFilter
+	 *
+	 * @param in TokenStream that will be filtered
+	 */
+	public HyphenatedWordsFilter(TokenStream in) {
+		super(in);
+	}
 
-    if (savedState != null) {
-      // the final term ends with a hyphen
-      // add back the hyphen, for backwards compatibility.
-      hyphenated.append('-');
-      unhyphenate();
-      return true;
-    }
-    
-    return false;
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		while (!exhausted && input.incrementToken()) {
+			char[] term = termAttribute.buffer();
+			int termLength = termAttribute.length();
+			lastEndOffset = offsetAttribute.endOffset();
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    hyphenated.setLength(0);
-    savedState = null;
-    exhausted = false;
-    lastEndOffset = 0;
-  }
+			if (termLength > 0 && term[termLength - 1] == '-') {
+				// a hyphenated word
+				// capture the state of the first token only
+				if (savedState == null) {
+					savedState = captureState();
+				}
+				hyphenated.append(term, 0, termLength - 1);
+			} else if (savedState == null) {
+				// not part of a hyphenated word.
+				return true;
+			} else {
+				// the final portion of a hyphenated word
+				hyphenated.append(term, 0, termLength);
+				unhyphenate();
+				return true;
+			}
+		}
 
-  // ================================================= Helper Methods ================================================
+		exhausted = true;
 
-  /**
-   * Writes the joined unhyphenated term
-   */
-  private void unhyphenate() {
-    restoreState(savedState);
-    savedState = null;
-    
-    char term[] = termAttribute.buffer();
-    int length = hyphenated.length();
-    if (length > termAttribute.length()) {
-      term = termAttribute.resizeBuffer(length);
-    }
-    
-    hyphenated.getChars(0, length, term, 0);
-    termAttribute.setLength(length);
-    offsetAttribute.setOffset(offsetAttribute.startOffset(), lastEndOffset);
-    hyphenated.setLength(0);
-  }
+		if (savedState != null) {
+			// the final term ends with a hyphen
+			// add back the hyphen, for backwards compatibility.
+			hyphenated.append('-');
+			unhyphenate();
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		hyphenated.setLength(0);
+		savedState = null;
+		exhausted = false;
+		lastEndOffset = 0;
+	}
+
+	// ================================================= Helper Methods ================================================
+
+	/**
+	 * Writes the joined unhyphenated term
+	 */
+	private void unhyphenate() {
+		restoreState(savedState);
+		savedState = null;
+
+		char term[] = termAttribute.buffer();
+		int length = hyphenated.length();
+		if (length > termAttribute.length()) {
+			term = termAttribute.resizeBuffer(length);
+		}
+
+		hyphenated.getChars(0, length, term, 0);
+		termAttribute.setLength(length);
+		offsetAttribute.setOffset(offsetAttribute.startOffset(), lastEndOffset);
+		hyphenated.setLength(0);
+	}
 }

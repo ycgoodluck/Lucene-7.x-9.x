@@ -19,19 +19,19 @@ package org.apache.lucene.util;
 import org.apache.lucene.search.BooleanQuery;
 
 /**
- * Prepares and restores {@link LuceneTestCase} at instance level 
+ * Prepares and restores {@link LuceneTestCase} at instance level
  * (fine grained junk that doesn't fit anywhere else).
  */
 final class TestRuleSetupAndRestoreInstanceEnv extends AbstractBeforeAfterRule {
-  private int savedBoolMaxClauseCount;
+	private int savedBoolMaxClauseCount;
 
-  @Override
-  protected void before() {
-    savedBoolMaxClauseCount = BooleanQuery.getMaxClauseCount();
-  }
+	@Override
+	protected void before() {
+		savedBoolMaxClauseCount = BooleanQuery.getMaxClauseCount();
+	}
 
-  @Override
-  protected void after() {
-    BooleanQuery.setMaxClauseCount(savedBoolMaxClauseCount);
-  }
+	@Override
+	protected void after() {
+		BooleanQuery.setMaxClauseCount(savedBoolMaxClauseCount);
+	}
 }

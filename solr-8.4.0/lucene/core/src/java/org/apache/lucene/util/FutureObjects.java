@@ -28,43 +28,48 @@ package org.apache.lucene.util;
  * refer to the Lucene implementations, but the final Lucene
  * JAR files will use the native Java 9 class names when executed
  * with Java 9.
+ *
  * @lucene.internal
  */
 public final class FutureObjects {
-  
-  private FutureObjects() {} // no instance
 
-  /**
-   * Behaves like Java 9's Objects.checkIndex
-   * @see <a href="http://download.java.net/java/jdk9/docs/api/java/util/Objects.html#checkIndex-int-int-">Objects.checkIndex</a>
-   */
-  public static int checkIndex(int index, int length) {
-    if (index < 0 || index >= length) {
-      throw new IndexOutOfBoundsException("Index " + index + " out-of-bounds for length " + length);
-    }
-    return index;
-  }
-  
-  /**
-   * Behaves like Java 9's Objects.checkFromToIndex
-   * @see <a href="http://download.java.net/java/jdk9/docs/api/java/util/Objects.html#checkFromToIndex-int-int-int-">Objects.checkFromToIndex</a>
-   */
-  public static int checkFromToIndex(int fromIndex, int toIndex, int length) {
-    if (fromIndex < 0 || fromIndex > toIndex || toIndex > length) {
-      throw new IndexOutOfBoundsException("Range [" + fromIndex + ", " + toIndex + ") out-of-bounds for length " + length);
-    }
-    return fromIndex;
-  }
-  
-  /**
-   * Behaves like Java 9's Objects.checkFromIndexSize
-   * @see <a href="http://download.java.net/java/jdk9/docs/api/java/util/Objects.html#checkFromIndexSize-int-int-int-">Objects.checkFromIndexSize</a>
-   */
-  public static int checkFromIndexSize(int fromIndex, int size, int length) {
-    int end = fromIndex + size;
-    if (fromIndex < 0 || fromIndex > end || end > length) {
-      throw new IndexOutOfBoundsException("Range [" + fromIndex + ", " + fromIndex + " + " + size + ") out-of-bounds for length " + length);
-    }
-    return fromIndex;
-  }
+	private FutureObjects() {
+	} // no instance
+
+	/**
+	 * Behaves like Java 9's Objects.checkIndex
+	 *
+	 * @see <a href="http://download.java.net/java/jdk9/docs/api/java/util/Objects.html#checkIndex-int-int-">Objects.checkIndex</a>
+	 */
+	public static int checkIndex(int index, int length) {
+		if (index < 0 || index >= length) {
+			throw new IndexOutOfBoundsException("Index " + index + " out-of-bounds for length " + length);
+		}
+		return index;
+	}
+
+	/**
+	 * Behaves like Java 9's Objects.checkFromToIndex
+	 *
+	 * @see <a href="http://download.java.net/java/jdk9/docs/api/java/util/Objects.html#checkFromToIndex-int-int-int-">Objects.checkFromToIndex</a>
+	 */
+	public static int checkFromToIndex(int fromIndex, int toIndex, int length) {
+		if (fromIndex < 0 || fromIndex > toIndex || toIndex > length) {
+			throw new IndexOutOfBoundsException("Range [" + fromIndex + ", " + toIndex + ") out-of-bounds for length " + length);
+		}
+		return fromIndex;
+	}
+
+	/**
+	 * Behaves like Java 9's Objects.checkFromIndexSize
+	 *
+	 * @see <a href="http://download.java.net/java/jdk9/docs/api/java/util/Objects.html#checkFromIndexSize-int-int-int-">Objects.checkFromIndexSize</a>
+	 */
+	public static int checkFromIndexSize(int fromIndex, int size, int length) {
+		int end = fromIndex + size;
+		if (fromIndex < 0 || fromIndex > end || end > length) {
+			throw new IndexOutOfBoundsException("Range [" + fromIndex + ", " + fromIndex + " + " + size + ") out-of-bounds for length " + length);
+		}
+		return fromIndex;
+	}
 }

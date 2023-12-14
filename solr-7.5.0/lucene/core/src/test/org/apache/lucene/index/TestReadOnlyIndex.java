@@ -39,66 +39,66 @@ import org.junit.BeforeClass;
 
 public class TestReadOnlyIndex extends LuceneTestCase {
 
-  private static final String longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
-  private static final String text = "This is the text to be indexed. " + longTerm;
+	private static final String longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
+	private static final String text = "This is the text to be indexed. " + longTerm;
 
-  private static Path indexPath;  
+	private static Path indexPath;
 
-  @BeforeClass
-  public static void buildIndex() throws Exception {
-    indexPath = Files.createTempDirectory("readonlyindex").toAbsolutePath();
-    
-    // borrows from TestDemo, but not important to keep in sync with demo
-    Analyzer analyzer = new MockAnalyzer(random());
-    Directory directory = newFSDirectory(indexPath);
-    RandomIndexWriter iwriter = new RandomIndexWriter(random(), directory, analyzer);
-    Document doc = new Document();
-    doc.add(newTextField("fieldname", text, Field.Store.YES));
-    iwriter.addDocument(doc);
-    iwriter.close();
-    directory.close();
-    analyzer.close();
-  }
-  
-  @AfterClass
-  public static void afterClass() throws Exception {
-    indexPath = null;
-  }
-  
-  public void testReadOnlyIndex() throws Exception {
-    runWithRestrictedPermissions(this::doTestReadOnlyIndex,
-        // add some basic permissions (because we are limited already - so we grant all important ones):
-        new RuntimePermission("*"),
-        new PropertyPermission("*", "read"),
-        // only allow read to the given index dir, nothing else:
-        new FilePermission(indexPath.toString(), "read"),
-        new FilePermission(indexPath.resolve("-").toString(), "read")
-    );
-  }
-  
-  private Void doTestReadOnlyIndex() throws Exception {
-    Directory dir = FSDirectory.open(indexPath); 
-    IndexReader ireader = DirectoryReader.open(dir); 
-    IndexSearcher isearcher = newSearcher(ireader);
-    
-    // borrows from TestDemo, but not important to keep in sync with demo
+	@BeforeClass
+	public static void buildIndex() throws Exception {
+		indexPath = Files.createTempDirectory("readonlyindex").toAbsolutePath();
 
-    assertEquals(1, isearcher.search(new TermQuery(new Term("fieldname", longTerm)), 1).totalHits);
-    Query query = new TermQuery(new Term("fieldname", "text"));
-    TopDocs hits = isearcher.search(query, 1);
-    assertEquals(1, hits.totalHits);
-    // Iterate through the results:
-    for (int i = 0; i < hits.scoreDocs.length; i++) {
-      Document hitDoc = isearcher.doc(hits.scoreDocs[i].doc);
-      assertEquals(text, hitDoc.get("fieldname"));
-    }
+		// borrows from TestDemo, but not important to keep in sync with demo
+		Analyzer analyzer = new MockAnalyzer(random());
+		Directory directory = newFSDirectory(indexPath);
+		RandomIndexWriter iwriter = new RandomIndexWriter(random(), directory, analyzer);
+		Document doc = new Document();
+		doc.add(newTextField("fieldname", text, Field.Store.YES));
+		iwriter.addDocument(doc);
+		iwriter.close();
+		directory.close();
+		analyzer.close();
+	}
 
-    // Test simple phrase query
-    PhraseQuery phraseQuery = new PhraseQuery("fieldname", "to", "be");
-    assertEquals(1, isearcher.search(phraseQuery, 1).totalHits);
+	@AfterClass
+	public static void afterClass() throws Exception {
+		indexPath = null;
+	}
 
-    ireader.close();
-    return null; // void
-  }
-  
+	public void testReadOnlyIndex() throws Exception {
+		runWithRestrictedPermissions(this::doTestReadOnlyIndex,
+			// add some basic permissions (because we are limited already - so we grant all important ones):
+			new RuntimePermission("*"),
+			new PropertyPermission("*", "read"),
+			// only allow read to the given index dir, nothing else:
+			new FilePermission(indexPath.toString(), "read"),
+			new FilePermission(indexPath.resolve("-").toString(), "read")
+		);
+	}
+
+	private Void doTestReadOnlyIndex() throws Exception {
+		Directory dir = FSDirectory.open(indexPath);
+		IndexReader ireader = DirectoryReader.open(dir);
+		IndexSearcher isearcher = newSearcher(ireader);
+
+		// borrows from TestDemo, but not important to keep in sync with demo
+
+		assertEquals(1, isearcher.search(new TermQuery(new Term("fieldname", longTerm)), 1).totalHits);
+		Query query = new TermQuery(new Term("fieldname", "text"));
+		TopDocs hits = isearcher.search(query, 1);
+		assertEquals(1, hits.totalHits);
+		// Iterate through the results:
+		for (int i = 0; i < hits.scoreDocs.length; i++) {
+			Document hitDoc = isearcher.doc(hits.scoreDocs[i].doc);
+			assertEquals(text, hitDoc.get("fieldname"));
+		}
+
+		// Test simple phrase query
+		PhraseQuery phraseQuery = new PhraseQuery("fieldname", "to", "be");
+		assertEquals(1, isearcher.search(phraseQuery, 1).totalHits);
+
+		ireader.close();
+		return null; // void
+	}
+
 }

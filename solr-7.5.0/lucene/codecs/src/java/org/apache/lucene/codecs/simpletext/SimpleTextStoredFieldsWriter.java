@@ -35,150 +35,151 @@ import org.apache.lucene.util.IOUtils;
  * Writes plain-text stored fields.
  * <p>
  * <b>FOR RECREATIONAL USE ONLY</b>
+ *
  * @lucene.experimental
  */
 public class SimpleTextStoredFieldsWriter extends StoredFieldsWriter {
-  private int numDocsWritten = 0;
-  private final Directory directory;
-  private final String segment;
-  private IndexOutput out;
-  
-  final static String FIELDS_EXTENSION = "fld";
-  
-  final static BytesRef TYPE_STRING = new BytesRef("string");
-  final static BytesRef TYPE_BINARY = new BytesRef("binary");
-  final static BytesRef TYPE_INT    = new BytesRef("int");
-  final static BytesRef TYPE_LONG   = new BytesRef("long");
-  final static BytesRef TYPE_FLOAT  = new BytesRef("float");
-  final static BytesRef TYPE_DOUBLE = new BytesRef("double");
+	private int numDocsWritten = 0;
+	private final Directory directory;
+	private final String segment;
+	private IndexOutput out;
 
-  final static BytesRef END      = new BytesRef("END");
-  final static BytesRef DOC      = new BytesRef("doc ");
-  final static BytesRef FIELD    = new BytesRef("  field ");
-  final static BytesRef NAME     = new BytesRef("    name ");
-  final static BytesRef TYPE     = new BytesRef("    type ");
-  final static BytesRef VALUE    = new BytesRef("    value ");
-  
-  private final BytesRefBuilder scratch = new BytesRefBuilder();
-  
-  public SimpleTextStoredFieldsWriter(Directory directory, String segment, IOContext context) throws IOException {
-    this.directory = directory;
-    this.segment = segment;
-    boolean success = false;
-    try {
-      out = directory.createOutput(IndexFileNames.segmentFileName(segment, "", FIELDS_EXTENSION), context);
-      success = true;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(this);
-      }
-    }
-  }
+	final static String FIELDS_EXTENSION = "fld";
 
-  @Override
-  public void startDocument() throws IOException {
-    write(DOC);
-    write(Integer.toString(numDocsWritten));
-    newLine();
-    
-    numDocsWritten++;
-  }
+	final static BytesRef TYPE_STRING = new BytesRef("string");
+	final static BytesRef TYPE_BINARY = new BytesRef("binary");
+	final static BytesRef TYPE_INT = new BytesRef("int");
+	final static BytesRef TYPE_LONG = new BytesRef("long");
+	final static BytesRef TYPE_FLOAT = new BytesRef("float");
+	final static BytesRef TYPE_DOUBLE = new BytesRef("double");
 
-  @Override
-  public void writeField(FieldInfo info, IndexableField field) throws IOException {
-    write(FIELD);
-    write(Integer.toString(info.number));
-    newLine();
-    
-    write(NAME);
-    write(field.name());
-    newLine();
-    
-    write(TYPE);
-    final Number n = field.numericValue();
+	final static BytesRef END = new BytesRef("END");
+	final static BytesRef DOC = new BytesRef("doc ");
+	final static BytesRef FIELD = new BytesRef("  field ");
+	final static BytesRef NAME = new BytesRef("    name ");
+	final static BytesRef TYPE = new BytesRef("    type ");
+	final static BytesRef VALUE = new BytesRef("    value ");
 
-    if (n != null) {
-      if (n instanceof Byte || n instanceof Short || n instanceof Integer) {
-        write(TYPE_INT);
-        newLine();
-          
-        write(VALUE);
-        write(Integer.toString(n.intValue()));
-        newLine();
-      } else if (n instanceof Long) {
-        write(TYPE_LONG);
-        newLine();
+	private final BytesRefBuilder scratch = new BytesRefBuilder();
 
-        write(VALUE);
-        write(Long.toString(n.longValue()));
-        newLine();
-      } else if (n instanceof Float) {
-        write(TYPE_FLOAT);
-        newLine();
-          
-        write(VALUE);
-        write(Float.toString(n.floatValue()));
-        newLine();
-      } else if (n instanceof Double) {
-        write(TYPE_DOUBLE);
-        newLine();
-          
-        write(VALUE);
-        write(Double.toString(n.doubleValue()));
-        newLine();
-      } else {
-        throw new IllegalArgumentException("cannot store numeric type " + n.getClass());
-      }
-    } else { 
-      BytesRef bytes = field.binaryValue();
-      if (bytes != null) {
-        write(TYPE_BINARY);
-        newLine();
-        
-        write(VALUE);
-        write(bytes);
-        newLine();
-      } else if (field.stringValue() == null) {
-        throw new IllegalArgumentException("field " + field.name() + " is stored but does not have binaryValue, stringValue nor numericValue");
-      } else {
-        write(TYPE_STRING);
-        newLine();
-        write(VALUE);
-        write(field.stringValue());
-        newLine();
-      }
-    }
-  }
+	public SimpleTextStoredFieldsWriter(Directory directory, String segment, IOContext context) throws IOException {
+		this.directory = directory;
+		this.segment = segment;
+		boolean success = false;
+		try {
+			out = directory.createOutput(IndexFileNames.segmentFileName(segment, "", FIELDS_EXTENSION), context);
+			success = true;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(this);
+			}
+		}
+	}
 
-  @Override
-  public void finish(FieldInfos fis, int numDocs) throws IOException {
-    if (numDocsWritten != numDocs) {
-      throw new RuntimeException("mergeFields produced an invalid result: docCount is " + numDocs 
-          + " but only saw " + numDocsWritten + " file=" + out.toString() + "; now aborting this merge to prevent index corruption");
-    }
-    write(END);
-    newLine();
-    SimpleTextUtil.writeChecksum(out, scratch);
-  }
+	@Override
+	public void startDocument() throws IOException {
+		write(DOC);
+		write(Integer.toString(numDocsWritten));
+		newLine();
 
-  @Override
-  public void close() throws IOException {
-    try {
-      IOUtils.close(out);
-    } finally {
-      out = null;
-    }
-  }
-  
-  private void write(String s) throws IOException {
-    SimpleTextUtil.write(out, s, scratch);
-  }
-  
-  private void write(BytesRef bytes) throws IOException {
-    SimpleTextUtil.write(out, bytes);
-  }
-  
-  private void newLine() throws IOException {
-    SimpleTextUtil.writeNewline(out);
-  }
+		numDocsWritten++;
+	}
+
+	@Override
+	public void writeField(FieldInfo info, IndexableField field) throws IOException {
+		write(FIELD);
+		write(Integer.toString(info.number));
+		newLine();
+
+		write(NAME);
+		write(field.name());
+		newLine();
+
+		write(TYPE);
+		final Number n = field.numericValue();
+
+		if (n != null) {
+			if (n instanceof Byte || n instanceof Short || n instanceof Integer) {
+				write(TYPE_INT);
+				newLine();
+
+				write(VALUE);
+				write(Integer.toString(n.intValue()));
+				newLine();
+			} else if (n instanceof Long) {
+				write(TYPE_LONG);
+				newLine();
+
+				write(VALUE);
+				write(Long.toString(n.longValue()));
+				newLine();
+			} else if (n instanceof Float) {
+				write(TYPE_FLOAT);
+				newLine();
+
+				write(VALUE);
+				write(Float.toString(n.floatValue()));
+				newLine();
+			} else if (n instanceof Double) {
+				write(TYPE_DOUBLE);
+				newLine();
+
+				write(VALUE);
+				write(Double.toString(n.doubleValue()));
+				newLine();
+			} else {
+				throw new IllegalArgumentException("cannot store numeric type " + n.getClass());
+			}
+		} else {
+			BytesRef bytes = field.binaryValue();
+			if (bytes != null) {
+				write(TYPE_BINARY);
+				newLine();
+
+				write(VALUE);
+				write(bytes);
+				newLine();
+			} else if (field.stringValue() == null) {
+				throw new IllegalArgumentException("field " + field.name() + " is stored but does not have binaryValue, stringValue nor numericValue");
+			} else {
+				write(TYPE_STRING);
+				newLine();
+				write(VALUE);
+				write(field.stringValue());
+				newLine();
+			}
+		}
+	}
+
+	@Override
+	public void finish(FieldInfos fis, int numDocs) throws IOException {
+		if (numDocsWritten != numDocs) {
+			throw new RuntimeException("mergeFields produced an invalid result: docCount is " + numDocs
+				+ " but only saw " + numDocsWritten + " file=" + out.toString() + "; now aborting this merge to prevent index corruption");
+		}
+		write(END);
+		newLine();
+		SimpleTextUtil.writeChecksum(out, scratch);
+	}
+
+	@Override
+	public void close() throws IOException {
+		try {
+			IOUtils.close(out);
+		} finally {
+			out = null;
+		}
+	}
+
+	private void write(String s) throws IOException {
+		SimpleTextUtil.write(out, s, scratch);
+	}
+
+	private void write(BytesRef bytes) throws IOException {
+		SimpleTextUtil.write(out, bytes);
+	}
+
+	private void newLine() throws IOException {
+		SimpleTextUtil.writeNewline(out);
+	}
 }

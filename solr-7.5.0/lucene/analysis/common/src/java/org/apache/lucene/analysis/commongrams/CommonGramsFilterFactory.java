@@ -39,50 +39,52 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class CommonGramsFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
-  // TODO: shared base class for Stop/Keep/CommonGrams? 
-  private CharArraySet commonWords;
-  private final String commonWordFiles;
-  private final String format;
-  private final boolean ignoreCase;
-  
-  /** Creates a new CommonGramsFilterFactory */
-  public CommonGramsFilterFactory(Map<String,String> args) {
-    super(args);
-    commonWordFiles = get(args, "words");
-    format = get(args, "format");
-    ignoreCase = getBoolean(args, "ignoreCase", false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	// TODO: shared base class for Stop/Keep/CommonGrams?
+	private CharArraySet commonWords;
+	private final String commonWordFiles;
+	private final String format;
+	private final boolean ignoreCase;
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    if (commonWordFiles != null) {
-      if ("snowball".equalsIgnoreCase(format)) {
-        commonWords = getSnowballWordSet(loader, commonWordFiles, ignoreCase);
-      } else {
-        commonWords = getWordSet(loader, commonWordFiles, ignoreCase);
-      }
-    } else {
-      commonWords = EnglishAnalyzer.ENGLISH_STOP_WORDS_SET;
-    }
-  }
+	/**
+	 * Creates a new CommonGramsFilterFactory
+	 */
+	public CommonGramsFilterFactory(Map<String, String> args) {
+		super(args);
+		commonWordFiles = get(args, "words");
+		format = get(args, "format");
+		ignoreCase = getBoolean(args, "ignoreCase", false);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  public boolean isIgnoreCase() {
-    return ignoreCase;
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		if (commonWordFiles != null) {
+			if ("snowball".equalsIgnoreCase(format)) {
+				commonWords = getSnowballWordSet(loader, commonWordFiles, ignoreCase);
+			} else {
+				commonWords = getWordSet(loader, commonWordFiles, ignoreCase);
+			}
+		} else {
+			commonWords = EnglishAnalyzer.ENGLISH_STOP_WORDS_SET;
+		}
+	}
 
-  public CharArraySet getCommonWords() {
-    return commonWords;
-  }
+	public boolean isIgnoreCase() {
+		return ignoreCase;
+	}
 
-  @Override
-  public TokenFilter create(TokenStream input) {
-    CommonGramsFilter commonGrams = new CommonGramsFilter(input, commonWords);
-    return commonGrams;
-  }
+	public CharArraySet getCommonWords() {
+		return commonWords;
+	}
+
+	@Override
+	public TokenFilter create(TokenStream input) {
+		CommonGramsFilter commonGrams = new CommonGramsFilter(input, commonWords);
+		return commonGrams;
+	}
 }
- 
-  
-  
+
+
+

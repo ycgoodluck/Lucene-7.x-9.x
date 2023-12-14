@@ -31,28 +31,28 @@ import org.apache.lucene.queryparser.flexible.core.config.QueryConfigHandler;
  * {@link StandardQueryNodeProcessorPipeline} and appending {@link BooleanModifiersQueryNodeProcessor}
  * to the pipeline.
  * </p>
- * 
+ *
  * @see PrecedenceQueryParser
- *  @see StandardQueryNodeProcessorPipeline
+ * @see StandardQueryNodeProcessorPipeline
  */
 public class PrecedenceQueryNodeProcessorPipeline extends StandardQueryNodeProcessorPipeline {
 
-  /**
-   * @see StandardQueryNodeProcessorPipeline#StandardQueryNodeProcessorPipeline(QueryConfigHandler)
-   */
-  public PrecedenceQueryNodeProcessorPipeline(QueryConfigHandler queryConfig) {
-    super(queryConfig);
-    
-    for (int i = 0 ; i < size() ; i++) {
-      
-      if (get(i).getClass().equals(BooleanQuery2ModifierNodeProcessor.class)) {
-        remove(i--);
-      }
-      
-    }
-    
-    add(new BooleanModifiersQueryNodeProcessor());
-    
-  }
+	/**
+	 * @see StandardQueryNodeProcessorPipeline#StandardQueryNodeProcessorPipeline(QueryConfigHandler)
+	 */
+	public PrecedenceQueryNodeProcessorPipeline(QueryConfigHandler queryConfig) {
+		super(queryConfig);
+
+		for (int i = 0; i < size(); i++) {
+
+			if (get(i).getClass().equals(BooleanQuery2ModifierNodeProcessor.class)) {
+				remove(i--);
+			}
+
+		}
+
+		add(new BooleanModifiersQueryNodeProcessor());
+
+	}
 
 }

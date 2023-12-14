@@ -23,61 +23,63 @@ import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BitSet;
 import org.apache.lucene.util.BytesRef;
 
-/** Silly stub class, used only when writing an auto-prefix
- *  term in order to expose DocsEnum over a FixedBitSet.  We
- *  pass this to {@link PostingsWriterBase#writeTerm} so 
- *  that it can pull .docs() multiple times for the
- *  current term. */
+/**
+ * Silly stub class, used only when writing an auto-prefix
+ * term in order to expose DocsEnum over a FixedBitSet.  We
+ * pass this to {@link PostingsWriterBase#writeTerm} so
+ * that it can pull .docs() multiple times for the
+ * current term.
+ */
 
 class BitSetTermsEnum extends TermsEnum {
-  private final BitSetPostingsEnum postingsEnum;
+	private final BitSetPostingsEnum postingsEnum;
 
-  public BitSetTermsEnum(BitSet docs) {
-    postingsEnum = new BitSetPostingsEnum(docs);
-  }
+	public BitSetTermsEnum(BitSet docs) {
+		postingsEnum = new BitSetPostingsEnum(docs);
+	}
 
-  @Override
-  public SeekStatus seekCeil(BytesRef text) {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public SeekStatus seekCeil(BytesRef text) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public void seekExact(long ord) {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public void seekExact(long ord) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public BytesRef term() {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public BytesRef term() {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public BytesRef next() {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public BytesRef next() {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public long ord() {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public long ord() {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public int docFreq() {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public int docFreq() {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public long totalTermFreq() {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public long totalTermFreq() {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public PostingsEnum postings(PostingsEnum reuse, int flags) {
-    if (flags != PostingsEnum.NONE) {
-      // We only work with DOCS_ONLY fields
-      return null;
-    }
-    postingsEnum.reset();
-    return postingsEnum;
-  }
+	@Override
+	public PostingsEnum postings(PostingsEnum reuse, int flags) {
+		if (flags != PostingsEnum.NONE) {
+			// We only work with DOCS_ONLY fields
+			return null;
+		}
+		postingsEnum.reset();
+		return postingsEnum;
+	}
 }

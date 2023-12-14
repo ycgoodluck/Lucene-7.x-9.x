@@ -26,42 +26,42 @@ import org.apache.lucene.search.Weight;
 
 abstract class BaseGlobalOrdinalScorer extends Scorer {
 
-  final SortedDocValues values;
-  final DocIdSetIterator approximation;
+	final SortedDocValues values;
+	final DocIdSetIterator approximation;
 
-  float score;
+	float score;
 
-  public BaseGlobalOrdinalScorer(Weight weight, SortedDocValues values, DocIdSetIterator approximationScorer) {
-    super(weight);
-    this.values = values;
-    this.approximation = approximationScorer;
-  }
+	public BaseGlobalOrdinalScorer(Weight weight, SortedDocValues values, DocIdSetIterator approximationScorer) {
+		super(weight);
+		this.values = values;
+		this.approximation = approximationScorer;
+	}
 
-  @Override
-  public float score() throws IOException {
-    return score;
-  }
+	@Override
+	public float score() throws IOException {
+		return score;
+	}
 
-  @Override
-  public float getMaxScore(int upTo) throws IOException {
-    return Float.POSITIVE_INFINITY;
-  }
+	@Override
+	public float getMaxScore(int upTo) throws IOException {
+		return Float.POSITIVE_INFINITY;
+	}
 
-  @Override
-  public int docID() {
-    return approximation.docID();
-  }
+	@Override
+	public int docID() {
+		return approximation.docID();
+	}
 
-  @Override
-  public DocIdSetIterator iterator() {
-    return TwoPhaseIterator.asDocIdSetIterator(twoPhaseIterator());
-  }
+	@Override
+	public DocIdSetIterator iterator() {
+		return TwoPhaseIterator.asDocIdSetIterator(twoPhaseIterator());
+	}
 
-  @Override
-  public TwoPhaseIterator twoPhaseIterator() {
-    return createTwoPhaseIterator(approximation);
-  }
+	@Override
+	public TwoPhaseIterator twoPhaseIterator() {
+		return createTwoPhaseIterator(approximation);
+	}
 
-  protected abstract TwoPhaseIterator createTwoPhaseIterator(DocIdSetIterator approximation);
+	protected abstract TwoPhaseIterator createTwoPhaseIterator(DocIdSetIterator approximation);
 
 }

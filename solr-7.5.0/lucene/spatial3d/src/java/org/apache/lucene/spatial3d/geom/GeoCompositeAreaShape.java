@@ -27,32 +27,33 @@ import java.io.IOException;
  */
 public class GeoCompositeAreaShape extends GeoBaseCompositeAreaShape<GeoAreaShape> {
 
-  /**
-   * Constructor.
-   */
-  public GeoCompositeAreaShape(PlanetModel planetModel) {
-    super(planetModel);
-  }
+	/**
+	 * Constructor.
+	 */
+	public GeoCompositeAreaShape(PlanetModel planetModel) {
+		super(planetModel);
+	}
 
-  /**
-   * Constructor for deserialization.
-   * @param planetModel is the planet model.
-   * @param inputStream is the input stream.
-   */
-  public GeoCompositeAreaShape(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
-    super(planetModel, inputStream, GeoAreaShape.class);
-  }
+	/**
+	 * Constructor for deserialization.
+	 *
+	 * @param planetModel is the planet model.
+	 * @param inputStream is the input stream.
+	 */
+	public GeoCompositeAreaShape(final PlanetModel planetModel, final InputStream inputStream) throws IOException {
+		super(planetModel, inputStream, GeoAreaShape.class);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof GeoCompositeAreaShape))
-      return false;
-    return super.equals(o);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof GeoCompositeAreaShape))
+			return false;
+		return super.equals(o);
+	}
 
-  @Override
-  public String toString() {
-    return "GeoCompositeAreaShape: {" + shapes + '}';
-  }
+	@Override
+	public String toString() {
+		return "GeoCompositeAreaShape: {" + shapes + '}';
+	}
 
 }

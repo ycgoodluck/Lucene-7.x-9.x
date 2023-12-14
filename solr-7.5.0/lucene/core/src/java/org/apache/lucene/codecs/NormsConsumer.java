@@ -27,19 +27,19 @@ import org.apache.lucene.index.MergeState;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.SegmentWriteState;
 
-/** 
- * Abstract API that consumes normalization values.  
+/**
+ * Abstract API that consumes normalization values.
  * Concrete implementations of this
  * actually do "something" with the norms (write it into
  * the index in a specific format).
  * <p>
  * The lifecycle is:
  * <ol>
- *   <li>NormsConsumer is created by 
+ *   <li>NormsConsumer is created by
  *       {@link NormsFormat#normsConsumer(SegmentWriteState)}.
  *   <li>{@link #addNormsField} is called for each field with
  *       normalization values. The API is a "pull" rather
- *       than "push", and the implementation is free to iterate over the 
+ *       than "push", and the implementation is free to iterate over the
  *       values multiple times ({@link Iterable#iterator()}).
  *   <li>After all fields are added, the consumer is {@link #close}d.
  * </ol>
@@ -47,145 +47,153 @@ import org.apache.lucene.index.SegmentWriteState;
  * @lucene.experimental
  */
 public abstract class NormsConsumer implements Closeable {
-  
-  /** Sole constructor. (For invocation by subclass 
-   *  constructors, typically implicit.) */
-  protected NormsConsumer() {}
-  
-  /**
-   * Writes normalization values for a field.
-   * @param field field information
-   * @param normsProducer NormsProducer of the numeric norm values
-   * @throws IOException if an I/O error occurred.
-   */
-  public abstract void addNormsField(FieldInfo field, NormsProducer normsProducer) throws IOException;
 
-  /** Merges in the fields from the readers in 
-   *  <code>mergeState</code>. The default implementation 
-   *  calls {@link #mergeNormsField} for each field,
-   *  filling segments with missing norms for the field with zeros. 
-   *  Implementations can override this method 
-   *  for more sophisticated merging (bulk-byte copying, etc). */
-  public void merge(MergeState mergeState) throws IOException {
-    for(NormsProducer normsProducer : mergeState.normsProducers) {
-      if (normsProducer != null) {
-        normsProducer.checkIntegrity();
-      }
-    }
-    for (FieldInfo mergeFieldInfo : mergeState.mergeFieldInfos) {
-      if (mergeFieldInfo.hasNorms()) {
-        mergeNormsField(mergeFieldInfo, mergeState);
-      }
-    }
-  }
-  
-  /** Tracks state of one numeric sub-reader that we are merging */
-  private static class NumericDocValuesSub extends DocIDMerger.Sub {
+	/**
+	 * Sole constructor. (For invocation by subclass
+	 * constructors, typically implicit.)
+	 */
+	protected NormsConsumer() {
+	}
 
-    private final NumericDocValues values;
-    
-    public NumericDocValuesSub(MergeState.DocMap docMap, NumericDocValues values) {
-      super(docMap);
-      this.values = values;
-      assert values.docID() == -1;
-    }
+	/**
+	 * Writes normalization values for a field.
+	 *
+	 * @param field         field information
+	 * @param normsProducer NormsProducer of the numeric norm values
+	 * @throws IOException if an I/O error occurred.
+	 */
+	public abstract void addNormsField(FieldInfo field, NormsProducer normsProducer) throws IOException;
 
-    @Override
-    public int nextDoc() throws IOException {
-      return values.nextDoc();
-    }
-  }
+	/**
+	 * Merges in the fields from the readers in
+	 * <code>mergeState</code>. The default implementation
+	 * calls {@link #mergeNormsField} for each field,
+	 * filling segments with missing norms for the field with zeros.
+	 * Implementations can override this method
+	 * for more sophisticated merging (bulk-byte copying, etc).
+	 */
+	public void merge(MergeState mergeState) throws IOException {
+		for (NormsProducer normsProducer : mergeState.normsProducers) {
+			if (normsProducer != null) {
+				normsProducer.checkIntegrity();
+			}
+		}
+		for (FieldInfo mergeFieldInfo : mergeState.mergeFieldInfos) {
+			if (mergeFieldInfo.hasNorms()) {
+				mergeNormsField(mergeFieldInfo, mergeState);
+			}
+		}
+	}
 
-  /**
-   * Merges the norms from <code>toMerge</code>.
-   * <p>
-   * The default implementation calls {@link #addNormsField}, passing
-   * an Iterable that merges and filters deleted documents on the fly.
-   */
-  public void mergeNormsField(final FieldInfo mergeFieldInfo, final MergeState mergeState) throws IOException {
+	/**
+	 * Tracks state of one numeric sub-reader that we are merging
+	 */
+	private static class NumericDocValuesSub extends DocIDMerger.Sub {
 
-    // TODO: try to share code with default merge of DVConsumer by passing MatchAllBits ?
-    addNormsField(mergeFieldInfo,
-                  new NormsProducer() {
-                    @Override
-                    public NumericDocValues getNorms(FieldInfo fieldInfo) throws IOException {
-                      if (fieldInfo != mergeFieldInfo) {
-                        throw new IllegalArgumentException("wrong fieldInfo");
-                      }
+		private final NumericDocValues values;
 
-                        List<NumericDocValuesSub> subs = new ArrayList<>();
-                        assert mergeState.docMaps.length == mergeState.docValuesProducers.length;
-                        for (int i=0;i<mergeState.docValuesProducers.length;i++) {
-                          NumericDocValues norms = null;
-                          NormsProducer normsProducer = mergeState.normsProducers[i];
-                          if (normsProducer != null) {
-                            FieldInfo readerFieldInfo = mergeState.fieldInfos[i].fieldInfo(mergeFieldInfo.name);
-                            if (readerFieldInfo != null && readerFieldInfo.hasNorms()) {
-                              norms = normsProducer.getNorms(readerFieldInfo);
-                            }
-                          }
+		public NumericDocValuesSub(MergeState.DocMap docMap, NumericDocValues values) {
+			super(docMap);
+			this.values = values;
+			assert values.docID() == -1;
+		}
 
-                          if (norms != null) {
-                            subs.add(new NumericDocValuesSub(mergeState.docMaps[i], norms));
-                          }
-                        }
+		@Override
+		public int nextDoc() throws IOException {
+			return values.nextDoc();
+		}
+	}
 
-                        final DocIDMerger<NumericDocValuesSub> docIDMerger = DocIDMerger.of(subs, mergeState.needsIndexSort);
+	/**
+	 * Merges the norms from <code>toMerge</code>.
+	 * <p>
+	 * The default implementation calls {@link #addNormsField}, passing
+	 * an Iterable that merges and filters deleted documents on the fly.
+	 */
+	public void mergeNormsField(final FieldInfo mergeFieldInfo, final MergeState mergeState) throws IOException {
 
-                        return new NumericDocValues() {
-                          private int docID = -1;
-                          private NumericDocValuesSub current;
+		// TODO: try to share code with default merge of DVConsumer by passing MatchAllBits ?
+		addNormsField(mergeFieldInfo,
+			new NormsProducer() {
+				@Override
+				public NumericDocValues getNorms(FieldInfo fieldInfo) throws IOException {
+					if (fieldInfo != mergeFieldInfo) {
+						throw new IllegalArgumentException("wrong fieldInfo");
+					}
 
-                          @Override
-                          public int docID() {
-                            return docID;
-                          }
+					List<NumericDocValuesSub> subs = new ArrayList<>();
+					assert mergeState.docMaps.length == mergeState.docValuesProducers.length;
+					for (int i = 0; i < mergeState.docValuesProducers.length; i++) {
+						NumericDocValues norms = null;
+						NormsProducer normsProducer = mergeState.normsProducers[i];
+						if (normsProducer != null) {
+							FieldInfo readerFieldInfo = mergeState.fieldInfos[i].fieldInfo(mergeFieldInfo.name);
+							if (readerFieldInfo != null && readerFieldInfo.hasNorms()) {
+								norms = normsProducer.getNorms(readerFieldInfo);
+							}
+						}
 
-                          @Override
-                          public int nextDoc() throws IOException {
-                            current = docIDMerger.next();
-                            if (current == null) {
-                              docID = NO_MORE_DOCS;
-                            } else {
-                              docID = current.mappedDocID;
-                            }
-                            return docID;
-                          }
+						if (norms != null) {
+							subs.add(new NumericDocValuesSub(mergeState.docMaps[i], norms));
+						}
+					}
 
-                          @Override
-                          public int advance(int target) throws IOException {
-                            throw new UnsupportedOperationException();
-                          }
+					final DocIDMerger<NumericDocValuesSub> docIDMerger = DocIDMerger.of(subs, mergeState.needsIndexSort);
 
-                          @Override
-                          public boolean advanceExact(int target) throws IOException {
-                            throw new UnsupportedOperationException();
-                          }
+					return new NumericDocValues() {
+						private int docID = -1;
+						private NumericDocValuesSub current;
 
-                          @Override
-                          public long cost() {
-                            return 0;
-                          }
+						@Override
+						public int docID() {
+							return docID;
+						}
 
-                          @Override
-                          public long longValue() throws IOException {
-                            return current.values.longValue();
-                          }
-                        };
-                    }
-                    
-                    @Override
-                    public void checkIntegrity() {
-                    }
+						@Override
+						public int nextDoc() throws IOException {
+							current = docIDMerger.next();
+							if (current == null) {
+								docID = NO_MORE_DOCS;
+							} else {
+								docID = current.mappedDocID;
+							}
+							return docID;
+						}
 
-                    @Override
-                    public void close() {
-                    }
+						@Override
+						public int advance(int target) throws IOException {
+							throw new UnsupportedOperationException();
+						}
 
-                    @Override
-                    public long ramBytesUsed() {
-                      return 0;
-                    }
-                  });
-  }
+						@Override
+						public boolean advanceExact(int target) throws IOException {
+							throw new UnsupportedOperationException();
+						}
+
+						@Override
+						public long cost() {
+							return 0;
+						}
+
+						@Override
+						public long longValue() throws IOException {
+							return current.values.longValue();
+						}
+					};
+				}
+
+				@Override
+				public void checkIntegrity() {
+				}
+
+				@Override
+				public void close() {
+				}
+
+				@Override
+				public long ramBytesUsed() {
+					return 0;
+				}
+			});
+	}
 }

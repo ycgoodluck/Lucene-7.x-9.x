@@ -36,86 +36,86 @@ import org.apache.lucene.util.IOUtils;
 
 abstract class DocumentBatch implements Closeable, Supplier<LeafReader> {
 
-  /**
-   * Create a DocumentBatch containing a single InputDocument
-   *
-   * @param doc the document to add
-   * @return the batch containing the input document
-   */
-  public static DocumentBatch of(Analyzer analyzer, Document doc) {
-    return new SingletonDocumentBatch(analyzer, doc);
-  }
+	/**
+	 * Create a DocumentBatch containing a single InputDocument
+	 *
+	 * @param doc the document to add
+	 * @return the batch containing the input document
+	 */
+	public static DocumentBatch of(Analyzer analyzer, Document doc) {
+		return new SingletonDocumentBatch(analyzer, doc);
+	}
 
-  /**
-   * Create a DocumentBatch containing a set of InputDocuments
-   *
-   * @param docs Collection of documents to add
-   * @return the batch containing the input documents
-   */
-  public static DocumentBatch of(Analyzer analyzer, Document... docs) {
-    return new MultiDocumentBatch(analyzer, docs);
-  }
+	/**
+	 * Create a DocumentBatch containing a set of InputDocuments
+	 *
+	 * @param docs Collection of documents to add
+	 * @return the batch containing the input documents
+	 */
+	public static DocumentBatch of(Analyzer analyzer, Document... docs) {
+		return new MultiDocumentBatch(analyzer, docs);
+	}
 
-  // Implementation of DocumentBatch for collections of documents
-  private static class MultiDocumentBatch extends DocumentBatch {
+	// Implementation of DocumentBatch for collections of documents
+	private static class MultiDocumentBatch extends DocumentBatch {
 
-    private final Directory directory = new ByteBuffersDirectory();
-    private final LeafReader reader;
+		private final Directory directory = new ByteBuffersDirectory();
+		private final LeafReader reader;
 
-    MultiDocumentBatch(Analyzer analyzer, Document... docs) {
-      IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
-      try (IndexWriter writer = new IndexWriter(directory, iwc)) {
-        this.reader = build(writer, docs);
-      } catch (IOException e) {
-        throw new RuntimeException(e);  // This is a RAMDirectory, so should never happen...
-      }
-    }
+		MultiDocumentBatch(Analyzer analyzer, Document... docs) {
+			IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+			try (IndexWriter writer = new IndexWriter(directory, iwc)) {
+				this.reader = build(writer, docs);
+			} catch (IOException e) {
+				throw new RuntimeException(e);  // This is a RAMDirectory, so should never happen...
+			}
+		}
 
-    @Override
-    public LeafReader get() {
-      return reader;
-    }
+		@Override
+		public LeafReader get() {
+			return reader;
+		}
 
-    private LeafReader build(IndexWriter writer, Document... docs) throws IOException {
-      writer.addDocuments(Arrays.asList(docs));
-      writer.commit();
-      writer.forceMerge(1);
-      LeafReader reader = DirectoryReader.open(directory).leaves().get(0).reader();
-      assert reader != null;
-      return reader;
-    }
+		private LeafReader build(IndexWriter writer, Document... docs) throws IOException {
+			writer.addDocuments(Arrays.asList(docs));
+			writer.commit();
+			writer.forceMerge(1);
+			LeafReader reader = DirectoryReader.open(directory).leaves().get(0).reader();
+			assert reader != null;
+			return reader;
+		}
 
-    @Override
-    public void close() throws IOException {
-      IOUtils.close(reader, directory);
-    }
+		@Override
+		public void close() throws IOException {
+			IOUtils.close(reader, directory);
+		}
 
-  }
+	}
 
-  // Specialized class for batches containing a single object - MemoryIndex benchmarks as
-  // better performing than RAMDirectory for this case
-  private static class SingletonDocumentBatch extends DocumentBatch {
+	// Specialized class for batches containing a single object - MemoryIndex benchmarks as
+	// better performing than RAMDirectory for this case
+	private static class SingletonDocumentBatch extends DocumentBatch {
 
-    private final LeafReader reader;
+		private final LeafReader reader;
 
-    private SingletonDocumentBatch(Analyzer analyzer, Document doc) {
-      MemoryIndex memoryindex = new MemoryIndex(true, true);
-      for (IndexableField field : doc) {
-        memoryindex.addField(field, analyzer);
-      }
-      memoryindex.freeze();
-      reader = (LeafReader) memoryindex.createSearcher().getIndexReader();
-    }
+		private SingletonDocumentBatch(Analyzer analyzer, Document doc) {
+			MemoryIndex memoryindex = new MemoryIndex(true, true);
+			for (IndexableField field : doc) {
+				memoryindex.addField(field, analyzer);
+			}
+			memoryindex.freeze();
+			reader = (LeafReader) memoryindex.createSearcher().getIndexReader();
+		}
 
-    @Override
-    public LeafReader get() {
-      return reader;
-    }
+		@Override
+		public LeafReader get() {
+			return reader;
+		}
 
-    @Override
-    public void close() throws IOException {
-      reader.close();
-    }
-  }
+		@Override
+		public void close() throws IOException {
+			reader.close();
+		}
+	}
 
 }

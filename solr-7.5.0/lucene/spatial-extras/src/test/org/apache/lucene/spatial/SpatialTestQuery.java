@@ -35,62 +35,61 @@ import java.util.StringTokenizer;
  * Helper class to execute queries
  */
 public class SpatialTestQuery {
-  public String testname;
-  public String line;
-  public int lineNumber = -1;
-  public SpatialArgs args;
-  public List<String> ids = new ArrayList<>();
+	public String testname;
+	public String line;
+	public int lineNumber = -1;
+	public SpatialArgs args;
+	public List<String> ids = new ArrayList<>();
 
-  /**
-   * Get Test Queries.  The InputStream is closed.
-   */
-  public static Iterator<SpatialTestQuery> getTestQueries(
-      final SpatialArgsParser parser,
-      final SpatialContext ctx,
-      final String name,
-      final InputStream in ) throws IOException {
+	/**
+	 * Get Test Queries.  The InputStream is closed.
+	 */
+	public static Iterator<SpatialTestQuery> getTestQueries(
+		final SpatialArgsParser parser,
+		final SpatialContext ctx,
+		final String name,
+		final InputStream in) throws IOException {
 
-    List<SpatialTestQuery> results = new ArrayList<>();
+		List<SpatialTestQuery> results = new ArrayList<>();
 
-    BufferedReader bufInput = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-    try {
-      String line;
-      for (int lineNumber = 1; (line = bufInput.readLine()) != null; lineNumber++) {
-        SpatialTestQuery test = new SpatialTestQuery();
-        test.line = line;
-        test.lineNumber = lineNumber;
+		BufferedReader bufInput = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+		try {
+			String line;
+			for (int lineNumber = 1; (line = bufInput.readLine()) != null; lineNumber++) {
+				SpatialTestQuery test = new SpatialTestQuery();
+				test.line = line;
+				test.lineNumber = lineNumber;
 
-        try {
-          // skip a comment
-          if( line.startsWith( "[" ) ) {
-            int idx = line.indexOf( ']' );
-            if( idx > 0 ) {
-              line = line.substring( idx+1 );
-            }
-          }
+				try {
+					// skip a comment
+					if (line.startsWith("[")) {
+						int idx = line.indexOf(']');
+						if (idx > 0) {
+							line = line.substring(idx + 1);
+						}
+					}
 
-          int idx = line.indexOf('@');
-          StringTokenizer st = new StringTokenizer(line.substring(0, idx));
-          while (st.hasMoreTokens()) {
-            test.ids.add(st.nextToken().trim());
-          }
-          test.args = parser.parse(line.substring(idx + 1).trim(), ctx);
-          results.add(test);
-        }
-        catch( Exception ex ) {
-          throw new RuntimeException( "invalid query line: "+test.line, ex );
-        }
-      }
-    } finally {
-      bufInput.close();
-    }
-    return results.iterator();
-  }
+					int idx = line.indexOf('@');
+					StringTokenizer st = new StringTokenizer(line.substring(0, idx));
+					while (st.hasMoreTokens()) {
+						test.ids.add(st.nextToken().trim());
+					}
+					test.args = parser.parse(line.substring(idx + 1).trim(), ctx);
+					results.add(test);
+				} catch (Exception ex) {
+					throw new RuntimeException("invalid query line: " + test.line, ex);
+				}
+			}
+		} finally {
+			bufInput.close();
+		}
+		return results.iterator();
+	}
 
-  @Override
-  public String toString() {
-    if (line != null)
-      return line;
-    return args.toString()+" "+ids;
-  }
+	@Override
+	public String toString() {
+		if (line != null)
+			return line;
+		return args.toString() + " " + ids;
+	}
 }

@@ -24,24 +24,26 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.luke.util.LoggerFactory;
 
-/** Abstract handler class */
+/**
+ * Abstract handler class
+ */
 public abstract class AbstractHandler<T extends Observer> {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private List<T> observers = new ArrayList<>();
+	private List<T> observers = new ArrayList<>();
 
-  public void addObserver(T observer) {
-    observers.add(observer);
-    log.debug("{} registered.", observer.getClass().getName());
-  }
+	public void addObserver(T observer) {
+		observers.add(observer);
+		log.debug("{} registered.", observer.getClass().getName());
+	}
 
-  void notifyObservers() {
-    for (T observer : observers) {
-      notifyOne(observer);
-    }
-  }
+	void notifyObservers() {
+		for (T observer : observers) {
+			notifyOne(observer);
+		}
+	}
 
-  protected abstract void notifyOne(T observer);
+	protected abstract void notifyOne(T observer);
 
 }

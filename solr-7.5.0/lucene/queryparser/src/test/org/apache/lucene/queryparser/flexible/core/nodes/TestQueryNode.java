@@ -22,60 +22,60 @@ import java.util.Collections;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestQueryNode extends LuceneTestCase {
- 
-  /* LUCENE-2227 bug in QueryNodeImpl.add() */
-  public void testAddChildren() throws Exception {
-    QueryNode nodeA = new FieldQueryNode("foo", "A", 0, 1);
-    QueryNode nodeB = new FieldQueryNode("foo", "B", 1, 2);
-    BooleanQueryNode bq = new BooleanQueryNode(
-        Arrays.asList(nodeA));
-    bq.add(Arrays.asList(nodeB));
-    assertEquals(2, bq.getChildren().size());
-  }
-  
-  /* LUCENE-3045 bug in QueryNodeImpl.containsTag(String key)*/
-  public void testTags() throws Exception {
-    QueryNode node = new FieldQueryNode("foo", "A", 0, 1);
-    
-    node.setTag("TaG", new Object());
-    assertTrue(node.getTagMap().size() > 0);
-    assertTrue(node.containsTag("tAg"));
-    assertTrue(node.getTag("tAg") != null);
-    
-  }
+
+	/* LUCENE-2227 bug in QueryNodeImpl.add() */
+	public void testAddChildren() throws Exception {
+		QueryNode nodeA = new FieldQueryNode("foo", "A", 0, 1);
+		QueryNode nodeB = new FieldQueryNode("foo", "B", 1, 2);
+		BooleanQueryNode bq = new BooleanQueryNode(
+			Arrays.asList(nodeA));
+		bq.add(Arrays.asList(nodeB));
+		assertEquals(2, bq.getChildren().size());
+	}
+
+	/* LUCENE-3045 bug in QueryNodeImpl.containsTag(String key)*/
+	public void testTags() throws Exception {
+		QueryNode node = new FieldQueryNode("foo", "A", 0, 1);
+
+		node.setTag("TaG", new Object());
+		assertTrue(node.getTagMap().size() > 0);
+		assertTrue(node.containsTag("tAg"));
+		assertTrue(node.getTag("tAg") != null);
+
+	}
 
 
-  /* LUCENE-5099 - QueryNodeProcessorImpl should set parent to null before returning on processing */
-  public void testRemoveFromParent() throws Exception {
-    BooleanQueryNode booleanNode = new BooleanQueryNode(Collections.<QueryNode>emptyList());
-    FieldQueryNode fieldNode = new FieldQueryNode("foo", "A", 0, 1);
-    assertNull(fieldNode.getParent());
+	/* LUCENE-5099 - QueryNodeProcessorImpl should set parent to null before returning on processing */
+	public void testRemoveFromParent() throws Exception {
+		BooleanQueryNode booleanNode = new BooleanQueryNode(Collections.<QueryNode>emptyList());
+		FieldQueryNode fieldNode = new FieldQueryNode("foo", "A", 0, 1);
+		assertNull(fieldNode.getParent());
 
-    booleanNode.add(fieldNode);
-    assertNotNull(fieldNode.getParent());
+		booleanNode.add(fieldNode);
+		assertNotNull(fieldNode.getParent());
 
-    fieldNode.removeFromParent();
-    assertNull(fieldNode.getParent());
-    /* LUCENE-5805 - QueryNodeImpl.removeFromParent does a lot of work without any effect */
-    assertFalse(booleanNode.getChildren().contains(fieldNode));
+		fieldNode.removeFromParent();
+		assertNull(fieldNode.getParent());
+		/* LUCENE-5805 - QueryNodeImpl.removeFromParent does a lot of work without any effect */
+		assertFalse(booleanNode.getChildren().contains(fieldNode));
 
-    booleanNode.add(fieldNode);
-    assertNotNull(fieldNode.getParent());
+		booleanNode.add(fieldNode);
+		assertNotNull(fieldNode.getParent());
 
-    booleanNode.set(Collections.<QueryNode>emptyList());
-    assertNull(fieldNode.getParent());
-  }
+		booleanNode.set(Collections.<QueryNode>emptyList());
+		assertNull(fieldNode.getParent());
+	}
 
-  public void testRemoveChildren() throws Exception{
-    BooleanQueryNode booleanNode = new BooleanQueryNode(Collections.<QueryNode>emptyList());
-    FieldQueryNode fieldNode = new FieldQueryNode("foo", "A", 0, 1);
+	public void testRemoveChildren() throws Exception {
+		BooleanQueryNode booleanNode = new BooleanQueryNode(Collections.<QueryNode>emptyList());
+		FieldQueryNode fieldNode = new FieldQueryNode("foo", "A", 0, 1);
 
-    booleanNode.add(fieldNode);
-    assertTrue(booleanNode.getChildren().size() == 1);
+		booleanNode.add(fieldNode);
+		assertTrue(booleanNode.getChildren().size() == 1);
 
-    booleanNode.removeChildren(fieldNode);
-    assertTrue(booleanNode.getChildren().size()==0);
-    assertNull(fieldNode.getParent());
-  }
-  
+		booleanNode.removeChildren(fieldNode);
+		assertTrue(booleanNode.getChildren().size() == 0);
+		assertNull(fieldNode.getParent());
+	}
+
 }

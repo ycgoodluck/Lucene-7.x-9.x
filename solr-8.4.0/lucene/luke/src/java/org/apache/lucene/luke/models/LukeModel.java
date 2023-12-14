@@ -33,39 +33,39 @@ import org.apache.lucene.util.Bits;
  */
 public abstract class LukeModel {
 
-  protected Directory dir;
+	protected Directory dir;
 
-  protected IndexReader reader;
+	protected IndexReader reader;
 
-  protected Bits liveDocs;
+	protected Bits liveDocs;
 
-  protected IndexCommit commit;
+	protected IndexCommit commit;
 
-  protected LukeModel(IndexReader reader) {
-    this.reader = Objects.requireNonNull(reader);
+	protected LukeModel(IndexReader reader) {
+		this.reader = Objects.requireNonNull(reader);
 
-    if (reader instanceof DirectoryReader) {
-      DirectoryReader dr = (DirectoryReader) reader;
-      this.dir = dr.directory();
-      try {
-        this.commit = dr.getIndexCommit();
-      } catch (IOException e) {
-        throw new LukeException(e.getMessage(), e);
-      }
-    } else {
-      this.dir = null;
-      this.commit = null;
-    }
+		if (reader instanceof DirectoryReader) {
+			DirectoryReader dr = (DirectoryReader) reader;
+			this.dir = dr.directory();
+			try {
+				this.commit = dr.getIndexCommit();
+			} catch (IOException e) {
+				throw new LukeException(e.getMessage(), e);
+			}
+		} else {
+			this.dir = null;
+			this.commit = null;
+		}
 
-    this.liveDocs = IndexUtils.getLiveDocs(reader);
-  }
+		this.liveDocs = IndexUtils.getLiveDocs(reader);
+	}
 
-  protected LukeModel (Directory dir) {
-    this.dir = Objects.requireNonNull(dir);
-  }
+	protected LukeModel(Directory dir) {
+		this.dir = Objects.requireNonNull(dir);
+	}
 
-  public Collection<String> getFieldNames() {
-    return IndexUtils.getFieldNames(reader);
-  }
+	public Collection<String> getFieldNames() {
+		return IndexUtils.getFieldNames(reader);
+	}
 
 }

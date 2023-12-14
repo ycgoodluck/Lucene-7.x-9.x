@@ -25,27 +25,27 @@ import java.io.IOException;
 
 public class TokenOffsetPayloadTokenFilterTest extends BaseTokenStreamTestCase {
 
-  public void test() throws IOException {
-    String test = "The quick red fox jumped over the lazy brown dogs";
+	public void test() throws IOException {
+		String test = "The quick red fox jumped over the lazy brown dogs";
 
-    TokenOffsetPayloadTokenFilter nptf = new TokenOffsetPayloadTokenFilter(whitespaceMockTokenizer(test));
-    int count = 0;
-    PayloadAttribute payloadAtt = nptf.getAttribute(PayloadAttribute.class);
-    OffsetAttribute offsetAtt = nptf.getAttribute(OffsetAttribute.class);
-    nptf.reset();
-    while (nptf.incrementToken()) {
-      BytesRef pay = payloadAtt.getPayload();
-      assertTrue("pay is null and it shouldn't be", pay != null);
-      byte [] data = pay.bytes;
-      int start = PayloadHelper.decodeInt(data, 0);
-      assertTrue(start + " does not equal: " + offsetAtt.startOffset(), start == offsetAtt.startOffset());
-      int end = PayloadHelper.decodeInt(data, 4);
-      assertTrue(end + " does not equal: " + offsetAtt.endOffset(), end == offsetAtt.endOffset());
-      count++;
-    }
-    assertTrue(count + " does not equal: " + 10, count == 10);
+		TokenOffsetPayloadTokenFilter nptf = new TokenOffsetPayloadTokenFilter(whitespaceMockTokenizer(test));
+		int count = 0;
+		PayloadAttribute payloadAtt = nptf.getAttribute(PayloadAttribute.class);
+		OffsetAttribute offsetAtt = nptf.getAttribute(OffsetAttribute.class);
+		nptf.reset();
+		while (nptf.incrementToken()) {
+			BytesRef pay = payloadAtt.getPayload();
+			assertTrue("pay is null and it shouldn't be", pay != null);
+			byte[] data = pay.bytes;
+			int start = PayloadHelper.decodeInt(data, 0);
+			assertTrue(start + " does not equal: " + offsetAtt.startOffset(), start == offsetAtt.startOffset());
+			int end = PayloadHelper.decodeInt(data, 4);
+			assertTrue(end + " does not equal: " + offsetAtt.endOffset(), end == offsetAtt.endOffset());
+			count++;
+		}
+		assertTrue(count + " does not equal: " + 10, count == 10);
 
-  }
+	}
 
 
 }

@@ -35,82 +35,83 @@ import org.apache.lucene.search.TopScoreDocCollector;
  */
 public class TopGroupsCollector<T> extends SecondPassGroupingCollector<T> {
 
-  private final Sort groupSort;
-  private final Sort withinGroupSort;
-  private final int maxDocsPerGroup;
+	private final Sort groupSort;
+	private final Sort withinGroupSort;
+	private final int maxDocsPerGroup;
 
-  /**
-   * Create a new TopGroupsCollector
-   * @param groupSelector     the group selector used to define groups
-   * @param groups            the groups to collect TopDocs for
-   * @param groupSort         the order in which groups are returned
-   * @param withinGroupSort   the order in which documents are sorted in each group
-   * @param maxDocsPerGroup   the maximum number of docs to collect for each group
-   * @param getScores         if true, record the scores of all docs in each group
-   * @param getMaxScores      if true, record the maximum score for each group
-   * @param fillSortFields    if true, record the sort field values for all docs
-   */
-  public TopGroupsCollector(GroupSelector<T> groupSelector, Collection<SearchGroup<T>> groups, Sort groupSort, Sort withinGroupSort,
-                            int maxDocsPerGroup, boolean getScores, boolean getMaxScores, boolean fillSortFields) {
-    super(groupSelector, groups,
-        new TopDocsReducer<>(withinGroupSort, maxDocsPerGroup, getScores, getMaxScores, fillSortFields));
-    this.groupSort = Objects.requireNonNull(groupSort);
-    this.withinGroupSort = Objects.requireNonNull(withinGroupSort);
-    this.maxDocsPerGroup = maxDocsPerGroup;
+	/**
+	 * Create a new TopGroupsCollector
+	 *
+	 * @param groupSelector   the group selector used to define groups
+	 * @param groups          the groups to collect TopDocs for
+	 * @param groupSort       the order in which groups are returned
+	 * @param withinGroupSort the order in which documents are sorted in each group
+	 * @param maxDocsPerGroup the maximum number of docs to collect for each group
+	 * @param getScores       if true, record the scores of all docs in each group
+	 * @param getMaxScores    if true, record the maximum score for each group
+	 * @param fillSortFields  if true, record the sort field values for all docs
+	 */
+	public TopGroupsCollector(GroupSelector<T> groupSelector, Collection<SearchGroup<T>> groups, Sort groupSort, Sort withinGroupSort,
+														int maxDocsPerGroup, boolean getScores, boolean getMaxScores, boolean fillSortFields) {
+		super(groupSelector, groups,
+			new TopDocsReducer<>(withinGroupSort, maxDocsPerGroup, getScores, getMaxScores, fillSortFields));
+		this.groupSort = Objects.requireNonNull(groupSort);
+		this.withinGroupSort = Objects.requireNonNull(withinGroupSort);
+		this.maxDocsPerGroup = maxDocsPerGroup;
 
-  }
+	}
 
-  private static class TopDocsReducer<T> extends GroupReducer<T, TopDocsCollector<?>> {
+	private static class TopDocsReducer<T> extends GroupReducer<T, TopDocsCollector<?>> {
 
-    private final Supplier<TopDocsCollector<?>> supplier;
-    private final boolean needsScores;
+		private final Supplier<TopDocsCollector<?>> supplier;
+		private final boolean needsScores;
 
-    TopDocsReducer(Sort withinGroupSort,
-                   int maxDocsPerGroup, boolean getScores, boolean getMaxScores, boolean fillSortFields) {
-      this.needsScores = getScores || getMaxScores || withinGroupSort.needsScores();
-      this.supplier = withinGroupSort == Sort.RELEVANCE ?
-          () -> TopScoreDocCollector.create(maxDocsPerGroup) :
-          () -> TopFieldCollector.create(withinGroupSort, maxDocsPerGroup, fillSortFields, getScores, getMaxScores, true); // TODO: disable exact counts?
-    }
+		TopDocsReducer(Sort withinGroupSort,
+									 int maxDocsPerGroup, boolean getScores, boolean getMaxScores, boolean fillSortFields) {
+			this.needsScores = getScores || getMaxScores || withinGroupSort.needsScores();
+			this.supplier = withinGroupSort == Sort.RELEVANCE ?
+				() -> TopScoreDocCollector.create(maxDocsPerGroup) :
+				() -> TopFieldCollector.create(withinGroupSort, maxDocsPerGroup, fillSortFields, getScores, getMaxScores, true); // TODO: disable exact counts?
+		}
 
-    @Override
-    public boolean needsScores() {
-      return needsScores;
-    }
+		@Override
+		public boolean needsScores() {
+			return needsScores;
+		}
 
-    @Override
-    protected TopDocsCollector<?> newCollector() {
-      return supplier.get();
-    }
-  }
+		@Override
+		protected TopDocsCollector<?> newCollector() {
+			return supplier.get();
+		}
+	}
 
-  /**
-   * Get the TopGroups recorded by this collector
-   * @param withinGroupOffset the offset within each group to start collecting documents
-   */
-  public TopGroups<T> getTopGroups(int withinGroupOffset) {
-    @SuppressWarnings({"unchecked","rawtypes"})
-    final GroupDocs<T>[] groupDocsResult = (GroupDocs<T>[]) new GroupDocs[groups.size()];
+	/**
+	 * Get the TopGroups recorded by this collector
+	 *
+	 * @param withinGroupOffset the offset within each group to start collecting documents
+	 */
+	public TopGroups<T> getTopGroups(int withinGroupOffset) {
+		@SuppressWarnings({"unchecked", "rawtypes"}) final GroupDocs<T>[] groupDocsResult = (GroupDocs<T>[]) new GroupDocs[groups.size()];
 
-    int groupIDX = 0;
-    float maxScore = Float.MIN_VALUE;
-    for(SearchGroup<T> group : groups) {
-      TopDocsCollector<?> collector = (TopDocsCollector<?>) groupReducer.getCollector(group.groupValue);
-      final TopDocs topDocs = collector.topDocs(withinGroupOffset, maxDocsPerGroup);
-      groupDocsResult[groupIDX++] = new GroupDocs<>(Float.NaN,
-          topDocs.getMaxScore(),
-          topDocs.totalHits,
-          topDocs.scoreDocs,
-          group.groupValue,
-          group.sortValues);
-      maxScore = Math.max(maxScore, topDocs.getMaxScore());
-    }
+		int groupIDX = 0;
+		float maxScore = Float.MIN_VALUE;
+		for (SearchGroup<T> group : groups) {
+			TopDocsCollector<?> collector = (TopDocsCollector<?>) groupReducer.getCollector(group.groupValue);
+			final TopDocs topDocs = collector.topDocs(withinGroupOffset, maxDocsPerGroup);
+			groupDocsResult[groupIDX++] = new GroupDocs<>(Float.NaN,
+				topDocs.getMaxScore(),
+				topDocs.totalHits,
+				topDocs.scoreDocs,
+				group.groupValue,
+				group.sortValues);
+			maxScore = Math.max(maxScore, topDocs.getMaxScore());
+		}
 
-    return new TopGroups<>(groupSort.getSort(),
-        withinGroupSort.getSort(),
-        totalHitCount, totalGroupedHitCount, groupDocsResult,
-        maxScore);
-  }
+		return new TopGroups<>(groupSort.getSort(),
+			withinGroupSort.getSort(),
+			totalHitCount, totalGroupedHitCount, groupDocsResult,
+			maxScore);
+	}
 
 
 }

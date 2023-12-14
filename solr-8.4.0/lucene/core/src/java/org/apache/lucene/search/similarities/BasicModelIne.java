@@ -18,55 +18,60 @@ package org.apache.lucene.search.similarities;
 
 
 import org.apache.lucene.search.Explanation;
+
 import static org.apache.lucene.search.similarities.SimilarityBase.log2;
 
 /**
  * Tf-idf model of randomness, based on a mixture of Poisson and inverse
  * document frequency.
+ *
  * @lucene.experimental
- */ 
+ */
 public class BasicModelIne extends BasicModel {
-  
-  /** Sole constructor: parameter-free */
-  public BasicModelIne() {}
 
-  @Override
-  public final double score(BasicStats stats, double tfn, double aeTimes1pTfn) {
-    long N = stats.getNumberOfDocuments();
-    long F = stats.getTotalTermFreq();
-    double ne = N * (1 - Math.pow((N - 1) / (double)N, F));
-    double A = log2((N + 1) / (ne + 0.5));
+	/**
+	 * Sole constructor: parameter-free
+	 */
+	public BasicModelIne() {
+	}
 
-    // basic model I(ne) should return A * tfn
-    // which we rewrite to A * (1 + tfn) - A
-    // so that it can be combined with the after effect while still guaranteeing
-    // that the result is non-decreasing with tfn
+	@Override
+	public final double score(BasicStats stats, double tfn, double aeTimes1pTfn) {
+		long N = stats.getNumberOfDocuments();
+		long F = stats.getTotalTermFreq();
+		double ne = N * (1 - Math.pow((N - 1) / (double) N, F));
+		double A = log2((N + 1) / (ne + 0.5));
 
-    return A * aeTimes1pTfn * (1 - 1 / (1 + tfn));
-  }
+		// basic model I(ne) should return A * tfn
+		// which we rewrite to A * (1 + tfn) - A
+		// so that it can be combined with the after effect while still guaranteeing
+		// that the result is non-decreasing with tfn
 
-  @Override
-  public Explanation explain(BasicStats stats, double tfn, double aeTimes1pTfn) {
-    double F = stats.getTotalTermFreq();
-    double N = stats.getNumberOfDocuments();
-    double ne = N * (1 - Math.pow((N - 1) / N, F));
-    Explanation explNe = Explanation.match((float) ne,
-        "ne, computed as N * (1 - Math.pow((N - 1) / N, F)) from:",
-        Explanation.match((float) F,
-            "F, total number of occurrences of term across all docs"),
-        Explanation.match((float) N,
-            "N, total number of documents with field"));
+		return A * aeTimes1pTfn * (1 - 1 / (1 + tfn));
+	}
 
-    return Explanation.match(
-        (float) (score(stats, tfn, aeTimes1pTfn) * (1 + tfn) / aeTimes1pTfn),
-        getClass().getSimpleName() + ", computed as " +
-            "tfn * log2((N + 1) / (ne + 0.5)) from:",
-        Explanation.match((float) tfn, "tfn, normalized term frequency"),
-        explNe);
-  }
+	@Override
+	public Explanation explain(BasicStats stats, double tfn, double aeTimes1pTfn) {
+		double F = stats.getTotalTermFreq();
+		double N = stats.getNumberOfDocuments();
+		double ne = N * (1 - Math.pow((N - 1) / N, F));
+		Explanation explNe = Explanation.match((float) ne,
+			"ne, computed as N * (1 - Math.pow((N - 1) / N, F)) from:",
+			Explanation.match((float) F,
+				"F, total number of occurrences of term across all docs"),
+			Explanation.match((float) N,
+				"N, total number of documents with field"));
 
-  @Override
-  public String toString() {
-    return "I(ne)";
-  }
+		return Explanation.match(
+			(float) (score(stats, tfn, aeTimes1pTfn) * (1 + tfn) / aeTimes1pTfn),
+			getClass().getSimpleName() + ", computed as " +
+				"tfn * log2((N + 1) / (ne + 0.5)) from:",
+			Explanation.match((float) tfn, "tfn, normalized term frequency"),
+			explNe);
+	}
+
+	@Override
+	public String toString() {
+		return "I(ne)";
+	}
 }

@@ -23,66 +23,75 @@ import org.apache.lucene.search.Query;
  * DocValues field for LongRange. This is a single valued field per document
  * due to being an extension of BinaryDocValuesField.
  */
-public class LongRangeDocValuesField extends BinaryRangeDocValuesField{
-  final String field;
-  final long[] min;
-  final long[] max;
+public class LongRangeDocValuesField extends BinaryRangeDocValuesField {
+	final String field;
+	final long[] min;
+	final long[] max;
 
-  /** Sole constructor. */
-  public LongRangeDocValuesField(String field, final long[] min, final long[] max) {
-    super(field, LongRange.encode(min, max), min.length, LongRange.BYTES);
-    checkArgs(min, max);
-    this.field = field;
-    this.min = min;
-    this.max = max;
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public LongRangeDocValuesField(String field, final long[] min, final long[] max) {
+		super(field, LongRange.encode(min, max), min.length, LongRange.BYTES);
+		checkArgs(min, max);
+		this.field = field;
+		this.min = min;
+		this.max = max;
+	}
 
-  /** Get the minimum value for the given dimension. */
-  public long getMin(int dimension) {
-    if (dimension > 4 || dimension > min.length) {
-      throw new IllegalArgumentException("Dimension out of valid range");
-    }
+	/**
+	 * Get the minimum value for the given dimension.
+	 */
+	public long getMin(int dimension) {
+		if (dimension > 4 || dimension > min.length) {
+			throw new IllegalArgumentException("Dimension out of valid range");
+		}
 
-    return min[dimension];
-  }
+		return min[dimension];
+	}
 
-  /** Get the maximum value for the given dimension. */
-  public long getMax(int dimension) {
-    if (dimension > 4 || dimension > min.length) {
-      throw new IllegalArgumentException("Dimension out of valid range");
-    }
+	/**
+	 * Get the maximum value for the given dimension.
+	 */
+	public long getMax(int dimension) {
+		if (dimension > 4 || dimension > min.length) {
+			throw new IllegalArgumentException("Dimension out of valid range");
+		}
 
-    return max[dimension];
-  }
+		return max[dimension];
+	}
 
-  private static Query newSlowRangeQuery(String field, final long[] min, final long[] max,
-                                        RangeFieldQuery.QueryType queryType) {
-    checkArgs(min, max);
-    return new LongRangeSlowRangeQuery(field, min, max, queryType);
-  }
+	private static Query newSlowRangeQuery(String field, final long[] min, final long[] max,
+																				 RangeFieldQuery.QueryType queryType) {
+		checkArgs(min, max);
+		return new LongRangeSlowRangeQuery(field, min, max, queryType);
+	}
 
-  /** Create a new range query that finds all ranges that intersect using doc values.
-   *  NOTE: This doesn't leverage indexing and may be slow.
-   *  @see LongRange#newIntersectsQuery */
-  public static Query newSlowIntersectsQuery(String field, final long[] min, final long[] max) {
-    return newSlowRangeQuery(field, min, max, RangeFieldQuery.QueryType.INTERSECTS);
-  }
+	/**
+	 * Create a new range query that finds all ranges that intersect using doc values.
+	 * NOTE: This doesn't leverage indexing and may be slow.
+	 *
+	 * @see LongRange#newIntersectsQuery
+	 */
+	public static Query newSlowIntersectsQuery(String field, final long[] min, final long[] max) {
+		return newSlowRangeQuery(field, min, max, RangeFieldQuery.QueryType.INTERSECTS);
+	}
 
-  /**
-   * validate the arguments
-   */
-  private static void checkArgs(final long[] min, final long[] max) {
-    if (min == null || max == null || min.length == 0 || max.length == 0) {
-      throw new IllegalArgumentException("min/max range values cannot be null or empty");
-    }
-    if (min.length != max.length) {
-      throw new IllegalArgumentException("min/max ranges must agree");
-    }
+	/**
+	 * validate the arguments
+	 */
+	private static void checkArgs(final long[] min, final long[] max) {
+		if (min == null || max == null || min.length == 0 || max.length == 0) {
+			throw new IllegalArgumentException("min/max range values cannot be null or empty");
+		}
+		if (min.length != max.length) {
+			throw new IllegalArgumentException("min/max ranges must agree");
+		}
 
-    for (int i = 0; i < min.length; i++) {
-      if (min[i] > max[i]) {
-        throw new IllegalArgumentException("min should be less than max");
-      }
-    }
-  }
+		for (int i = 0; i < min.length; i++) {
+			if (min[i] > max[i]) {
+				throw new IllegalArgumentException("min should be less than max");
+			}
+		}
+	}
 }

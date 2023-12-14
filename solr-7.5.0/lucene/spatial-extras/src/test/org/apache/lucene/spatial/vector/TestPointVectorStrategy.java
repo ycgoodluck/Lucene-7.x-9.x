@@ -35,67 +35,67 @@ import org.locationtech.spatial4j.shape.Point;
 
 public class TestPointVectorStrategy extends StrategyTestCase {
 
-  @Before
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    this.ctx = SpatialContext.GEO;
-  }
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		this.ctx = SpatialContext.GEO;
+	}
 
-  @Test
-  public void testCircleShapeSupport() {
-    this.strategy = PointVectorStrategy.newInstance(ctx, getClass().getSimpleName());
-    Circle circle = ctx.makeCircle(ctx.makePoint(0, 0), 10);
-    SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, circle);
-    Query query = this.strategy.makeQuery(args);
+	@Test
+	public void testCircleShapeSupport() {
+		this.strategy = PointVectorStrategy.newInstance(ctx, getClass().getSimpleName());
+		Circle circle = ctx.makeCircle(ctx.makePoint(0, 0), 10);
+		SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, circle);
+		Query query = this.strategy.makeQuery(args);
 
-    assertNotNull(query);
-  }
+		assertNotNull(query);
+	}
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void testInvalidQueryShape() {
-    this.strategy = PointVectorStrategy.newInstance(ctx, getClass().getSimpleName());
-    Point point = ctx.makePoint(0, 0);
-    SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, point);
-    this.strategy.makeQuery(args);
-  }
+	@Test(expected = UnsupportedOperationException.class)
+	public void testInvalidQueryShape() {
+		this.strategy = PointVectorStrategy.newInstance(ctx, getClass().getSimpleName());
+		Point point = ctx.makePoint(0, 0);
+		SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, point);
+		this.strategy.makeQuery(args);
+	}
 
-  @Test
-  public void testCitiesIntersectsBBox() throws IOException {
-    // note: does not require docValues
-    this.strategy = PointVectorStrategy.newInstance(ctx, getClass().getSimpleName());
-    getAddAndVerifyIndexedDocuments(DATA_WORLD_CITIES_POINTS);
-    executeQueries(SpatialMatchConcern.FILTER, QTEST_Cities_Intersects_BBox);
-  }
+	@Test
+	public void testCitiesIntersectsBBox() throws IOException {
+		// note: does not require docValues
+		this.strategy = PointVectorStrategy.newInstance(ctx, getClass().getSimpleName());
+		getAddAndVerifyIndexedDocuments(DATA_WORLD_CITIES_POINTS);
+		executeQueries(SpatialMatchConcern.FILTER, QTEST_Cities_Intersects_BBox);
+	}
 
-  @Test
-  public void testFieldOptions() throws IOException, ParseException {
-    // It's not stored; test it isn't.
-    this.strategy = PointVectorStrategy.newInstance(ctx, getClass().getSimpleName());
-    adoc("99", "POINT(-5.0 8.2)");
-    commit();
-    SearchResults results = executeQuery(new MatchAllDocsQuery(), 1);
-    Document document = results.results.get(0).document;
-    assertNull("not stored", document.getField(strategy.getFieldName() + PointVectorStrategy.SUFFIX_X));
-    assertNull("not stored", document.getField(strategy.getFieldName() + PointVectorStrategy.SUFFIX_Y));
-    deleteAll();
+	@Test
+	public void testFieldOptions() throws IOException, ParseException {
+		// It's not stored; test it isn't.
+		this.strategy = PointVectorStrategy.newInstance(ctx, getClass().getSimpleName());
+		adoc("99", "POINT(-5.0 8.2)");
+		commit();
+		SearchResults results = executeQuery(new MatchAllDocsQuery(), 1);
+		Document document = results.results.get(0).document;
+		assertNull("not stored", document.getField(strategy.getFieldName() + PointVectorStrategy.SUFFIX_X));
+		assertNull("not stored", document.getField(strategy.getFieldName() + PointVectorStrategy.SUFFIX_Y));
+		deleteAll();
 
-    // Now we mark it stored.  We also disable pointvalues...
-    FieldType fieldType = new FieldType(PointVectorStrategy.DEFAULT_FIELDTYPE);
-    fieldType.setStored(true);
-    fieldType.setDimensions(0, 0);//disable point values
-    this.strategy = new PointVectorStrategy(ctx, getClass().getSimpleName(), fieldType);
-    adoc("99", "POINT(-5.0 8.2)");
-    commit();
-    results = executeQuery(new MatchAllDocsQuery(), 1);
-    document = results.results.get(0).document;
-    assertEquals("stored", -5.0, document.getField(strategy.getFieldName() + PointVectorStrategy.SUFFIX_X).numericValue());
-    assertEquals("stored", 8.2,  document.getField(strategy.getFieldName() + PointVectorStrategy.SUFFIX_Y).numericValue());
+		// Now we mark it stored.  We also disable pointvalues...
+		FieldType fieldType = new FieldType(PointVectorStrategy.DEFAULT_FIELDTYPE);
+		fieldType.setStored(true);
+		fieldType.setDimensions(0, 0);//disable point values
+		this.strategy = new PointVectorStrategy(ctx, getClass().getSimpleName(), fieldType);
+		adoc("99", "POINT(-5.0 8.2)");
+		commit();
+		results = executeQuery(new MatchAllDocsQuery(), 1);
+		document = results.results.get(0).document;
+		assertEquals("stored", -5.0, document.getField(strategy.getFieldName() + PointVectorStrategy.SUFFIX_X).numericValue());
+		assertEquals("stored", 8.2, document.getField(strategy.getFieldName() + PointVectorStrategy.SUFFIX_Y).numericValue());
 
-    // Test a query fails without point values
-    expectThrows(UnsupportedOperationException.class, () -> {
-      SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, ctx.makeRectangle(-10.0, 10.0, -5.0, 5.0));
-      this.strategy.makeQuery(args);
-    });
-  }
+		// Test a query fails without point values
+		expectThrows(UnsupportedOperationException.class, () -> {
+			SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, ctx.makeRectangle(-10.0, 10.0, -5.0, 5.0));
+			this.strategy.makeQuery(args);
+		});
+	}
 }

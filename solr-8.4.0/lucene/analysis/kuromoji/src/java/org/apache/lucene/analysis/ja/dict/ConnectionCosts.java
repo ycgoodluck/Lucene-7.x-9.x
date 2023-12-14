@@ -30,70 +30,71 @@ import org.apache.lucene.util.IOUtils;
  * n-gram connection cost data
  */
 public final class ConnectionCosts {
-  
-  public static final String FILENAME_SUFFIX = ".dat";
-  public static final String HEADER = "kuromoji_cc";
-  public static final int VERSION = 1;
-  
-  private final short[][] costs; // array is backward IDs first since get is called using the same backward ID consecutively. maybe doesn't matter.
-  
-  /**
-   * @param scheme - scheme for loading resources (FILE or CLASSPATH).
-   * @param path - where to load resources from, without the ".dat" suffix
-   */
-  public ConnectionCosts(BinaryDictionary.ResourceScheme scheme, String path) throws IOException {
-    InputStream is = null;
-    short[][] costs = null;
-    boolean success = false;
-    try {
-      is = BinaryDictionary.getResource(scheme, path.replace('.', '/') + FILENAME_SUFFIX);
-      is = new BufferedInputStream(is);
-      final DataInput in = new InputStreamDataInput(is);
-      CodecUtil.checkHeader(in, HEADER, VERSION, VERSION);
-      int forwardSize = in.readVInt();
-      int backwardSize = in.readVInt();
-      costs = new short[backwardSize][forwardSize];
-      int accum = 0;
-      for (int j = 0; j < costs.length; j++) {
-        final short[] a = costs[j];
-        for (int i = 0; i < a.length; i++) {
-          accum += in.readZInt();
-          a[i] = (short)accum;
-        }
-      }
-      success = true;
-    } finally {
-      if (success) {
-        IOUtils.close(is);
-      } else {
-        IOUtils.closeWhileHandlingException(is);
-      }
-    }
-    
-    this.costs = costs;
-  }
 
-  private ConnectionCosts() throws IOException {
-    this(BinaryDictionary.ResourceScheme.CLASSPATH, ConnectionCosts.class.getName());
-  }
+	public static final String FILENAME_SUFFIX = ".dat";
+	public static final String HEADER = "kuromoji_cc";
+	public static final int VERSION = 1;
 
-  public int get(int forwardId, int backwardId) {
-    return costs[backwardId][forwardId];
-  }
-  
-  public static ConnectionCosts getInstance() {
-    return SingletonHolder.INSTANCE;
-  }
-  
-  private static class SingletonHolder {
-    static final ConnectionCosts INSTANCE;
-    static {
-      try {
-        INSTANCE = new ConnectionCosts();
-      } catch (IOException ioe) {
-        throw new RuntimeException("Cannot load ConnectionCosts.", ioe);
-      }
-    }
-   }
-  
+	private final short[][] costs; // array is backward IDs first since get is called using the same backward ID consecutively. maybe doesn't matter.
+
+	/**
+	 * @param scheme - scheme for loading resources (FILE or CLASSPATH).
+	 * @param path   - where to load resources from, without the ".dat" suffix
+	 */
+	public ConnectionCosts(BinaryDictionary.ResourceScheme scheme, String path) throws IOException {
+		InputStream is = null;
+		short[][] costs = null;
+		boolean success = false;
+		try {
+			is = BinaryDictionary.getResource(scheme, path.replace('.', '/') + FILENAME_SUFFIX);
+			is = new BufferedInputStream(is);
+			final DataInput in = new InputStreamDataInput(is);
+			CodecUtil.checkHeader(in, HEADER, VERSION, VERSION);
+			int forwardSize = in.readVInt();
+			int backwardSize = in.readVInt();
+			costs = new short[backwardSize][forwardSize];
+			int accum = 0;
+			for (int j = 0; j < costs.length; j++) {
+				final short[] a = costs[j];
+				for (int i = 0; i < a.length; i++) {
+					accum += in.readZInt();
+					a[i] = (short) accum;
+				}
+			}
+			success = true;
+		} finally {
+			if (success) {
+				IOUtils.close(is);
+			} else {
+				IOUtils.closeWhileHandlingException(is);
+			}
+		}
+
+		this.costs = costs;
+	}
+
+	private ConnectionCosts() throws IOException {
+		this(BinaryDictionary.ResourceScheme.CLASSPATH, ConnectionCosts.class.getName());
+	}
+
+	public int get(int forwardId, int backwardId) {
+		return costs[backwardId][forwardId];
+	}
+
+	public static ConnectionCosts getInstance() {
+		return SingletonHolder.INSTANCE;
+	}
+
+	private static class SingletonHolder {
+		static final ConnectionCosts INSTANCE;
+
+		static {
+			try {
+				INSTANCE = new ConnectionCosts();
+			} catch (IOException ioe) {
+				throw new RuntimeException("Cannot load ConnectionCosts.", ioe);
+			}
+		}
+	}
+
 }

@@ -20,20 +20,20 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestDependencies extends StemmerTestBase {
-  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("dependencies.aff", "dependencies.dic");
-  }
-  
-  public void testDependencies() {
-    assertStemsTo("drink", "drink", "drink");
-    assertStemsTo("drinks", "drink", "drink");
-    assertStemsTo("drinkable", "drink");
-    assertStemsTo("drinkables", "drink");
-    assertStemsTo("undrinkable", "drink");
-    assertStemsTo("undrinkables", "drink");
-    assertStemsTo("undrink");
-    assertStemsTo("undrinks");
-  }
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("dependencies.aff", "dependencies.dic");
+	}
+
+	public void testDependencies() {
+		assertStemsTo("drink", "drink", "drink");
+		assertStemsTo("drinks", "drink", "drink");
+		assertStemsTo("drinkable", "drink");
+		assertStemsTo("drinkables", "drink");
+		assertStemsTo("undrinkable", "drink");
+		assertStemsTo("undrinkables", "drink");
+		assertStemsTo("undrink");
+		assertStemsTo("undrinks");
+	}
 }

@@ -31,73 +31,75 @@ import org.apache.lucene.codecs.SegmentInfoFormat;
 import org.apache.lucene.codecs.StoredFieldsFormat;
 import org.apache.lucene.codecs.TermVectorsFormat;
 
-/** Codec for testing that throws random IOExceptions */
+/**
+ * Codec for testing that throws random IOExceptions
+ */
 public class CrankyCodec extends FilterCodec {
-  final Random random;
-  
-  /** 
-   * Wrap the provided codec with crankiness.
-   * Try passing Asserting for the most fun.
-   */
-  public CrankyCodec(Codec delegate, Random random) {
-    // we impersonate the passed-in codec, so we don't need to be in SPI,
-    // and so we dont change file formats
-    super(delegate.getName(), delegate);
-    this.random = random;
-  }
+	final Random random;
 
-  @Override
-  public DocValuesFormat docValuesFormat() {
-    return new CrankyDocValuesFormat(delegate.docValuesFormat(), random);
-  }
+	/**
+	 * Wrap the provided codec with crankiness.
+	 * Try passing Asserting for the most fun.
+	 */
+	public CrankyCodec(Codec delegate, Random random) {
+		// we impersonate the passed-in codec, so we don't need to be in SPI,
+		// and so we dont change file formats
+		super(delegate.getName(), delegate);
+		this.random = random;
+	}
 
-  @Override
-  public FieldInfosFormat fieldInfosFormat() {
-    return new CrankyFieldInfosFormat(delegate.fieldInfosFormat(), random);
-  }
+	@Override
+	public DocValuesFormat docValuesFormat() {
+		return new CrankyDocValuesFormat(delegate.docValuesFormat(), random);
+	}
 
-  @Override
-  public LiveDocsFormat liveDocsFormat() {
-    return new CrankyLiveDocsFormat(delegate.liveDocsFormat(), random);
-  }
+	@Override
+	public FieldInfosFormat fieldInfosFormat() {
+		return new CrankyFieldInfosFormat(delegate.fieldInfosFormat(), random);
+	}
 
-  @Override
-  public NormsFormat normsFormat() {
-    return new CrankyNormsFormat(delegate.normsFormat(), random);
-  }
+	@Override
+	public LiveDocsFormat liveDocsFormat() {
+		return new CrankyLiveDocsFormat(delegate.liveDocsFormat(), random);
+	}
 
-  @Override
-  public PostingsFormat postingsFormat() {
-    return new CrankyPostingsFormat(delegate.postingsFormat(), random);
-  }
+	@Override
+	public NormsFormat normsFormat() {
+		return new CrankyNormsFormat(delegate.normsFormat(), random);
+	}
 
-  @Override
-  public SegmentInfoFormat segmentInfoFormat() {
-    return new CrankySegmentInfoFormat(delegate.segmentInfoFormat(), random);
-  }
+	@Override
+	public PostingsFormat postingsFormat() {
+		return new CrankyPostingsFormat(delegate.postingsFormat(), random);
+	}
 
-  @Override
-  public StoredFieldsFormat storedFieldsFormat() {
-    return new CrankyStoredFieldsFormat(delegate.storedFieldsFormat(), random);
-  }
+	@Override
+	public SegmentInfoFormat segmentInfoFormat() {
+		return new CrankySegmentInfoFormat(delegate.segmentInfoFormat(), random);
+	}
 
-  @Override
-  public TermVectorsFormat termVectorsFormat() {
-    return new CrankyTermVectorsFormat(delegate.termVectorsFormat(), random);
-  }
+	@Override
+	public StoredFieldsFormat storedFieldsFormat() {
+		return new CrankyStoredFieldsFormat(delegate.storedFieldsFormat(), random);
+	}
 
-  @Override
-  public CompoundFormat compoundFormat() {
-    return new CrankyCompoundFormat(delegate.compoundFormat(), random);
-  }
+	@Override
+	public TermVectorsFormat termVectorsFormat() {
+		return new CrankyTermVectorsFormat(delegate.termVectorsFormat(), random);
+	}
 
-  @Override
-  public PointsFormat pointsFormat() {
-    return new CrankyPointsFormat(delegate.pointsFormat(), random);
-  }
+	@Override
+	public CompoundFormat compoundFormat() {
+		return new CrankyCompoundFormat(delegate.compoundFormat(), random);
+	}
 
-  @Override
-  public String toString() {
-    return "Cranky(" + delegate + ")";
-  }
+	@Override
+	public PointsFormat pointsFormat() {
+		return new CrankyPointsFormat(delegate.pointsFormat(), random);
+	}
+
+	@Override
+	public String toString() {
+		return "Cranky(" + delegate + ")";
+	}
 }

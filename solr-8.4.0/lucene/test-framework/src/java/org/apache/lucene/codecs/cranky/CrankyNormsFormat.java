@@ -27,50 +27,50 @@ import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
 
 class CrankyNormsFormat extends NormsFormat {
-  final NormsFormat delegate;
-  final Random random;
-  
-  CrankyNormsFormat(NormsFormat delegate, Random random) {
-    this.delegate = delegate;
-    this.random = random;
-  }
+	final NormsFormat delegate;
+	final Random random;
 
-  @Override
-  public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
-    if (random.nextInt(100) == 0) {
-      throw new IOException("Fake IOException from NormsFormat.normsConsumer()");
-    }
-    return new CrankyNormsConsumer(delegate.normsConsumer(state), random);
-  }
+	CrankyNormsFormat(NormsFormat delegate, Random random) {
+		this.delegate = delegate;
+		this.random = random;
+	}
 
-  @Override
-  public NormsProducer normsProducer(SegmentReadState state) throws IOException {
-    return delegate.normsProducer(state);
-  }
-  
-  static class CrankyNormsConsumer extends NormsConsumer {
-    final NormsConsumer delegate;
-    final Random random;
-    
-    CrankyNormsConsumer(NormsConsumer delegate, Random random) {
-      this.delegate = delegate;
-      this.random = random;
-    }
-    
-    @Override
-    public void close() throws IOException {
-      delegate.close();
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from NormsConsumer.close()");
-      }
-    }
+	@Override
+	public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
+		if (random.nextInt(100) == 0) {
+			throw new IOException("Fake IOException from NormsFormat.normsConsumer()");
+		}
+		return new CrankyNormsConsumer(delegate.normsConsumer(state), random);
+	}
 
-    @Override
-    public void addNormsField(FieldInfo field, NormsProducer valuesProducer) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from NormsConsumer.addNormsField()");
-      }
-      delegate.addNormsField(field, valuesProducer);
-    }
-  }
+	@Override
+	public NormsProducer normsProducer(SegmentReadState state) throws IOException {
+		return delegate.normsProducer(state);
+	}
+
+	static class CrankyNormsConsumer extends NormsConsumer {
+		final NormsConsumer delegate;
+		final Random random;
+
+		CrankyNormsConsumer(NormsConsumer delegate, Random random) {
+			this.delegate = delegate;
+			this.random = random;
+		}
+
+		@Override
+		public void close() throws IOException {
+			delegate.close();
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from NormsConsumer.close()");
+			}
+		}
+
+		@Override
+		public void addNormsField(FieldInfo field, NormsProducer valuesProducer) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from NormsConsumer.addNormsField()");
+			}
+			delegate.addNormsField(field, valuesProducer);
+		}
+	}
 }

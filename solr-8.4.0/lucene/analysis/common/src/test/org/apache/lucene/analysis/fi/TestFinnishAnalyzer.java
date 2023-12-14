@@ -24,37 +24,45 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestFinnishAnalyzer extends BaseTokenStreamTestCase {
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new FinnishAnalyzer().close();
-  }
-  
-  /** test stopwords and stemming */
-  public void testBasics() throws IOException {
-    Analyzer a = new FinnishAnalyzer();
-    // stemming
-    checkOneTerm(a, "edeltäjiinsä", "edeltäj");
-    checkOneTerm(a, "edeltäjistään", "edeltäj");
-    // stopword
-    assertAnalyzesTo(a, "olla", new String[] {});
-    a.close();
-  }
-  
-  /** test use of exclusion set */
-  public void testExclude() throws IOException {
-    CharArraySet exclusionSet = new CharArraySet( asSet("edeltäjistään"), false);
-    Analyzer a = new FinnishAnalyzer( 
-        FinnishAnalyzer.getDefaultStopSet(), exclusionSet);
-    checkOneTerm(a, "edeltäjiinsä", "edeltäj");
-    checkOneTerm(a, "edeltäjistään", "edeltäjistään");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer a = new FinnishAnalyzer();
-    checkRandomData(random(), a, 1000*RANDOM_MULTIPLIER);
-    a.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new FinnishAnalyzer().close();
+	}
+
+	/**
+	 * test stopwords and stemming
+	 */
+	public void testBasics() throws IOException {
+		Analyzer a = new FinnishAnalyzer();
+		// stemming
+		checkOneTerm(a, "edeltäjiinsä", "edeltäj");
+		checkOneTerm(a, "edeltäjistään", "edeltäj");
+		// stopword
+		assertAnalyzesTo(a, "olla", new String[]{});
+		a.close();
+	}
+
+	/**
+	 * test use of exclusion set
+	 */
+	public void testExclude() throws IOException {
+		CharArraySet exclusionSet = new CharArraySet(asSet("edeltäjistään"), false);
+		Analyzer a = new FinnishAnalyzer(
+			FinnishAnalyzer.getDefaultStopSet(), exclusionSet);
+		checkOneTerm(a, "edeltäjiinsä", "edeltäj");
+		checkOneTerm(a, "edeltäjistään", "edeltäjistään");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer a = new FinnishAnalyzer();
+		checkRandomData(random(), a, 1000 * RANDOM_MULTIPLIER);
+		a.close();
+	}
 }

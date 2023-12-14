@@ -21,63 +21,63 @@ import java.io.IOException;
 
 abstract class RelativeIterator extends IntervalIterator {
 
-  final IntervalIterator a;
-  final IntervalIterator b;
+	final IntervalIterator a;
+	final IntervalIterator b;
 
-  boolean bpos;
+	boolean bpos;
 
-  RelativeIterator(IntervalIterator a, IntervalIterator b) {
-    this.a = a;
-    this.b = b;
-  }
+	RelativeIterator(IntervalIterator a, IntervalIterator b) {
+		this.a = a;
+		this.b = b;
+	}
 
-  @Override
-  public int docID() {
-    return a.docID();
-  }
+	@Override
+	public int docID() {
+		return a.docID();
+	}
 
-  @Override
-  public int nextDoc() throws IOException {
-    int doc = a.nextDoc();
-    reset();
-    return doc;
-  }
+	@Override
+	public int nextDoc() throws IOException {
+		int doc = a.nextDoc();
+		reset();
+		return doc;
+	}
 
-  @Override
-  public int advance(int target) throws IOException {
-    int doc = a.advance(target);
-    reset();
-    return doc;
-  }
+	@Override
+	public int advance(int target) throws IOException {
+		int doc = a.advance(target);
+		reset();
+		return doc;
+	}
 
-  @Override
-  public long cost() {
-    return a.cost();
-  }
+	@Override
+	public long cost() {
+		return a.cost();
+	}
 
-  protected void reset() throws IOException {
-    int doc = a.docID();
-    bpos = b.docID() == doc ||
-        (b.docID() < doc && b.advance(doc) == doc);
-  }
+	protected void reset() throws IOException {
+		int doc = a.docID();
+		bpos = b.docID() == doc ||
+			(b.docID() < doc && b.advance(doc) == doc);
+	}
 
-  @Override
-  public int start() {
-    return a.start();
-  }
+	@Override
+	public int start() {
+		return a.start();
+	}
 
-  @Override
-  public int end() {
-    return a.end();
-  }
+	@Override
+	public int end() {
+		return a.end();
+	}
 
-  @Override
-  public int gaps() {
-    return a.gaps();
-  }
+	@Override
+	public int gaps() {
+		return a.gaps();
+	}
 
-  @Override
-  public float matchCost() {
-    return a.matchCost() + b.matchCost();
-  }
+	@Override
+	public float matchCost() {
+		return a.matchCost() + b.matchCost();
+	}
 }

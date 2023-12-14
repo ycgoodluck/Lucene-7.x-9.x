@@ -33,27 +33,28 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * &lt;/fieldType&gt;</pre>
  * <p>
  * The {@code consumeAllTokens} property is optional and defaults to {@code false}.
+ *
  * @since 5.2.0
  */
 public class LimitTokenOffsetFilterFactory extends TokenFilterFactory {
 
-  public static final String MAX_START_OFFSET = "maxStartOffset";
-  public static final String CONSUME_ALL_TOKENS_KEY = "consumeAllTokens";
+	public static final String MAX_START_OFFSET = "maxStartOffset";
+	public static final String CONSUME_ALL_TOKENS_KEY = "consumeAllTokens";
 
-  private int maxStartOffset;
-  private boolean consumeAllTokens;
+	private int maxStartOffset;
+	private boolean consumeAllTokens;
 
-  public LimitTokenOffsetFilterFactory(Map<String, String> args) {
-    super(args);
-    maxStartOffset = requireInt(args, MAX_START_OFFSET);
-    consumeAllTokens = getBoolean(args, CONSUME_ALL_TOKENS_KEY, false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	public LimitTokenOffsetFilterFactory(Map<String, String> args) {
+		super(args);
+		maxStartOffset = requireInt(args, MAX_START_OFFSET);
+		consumeAllTokens = getBoolean(args, CONSUME_ALL_TOKENS_KEY, false);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new LimitTokenOffsetFilter(input, maxStartOffset, consumeAllTokens);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new LimitTokenOffsetFilter(input, maxStartOffset, consumeAllTokens);
+	}
 }

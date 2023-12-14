@@ -26,8 +26,8 @@ import org.apache.lucene.util.TestUtil;
  */
 public class TestLucene60FieldInfoFormat extends BaseFieldInfoFormatTestCase {
 
-  @Override
-  protected Codec getCodec() {
-    return TestUtil.getDefaultCodec();
-  }
+	@Override
+	protected Codec getCodec() {
+		return TestUtil.getDefaultCodec();
+	}
 }

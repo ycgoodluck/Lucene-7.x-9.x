@@ -20,78 +20,78 @@ import java.util.Arrays;
 
 public class TestStringMSBRadixSorter extends LuceneTestCase {
 
-  private void test(BytesRef[] refs, int len) {
-    BytesRef[] expected = ArrayUtil.copyOfSubArray(refs, 0, len);
-    Arrays.sort(expected);
+	private void test(BytesRef[] refs, int len) {
+		BytesRef[] expected = ArrayUtil.copyOfSubArray(refs, 0, len);
+		Arrays.sort(expected);
 
-    new StringMSBRadixSorter() {
+		new StringMSBRadixSorter() {
 
-      @Override
-      protected BytesRef get(int i) {
-        return refs[i];
-      }
+			@Override
+			protected BytesRef get(int i) {
+				return refs[i];
+			}
 
-      @Override
-      protected void swap(int i, int j) {
-        BytesRef tmp = refs[i];
-        refs[i] = refs[j];
-        refs[j] = tmp;
-      }
-    }.sort(0, len);
-    BytesRef[] actual = ArrayUtil.copyOfSubArray(refs, 0, len);
-    assertArrayEquals(expected, actual);
-  }
+			@Override
+			protected void swap(int i, int j) {
+				BytesRef tmp = refs[i];
+				refs[i] = refs[j];
+				refs[j] = tmp;
+			}
+		}.sort(0, len);
+		BytesRef[] actual = ArrayUtil.copyOfSubArray(refs, 0, len);
+		assertArrayEquals(expected, actual);
+	}
 
-  public void testEmpty() {
-    test(new BytesRef[random().nextInt(5)], 0);
-  }
+	public void testEmpty() {
+		test(new BytesRef[random().nextInt(5)], 0);
+	}
 
-  public void testOneValue() {
-    BytesRef bytes = new BytesRef(TestUtil.randomSimpleString(random()));
-    test(new BytesRef[] { bytes }, 1);
-  }
+	public void testOneValue() {
+		BytesRef bytes = new BytesRef(TestUtil.randomSimpleString(random()));
+		test(new BytesRef[]{bytes}, 1);
+	}
 
-  public void testTwoValues() {
-    BytesRef bytes1 = new BytesRef(TestUtil.randomSimpleString(random()));
-    BytesRef bytes2 = new BytesRef(TestUtil.randomSimpleString(random()));
-    test(new BytesRef[] { bytes1, bytes2 }, 2);
-  }
+	public void testTwoValues() {
+		BytesRef bytes1 = new BytesRef(TestUtil.randomSimpleString(random()));
+		BytesRef bytes2 = new BytesRef(TestUtil.randomSimpleString(random()));
+		test(new BytesRef[]{bytes1, bytes2}, 2);
+	}
 
-  private void testRandom(int commonPrefixLen, int maxLen) {
-    byte[] commonPrefix = new byte[commonPrefixLen];
-    random().nextBytes(commonPrefix);
-    final int len = random().nextInt(100000);
-    BytesRef[] bytes = new BytesRef[len + random().nextInt(50)];
-    for (int i = 0; i < len; ++i) {
-      byte[] b = new byte[commonPrefixLen + random().nextInt(maxLen)];
-      random().nextBytes(b);
-      System.arraycopy(commonPrefix, 0, b, 0, commonPrefixLen);
-      bytes[i] = new BytesRef(b);
-    }
-    test(bytes, len);
-  }
+	private void testRandom(int commonPrefixLen, int maxLen) {
+		byte[] commonPrefix = new byte[commonPrefixLen];
+		random().nextBytes(commonPrefix);
+		final int len = random().nextInt(100000);
+		BytesRef[] bytes = new BytesRef[len + random().nextInt(50)];
+		for (int i = 0; i < len; ++i) {
+			byte[] b = new byte[commonPrefixLen + random().nextInt(maxLen)];
+			random().nextBytes(b);
+			System.arraycopy(commonPrefix, 0, b, 0, commonPrefixLen);
+			bytes[i] = new BytesRef(b);
+		}
+		test(bytes, len);
+	}
 
-  public void testRandom() {
-    for (int iter = 0; iter < 10; ++iter) {
-      testRandom(0, 10);
-    }
-  }
+	public void testRandom() {
+		for (int iter = 0; iter < 10; ++iter) {
+			testRandom(0, 10);
+		}
+	}
 
-  public void testRandomWithLotsOfDuplicates() {
-    for (int iter = 0; iter < 10; ++iter) {
-      testRandom(0, 2);
-    }
-  }
+	public void testRandomWithLotsOfDuplicates() {
+		for (int iter = 0; iter < 10; ++iter) {
+			testRandom(0, 2);
+		}
+	}
 
-  public void testRandomWithSharedPrefix() {
-    for (int iter = 0; iter < 10; ++iter) {
-      testRandom(TestUtil.nextInt(random(), 1, 30), 10);
-    }
-  }
+	public void testRandomWithSharedPrefix() {
+		for (int iter = 0; iter < 10; ++iter) {
+			testRandom(TestUtil.nextInt(random(), 1, 30), 10);
+		}
+	}
 
-  public void testRandomWithSharedPrefixAndLotsOfDuplicates() {
-    for (int iter = 0; iter < 10; ++iter) {
-      testRandom(TestUtil.nextInt(random(), 1, 30), 2);
-    }
-  }
+	public void testRandomWithSharedPrefixAndLotsOfDuplicates() {
+		for (int iter = 0; iter < 10; ++iter) {
+			testRandom(TestUtil.nextInt(random(), 1, 30), 2);
+		}
+	}
 }

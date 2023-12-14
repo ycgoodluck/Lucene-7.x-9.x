@@ -33,7 +33,7 @@ import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
  * <p>
  * It also supports NLS messages.
  * </p>
- * 
+ *
  * @see Message
  * @see NLS
  * @see NLSException
@@ -41,48 +41,48 @@ import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
  */
 public class QueryNodeException extends Exception implements NLSException {
 
-  protected Message message = new MessageImpl(QueryParserMessages.EMPTY_MESSAGE);
+	protected Message message = new MessageImpl(QueryParserMessages.EMPTY_MESSAGE);
 
-  public QueryNodeException(Message message) {
-    super(message.getKey());
+	public QueryNodeException(Message message) {
+		super(message.getKey());
 
-    this.message = message;
+		this.message = message;
 
-  }
+	}
 
-  public QueryNodeException(Throwable throwable) {
-    super(throwable);
-  }
+	public QueryNodeException(Throwable throwable) {
+		super(throwable);
+	}
 
-  public QueryNodeException(Message message, Throwable throwable) {
-    super(message.getKey(), throwable);
+	public QueryNodeException(Message message, Throwable throwable) {
+		super(message.getKey(), throwable);
 
-    this.message = message;
+		this.message = message;
 
-  }
+	}
 
-  @Override
-  public Message getMessageObject() {
-    return this.message;
-  }
+	@Override
+	public Message getMessageObject() {
+		return this.message;
+	}
 
-  @Override
-  public String getMessage() {
-    return getLocalizedMessage();
-  }
+	@Override
+	public String getMessage() {
+		return getLocalizedMessage();
+	}
 
-  @Override
-  public String getLocalizedMessage() {
-    return getLocalizedMessage(Locale.getDefault());
-  }
+	@Override
+	public String getLocalizedMessage() {
+		return getLocalizedMessage(Locale.getDefault());
+	}
 
-  public String getLocalizedMessage(Locale locale) {
-    return this.message.getLocalizedMessage(locale);
-  }
+	public String getLocalizedMessage(Locale locale) {
+		return this.message.getLocalizedMessage(locale);
+	}
 
-  @Override
-  public String toString() {
-    return this.message.getKey() + ": " + getLocalizedMessage();
-  }
+	@Override
+	public String toString() {
+		return this.message.getKey() + ": " + getLocalizedMessage();
+	}
 
 }

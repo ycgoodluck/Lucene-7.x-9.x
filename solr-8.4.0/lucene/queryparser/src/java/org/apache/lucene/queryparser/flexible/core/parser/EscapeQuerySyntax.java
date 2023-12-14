@@ -23,22 +23,19 @@ import java.util.Locale;
  * to escape the queries, when the toQueryString method is called.
  */
 public interface EscapeQuerySyntax {
-  /**
-   * Type of escaping: String for escaping syntax,
-   * NORMAL for escaping reserved words (like AND) in terms
-   */
-  public enum Type {
-    STRING, NORMAL;
-  }
+	/**
+	 * Type of escaping: String for escaping syntax,
+	 * NORMAL for escaping reserved words (like AND) in terms
+	 */
+	public enum Type {
+		STRING, NORMAL;
+	}
 
-  /**
-   * @param text
-   *          - text to be escaped
-   * @param locale
-   *          - locale for the current query
-   * @param type
-   *          - select the type of escape operation to use
-   * @return escaped text
-   */
-  CharSequence escape(CharSequence text, Locale locale, Type type);
+	/**
+	 * @param text   - text to be escaped
+	 * @param locale - locale for the current query
+	 * @param type   - select the type of escape operation to use
+	 * @return escaped text
+	 */
+	CharSequence escape(CharSequence text, Locale locale, Type type);
 }

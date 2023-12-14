@@ -22,8 +22,8 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
- * Factory for {@link GreekLowerCaseFilter}. 
+/**
+ * Factory for {@link GreekLowerCaseFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_glc" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -32,30 +32,34 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class GreekLowerCaseFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "greekLowercase";
- 
-  /** Creates a new GreekLowerCaseFilterFactory */
-  public GreekLowerCaseFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "greekLowercase";
 
-  @Override
-  public TokenStream create(TokenStream in) {
-    return new GreekLowerCaseFilter(in);
-  }
+	/**
+	 * Creates a new GreekLowerCaseFilterFactory
+	 */
+	public GreekLowerCaseFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	@Override
+	public TokenStream create(TokenStream in) {
+		return new GreekLowerCaseFilter(in);
+	}
+
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }
 

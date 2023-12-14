@@ -29,50 +29,51 @@ import static org.apache.lucene.analysis.TokenStream.DEFAULT_TOKEN_ATTRIBUTE_FAC
 
 /**
  * Analyzer for Korean that uses morphological analysis.
- * @see KoreanTokenizer
+ *
  * @lucene.experimental
+ * @see KoreanTokenizer
  */
 public class KoreanAnalyzer extends Analyzer {
-  private final UserDictionary userDict;
-  private final KoreanTokenizer.DecompoundMode mode;
-  private final Set<POS.Tag> stopTags;
-  private final boolean outputUnknownUnigrams;
+	private final UserDictionary userDict;
+	private final KoreanTokenizer.DecompoundMode mode;
+	private final Set<POS.Tag> stopTags;
+	private final boolean outputUnknownUnigrams;
 
-  /**
-   * Creates a new KoreanAnalyzer.
-   */
-  public KoreanAnalyzer() {
-    this(null, KoreanTokenizer.DEFAULT_DECOMPOUND, KoreanPartOfSpeechStopFilter.DEFAULT_STOP_TAGS, false);
-  }
+	/**
+	 * Creates a new KoreanAnalyzer.
+	 */
+	public KoreanAnalyzer() {
+		this(null, KoreanTokenizer.DEFAULT_DECOMPOUND, KoreanPartOfSpeechStopFilter.DEFAULT_STOP_TAGS, false);
+	}
 
-  /**
-   * Creates a new KoreanAnalyzer.
-   *
-   * @param userDict Optional: if non-null, user dictionary.
-   * @param mode Decompound mode.
-   * @param stopTags The set of part of speech that should be filtered.
-   * @param outputUnknownUnigrams If true outputs unigrams for unknown words.
-   */
-  public KoreanAnalyzer(UserDictionary userDict, DecompoundMode mode, Set<POS.Tag> stopTags, boolean outputUnknownUnigrams) {
-    super();
-    this.userDict = userDict;
-    this.mode = mode;
-    this.stopTags = stopTags;
-    this.outputUnknownUnigrams = outputUnknownUnigrams;
-  }
-  
-  @Override
-  protected TokenStreamComponents createComponents(String fieldName) {
-    Tokenizer tokenizer = new KoreanTokenizer(DEFAULT_TOKEN_ATTRIBUTE_FACTORY, userDict, mode, outputUnknownUnigrams);
-    TokenStream stream = new KoreanPartOfSpeechStopFilter(tokenizer, stopTags);
-    stream = new KoreanReadingFormFilter(stream);
-    stream = new LowerCaseFilter(stream);
-    return new TokenStreamComponents(tokenizer, stream);
-  }
+	/**
+	 * Creates a new KoreanAnalyzer.
+	 *
+	 * @param userDict              Optional: if non-null, user dictionary.
+	 * @param mode                  Decompound mode.
+	 * @param stopTags              The set of part of speech that should be filtered.
+	 * @param outputUnknownUnigrams If true outputs unigrams for unknown words.
+	 */
+	public KoreanAnalyzer(UserDictionary userDict, DecompoundMode mode, Set<POS.Tag> stopTags, boolean outputUnknownUnigrams) {
+		super();
+		this.userDict = userDict;
+		this.mode = mode;
+		this.stopTags = stopTags;
+		this.outputUnknownUnigrams = outputUnknownUnigrams;
+	}
 
-  @Override
-  protected TokenStream normalize(String fieldName, TokenStream in) {
-    TokenStream result = new LowerCaseFilter(in);
-    return result;
-  }
+	@Override
+	protected TokenStreamComponents createComponents(String fieldName) {
+		Tokenizer tokenizer = new KoreanTokenizer(DEFAULT_TOKEN_ATTRIBUTE_FACTORY, userDict, mode, outputUnknownUnigrams);
+		TokenStream stream = new KoreanPartOfSpeechStopFilter(tokenizer, stopTags);
+		stream = new KoreanReadingFormFilter(stream);
+		stream = new LowerCaseFilter(stream);
+		return new TokenStreamComponents(tokenizer, stream);
+	}
+
+	@Override
+	protected TokenStream normalize(String fieldName, TokenStream in) {
+		TokenStream result = new LowerCaseFilter(in);
+		return result;
+	}
 }

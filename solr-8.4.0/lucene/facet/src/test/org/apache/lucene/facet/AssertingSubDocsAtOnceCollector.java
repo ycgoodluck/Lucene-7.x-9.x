@@ -24,39 +24,41 @@ import org.apache.lucene.search.Scorable;
 import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.search.SimpleCollector;
 
-/** Verifies in collect() that all child subScorers are on
- *  the collected doc. */
+/**
+ * Verifies in collect() that all child subScorers are on
+ * the collected doc.
+ */
 class AssertingSubDocsAtOnceCollector extends SimpleCollector {
 
-  // TODO: allow wrapping another Collector
+	// TODO: allow wrapping another Collector
 
-  List<Scorable> allScorers;
+	List<Scorable> allScorers;
 
-  @Override
-  public void setScorer(Scorable s) throws IOException {
-    // Gathers all scorers, including s and "under":
-    allScorers = new ArrayList<>();
-    allScorers.add(s);
-    int upto = 0;
-    while(upto < allScorers.size()) {
-      s = allScorers.get(upto++);
-      for (Scorable.ChildScorable sub : s.getChildren()) {
-        allScorers.add(sub.child);
-      }
-    }
-  }
+	@Override
+	public void setScorer(Scorable s) throws IOException {
+		// Gathers all scorers, including s and "under":
+		allScorers = new ArrayList<>();
+		allScorers.add(s);
+		int upto = 0;
+		while (upto < allScorers.size()) {
+			s = allScorers.get(upto++);
+			for (Scorable.ChildScorable sub : s.getChildren()) {
+				allScorers.add(sub.child);
+			}
+		}
+	}
 
-  @Override
-  public void collect(int docID) {
-    for(Scorable s : allScorers) {
-      if (docID != s.docID()) {
-        throw new IllegalStateException("subScorer=" + s + " has docID=" + s.docID() + " != collected docID=" + docID);
-      }
-    }
-  }
+	@Override
+	public void collect(int docID) {
+		for (Scorable s : allScorers) {
+			if (docID != s.docID()) {
+				throw new IllegalStateException("subScorer=" + s + " has docID=" + s.docID() + " != collected docID=" + docID);
+			}
+		}
+	}
 
-  @Override
-  public ScoreMode scoreMode() {
-    return ScoreMode.COMPLETE_NO_SCORES;
-  }
+	@Override
+	public ScoreMode scoreMode() {
+		return ScoreMode.COMPLETE_NO_SCORES;
+	}
 }

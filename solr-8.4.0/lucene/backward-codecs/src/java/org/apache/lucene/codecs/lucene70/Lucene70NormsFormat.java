@@ -40,7 +40,7 @@ import org.apache.lucene.store.DataOutput;
  * <ol>
  *   <li><a name="nvm"></a>
  *   <p>The Norms metadata or .nvm file.</p>
- *   <p>For each norms field, this stores metadata, such as the offset into the 
+ *   <p>For each norms field, this stores metadata, such as the offset into the
  *      Norms data (.nvd)</p>
  *   <p>Norms metadata (.dvm) --&gt; Header,&lt;Entry&gt;<sup>NumFields</sup>,Footer</p>
  *   <ul>
@@ -55,7 +55,7 @@ import org.apache.lucene.store.DataOutput;
  *     <li>Footer --&gt; {@link CodecUtil#writeFooter CodecFooter}</li>
  *   </ul>
  *   <p>FieldNumber of -1 indicates the end of metadata.</p>
- *   <p>NormsAddress is the pointer to the start of the data in the norms data (.nvd), or the singleton value 
+ *   <p>NormsAddress is the pointer to the start of the data in the norms data (.nvd), or the singleton value
  *      when BytesPerValue = 0. If BytesPerValue is different from 0 then there are NumDocsWithField values
  *      to read at that offset.</p>
  *   <p>DocsWithFieldAddress is the pointer to the start of the bit set containing documents that have a norm
@@ -73,27 +73,31 @@ import org.apache.lucene.store.DataOutput;
  *     <li>Footer --&gt; {@link CodecUtil#writeFooter CodecFooter}</li>
  *   </ul>
  * </ol>
+ *
  * @lucene.experimental
  */
 public class Lucene70NormsFormat extends NormsFormat {
 
-  /** Sole Constructor */
-  public Lucene70NormsFormat() {}
-  
-  @Override
-  public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
-    return new Lucene70NormsConsumer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION);
-  }
+	/**
+	 * Sole Constructor
+	 */
+	public Lucene70NormsFormat() {
+	}
 
-  @Override
-  public NormsProducer normsProducer(SegmentReadState state) throws IOException {
-    return new Lucene70NormsProducer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION);
-  }
-  
-  private static final String DATA_CODEC = "Lucene70NormsData";
-  private static final String DATA_EXTENSION = "nvd";
-  private static final String METADATA_CODEC = "Lucene70NormsMetadata";
-  private static final String METADATA_EXTENSION = "nvm";
-  static final int VERSION_START = 0;
-  static final int VERSION_CURRENT = VERSION_START;
+	@Override
+	public NormsConsumer normsConsumer(SegmentWriteState state) throws IOException {
+		return new Lucene70NormsConsumer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION);
+	}
+
+	@Override
+	public NormsProducer normsProducer(SegmentReadState state) throws IOException {
+		return new Lucene70NormsProducer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION);
+	}
+
+	private static final String DATA_CODEC = "Lucene70NormsData";
+	private static final String DATA_EXTENSION = "nvd";
+	private static final String METADATA_CODEC = "Lucene70NormsMetadata";
+	private static final String METADATA_EXTENSION = "nvm";
+	static final int VERSION_START = 0;
+	static final int VERSION_CURRENT = VERSION_START;
 }

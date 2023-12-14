@@ -24,36 +24,45 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestPolishAnalyzer extends BaseTokenStreamTestCase {
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new PolishAnalyzer().close();
-  }
-  
-  /** test stopwords and stemming */
-  public void testBasics() throws IOException {
-    Analyzer a = new PolishAnalyzer();
-    // stemming
-    checkOneTerm(a, "studenta", "student");
-    checkOneTerm(a, "studenci", "student");
-    // stopword
-    assertAnalyzesTo(a, "był", new String[] {});
-    a.close();
-  }
-  
-  /** test use of exclusion set */
-  public void testExclude() throws IOException {
-    CharArraySet exclusionSet = new CharArraySet(asSet("studenta"), false);;
-    Analyzer a = new PolishAnalyzer(PolishAnalyzer.getDefaultStopSet(), exclusionSet);
-    checkOneTerm(a, "studenta", "studenta");
-    checkOneTerm(a, "studenci", "student");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer analyzer = new PolishAnalyzer();
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-    analyzer.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new PolishAnalyzer().close();
+	}
+
+	/**
+	 * test stopwords and stemming
+	 */
+	public void testBasics() throws IOException {
+		Analyzer a = new PolishAnalyzer();
+		// stemming
+		checkOneTerm(a, "studenta", "student");
+		checkOneTerm(a, "studenci", "student");
+		// stopword
+		assertAnalyzesTo(a, "był", new String[]{});
+		a.close();
+	}
+
+	/**
+	 * test use of exclusion set
+	 */
+	public void testExclude() throws IOException {
+		CharArraySet exclusionSet = new CharArraySet(asSet("studenta"), false);
+		;
+		Analyzer a = new PolishAnalyzer(PolishAnalyzer.getDefaultStopSet(), exclusionSet);
+		checkOneTerm(a, "studenta", "studenta");
+		checkOneTerm(a, "studenci", "student");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer analyzer = new PolishAnalyzer();
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+		analyzer.close();
+	}
 }

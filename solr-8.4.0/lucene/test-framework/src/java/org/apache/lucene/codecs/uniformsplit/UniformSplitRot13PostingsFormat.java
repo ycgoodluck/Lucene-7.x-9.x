@@ -33,115 +33,115 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IOUtils;
 
 /**
- *  {@link UniformSplitPostingsFormat} with block encoding using ROT13 cypher.
+ * {@link UniformSplitPostingsFormat} with block encoding using ROT13 cypher.
  */
 public class UniformSplitRot13PostingsFormat extends PostingsFormat {
 
-  public static volatile boolean encoderCalled;
-  public static volatile boolean decoderCalled;
-  public static volatile boolean blocksEncoded;
-  public static volatile boolean dictionaryEncoded;
+	public static volatile boolean encoderCalled;
+	public static volatile boolean decoderCalled;
+	public static volatile boolean blocksEncoded;
+	public static volatile boolean dictionaryEncoded;
 
-  public UniformSplitRot13PostingsFormat() {
-    this("UniformSplitRot13");
-  }
+	public UniformSplitRot13PostingsFormat() {
+		this("UniformSplitRot13");
+	}
 
-  protected UniformSplitRot13PostingsFormat(String name) {
-    super(name);
-  }
+	protected UniformSplitRot13PostingsFormat(String name) {
+		super(name);
+	}
 
-  public static void resetEncodingFlags() {
-    encoderCalled = false;
-    decoderCalled = false;
-    blocksEncoded = false;
-    dictionaryEncoded = false;
-  }
+	public static void resetEncodingFlags() {
+		encoderCalled = false;
+		decoderCalled = false;
+		blocksEncoded = false;
+		dictionaryEncoded = false;
+	}
 
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState segmentWriteState) throws IOException {
-    PostingsWriterBase postingsWriter = new Lucene84PostingsWriter(segmentWriteState);
-    boolean success = false;
-    try {
-      FieldsConsumer fieldsConsumer = createFieldsConsumer(segmentWriteState, postingsWriter);
-      success = true;
-      return fieldsConsumer;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(postingsWriter);
-      }
-    }
-  }
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState segmentWriteState) throws IOException {
+		PostingsWriterBase postingsWriter = new Lucene84PostingsWriter(segmentWriteState);
+		boolean success = false;
+		try {
+			FieldsConsumer fieldsConsumer = createFieldsConsumer(segmentWriteState, postingsWriter);
+			success = true;
+			return fieldsConsumer;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(postingsWriter);
+			}
+		}
+	}
 
-  protected FieldsConsumer createFieldsConsumer(SegmentWriteState segmentWriteState, PostingsWriterBase postingsWriter) throws IOException {
-    return new UniformSplitTermsWriter(postingsWriter, segmentWriteState,
-        UniformSplitTermsWriter.DEFAULT_TARGET_NUM_BLOCK_LINES,
-        UniformSplitTermsWriter.DEFAULT_DELTA_NUM_LINES,
-        getBlockEncoder()
-    ) {
-      @Override
-      protected void writeDictionary(IndexDictionary.Builder dictionaryBuilder) throws IOException {
-        recordBlockEncodingCall();
-        super.writeDictionary(dictionaryBuilder);
-        recordDictionaryEncodingCall();
-      }
-    };
-  }
+	protected FieldsConsumer createFieldsConsumer(SegmentWriteState segmentWriteState, PostingsWriterBase postingsWriter) throws IOException {
+		return new UniformSplitTermsWriter(postingsWriter, segmentWriteState,
+			UniformSplitTermsWriter.DEFAULT_TARGET_NUM_BLOCK_LINES,
+			UniformSplitTermsWriter.DEFAULT_DELTA_NUM_LINES,
+			getBlockEncoder()
+		) {
+			@Override
+			protected void writeDictionary(IndexDictionary.Builder dictionaryBuilder) throws IOException {
+				recordBlockEncodingCall();
+				super.writeDictionary(dictionaryBuilder);
+				recordDictionaryEncodingCall();
+			}
+		};
+	}
 
-  protected void recordBlockEncodingCall() {
-    if (encoderCalled) {
-      blocksEncoded = true;
-      encoderCalled = false;
-    }
-  }
+	protected void recordBlockEncodingCall() {
+		if (encoderCalled) {
+			blocksEncoded = true;
+			encoderCalled = false;
+		}
+	}
 
-  protected void recordDictionaryEncodingCall() {
-    if (encoderCalled) {
-      dictionaryEncoded = true;
-      encoderCalled = false;
-    }
-  }
+	protected void recordDictionaryEncodingCall() {
+		if (encoderCalled) {
+			dictionaryEncoded = true;
+			encoderCalled = false;
+		}
+	}
 
-  protected BlockEncoder getBlockEncoder() {
-    return (blockBytes, length) -> {
-      byte[] encodedBytes = Rot13CypherTestUtil.encode(blockBytes, Math.toIntExact(length));
-      return new BlockEncoder.WritableBytes() {
-        @Override
-        public long size() {
-          return encodedBytes.length;
-        }
+	protected BlockEncoder getBlockEncoder() {
+		return (blockBytes, length) -> {
+			byte[] encodedBytes = Rot13CypherTestUtil.encode(blockBytes, Math.toIntExact(length));
+			return new BlockEncoder.WritableBytes() {
+				@Override
+				public long size() {
+					return encodedBytes.length;
+				}
 
-        @Override
-        public void writeTo(DataOutput dataOutput) throws IOException {
-          encoderCalled = true;
-          dataOutput.writeBytes(encodedBytes, 0, encodedBytes.length);
-        }
-      };
-    };
-  }
+				@Override
+				public void writeTo(DataOutput dataOutput) throws IOException {
+					encoderCalled = true;
+					dataOutput.writeBytes(encodedBytes, 0, encodedBytes.length);
+				}
+			};
+		};
+	}
 
-  @Override
-  public FieldsProducer fieldsProducer(SegmentReadState segmentReadState) throws IOException {
-    PostingsReaderBase postingsReader = new Lucene84PostingsReader(segmentReadState);
-    boolean success = false;
-    try {
-      FieldsProducer fieldsProducer = createFieldsProducer(segmentReadState, postingsReader);
-      success = true;
-      return fieldsProducer;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(postingsReader);
-      }
-    }
-  }
+	@Override
+	public FieldsProducer fieldsProducer(SegmentReadState segmentReadState) throws IOException {
+		PostingsReaderBase postingsReader = new Lucene84PostingsReader(segmentReadState);
+		boolean success = false;
+		try {
+			FieldsProducer fieldsProducer = createFieldsProducer(segmentReadState, postingsReader);
+			success = true;
+			return fieldsProducer;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(postingsReader);
+			}
+		}
+	}
 
-  protected FieldsProducer createFieldsProducer(SegmentReadState segmentReadState, PostingsReaderBase postingsReader) throws IOException {
-    return new UniformSplitTermsReader(postingsReader, segmentReadState, getBlockDecoder());
-  }
+	protected FieldsProducer createFieldsProducer(SegmentReadState segmentReadState, PostingsReaderBase postingsReader) throws IOException {
+		return new UniformSplitTermsReader(postingsReader, segmentReadState, getBlockDecoder());
+	}
 
-  protected BlockDecoder getBlockDecoder() {
-    return (blockBytes, length) -> {
-      decoderCalled = true;
-      return new BytesRef(Rot13CypherTestUtil.decode(blockBytes, length));
-    };
-  }
+	protected BlockDecoder getBlockDecoder() {
+		return (blockBytes, length) -> {
+			decoderCalled = true;
+			return new BytesRef(Rot13CypherTestUtil.decode(blockBytes, length));
+		};
+	}
 }

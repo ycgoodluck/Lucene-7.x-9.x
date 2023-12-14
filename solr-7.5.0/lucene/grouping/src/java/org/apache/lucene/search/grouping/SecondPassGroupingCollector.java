@@ -28,75 +28,75 @@ import org.apache.lucene.search.SimpleCollector;
  * SecondPassGroupingCollector runs over an already collected set of
  * groups, further applying a {@link GroupReducer} to each group
  *
+ * @lucene.experimental
  * @see TopGroupsCollector
  * @see DistinctValuesCollector
- *
- * @lucene.experimental
  */
 public class SecondPassGroupingCollector<T> extends SimpleCollector {
 
-  protected final GroupSelector<T> groupSelector;
-  protected final Collection<SearchGroup<T>> groups;
-  protected final GroupReducer<T, ?> groupReducer;
+	protected final GroupSelector<T> groupSelector;
+	protected final Collection<SearchGroup<T>> groups;
+	protected final GroupReducer<T, ?> groupReducer;
 
-  protected int totalHitCount;
-  protected int totalGroupedHitCount;
+	protected int totalHitCount;
+	protected int totalGroupedHitCount;
 
-  /**
-   * Create a new SecondPassGroupingCollector
-   * @param groupSelector   the GroupSelector that defines groups for this search
-   * @param groups          the groups to collect documents for
-   * @param reducer         the reducer to apply to each group
-   */
-  public SecondPassGroupingCollector(GroupSelector<T> groupSelector, Collection<SearchGroup<T>> groups, GroupReducer<T, ?> reducer) {
+	/**
+	 * Create a new SecondPassGroupingCollector
+	 *
+	 * @param groupSelector the GroupSelector that defines groups for this search
+	 * @param groups        the groups to collect documents for
+	 * @param reducer       the reducer to apply to each group
+	 */
+	public SecondPassGroupingCollector(GroupSelector<T> groupSelector, Collection<SearchGroup<T>> groups, GroupReducer<T, ?> reducer) {
 
-    //System.out.println("SP init");
-    if (groups.isEmpty()) {
-      throw new IllegalArgumentException("no groups to collect (groups is empty)");
-    }
+		//System.out.println("SP init");
+		if (groups.isEmpty()) {
+			throw new IllegalArgumentException("no groups to collect (groups is empty)");
+		}
 
-    this.groupSelector = Objects.requireNonNull(groupSelector);
-    this.groupSelector.setGroups(groups);
+		this.groupSelector = Objects.requireNonNull(groupSelector);
+		this.groupSelector.setGroups(groups);
 
-    this.groups = Objects.requireNonNull(groups);
-    this.groupReducer = reducer;
-    reducer.setGroups(groups);
-  }
+		this.groups = Objects.requireNonNull(groups);
+		this.groupReducer = reducer;
+		reducer.setGroups(groups);
+	}
 
-  /**
-   * @return the GroupSelector used in this collector
-   */
-  public GroupSelector<T> getGroupSelector() {
-    return groupSelector;
-  }
+	/**
+	 * @return the GroupSelector used in this collector
+	 */
+	public GroupSelector<T> getGroupSelector() {
+		return groupSelector;
+	}
 
-  @Override
-  public boolean needsScores() {
-    return groupReducer.needsScores();
-  }
+	@Override
+	public boolean needsScores() {
+		return groupReducer.needsScores();
+	}
 
-  @Override
-  public void setScorer(Scorer scorer) throws IOException {
-    groupReducer.setScorer(scorer);
-  }
+	@Override
+	public void setScorer(Scorer scorer) throws IOException {
+		groupReducer.setScorer(scorer);
+	}
 
-  @Override
-  public void collect(int doc) throws IOException {
-    // 统计满足搜索要求的文档个数
-    totalHitCount++;
-    if (groupSelector.advanceTo(doc) == GroupSelector.State.SKIP)
-      return;
-    // 统计满足所属分组值是FirstPassGroupingCollector中收集到的分组值的文档数
-    totalGroupedHitCount++;
-    T value = groupSelector.currentValue();
-    // 对属于同一个分组值的文档进行收集工作
-    groupReducer.collect(value, doc);
-  }
+	@Override
+	public void collect(int doc) throws IOException {
+		// 统计满足搜索要求的文档个数
+		totalHitCount++;
+		if (groupSelector.advanceTo(doc) == GroupSelector.State.SKIP)
+			return;
+		// 统计满足所属分组值是FirstPassGroupingCollector中收集到的分组值的文档数
+		totalGroupedHitCount++;
+		T value = groupSelector.currentValue();
+		// 对属于同一个分组值的文档进行收集工作
+		groupReducer.collect(value, doc);
+	}
 
-  @Override
-  protected void doSetNextReader(LeafReaderContext readerContext) throws IOException {
-    groupReducer.setNextReader(readerContext);
-    groupSelector.setNextReader(readerContext);
-  }
+	@Override
+	protected void doSetNextReader(LeafReaderContext readerContext) throws IOException {
+		groupReducer.setNextReader(readerContext);
+		groupSelector.setNextReader(readerContext);
+	}
 
 }

@@ -37,425 +37,435 @@ import static org.apache.lucene.index.PostingsEnum.NO_MORE_DOCS;
 
 public class TestCustomTermFreq extends LuceneTestCase {
 
-  private static final class CannedTermFreqs extends TokenStream {
-    private final String[] terms;
-    private final int[] termFreqs;
-    private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-    private final TermFrequencyAttribute termFreqAtt = addAttribute(TermFrequencyAttribute.class);
-    private int upto;
-    
-    public CannedTermFreqs(String[] terms, int[] termFreqs) {
-      this.terms = terms;
-      this.termFreqs = termFreqs;
-      assert terms.length == termFreqs.length;
-    }
+	private static final class CannedTermFreqs extends TokenStream {
+		private final String[] terms;
+		private final int[] termFreqs;
+		private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+		private final TermFrequencyAttribute termFreqAtt = addAttribute(TermFrequencyAttribute.class);
+		private int upto;
 
-    @Override
-    public boolean incrementToken() {
-      if (upto == terms.length) {
-        return false;
-      }
+		public CannedTermFreqs(String[] terms, int[] termFreqs) {
+			this.terms = terms;
+			this.termFreqs = termFreqs;
+			assert terms.length == termFreqs.length;
+		}
 
-      clearAttributes();
+		@Override
+		public boolean incrementToken() {
+			if (upto == terms.length) {
+				return false;
+			}
 
-      termAtt.append(terms[upto]);
-      termFreqAtt.setTermFrequency(termFreqs[upto]);
+			clearAttributes();
 
-      upto++;
-      return true;
-    }
+			termAtt.append(terms[upto]);
+			termFreqAtt.setTermFrequency(termFreqs[upto]);
 
-    @Override
-    public void reset() {
-      upto = 0;
-    }
-  }
-  
-  public void testSingletonTermsOneDoc() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+			upto++;
+			return true;
+		}
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar"},
-                                                new int[] {42, 128}),
-                            fieldType);
-    doc.add(field);
-    w.addDocument(doc);
-    IndexReader r = DirectoryReader.open(w);
-    PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("bar"), (int) PostingsEnum.FREQS);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(128, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
+		@Override
+		public void reset() {
+			upto = 0;
+		}
+	}
 
-    postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("foo"), (int) PostingsEnum.FREQS);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(42, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
-    
-    IOUtils.close(r, w, dir);
-  }
+	public void testSingletonTermsOneDoc() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-  public void testSingletonTermsTwoDocs() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar"},
+				new int[]{42, 128}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
+		IndexReader r = DirectoryReader.open(w);
+		PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("bar"), (int) PostingsEnum.FREQS);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(128, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar"},
-                                                new int[] {42, 128}),
-                            fieldType);
-    doc.add(field);
-    w.addDocument(doc);
+		postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("foo"), (int) PostingsEnum.FREQS);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(42, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
 
-    doc = new Document();
-    field = new Field("field",
-                      new CannedTermFreqs(new String[] {"foo", "bar"},
-                                          new int[] {50, 50}),
-                      fieldType);
-    doc.add(field);
-    w.addDocument(doc);
-    
-    IndexReader r = DirectoryReader.open(w);
-    PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("bar"), (int) PostingsEnum.FREQS);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(128, postings.freq());
-    assertEquals(1, postings.nextDoc());
-    assertEquals(50, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
+		IOUtils.close(r, w, dir);
+	}
 
-    postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("foo"), (int) PostingsEnum.FREQS);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(42, postings.freq());
-    assertEquals(1, postings.nextDoc());
-    assertEquals(50, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
-    
-    IOUtils.close(r, w, dir);
-  }
+	public void testSingletonTermsTwoDocs() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-  public void testRepeatTermsOneDoc() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar"},
+				new int[]{42, 128}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                                new int[] {42, 128, 17, 100}),
-                            fieldType);
-    doc.add(field);
-    w.addDocument(doc);
-    IndexReader r = DirectoryReader.open(w);
-    PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("bar"), (int) PostingsEnum.FREQS);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(228, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
+		doc = new Document();
+		field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar"},
+				new int[]{50, 50}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
 
-    postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("foo"), (int) PostingsEnum.FREQS);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(59, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
-    
-    IOUtils.close(r, w, dir);
-  }
+		IndexReader r = DirectoryReader.open(w);
+		PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("bar"), (int) PostingsEnum.FREQS);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(128, postings.freq());
+		assertEquals(1, postings.nextDoc());
+		assertEquals(50, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
 
-  public void testRepeatTermsTwoDocs() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+		postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("foo"), (int) PostingsEnum.FREQS);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(42, postings.freq());
+		assertEquals(1, postings.nextDoc());
+		assertEquals(50, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                                new int[] {42, 128, 17, 100}),
-                            fieldType);
-    doc.add(field);
-    w.addDocument(doc);
+		IOUtils.close(r, w, dir);
+	}
 
-    doc = new Document();
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    field = new Field("field",
-                      new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                          new int[] {50, 60, 70, 80}),
-                      fieldType);
-    doc.add(field);
-    w.addDocument(doc);
+	public void testRepeatTermsOneDoc() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-    IndexReader r = DirectoryReader.open(w);
-    PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("bar"), (int) PostingsEnum.FREQS);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(228, postings.freq());
-    assertEquals(1, postings.nextDoc());
-    assertEquals(140, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{42, 128, 17, 100}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
+		IndexReader r = DirectoryReader.open(w);
+		PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("bar"), (int) PostingsEnum.FREQS);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(228, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
 
-    postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("foo"), (int) PostingsEnum.FREQS);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(59, postings.freq());
-    assertEquals(1, postings.nextDoc());
-    assertEquals(120, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
+		postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("foo"), (int) PostingsEnum.FREQS);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(59, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
 
-    IOUtils.close(r, w, dir);
-  }
+		IOUtils.close(r, w, dir);
+	}
 
-  public void testTotalTermFreq() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+	public void testRepeatTermsTwoDocs() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                                new int[] {42, 128, 17, 100}),
-                            fieldType);
-    doc.add(field);
-    w.addDocument(doc);
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{42, 128, 17, 100}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
 
-    doc = new Document();
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    field = new Field("field",
-                      new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                          new int[] {50, 60, 70, 80}),
-                      fieldType);
-    doc.add(field);
-    w.addDocument(doc);
+		doc = new Document();
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{50, 60, 70, 80}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
 
-    IndexReader r = DirectoryReader.open(w);
+		IndexReader r = DirectoryReader.open(w);
+		PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("bar"), (int) PostingsEnum.FREQS);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(228, postings.freq());
+		assertEquals(1, postings.nextDoc());
+		assertEquals(140, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
 
-    TermsEnum termsEnum = MultiTerms.getTerms(r, "field").iterator();
-    assertTrue(termsEnum.seekExact(new BytesRef("foo")));
-    assertEquals(179, termsEnum.totalTermFreq());
-    assertTrue(termsEnum.seekExact(new BytesRef("bar")));
-    assertEquals(368, termsEnum.totalTermFreq());
-    
-    IOUtils.close(r, w, dir);
-  }
+		postings = MultiTerms.getTermPostingsEnum(r, "field", new BytesRef("foo"), (int) PostingsEnum.FREQS);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(59, postings.freq());
+		assertEquals(1, postings.nextDoc());
+		assertEquals(120, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
 
-  // you can't index proximity with custom term freqs:
-  public void testInvalidProx() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+		IOUtils.close(r, w, dir);
+	}
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                                new int[] {42, 128, 17, 100}),
-                            fieldType);
-    doc.add(field);
-    Exception e = expectThrows(IllegalStateException.class, () -> {w.addDocument(doc);});
-    assertEquals("field \"field\": cannot index positions while using custom TermFrequencyAttribute", e.getMessage());
-    IOUtils.close(w, dir);
-  }
+	public void testTotalTermFreq() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-  // you can't index DOCS_ONLY with custom term freq
-  public void testInvalidDocsOnly() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{42, 128, 17, 100}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                                new int[] {42, 128, 17, 100}),
-                            fieldType);
-    doc.add(field);
-    Exception e = expectThrows(IllegalStateException.class, () -> {w.addDocument(doc);});
-    assertEquals("field \"field\": must index term freq while using custom TermFrequencyAttribute", e.getMessage());
-    IOUtils.close(w, dir);
-  }
+		doc = new Document();
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{50, 60, 70, 80}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
 
-  // sum of term freqs must fit in an int
-  public void testOverflowInt() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+		IndexReader r = DirectoryReader.open(w);
 
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS);
-    
-    Document doc = new Document();
-    doc.add(new Field("field", "this field should be indexed", fieldType));
-    w.addDocument(doc);
+		TermsEnum termsEnum = MultiTerms.getTerms(r, "field").iterator();
+		assertTrue(termsEnum.seekExact(new BytesRef("foo")));
+		assertEquals(179, termsEnum.totalTermFreq());
+		assertTrue(termsEnum.seekExact(new BytesRef("bar")));
+		assertEquals(368, termsEnum.totalTermFreq());
 
-    Document doc2 = new Document();
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar"},
-                                                new int[] {3, Integer.MAX_VALUE}),
-                            fieldType);
-    doc2.add(field);
-    expectThrows(IllegalArgumentException.class, () -> {w.addDocument(doc2);});
+		IOUtils.close(r, w, dir);
+	}
 
-    IndexReader r = DirectoryReader.open(w);
-    assertEquals(1, r.numDocs());
+	// you can't index proximity with custom term freqs:
+	public void testInvalidProx() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-    IOUtils.close(r, w, dir);
-  }
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{42, 128, 17, 100}),
+			fieldType);
+		doc.add(field);
+		Exception e = expectThrows(IllegalStateException.class, () -> {
+			w.addDocument(doc);
+		});
+		assertEquals("field \"field\": cannot index positions while using custom TermFrequencyAttribute", e.getMessage());
+		IOUtils.close(w, dir);
+	}
 
-  public void testInvalidTermVectorPositions() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+	// you can't index DOCS_ONLY with custom term freq
+	public void testInvalidDocsOnly() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    fieldType.setStoreTermVectors(true);
-    fieldType.setStoreTermVectorPositions(true);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                                new int[] {42, 128, 17, 100}),
-                            fieldType);
-    doc.add(field);
-    Exception e = expectThrows(IllegalArgumentException.class, () -> {w.addDocument(doc);});
-    assertEquals("field \"field\": cannot index term vector positions while using custom TermFrequencyAttribute", e.getMessage());
-    IOUtils.close(w, dir);
-  }
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{42, 128, 17, 100}),
+			fieldType);
+		doc.add(field);
+		Exception e = expectThrows(IllegalStateException.class, () -> {
+			w.addDocument(doc);
+		});
+		assertEquals("field \"field\": must index term freq while using custom TermFrequencyAttribute", e.getMessage());
+		IOUtils.close(w, dir);
+	}
 
-  public void testInvalidTermVectorOffsets() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+	// sum of term freqs must fit in an int
+	public void testOverflowInt() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    fieldType.setStoreTermVectors(true);
-    fieldType.setStoreTermVectorOffsets(true);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                                new int[] {42, 128, 17, 100}),
-                            fieldType);
-    doc.add(field);
-    Exception e = expectThrows(IllegalArgumentException.class, () -> {w.addDocument(doc);});
-    assertEquals("field \"field\": cannot index term vector offsets while using custom TermFrequencyAttribute", e.getMessage());
-    IOUtils.close(w, dir);
-  }
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS);
 
-  public void testTermVectors() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
+		Document doc = new Document();
+		doc.add(new Field("field", "this field should be indexed", fieldType));
+		w.addDocument(doc);
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    fieldType.setStoreTermVectors(true);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                                new int[] {42, 128, 17, 100}),
-                            fieldType);
-    doc.add(field);
-    w.addDocument(doc);
+		Document doc2 = new Document();
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar"},
+				new int[]{3, Integer.MAX_VALUE}),
+			fieldType);
+		doc2.add(field);
+		expectThrows(IllegalArgumentException.class, () -> {
+			w.addDocument(doc2);
+		});
 
-    doc = new Document();
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    field = new Field("field",
-                      new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                          new int[] {50, 60, 70, 80}),
-                      fieldType);
-    doc.add(field);
-    w.addDocument(doc);
+		IndexReader r = DirectoryReader.open(w);
+		assertEquals(1, r.numDocs());
 
-    IndexReader r = DirectoryReader.open(w);
+		IOUtils.close(r, w, dir);
+	}
 
-    Fields fields = r.getTermVectors(0);
-    TermsEnum termsEnum = fields.terms("field").iterator();
-    assertTrue(termsEnum.seekExact(new BytesRef("bar")));
-    assertEquals(228, termsEnum.totalTermFreq());
-    PostingsEnum postings = termsEnum.postings(null);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(228, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
+	public void testInvalidTermVectorPositions() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-    assertTrue(termsEnum.seekExact(new BytesRef("foo")));
-    assertEquals(59, termsEnum.totalTermFreq());
-    postings = termsEnum.postings(null);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(59, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		fieldType.setStoreTermVectors(true);
+		fieldType.setStoreTermVectorPositions(true);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{42, 128, 17, 100}),
+			fieldType);
+		doc.add(field);
+		Exception e = expectThrows(IllegalArgumentException.class, () -> {
+			w.addDocument(doc);
+		});
+		assertEquals("field \"field\": cannot index term vector positions while using custom TermFrequencyAttribute", e.getMessage());
+		IOUtils.close(w, dir);
+	}
 
-    fields = r.getTermVectors(1);
-    termsEnum = fields.terms("field").iterator();
-    assertTrue(termsEnum.seekExact(new BytesRef("bar")));
-    assertEquals(140, termsEnum.totalTermFreq());
-    postings = termsEnum.postings(null);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(140, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
+	public void testInvalidTermVectorOffsets() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-    assertTrue(termsEnum.seekExact(new BytesRef("foo")));
-    assertEquals(120, termsEnum.totalTermFreq());
-    postings = termsEnum.postings(null);
-    assertNotNull(postings);
-    assertEquals(0, postings.nextDoc());
-    assertEquals(120, postings.freq());
-    assertEquals(NO_MORE_DOCS, postings.nextDoc());
-    
-    IOUtils.close(r, w, dir);
-  }
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		fieldType.setStoreTermVectors(true);
+		fieldType.setStoreTermVectorOffsets(true);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{42, 128, 17, 100}),
+			fieldType);
+		doc.add(field);
+		Exception e = expectThrows(IllegalArgumentException.class, () -> {
+			w.addDocument(doc);
+		});
+		assertEquals("field \"field\": cannot index term vector offsets while using custom TermFrequencyAttribute", e.getMessage());
+		IOUtils.close(w, dir);
+	}
 
-  /**
-   * Similarity holds onto the FieldInvertState for subsequent verification.
-   */
-  private static class NeverForgetsSimilarity extends Similarity {
-    public FieldInvertState lastState;
-    private final static NeverForgetsSimilarity INSTANCE = new NeverForgetsSimilarity();
+	public void testTermVectors() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())));
 
-    private NeverForgetsSimilarity() {
-      // no
-    }
-    
-    @Override
-    public long computeNorm(FieldInvertState state) {
-      this.lastState = state;
-      return 1;
-    }
-    
-    @Override
-    public SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-      throw new UnsupportedOperationException();
-    }
-  }
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		fieldType.setStoreTermVectors(true);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{42, 128, 17, 100}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
 
-  public void testFieldInvertState() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()));
-    iwc.setSimilarity(NeverForgetsSimilarity.INSTANCE);
-    IndexWriter w = new IndexWriter(dir, iwc);
+		doc = new Document();
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{50, 60, 70, 80}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
 
-    Document doc = new Document();
-    FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
-    fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    Field field = new Field("field",
-                            new CannedTermFreqs(new String[] {"foo", "bar", "foo", "bar"},
-                                                new int[] {42, 128, 17, 100}),
-                            fieldType);
-    doc.add(field);
-    w.addDocument(doc);
-    FieldInvertState fis = NeverForgetsSimilarity.INSTANCE.lastState;
-    assertEquals(228, fis.getMaxTermFrequency());
-    assertEquals(2, fis.getUniqueTermCount());
-    assertEquals(0, fis.getNumOverlap());
-    assertEquals(287, fis.getLength());
+		IndexReader r = DirectoryReader.open(w);
 
-    IOUtils.close(w, dir);
-  }
+		Fields fields = r.getTermVectors(0);
+		TermsEnum termsEnum = fields.terms("field").iterator();
+		assertTrue(termsEnum.seekExact(new BytesRef("bar")));
+		assertEquals(228, termsEnum.totalTermFreq());
+		PostingsEnum postings = termsEnum.postings(null);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(228, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
+
+		assertTrue(termsEnum.seekExact(new BytesRef("foo")));
+		assertEquals(59, termsEnum.totalTermFreq());
+		postings = termsEnum.postings(null);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(59, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
+
+		fields = r.getTermVectors(1);
+		termsEnum = fields.terms("field").iterator();
+		assertTrue(termsEnum.seekExact(new BytesRef("bar")));
+		assertEquals(140, termsEnum.totalTermFreq());
+		postings = termsEnum.postings(null);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(140, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
+
+		assertTrue(termsEnum.seekExact(new BytesRef("foo")));
+		assertEquals(120, termsEnum.totalTermFreq());
+		postings = termsEnum.postings(null);
+		assertNotNull(postings);
+		assertEquals(0, postings.nextDoc());
+		assertEquals(120, postings.freq());
+		assertEquals(NO_MORE_DOCS, postings.nextDoc());
+
+		IOUtils.close(r, w, dir);
+	}
+
+	/**
+	 * Similarity holds onto the FieldInvertState for subsequent verification.
+	 */
+	private static class NeverForgetsSimilarity extends Similarity {
+		public FieldInvertState lastState;
+		private final static NeverForgetsSimilarity INSTANCE = new NeverForgetsSimilarity();
+
+		private NeverForgetsSimilarity() {
+			// no
+		}
+
+		@Override
+		public long computeNorm(FieldInvertState state) {
+			this.lastState = state;
+			return 1;
+		}
+
+		@Override
+		public SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public void testFieldInvertState() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()));
+		iwc.setSimilarity(NeverForgetsSimilarity.INSTANCE);
+		IndexWriter w = new IndexWriter(dir, iwc);
+
+		Document doc = new Document();
+		FieldType fieldType = new FieldType(TextField.TYPE_NOT_STORED);
+		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		Field field = new Field("field",
+			new CannedTermFreqs(new String[]{"foo", "bar", "foo", "bar"},
+				new int[]{42, 128, 17, 100}),
+			fieldType);
+		doc.add(field);
+		w.addDocument(doc);
+		FieldInvertState fis = NeverForgetsSimilarity.INSTANCE.lastState;
+		assertEquals(228, fis.getMaxTermFrequency());
+		assertEquals(2, fis.getUniqueTermCount());
+		assertEquals(0, fis.getNumOverlap());
+		assertEquals(287, fis.getLength());
+
+		IOUtils.close(w, dir);
+	}
 }

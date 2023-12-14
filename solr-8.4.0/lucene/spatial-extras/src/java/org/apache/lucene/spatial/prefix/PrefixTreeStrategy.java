@@ -56,7 +56,7 @@ import org.locationtech.spatial4j.shape.Shape;
  * <li>Only {@link org.apache.lucene.spatial.query.SpatialOperation#Intersects}
  * is supported.  If only points are indexed then this is effectively equivalent
  * to IsWithin.</li>
- * <li>The strategy supports {@link #makeDistanceValueSource(org.locationtech.spatial4j.shape.Point,double)}
+ * <li>The strategy supports {@link #makeDistanceValueSource(org.locationtech.spatial4j.shape.Point, double)}
  * even for multi-valued data, so long as the indexed data is all points; the
  * behavior is undefined otherwise.  However, <em>it will likely be removed in
  * the future</em> in lieu of using another strategy with a more scalable
@@ -77,158 +77,161 @@ import org.locationtech.spatial4j.shape.Shape;
  * @lucene.experimental
  */
 public abstract class PrefixTreeStrategy extends SpatialStrategy {
-  protected final SpatialPrefixTree grid;
-  private final Map<String, PointPrefixTreeFieldCacheProvider> provider = new ConcurrentHashMap<>();
-  protected int defaultFieldValuesArrayLen = 2;
-  protected double distErrPct = SpatialArgs.DEFAULT_DISTERRPCT;// [ 0 TO 0.5 ]
-  protected boolean pointsOnly = false;//if true, there are no leaves
+	protected final SpatialPrefixTree grid;
+	private final Map<String, PointPrefixTreeFieldCacheProvider> provider = new ConcurrentHashMap<>();
+	protected int defaultFieldValuesArrayLen = 2;
+	protected double distErrPct = SpatialArgs.DEFAULT_DISTERRPCT;// [ 0 TO 0.5 ]
+	protected boolean pointsOnly = false;//if true, there are no leaves
 
-  public PrefixTreeStrategy(SpatialPrefixTree grid, String fieldName) {
-    super(grid.getSpatialContext(), fieldName);
-    this.grid = grid;
-  }
+	public PrefixTreeStrategy(SpatialPrefixTree grid, String fieldName) {
+		super(grid.getSpatialContext(), fieldName);
+		this.grid = grid;
+	}
 
-  public SpatialPrefixTree getGrid() {
-    return grid;
-  }
+	public SpatialPrefixTree getGrid() {
+		return grid;
+	}
 
-  /**
-   * A memory hint used by {@link #makeDistanceValueSource(org.locationtech.spatial4j.shape.Point)}
-   * for how big the initial size of each Document's array should be. The
-   * default is 2.  Set this to slightly more than the default expected number
-   * of points per document.
-   */
-  public void setDefaultFieldValuesArrayLen(int defaultFieldValuesArrayLen) {
-    this.defaultFieldValuesArrayLen = defaultFieldValuesArrayLen;
-  }
+	/**
+	 * A memory hint used by {@link #makeDistanceValueSource(org.locationtech.spatial4j.shape.Point)}
+	 * for how big the initial size of each Document's array should be. The
+	 * default is 2.  Set this to slightly more than the default expected number
+	 * of points per document.
+	 */
+	public void setDefaultFieldValuesArrayLen(int defaultFieldValuesArrayLen) {
+		this.defaultFieldValuesArrayLen = defaultFieldValuesArrayLen;
+	}
 
-  public double getDistErrPct() {
-    return distErrPct;
-  }
+	public double getDistErrPct() {
+		return distErrPct;
+	}
 
-  /**
-   * The default measure of shape precision affecting shapes at index and query
-   * times. Points don't use this as they are always indexed at the configured
-   * maximum precision ({@link org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree#getMaxLevels()});
-   * this applies to all other shapes. Specific shapes at index and query time
-   * can use something different than this default value.  If you don't set a
-   * default then the default is {@link SpatialArgs#DEFAULT_DISTERRPCT} --
-   * 2.5%.
-   *
-   * @see org.apache.lucene.spatial.query.SpatialArgs#getDistErrPct()
-   */
-  public void setDistErrPct(double distErrPct) {
-    this.distErrPct = distErrPct;
-  }
+	/**
+	 * The default measure of shape precision affecting shapes at index and query
+	 * times. Points don't use this as they are always indexed at the configured
+	 * maximum precision ({@link org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree#getMaxLevels()});
+	 * this applies to all other shapes. Specific shapes at index and query time
+	 * can use something different than this default value.  If you don't set a
+	 * default then the default is {@link SpatialArgs#DEFAULT_DISTERRPCT} --
+	 * 2.5%.
+	 *
+	 * @see org.apache.lucene.spatial.query.SpatialArgs#getDistErrPct()
+	 */
+	public void setDistErrPct(double distErrPct) {
+		this.distErrPct = distErrPct;
+	}
 
-  public boolean isPointsOnly() {
-    return pointsOnly;
-  }
+	public boolean isPointsOnly() {
+		return pointsOnly;
+	}
 
-  /** True if only indexed points shall be supported. There are no "leafs" in such a case, except those
-   * at maximum precision. */
-  public void setPointsOnly(boolean pointsOnly) {
-    this.pointsOnly = pointsOnly;
-  }
+	/**
+	 * True if only indexed points shall be supported. There are no "leafs" in such a case, except those
+	 * at maximum precision.
+	 */
+	public void setPointsOnly(boolean pointsOnly) {
+		this.pointsOnly = pointsOnly;
+	}
 
-  @Override
-  public Field[] createIndexableFields(Shape shape) {
-    double distErr = SpatialArgs.calcDistanceFromErrPct(shape, distErrPct, ctx);
-    return createIndexableFields(shape, distErr);
-  }
+	@Override
+	public Field[] createIndexableFields(Shape shape) {
+		double distErr = SpatialArgs.calcDistanceFromErrPct(shape, distErrPct, ctx);
+		return createIndexableFields(shape, distErr);
+	}
 
-  /**
-   * Turns {@link SpatialPrefixTree#getTreeCellIterator(Shape, int)} into a
-   * {@link org.apache.lucene.analysis.TokenStream}.
-   */
-  public Field[] createIndexableFields(Shape shape, double distErr) {
-    int detailLevel = grid.getLevelForDistance(distErr);
-    return createIndexableFields(shape, detailLevel);
-  }
+	/**
+	 * Turns {@link SpatialPrefixTree#getTreeCellIterator(Shape, int)} into a
+	 * {@link org.apache.lucene.analysis.TokenStream}.
+	 */
+	public Field[] createIndexableFields(Shape shape, double distErr) {
+		int detailLevel = grid.getLevelForDistance(distErr);
+		return createIndexableFields(shape, detailLevel);
+	}
 
-  public Field[] createIndexableFields(Shape shape, int detailLevel) {
-    //TODO re-use TokenStream LUCENE-5776: Subclass Field, put cell iterator there, override tokenStream()
-    Iterator<Cell> cells = createCellIteratorToIndex(shape, detailLevel, null);
-    CellToBytesRefIterator cellToBytesRefIterator = newCellToBytesRefIterator();
-    cellToBytesRefIterator.reset(cells);
-    BytesRefIteratorTokenStream tokenStream = new BytesRefIteratorTokenStream();
-    tokenStream.setBytesRefIterator(cellToBytesRefIterator);
-    Field field = new Field(getFieldName(), tokenStream, FIELD_TYPE);
-    return new Field[]{field};
-  }
+	public Field[] createIndexableFields(Shape shape, int detailLevel) {
+		//TODO re-use TokenStream LUCENE-5776: Subclass Field, put cell iterator there, override tokenStream()
+		Iterator<Cell> cells = createCellIteratorToIndex(shape, detailLevel, null);
+		CellToBytesRefIterator cellToBytesRefIterator = newCellToBytesRefIterator();
+		cellToBytesRefIterator.reset(cells);
+		BytesRefIteratorTokenStream tokenStream = new BytesRefIteratorTokenStream();
+		tokenStream.setBytesRefIterator(cellToBytesRefIterator);
+		Field field = new Field(getFieldName(), tokenStream, FIELD_TYPE);
+		return new Field[]{field};
+	}
 
-  public class ShapeTokenStream extends BytesRefIteratorTokenStream {
+	public class ShapeTokenStream extends BytesRefIteratorTokenStream {
 
-    public void setShape(Shape shape) {
-      double distErr = SpatialArgs.calcDistanceFromErrPct(shape, distErrPct, ctx);
-      int detailLevel = grid.getLevelForDistance(distErr);
-      Iterator<Cell> cells = createCellIteratorToIndex(shape, detailLevel, null);
-      CellToBytesRefIterator cellToBytesRefIterator = newCellToBytesRefIterator();
-      cellToBytesRefIterator.reset(cells);
-      setBytesRefIterator(cellToBytesRefIterator);
-    }
+		public void setShape(Shape shape) {
+			double distErr = SpatialArgs.calcDistanceFromErrPct(shape, distErrPct, ctx);
+			int detailLevel = grid.getLevelForDistance(distErr);
+			Iterator<Cell> cells = createCellIteratorToIndex(shape, detailLevel, null);
+			CellToBytesRefIterator cellToBytesRefIterator = newCellToBytesRefIterator();
+			cellToBytesRefIterator.reset(cells);
+			setBytesRefIterator(cellToBytesRefIterator);
+		}
 
-  }
+	}
 
-  public ShapeTokenStream tokenStream() {
-    return new ShapeTokenStream();
-  }
+	public ShapeTokenStream tokenStream() {
+		return new ShapeTokenStream();
+	}
 
-  protected CellToBytesRefIterator newCellToBytesRefIterator() {
-    //subclasses could return one that never emits leaves, or does both, or who knows.
-    return new CellToBytesRefIterator();
-  }
+	protected CellToBytesRefIterator newCellToBytesRefIterator() {
+		//subclasses could return one that never emits leaves, or does both, or who knows.
+		return new CellToBytesRefIterator();
+	}
 
-  protected Iterator<Cell> createCellIteratorToIndex(Shape shape, int detailLevel, Iterator<Cell> reuse) {
-    if (pointsOnly && !isPointShape(shape)) {
-      throw new IllegalArgumentException("pointsOnly is true yet a " + shape.getClass() + " is given for indexing");
-    }
-    return grid.getTreeCellIterator(shape, detailLevel);//TODO should take a re-use iterator
-  }
+	protected Iterator<Cell> createCellIteratorToIndex(Shape shape, int detailLevel, Iterator<Cell> reuse) {
+		if (pointsOnly && !isPointShape(shape)) {
+			throw new IllegalArgumentException("pointsOnly is true yet a " + shape.getClass() + " is given for indexing");
+		}
+		return grid.getTreeCellIterator(shape, detailLevel);//TODO should take a re-use iterator
+	}
 
-  /* Indexed, tokenized, not stored. */
-  public static final FieldType FIELD_TYPE = new FieldType();
+	/* Indexed, tokenized, not stored. */
+	public static final FieldType FIELD_TYPE = new FieldType();
 
-  static {
-    FIELD_TYPE.setTokenized(true);
-    FIELD_TYPE.setOmitNorms(true);
-    FIELD_TYPE.setIndexOptions(IndexOptions.DOCS);
-    FIELD_TYPE.freeze();
-  }
+	static {
+		FIELD_TYPE.setTokenized(true);
+		FIELD_TYPE.setOmitNorms(true);
+		FIELD_TYPE.setIndexOptions(IndexOptions.DOCS);
+		FIELD_TYPE.freeze();
+	}
 
-  @Override
-  public DoubleValuesSource makeDistanceValueSource(Point queryPoint, double multiplier) {
-    PointPrefixTreeFieldCacheProvider p = provider.get( getFieldName() );
-    if( p == null ) {
-      synchronized (this) {//double checked locking idiom is okay since provider is threadsafe
-        p = provider.get( getFieldName() );
-        if (p == null) {
-          p = new PointPrefixTreeFieldCacheProvider(grid, getFieldName(), defaultFieldValuesArrayLen);
-          provider.put(getFieldName(),p);
-        }
-      }
-    }
+	@Override
+	public DoubleValuesSource makeDistanceValueSource(Point queryPoint, double multiplier) {
+		PointPrefixTreeFieldCacheProvider p = provider.get(getFieldName());
+		if (p == null) {
+			synchronized (this) {//double checked locking idiom is okay since provider is threadsafe
+				p = provider.get(getFieldName());
+				if (p == null) {
+					p = new PointPrefixTreeFieldCacheProvider(grid, getFieldName(), defaultFieldValuesArrayLen);
+					provider.put(getFieldName(), p);
+				}
+			}
+		}
 
-    return new ShapeFieldCacheDistanceValueSource(ctx, p, queryPoint, multiplier);
-  }
+		return new ShapeFieldCacheDistanceValueSource(ctx, p, queryPoint, multiplier);
+	}
 
-  /**
-   * Computes spatial facets in two dimensions as a grid of numbers.  The data is often visualized as a so-called
-   * "heatmap".
-   *
-   * @see HeatmapFacetCounter#calcFacets(PrefixTreeStrategy, IndexReaderContext, Bits, Shape, int, int)
-   */
-  public HeatmapFacetCounter.Heatmap calcFacets(IndexReaderContext context, Bits topAcceptDocs,
-                                   Shape inputShape, final int facetLevel, int maxCells) throws IOException {
-    return HeatmapFacetCounter.calcFacets(this, context, topAcceptDocs, inputShape, facetLevel, maxCells);
-  }
+	/**
+	 * Computes spatial facets in two dimensions as a grid of numbers.  The data is often visualized as a so-called
+	 * "heatmap".
+	 *
+	 * @see HeatmapFacetCounter#calcFacets(PrefixTreeStrategy, IndexReaderContext, Bits, Shape, int, int)
+	 */
+	public HeatmapFacetCounter.Heatmap calcFacets(IndexReaderContext context, Bits topAcceptDocs,
+																								Shape inputShape, final int facetLevel, int maxCells) throws IOException {
+		return HeatmapFacetCounter.calcFacets(this, context, topAcceptDocs, inputShape, facetLevel, maxCells);
+	}
 
-  /**
-   * Returns true if the {@code shape} is a {@link Point}.  For custom spatial contexts, it may make sense to
-   * have certain other shapes return true.
-   * @lucene.experimental
-   */
-  protected boolean isPointShape(Shape shape) {
-    return shape instanceof Point;
-  }
+	/**
+	 * Returns true if the {@code shape} is a {@link Point}.  For custom spatial contexts, it may make sense to
+	 * have certain other shapes return true.
+	 *
+	 * @lucene.experimental
+	 */
+	protected boolean isPointShape(Shape shape) {
+		return shape instanceof Point;
+	}
 }

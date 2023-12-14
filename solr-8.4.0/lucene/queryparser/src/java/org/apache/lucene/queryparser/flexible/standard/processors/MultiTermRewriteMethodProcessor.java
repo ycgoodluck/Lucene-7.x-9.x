@@ -34,40 +34,40 @@ import org.apache.lucene.search.MultiTermQuery;
  */
 public class MultiTermRewriteMethodProcessor extends QueryNodeProcessorImpl {
 
-  public static final String TAG_ID = "MultiTermRewriteMethodConfiguration";
+	public static final String TAG_ID = "MultiTermRewriteMethodConfiguration";
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) {
 
-    // set setMultiTermRewriteMethod for WildcardQueryNode and
-    // PrefixWildcardQueryNode
-    if (node instanceof WildcardQueryNode
-        || node instanceof AbstractRangeQueryNode || node instanceof RegexpQueryNode) {
-      
-      MultiTermQuery.RewriteMethod rewriteMethod = getQueryConfigHandler().get(ConfigurationKeys.MULTI_TERM_REWRITE_METHOD);
+		// set setMultiTermRewriteMethod for WildcardQueryNode and
+		// PrefixWildcardQueryNode
+		if (node instanceof WildcardQueryNode
+			|| node instanceof AbstractRangeQueryNode || node instanceof RegexpQueryNode) {
 
-      if (rewriteMethod == null) {
-        // This should not happen, this configuration is set in the
-        // StandardQueryConfigHandler
-        throw new IllegalArgumentException(
-            "StandardQueryConfigHandler.ConfigurationKeys.MULTI_TERM_REWRITE_METHOD should be set on the QueryConfigHandler");
-      }
+			MultiTermQuery.RewriteMethod rewriteMethod = getQueryConfigHandler().get(ConfigurationKeys.MULTI_TERM_REWRITE_METHOD);
 
-      // use a TAG to take the value to the Builder
-      node.setTag(MultiTermRewriteMethodProcessor.TAG_ID, rewriteMethod);
+			if (rewriteMethod == null) {
+				// This should not happen, this configuration is set in the
+				// StandardQueryConfigHandler
+				throw new IllegalArgumentException(
+					"StandardQueryConfigHandler.ConfigurationKeys.MULTI_TERM_REWRITE_METHOD should be set on the QueryConfigHandler");
+			}
 
-    }
+			// use a TAG to take the value to the Builder
+			node.setTag(MultiTermRewriteMethodProcessor.TAG_ID, rewriteMethod);
 
-    return node;
-  }
+		}
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) {
-    return node;
-  }
+		return node;
+	}
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children) {
-    return children;
-  }
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) {
+		return node;
+	}
+
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children) {
+		return children;
+	}
 }

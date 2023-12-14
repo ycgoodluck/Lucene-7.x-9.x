@@ -21,59 +21,61 @@ import java.nio.file.Paths;
  * @date 2020/6/12 11:05 上午
  */
 public class SoftDeletesTest1 {
-    private Directory directory;
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	private Directory directory;
 
-    // 放在方法外 这个变量能高亮显示
-    private IndexWriter indexWriter;
-    IndexWriterConfig indexWriterConfig;
-    public void doIndexAndSearch() throws Exception {
-        indexWriterConfig = new IndexWriterConfig(new WhitespaceAnalyzer());
-        String softDeletesField  = "softDeleteField";
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-        indexWriterConfig.setSoftDeletesField(softDeletesField);
-        indexWriterConfig.setMergePolicy(NoMergePolicy.INSTANCE);
-        indexWriter = new IndexWriter(directory, indexWriterConfig);
-        Document doc;
-        // 文档0
-        doc = new Document();
-        doc.add(new StringField("abc", "document1", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档1
-        doc = new Document();
-        doc.add(new StringField("abc", "document3", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 生成一个段
-        indexWriter.commit();
-        // 文档2
-        doc = new Document();
-        doc.add(new StringField("abc", "document2", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档3
-        Document newDoc = new Document();
-        newDoc.add(new StringField("abc", "document3", Field.Store.YES));
-        // 软删除
-        indexWriter.softUpdateDocument(new Term("abc", "document3"), newDoc, new NumericDocValuesField(softDeletesField, 3));
-        // 硬删除
-        // indexWriter.updateDocument(new Term("abc", "document3"), newDoc);
-        // 生成一个段
-        indexWriter.commit();
-        DirectoryReader readerBeforeMerge = DirectoryReader.open(indexWriter);
-        ScoreDoc[] scoreDocs = (new IndexSearcher(readerBeforeMerge)).search(new MatchAllDocsQuery(), 100).scoreDocs;
-        for (ScoreDoc scoreDoc : scoreDocs) {
-            System.out.println("docId: 文档" + scoreDoc.doc + ", FieldValue of Field abc: " + readerBeforeMerge.document(scoreDoc.doc).get("abc") + "");
-        }
-    }
+	// 放在方法外 这个变量能高亮显示
+	private IndexWriter indexWriter;
+	IndexWriterConfig indexWriterConfig;
 
-    public static void main(String[] args) throws Exception{
-        SoftDeletesTest1 test = new SoftDeletesTest1();
-        test.doIndexAndSearch();
-    }
+	public void doIndexAndSearch() throws Exception {
+		indexWriterConfig = new IndexWriterConfig(new WhitespaceAnalyzer());
+		String softDeletesField = "softDeleteField";
+
+		indexWriterConfig.setSoftDeletesField(softDeletesField);
+		indexWriterConfig.setMergePolicy(NoMergePolicy.INSTANCE);
+		indexWriter = new IndexWriter(directory, indexWriterConfig);
+		Document doc;
+		// 文档0
+		doc = new Document();
+		doc.add(new StringField("abc", "document1", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档1
+		doc = new Document();
+		doc.add(new StringField("abc", "document3", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 生成一个段
+		indexWriter.commit();
+		// 文档2
+		doc = new Document();
+		doc.add(new StringField("abc", "document2", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档3
+		Document newDoc = new Document();
+		newDoc.add(new StringField("abc", "document3", Field.Store.YES));
+		// 软删除
+		indexWriter.softUpdateDocument(new Term("abc", "document3"), newDoc, new NumericDocValuesField(softDeletesField, 3));
+		// 硬删除
+		// indexWriter.updateDocument(new Term("abc", "document3"), newDoc);
+		// 生成一个段
+		indexWriter.commit();
+		DirectoryReader readerBeforeMerge = DirectoryReader.open(indexWriter);
+		ScoreDoc[] scoreDocs = (new IndexSearcher(readerBeforeMerge)).search(new MatchAllDocsQuery(), 100).scoreDocs;
+		for (ScoreDoc scoreDoc : scoreDocs) {
+			System.out.println("docId: 文档" + scoreDoc.doc + ", FieldValue of Field abc: " + readerBeforeMerge.document(scoreDoc.doc).get("abc") + "");
+		}
+	}
+
+	public static void main(String[] args) throws Exception {
+		SoftDeletesTest1 test = new SoftDeletesTest1();
+		test.doIndexAndSearch();
+	}
 }

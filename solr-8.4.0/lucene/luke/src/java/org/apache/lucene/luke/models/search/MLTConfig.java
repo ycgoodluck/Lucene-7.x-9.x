@@ -29,68 +29,70 @@ import org.apache.lucene.queries.mlt.MoreLikeThis;
  */
 public final class MLTConfig {
 
-  private final List<String> fields;
+	private final List<String> fields;
 
-  private final int maxDocFreq;
+	private final int maxDocFreq;
 
-  private final int minDocFreq;
+	private final int minDocFreq;
 
-  private final int minTermFreq;
+	private final int minTermFreq;
 
-  /** Builder for {@link MLTConfig} */
-  public static class Builder {
+	/**
+	 * Builder for {@link MLTConfig}
+	 */
+	public static class Builder {
 
-    private final List<String> fields = new ArrayList<>();
-    private int maxDocFreq = MoreLikeThis.DEFAULT_MAX_DOC_FREQ;
-    private int minDocFreq = MoreLikeThis.DEFAULT_MIN_DOC_FREQ;
-    private int minTermFreq = MoreLikeThis.DEFAULT_MIN_TERM_FREQ;
+		private final List<String> fields = new ArrayList<>();
+		private int maxDocFreq = MoreLikeThis.DEFAULT_MAX_DOC_FREQ;
+		private int minDocFreq = MoreLikeThis.DEFAULT_MIN_DOC_FREQ;
+		private int minTermFreq = MoreLikeThis.DEFAULT_MIN_TERM_FREQ;
 
-    public Builder fields(Collection<String> val) {
-      fields.addAll(val);
-      return this;
-    }
+		public Builder fields(Collection<String> val) {
+			fields.addAll(val);
+			return this;
+		}
 
-    public Builder maxDocFreq(int val) {
-      maxDocFreq = val;
-      return this;
-    }
+		public Builder maxDocFreq(int val) {
+			maxDocFreq = val;
+			return this;
+		}
 
-    public Builder minDocFreq(int val) {
-      minDocFreq = val;
-      return this;
-    }
+		public Builder minDocFreq(int val) {
+			minDocFreq = val;
+			return this;
+		}
 
-    public Builder minTermFreq(int val) {
-      minTermFreq = val;
-      return this;
-    }
+		public Builder minTermFreq(int val) {
+			minTermFreq = val;
+			return this;
+		}
 
-    public MLTConfig build() {
-      return new MLTConfig(this);
-    }
-  }
+		public MLTConfig build() {
+			return new MLTConfig(this);
+		}
+	}
 
-  private MLTConfig(Builder builder) {
-    this.fields = Collections.unmodifiableList(builder.fields);
-    this.maxDocFreq = builder.maxDocFreq;
-    this.minDocFreq = builder.minDocFreq;
-    this.minTermFreq = builder.minTermFreq;
-  }
+	private MLTConfig(Builder builder) {
+		this.fields = Collections.unmodifiableList(builder.fields);
+		this.maxDocFreq = builder.maxDocFreq;
+		this.minDocFreq = builder.minDocFreq;
+		this.minTermFreq = builder.minTermFreq;
+	}
 
-  public String[] getFieldNames() {
-    return fields.toArray(new String[fields.size()]);
-  }
+	public String[] getFieldNames() {
+		return fields.toArray(new String[fields.size()]);
+	}
 
-  public int getMaxDocFreq() {
-    return maxDocFreq;
-  }
+	public int getMaxDocFreq() {
+		return maxDocFreq;
+	}
 
-  public int getMinDocFreq() {
-    return minDocFreq;
-  }
+	public int getMinDocFreq() {
+		return minDocFreq;
+	}
 
-  public int getMinTermFreq() {
-    return minTermFreq;
-  }
+	public int getMinTermFreq() {
+		return minTermFreq;
+	}
 
 }

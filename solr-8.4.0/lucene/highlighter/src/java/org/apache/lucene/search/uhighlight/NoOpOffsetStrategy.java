@@ -30,21 +30,21 @@ import org.apache.lucene.util.BytesRef;
  */
 public class NoOpOffsetStrategy extends FieldOffsetStrategy {
 
-  public static final NoOpOffsetStrategy INSTANCE = new NoOpOffsetStrategy();
+	public static final NoOpOffsetStrategy INSTANCE = new NoOpOffsetStrategy();
 
-  private NoOpOffsetStrategy() {
-    super(new UHComponents("_ignored_", (s) -> false, new MatchNoDocsQuery(),
-        new BytesRef[0], PhraseHelper.NONE, new LabelledCharArrayMatcher[0], false, Collections.emptySet()));
-  }
+	private NoOpOffsetStrategy() {
+		super(new UHComponents("_ignored_", (s) -> false, new MatchNoDocsQuery(),
+			new BytesRef[0], PhraseHelper.NONE, new LabelledCharArrayMatcher[0], false, Collections.emptySet()));
+	}
 
-  @Override
-  public UnifiedHighlighter.OffsetSource getOffsetSource() {
-    return UnifiedHighlighter.OffsetSource.NONE_NEEDED;
-  }
+	@Override
+	public UnifiedHighlighter.OffsetSource getOffsetSource() {
+		return UnifiedHighlighter.OffsetSource.NONE_NEEDED;
+	}
 
-  @Override
-  public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
-    return OffsetsEnum.EMPTY;
-  }
+	@Override
+	public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
+		return OffsetsEnum.EMPTY;
+	}
 
 }

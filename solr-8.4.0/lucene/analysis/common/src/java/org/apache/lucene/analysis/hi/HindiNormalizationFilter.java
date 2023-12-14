@@ -34,26 +34,27 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  * {@link SetKeywordMarkerFilter} or a custom {@link TokenFilter} that sets
  * the {@link KeywordAttribute} before this {@link TokenStream}.
  * </p>
+ *
  * @see HindiNormalizer
  */
 public final class HindiNormalizationFilter extends TokenFilter {
 
-  private final HindiNormalizer normalizer = new HindiNormalizer();
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
-  
-  public HindiNormalizationFilter(TokenStream input) {
-    super(input);
-  }
+	private final HindiNormalizer normalizer = new HindiNormalizer();
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if (!keywordAtt.isKeyword())
-        termAtt.setLength(normalizer.normalize(termAtt.buffer(), 
-            termAtt.length()));
-      return true;
-    } 
-    return false;
-  }
+	public HindiNormalizationFilter(TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAtt.isKeyword())
+				termAtt.setLength(normalizer.normalize(termAtt.buffer(),
+					termAtt.length()));
+			return true;
+		}
+		return false;
+	}
 }

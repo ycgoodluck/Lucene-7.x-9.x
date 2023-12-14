@@ -26,7 +26,7 @@ import org.apache.lucene.analysis.commongrams.CommonGramsQueryFilter;
 
 /**
  * Construct {@link CommonGramsQueryFilter}.
- * 
+ *
  * <pre class="prettyprint">
  * &lt;fieldType name="text_cmmngrmsqry" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -37,17 +37,19 @@ import org.apache.lucene.analysis.commongrams.CommonGramsQueryFilter;
  */
 public class CommonGramsQueryFilterFactory extends CommonGramsFilterFactory {
 
-  /** Creates a new CommonGramsQueryFilterFactory */
-  public CommonGramsQueryFilterFactory(Map<String,String> args) {
-    super(args);
-  }
+	/**
+	 * Creates a new CommonGramsQueryFilterFactory
+	 */
+	public CommonGramsQueryFilterFactory(Map<String, String> args) {
+		super(args);
+	}
 
-  /**
-   * Create a CommonGramsFilter and wrap it with a CommonGramsQueryFilter
-   */
-  @Override
-  public TokenFilter create(TokenStream input) {
-    CommonGramsFilter commonGrams = (CommonGramsFilter) super.create(input);
-    return new CommonGramsQueryFilter(commonGrams);
-  }
+	/**
+	 * Create a CommonGramsFilter and wrap it with a CommonGramsQueryFilter
+	 */
+	@Override
+	public TokenFilter create(TokenStream input) {
+		CommonGramsFilter commonGrams = (CommonGramsFilter) super.create(input);
+		return new CommonGramsQueryFilter(commonGrams);
+	}
 }

@@ -34,236 +34,238 @@ import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
  */
 public abstract class QueryNodeImpl implements QueryNode, Cloneable {
 
-  /* index default field */
-  // TODO remove PLAINTEXT_FIELD_NAME replacing it with configuration APIs
-  public static final String PLAINTEXT_FIELD_NAME = "_plain";
+	/* index default field */
+	// TODO remove PLAINTEXT_FIELD_NAME replacing it with configuration APIs
+	public static final String PLAINTEXT_FIELD_NAME = "_plain";
 
-  private boolean isLeaf = true;
+	private boolean isLeaf = true;
 
-  private Hashtable<String, Object> tags = new Hashtable<>();
+	private Hashtable<String, Object> tags = new Hashtable<>();
 
-  private List<QueryNode> clauses = null;
+	private List<QueryNode> clauses = null;
 
-  protected void allocate() {
+	protected void allocate() {
 
-    if (this.clauses == null) {
-      this.clauses = new ArrayList<>();
+		if (this.clauses == null) {
+			this.clauses = new ArrayList<>();
 
-    } else {
-      this.clauses.clear();
-    }
+		} else {
+			this.clauses.clear();
+		}
 
-  }
+	}
 
-  @Override
-  public final void add(QueryNode child) {
+	@Override
+	public final void add(QueryNode child) {
 
-    if (isLeaf() || this.clauses == null || child == null) {
-      throw new IllegalArgumentException(NLS
-          .getLocalizedMessage(QueryParserMessages.NODE_ACTION_NOT_SUPPORTED));
-    }
+		if (isLeaf() || this.clauses == null || child == null) {
+			throw new IllegalArgumentException(NLS
+				.getLocalizedMessage(QueryParserMessages.NODE_ACTION_NOT_SUPPORTED));
+		}
 
-    this.clauses.add(child);
-    ((QueryNodeImpl) child).setParent(this);
+		this.clauses.add(child);
+		((QueryNodeImpl) child).setParent(this);
 
-  }
+	}
 
-  @Override
-  public final void add(List<QueryNode> children) {
+	@Override
+	public final void add(List<QueryNode> children) {
 
-    if (isLeaf() || this.clauses == null) {
-      throw new IllegalArgumentException(NLS
-          .getLocalizedMessage(QueryParserMessages.NODE_ACTION_NOT_SUPPORTED));
-    }
+		if (isLeaf() || this.clauses == null) {
+			throw new IllegalArgumentException(NLS
+				.getLocalizedMessage(QueryParserMessages.NODE_ACTION_NOT_SUPPORTED));
+		}
 
-    for (QueryNode child : children) {
-      add(child);
-    }
+		for (QueryNode child : children) {
+			add(child);
+		}
 
-  }
+	}
 
-  @Override
-  public boolean isLeaf() {
-    return this.isLeaf;
-  }
+	@Override
+	public boolean isLeaf() {
+		return this.isLeaf;
+	}
 
-  @Override
-  public final void set(List<QueryNode> children) {
+	@Override
+	public final void set(List<QueryNode> children) {
 
-    if (isLeaf() || this.clauses == null) {
-      ResourceBundle bundle = ResourceBundle
-          .getBundle("org.apache.lucene.queryParser.messages.QueryParserMessages", Locale.getDefault());
-      String message = bundle.getObject("Q0008E.NODE_ACTION_NOT_SUPPORTED")
-          .toString();
+		if (isLeaf() || this.clauses == null) {
+			ResourceBundle bundle = ResourceBundle
+				.getBundle("org.apache.lucene.queryParser.messages.QueryParserMessages", Locale.getDefault());
+			String message = bundle.getObject("Q0008E.NODE_ACTION_NOT_SUPPORTED")
+				.toString();
 
-      throw new IllegalArgumentException(message);
+			throw new IllegalArgumentException(message);
 
-    }
+		}
 
-    // reset parent value
-    for (QueryNode child : children) {
-      child.removeFromParent();
-    }
-    
-    ArrayList<QueryNode> existingChildren = new ArrayList<>(getChildren());
-    for (QueryNode existingChild : existingChildren) {
-      existingChild.removeFromParent();
-    }
-    
-    // allocate new children list
-    allocate();
-    
-    // add new children and set parent
-    add(children);
-  }
+		// reset parent value
+		for (QueryNode child : children) {
+			child.removeFromParent();
+		}
 
-  @Override
-  public QueryNode cloneTree() throws CloneNotSupportedException {
-    QueryNodeImpl clone = (QueryNodeImpl) super.clone();
-    clone.isLeaf = this.isLeaf;
+		ArrayList<QueryNode> existingChildren = new ArrayList<>(getChildren());
+		for (QueryNode existingChild : existingChildren) {
+			existingChild.removeFromParent();
+		}
 
-    // Reset all tags
-    clone.tags = new Hashtable<>();
+		// allocate new children list
+		allocate();
 
-    // copy children
-    if (this.clauses != null) {
-      List<QueryNode> localClauses = new ArrayList<>();
-      for (QueryNode clause : this.clauses) {
-        localClauses.add(clause.cloneTree());
-      }
-      clone.clauses = localClauses;
-    }
+		// add new children and set parent
+		add(children);
+	}
 
-    return clone;
-  }
+	@Override
+	public QueryNode cloneTree() throws CloneNotSupportedException {
+		QueryNodeImpl clone = (QueryNodeImpl) super.clone();
+		clone.isLeaf = this.isLeaf;
 
-  @Override
-  public QueryNode clone() throws CloneNotSupportedException {
-    return cloneTree();
-  }
+		// Reset all tags
+		clone.tags = new Hashtable<>();
 
-  protected void setLeaf(boolean isLeaf) {
-    this.isLeaf = isLeaf;
-  }
+		// copy children
+		if (this.clauses != null) {
+			List<QueryNode> localClauses = new ArrayList<>();
+			for (QueryNode clause : this.clauses) {
+				localClauses.add(clause.cloneTree());
+			}
+			clone.clauses = localClauses;
+		}
 
-  /**
-   * @return a List for QueryNode object. Returns null, for nodes that do not
-   *         contain children. All leaf Nodes return null.
-   */
-  @Override
-  public final List<QueryNode> getChildren() {
-    if (isLeaf() || this.clauses == null) {
-      return null;
-    }
-    return new ArrayList<>(this.clauses);
-  }
+		return clone;
+	}
 
-  @Override
-  public void setTag(String tagName, Object value) {
-    this.tags.put(tagName.toLowerCase(Locale.ROOT), value);
-  }
+	@Override
+	public QueryNode clone() throws CloneNotSupportedException {
+		return cloneTree();
+	}
 
-  @Override
-  public void unsetTag(String tagName) {
-    this.tags.remove(tagName.toLowerCase(Locale.ROOT));
-  }
+	protected void setLeaf(boolean isLeaf) {
+		this.isLeaf = isLeaf;
+	}
 
-  /** verify if a node contains a tag */
-  @Override
-  public boolean containsTag(String tagName) {
-    return this.tags.containsKey(tagName.toLowerCase(Locale.ROOT));
-  }
+	/**
+	 * @return a List for QueryNode object. Returns null, for nodes that do not
+	 * contain children. All leaf Nodes return null.
+	 */
+	@Override
+	public final List<QueryNode> getChildren() {
+		if (isLeaf() || this.clauses == null) {
+			return null;
+		}
+		return new ArrayList<>(this.clauses);
+	}
 
-  @Override
-  public Object getTag(String tagName) {
-    return this.tags.get(tagName.toLowerCase(Locale.ROOT));
-  }
+	@Override
+	public void setTag(String tagName, Object value) {
+		this.tags.put(tagName.toLowerCase(Locale.ROOT), value);
+	}
 
-  private QueryNode parent = null;
+	@Override
+	public void unsetTag(String tagName) {
+		this.tags.remove(tagName.toLowerCase(Locale.ROOT));
+	}
 
-  private void setParent(QueryNode parent) {
-    if (this.parent != parent) {
-      this.removeFromParent();
-      this.parent = parent;
-    }
-  }
+	/**
+	 * verify if a node contains a tag
+	 */
+	@Override
+	public boolean containsTag(String tagName) {
+		return this.tags.containsKey(tagName.toLowerCase(Locale.ROOT));
+	}
 
-  @Override
-  public QueryNode getParent() {
-    return this.parent;
-  }
+	@Override
+	public Object getTag(String tagName) {
+		return this.tags.get(tagName.toLowerCase(Locale.ROOT));
+	}
 
-  protected boolean isRoot() {
-    return getParent() == null;
-  }
+	private QueryNode parent = null;
 
-  /**
-   * If set to true the the method toQueryString will not write field names
-   */
-  protected boolean toQueryStringIgnoreFields = false;
+	private void setParent(QueryNode parent) {
+		if (this.parent != parent) {
+			this.removeFromParent();
+			this.parent = parent;
+		}
+	}
 
-  /**
-   * This method is use toQueryString to detect if fld is the default field
-   * 
-   * @param fld - field name
-   * @return true if fld is the default field
-   */
-  // TODO: remove this method, it's commonly used by {@link
-  // #toQueryString(org.apache.lucene.queryParser.core.parser.EscapeQuerySyntax)}
-  // to figure out what is the default field, however, {@link
-  // #toQueryString(org.apache.lucene.queryParser.core.parser.EscapeQuerySyntax)}
-  // should receive the default field value directly by parameter
-  protected boolean isDefaultField(CharSequence fld) {
-    if (this.toQueryStringIgnoreFields)
-      return true;
-    if (fld == null)
-      return true;
-    if (QueryNodeImpl.PLAINTEXT_FIELD_NAME.equals(StringUtils.toString(fld)))
-      return true;
-    return false;
-  }
+	@Override
+	public QueryNode getParent() {
+		return this.parent;
+	}
 
-  /**
-   * Every implementation of this class should return pseudo xml like this:
-   * 
-   * For FieldQueryNode: &lt;field start='1' end='2' field='subject' text='foo'/&gt;
-   * 
-   * @see org.apache.lucene.queryparser.flexible.core.nodes.QueryNode#toString()
-   */
-  @Override
-  public String toString() {
-    return super.toString();
-  }
+	protected boolean isRoot() {
+		return getParent() == null;
+	}
 
-  /**
-   * Returns a map containing all tags attached to this query node.
-   * 
-   * @return a map containing all tags attached to this query node
-   */
-  @Override
-  @SuppressWarnings("unchecked")
-  public Map<String, Object> getTagMap() {
-    return (Map<String, Object>) this.tags.clone();
-  }
+	/**
+	 * If set to true the the method toQueryString will not write field names
+	 */
+	protected boolean toQueryStringIgnoreFields = false;
 
-  @Override
-  public void removeChildren(QueryNode childNode){
-    Iterator<QueryNode> it = this.clauses.iterator();
-    while(it.hasNext()){
-      if(it.next() == childNode){
-        it.remove();
-      }
-    }
-    childNode.removeFromParent();
-  }
+	/**
+	 * This method is use toQueryString to detect if fld is the default field
+	 *
+	 * @param fld - field name
+	 * @return true if fld is the default field
+	 */
+	// TODO: remove this method, it's commonly used by {@link
+	// #toQueryString(org.apache.lucene.queryParser.core.parser.EscapeQuerySyntax)}
+	// to figure out what is the default field, however, {@link
+	// #toQueryString(org.apache.lucene.queryParser.core.parser.EscapeQuerySyntax)}
+	// should receive the default field value directly by parameter
+	protected boolean isDefaultField(CharSequence fld) {
+		if (this.toQueryStringIgnoreFields)
+			return true;
+		if (fld == null)
+			return true;
+		if (QueryNodeImpl.PLAINTEXT_FIELD_NAME.equals(StringUtils.toString(fld)))
+			return true;
+		return false;
+	}
 
-  @Override
-  public void removeFromParent() {
-    if (this.parent != null) {
-      QueryNode parent = this.parent;
-      this.parent = null;
-      parent.removeChildren(this);
-    }
-  }
+	/**
+	 * Every implementation of this class should return pseudo xml like this:
+	 * <p>
+	 * For FieldQueryNode: &lt;field start='1' end='2' field='subject' text='foo'/&gt;
+	 *
+	 * @see org.apache.lucene.queryparser.flexible.core.nodes.QueryNode#toString()
+	 */
+	@Override
+	public String toString() {
+		return super.toString();
+	}
+
+	/**
+	 * Returns a map containing all tags attached to this query node.
+	 *
+	 * @return a map containing all tags attached to this query node
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getTagMap() {
+		return (Map<String, Object>) this.tags.clone();
+	}
+
+	@Override
+	public void removeChildren(QueryNode childNode) {
+		Iterator<QueryNode> it = this.clauses.iterator();
+		while (it.hasNext()) {
+			if (it.next() == childNode) {
+				it.remove();
+			}
+		}
+		childNode.removeFromParent();
+	}
+
+	@Override
+	public void removeFromParent() {
+		if (this.parent != null) {
+			QueryNode parent = this.parent;
+			this.parent = null;
+			parent.removeChildren(this);
+		}
+	}
 
 } // end class QueryNodeImpl

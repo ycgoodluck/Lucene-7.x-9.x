@@ -45,145 +45,147 @@ import org.apache.lucene.luke.app.desktop.util.MessageUtils;
 import org.apache.lucene.luke.app.desktop.util.TableUtils;
 import org.apache.lucene.luke.models.documents.TermVectorEntry;
 
-/** Factory of term vector dialog */
+/**
+ * Factory of term vector dialog
+ */
 public final class TermVectorDialogFactory implements DialogOpener.DialogFactory {
 
-  private static TermVectorDialogFactory instance;
+	private static TermVectorDialogFactory instance;
 
-  private final Preferences prefs;
+	private final Preferences prefs;
 
-  private JDialog dialog;
+	private JDialog dialog;
 
-  private String field;
+	private String field;
 
-  private List<TermVectorEntry> tvEntries;
+	private List<TermVectorEntry> tvEntries;
 
-  public synchronized static TermVectorDialogFactory getInstance() throws IOException {
-    if (instance == null) {
-      instance = new TermVectorDialogFactory();
-    }
-    return instance;
-  }
+	public synchronized static TermVectorDialogFactory getInstance() throws IOException {
+		if (instance == null) {
+			instance = new TermVectorDialogFactory();
+		}
+		return instance;
+	}
 
-  private TermVectorDialogFactory() throws IOException {
-    this.prefs = PreferencesFactory.getInstance();
-  }
+	private TermVectorDialogFactory() throws IOException {
+		this.prefs = PreferencesFactory.getInstance();
+	}
 
-  public void setField(String field) {
-    this.field = field;
-  }
+	public void setField(String field) {
+		this.field = field;
+	}
 
-  public void setTvEntries(List<TermVectorEntry> tvEntries) {
-    this.tvEntries = tvEntries;
-  }
+	public void setTvEntries(List<TermVectorEntry> tvEntries) {
+		this.tvEntries = tvEntries;
+	}
 
-  @Override
-  public JDialog create(Window owner, String title, int width, int height) {
-    if (Objects.isNull(field) || Objects.isNull(tvEntries)) {
-      throw new IllegalStateException("field name and/or term vector is not set.");
-    }
+	@Override
+	public JDialog create(Window owner, String title, int width, int height) {
+		if (Objects.isNull(field) || Objects.isNull(tvEntries)) {
+			throw new IllegalStateException("field name and/or term vector is not set.");
+		}
 
-    dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
-    dialog.add(content());
-    dialog.setSize(new Dimension(width, height));
-    dialog.setLocationRelativeTo(owner);
-    dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
-    return dialog;
-  }
+		dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
+		dialog.add(content());
+		dialog.setSize(new Dimension(width, height));
+		dialog.setLocationRelativeTo(owner);
+		dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
+		return dialog;
+	}
 
-  private JPanel content() {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setOpaque(false);
-    panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+	private JPanel content() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setOpaque(false);
+		panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-    JPanel header = new JPanel(new FlowLayout(FlowLayout.LEADING, 5, 5));
-    header.setOpaque(false);
-    header.add(new JLabel(MessageUtils.getLocalizedMessage("documents.termvector.label.term_vector")));
-    header.add(new JLabel(field));
-    panel.add(header, BorderLayout.PAGE_START);
+		JPanel header = new JPanel(new FlowLayout(FlowLayout.LEADING, 5, 5));
+		header.setOpaque(false);
+		header.add(new JLabel(MessageUtils.getLocalizedMessage("documents.termvector.label.term_vector")));
+		header.add(new JLabel(field));
+		panel.add(header, BorderLayout.PAGE_START);
 
-    JTable tvTable = new JTable();
-    TableUtils.setupTable(tvTable, ListSelectionModel.SINGLE_SELECTION, new TermVectorTableModel(tvEntries), null, 100, 50, 100);
-    JScrollPane scrollPane = new JScrollPane(tvTable);
-    panel.add(scrollPane, BorderLayout.CENTER);
+		JTable tvTable = new JTable();
+		TableUtils.setupTable(tvTable, ListSelectionModel.SINGLE_SELECTION, new TermVectorTableModel(tvEntries), null, 100, 50, 100);
+		JScrollPane scrollPane = new JScrollPane(tvTable);
+		panel.add(scrollPane, BorderLayout.CENTER);
 
-    JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 10));
-    footer.setOpaque(false);
-    JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
-    closeBtn.setMargin(new Insets(3, 3, 3, 3));
-    closeBtn.addActionListener(e -> dialog.dispose());
-    footer.add(closeBtn);
-    panel.add(footer, BorderLayout.PAGE_END);
+		JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 10));
+		footer.setOpaque(false);
+		JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
+		closeBtn.setMargin(new Insets(3, 3, 3, 3));
+		closeBtn.addActionListener(e -> dialog.dispose());
+		footer.add(closeBtn);
+		panel.add(footer, BorderLayout.PAGE_END);
 
-    return panel;
-  }
+		return panel;
+	}
 
-  static final class TermVectorTableModel extends TableModelBase<TermVectorTableModel.Column> {
+	static final class TermVectorTableModel extends TableModelBase<TermVectorTableModel.Column> {
 
-    enum Column implements TableColumnInfo {
+		enum Column implements TableColumnInfo {
 
-      TERM("Term", 0, String.class),
-      FREQ("Freq", 1, Long.class),
-      POSITIONS("Positions", 2, String.class),
-      OFFSETS("Offsets", 3, String.class);
+			TERM("Term", 0, String.class),
+			FREQ("Freq", 1, Long.class),
+			POSITIONS("Positions", 2, String.class),
+			OFFSETS("Offsets", 3, String.class);
 
-      private String colName;
-      private int index;
-      private Class<?> type;
+			private String colName;
+			private int index;
+			private Class<?> type;
 
-      Column(String colName, int index, Class<?> type) {
-        this.colName = colName;
-        this.index = index;
-        this.type = type;
-      }
+			Column(String colName, int index, Class<?> type) {
+				this.colName = colName;
+				this.index = index;
+				this.type = type;
+			}
 
-      @Override
-      public String getColName() {
-        return colName;
-      }
+			@Override
+			public String getColName() {
+				return colName;
+			}
 
-      @Override
-      public int getIndex() {
-        return index;
-      }
+			@Override
+			public int getIndex() {
+				return index;
+			}
 
-      @Override
-      public Class<?> getType() {
-        return type;
-      }
-    }
+			@Override
+			public Class<?> getType() {
+				return type;
+			}
+		}
 
-    TermVectorTableModel() {
-      super();
-    }
+		TermVectorTableModel() {
+			super();
+		}
 
-    TermVectorTableModel(List<TermVectorEntry> tvEntries) {
-      super(tvEntries.size());
+		TermVectorTableModel(List<TermVectorEntry> tvEntries) {
+			super(tvEntries.size());
 
-      for (int i = 0; i < tvEntries.size(); i++) {
-        TermVectorEntry entry = tvEntries.get(i);
+			for (int i = 0; i < tvEntries.size(); i++) {
+				TermVectorEntry entry = tvEntries.get(i);
 
-        String termText = entry.getTermText();
-        long freq = tvEntries.get(i).getFreq();
-        String positions = String.join(",",
-            entry.getPositions().stream()
-                .map(pos -> Integer.toString(pos.getPosition()))
-                .collect(Collectors.toList()));
-        String offsets = String.join(",",
-            entry.getPositions().stream()
-                .filter(pos -> pos.getStartOffset().isPresent() && pos.getEndOffset().isPresent())
-                .map(pos -> Integer.toString(pos.getStartOffset().orElse(-1)) + "-" + Integer.toString(pos.getEndOffset().orElse(-1)))
-                .collect(Collectors.toList())
-        );
+				String termText = entry.getTermText();
+				long freq = tvEntries.get(i).getFreq();
+				String positions = String.join(",",
+					entry.getPositions().stream()
+						.map(pos -> Integer.toString(pos.getPosition()))
+						.collect(Collectors.toList()));
+				String offsets = String.join(",",
+					entry.getPositions().stream()
+						.filter(pos -> pos.getStartOffset().isPresent() && pos.getEndOffset().isPresent())
+						.map(pos -> Integer.toString(pos.getStartOffset().orElse(-1)) + "-" + Integer.toString(pos.getEndOffset().orElse(-1)))
+						.collect(Collectors.toList())
+				);
 
-        data[i] = new Object[]{termText, freq, positions, offsets};
-      }
+				data[i] = new Object[]{termText, freq, positions, offsets};
+			}
 
-    }
+		}
 
-    @Override
-    protected Column[] columnInfos() {
-      return Column.values();
-    }
-  }
+		@Override
+		protected Column[] columnInfos() {
+			return Column.values();
+		}
+	}
 }

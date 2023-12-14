@@ -38,196 +38,198 @@ import org.apache.lucene.util.LongValues;
 
 final class GlobalOrdinalsQuery extends Query {
 
-  // All the ords of matching docs found with OrdinalsCollector.
-  private final LongBitSet foundOrds;
-  private final String joinField;
-  private final OrdinalMap globalOrds;
-  // Is also an approximation of the docs that will match. Can be all docs that have toField or something more specific.
-  private final Query toQuery;
+	// All the ords of matching docs found with OrdinalsCollector.
+	private final LongBitSet foundOrds;
+	private final String joinField;
+	private final OrdinalMap globalOrds;
+	// Is also an approximation of the docs that will match. Can be all docs that have toField or something more specific.
+	private final Query toQuery;
 
-  // just for hashcode and equals:
-  private final Query fromQuery;
-  // id of the context rather than the context itself in order not to hold references to index readers
-  private final Object indexReaderContextId;
+	// just for hashcode and equals:
+	private final Query fromQuery;
+	// id of the context rather than the context itself in order not to hold references to index readers
+	private final Object indexReaderContextId;
 
-  GlobalOrdinalsQuery(LongBitSet foundOrds, String joinField, OrdinalMap globalOrds, Query toQuery,
-                      Query fromQuery, Object indexReaderContextId) {
-    this.foundOrds = foundOrds;
-    this.joinField = joinField;
-    this.globalOrds = globalOrds;
-    this.toQuery = toQuery;
-    this.fromQuery = fromQuery;
-    this.indexReaderContextId = indexReaderContextId;
-  }
+	GlobalOrdinalsQuery(LongBitSet foundOrds, String joinField, OrdinalMap globalOrds, Query toQuery,
+											Query fromQuery, Object indexReaderContextId) {
+		this.foundOrds = foundOrds;
+		this.joinField = joinField;
+		this.globalOrds = globalOrds;
+		this.toQuery = toQuery;
+		this.fromQuery = fromQuery;
+		this.indexReaderContextId = indexReaderContextId;
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-    if (searcher.getTopReaderContext().id() != indexReaderContextId) {
-      throw new IllegalStateException("Creating the weight against a different index reader than this query has been built for.");
-    }
-    return new W(this, toQuery.createWeight(searcher, false, 1f), boost);
-  }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+		if (searcher.getTopReaderContext().id() != indexReaderContextId) {
+			throw new IllegalStateException("Creating the weight against a different index reader than this query has been built for.");
+		}
+		return new W(this, toQuery.createWeight(searcher, false, 1f), boost);
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
 
-  private boolean equalsTo(GlobalOrdinalsQuery other) {
-    return fromQuery.equals(other.fromQuery) &&
-           joinField.equals(other.joinField) &&
-           toQuery.equals(other.toQuery) &&
-           indexReaderContextId.equals(other.indexReaderContextId);
-  }
+	private boolean equalsTo(GlobalOrdinalsQuery other) {
+		return fromQuery.equals(other.fromQuery) &&
+			joinField.equals(other.joinField) &&
+			toQuery.equals(other.toQuery) &&
+			indexReaderContextId.equals(other.indexReaderContextId);
+	}
 
-  @Override
-  public int hashCode() {
-    int result = classHash();
-    result = 31 * result + joinField.hashCode();
-    result = 31 * result + toQuery.hashCode();
-    result = 31 * result + fromQuery.hashCode();
-    result = 31 * result + indexReaderContextId.hashCode();
-    return result;
-  }
+	@Override
+	public int hashCode() {
+		int result = classHash();
+		result = 31 * result + joinField.hashCode();
+		result = 31 * result + toQuery.hashCode();
+		result = 31 * result + fromQuery.hashCode();
+		result = 31 * result + indexReaderContextId.hashCode();
+		return result;
+	}
 
-  @Override
-  public String toString(String field) {
-    return "GlobalOrdinalsQuery{" +
-        "joinField=" + joinField +
-        '}';
-  }
+	@Override
+	public String toString(String field) {
+		return "GlobalOrdinalsQuery{" +
+			"joinField=" + joinField +
+			'}';
+	}
 
-  final class W extends ConstantScoreWeight {
+	final class W extends ConstantScoreWeight {
 
-    private final Weight approximationWeight;
+		private final Weight approximationWeight;
 
-    W(Query query, Weight approximationWeight, float boost) {
-      super(query, boost);
-      this.approximationWeight = approximationWeight;
-    }
+		W(Query query, Weight approximationWeight, float boost) {
+			super(query, boost);
+			this.approximationWeight = approximationWeight;
+		}
 
-    @Override
-    public void extractTerms(Set<Term> terms) {}
+		@Override
+		public void extractTerms(Set<Term> terms) {
+		}
 
-    @Override
-    public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-      SortedDocValues values = DocValues.getSorted(context.reader(), joinField);
-      if (values == null) {
-        return Explanation.noMatch("Not a match");
-      }
+		@Override
+		public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+			SortedDocValues values = DocValues.getSorted(context.reader(), joinField);
+			if (values == null) {
+				return Explanation.noMatch("Not a match");
+			}
 
-      if (values.advance(doc) != doc) {
-        return Explanation.noMatch("Not a match");
-      }
-      int segmentOrd = values.ordValue();
-      BytesRef joinValue = values.lookupOrd(segmentOrd);
+			if (values.advance(doc) != doc) {
+				return Explanation.noMatch("Not a match");
+			}
+			int segmentOrd = values.ordValue();
+			BytesRef joinValue = values.lookupOrd(segmentOrd);
 
-      int ord;
-      if (globalOrds != null) {
-        ord = (int) globalOrds.getGlobalOrds(context.ord).get(segmentOrd);
-      } else {
-        ord = segmentOrd;
-      }
-      if (foundOrds.get(ord) == false) {
-        return Explanation.noMatch("Not a match, join value " + Term.toString(joinValue));
-      }
+			int ord;
+			if (globalOrds != null) {
+				ord = (int) globalOrds.getGlobalOrds(context.ord).get(segmentOrd);
+			} else {
+				ord = segmentOrd;
+			}
+			if (foundOrds.get(ord) == false) {
+				return Explanation.noMatch("Not a match, join value " + Term.toString(joinValue));
+			}
 
-      return Explanation.match(score(), "A match, join value " + Term.toString(joinValue));
-    }
+			return Explanation.match(score(), "A match, join value " + Term.toString(joinValue));
+		}
 
-    @Override
-    public Scorer scorer(LeafReaderContext context) throws IOException {
-      SortedDocValues values = DocValues.getSorted(context.reader(), joinField);
-      if (values == null) {
-        return null;
-      }
+		@Override
+		public Scorer scorer(LeafReaderContext context) throws IOException {
+			SortedDocValues values = DocValues.getSorted(context.reader(), joinField);
+			if (values == null) {
+				return null;
+			}
 
-      Scorer approximationScorer = approximationWeight.scorer(context);
-      if (approximationScorer == null) {
-        return null;
-      }
-      if (globalOrds != null) {
-        return new OrdinalMapScorer(this, score(), foundOrds, values, approximationScorer.iterator(), globalOrds.getGlobalOrds(context.ord));
-      } {
-        return new SegmentOrdinalScorer(this, score(), foundOrds, values, approximationScorer.iterator());
-      }
-    }
+			Scorer approximationScorer = approximationWeight.scorer(context);
+			if (approximationScorer == null) {
+				return null;
+			}
+			if (globalOrds != null) {
+				return new OrdinalMapScorer(this, score(), foundOrds, values, approximationScorer.iterator(), globalOrds.getGlobalOrds(context.ord));
+			}
+			{
+				return new SegmentOrdinalScorer(this, score(), foundOrds, values, approximationScorer.iterator());
+			}
+		}
 
-    @Override
-    public boolean isCacheable(LeafReaderContext ctx) {
-      // disable caching because this query relies on a top reader context
-      // and holds a bitset of matching ordinals that cannot be accounted in
-      // the memory used by the cache
-      return false;
-    }
+		@Override
+		public boolean isCacheable(LeafReaderContext ctx) {
+			// disable caching because this query relies on a top reader context
+			// and holds a bitset of matching ordinals that cannot be accounted in
+			// the memory used by the cache
+			return false;
+		}
 
-  }
+	}
 
-  final static class OrdinalMapScorer extends BaseGlobalOrdinalScorer {
+	final static class OrdinalMapScorer extends BaseGlobalOrdinalScorer {
 
-    final LongBitSet foundOrds;
-    final LongValues segmentOrdToGlobalOrdLookup;
+		final LongBitSet foundOrds;
+		final LongValues segmentOrdToGlobalOrdLookup;
 
-    public OrdinalMapScorer(Weight weight, float score, LongBitSet foundOrds, SortedDocValues values, DocIdSetIterator approximationScorer, LongValues segmentOrdToGlobalOrdLookup) {
-      super(weight, values, approximationScorer);
-      this.score = score;
-      this.foundOrds = foundOrds;
-      this.segmentOrdToGlobalOrdLookup = segmentOrdToGlobalOrdLookup;
-    }
+		public OrdinalMapScorer(Weight weight, float score, LongBitSet foundOrds, SortedDocValues values, DocIdSetIterator approximationScorer, LongValues segmentOrdToGlobalOrdLookup) {
+			super(weight, values, approximationScorer);
+			this.score = score;
+			this.foundOrds = foundOrds;
+			this.segmentOrdToGlobalOrdLookup = segmentOrdToGlobalOrdLookup;
+		}
 
-    @Override
-    protected TwoPhaseIterator createTwoPhaseIterator(DocIdSetIterator approximation) {
-      return new TwoPhaseIterator(approximation) {
+		@Override
+		protected TwoPhaseIterator createTwoPhaseIterator(DocIdSetIterator approximation) {
+			return new TwoPhaseIterator(approximation) {
 
-        @Override
-        public boolean matches() throws IOException {
-          if (values.advanceExact(approximation.docID())) {
-            final long segmentOrd = values.ordValue();
-            final long globalOrd = segmentOrdToGlobalOrdLookup.get(segmentOrd);
-            if (foundOrds.get(globalOrd)) {
-              return true;
-            }
-          }
-          return false;
-        }
+				@Override
+				public boolean matches() throws IOException {
+					if (values.advanceExact(approximation.docID())) {
+						final long segmentOrd = values.ordValue();
+						final long globalOrd = segmentOrdToGlobalOrdLookup.get(segmentOrd);
+						if (foundOrds.get(globalOrd)) {
+							return true;
+						}
+					}
+					return false;
+				}
 
-        @Override
-        public float matchCost() {
-          return 100; // TODO: use cost of values.getOrd() and foundOrds.get()
-        }
-      };
-    }
-  }
+				@Override
+				public float matchCost() {
+					return 100; // TODO: use cost of values.getOrd() and foundOrds.get()
+				}
+			};
+		}
+	}
 
-  final static class SegmentOrdinalScorer extends BaseGlobalOrdinalScorer {
+	final static class SegmentOrdinalScorer extends BaseGlobalOrdinalScorer {
 
-    final LongBitSet foundOrds;
+		final LongBitSet foundOrds;
 
-    public SegmentOrdinalScorer(Weight weight, float score, LongBitSet foundOrds, SortedDocValues values, DocIdSetIterator approximationScorer) {
-      super(weight, values, approximationScorer);
-      this.score = score;
-      this.foundOrds = foundOrds;
-    }
+		public SegmentOrdinalScorer(Weight weight, float score, LongBitSet foundOrds, SortedDocValues values, DocIdSetIterator approximationScorer) {
+			super(weight, values, approximationScorer);
+			this.score = score;
+			this.foundOrds = foundOrds;
+		}
 
-    @Override
-    protected TwoPhaseIterator createTwoPhaseIterator(DocIdSetIterator approximation) {
-      return new TwoPhaseIterator(approximation) {
+		@Override
+		protected TwoPhaseIterator createTwoPhaseIterator(DocIdSetIterator approximation) {
+			return new TwoPhaseIterator(approximation) {
 
-        @Override
-        public boolean matches() throws IOException {
-          if (values.advanceExact(approximation.docID()) && foundOrds.get(values.ordValue())) {
-            return true;
-          }
-          return false;
-        }
+				@Override
+				public boolean matches() throws IOException {
+					if (values.advanceExact(approximation.docID()) && foundOrds.get(values.ordValue())) {
+						return true;
+					}
+					return false;
+				}
 
-        @Override
-        public float matchCost() {
-          return 100; // TODO: use cost of values.getOrd() and foundOrds.get()
-        }
-      };
-    }
+				@Override
+				public float matchCost() {
+					return 100; // TODO: use cost of values.getOrd() and foundOrds.get()
+				}
+			};
+		}
 
-  }
+	}
 }

@@ -37,119 +37,121 @@ import org.apache.lucene.util.fst.BytesRefFSTEnum;
 import org.apache.lucene.util.fst.FST;
 import org.apache.lucene.util.fst.PositiveIntOutputs;
 
-/** See {@link VariableGapTermsIndexWriter}
- * 
- * @lucene.experimental */
+/**
+ * See {@link VariableGapTermsIndexWriter}
+ *
+ * @lucene.experimental
+ */
 public class VariableGapTermsIndexReader extends TermsIndexReaderBase {
 
-  private final PositiveIntOutputs fstOutputs = PositiveIntOutputs.getSingleton();
+	private final PositiveIntOutputs fstOutputs = PositiveIntOutputs.getSingleton();
 
-  final HashMap<String,FieldIndexData> fields = new HashMap<>();
-  
-  public VariableGapTermsIndexReader(SegmentReadState state) throws IOException {
-    String fileName = IndexFileNames.segmentFileName(state.segmentInfo.name, 
-                                                     state.segmentSuffix, 
-                                                     VariableGapTermsIndexWriter.TERMS_INDEX_EXTENSION);
-    final IndexInput in = state.directory.openInput(fileName, new IOContext(state.context, true));
-    boolean success = false;
+	final HashMap<String, FieldIndexData> fields = new HashMap<>();
 
-    try {
-      
-      CodecUtil.checkIndexHeader(in, VariableGapTermsIndexWriter.CODEC_NAME,
-                                       VariableGapTermsIndexWriter.VERSION_START,
-                                       VariableGapTermsIndexWriter.VERSION_CURRENT,
-                                       state.segmentInfo.getId(), state.segmentSuffix);
-      
-      CodecUtil.checksumEntireFile(in);
+	public VariableGapTermsIndexReader(SegmentReadState state) throws IOException {
+		String fileName = IndexFileNames.segmentFileName(state.segmentInfo.name,
+			state.segmentSuffix,
+			VariableGapTermsIndexWriter.TERMS_INDEX_EXTENSION);
+		final IndexInput in = state.directory.openInput(fileName, new IOContext(state.context, true));
+		boolean success = false;
 
-      seekDir(in);
+		try {
 
-      // Read directory
-      final int numFields = in.readVInt();
-      if (numFields < 0) {
-        throw new CorruptIndexException("invalid numFields: " + numFields, in);
-      }
+			CodecUtil.checkIndexHeader(in, VariableGapTermsIndexWriter.CODEC_NAME,
+				VariableGapTermsIndexWriter.VERSION_START,
+				VariableGapTermsIndexWriter.VERSION_CURRENT,
+				state.segmentInfo.getId(), state.segmentSuffix);
 
-      for(int i=0;i<numFields;i++) {
-        final int field = in.readVInt();
-        final long indexStart = in.readVLong();
-        final FieldInfo fieldInfo = state.fieldInfos.fieldInfo(field);
-        FieldIndexData previous = fields.put(fieldInfo.name, new FieldIndexData(in, fieldInfo, indexStart));
-        if (previous != null) {
-          throw new CorruptIndexException("duplicate field: " + fieldInfo.name, in);
-        }
-      }
-      success = true;
-    } finally {
-      if (success) {
-        IOUtils.close(in);
-      } else {
-        IOUtils.closeWhileHandlingException(in);
-      }
-    }
-  }
+			CodecUtil.checksumEntireFile(in);
 
-  private static class IndexEnum extends FieldIndexEnum {
-    private final BytesRefFSTEnum<Long> fstEnum;
-    private BytesRefFSTEnum.InputOutput<Long> current;
+			seekDir(in);
 
-    public IndexEnum(FST<Long> fst) {
-      fstEnum = new BytesRefFSTEnum<>(fst);
-    }
+			// Read directory
+			final int numFields = in.readVInt();
+			if (numFields < 0) {
+				throw new CorruptIndexException("invalid numFields: " + numFields, in);
+			}
 
-    @Override
-    public BytesRef term() {
-      if (current == null) {
-        return null;
-      } else {
-        return current.input;
-      }
-    }
+			for (int i = 0; i < numFields; i++) {
+				final int field = in.readVInt();
+				final long indexStart = in.readVLong();
+				final FieldInfo fieldInfo = state.fieldInfos.fieldInfo(field);
+				FieldIndexData previous = fields.put(fieldInfo.name, new FieldIndexData(in, fieldInfo, indexStart));
+				if (previous != null) {
+					throw new CorruptIndexException("duplicate field: " + fieldInfo.name, in);
+				}
+			}
+			success = true;
+		} finally {
+			if (success) {
+				IOUtils.close(in);
+			} else {
+				IOUtils.closeWhileHandlingException(in);
+			}
+		}
+	}
 
-    @Override
-    public long seek(BytesRef target) throws IOException {
-      //System.out.println("VGR: seek field=" + fieldInfo.name + " target=" + target);
-      current = fstEnum.seekFloor(target);
-      //System.out.println("  got input=" + current.input + " output=" + current.output);
-      return current.output;
-    }
+	private static class IndexEnum extends FieldIndexEnum {
+		private final BytesRefFSTEnum<Long> fstEnum;
+		private BytesRefFSTEnum.InputOutput<Long> current;
 
-    @Override
-    public long next() throws IOException {
-      //System.out.println("VGR: next field=" + fieldInfo.name);
-      current = fstEnum.next();
-      if (current == null) {
-        //System.out.println("  eof");
-        return -1;
-      } else {
-        return current.output;
-      }
-    }
+		public IndexEnum(FST<Long> fst) {
+			fstEnum = new BytesRefFSTEnum<>(fst);
+		}
 
-    @Override
-    public long ord() {
-      throw new UnsupportedOperationException();
-    }
+		@Override
+		public BytesRef term() {
+			if (current == null) {
+				return null;
+			} else {
+				return current.input;
+			}
+		}
 
-    @Override
-    public long seek(long ord) {
-      throw new UnsupportedOperationException();
-    }
-  }
+		@Override
+		public long seek(BytesRef target) throws IOException {
+			//System.out.println("VGR: seek field=" + fieldInfo.name + " target=" + target);
+			current = fstEnum.seekFloor(target);
+			//System.out.println("  got input=" + current.input + " output=" + current.output);
+			return current.output;
+		}
 
-  @Override
-  public boolean supportsOrd() {
-    return false;
-  }
+		@Override
+		public long next() throws IOException {
+			//System.out.println("VGR: next field=" + fieldInfo.name);
+			current = fstEnum.next();
+			if (current == null) {
+				//System.out.println("  eof");
+				return -1;
+			} else {
+				return current.output;
+			}
+		}
 
-  private final class FieldIndexData implements Accountable {
-    private final FST<Long> fst;
+		@Override
+		public long ord() {
+			throw new UnsupportedOperationException();
+		}
 
-    public FieldIndexData(IndexInput in, FieldInfo fieldInfo, long indexStart) throws IOException {
-      IndexInput clone = in.clone();
-      clone.seek(indexStart);
-      fst = new FST<>(clone, fstOutputs);
-      clone.close();
+		@Override
+		public long seek(long ord) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	@Override
+	public boolean supportsOrd() {
+		return false;
+	}
+
+	private final class FieldIndexData implements Accountable {
+		private final FST<Long> fst;
+
+		public FieldIndexData(IndexInput in, FieldInfo fieldInfo, long indexStart) throws IOException {
+			IndexInput clone = in.clone();
+			clone.seek(indexStart);
+			fst = new FST<>(clone, fstOutputs);
+			clone.close();
 
       /*
       final String dotFileName = segment + "_" + fieldInfo.name + ".dot";
@@ -158,63 +160,64 @@ public class VariableGapTermsIndexReader extends TermsIndexReaderBase {
       System.out.println("FST INDEX: SAVED to " + dotFileName);
       w.close();
       */
-    }
+		}
 
-    @Override
-    public long ramBytesUsed() {
-      return fst == null ? 0 : fst.ramBytesUsed();
-    }
+		@Override
+		public long ramBytesUsed() {
+			return fst == null ? 0 : fst.ramBytesUsed();
+		}
 
-    @Override
-    public Collection<Accountable> getChildResources() {
-      if (fst == null) {
-        return Collections.emptyList();
-      } else {
-        return Collections.singletonList(Accountables.namedAccountable("index data", fst));
-      }
-    }
-    
-    @Override
-    public String toString() {
-      return "VarGapTermIndex";
-    }
-  }
+		@Override
+		public Collection<Accountable> getChildResources() {
+			if (fst == null) {
+				return Collections.emptyList();
+			} else {
+				return Collections.singletonList(Accountables.namedAccountable("index data", fst));
+			}
+		}
 
-  @Override
-  public FieldIndexEnum getFieldEnum(FieldInfo fieldInfo) {
-    final FieldIndexData fieldData = fields.get(fieldInfo.name);
-    if (fieldData.fst == null) {
-      return null;
-    } else {
-      return new IndexEnum(fieldData.fst);
-    }
-  }
+		@Override
+		public String toString() {
+			return "VarGapTermIndex";
+		}
+	}
 
-  @Override
-  public void close() throws IOException {}
+	@Override
+	public FieldIndexEnum getFieldEnum(FieldInfo fieldInfo) {
+		final FieldIndexData fieldData = fields.get(fieldInfo.name);
+		if (fieldData.fst == null) {
+			return null;
+		} else {
+			return new IndexEnum(fieldData.fst);
+		}
+	}
 
-  private void seekDir(IndexInput input) throws IOException {
-    input.seek(input.length() - CodecUtil.footerLength() - 8);
-    long dirOffset = input.readLong();
-    input.seek(dirOffset);
-  }
+	@Override
+	public void close() throws IOException {
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    long sizeInBytes = 0;
-    for(FieldIndexData entry : fields.values()) {
-      sizeInBytes += entry.ramBytesUsed();
-    }
-    return sizeInBytes;
-  }
+	private void seekDir(IndexInput input) throws IOException {
+		input.seek(input.length() - CodecUtil.footerLength() - 8);
+		long dirOffset = input.readLong();
+		input.seek(dirOffset);
+	}
 
-  @Override
-  public Collection<Accountable> getChildResources() {
-    return Accountables.namedAccountables("field", fields);
-  }
+	@Override
+	public long ramBytesUsed() {
+		long sizeInBytes = 0;
+		for (FieldIndexData entry : fields.values()) {
+			sizeInBytes += entry.ramBytesUsed();
+		}
+		return sizeInBytes;
+	}
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "(fields=" + fields.size() + ")";
-  }
+	@Override
+	public Collection<Accountable> getChildResources() {
+		return Accountables.namedAccountables("field", fields);
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(fields=" + fields.size() + ")";
+	}
 }

@@ -25,42 +25,45 @@ package org.apache.lucene.search.similarities;
  * information-based models</a> (see {@link IBSimilarity}) introduced a
  * multiplying factor.
  * The default value for the {@code c} parameter is {@code 1}.</p>
+ *
  * @lucene.experimental
  */
 public class NormalizationH1 extends Normalization {
-  private final float c;
-  
-  /**
-   * Creates NormalizationH1 with the supplied parameter <code>c</code>.
-   * @param c hyper-parameter that controls the term frequency 
-   * normalization with respect to the document length.
-   */
-  public NormalizationH1(float c) {
-    this.c = c;
-  }
-  
-  /**
-   * Calls {@link #NormalizationH1(float) NormalizationH1(1)}
-   */
-  public NormalizationH1() {
-    this(1);
-  }
-  
-  @Override
-  public final float tfn(BasicStats stats, float tf, float len) {
-    return tf * c * stats.getAvgFieldLength() / len;
-  }
+	private final float c;
 
-  @Override
-  public String toString() {
-    return "1";
-  }
-  
-  /**
-   * Returns the <code>c</code> parameter.
-   * @see #NormalizationH1(float)
-   */
-  public float getC() {
-    return c;
-  }
+	/**
+	 * Creates NormalizationH1 with the supplied parameter <code>c</code>.
+	 *
+	 * @param c hyper-parameter that controls the term frequency
+	 *          normalization with respect to the document length.
+	 */
+	public NormalizationH1(float c) {
+		this.c = c;
+	}
+
+	/**
+	 * Calls {@link #NormalizationH1(float) NormalizationH1(1)}
+	 */
+	public NormalizationH1() {
+		this(1);
+	}
+
+	@Override
+	public final float tfn(BasicStats stats, float tf, float len) {
+		return tf * c * stats.getAvgFieldLength() / len;
+	}
+
+	@Override
+	public String toString() {
+		return "1";
+	}
+
+	/**
+	 * Returns the <code>c</code> parameter.
+	 *
+	 * @see #NormalizationH1(float)
+	 */
+	public float getC() {
+		return c;
+	}
 }

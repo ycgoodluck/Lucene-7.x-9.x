@@ -30,69 +30,68 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;
 
 
-
 public class TestReaderWrapperDVTypeCheck extends LuceneTestCase {
-  
-  public void testNoDVFieldOnSegment() throws IOException{
-    Directory dir = newDirectory();
-    IndexWriterConfig cfg = new IndexWriterConfig(new MockAnalyzer(random())).setCodec(TestUtil.alwaysDocValuesFormat(TestUtil.getDefaultDocValuesFormat()));
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir, cfg);
-    
-    boolean sdvExist = false;
-    boolean ssdvExist = false;
-    
-    final long seed = random().nextLong();
-    {
-      final Random indexRandom = new Random(seed);
-      final int docs;
-      docs = TestUtil.nextInt(indexRandom, 1, 4);
-     // System.out.println("docs:"+docs);
-      
-      for(int i=0; i< docs; i++){
-        Document d = new Document();
-        d.add(newStringField("id", ""+i, Store.NO));
-        if (rarely(indexRandom)) {
-         // System.out.println("on:"+i+" rarely: true");
-          d.add(new SortedDocValuesField("sdv", new BytesRef(""+i)));
-          sdvExist = true;
-        }else{
-         // System.out.println("on:"+i+" rarely: false");
-        }
-        final int numSortedSet = indexRandom.nextInt(5)-3;
-        for (int j = 0; j < numSortedSet; ++j) {
-         // System.out.println("on:"+i+" add ssdv:"+j);
-          d.add(new SortedSetDocValuesField("ssdv", new BytesRef(""+j)));
-          ssdvExist = true;
-        }
-        iw.addDocument(d);
-        iw.commit();
-      }
-    }
-    iw.forceMerge(1);
-    final DirectoryReader reader = iw.getReader();
-    
-   // System.out.println("sdv:"+ sdvExist+ " ssdv:"+ssdvExist+", segs: "+reader.leaves().size() +", "+reader.leaves());
-    
-    iw.close();
-    final LeafReader wrapper = getOnlyLeafReader(reader);
-    
-    {
-      //final Random indexRandom = new Random(seed);
-      final SortedDocValues sdv = wrapper.getSortedDocValues("sdv");
-      final SortedSetDocValues ssdv = wrapper.getSortedSetDocValues("ssdv");
-      
-      assertNull("confusing DV type", wrapper.getSortedDocValues("ssdv"));
-      assertNull("confusing DV type", wrapper.getSortedSetDocValues("sdv"));
-      
-      assertNull("absent field", wrapper.getSortedDocValues("NOssdv"));
-      assertNull("absent field", wrapper.getSortedSetDocValues("NOsdv"));
-      
-      assertTrue("optional sdv field", sdvExist == (sdv!=null));
-      assertTrue("optional ssdv field", ssdvExist == (ssdv!=null));
-    } 
-    reader.close();
-    
-    dir.close();
-  }
-  
+
+	public void testNoDVFieldOnSegment() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriterConfig cfg = new IndexWriterConfig(new MockAnalyzer(random())).setCodec(TestUtil.alwaysDocValuesFormat(TestUtil.getDefaultDocValuesFormat()));
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir, cfg);
+
+		boolean sdvExist = false;
+		boolean ssdvExist = false;
+
+		final long seed = random().nextLong();
+		{
+			final Random indexRandom = new Random(seed);
+			final int docs;
+			docs = TestUtil.nextInt(indexRandom, 1, 4);
+			// System.out.println("docs:"+docs);
+
+			for (int i = 0; i < docs; i++) {
+				Document d = new Document();
+				d.add(newStringField("id", "" + i, Store.NO));
+				if (rarely(indexRandom)) {
+					// System.out.println("on:"+i+" rarely: true");
+					d.add(new SortedDocValuesField("sdv", new BytesRef("" + i)));
+					sdvExist = true;
+				} else {
+					// System.out.println("on:"+i+" rarely: false");
+				}
+				final int numSortedSet = indexRandom.nextInt(5) - 3;
+				for (int j = 0; j < numSortedSet; ++j) {
+					// System.out.println("on:"+i+" add ssdv:"+j);
+					d.add(new SortedSetDocValuesField("ssdv", new BytesRef("" + j)));
+					ssdvExist = true;
+				}
+				iw.addDocument(d);
+				iw.commit();
+			}
+		}
+		iw.forceMerge(1);
+		final DirectoryReader reader = iw.getReader();
+
+		// System.out.println("sdv:"+ sdvExist+ " ssdv:"+ssdvExist+", segs: "+reader.leaves().size() +", "+reader.leaves());
+
+		iw.close();
+		final LeafReader wrapper = getOnlyLeafReader(reader);
+
+		{
+			//final Random indexRandom = new Random(seed);
+			final SortedDocValues sdv = wrapper.getSortedDocValues("sdv");
+			final SortedSetDocValues ssdv = wrapper.getSortedSetDocValues("ssdv");
+
+			assertNull("confusing DV type", wrapper.getSortedDocValues("ssdv"));
+			assertNull("confusing DV type", wrapper.getSortedSetDocValues("sdv"));
+
+			assertNull("absent field", wrapper.getSortedDocValues("NOssdv"));
+			assertNull("absent field", wrapper.getSortedSetDocValues("NOsdv"));
+
+			assertTrue("optional sdv field", sdvExist == (sdv != null));
+			assertTrue("optional ssdv field", ssdvExist == (ssdv != null));
+		}
+		reader.close();
+
+		dir.close();
+	}
+
 }

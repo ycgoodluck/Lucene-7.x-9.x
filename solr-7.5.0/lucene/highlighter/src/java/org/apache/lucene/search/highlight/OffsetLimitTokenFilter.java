@@ -27,30 +27,30 @@ import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
  * current offset.
  */
 public final class OffsetLimitTokenFilter extends TokenFilter {
-  
-  private int offsetCount;
-  private OffsetAttribute offsetAttrib = getAttribute(OffsetAttribute.class);
-  private int offsetLimit;
-  
-  public OffsetLimitTokenFilter(TokenStream input, int offsetLimit) {
-    super(input);
-    this.offsetLimit = offsetLimit;
-  }
-  
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (offsetCount < offsetLimit && input.incrementToken()) {
-      int offsetLength = offsetAttrib.endOffset() - offsetAttrib.startOffset();
-      offsetCount += offsetLength;
-      return true;
-    }
-    return false;
-  }
-  
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    offsetCount = 0;
-  }
-  
+
+	private int offsetCount;
+	private OffsetAttribute offsetAttrib = getAttribute(OffsetAttribute.class);
+	private int offsetLimit;
+
+	public OffsetLimitTokenFilter(TokenStream input, int offsetLimit) {
+		super(input);
+		this.offsetLimit = offsetLimit;
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (offsetCount < offsetLimit && input.incrementToken()) {
+			int offsetLength = offsetAttrib.endOffset() - offsetAttrib.startOffset();
+			offsetCount += offsetLength;
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		offsetCount = 0;
+	}
+
 }

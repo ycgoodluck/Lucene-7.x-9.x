@@ -20,17 +20,17 @@ import org.junit.BeforeClass;
 
 
 public class TestConv extends StemmerTestBase {
-  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("conv.aff", "conv.dic");
-  }
-  
-  public void testConversion() {
-    assertStemsTo("drink", "drInk");
-    assertStemsTo("drInk", "drInk");
-    assertStemsTo("drInkAble", "drInk");
-    assertStemsTo("drInkABle", "drInk");
-    assertStemsTo("drinkABle", "drInk");
-  }
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("conv.aff", "conv.dic");
+	}
+
+	public void testConversion() {
+		assertStemsTo("drink", "drInk");
+		assertStemsTo("drInk", "drInk");
+		assertStemsTo("drInkAble", "drInk");
+		assertStemsTo("drInkABle", "drInk");
+		assertStemsTo("drinkABle", "drInk");
+	}
 }

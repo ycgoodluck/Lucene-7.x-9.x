@@ -29,10 +29,12 @@ import java.io.IOException;
  * For supported configuration parameters see {@link ContentItemsSource}.
  */
 public abstract class ContentSource extends ContentItemsSource {
-  
-  /** Returns the next {@link DocData} from the content source. 
-   * Implementations must account for multi-threading, as multiple threads 
-   * can call this method simultaneously. */
-  public abstract DocData getNextDocData(DocData docData) throws NoMoreDataException, IOException;
+
+	/**
+	 * Returns the next {@link DocData} from the content source.
+	 * Implementations must account for multi-threading, as multiple threads
+	 * can call this method simultaneously.
+	 */
+	public abstract DocData getNextDocData(DocData docData) throws NoMoreDataException, IOException;
 
 }

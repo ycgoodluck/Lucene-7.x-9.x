@@ -32,62 +32,62 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public abstract class MonitorTestBase extends LuceneTestCase {
 
-  public static final String FIELD = "field";
-  public static final Analyzer ANALYZER = new StandardAnalyzer();
+	public static final String FIELD = "field";
+	public static final Analyzer ANALYZER = new StandardAnalyzer();
 
-  public static Query parse(String query) {
-    QueryParser parser = new QueryParser(FIELD, ANALYZER);
-    try {
-      return parser.parse(query);
-    } catch (ParseException e) {
-      throw new IllegalArgumentException(e);
-    }
-  }
+	public static Query parse(String query) {
+		QueryParser parser = new QueryParser(FIELD, ANALYZER);
+		try {
+			return parser.parse(query);
+		} catch (ParseException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
 
-  public static MonitorQuery mq(String id, String query, String... metadata) {
-    Query q = parse(query);
-    assert metadata.length % 2 == 0;
-    Map<String, String> mm = new HashMap<>();
-    for (int i = 0; i < metadata.length / 2; i += 2) {
-      mm.put(metadata[i], metadata[i + 1]);
-    }
-    return new MonitorQuery(id, q, query, mm);
-  }
+	public static MonitorQuery mq(String id, String query, String... metadata) {
+		Query q = parse(query);
+		assert metadata.length % 2 == 0;
+		Map<String, String> mm = new HashMap<>();
+		for (int i = 0; i < metadata.length / 2; i += 2) {
+			mm.put(metadata[i], metadata[i + 1]);
+		}
+		return new MonitorQuery(id, q, query, mm);
+	}
 
-  protected Monitor newMonitor() throws IOException {
-    return newMonitor(new StandardAnalyzer());
-  }
+	protected Monitor newMonitor() throws IOException {
+		return newMonitor(new StandardAnalyzer());
+	}
 
-  protected Monitor newMonitor(Analyzer analyzer) throws IOException {
-    // TODO: randomize presearcher
-    return new Monitor(analyzer);
-  }
+	protected Monitor newMonitor(Analyzer analyzer) throws IOException {
+		// TODO: randomize presearcher
+		return new Monitor(analyzer);
+	}
 
-  public static class ThrowOnRewriteQuery extends Query {
+	public static class ThrowOnRewriteQuery extends Query {
 
-    @Override
-    public Query rewrite(IndexReader reader) throws IOException {
-      throw new IOException("Error rewriting");
-    }
+		@Override
+		public Query rewrite(IndexReader reader) throws IOException {
+			throw new IOException("Error rewriting");
+		}
 
-    @Override
-    public String toString(String field) {
-      return "ThrowOnRewriteQuery";
-    }
+		@Override
+		public String toString(String field) {
+			return "ThrowOnRewriteQuery";
+		}
 
-    @Override
-    public void visit(QueryVisitor visitor) {
-      visitor.visitLeaf(this);
-    }
+		@Override
+		public void visit(QueryVisitor visitor) {
+			visitor.visitLeaf(this);
+		}
 
-    @Override
-    public boolean equals(Object obj) {
-      return false;
-    }
+		@Override
+		public boolean equals(Object obj) {
+			return false;
+		}
 
-    @Override
-    public int hashCode() {
-      return 0;
-    }
-  }
+		@Override
+		public int hashCode() {
+			return 0;
+		}
+	}
 }

@@ -45,93 +45,94 @@ import java.io.IOException;
  * Some do however use a, a, o, oo, ao and sometimes permutations of everything above.
  * <p>
  * This filter solves that mismatch problem, but might also cause new.
+ *
  * @see ScandinavianNormalizationFilter
  */
 public final class ScandinavianFoldingFilter extends TokenFilter {
 
-  public ScandinavianFoldingFilter(TokenStream input) {
-    super(input);
-  }
+	public ScandinavianFoldingFilter(TokenStream input) {
+		super(input);
+	}
 
-  private final CharTermAttribute charTermAttribute = addAttribute(CharTermAttribute.class);
+	private final CharTermAttribute charTermAttribute = addAttribute(CharTermAttribute.class);
 
-  private static final char AA = '\u00C5'; // Å
-  private static final char aa = '\u00E5'; // å
-  private static final char AE = '\u00C6'; // Æ
-  private static final char ae = '\u00E6'; // æ
-  private static final char AE_se = '\u00C4'; // Ä
-  private static final char ae_se = '\u00E4'; // ä
-  private static final char OE = '\u00D8'; // Ø
-  private static final char oe = '\u00F8'; // ø
-  private static final char OE_se = '\u00D6'; // Ö
-  private static final char oe_se = '\u00F6'; //ö
-
-
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (!input.incrementToken()) {
-      return false;
-    }
-
-    char[] buffer = charTermAttribute.buffer();
-    int length = charTermAttribute.length();
+	private static final char AA = '\u00C5'; // Å
+	private static final char aa = '\u00E5'; // å
+	private static final char AE = '\u00C6'; // Æ
+	private static final char ae = '\u00E6'; // æ
+	private static final char AE_se = '\u00C4'; // Ä
+	private static final char ae_se = '\u00E4'; // ä
+	private static final char OE = '\u00D8'; // Ø
+	private static final char oe = '\u00F8'; // ø
+	private static final char OE_se = '\u00D6'; // Ö
+	private static final char oe_se = '\u00F6'; //ö
 
 
-    int i;
-    for (i = 0; i < length; i++) {
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (!input.incrementToken()) {
+			return false;
+		}
 
-      if (buffer[i] == aa
-          || buffer[i] == ae_se
-          || buffer[i] == ae) {
-
-        buffer[i] = 'a';
-
-      } else if (buffer[i] == AA
-          || buffer[i] == AE_se
-          || buffer[i] == AE) {
-
-        buffer[i] = 'A';
-
-      } else if (buffer[i] == oe
-          || buffer[i] == oe_se) {
-
-        buffer[i] = 'o';
-
-      } else if (buffer[i] == OE
-          || buffer[i] == OE_se) {
-
-        buffer[i] = 'O';
-
-      } else if (length - 1 > i) {
-
-        if ((buffer[i] == 'a' || buffer[i] == 'A')
-            && (buffer[i + 1] == 'a'
-            || buffer[i + 1] == 'A'
-            || buffer[i + 1] == 'e'
-            || buffer[i + 1] == 'E'
-            || buffer[i + 1] == 'o'
-            || buffer[i + 1] == 'O')
-            ) {
-
-          length = StemmerUtil.delete(buffer, i + 1, length);
-
-        } else if ((buffer[i] == 'o' || buffer[i] == 'O')
-            && (buffer[i + 1] == 'e'
-            || buffer[i + 1] == 'E'
-            || buffer[i + 1] == 'o'
-            || buffer[i + 1] == 'O')
-            ) {
-
-          length = StemmerUtil.delete(buffer, i + 1, length);
-
-        }
-      }
-    }
-
-    charTermAttribute.setLength(length);
+		char[] buffer = charTermAttribute.buffer();
+		int length = charTermAttribute.length();
 
 
-    return true;
-  }
+		int i;
+		for (i = 0; i < length; i++) {
+
+			if (buffer[i] == aa
+				|| buffer[i] == ae_se
+				|| buffer[i] == ae) {
+
+				buffer[i] = 'a';
+
+			} else if (buffer[i] == AA
+				|| buffer[i] == AE_se
+				|| buffer[i] == AE) {
+
+				buffer[i] = 'A';
+
+			} else if (buffer[i] == oe
+				|| buffer[i] == oe_se) {
+
+				buffer[i] = 'o';
+
+			} else if (buffer[i] == OE
+				|| buffer[i] == OE_se) {
+
+				buffer[i] = 'O';
+
+			} else if (length - 1 > i) {
+
+				if ((buffer[i] == 'a' || buffer[i] == 'A')
+					&& (buffer[i + 1] == 'a'
+					|| buffer[i + 1] == 'A'
+					|| buffer[i + 1] == 'e'
+					|| buffer[i + 1] == 'E'
+					|| buffer[i + 1] == 'o'
+					|| buffer[i + 1] == 'O')
+				) {
+
+					length = StemmerUtil.delete(buffer, i + 1, length);
+
+				} else if ((buffer[i] == 'o' || buffer[i] == 'O')
+					&& (buffer[i + 1] == 'e'
+					|| buffer[i + 1] == 'E'
+					|| buffer[i + 1] == 'o'
+					|| buffer[i + 1] == 'O')
+				) {
+
+					length = StemmerUtil.delete(buffer, i + 1, length);
+
+				}
+			}
+		}
+
+		charTermAttribute.setLength(length);
+
+
+		return true;
+	}
 
 }

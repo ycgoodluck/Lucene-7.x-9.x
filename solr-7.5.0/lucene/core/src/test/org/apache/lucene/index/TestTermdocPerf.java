@@ -32,112 +32,112 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;
 
 class RepeatingTokenizer extends Tokenizer {
-  
-  private final Random random;
-  private final float percentDocs;
-  private final int maxTF;
-  private int num;
-  CharTermAttribute termAtt;
-  String value;
 
-   public RepeatingTokenizer(String val, Random random, float percentDocs, int maxTF) {
-     super();
-     this.value = val;
-     this.random = random;
-     this.percentDocs = percentDocs;
-     this.maxTF = maxTF;
-     this.termAtt = addAttribute(CharTermAttribute.class);
-   }
+	private final Random random;
+	private final float percentDocs;
+	private final int maxTF;
+	private int num;
+	CharTermAttribute termAtt;
+	String value;
 
-   @Override
-   public boolean incrementToken() throws IOException {
-     num--;
-     if (num >= 0) {
-       clearAttributes();
-       termAtt.append(value);
-       return true;
-     }
-     return false;
-   }
+	public RepeatingTokenizer(String val, Random random, float percentDocs, int maxTF) {
+		super();
+		this.value = val;
+		this.random = random;
+		this.percentDocs = percentDocs;
+		this.maxTF = maxTF;
+		this.termAtt = addAttribute(CharTermAttribute.class);
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    if (random.nextFloat() < percentDocs) {
-      num = random.nextInt(maxTF) + 1;
-    } else {
-      num = 0;
-    }
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		num--;
+		if (num >= 0) {
+			clearAttributes();
+			termAtt.append(value);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		if (random.nextFloat() < percentDocs) {
+			num = random.nextInt(maxTF) + 1;
+		} else {
+			num = 0;
+		}
+	}
 }
 
 
 public class TestTermdocPerf extends LuceneTestCase {
 
-  void addDocs(final Random random, Directory dir, final int ndocs, String field, final String val, final int maxTF, final float percentDocs) throws IOException {
+	void addDocs(final Random random, Directory dir, final int ndocs, String field, final String val, final int maxTF, final float percentDocs) throws IOException {
 
-    Analyzer analyzer = new Analyzer() {
-      @Override
-      public TokenStreamComponents createComponents(String fieldName) {
-        return new TokenStreamComponents(new RepeatingTokenizer(val, random, percentDocs, maxTF));
-      }
-    };
+		Analyzer analyzer = new Analyzer() {
+			@Override
+			public TokenStreamComponents createComponents(String fieldName) {
+				return new TokenStreamComponents(new RepeatingTokenizer(val, random, percentDocs, maxTF));
+			}
+		};
 
-    Document doc = new Document();
-    
-    doc.add(newStringField(field, val, Field.Store.NO));
-    IndexWriter writer = new IndexWriter(
-        dir,
-        newIndexWriterConfig(analyzer)
-          .setOpenMode(OpenMode.CREATE)
-          .setMaxBufferedDocs(100)
-          .setMergePolicy(newLogMergePolicy(100))
-    );
+		Document doc = new Document();
 
-    for (int i=0; i<ndocs; i++) {
-      writer.addDocument(doc);
-    }
+		doc.add(newStringField(field, val, Field.Store.NO));
+		IndexWriter writer = new IndexWriter(
+			dir,
+			newIndexWriterConfig(analyzer)
+				.setOpenMode(OpenMode.CREATE)
+				.setMaxBufferedDocs(100)
+				.setMergePolicy(newLogMergePolicy(100))
+		);
 
-    writer.forceMerge(1);
-    writer.close();
-  }
+		for (int i = 0; i < ndocs; i++) {
+			writer.addDocument(doc);
+		}
+
+		writer.forceMerge(1);
+		writer.close();
+	}
 
 
-  public int doTest(int iter, int ndocs, int maxTF, float percentDocs) throws IOException {
-    Directory dir = newDirectory();
+	public int doTest(int iter, int ndocs, int maxTF, float percentDocs) throws IOException {
+		Directory dir = newDirectory();
 
-    long start = System.currentTimeMillis();
-    addDocs(random(), dir, ndocs, "foo", "val", maxTF, percentDocs);
-    long end = System.currentTimeMillis();
-    if (VERBOSE) System.out.println("milliseconds for creation of " + ndocs + " docs = " + (end-start));
+		long start = System.currentTimeMillis();
+		addDocs(random(), dir, ndocs, "foo", "val", maxTF, percentDocs);
+		long end = System.currentTimeMillis();
+		if (VERBOSE) System.out.println("milliseconds for creation of " + ndocs + " docs = " + (end - start));
 
-    IndexReader reader = DirectoryReader.open(dir);
+		IndexReader reader = DirectoryReader.open(dir);
 
-    TermsEnum tenum = MultiFields.getTerms(reader, "foo").iterator();
+		TermsEnum tenum = MultiFields.getTerms(reader, "foo").iterator();
 
-    start = System.currentTimeMillis();
+		start = System.currentTimeMillis();
 
-    int ret=0;
-    PostingsEnum tdocs = null;
-    final Random random = new Random(random().nextLong());
-    for (int i=0; i<iter; i++) {
-      tenum.seekCeil(new BytesRef("val"));
-      tdocs = TestUtil.docs(random, tenum, tdocs, PostingsEnum.NONE);
-      while (tdocs.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
-        ret += tdocs.docID();
-      }
-    }
+		int ret = 0;
+		PostingsEnum tdocs = null;
+		final Random random = new Random(random().nextLong());
+		for (int i = 0; i < iter; i++) {
+			tenum.seekCeil(new BytesRef("val"));
+			tdocs = TestUtil.docs(random, tenum, tdocs, PostingsEnum.NONE);
+			while (tdocs.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
+				ret += tdocs.docID();
+			}
+		}
 
-    end = System.currentTimeMillis();
-    if (VERBOSE) System.out.println("milliseconds for " + iter + " TermDocs iteration: " + (end-start));
+		end = System.currentTimeMillis();
+		if (VERBOSE) System.out.println("milliseconds for " + iter + " TermDocs iteration: " + (end - start));
 
-    return ret;
-  }
+		return ret;
+	}
 
-  public void testTermDocPerf() throws IOException {
-    // performance test for 10% of documents containing a term
-    // doTest(100000, 10000,3,.1f);
-  }
+	public void testTermDocPerf() throws IOException {
+		// performance test for 10% of documents containing a term
+		// doTest(100000, 10000,3,.1f);
+	}
 
 
 }

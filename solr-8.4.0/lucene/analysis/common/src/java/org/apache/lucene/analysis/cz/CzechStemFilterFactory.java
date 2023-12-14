@@ -32,24 +32,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.CzechStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.1.0
  */
 public class CzechStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "czechStem";
-  
-  /** Creates a new CzechStemFilterFactory */
-  public CzechStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new CzechStemFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "czechStem";
+
+	/**
+	 * Creates a new CzechStemFilterFactory
+	 */
+	public CzechStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new CzechStemFilter(input);
+	}
 }

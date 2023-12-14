@@ -20,21 +20,21 @@ import org.apache.lucene.codecs.BlockTermState;
 import org.apache.lucene.index.TermState;
 
 final class IDVersionTermState extends BlockTermState {
-  long idVersion;
-  int docID;
+	long idVersion;
+	int docID;
 
-  @Override
-  public IDVersionTermState clone() {
-    IDVersionTermState other = new IDVersionTermState();
-    other.copyFrom(this);
-    return other;
-  }
+	@Override
+	public IDVersionTermState clone() {
+		IDVersionTermState other = new IDVersionTermState();
+		other.copyFrom(this);
+		return other;
+	}
 
-  @Override
-  public void copyFrom(TermState _other) {
-    super.copyFrom(_other);
-    IDVersionTermState other = (IDVersionTermState) _other;
-    idVersion = other.idVersion;
-    docID = other.docID;
-  }
+	@Override
+	public void copyFrom(TermState _other) {
+		super.copyFrom(_other);
+		IDVersionTermState other = (IDVersionTermState) _other;
+		idVersion = other.idVersion;
+		docID = other.docID;
+	}
 }

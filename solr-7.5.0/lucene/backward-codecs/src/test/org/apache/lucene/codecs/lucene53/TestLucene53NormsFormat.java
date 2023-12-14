@@ -25,20 +25,20 @@ import org.apache.lucene.util.Version;
  * Tests Lucene53NormsFormat
  */
 public class TestLucene53NormsFormat extends BaseNormsFormatTestCase {
-  private final Codec codec = new Lucene62RWCodec();
+	private final Codec codec = new Lucene62RWCodec();
 
-  @Override
-  protected int getCreatedVersionMajor() {
-    return Version.LUCENE_6_2_0.major;
-  }
+	@Override
+	protected int getCreatedVersionMajor() {
+		return Version.LUCENE_6_2_0.major;
+	}
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 
-  @Override
-  protected boolean codecSupportsSparsity() {
-    return false;
-  }
+	@Override
+	protected boolean codecSupportsSparsity() {
+		return false;
+	}
 }

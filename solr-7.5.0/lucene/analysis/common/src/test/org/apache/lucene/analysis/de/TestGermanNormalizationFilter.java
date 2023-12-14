@@ -30,63 +30,65 @@ import org.apache.lucene.analysis.core.KeywordTokenizer;
  * Tests {@link GermanNormalizationFilter}
  */
 public class TestGermanNormalizationFilter extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String field) {
-        final Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-        final TokenStream stream = new GermanNormalizationFilter(tokenizer);
-        return new TokenStreamComponents(tokenizer, stream);
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    analyzer.close();
-    super.tearDown();
-  }
-  
-  /**
-   * Tests that a/o/u + e is equivalent to the umlaut form
-   */
-  public void testBasicExamples() throws IOException {
-    checkOneTerm(analyzer, "Schaltflächen", "Schaltflachen");
-    checkOneTerm(analyzer, "Schaltflaechen", "Schaltflachen");
-  }
+	private Analyzer analyzer;
 
-  /**
-   * Tests the specific heuristic that ue is not folded after a vowel or q.
-   */
-  public void testUHeuristic() throws IOException {
-    checkOneTerm(analyzer, "dauer", "dauer");
-  }
-  
-  /**
-   * Tests german specific folding of sharp-s
-   */
-  public void testSpecialFolding() throws IOException {
-    checkOneTerm(analyzer, "weißbier", "weissbier");
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new GermanNormalizationFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String field) {
+				final Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+				final TokenStream stream = new GermanNormalizationFilter(tokenizer);
+				return new TokenStreamComponents(tokenizer, stream);
+			}
+		};
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		analyzer.close();
+		super.tearDown();
+	}
+
+	/**
+	 * Tests that a/o/u + e is equivalent to the umlaut form
+	 */
+	public void testBasicExamples() throws IOException {
+		checkOneTerm(analyzer, "Schaltflächen", "Schaltflachen");
+		checkOneTerm(analyzer, "Schaltflaechen", "Schaltflachen");
+	}
+
+	/**
+	 * Tests the specific heuristic that ue is not folded after a vowel or q.
+	 */
+	public void testUHeuristic() throws IOException {
+		checkOneTerm(analyzer, "dauer", "dauer");
+	}
+
+	/**
+	 * Tests german specific folding of sharp-s
+	 */
+	public void testSpecialFolding() throws IOException {
+		checkOneTerm(analyzer, "weißbier", "weissbier");
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new GermanNormalizationFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

@@ -30,23 +30,23 @@ import org.apache.lucene.search.WildcardQuery;
  */
 public class WildcardQueryNodeBuilder implements StandardQueryBuilder {
 
-  public WildcardQueryNodeBuilder() {
-    // empty constructor
-  }
+	public WildcardQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public WildcardQuery build(QueryNode queryNode) throws QueryNodeException {
-    WildcardQueryNode wildcardNode = (WildcardQueryNode) queryNode;
+	@Override
+	public WildcardQuery build(QueryNode queryNode) throws QueryNodeException {
+		WildcardQueryNode wildcardNode = (WildcardQueryNode) queryNode;
 
-    WildcardQuery q = new WildcardQuery(new Term(wildcardNode.getFieldAsString(),
-                                                 wildcardNode.getTextAsString()));
-    
-    MultiTermQuery.RewriteMethod method = (MultiTermQuery.RewriteMethod)queryNode.getTag(MultiTermRewriteMethodProcessor.TAG_ID);
-    if (method != null) {
-      q.setRewriteMethod(method);
-    }
-    
-    return q;
-  }
+		WildcardQuery q = new WildcardQuery(new Term(wildcardNode.getFieldAsString(),
+			wildcardNode.getTextAsString()));
+
+		MultiTermQuery.RewriteMethod method = (MultiTermQuery.RewriteMethod) queryNode.getTag(MultiTermRewriteMethodProcessor.TAG_ID);
+		if (method != null) {
+			q.setRewriteMethod(method);
+		}
+
+		return q;
+	}
 
 }

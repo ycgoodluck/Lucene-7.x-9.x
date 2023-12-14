@@ -29,19 +29,21 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Portuguese Light stem factory is working.
  */
 public class TestPortugueseLightStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("evidentemente");
-    TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("PortugueseLightStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "evident" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("PortugueseLightStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("evidentemente");
+		TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		((Tokenizer) stream).setReader(reader);
+		stream = tokenFilterFactory("PortugueseLightStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"evident"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("PortugueseLightStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

@@ -30,51 +30,51 @@ import org.apache.lucene.util.automaton.CharacterRunAutomaton;
  * @lucene.internal
  */
 public class UHComponents {
-  private final String field;
-  private final Predicate<String> fieldMatcher;
-  private final Query query;
-  private final BytesRef[] terms; // Query: all terms we extracted (some may be position sensitive)
-  private final PhraseHelper phraseHelper; // Query: position-sensitive information
-  private final CharacterRunAutomaton[] automata; // Query: wildcards (i.e. multi-term query), not position sensitive
-  private final Set<UnifiedHighlighter.HighlightFlag> highlightFlags;
+	private final String field;
+	private final Predicate<String> fieldMatcher;
+	private final Query query;
+	private final BytesRef[] terms; // Query: all terms we extracted (some may be position sensitive)
+	private final PhraseHelper phraseHelper; // Query: position-sensitive information
+	private final CharacterRunAutomaton[] automata; // Query: wildcards (i.e. multi-term query), not position sensitive
+	private final Set<UnifiedHighlighter.HighlightFlag> highlightFlags;
 
-  public UHComponents(String field, Predicate<String> fieldMatcher, Query query,
-                      BytesRef[] terms, PhraseHelper phraseHelper, CharacterRunAutomaton[] automata,
-                      Set<UnifiedHighlighter.HighlightFlag> highlightFlags) {
-    this.field = field;
-    this.fieldMatcher = fieldMatcher;
-    this.query = query;
-    this.terms = terms;
-    this.phraseHelper = phraseHelper;
-    this.automata = automata;
-    this.highlightFlags = highlightFlags;
-  }
+	public UHComponents(String field, Predicate<String> fieldMatcher, Query query,
+											BytesRef[] terms, PhraseHelper phraseHelper, CharacterRunAutomaton[] automata,
+											Set<UnifiedHighlighter.HighlightFlag> highlightFlags) {
+		this.field = field;
+		this.fieldMatcher = fieldMatcher;
+		this.query = query;
+		this.terms = terms;
+		this.phraseHelper = phraseHelper;
+		this.automata = automata;
+		this.highlightFlags = highlightFlags;
+	}
 
-  public String getField() {
-    return field;
-  }
+	public String getField() {
+		return field;
+	}
 
-  public Predicate<String> getFieldMatcher() {
-    return fieldMatcher;
-  }
+	public Predicate<String> getFieldMatcher() {
+		return fieldMatcher;
+	}
 
-  public Query getQuery() {
-    return query;
-  }
+	public Query getQuery() {
+		return query;
+	}
 
-  public BytesRef[] getTerms() {
-    return terms;
-  }
+	public BytesRef[] getTerms() {
+		return terms;
+	}
 
-  public PhraseHelper getPhraseHelper() {
-    return phraseHelper;
-  }
+	public PhraseHelper getPhraseHelper() {
+		return phraseHelper;
+	}
 
-  public CharacterRunAutomaton[] getAutomata() {
-    return automata;
-  }
+	public CharacterRunAutomaton[] getAutomata() {
+		return automata;
+	}
 
-  public Set<UnifiedHighlighter.HighlightFlag> getHighlightFlags() {
-    return highlightFlags;
-  }
+	public Set<UnifiedHighlighter.HighlightFlag> getHighlightFlags() {
+		return highlightFlags;
+	}
 }

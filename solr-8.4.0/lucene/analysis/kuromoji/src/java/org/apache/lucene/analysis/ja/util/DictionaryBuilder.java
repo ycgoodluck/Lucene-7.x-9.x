@@ -33,40 +33,47 @@ import java.util.Locale;
  * files, roughly following the conventions of IPADIC. JapaneseTokenizer uses dictionaries built
  * with this tool. Note that the input files required by this build generally must be generated from
  * a corpus of real text using tools that are not part of Lucene.  </p>
+ *
  * @lucene.experimental
  */
 public class DictionaryBuilder {
 
-  /** Format of the dictionary. */
-  public enum DictionaryFormat {
-    /** IPADIC format */
-    IPADIC,
-    /** UNIDIC format */
-    UNIDIC
-  }
+	/**
+	 * Format of the dictionary.
+	 */
+	public enum DictionaryFormat {
+		/**
+		 * IPADIC format
+		 */
+		IPADIC,
+		/**
+		 * UNIDIC format
+		 */
+		UNIDIC
+	}
 
-  private DictionaryBuilder() {
-  }
+	private DictionaryBuilder() {
+	}
 
-  public static void build(DictionaryFormat format, Path inputDir, Path outputDir, String encoding, boolean normalizeEntry) throws IOException {
-    new TokenInfoDictionaryBuilder(format, encoding, normalizeEntry)
-        .build(inputDir)
-        .write(outputDir);
+	public static void build(DictionaryFormat format, Path inputDir, Path outputDir, String encoding, boolean normalizeEntry) throws IOException {
+		new TokenInfoDictionaryBuilder(format, encoding, normalizeEntry)
+			.build(inputDir)
+			.write(outputDir);
 
-    new UnknownDictionaryBuilder(encoding)
-        .build(inputDir)
-        .write(outputDir);
+		new UnknownDictionaryBuilder(encoding)
+			.build(inputDir)
+			.write(outputDir);
 
-    ConnectionCostsBuilder.build(inputDir.resolve("matrix.def"))
-        .write(outputDir);
-  }
+		ConnectionCostsBuilder.build(inputDir.resolve("matrix.def"))
+			.write(outputDir);
+	}
 
-  public static void main(String[] args) throws IOException {
-    DictionaryFormat format = DictionaryFormat.valueOf(args[0].toUpperCase(Locale.ROOT));
-    String inputDirName = args[1];
-    String outputDirName = args[2];
-    String inputEncoding = args[3];
-    boolean normalizeEntries = Boolean.parseBoolean(args[4]);
-    DictionaryBuilder.build(format, Paths.get(inputDirName), Paths.get(outputDirName), inputEncoding, normalizeEntries);
-  }
+	public static void main(String[] args) throws IOException {
+		DictionaryFormat format = DictionaryFormat.valueOf(args[0].toUpperCase(Locale.ROOT));
+		String inputDirName = args[1];
+		String outputDirName = args[2];
+		String inputEncoding = args[3];
+		boolean normalizeEntries = Boolean.parseBoolean(args[4]);
+		DictionaryBuilder.build(format, Paths.get(inputDirName), Paths.get(outputDirName), inputEncoding, normalizeEntries);
+	}
 }

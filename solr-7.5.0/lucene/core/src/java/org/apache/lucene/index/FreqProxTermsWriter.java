@@ -30,100 +30,100 @@ import org.apache.lucene.util.IOUtils;
 
 final class FreqProxTermsWriter extends TermsHash {
 
-  public FreqProxTermsWriter(DocumentsWriterPerThread docWriter, TermsHash termVectors) {
-    super(docWriter, true, termVectors);
-  }
+	public FreqProxTermsWriter(DocumentsWriterPerThread docWriter, TermsHash termVectors) {
+		super(docWriter, true, termVectors);
+	}
 
-  private void applyDeletes(SegmentWriteState state, Fields fields) throws IOException {
-    // Process any pending Term deletes for this newly
-    // flushed segment:
-    if (state.segUpdates != null && state.segUpdates.deleteTerms.size() > 0) {
-      Map<Term,Integer> segDeletes = state.segUpdates.deleteTerms;
-      List<Term> deleteTerms = new ArrayList<>(segDeletes.keySet());
-      Collections.sort(deleteTerms);
-      String lastField = null;
-      TermsEnum termsEnum = null;
-      PostingsEnum postingsEnum = null;
-      for(Term deleteTerm : deleteTerms) {
-        if (deleteTerm.field().equals(lastField) == false) {
-          lastField = deleteTerm.field();
-          Terms terms = fields.terms(lastField);
-          if (terms != null) {
-            termsEnum = terms.iterator();
-          } else {
-            termsEnum = null;
-          }
-        }
+	private void applyDeletes(SegmentWriteState state, Fields fields) throws IOException {
+		// Process any pending Term deletes for this newly
+		// flushed segment:
+		if (state.segUpdates != null && state.segUpdates.deleteTerms.size() > 0) {
+			Map<Term, Integer> segDeletes = state.segUpdates.deleteTerms;
+			List<Term> deleteTerms = new ArrayList<>(segDeletes.keySet());
+			Collections.sort(deleteTerms);
+			String lastField = null;
+			TermsEnum termsEnum = null;
+			PostingsEnum postingsEnum = null;
+			for (Term deleteTerm : deleteTerms) {
+				if (deleteTerm.field().equals(lastField) == false) {
+					lastField = deleteTerm.field();
+					Terms terms = fields.terms(lastField);
+					if (terms != null) {
+						termsEnum = terms.iterator();
+					} else {
+						termsEnum = null;
+					}
+				}
 
-        if (termsEnum != null && termsEnum.seekExact(deleteTerm.bytes())) {
-          postingsEnum = termsEnum.postings(postingsEnum, 0);
-          int delDocLimit = segDeletes.get(deleteTerm);
-          assert delDocLimit < PostingsEnum.NO_MORE_DOCS;
-          while (true) {
-            int doc = postingsEnum.nextDoc();
-            if (doc < delDocLimit) {
-              if (state.liveDocs == null) {
-                state.liveDocs = new FixedBitSet(state.segmentInfo.maxDoc());
-                state.liveDocs.set(0, state.segmentInfo.maxDoc());
-              }
-              if (state.liveDocs.get(doc)) {
-                state.delCountOnFlush++;
-                state.liveDocs.clear(doc);
-              }
-            } else {
-              break;
-            }
-          }
-        }
-      }
-    }
-  }
+				if (termsEnum != null && termsEnum.seekExact(deleteTerm.bytes())) {
+					postingsEnum = termsEnum.postings(postingsEnum, 0);
+					int delDocLimit = segDeletes.get(deleteTerm);
+					assert delDocLimit < PostingsEnum.NO_MORE_DOCS;
+					while (true) {
+						int doc = postingsEnum.nextDoc();
+						if (doc < delDocLimit) {
+							if (state.liveDocs == null) {
+								state.liveDocs = new FixedBitSet(state.segmentInfo.maxDoc());
+								state.liveDocs.set(0, state.segmentInfo.maxDoc());
+							}
+							if (state.liveDocs.get(doc)) {
+								state.delCountOnFlush++;
+								state.liveDocs.clear(doc);
+							}
+						} else {
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
 
-  @Override
-  public void flush(Map<String,TermsHashPerField> fieldsToFlush, final SegmentWriteState state, Sorter.DocMap sortMap) throws IOException {
-    super.flush(fieldsToFlush, state, sortMap);
+	@Override
+	public void flush(Map<String, TermsHashPerField> fieldsToFlush, final SegmentWriteState state, Sorter.DocMap sortMap) throws IOException {
+		super.flush(fieldsToFlush, state, sortMap);
 
-    // Gather all fields that saw any postings:
-    List<FreqProxTermsWriterPerField> allFields = new ArrayList<>();
+		// Gather all fields that saw any postings:
+		List<FreqProxTermsWriterPerField> allFields = new ArrayList<>();
 
-    // fieldsToFlush中key为域名，value为对应的倒排表信息
-    for (TermsHashPerField f : fieldsToFlush.values()) {
-      final FreqProxTermsWriterPerField perField = (FreqProxTermsWriterPerField) f;
-      if (perField.bytesHash.size() > 0) {
-        // 对termID进行排序，排序前存储termID的数组为稀疏矩阵
-        perField.sortPostings();
-        assert perField.fieldInfo.getIndexOptions() != IndexOptions.NONE;
-        allFields.add(perField);
-      }
-    }
+		// fieldsToFlush中key为域名，value为对应的倒排表信息
+		for (TermsHashPerField f : fieldsToFlush.values()) {
+			final FreqProxTermsWriterPerField perField = (FreqProxTermsWriterPerField) f;
+			if (perField.bytesHash.size() > 0) {
+				// 对termID进行排序，排序前存储termID的数组为稀疏矩阵
+				perField.sortPostings();
+				assert perField.fieldInfo.getIndexOptions() != IndexOptions.NONE;
+				allFields.add(perField);
+			}
+		}
 
-    // Sort by field name
-    // 根据域名进行排序
-    CollectionUtil.introSort(allFields);
+		// Sort by field name
+		// 根据域名进行排序
+		CollectionUtil.introSort(allFields);
 
-    Fields fields = new FreqProxFields(allFields);
-    applyDeletes(state, fields);
-    if (sortMap != null) {
-      fields = new SortingLeafReader.SortingFields(fields, state.fieldInfos, sortMap);
-    }
+		Fields fields = new FreqProxFields(allFields);
+		applyDeletes(state, fields);
+		if (sortMap != null) {
+			fields = new SortingLeafReader.SortingFields(fields, state.fieldInfos, sortMap);
+		}
 
-    FieldsConsumer consumer = state.segmentInfo.getCodec().postingsFormat().fieldsConsumer(state);
-    boolean success = false;
-    try {
-      consumer.write(fields);
-      success = true;
-    } finally {
-      if (success) {
-        IOUtils.close(consumer);
-      } else {
-        IOUtils.closeWhileHandlingException(consumer);
-      }
-    }
+		FieldsConsumer consumer = state.segmentInfo.getCodec().postingsFormat().fieldsConsumer(state);
+		boolean success = false;
+		try {
+			consumer.write(fields);
+			success = true;
+		} finally {
+			if (success) {
+				IOUtils.close(consumer);
+			} else {
+				IOUtils.closeWhileHandlingException(consumer);
+			}
+		}
 
-  }
+	}
 
-  @Override
-  public TermsHashPerField addField(FieldInvertState invertState, FieldInfo fieldInfo) {
-    return new FreqProxTermsWriterPerField(invertState, this, fieldInfo, nextTermsHash.addField(invertState, fieldInfo));
-  }
+	@Override
+	public TermsHashPerField addField(FieldInvertState invertState, FieldInfo fieldInfo) {
+		return new FreqProxTermsWriterPerField(invertState, this, fieldInfo, nextTermsHash.addField(invertState, fieldInfo));
+	}
 }

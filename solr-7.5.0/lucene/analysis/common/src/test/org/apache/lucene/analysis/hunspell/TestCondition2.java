@@ -20,13 +20,13 @@ import org.junit.BeforeClass;
 
 
 public class TestCondition2 extends StemmerTestBase {
-  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("condition2.aff", "condition2.dic");
-  }
-  
-  public void testStemming() {
-    assertStemsTo("monopolies", "monopoly");
-  }
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("condition2.aff", "condition2.dic");
+	}
+
+	public void testStemming() {
+		assertStemsTo("monopolies", "monopoly");
+	}
 }

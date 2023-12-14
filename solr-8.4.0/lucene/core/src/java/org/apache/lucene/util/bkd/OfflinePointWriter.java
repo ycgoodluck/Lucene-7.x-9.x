@@ -28,84 +28,86 @@ import org.apache.lucene.util.BytesRef;
  * Writes points to disk in a fixed-with format.
  *
  * @lucene.internal
- * */
+ */
 public final class OfflinePointWriter implements PointWriter {
 
-  final Directory tempDir;
-  public final IndexOutput out;
-  public final String name;
-  final int packedBytesLength;
-  long count;
-  private boolean closed;
-  final long expectedCount;
+	final Directory tempDir;
+	public final IndexOutput out;
+	public final String name;
+	final int packedBytesLength;
+	long count;
+	private boolean closed;
+	final long expectedCount;
 
-  /** Create a new writer with an unknown number of incoming points */
-  public OfflinePointWriter(Directory tempDir, String tempFileNamePrefix, int packedBytesLength,
-                            String desc, long expectedCount) throws IOException {
-    this.out = tempDir.createTempOutput(tempFileNamePrefix, "bkd_" + desc, IOContext.DEFAULT);
-    this.name = out.getName();
-    this.tempDir = tempDir;
-    this.packedBytesLength = packedBytesLength;
-    this.expectedCount = expectedCount;
-  }
+	/**
+	 * Create a new writer with an unknown number of incoming points
+	 */
+	public OfflinePointWriter(Directory tempDir, String tempFileNamePrefix, int packedBytesLength,
+														String desc, long expectedCount) throws IOException {
+		this.out = tempDir.createTempOutput(tempFileNamePrefix, "bkd_" + desc, IOContext.DEFAULT);
+		this.name = out.getName();
+		this.tempDir = tempDir;
+		this.packedBytesLength = packedBytesLength;
+		this.expectedCount = expectedCount;
+	}
 
-  @Override
-  public void append(byte[] packedValue, int docID) throws IOException {
-    assert closed == false : "Point writer is already closed";
-    assert packedValue.length == packedBytesLength : "[packedValue] must have length [" + packedBytesLength + "] but was [" + packedValue.length + "]";
-    out.writeBytes(packedValue, 0, packedValue.length);
-    out.writeInt(docID);
-    count++;
-    assert expectedCount == 0 || count <= expectedCount:  "expectedCount=" + expectedCount + " vs count=" + count;
-  }
+	@Override
+	public void append(byte[] packedValue, int docID) throws IOException {
+		assert closed == false : "Point writer is already closed";
+		assert packedValue.length == packedBytesLength : "[packedValue] must have length [" + packedBytesLength + "] but was [" + packedValue.length + "]";
+		out.writeBytes(packedValue, 0, packedValue.length);
+		out.writeInt(docID);
+		count++;
+		assert expectedCount == 0 || count <= expectedCount : "expectedCount=" + expectedCount + " vs count=" + count;
+	}
 
-  @Override
-  public void append(PointValue pointValue) throws IOException {
-    assert closed == false : "Point writer is already closed";
-    BytesRef packedValueDocID = pointValue.packedValueDocIDBytes();
-    assert packedValueDocID.length == packedBytesLength + Integer.BYTES : "[packedValue and docID] must have length [" + (packedBytesLength + Integer.BYTES) + "] but was [" + packedValueDocID.length + "]";
-    out.writeBytes(packedValueDocID.bytes, packedValueDocID.offset, packedValueDocID.length);
-    count++;
-    assert expectedCount == 0 || count <= expectedCount : "expectedCount=" + expectedCount + " vs count=" + count;
-  }
+	@Override
+	public void append(PointValue pointValue) throws IOException {
+		assert closed == false : "Point writer is already closed";
+		BytesRef packedValueDocID = pointValue.packedValueDocIDBytes();
+		assert packedValueDocID.length == packedBytesLength + Integer.BYTES : "[packedValue and docID] must have length [" + (packedBytesLength + Integer.BYTES) + "] but was [" + packedValueDocID.length + "]";
+		out.writeBytes(packedValueDocID.bytes, packedValueDocID.offset, packedValueDocID.length);
+		count++;
+		assert expectedCount == 0 || count <= expectedCount : "expectedCount=" + expectedCount + " vs count=" + count;
+	}
 
-  @Override
-  public PointReader getReader(long start, long length) throws IOException {
-    byte[] buffer  = new byte[packedBytesLength + Integer.BYTES];
-    return getReader(start, length,  buffer);
-  }
+	@Override
+	public PointReader getReader(long start, long length) throws IOException {
+		byte[] buffer = new byte[packedBytesLength + Integer.BYTES];
+		return getReader(start, length, buffer);
+	}
 
-  protected OfflinePointReader getReader(long start, long length, byte[] reusableBuffer) throws IOException {
-    assert closed: "point writer is still open and trying to get a reader";
-    assert start + length <= count: "start=" + start + " length=" + length + " count=" + count;
-    assert expectedCount == 0 || count == expectedCount;
-    return new OfflinePointReader(tempDir, name, packedBytesLength, start, length, reusableBuffer);
-  }
+	protected OfflinePointReader getReader(long start, long length, byte[] reusableBuffer) throws IOException {
+		assert closed : "point writer is still open and trying to get a reader";
+		assert start + length <= count : "start=" + start + " length=" + length + " count=" + count;
+		assert expectedCount == 0 || count == expectedCount;
+		return new OfflinePointReader(tempDir, name, packedBytesLength, start, length, reusableBuffer);
+	}
 
-  @Override
-  public long count() {
-    return count;
-  }
+	@Override
+	public long count() {
+		return count;
+	}
 
-  @Override
-  public void close() throws IOException {
-    if (closed == false) {
-      try {
-        CodecUtil.writeFooter(out);
-      } finally {
-        out.close();
-        closed = true;
-      }
-    }
-  }
+	@Override
+	public void close() throws IOException {
+		if (closed == false) {
+			try {
+				CodecUtil.writeFooter(out);
+			} finally {
+				out.close();
+				closed = true;
+			}
+		}
+	}
 
-  @Override
-  public void destroy() throws IOException {
-    tempDir.deleteFile(name);
-  }
+	@Override
+	public void destroy() throws IOException {
+		tempDir.deleteFile(name);
+	}
 
-  @Override
-  public String toString() {
-    return "OfflinePointWriter(count=" + count + " tempFileName=" + name + ")";
-  }
+	@Override
+	public String toString() {
+		return "OfflinePointWriter(count=" + count + " tempFileName=" + name + ")";
+	}
 }

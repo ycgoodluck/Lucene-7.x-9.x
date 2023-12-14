@@ -27,92 +27,94 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestReqExclBulkScorer extends LuceneTestCase {
 
-  public void testRandom() throws IOException {
-    final int iters = atLeast(10);
-    for (int iter = 0; iter < iters; ++iter) {
-      doTestRandom();
-    }
-  }
+	public void testRandom() throws IOException {
+		final int iters = atLeast(10);
+		for (int iter = 0; iter < iters; ++iter) {
+			doTestRandom();
+		}
+	}
 
-  public void doTestRandom() throws IOException {
-    final int maxDoc = TestUtil.nextInt(random(), 1, 1000);
-    DocIdSetBuilder reqBuilder = new DocIdSetBuilder(maxDoc);
-    DocIdSetBuilder exclBuilder = new DocIdSetBuilder(maxDoc);
-    final int numIncludedDocs = TestUtil.nextInt(random(), 1, maxDoc);
-    final int numExcludedDocs = TestUtil.nextInt(random(), 1, maxDoc);
-    DocIdSetBuilder.BulkAdder reqAdder = reqBuilder.grow(numIncludedDocs);
-    for (int i = 0; i < numIncludedDocs; ++i) {
-      reqAdder.add(random().nextInt(maxDoc));
-    }
-    DocIdSetBuilder.BulkAdder exclAdder = exclBuilder.grow(numExcludedDocs);
-    for (int i = 0; i < numExcludedDocs; ++i) {
-      exclAdder.add(random().nextInt(maxDoc));
-    }
+	public void doTestRandom() throws IOException {
+		final int maxDoc = TestUtil.nextInt(random(), 1, 1000);
+		DocIdSetBuilder reqBuilder = new DocIdSetBuilder(maxDoc);
+		DocIdSetBuilder exclBuilder = new DocIdSetBuilder(maxDoc);
+		final int numIncludedDocs = TestUtil.nextInt(random(), 1, maxDoc);
+		final int numExcludedDocs = TestUtil.nextInt(random(), 1, maxDoc);
+		DocIdSetBuilder.BulkAdder reqAdder = reqBuilder.grow(numIncludedDocs);
+		for (int i = 0; i < numIncludedDocs; ++i) {
+			reqAdder.add(random().nextInt(maxDoc));
+		}
+		DocIdSetBuilder.BulkAdder exclAdder = exclBuilder.grow(numExcludedDocs);
+		for (int i = 0; i < numExcludedDocs; ++i) {
+			exclAdder.add(random().nextInt(maxDoc));
+		}
 
-    final DocIdSet req = reqBuilder.build();
-    final DocIdSet excl = exclBuilder.build();
+		final DocIdSet req = reqBuilder.build();
+		final DocIdSet excl = exclBuilder.build();
 
-    final BulkScorer reqBulkScorer = new BulkScorer() {
-      final DocIdSetIterator iterator = req.iterator();
+		final BulkScorer reqBulkScorer = new BulkScorer() {
+			final DocIdSetIterator iterator = req.iterator();
 
-      @Override
-      public int score(LeafCollector collector, Bits acceptDocs, int min, int max) throws IOException {
-        int doc = iterator.docID();
-        if (iterator.docID() < min) {
-          doc = iterator.advance(min);
-        }
-        while (doc < max) {
-          if (acceptDocs == null || acceptDocs.get(doc)) {
-            collector.collect(doc);
-          }
-          doc = iterator.nextDoc();
-        }
-        return doc;
-      }
+			@Override
+			public int score(LeafCollector collector, Bits acceptDocs, int min, int max) throws IOException {
+				int doc = iterator.docID();
+				if (iterator.docID() < min) {
+					doc = iterator.advance(min);
+				}
+				while (doc < max) {
+					if (acceptDocs == null || acceptDocs.get(doc)) {
+						collector.collect(doc);
+					}
+					doc = iterator.nextDoc();
+				}
+				return doc;
+			}
 
-      @Override
-      public long cost() {
-        return iterator.cost();
-      }
-    };
+			@Override
+			public long cost() {
+				return iterator.cost();
+			}
+		};
 
-    ReqExclBulkScorer reqExcl = new ReqExclBulkScorer(reqBulkScorer, excl.iterator());
-    final FixedBitSet actualMatches = new FixedBitSet(maxDoc);
-    if (random().nextBoolean()) {
-      reqExcl.score(new LeafCollector() {
-        @Override
-        public void setScorer(Scorable scorer) throws IOException {}
-        
-        @Override
-        public void collect(int doc) throws IOException {
-          actualMatches.set(doc);
-        }
-      }, null);
-    } else {
-      int next = 0;
-      while (next < maxDoc) {
-        final int min = next;
-        final int max = min + random().nextInt(10);
-        next = reqExcl.score(new LeafCollector() {
-          @Override
-          public void setScorer(Scorable scorer) throws IOException {}
-          
-          @Override
-          public void collect(int doc) throws IOException {
-            actualMatches.set(doc);
-          }
-        }, null, min, max);
-        assertTrue(next >= max);
-      }
-    }
+		ReqExclBulkScorer reqExcl = new ReqExclBulkScorer(reqBulkScorer, excl.iterator());
+		final FixedBitSet actualMatches = new FixedBitSet(maxDoc);
+		if (random().nextBoolean()) {
+			reqExcl.score(new LeafCollector() {
+				@Override
+				public void setScorer(Scorable scorer) throws IOException {
+				}
 
-    final FixedBitSet expectedMatches = new FixedBitSet(maxDoc);
-    expectedMatches.or(req.iterator());
-    FixedBitSet excludedSet = new FixedBitSet(maxDoc);
-    excludedSet.or(excl.iterator());
-    expectedMatches.andNot(excludedSet);
+				@Override
+				public void collect(int doc) throws IOException {
+					actualMatches.set(doc);
+				}
+			}, null);
+		} else {
+			int next = 0;
+			while (next < maxDoc) {
+				final int min = next;
+				final int max = min + random().nextInt(10);
+				next = reqExcl.score(new LeafCollector() {
+					@Override
+					public void setScorer(Scorable scorer) throws IOException {
+					}
 
-    assertArrayEquals(expectedMatches.getBits(), actualMatches.getBits());
-  }
+					@Override
+					public void collect(int doc) throws IOException {
+						actualMatches.set(doc);
+					}
+				}, null, min, max);
+				assertTrue(next >= max);
+			}
+		}
+
+		final FixedBitSet expectedMatches = new FixedBitSet(maxDoc);
+		expectedMatches.or(req.iterator());
+		FixedBitSet excludedSet = new FixedBitSet(maxDoc);
+		excludedSet.or(excl.iterator());
+		expectedMatches.andNot(excludedSet);
+
+		assertArrayEquals(expectedMatches.getBits(), actualMatches.getBits());
+	}
 
 }

@@ -26,30 +26,30 @@ import org.apache.lucene.util.MemoryTracker;
  * allocations and allows setting a memory limit per collector
  */
 public class CollectorMemoryTracker implements MemoryTracker {
-  private String name;
-  private AtomicLong memoryUsage;
-  private final long memoryLimit;
+	private String name;
+	private AtomicLong memoryUsage;
+	private final long memoryLimit;
 
-  public CollectorMemoryTracker(String name, long memoryLimit) {
-    this.name = name;
-    this.memoryUsage = new AtomicLong();
-    this.memoryLimit = memoryLimit;
-  }
+	public CollectorMemoryTracker(String name, long memoryLimit) {
+		this.name = name;
+		this.memoryUsage = new AtomicLong();
+		this.memoryLimit = memoryLimit;
+	}
 
-  @Override
-  public void updateBytes(long bytes) {
-    long currentMemoryUsage = memoryUsage.addAndGet(bytes);
+	@Override
+	public void updateBytes(long bytes) {
+		long currentMemoryUsage = memoryUsage.addAndGet(bytes);
 
-    if (currentMemoryUsage > memoryLimit) {
-      throw new IllegalStateException("Memory limit exceeded for " + name);
-    }
-    if (currentMemoryUsage < 0) {
-      throw new IllegalStateException("Illegal Memory State for " + name);
-    }
-  }
+		if (currentMemoryUsage > memoryLimit) {
+			throw new IllegalStateException("Memory limit exceeded for " + name);
+		}
+		if (currentMemoryUsage < 0) {
+			throw new IllegalStateException("Illegal Memory State for " + name);
+		}
+	}
 
-  @Override
-  public long getBytes() {
-    return memoryUsage.get();
-  }
+	@Override
+	public long getBytes() {
+		return memoryUsage.get();
+	}
 }

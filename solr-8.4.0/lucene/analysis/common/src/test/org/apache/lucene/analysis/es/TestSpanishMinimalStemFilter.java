@@ -30,51 +30,55 @@ import org.apache.lucene.analysis.en.EnglishMinimalStemFilter;
  * Simple tests for {@link SpanishMinimalStemFilter}
  */
 public class TestSpanishMinimalStemFilter extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
+	private Analyzer analyzer;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-        return new TokenStreamComponents(source, new SpanishMinimalStemFilter(source));
-      }
-    };
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+				return new TokenStreamComponents(source, new SpanishMinimalStemFilter(source));
+			}
+		};
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    analyzer.close();
-    super.tearDown();
-  }
+	@Override
+	public void tearDown() throws Exception {
+		analyzer.close();
+		super.tearDown();
+	}
 
-  /** Test some examples */
-  public void testExamples() throws IOException {
-    checkOneTerm(analyzer, "actrices", "actriz");
-    checkOneTerm(analyzer, "niños", "nino");
-    checkOneTerm(analyzer, "países", "pais");
-    checkOneTerm(analyzer, "caragodor", "caragodor");
-    checkOneTerm(analyzer, "móviles", "movil");
-    checkOneTerm(analyzer, "chicas", "chica");
-  }
+	/**
+	 * Test some examples
+	 */
+	public void testExamples() throws IOException {
+		checkOneTerm(analyzer, "actrices", "actriz");
+		checkOneTerm(analyzer, "niños", "nino");
+		checkOneTerm(analyzer, "países", "pais");
+		checkOneTerm(analyzer, "caragodor", "caragodor");
+		checkOneTerm(analyzer, "móviles", "movil");
+		checkOneTerm(analyzer, "chicas", "chica");
+	}
 
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    checkRandomData(random(), analyzer, 50*RANDOM_MULTIPLIER);
-  }
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		checkRandomData(random(), analyzer, 50 * RANDOM_MULTIPLIER);
+	}
 
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new EnglishMinimalStemFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new EnglishMinimalStemFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 
 }

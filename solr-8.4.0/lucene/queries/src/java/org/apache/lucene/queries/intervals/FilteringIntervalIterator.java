@@ -22,40 +22,40 @@ import java.util.Arrays;
 
 abstract class FilteringIntervalIterator extends ConjunctionIntervalIterator {
 
-  final IntervalIterator a;
-  final IntervalIterator b;
+	final IntervalIterator a;
+	final IntervalIterator b;
 
-  boolean bpos;
+	boolean bpos;
 
-  protected FilteringIntervalIterator(IntervalIterator a, IntervalIterator b) {
-    super(Arrays.asList(a, b));
-    this.a = a;
-    this.b = b;
-  }
+	protected FilteringIntervalIterator(IntervalIterator a, IntervalIterator b) {
+		super(Arrays.asList(a, b));
+		this.a = a;
+		this.b = b;
+	}
 
-  @Override
-  public int start() {
-    if (bpos == false) {
-      return NO_MORE_INTERVALS;
-    }
-    return a.start();
-  }
+	@Override
+	public int start() {
+		if (bpos == false) {
+			return NO_MORE_INTERVALS;
+		}
+		return a.start();
+	}
 
-  @Override
-  public int end() {
-    if (bpos == false) {
-      return NO_MORE_INTERVALS;
-    }
-    return a.end();
-  }
+	@Override
+	public int end() {
+		if (bpos == false) {
+			return NO_MORE_INTERVALS;
+		}
+		return a.end();
+	}
 
-  @Override
-  public int gaps() {
-    return a.gaps();
-  }
+	@Override
+	public int gaps() {
+		return a.gaps();
+	}
 
-  @Override
-  protected void reset() throws IOException {
-    bpos = b.nextInterval() != NO_MORE_INTERVALS;
-  }
+	@Override
+	protected void reset() throws IOException {
+		bpos = b.nextInterval() != NO_MORE_INTERVALS;
+	}
 }

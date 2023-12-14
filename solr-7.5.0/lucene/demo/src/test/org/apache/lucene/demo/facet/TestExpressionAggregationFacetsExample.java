@@ -23,9 +23,9 @@ import org.junit.Test;
 
 public class TestExpressionAggregationFacetsExample extends LuceneTestCase {
 
-  @Test
-  public void testSimple() throws Exception {
-    FacetResult result = new ExpressionAggregationFacetsExample().runSearch();
-    assertEquals("dim=A path=[] value=3.9681187 childCount=2\n  B (2.236068)\n  C (1.7320508)\n", result.toString());
-  }
+	@Test
+	public void testSimple() throws Exception {
+		FacetResult result = new ExpressionAggregationFacetsExample().runSearch();
+		assertEquals("dim=A path=[] value=3.9681187 childCount=2\n  B (2.236068)\n  C (1.7320508)\n", result.toString());
+	}
 }

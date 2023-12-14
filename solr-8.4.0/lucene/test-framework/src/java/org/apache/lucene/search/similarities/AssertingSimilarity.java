@@ -21,86 +21,88 @@ import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.TermStatistics;
 
-/** wraps a similarity with checks for testing */
+/**
+ * wraps a similarity with checks for testing
+ */
 public class AssertingSimilarity extends Similarity {
-  private final Similarity delegate;
+	private final Similarity delegate;
 
-  public AssertingSimilarity(Similarity delegate) {
-    this.delegate = delegate;
-  }
+	public AssertingSimilarity(Similarity delegate) {
+		this.delegate = delegate;
+	}
 
-  @Override
-  public long computeNorm(FieldInvertState state) {
-    assert state != null;
-    assert state.getLength() > 0;
-    assert state.getPosition() >= 0;
-    assert state.getOffset() >= 0;
-    assert state.getMaxTermFrequency() >= 0; // TODO: seems to be 0 for omitTFAP? 
-    assert state.getMaxTermFrequency() <= state.getLength();
-    assert state.getNumOverlap() >= 0;
-    assert state.getNumOverlap() < state.getLength();
-    assert state.getUniqueTermCount() > 0;
-    assert state.getUniqueTermCount() <= state.getLength();
-    long norm = delegate.computeNorm(state);
-    assert norm != 0;
-    return norm;
-  }
+	@Override
+	public long computeNorm(FieldInvertState state) {
+		assert state != null;
+		assert state.getLength() > 0;
+		assert state.getPosition() >= 0;
+		assert state.getOffset() >= 0;
+		assert state.getMaxTermFrequency() >= 0; // TODO: seems to be 0 for omitTFAP?
+		assert state.getMaxTermFrequency() <= state.getLength();
+		assert state.getNumOverlap() >= 0;
+		assert state.getNumOverlap() < state.getLength();
+		assert state.getUniqueTermCount() > 0;
+		assert state.getUniqueTermCount() <= state.getLength();
+		long norm = delegate.computeNorm(state);
+		assert norm != 0;
+		return norm;
+	}
 
-  @Override
-  public SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-    assert boost >= 0;
-    assert collectionStats != null;
-    assert termStats.length > 0;
-    for (TermStatistics term : termStats) {
-      assert term != null;
-    }
-    // TODO: check that TermStats is in bounds with respect to collection? e.g. docFreq <= maxDoc
-    SimScorer scorer = delegate.scorer(boost, collectionStats, termStats);
-    assert scorer != null;
-    return new AssertingSimScorer(scorer, boost);
-  }
-  
-  static class AssertingSimScorer extends SimScorer {
-    final SimScorer delegate;
-    final float boost;
-    
-    AssertingSimScorer(SimScorer delegate, float boost) {
-      super();
-      this.delegate = delegate;
-      this.boost = boost;
-    }
+	@Override
+	public SimScorer scorer(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+		assert boost >= 0;
+		assert collectionStats != null;
+		assert termStats.length > 0;
+		for (TermStatistics term : termStats) {
+			assert term != null;
+		}
+		// TODO: check that TermStats is in bounds with respect to collection? e.g. docFreq <= maxDoc
+		SimScorer scorer = delegate.scorer(boost, collectionStats, termStats);
+		assert scorer != null;
+		return new AssertingSimScorer(scorer, boost);
+	}
 
-    @Override
-    public float score(float freq, long norm) {
-      // freq in bounds
-      assert Float.isFinite(freq);
-      assert freq > 0;
-      // result in bounds
-      float score = delegate.score(freq, norm);
-      assert Float.isFinite(score);
-      assert score <= delegate.score(freq, 1);
-      assert score >= 0;
-      return score;
-    }
+	static class AssertingSimScorer extends SimScorer {
+		final SimScorer delegate;
+		final float boost;
 
-    @Override
-    public Explanation explain(Explanation freq, long norm) {
-      // freq in bounds 
-      assert freq != null;
-      assert Float.isFinite(freq.getValue().floatValue());
-      // result in bounds
-      Explanation explanation = delegate.explain(freq, norm);
-      assert explanation != null;
-      assert Float.isFinite(explanation.getValue().floatValue());
-      // result matches score exactly
-      assert explanation.getValue().floatValue() == delegate.score(freq.getValue().floatValue(), norm);
-      return explanation;
-    }
-  }
+		AssertingSimScorer(SimScorer delegate, float boost) {
+			super();
+			this.delegate = delegate;
+			this.boost = boost;
+		}
 
-  @Override
-  public String toString() {
-    return "Asserting(" + super.toString() + ")";
-  }
+		@Override
+		public float score(float freq, long norm) {
+			// freq in bounds
+			assert Float.isFinite(freq);
+			assert freq > 0;
+			// result in bounds
+			float score = delegate.score(freq, norm);
+			assert Float.isFinite(score);
+			assert score <= delegate.score(freq, 1);
+			assert score >= 0;
+			return score;
+		}
+
+		@Override
+		public Explanation explain(Explanation freq, long norm) {
+			// freq in bounds
+			assert freq != null;
+			assert Float.isFinite(freq.getValue().floatValue());
+			// result in bounds
+			Explanation explanation = delegate.explain(freq, norm);
+			assert explanation != null;
+			assert Float.isFinite(explanation.getValue().floatValue());
+			// result matches score exactly
+			assert explanation.getValue().floatValue() == delegate.score(freq.getValue().floatValue(), norm);
+			return explanation;
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "Asserting(" + super.toString() + ")";
+	}
 
 }

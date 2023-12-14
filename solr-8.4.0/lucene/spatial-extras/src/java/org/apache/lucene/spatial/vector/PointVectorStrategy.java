@@ -87,240 +87,242 @@ import org.locationtech.spatial4j.shape.Shape;
  */
 public class PointVectorStrategy extends SpatialStrategy {
 
-  // note: we use a FieldType to articulate the options we want on the field.  We don't use it as-is with a Field, we
-  //  create more than one Field.
+	// note: we use a FieldType to articulate the options we want on the field.  We don't use it as-is with a Field, we
+	//  create more than one Field.
 
-  /**
-   * pointValues, docValues, and nothing else.
-   */
-  public static FieldType DEFAULT_FIELDTYPE;
+	/**
+	 * pointValues, docValues, and nothing else.
+	 */
+	public static FieldType DEFAULT_FIELDTYPE;
 
-  static {
-    // Default: pointValues + docValues
-    FieldType type = new FieldType();
-    type.setDimensions(1, Double.BYTES);//pointValues (assume Double)
-    type.setDocValuesType(DocValuesType.NUMERIC);//docValues
-    type.setStored(false);
-    type.freeze();
-    DEFAULT_FIELDTYPE = type;
-  }
+	static {
+		// Default: pointValues + docValues
+		FieldType type = new FieldType();
+		type.setDimensions(1, Double.BYTES);//pointValues (assume Double)
+		type.setDocValuesType(DocValuesType.NUMERIC);//docValues
+		type.setStored(false);
+		type.freeze();
+		DEFAULT_FIELDTYPE = type;
+	}
 
-  public static final String SUFFIX_X = "__x";
-  public static final String SUFFIX_Y = "__y";
+	public static final String SUFFIX_X = "__x";
+	public static final String SUFFIX_Y = "__y";
 
-  private final String fieldNameX;
-  private final String fieldNameY;
+	private final String fieldNameX;
+	private final String fieldNameY;
 
-  private final int fieldsLen;
-  private final boolean hasStored;
-  private final boolean hasDocVals;
-  private final boolean hasPointVals;
+	private final int fieldsLen;
+	private final boolean hasStored;
+	private final boolean hasDocVals;
+	private final boolean hasPointVals;
 
-  /**
-   * Create a new {@link PointVectorStrategy} instance that uses {@link DoublePoint} and {@link DoublePoint#newRangeQuery}
-   */
-  public static PointVectorStrategy newInstance(SpatialContext ctx, String fieldNamePrefix) {
-    return new PointVectorStrategy(ctx, fieldNamePrefix, DEFAULT_FIELDTYPE);
-  }
+	/**
+	 * Create a new {@link PointVectorStrategy} instance that uses {@link DoublePoint} and {@link DoublePoint#newRangeQuery}
+	 */
+	public static PointVectorStrategy newInstance(SpatialContext ctx, String fieldNamePrefix) {
+		return new PointVectorStrategy(ctx, fieldNamePrefix, DEFAULT_FIELDTYPE);
+	}
 
-  /**
-   * Create a new instance configured with the provided FieldType options. See {@link #DEFAULT_FIELDTYPE}.
-   * a field type is used to articulate the desired options (namely pointValues, docValues, stored).  Legacy numerics
-   * is configurable this way too.
-   */
-  public PointVectorStrategy(SpatialContext ctx, String fieldNamePrefix, FieldType fieldType) {
-    super(ctx, fieldNamePrefix);
-    this.fieldNameX = fieldNamePrefix+SUFFIX_X;
-    this.fieldNameY = fieldNamePrefix+SUFFIX_Y;
+	/**
+	 * Create a new instance configured with the provided FieldType options. See {@link #DEFAULT_FIELDTYPE}.
+	 * a field type is used to articulate the desired options (namely pointValues, docValues, stored).  Legacy numerics
+	 * is configurable this way too.
+	 */
+	public PointVectorStrategy(SpatialContext ctx, String fieldNamePrefix, FieldType fieldType) {
+		super(ctx, fieldNamePrefix);
+		this.fieldNameX = fieldNamePrefix + SUFFIX_X;
+		this.fieldNameY = fieldNamePrefix + SUFFIX_Y;
 
-    int numPairs = 0;
-    if ((this.hasStored = fieldType.stored())) {
-      numPairs++;
-    }
-    if ((this.hasDocVals = fieldType.docValuesType() != DocValuesType.NONE)) {
-      numPairs++;
-    }
-    if ((this.hasPointVals = fieldType.pointDataDimensionCount() > 0)) {
-      numPairs++;
-    }
-    this.fieldsLen = numPairs * 2;
-  }
+		int numPairs = 0;
+		if ((this.hasStored = fieldType.stored())) {
+			numPairs++;
+		}
+		if ((this.hasDocVals = fieldType.docValuesType() != DocValuesType.NONE)) {
+			numPairs++;
+		}
+		if ((this.hasPointVals = fieldType.pointDataDimensionCount() > 0)) {
+			numPairs++;
+		}
+		this.fieldsLen = numPairs * 2;
+	}
 
 
-  String getFieldNameX() {
-    return fieldNameX;
-  }
+	String getFieldNameX() {
+		return fieldNameX;
+	}
 
-  String getFieldNameY() {
-    return fieldNameY;
-  }
+	String getFieldNameY() {
+		return fieldNameY;
+	}
 
-  @Override
-  public Field[] createIndexableFields(Shape shape) {
-    if (shape instanceof Point)
-      return createIndexableFields((Point) shape);
-    throw new UnsupportedOperationException("Can only index Point, not " + shape);
-  }
+	@Override
+	public Field[] createIndexableFields(Shape shape) {
+		if (shape instanceof Point)
+			return createIndexableFields((Point) shape);
+		throw new UnsupportedOperationException("Can only index Point, not " + shape);
+	}
 
-  /** @see #createIndexableFields(org.locationtech.spatial4j.shape.Shape) */
-  public Field[] createIndexableFields(Point point) {
-    Field[] fields = new Field[fieldsLen];
-    int idx = -1;
-    if (hasStored) {
-      fields[++idx] = new StoredField(fieldNameX, point.getX());
-      fields[++idx] = new StoredField(fieldNameY, point.getY());
-    }
-    if (hasDocVals) {
-      fields[++idx] = new DoubleDocValuesField(fieldNameX, point.getX());
-      fields[++idx] = new DoubleDocValuesField(fieldNameY, point.getY());
-    }
-    if (hasPointVals) {
-      fields[++idx] = new DoublePoint(fieldNameX, point.getX());
-      fields[++idx] = new DoublePoint(fieldNameY, point.getY());
-    }
-    assert idx == fields.length - 1;
-    return fields;
-  }
+	/**
+	 * @see #createIndexableFields(org.locationtech.spatial4j.shape.Shape)
+	 */
+	public Field[] createIndexableFields(Point point) {
+		Field[] fields = new Field[fieldsLen];
+		int idx = -1;
+		if (hasStored) {
+			fields[++idx] = new StoredField(fieldNameX, point.getX());
+			fields[++idx] = new StoredField(fieldNameY, point.getY());
+		}
+		if (hasDocVals) {
+			fields[++idx] = new DoubleDocValuesField(fieldNameX, point.getX());
+			fields[++idx] = new DoubleDocValuesField(fieldNameY, point.getY());
+		}
+		if (hasPointVals) {
+			fields[++idx] = new DoublePoint(fieldNameX, point.getX());
+			fields[++idx] = new DoublePoint(fieldNameY, point.getY());
+		}
+		assert idx == fields.length - 1;
+		return fields;
+	}
 
-  @Override
-  public DoubleValuesSource makeDistanceValueSource(Point queryPoint, double multiplier) {
-    return new DistanceValueSource(this, queryPoint, multiplier);
-  }
+	@Override
+	public DoubleValuesSource makeDistanceValueSource(Point queryPoint, double multiplier) {
+		return new DistanceValueSource(this, queryPoint, multiplier);
+	}
 
-  @Override
-  public Query makeQuery(SpatialArgs args) {
-    if(! SpatialOperation.is( args.getOperation(),
-        SpatialOperation.Intersects,
-        SpatialOperation.IsWithin ))
-      throw new UnsupportedSpatialOperation(args.getOperation());
-    Shape shape = args.getShape();
-    if (shape instanceof Rectangle) {
-      Rectangle bbox = (Rectangle) shape;
-      return new ConstantScoreQuery(makeWithin(bbox));
-    } else if (shape instanceof Circle) {
-      Circle circle = (Circle)shape;
-      Rectangle bbox = circle.getBoundingBox();
-      return new DistanceRangeQuery(makeWithin(bbox), makeDistanceValueSource(circle.getCenter()), circle.getRadius());
-    } else {
-      throw new UnsupportedOperationException("Only Rectangles and Circles are currently supported, " +
-          "found [" + shape.getClass() + "]");//TODO
-    }
-  }
+	@Override
+	public Query makeQuery(SpatialArgs args) {
+		if (!SpatialOperation.is(args.getOperation(),
+			SpatialOperation.Intersects,
+			SpatialOperation.IsWithin))
+			throw new UnsupportedSpatialOperation(args.getOperation());
+		Shape shape = args.getShape();
+		if (shape instanceof Rectangle) {
+			Rectangle bbox = (Rectangle) shape;
+			return new ConstantScoreQuery(makeWithin(bbox));
+		} else if (shape instanceof Circle) {
+			Circle circle = (Circle) shape;
+			Rectangle bbox = circle.getBoundingBox();
+			return new DistanceRangeQuery(makeWithin(bbox), makeDistanceValueSource(circle.getCenter()), circle.getRadius());
+		} else {
+			throw new UnsupportedOperationException("Only Rectangles and Circles are currently supported, " +
+				"found [" + shape.getClass() + "]");//TODO
+		}
+	}
 
-  /**
-   * Constructs a query to retrieve documents that fully contain the input envelope.
-   */
-  private Query makeWithin(Rectangle bbox) {
-    BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    BooleanClause.Occur MUST = BooleanClause.Occur.MUST;
-    if (bbox.getCrossesDateLine()) {
-      //use null as performance trick since no data will be beyond the world bounds
-      bq.add(rangeQuery(fieldNameX, null/*-180*/, bbox.getMaxX()), BooleanClause.Occur.SHOULD );
-      bq.add(rangeQuery(fieldNameX, bbox.getMinX(), null/*+180*/), BooleanClause.Occur.SHOULD );
-      bq.setMinimumNumberShouldMatch(1);//must match at least one of the SHOULD
-    } else {
-      bq.add(rangeQuery(fieldNameX, bbox.getMinX(), bbox.getMaxX()), MUST);
-    }
-    bq.add(rangeQuery(fieldNameY, bbox.getMinY(), bbox.getMaxY()), MUST);
-    return bq.build();
-  }
+	/**
+	 * Constructs a query to retrieve documents that fully contain the input envelope.
+	 */
+	private Query makeWithin(Rectangle bbox) {
+		BooleanQuery.Builder bq = new BooleanQuery.Builder();
+		BooleanClause.Occur MUST = BooleanClause.Occur.MUST;
+		if (bbox.getCrossesDateLine()) {
+			//use null as performance trick since no data will be beyond the world bounds
+			bq.add(rangeQuery(fieldNameX, null/*-180*/, bbox.getMaxX()), BooleanClause.Occur.SHOULD);
+			bq.add(rangeQuery(fieldNameX, bbox.getMinX(), null/*+180*/), BooleanClause.Occur.SHOULD);
+			bq.setMinimumNumberShouldMatch(1);//must match at least one of the SHOULD
+		} else {
+			bq.add(rangeQuery(fieldNameX, bbox.getMinX(), bbox.getMaxX()), MUST);
+		}
+		bq.add(rangeQuery(fieldNameY, bbox.getMinY(), bbox.getMaxY()), MUST);
+		return bq.build();
+	}
 
-  /**
-   * Returns a numeric range query based on FieldType
-   * {@link DoublePoint#newRangeQuery} is used for indexes created using {@link DoublePoint} fields
-   */
-  private Query rangeQuery(String fieldName, Double min, Double max) {
-    if (hasPointVals) {
-      if (min == null) {
-        min = Double.NEGATIVE_INFINITY;
-      }
+	/**
+	 * Returns a numeric range query based on FieldType
+	 * {@link DoublePoint#newRangeQuery} is used for indexes created using {@link DoublePoint} fields
+	 */
+	private Query rangeQuery(String fieldName, Double min, Double max) {
+		if (hasPointVals) {
+			if (min == null) {
+				min = Double.NEGATIVE_INFINITY;
+			}
 
-      if (max == null) {
-        max = Double.POSITIVE_INFINITY;
-      }
+			if (max == null) {
+				max = Double.POSITIVE_INFINITY;
+			}
 
-      return DoublePoint.newRangeQuery(fieldName, min, max);
+			return DoublePoint.newRangeQuery(fieldName, min, max);
 
-    }
-    //TODO try doc-value range query?
-    throw new UnsupportedOperationException("An index is required for this operation.");
-  }
+		}
+		//TODO try doc-value range query?
+		throw new UnsupportedOperationException("An index is required for this operation.");
+	}
 
-  private static class DistanceRangeQuery extends Query {
+	private static class DistanceRangeQuery extends Query {
 
-    final Query inner;
-    final DoubleValuesSource distanceSource;
-    final double limit;
+		final Query inner;
+		final DoubleValuesSource distanceSource;
+		final double limit;
 
-    private DistanceRangeQuery(Query inner, DoubleValuesSource distanceSource, double limit) {
-      this.inner = inner;
-      this.distanceSource = distanceSource;
-      this.limit = limit;
-    }
+		private DistanceRangeQuery(Query inner, DoubleValuesSource distanceSource, double limit) {
+			this.inner = inner;
+			this.distanceSource = distanceSource;
+			this.limit = limit;
+		}
 
-    @Override
-    public Query rewrite(IndexReader reader) throws IOException {
-      Query rewritten = inner.rewrite(reader);
-      if (rewritten == inner)
-        return this;
-      return new DistanceRangeQuery(rewritten, distanceSource, limit);
-    }
+		@Override
+		public Query rewrite(IndexReader reader) throws IOException {
+			Query rewritten = inner.rewrite(reader);
+			if (rewritten == inner)
+				return this;
+			return new DistanceRangeQuery(rewritten, distanceSource, limit);
+		}
 
-    @Override
-    public void visit(QueryVisitor visitor) {
-      visitor.visitLeaf(this);
-    }
+		@Override
+		public void visit(QueryVisitor visitor) {
+			visitor.visitLeaf(this);
+		}
 
-    @Override
-    public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-      Weight w = inner.createWeight(searcher, scoreMode, 1f);
-      return new ConstantScoreWeight(this, boost) {
-        @Override
-        public Scorer scorer(LeafReaderContext context) throws IOException {
-          Scorer in = w.scorer(context);
-          if (in == null)
-            return null;
-          DoubleValues v = distanceSource.getValues(context, DoubleValuesSource.fromScorer(in));
-          DocIdSetIterator approximation = in.iterator();
-          TwoPhaseIterator twoPhase = new TwoPhaseIterator(approximation) {
-            @Override
-            public boolean matches() throws IOException {
-              return v.advanceExact(approximation.docID()) && v.doubleValue() <= limit;
-            }
+		@Override
+		public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+			Weight w = inner.createWeight(searcher, scoreMode, 1f);
+			return new ConstantScoreWeight(this, boost) {
+				@Override
+				public Scorer scorer(LeafReaderContext context) throws IOException {
+					Scorer in = w.scorer(context);
+					if (in == null)
+						return null;
+					DoubleValues v = distanceSource.getValues(context, DoubleValuesSource.fromScorer(in));
+					DocIdSetIterator approximation = in.iterator();
+					TwoPhaseIterator twoPhase = new TwoPhaseIterator(approximation) {
+						@Override
+						public boolean matches() throws IOException {
+							return v.advanceExact(approximation.docID()) && v.doubleValue() <= limit;
+						}
 
-            @Override
-            public float matchCost() {
-              return 100;   // distance calculation can be heavy!
-            }
-          };
-          return new ConstantScoreScorer(this, score(), scoreMode, twoPhase);
-        }
+						@Override
+						public float matchCost() {
+							return 100;   // distance calculation can be heavy!
+						}
+					};
+					return new ConstantScoreScorer(this, score(), scoreMode, twoPhase);
+				}
 
-        @Override
-        public boolean isCacheable(LeafReaderContext ctx) {
-          return distanceSource.isCacheable(ctx);
-        }
+				@Override
+				public boolean isCacheable(LeafReaderContext ctx) {
+					return distanceSource.isCacheable(ctx);
+				}
 
-      };
-    }
+			};
+		}
 
-    @Override
-    public String toString(String field) {
-      return "DistanceRangeQuery(" + inner.toString(field) + "; " + distanceSource.toString() + " < " + limit + ")";
-    }
+		@Override
+		public String toString(String field) {
+			return "DistanceRangeQuery(" + inner.toString(field) + "; " + distanceSource.toString() + " < " + limit + ")";
+		}
 
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      DistanceRangeQuery that = (DistanceRangeQuery) o;
-      return Objects.equals(inner, that.inner) &&
-          Objects.equals(distanceSource, that.distanceSource) && limit == that.limit;
-    }
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			DistanceRangeQuery that = (DistanceRangeQuery) o;
+			return Objects.equals(inner, that.inner) &&
+				Objects.equals(distanceSource, that.distanceSource) && limit == that.limit;
+		}
 
-    @Override
-    public int hashCode() {
-      return Objects.hash(inner, distanceSource, limit);
-    }
-  }
+		@Override
+		public int hashCode() {
+			return Objects.hash(inner, distanceSource, limit);
+		}
+	}
 }

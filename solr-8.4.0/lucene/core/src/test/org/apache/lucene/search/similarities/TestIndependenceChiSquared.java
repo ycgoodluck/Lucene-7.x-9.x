@@ -20,9 +20,9 @@ import java.util.Random;
 
 public class TestIndependenceChiSquared extends BaseSimilarityTestCase {
 
-  @Override
-  protected final Similarity getSimilarity(Random random) {
-    return new DFISimilarity(new IndependenceChiSquared());
-  }
+	@Override
+	protected final Similarity getSimilarity(Random random) {
+		return new DFISimilarity(new IndependenceChiSquared());
+	}
 
 }

@@ -18,7 +18,7 @@ package org.apache.lucene.analysis.ckb;
 
 import static org.apache.lucene.analysis.util.StemmerUtil.delete;
 
-/** 
+/**
  * Normalizes the Unicode representation of Sorani text.
  * <p>
  * Normalization consists of:
@@ -32,96 +32,96 @@ import static org.apache.lucene.analysis.util.StemmerUtil.delete;
  * </ul>
  */
 public class SoraniNormalizer {
-  
-  static final char YEH = '\u064A';
-  static final char DOTLESS_YEH = '\u0649';
-  static final char FARSI_YEH = '\u06CC';
-  
-  static final char KAF = '\u0643';
-  static final char KEHEH = '\u06A9';
-  
-  static final char HEH = '\u0647';
-  static final char AE = '\u06D5';
-  static final char ZWNJ = '\u200C';
-  static final char HEH_DOACHASHMEE = '\u06BE';
-  static final char TEH_MARBUTA = '\u0629';
-      
-  static final char REH = '\u0631';
-  static final char RREH = '\u0695';
-  static final char RREH_ABOVE = '\u0692';
-  
-  static final char TATWEEL = '\u0640';
-  static final char FATHATAN = '\u064B';
-  static final char DAMMATAN = '\u064C';
-  static final char KASRATAN = '\u064D';
-  static final char FATHA = '\u064E';
-  static final char DAMMA = '\u064F';
-  static final char KASRA = '\u0650';
-  static final char SHADDA = '\u0651';
-  static final char SUKUN = '\u0652';
 
-  /**
-   * Normalize an input buffer of Sorani text
-   * 
-   * @param s input buffer
-   * @param len length of input buffer
-   * @return length of input buffer after normalization
-   */
-  public int normalize(char s[], int len) {
-    for (int i = 0; i < len; i++) {
-      switch (s[i]) {
-        case YEH:
-        case DOTLESS_YEH:
-          s[i] = FARSI_YEH;
-          break;
-        case KAF:
-          s[i] = KEHEH;
-          break;
-        case ZWNJ:
-          if (i > 0 && s[i-1] == HEH) {
-            s[i-1] = AE;
-          }
-          len = delete(s, i, len);
-          i--;
-          break;
-        case HEH:
-          if (i == len-1) {
-            s[i] = AE;
-          }
-          break;
-        case TEH_MARBUTA:
-          s[i] = AE;
-          break;
-        case HEH_DOACHASHMEE:
-          s[i] = HEH;
-          break;
-        case REH:
-          if (i == 0) {
-            s[i] = RREH;
-          }
-          break;
-        case RREH_ABOVE:
-          s[i] = RREH;
-          break;
-        case TATWEEL:
-        case KASRATAN:
-        case DAMMATAN:
-        case FATHATAN:
-        case FATHA:
-        case DAMMA:
-        case KASRA:
-        case SHADDA:
-        case SUKUN:
-          len = delete(s, i, len);
-          i--;
-          break;
-        default:
-          if (Character.getType(s[i]) == Character.FORMAT) {
-            len = delete(s, i, len);
-            i--;
-          }
-      }
-    }
-    return len;
-  }
+	static final char YEH = '\u064A';
+	static final char DOTLESS_YEH = '\u0649';
+	static final char FARSI_YEH = '\u06CC';
+
+	static final char KAF = '\u0643';
+	static final char KEHEH = '\u06A9';
+
+	static final char HEH = '\u0647';
+	static final char AE = '\u06D5';
+	static final char ZWNJ = '\u200C';
+	static final char HEH_DOACHASHMEE = '\u06BE';
+	static final char TEH_MARBUTA = '\u0629';
+
+	static final char REH = '\u0631';
+	static final char RREH = '\u0695';
+	static final char RREH_ABOVE = '\u0692';
+
+	static final char TATWEEL = '\u0640';
+	static final char FATHATAN = '\u064B';
+	static final char DAMMATAN = '\u064C';
+	static final char KASRATAN = '\u064D';
+	static final char FATHA = '\u064E';
+	static final char DAMMA = '\u064F';
+	static final char KASRA = '\u0650';
+	static final char SHADDA = '\u0651';
+	static final char SUKUN = '\u0652';
+
+	/**
+	 * Normalize an input buffer of Sorani text
+	 *
+	 * @param s   input buffer
+	 * @param len length of input buffer
+	 * @return length of input buffer after normalization
+	 */
+	public int normalize(char s[], int len) {
+		for (int i = 0; i < len; i++) {
+			switch (s[i]) {
+				case YEH:
+				case DOTLESS_YEH:
+					s[i] = FARSI_YEH;
+					break;
+				case KAF:
+					s[i] = KEHEH;
+					break;
+				case ZWNJ:
+					if (i > 0 && s[i - 1] == HEH) {
+						s[i - 1] = AE;
+					}
+					len = delete(s, i, len);
+					i--;
+					break;
+				case HEH:
+					if (i == len - 1) {
+						s[i] = AE;
+					}
+					break;
+				case TEH_MARBUTA:
+					s[i] = AE;
+					break;
+				case HEH_DOACHASHMEE:
+					s[i] = HEH;
+					break;
+				case REH:
+					if (i == 0) {
+						s[i] = RREH;
+					}
+					break;
+				case RREH_ABOVE:
+					s[i] = RREH;
+					break;
+				case TATWEEL:
+				case KASRATAN:
+				case DAMMATAN:
+				case FATHATAN:
+				case FATHA:
+				case DAMMA:
+				case KASRA:
+				case SHADDA:
+				case SUKUN:
+					len = delete(s, i, len);
+					i--;
+					break;
+				default:
+					if (Character.getType(s[i]) == Character.FORMAT) {
+						len = delete(s, i, len);
+						i--;
+					}
+			}
+		}
+		return len;
+	}
 }

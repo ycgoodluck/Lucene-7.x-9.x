@@ -22,19 +22,19 @@ package org.apache.lucene.spatial3d.geom;
  * @lucene.experimental
  */
 public interface GeoSizeable {
-  /**
-   * Returns the radius of a circle into which the GeoSizeable area can
-   * be inscribed.
-   *
-   * @return the radius.
-   */
-  public double getRadius();
+	/**
+	 * Returns the radius of a circle into which the GeoSizeable area can
+	 * be inscribed.
+	 *
+	 * @return the radius.
+	 */
+	public double getRadius();
 
-  /**
-   * Returns the center of a circle into which the area will be inscribed.
-   *
-   * @return the center.
-   */
-  public GeoPoint getCenter();
+	/**
+	 * Returns the center of a circle into which the area will be inscribed.
+	 *
+	 * @return the center.
+	 */
+	public GeoPoint getCenter();
 
 }

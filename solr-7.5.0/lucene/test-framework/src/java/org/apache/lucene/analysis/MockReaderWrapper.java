@@ -22,76 +22,80 @@ import java.util.Random;
 
 import org.apache.lucene.util.TestUtil;
 
-/** Wraps a Reader, and can throw random or fixed
- *  exceptions, and spoon feed read chars. */
+/**
+ * Wraps a Reader, and can throw random or fixed
+ * exceptions, and spoon feed read chars.
+ */
 
 public class MockReaderWrapper extends Reader {
-  
-  private final Reader in;
-  private final Random random;
 
-  private int excAtChar = -1;
-  private int readSoFar;
-  private boolean throwExcNext;
+	private final Reader in;
+	private final Random random;
 
-  public MockReaderWrapper(Random random, Reader in) {
-    this.in = in;
-    this.random = random;
-  }
+	private int excAtChar = -1;
+	private int readSoFar;
+	private boolean throwExcNext;
 
-  /** Throw an exception after reading this many chars. */
-  public void throwExcAfterChar(int charUpto) {
-    excAtChar = charUpto;
-    // You should only call this on init!:
-    assert readSoFar == 0;
-  }
+	public MockReaderWrapper(Random random, Reader in) {
+		this.in = in;
+		this.random = random;
+	}
 
-  public void throwExcNext() {
-    throwExcNext = true;
-  }
+	/**
+	 * Throw an exception after reading this many chars.
+	 */
+	public void throwExcAfterChar(int charUpto) {
+		excAtChar = charUpto;
+		// You should only call this on init!:
+		assert readSoFar == 0;
+	}
 
-  @Override
-  public void close() throws IOException {
-    in.close();
-  }
+	public void throwExcNext() {
+		throwExcNext = true;
+	}
 
-  @Override
-  public int read(char[] cbuf, int off, int len) throws IOException {
-    if (throwExcNext || (excAtChar != -1 && readSoFar >= excAtChar)) {
-      throw new RuntimeException("fake exception now!");
-    }
-    final int read;
-    final int realLen;
-    if (len == 1) {
-      realLen = 1;
-    } else {
-      // Spoon-feed: intentionally maybe return less than
-      // the consumer asked for
-      realLen = TestUtil.nextInt(random, 1, len);
-    }
-    if (excAtChar != -1) {
-      final int left = excAtChar - readSoFar;
-      assert left != 0;
-      read = in.read(cbuf, off, Math.min(realLen, left));
-      assert read != -1;
-      readSoFar += read;
-    } else {
-      read = in.read(cbuf, off, realLen);
-    }
-    return read;
-  }
+	@Override
+	public void close() throws IOException {
+		in.close();
+	}
 
-  @Override
-  public boolean markSupported() {
-    return false;
-  }
+	@Override
+	public int read(char[] cbuf, int off, int len) throws IOException {
+		if (throwExcNext || (excAtChar != -1 && readSoFar >= excAtChar)) {
+			throw new RuntimeException("fake exception now!");
+		}
+		final int read;
+		final int realLen;
+		if (len == 1) {
+			realLen = 1;
+		} else {
+			// Spoon-feed: intentionally maybe return less than
+			// the consumer asked for
+			realLen = TestUtil.nextInt(random, 1, len);
+		}
+		if (excAtChar != -1) {
+			final int left = excAtChar - readSoFar;
+			assert left != 0;
+			read = in.read(cbuf, off, Math.min(realLen, left));
+			assert read != -1;
+			readSoFar += read;
+		} else {
+			read = in.read(cbuf, off, realLen);
+		}
+		return read;
+	}
 
-  @Override
-  public boolean ready() {
-    return false;
-  }
+	@Override
+	public boolean markSupported() {
+		return false;
+	}
 
-  public static boolean isMyEvilException(Throwable t) {
-    return (t instanceof RuntimeException) && "fake exception now!".equals(t.getMessage());
-  }
+	@Override
+	public boolean ready() {
+		return false;
+	}
+
+	public static boolean isMyEvilException(Throwable t) {
+		return (t instanceof RuntimeException) && "fake exception now!".equals(t.getMessage());
+	}
 };

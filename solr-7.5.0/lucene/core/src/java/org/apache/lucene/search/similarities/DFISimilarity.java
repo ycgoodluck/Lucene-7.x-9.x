@@ -39,39 +39,40 @@ package org.apache.lucene.search.similarities;
 
 
 public class DFISimilarity extends SimilarityBase {
-  private final Independence independence;
-  
-  /**
-   * Create DFI with the specified divergence from independence measure
-   * @param independenceMeasure measure of divergence from independence
-   */
-  public DFISimilarity(Independence independenceMeasure) {
-    this.independence = independenceMeasure;
-  }
+	private final Independence independence;
 
-  @Override
-  protected float score(BasicStats stats, float freq, float docLen) {
+	/**
+	 * Create DFI with the specified divergence from independence measure
+	 *
+	 * @param independenceMeasure measure of divergence from independence
+	 */
+	public DFISimilarity(Independence independenceMeasure) {
+		this.independence = independenceMeasure;
+	}
 
-    final float expected = (stats.getTotalTermFreq() + 1) * docLen / (stats.getNumberOfFieldTokens() + 1);
+	@Override
+	protected float score(BasicStats stats, float freq, float docLen) {
 
-    // if the observed frequency is less than or equal to the expected value, then return zero.
-    if (freq <= expected) return 0;
+		final float expected = (stats.getTotalTermFreq() + 1) * docLen / (stats.getNumberOfFieldTokens() + 1);
 
-    final float measure = independence.score(freq, expected);
+		// if the observed frequency is less than or equal to the expected value, then return zero.
+		if (freq <= expected) return 0;
 
-    return stats.getBoost() * (float) log2(measure + 1);
-  }
+		final float measure = independence.score(freq, expected);
 
-  /**
-   * Returns the measure of independence
-   */
-  public Independence getIndependence() {
-    return independence;
-  }
+		return stats.getBoost() * (float) log2(measure + 1);
+	}
 
-  @Override
-  public String toString() {
-    return "DFI(" + independence + ")";
-  }
+	/**
+	 * Returns the measure of independence
+	 */
+	public Independence getIndependence() {
+		return independence;
+	}
+
+	@Override
+	public String toString() {
+		return "DFI(" + independence + ")";
+	}
 }
 

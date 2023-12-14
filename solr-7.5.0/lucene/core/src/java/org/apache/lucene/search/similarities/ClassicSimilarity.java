@@ -29,54 +29,67 @@ import org.apache.lucene.util.BytesRef;
  */
 public class ClassicSimilarity extends TFIDFSimilarity {
 
-  /** Sole constructor: parameter-free */
-  public ClassicSimilarity() {}
+	/**
+	 * Sole constructor: parameter-free
+	 */
+	public ClassicSimilarity() {
+	}
 
-  /** Implemented as
-   *  <code>1/sqrt(length)</code>.
-   *
-   *  @lucene.experimental */
-  @Override
-  public float lengthNorm(int numTerms) {
-    return (float) (1.0 / Math.sqrt(numTerms));
-  }
+	/**
+	 * Implemented as
+	 * <code>1/sqrt(length)</code>.
+	 *
+	 * @lucene.experimental
+	 */
+	@Override
+	public float lengthNorm(int numTerms) {
+		return (float) (1.0 / Math.sqrt(numTerms));
+	}
 
-  /** Implemented as <code>sqrt(freq)</code>. */
-  @Override
-  public float tf(float freq) {
-    return (float)Math.sqrt(freq);
-  }
-    
-  /** Implemented as <code>1 / (distance + 1)</code>. */
-  @Override
-  public float sloppyFreq(int distance) {
-    return 1.0f / (distance + 1);
-  }
-  
-  /** The default implementation returns <code>1</code> */
-  @Override
-  public float scorePayload(int doc, int start, int end, BytesRef payload) {
-    return 1;
-  }
+	/**
+	 * Implemented as <code>sqrt(freq)</code>.
+	 */
+	@Override
+	public float tf(float freq) {
+		return (float) Math.sqrt(freq);
+	}
 
-  @Override
-  public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats) {
-    final long df = termStats.docFreq();
-    final long docCount = collectionStats.docCount() == -1 ? collectionStats.maxDoc() : collectionStats.docCount();
-    final float idf = idf(df, docCount);
-    return Explanation.match(idf, "idf, computed as log((docCount+1)/(docFreq+1)) + 1 from:",
-        Explanation.match(df, "docFreq"),
-        Explanation.match(docCount, "docCount"));
-  }
+	/**
+	 * Implemented as <code>1 / (distance + 1)</code>.
+	 */
+	@Override
+	public float sloppyFreq(int distance) {
+		return 1.0f / (distance + 1);
+	}
 
-  /** Implemented as <code>log((docCount+1)/(docFreq+1)) + 1</code>. */
-  @Override
-  public float idf(long docFreq, long docCount) {
-    return (float)(Math.log((docCount+1)/(double)(docFreq+1)) + 1.0);
-  }
+	/**
+	 * The default implementation returns <code>1</code>
+	 */
+	@Override
+	public float scorePayload(int doc, int start, int end, BytesRef payload) {
+		return 1;
+	}
 
-  @Override
-  public String toString() {
-    return "ClassicSimilarity";
-  }
+	@Override
+	public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats) {
+		final long df = termStats.docFreq();
+		final long docCount = collectionStats.docCount() == -1 ? collectionStats.maxDoc() : collectionStats.docCount();
+		final float idf = idf(df, docCount);
+		return Explanation.match(idf, "idf, computed as log((docCount+1)/(docFreq+1)) + 1 from:",
+			Explanation.match(df, "docFreq"),
+			Explanation.match(docCount, "docCount"));
+	}
+
+	/**
+	 * Implemented as <code>log((docCount+1)/(docFreq+1)) + 1</code>.
+	 */
+	@Override
+	public float idf(long docFreq, long docCount) {
+		return (float) (Math.log((docCount + 1) / (double) (docFreq + 1)) + 1.0);
+	}
+
+	@Override
+	public String toString() {
+		return "ClassicSimilarity";
+	}
 }

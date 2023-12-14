@@ -32,57 +32,57 @@ import org.apache.lucene.store.Directory;
  * <br> Optional params commitUserData eg. OpenReader(false,commit1)
  */
 public class OpenReaderTask extends PerfTask {
-  public static final String USER_DATA = "userData";
-  private String commitUserData = null;
+	public static final String USER_DATA = "userData";
+	private String commitUserData = null;
 
-  public OpenReaderTask(PerfRunData runData) {
-    super(runData);
-  }
+	public OpenReaderTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  public int doLogic() throws IOException {
-    Directory dir = getRunData().getDirectory();
-    DirectoryReader r = null;
-    if (commitUserData != null) {
-      r = DirectoryReader.open(OpenReaderTask.findIndexCommit(dir, commitUserData)); 
-    } else {
-      r = DirectoryReader.open(dir); 
-    }
-    getRunData().setIndexReader(r);
-    // We transfer reference to the run data
-    r.decRef();
-    return 1;
-  }
- 
-  @Override
-  public void setParams(String params) {
-    super.setParams(params);
-    if (params != null) {
-      String[] split = params.split(",");
-      if (split.length > 0) {
-        commitUserData = split[0];
-      }
-    }
-  }
+	@Override
+	public int doLogic() throws IOException {
+		Directory dir = getRunData().getDirectory();
+		DirectoryReader r = null;
+		if (commitUserData != null) {
+			r = DirectoryReader.open(OpenReaderTask.findIndexCommit(dir, commitUserData));
+		} else {
+			r = DirectoryReader.open(dir);
+		}
+		getRunData().setIndexReader(r);
+		// We transfer reference to the run data
+		r.decRef();
+		return 1;
+	}
 
-  @Override
-  public boolean supportsParams() {
-    return true;
-  }
+	@Override
+	public void setParams(String params) {
+		super.setParams(params);
+		if (params != null) {
+			String[] split = params.split(",");
+			if (split.length > 0) {
+				commitUserData = split[0];
+			}
+		}
+	}
 
-  public static IndexCommit findIndexCommit(Directory dir, String userData) throws IOException {
-    Collection<IndexCommit> commits = DirectoryReader.listCommits(dir);
-    for (final IndexCommit ic : commits) {
-      Map<String,String> map = ic.getUserData();
-      String ud = null;
-      if (map != null) {
-        ud = map.get(USER_DATA);
-      }
-      if (ud != null && ud.equals(userData)) {
-        return ic;
-      }
-    }
+	@Override
+	public boolean supportsParams() {
+		return true;
+	}
 
-    throw new IOException("index does not contain commit with userData: " + userData);
-  }
+	public static IndexCommit findIndexCommit(Directory dir, String userData) throws IOException {
+		Collection<IndexCommit> commits = DirectoryReader.listCommits(dir);
+		for (final IndexCommit ic : commits) {
+			Map<String, String> map = ic.getUserData();
+			String ud = null;
+			if (map != null) {
+				ud = map.get(USER_DATA);
+			}
+			if (ud != null && ud.equals(userData)) {
+				return ic;
+			}
+		}
+
+		throw new IOException("index does not contain commit with userData: " + userData);
+	}
 }

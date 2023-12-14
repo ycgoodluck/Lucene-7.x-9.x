@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link TokenOffsetPayloadTokenFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_tokenoffset" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -32,25 +32,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class TokenOffsetPayloadTokenFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "tokenOffsetPayload";
-  
-  /** Creates a new TokenOffsetPayloadTokenFilterFactory */
-  public TokenOffsetPayloadTokenFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenOffsetPayloadTokenFilter create(TokenStream input) {
-    return new TokenOffsetPayloadTokenFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "tokenOffsetPayload";
+
+	/**
+	 * Creates a new TokenOffsetPayloadTokenFilterFactory
+	 */
+	public TokenOffsetPayloadTokenFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenOffsetPayloadTokenFilter create(TokenStream input) {
+		return new TokenOffsetPayloadTokenFilter(input);
+	}
 }
 

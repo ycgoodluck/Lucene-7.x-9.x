@@ -31,93 +31,93 @@ import org.apache.lucene.util.BytesRefBuilder;
  * HighFrequencyDictionary: terms taken from the given field
  * of a Lucene index, which appear in a number of documents
  * above a given threshold.
- *
+ * <p>
  * Threshold is a value in [0..1] representing the minimum
  * number of documents (of the total) where a term should appear.
- * 
+ * <p>
  * Based on LuceneDictionary.
  */
 public class HighFrequencyDictionary implements Dictionary {
-  private IndexReader reader;
-  private String field;
-  private float thresh;
+	private IndexReader reader;
+	private String field;
+	private float thresh;
 
-  /**
-   * Creates a new Dictionary, pulling source terms from
-   * the specified <code>field</code> in the provided <code>reader</code>.
-   * <p>
-   * Terms appearing in less than <code>thresh</code> percentage of documents
-   * will be excluded.
-   */
-  public HighFrequencyDictionary(IndexReader reader, String field, float thresh) {
-    this.reader = reader;
-    this.field = field;
-    this.thresh = thresh;
-  }
+	/**
+	 * Creates a new Dictionary, pulling source terms from
+	 * the specified <code>field</code> in the provided <code>reader</code>.
+	 * <p>
+	 * Terms appearing in less than <code>thresh</code> percentage of documents
+	 * will be excluded.
+	 */
+	public HighFrequencyDictionary(IndexReader reader, String field, float thresh) {
+		this.reader = reader;
+		this.field = field;
+		this.thresh = thresh;
+	}
 
-  @Override
-  public final InputIterator getEntryIterator() throws IOException {
-    return new HighFrequencyIterator();
-  }
+	@Override
+	public final InputIterator getEntryIterator() throws IOException {
+		return new HighFrequencyIterator();
+	}
 
-  final class HighFrequencyIterator implements InputIterator {
-    private final BytesRefBuilder spare = new BytesRefBuilder();
-    private final TermsEnum termsEnum;
-    private int minNumDocs;
-    private long freq;
+	final class HighFrequencyIterator implements InputIterator {
+		private final BytesRefBuilder spare = new BytesRefBuilder();
+		private final TermsEnum termsEnum;
+		private int minNumDocs;
+		private long freq;
 
-    HighFrequencyIterator() throws IOException {
-      Terms terms = MultiTerms.getTerms(reader, field);
-      if (terms != null) {
-        termsEnum = terms.iterator();
-      } else {
-        termsEnum = null;
-      }
-      minNumDocs = (int)(thresh * (float)reader.numDocs());
-    }
+		HighFrequencyIterator() throws IOException {
+			Terms terms = MultiTerms.getTerms(reader, field);
+			if (terms != null) {
+				termsEnum = terms.iterator();
+			} else {
+				termsEnum = null;
+			}
+			minNumDocs = (int) (thresh * (float) reader.numDocs());
+		}
 
-    private boolean isFrequent(int freq) {
-      return freq >= minNumDocs;
-    }
-    
-    @Override
-    public long weight() {
-      return freq;
-    }
+		private boolean isFrequent(int freq) {
+			return freq >= minNumDocs;
+		}
 
-    @Override
-    public BytesRef next() throws IOException {
-      if (termsEnum != null) {
-        BytesRef next;
-        while((next = termsEnum.next()) != null) {
-          if (isFrequent(termsEnum.docFreq())) {
-            freq = termsEnum.docFreq();
-            spare.copyBytes(next);
-            return spare.get();
-          }
-        }
-      }
-      return  null;
-    }
+		@Override
+		public long weight() {
+			return freq;
+		}
 
-    @Override
-    public BytesRef payload() {
-      return null;
-    }
+		@Override
+		public BytesRef next() throws IOException {
+			if (termsEnum != null) {
+				BytesRef next;
+				while ((next = termsEnum.next()) != null) {
+					if (isFrequent(termsEnum.docFreq())) {
+						freq = termsEnum.docFreq();
+						spare.copyBytes(next);
+						return spare.get();
+					}
+				}
+			}
+			return null;
+		}
 
-    @Override
-    public boolean hasPayloads() {
-      return false;
-    }
+		@Override
+		public BytesRef payload() {
+			return null;
+		}
 
-    @Override
-    public Set<BytesRef> contexts() {
-      return null;
-    }
+		@Override
+		public boolean hasPayloads() {
+			return false;
+		}
 
-    @Override
-    public boolean hasContexts() {
-      return false;
-    }
-  }
+		@Override
+		public Set<BytesRef> contexts() {
+			return null;
+		}
+
+		@Override
+		public boolean hasContexts() {
+			return false;
+		}
+	}
 }

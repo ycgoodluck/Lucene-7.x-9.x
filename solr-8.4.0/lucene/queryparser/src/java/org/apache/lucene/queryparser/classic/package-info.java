@@ -95,7 +95,7 @@
  * </li>
  * </ul>
  * </div>
- *         
+ *
  * <a name="N10013"></a><a name="Overview"></a>
  * <h2 class="boxed">Overview</h2>
  * <div class="section">
@@ -112,34 +112,34 @@
  * <p>
  *             Before choosing to use the provided Query Parser, please consider the following:
  *             <ol>
- *             
+ *
  * <li>If you are programmatically generating a query string and then
  *             parsing it with the query parser then you should seriously consider building
  *             your queries directly with the query API.  In other words, the query
  *             parser is designed for human-entered text, not for program-generated
  *             text.</li>
- * 
- *             
+ *
+ *
  * <li>Untokenized fields are best added directly to queries, and not
  *             through the query parser.  If a field's values are generated programmatically
  *             by the application, then so should query clauses for this field.
  *             An analyzer, which the query parser uses, is designed to convert human-entered
  *             text to terms.  Program-generated values, like dates, keywords, etc.,
  *             should be consistently program-generated.</li>
- * 
- *             
+ *
+ *
  * <li>In a query form, fields which are general text should use the query
  *             parser.  All others, such as date ranges, keywords, etc. are better added
  *             directly through the query API.  A field with a limit set of values,
  *             that can be specified with a pull-down menu should not be added to a
  *             query string which is subsequently parsed, but rather added as a
  *             TermQuery clause.</li>
- *             
+ *
  * </ol>
- *           
+ *
  * </div>
- * 
- *         
+ *
+ *
  * <a name="N10032"></a><a name="Terms"></a>
  * <h2 class="boxed">Terms</h2>
  * <div class="section">
@@ -150,8 +150,8 @@
  * <p>Note: The analyzer used to create the index will be used on the terms and phrases in the query string.
  *         So it is important to choose an analyzer that will not interfere with the terms used in the query string.
  * </div>
- * 
- *         
+ *
+ *
  * <a name="N10048"></a><a name="Fields"></a>
  * <h2 class="boxed">Fields</h2>
  * <div class="section">
@@ -167,8 +167,8 @@
  * <pre class="code">title:The Right Way</pre>
  * <p>Will only find "The" in the title field. It will find "Right" and "Way" in the default field (in this case the text field).
  * </div>
- * 
- *         
+ *
+ *
  * <a name="N1006D"></a><a name="Term_Modifiers"></a>
  * <h2 class="boxed">Term Modifiers</h2>
  * <div class="section">
@@ -181,7 +181,7 @@
  * <p>To perform a multiple character wildcard search use the "*" symbol.
  * <p>The single character wildcard search looks for terms that match that with the single character replaced. For example, to search for "text" or "test" you can use the search:
  * <pre class="code">te?t</pre>
- * <p>Multiple character wildcard searches looks for 0 or more characters. For example, to search for test, tests or tester, you can use the search: 
+ * <p>Multiple character wildcard searches looks for 0 or more characters. For example, to search for test, tests or tester, you can use the search:
  * <pre class="code">test*</pre>
  * <p>You can also use the wildcard searches in the middle of a term.
  * <pre class="code">te*t</pre>
@@ -190,11 +190,11 @@
  * <h3 class="boxed">Regular Expression Searches</h3>
  * <p>Lucene supports regular expression searches matching a pattern between forward slashes "/". The syntax may change across releases, but the current supported
  * syntax is documented in the {@link org.apache.lucene.util.automaton.RegExp RegExp} class. For example to find documents containing "moat" or "boat":
- * 
+ *
  * <pre class="code">/[mb]oat/</pre>
  * <a name="N1009B"></a><a name="Fuzzy_Searches"></a>
  * <h3 class="boxed">Fuzzy Searches</h3>
- * <p>Lucene supports fuzzy searches based on Damerau-Levenshtein Distance. To do a fuzzy search use the tilde, "~", symbol at the end of a Single word Term. For example to search for a term similar in spelling to "roam" use the fuzzy search: 
+ * <p>Lucene supports fuzzy searches based on Damerau-Levenshtein Distance. To do a fuzzy search use the tilde, "~", symbol at the end of a Single word Term. For example to search for a term similar in spelling to "roam" use the fuzzy search:
  * <pre class="code">roam~</pre>
  * <p>This search will find terms like foam and roams.
  * <p>An additional (optional) parameter can specify the maximum number of edits allowed. The value is between 0 and 2, For example:
@@ -226,13 +226,13 @@
  * <p>and you want the term "jakarta" to be more relevant boost it using the ^ symbol along with the boost factor next to the term.
  *         You would type:
  * <pre class="code">jakarta^4 apache</pre>
- * <p>This will make documents with the term jakarta appear more relevant. You can also boost Phrase Terms as in the example: 
+ * <p>This will make documents with the term jakarta appear more relevant. You can also boost Phrase Terms as in the example:
  * <pre class="code">"jakarta apache"^4 "Apache Lucene"</pre>
  * <p>By default, the boost factor is 1. Although the boost factor must be positive, it can be less than 1 (e.g. 0.2)
  * </div>
- * 
- * 
- *         
+ *
+ *
+ *
  * <a name="N100FA"></a><a name="Boolean_operators"></a>
  * <h2 class="boxed">Boolean Operators</h2>
  * <div class="section">
@@ -251,7 +251,7 @@
  * <h3 class="boxed">AND</h3>
  * <p>The AND operator matches documents where both terms exist anywhere in the text of a single document.
  *         This is equivalent to an intersection using sets. The symbol &amp;&amp; can be used in place of the word AND.
- * <p>To search for documents that contain "jakarta apache" and "Apache Lucene" use the query: 
+ * <p>To search for documents that contain "jakarta apache" and "Apache Lucene" use the query:
  * <pre class="code">"jakarta apache" AND "Apache Lucene"</pre>
  * <a name="N10126"></a>
  * <h3 class="boxed">+</h3>
@@ -262,18 +262,18 @@
  * <h3 class="boxed">NOT</h3>
  * <p>The NOT operator excludes documents that contain the term after NOT.
  *         This is equivalent to a difference using sets. The symbol ! can be used in place of the word NOT.
- * <p>To search for documents that contain "jakarta apache" but not "Apache Lucene" use the query: 
+ * <p>To search for documents that contain "jakarta apache" but not "Apache Lucene" use the query:
  * <pre class="code">"jakarta apache" NOT "Apache Lucene"</pre>
  * <p>Note: The NOT operator cannot be used with just one term. For example, the following search will return no results:
  * <pre class="code">NOT "jakarta apache"</pre>
  * <a name="N1014C"></a>
  * <h3 class="boxed">-</h3>
  * <p>The "-" or prohibit operator excludes documents that contain the term after the "-" symbol.
- * <p>To search for documents that contain "jakarta apache" but not "Apache Lucene" use the query: 
+ * <p>To search for documents that contain "jakarta apache" but not "Apache Lucene" use the query:
  * <pre class="code">"jakarta apache" -"Apache Lucene"</pre>
  * </div>
- * 
- *         
+ *
+ *
  * <a name="N1015D"></a><a name="Grouping"></a>
  * <h2 class="boxed">Grouping</h2>
  * <div class="section">
@@ -282,8 +282,8 @@
  * <pre class="code">(jakarta OR apache) AND website</pre>
  * <p>This eliminates any confusion and makes sure you that website must exist and either term jakarta or apache may exist.
  * </div>
- * 
- *         
+ *
+ *
  * <a name="N10170"></a><a name="Field_Grouping"></a>
  * <h2 class="boxed">Field Grouping</h2>
  * <div class="section">
@@ -291,8 +291,8 @@
  * <p>To search for a title that contains both the word "return" and the phrase "pink panther" use the query:
  * <pre class="code">title:(+return +"pink panther")</pre>
  * </div>
- * 
- *         
+ *
+ *
  * <a name="N10180"></a><a name="Escaping_Special_Characters"></a>
  * <h2 class="boxed">Escaping Special Characters</h2>
  * <div class="section">

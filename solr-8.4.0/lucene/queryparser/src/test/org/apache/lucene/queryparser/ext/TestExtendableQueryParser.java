@@ -34,101 +34,101 @@ import org.apache.lucene.search.TermQuery;
  * Testcase for the class {@link ExtendableQueryParser}
  */
 public class TestExtendableQueryParser extends TestQueryParser {
-  private static char[] DELIMITERS = new char[] {
-      Extensions.DEFAULT_EXTENSION_FIELD_DELIMITER, '-', '|' };
+	private static char[] DELIMITERS = new char[]{
+		Extensions.DEFAULT_EXTENSION_FIELD_DELIMITER, '-', '|'};
 
-  @Override
-  public QueryParser getParser(Analyzer a) throws Exception {
-    return getParser(a, null);
-  }
+	@Override
+	public QueryParser getParser(Analyzer a) throws Exception {
+		return getParser(a, null);
+	}
 
-  public QueryParser getParser(Analyzer a, Extensions extensions)
-      throws Exception {
-    if (a == null)
-      a = new MockAnalyzer(random(), MockTokenizer.SIMPLE, true);
-    QueryParser qp = extensions == null ? new ExtendableQueryParser(
-        getDefaultField(), a) : new ExtendableQueryParser(
-        getDefaultField(), a, extensions);
-    qp.setDefaultOperator(QueryParserBase.OR_OPERATOR);
-    qp.setSplitOnWhitespace(splitOnWhitespace);
-    return qp;
-  }
+	public QueryParser getParser(Analyzer a, Extensions extensions)
+		throws Exception {
+		if (a == null)
+			a = new MockAnalyzer(random(), MockTokenizer.SIMPLE, true);
+		QueryParser qp = extensions == null ? new ExtendableQueryParser(
+			getDefaultField(), a) : new ExtendableQueryParser(
+			getDefaultField(), a, extensions);
+		qp.setDefaultOperator(QueryParserBase.OR_OPERATOR);
+		qp.setSplitOnWhitespace(splitOnWhitespace);
+		return qp;
+	}
 
-  public void testUnescapedExtDelimiter() throws Exception {
-    Extensions ext = newExtensions(':');
-    ext.add("testExt", new ExtensionStub());
-    ExtendableQueryParser parser = (ExtendableQueryParser) getParser(null, ext);
-    expectThrows(ParseException.class, () -> {
-      parser.parse("aField:testExt:\"foo \\& bar\"");
-    });
-  }
+	public void testUnescapedExtDelimiter() throws Exception {
+		Extensions ext = newExtensions(':');
+		ext.add("testExt", new ExtensionStub());
+		ExtendableQueryParser parser = (ExtendableQueryParser) getParser(null, ext);
+		expectThrows(ParseException.class, () -> {
+			parser.parse("aField:testExt:\"foo \\& bar\"");
+		});
+	}
 
-  public void testExtFieldUnqoted() throws Exception {
-    for (int i = 0; i < DELIMITERS.length; i++) {
-      Extensions ext = newExtensions(DELIMITERS[i]);
-      ext.add("testExt", new ExtensionStub());
-      ExtendableQueryParser parser = (ExtendableQueryParser) getParser(null,
-          ext);
-      String field = ext.buildExtensionField("testExt", "aField");
-      Query query = parser.parse(String.format(Locale.ROOT, "%s:foo bar", field));
-      assertTrue("expected instance of BooleanQuery but was "
-          + query.getClass(), query instanceof BooleanQuery);
-      BooleanQuery bquery = (BooleanQuery) query;
-      BooleanClause[] clauses = bquery.clauses().toArray(new BooleanClause[0]);
-      assertEquals(2, clauses.length);
-      BooleanClause booleanClause = clauses[0];
-      query = booleanClause.getQuery();
-      assertTrue("expected instance of TermQuery but was " + query.getClass(),
-          query instanceof TermQuery);
-      TermQuery tquery = (TermQuery) query;
-      assertEquals("aField", tquery.getTerm()
-          .field());
-      assertEquals("foo", tquery.getTerm().text());
+	public void testExtFieldUnqoted() throws Exception {
+		for (int i = 0; i < DELIMITERS.length; i++) {
+			Extensions ext = newExtensions(DELIMITERS[i]);
+			ext.add("testExt", new ExtensionStub());
+			ExtendableQueryParser parser = (ExtendableQueryParser) getParser(null,
+				ext);
+			String field = ext.buildExtensionField("testExt", "aField");
+			Query query = parser.parse(String.format(Locale.ROOT, "%s:foo bar", field));
+			assertTrue("expected instance of BooleanQuery but was "
+				+ query.getClass(), query instanceof BooleanQuery);
+			BooleanQuery bquery = (BooleanQuery) query;
+			BooleanClause[] clauses = bquery.clauses().toArray(new BooleanClause[0]);
+			assertEquals(2, clauses.length);
+			BooleanClause booleanClause = clauses[0];
+			query = booleanClause.getQuery();
+			assertTrue("expected instance of TermQuery but was " + query.getClass(),
+				query instanceof TermQuery);
+			TermQuery tquery = (TermQuery) query;
+			assertEquals("aField", tquery.getTerm()
+				.field());
+			assertEquals("foo", tquery.getTerm().text());
 
-      booleanClause = clauses[1];
-      query = booleanClause.getQuery();
-      assertTrue("expected instance of TermQuery but was " + query.getClass(),
-          query instanceof TermQuery);
-      tquery = (TermQuery) query;
-      assertEquals(getDefaultField(), tquery.getTerm().field());
-      assertEquals("bar", tquery.getTerm().text());
-    }
-  }
+			booleanClause = clauses[1];
+			query = booleanClause.getQuery();
+			assertTrue("expected instance of TermQuery but was " + query.getClass(),
+				query instanceof TermQuery);
+			tquery = (TermQuery) query;
+			assertEquals(getDefaultField(), tquery.getTerm().field());
+			assertEquals("bar", tquery.getTerm().text());
+		}
+	}
 
-  public void testExtDefaultField() throws Exception {
-    for (int i = 0; i < DELIMITERS.length; i++) {
-      Extensions ext = newExtensions(DELIMITERS[i]);
-      ext.add("testExt", new ExtensionStub());
-      ExtendableQueryParser parser = (ExtendableQueryParser) getParser(null,
-          ext);
-      String field = ext.buildExtensionField("testExt");
-      Query parse = parser.parse(String.format(Locale.ROOT, "%s:\"foo \\& bar\"", field));
-      assertTrue("expected instance of TermQuery but was " + parse.getClass(),
-          parse instanceof TermQuery);
-      TermQuery tquery = (TermQuery) parse;
-      assertEquals(getDefaultField(), tquery.getTerm().field());
-      assertEquals("foo & bar", tquery.getTerm().text());
-    }
-  }
+	public void testExtDefaultField() throws Exception {
+		for (int i = 0; i < DELIMITERS.length; i++) {
+			Extensions ext = newExtensions(DELIMITERS[i]);
+			ext.add("testExt", new ExtensionStub());
+			ExtendableQueryParser parser = (ExtendableQueryParser) getParser(null,
+				ext);
+			String field = ext.buildExtensionField("testExt");
+			Query parse = parser.parse(String.format(Locale.ROOT, "%s:\"foo \\& bar\"", field));
+			assertTrue("expected instance of TermQuery but was " + parse.getClass(),
+				parse instanceof TermQuery);
+			TermQuery tquery = (TermQuery) parse;
+			assertEquals(getDefaultField(), tquery.getTerm().field());
+			assertEquals("foo & bar", tquery.getTerm().text());
+		}
+	}
 
-  public Extensions newExtensions(char delimiter) {
-    return new Extensions(delimiter);
-  }
+	public Extensions newExtensions(char delimiter) {
+		return new Extensions(delimiter);
+	}
 
-  public void testExtField() throws Exception {
-    for (int i = 0; i < DELIMITERS.length; i++) {
-      Extensions ext = newExtensions(DELIMITERS[i]);
-      ext.add("testExt", new ExtensionStub());
-      ExtendableQueryParser parser = (ExtendableQueryParser) getParser(null,
-          ext);
-      String field = ext.buildExtensionField("testExt", "afield");
-      Query parse = parser.parse(String.format(Locale.ROOT, "%s:\"foo \\& bar\"", field));
-      assertTrue("expected instance of TermQuery but was " + parse.getClass(),
-          parse instanceof TermQuery);
-      TermQuery tquery = (TermQuery) parse;
-      assertEquals("afield", tquery.getTerm().field());
-      assertEquals("foo & bar", tquery.getTerm().text());
-    }
-  }
+	public void testExtField() throws Exception {
+		for (int i = 0; i < DELIMITERS.length; i++) {
+			Extensions ext = newExtensions(DELIMITERS[i]);
+			ext.add("testExt", new ExtensionStub());
+			ExtendableQueryParser parser = (ExtendableQueryParser) getParser(null,
+				ext);
+			String field = ext.buildExtensionField("testExt", "afield");
+			Query parse = parser.parse(String.format(Locale.ROOT, "%s:\"foo \\& bar\"", field));
+			assertTrue("expected instance of TermQuery but was " + parse.getClass(),
+				parse instanceof TermQuery);
+			TermQuery tquery = (TermQuery) parse;
+			assertEquals("afield", tquery.getTerm().field());
+			assertEquals("foo & bar", tquery.getTerm().text());
+		}
+	}
 
 }

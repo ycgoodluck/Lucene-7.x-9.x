@@ -22,154 +22,154 @@ import java.io.IOException;
 
 import static org.apache.lucene.store.RAMOutputStream.BUFFER_SIZE;
 
-/** 
- * A memory-resident {@link IndexInput} implementation. 
+/**
+ * A memory-resident {@link IndexInput} implementation.
  *
- * @lucene.internal 
+ * @lucene.internal
  * @deprecated This class uses inefficient synchronization and is discouraged
- * in favor of {@link MMapDirectory}. It will be removed in future versions 
+ * in favor of {@link MMapDirectory}. It will be removed in future versions
  * of Lucene.
  */
 @Deprecated
 public class RAMInputStream extends IndexInput implements Cloneable {
 
-  private final RAMFile file;
-  private final long length;
+	private final RAMFile file;
+	private final long length;
 
-  private byte[] currentBuffer;
-  private int currentBufferIndex;
-  
-  private int bufferPosition;
-  private int bufferLength;
+	private byte[] currentBuffer;
+	private int currentBufferIndex;
 
-  public RAMInputStream(String name, RAMFile f) throws IOException {
-    this(name, f, f.length);
-  }
+	private int bufferPosition;
+	private int bufferLength;
 
-  RAMInputStream(String name, RAMFile f, long length) throws IOException {
-    super("RAMInputStream(name=" + name + ")");
-    this.file = f;
-    this.length = length;
-    if (length/BUFFER_SIZE >= Integer.MAX_VALUE) {
-      throw new IOException("RAMInputStream too large length=" + length + ": " + name); 
-    }
+	public RAMInputStream(String name, RAMFile f) throws IOException {
+		this(name, f, f.length);
+	}
 
-    setCurrentBuffer();
-  }
+	RAMInputStream(String name, RAMFile f, long length) throws IOException {
+		super("RAMInputStream(name=" + name + ")");
+		this.file = f;
+		this.length = length;
+		if (length / BUFFER_SIZE >= Integer.MAX_VALUE) {
+			throw new IOException("RAMInputStream too large length=" + length + ": " + name);
+		}
 
-  @Override
-  public void close() {
-    // nothing to do here
-  }
+		setCurrentBuffer();
+	}
 
-  @Override
-  public long length() {
-    return length;
-  }
+	@Override
+	public void close() {
+		// nothing to do here
+	}
 
-  @Override
-  public byte readByte() throws IOException {
-    if (bufferPosition == bufferLength) {
-      nextBuffer();
-    }
-    return currentBuffer[bufferPosition++];
-  }
+	@Override
+	public long length() {
+		return length;
+	}
 
-  @Override
-  public void readBytes(byte[] b, int offset, int len) throws IOException {
-    while (len > 0) {
+	@Override
+	public byte readByte() throws IOException {
+		if (bufferPosition == bufferLength) {
+			nextBuffer();
+		}
+		return currentBuffer[bufferPosition++];
+	}
 
-      if (bufferPosition == bufferLength) {
-        nextBuffer();
-      }
+	@Override
+	public void readBytes(byte[] b, int offset, int len) throws IOException {
+		while (len > 0) {
 
-      int remainInBuffer = bufferLength - bufferPosition;
-      int bytesToCopy = len < remainInBuffer ? len : remainInBuffer;
-      System.arraycopy(currentBuffer, bufferPosition, b, offset, bytesToCopy);
-      offset += bytesToCopy;
-      len -= bytesToCopy;
-      bufferPosition += bytesToCopy;
-    }
-  }
+			if (bufferPosition == bufferLength) {
+				nextBuffer();
+			}
 
-  @Override
-  public long getFilePointer() {
-    return (long) currentBufferIndex * BUFFER_SIZE + bufferPosition;
-  }
+			int remainInBuffer = bufferLength - bufferPosition;
+			int bytesToCopy = len < remainInBuffer ? len : remainInBuffer;
+			System.arraycopy(currentBuffer, bufferPosition, b, offset, bytesToCopy);
+			offset += bytesToCopy;
+			len -= bytesToCopy;
+			bufferPosition += bytesToCopy;
+		}
+	}
 
-  @Override
-  public void seek(long pos) throws IOException {
-    int newBufferIndex = (int) (pos / BUFFER_SIZE);
+	@Override
+	public long getFilePointer() {
+		return (long) currentBufferIndex * BUFFER_SIZE + bufferPosition;
+	}
 
-    if (newBufferIndex != currentBufferIndex) {
-      // we seek'd to a different buffer:
-      currentBufferIndex = newBufferIndex;
-      setCurrentBuffer();
-    }
+	@Override
+	public void seek(long pos) throws IOException {
+		int newBufferIndex = (int) (pos / BUFFER_SIZE);
 
-    bufferPosition = (int) (pos % BUFFER_SIZE);
+		if (newBufferIndex != currentBufferIndex) {
+			// we seek'd to a different buffer:
+			currentBufferIndex = newBufferIndex;
+			setCurrentBuffer();
+		}
 
-    // This is not >= because seeking to exact end of file is OK: this is where
-    // you'd also be if you did a readBytes of all bytes in the file
-    if (getFilePointer() > length()) {
-      throw new EOFException("seek beyond EOF: pos=" + getFilePointer() + " vs length=" + length() + ": " + this);
-    }
-  }
+		bufferPosition = (int) (pos % BUFFER_SIZE);
 
-  private void nextBuffer() throws IOException {
-    // This is >= because we are called when there is at least 1 more byte to read:
-    if (getFilePointer() >= length()) {
-      throw new EOFException("cannot read another byte at EOF: pos=" + getFilePointer() + " vs length=" + length() + ": " + this);
-    }
-    currentBufferIndex++;
-    setCurrentBuffer();
-    assert currentBuffer != null;
-    bufferPosition = 0;
-  }
+		// This is not >= because seeking to exact end of file is OK: this is where
+		// you'd also be if you did a readBytes of all bytes in the file
+		if (getFilePointer() > length()) {
+			throw new EOFException("seek beyond EOF: pos=" + getFilePointer() + " vs length=" + length() + ": " + this);
+		}
+	}
 
-  private final void setCurrentBuffer() throws IOException {
-    if (currentBufferIndex < file.numBuffers()) {
-      currentBuffer = file.getBuffer(currentBufferIndex);
-      assert currentBuffer != null;
-      long bufferStart = (long) BUFFER_SIZE * (long) currentBufferIndex;
-      bufferLength = (int) Math.min(BUFFER_SIZE, length - bufferStart);
-    } else {
-      currentBuffer = null;
-    }
-  }
+	private void nextBuffer() throws IOException {
+		// This is >= because we are called when there is at least 1 more byte to read:
+		if (getFilePointer() >= length()) {
+			throw new EOFException("cannot read another byte at EOF: pos=" + getFilePointer() + " vs length=" + length() + ": " + this);
+		}
+		currentBufferIndex++;
+		setCurrentBuffer();
+		assert currentBuffer != null;
+		bufferPosition = 0;
+	}
 
-  @Override
-  public IndexInput slice(String sliceDescription, final long offset, final long sliceLength) throws IOException {
-    if (offset < 0 || sliceLength < 0 || offset + sliceLength > this.length) {
-      throw new IllegalArgumentException("slice() " + sliceDescription + " out of bounds: "  + this);
-    }
-    return new RAMInputStream(getFullSliceDescription(sliceDescription), file, offset + sliceLength) {
-      {
-        seek(0L);
-      }
-      
-      @Override
-      public void seek(long pos) throws IOException {
-        if (pos < 0L) {
-          throw new IllegalArgumentException("Seeking to negative position: " + this);
-        }
-        super.seek(pos + offset);
-      }
-      
-      @Override
-      public long getFilePointer() {
-        return super.getFilePointer() - offset;
-      }
+	private final void setCurrentBuffer() throws IOException {
+		if (currentBufferIndex < file.numBuffers()) {
+			currentBuffer = file.getBuffer(currentBufferIndex);
+			assert currentBuffer != null;
+			long bufferStart = (long) BUFFER_SIZE * (long) currentBufferIndex;
+			bufferLength = (int) Math.min(BUFFER_SIZE, length - bufferStart);
+		} else {
+			currentBuffer = null;
+		}
+	}
 
-      @Override
-      public long length() {
-        return sliceLength;
-      }
+	@Override
+	public IndexInput slice(String sliceDescription, final long offset, final long sliceLength) throws IOException {
+		if (offset < 0 || sliceLength < 0 || offset + sliceLength > this.length) {
+			throw new IllegalArgumentException("slice() " + sliceDescription + " out of bounds: " + this);
+		}
+		return new RAMInputStream(getFullSliceDescription(sliceDescription), file, offset + sliceLength) {
+			{
+				seek(0L);
+			}
 
-      @Override
-      public IndexInput slice(String sliceDescription, long ofs, long len) throws IOException {
-        return super.slice(sliceDescription, offset + ofs, len);
-      }
-    };
-  }
+			@Override
+			public void seek(long pos) throws IOException {
+				if (pos < 0L) {
+					throw new IllegalArgumentException("Seeking to negative position: " + this);
+				}
+				super.seek(pos + offset);
+			}
+
+			@Override
+			public long getFilePointer() {
+				return super.getFilePointer() - offset;
+			}
+
+			@Override
+			public long length() {
+				return sliceLength;
+			}
+
+			@Override
+			public IndexInput slice(String sliceDescription, long ofs, long len) throws IOException {
+				return super.slice(sliceDescription, offset + ofs, len);
+			}
+		};
+	}
 }

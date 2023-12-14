@@ -23,15 +23,15 @@ import org.apache.lucene.analysis.Analyzer;
  * An Analyzer that uses {@link UnicodeWhitespaceTokenizer}.
  **/
 public final class UnicodeWhitespaceAnalyzer extends Analyzer {
-  
-  /**
-   * Creates a new {@link UnicodeWhitespaceAnalyzer}
-   */
-  public UnicodeWhitespaceAnalyzer() {
-  }
-  
-  @Override
-  protected TokenStreamComponents createComponents(final String fieldName) {
-    return new TokenStreamComponents(new UnicodeWhitespaceTokenizer());
-  }
+
+	/**
+	 * Creates a new {@link UnicodeWhitespaceAnalyzer}
+	 */
+	public UnicodeWhitespaceAnalyzer() {
+	}
+
+	@Override
+	protected TokenStreamComponents createComponents(final String fieldName) {
+		return new TokenStreamComponents(new UnicodeWhitespaceTokenizer());
+	}
 }

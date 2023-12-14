@@ -23,18 +23,18 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 
 public class DateRecognizerFilterFactoryTest extends BaseTokenStreamTestCase {
 
-  public void testBadLanguageTagThrowsException() {
-    expectThrows(Exception.class, () -> {
-      final Map<String,String> args = new HashMap<>();
-      args.put(DateRecognizerFilterFactory.LOCALE, "en_US");
-      new DateRecognizerFilterFactory(args);
-    });
-  }
-  
-  public void testGoodLocaleParsesWell() {
-    final Map<String,String> args = new HashMap<>();
-    args.put(DateRecognizerFilterFactory.LOCALE, "en-US");
-    new DateRecognizerFilterFactory(args);
-  }
-  
+	public void testBadLanguageTagThrowsException() {
+		expectThrows(Exception.class, () -> {
+			final Map<String, String> args = new HashMap<>();
+			args.put(DateRecognizerFilterFactory.LOCALE, "en_US");
+			new DateRecognizerFilterFactory(args);
+		});
+	}
+
+	public void testGoodLocaleParsesWell() {
+		final Map<String, String> args = new HashMap<>();
+		args.put(DateRecognizerFilterFactory.LOCALE, "en-US");
+		new DateRecognizerFilterFactory(args);
+	}
+
 }

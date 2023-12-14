@@ -38,28 +38,28 @@ import org.apache.lucene.util.automaton.CompiledAutomaton;
  */
 public class STUniformSplitTerms extends UniformSplitTerms {
 
-  protected final FieldMetadata unionFieldMetadata;
-  protected final FieldInfos fieldInfos;
+	protected final FieldMetadata unionFieldMetadata;
+	protected final FieldInfos fieldInfos;
 
-  protected STUniformSplitTerms(IndexInput blockInput, FieldMetadata fieldMetadata,
-                                FieldMetadata unionFieldMetadata, PostingsReaderBase postingsReader,
-                                BlockDecoder blockDecoder, FieldInfos fieldInfos, DictionaryBrowserSupplier dictionaryBrowserSupplier) {
-    super(blockInput, fieldMetadata, postingsReader, blockDecoder, dictionaryBrowserSupplier);
-    this.unionFieldMetadata = unionFieldMetadata;
-    this.fieldInfos = fieldInfos;
-  }
+	protected STUniformSplitTerms(IndexInput blockInput, FieldMetadata fieldMetadata,
+																FieldMetadata unionFieldMetadata, PostingsReaderBase postingsReader,
+																BlockDecoder blockDecoder, FieldInfos fieldInfos, DictionaryBrowserSupplier dictionaryBrowserSupplier) {
+		super(blockInput, fieldMetadata, postingsReader, blockDecoder, dictionaryBrowserSupplier);
+		this.unionFieldMetadata = unionFieldMetadata;
+		this.fieldInfos = fieldInfos;
+	}
 
-  @Override
-  public TermsEnum intersect(CompiledAutomaton compiled, BytesRef startTerm) throws IOException {
-    return new STIntersectBlockReader(compiled, startTerm, dictionaryBrowserSupplier, blockInput, postingsReader, fieldMetadata, blockDecoder, fieldInfos);
-  }
+	@Override
+	public TermsEnum intersect(CompiledAutomaton compiled, BytesRef startTerm) throws IOException {
+		return new STIntersectBlockReader(compiled, startTerm, dictionaryBrowserSupplier, blockInput, postingsReader, fieldMetadata, blockDecoder, fieldInfos);
+	}
 
-  @Override
-  public TermsEnum iterator() throws IOException {
-    return new STBlockReader(dictionaryBrowserSupplier, blockInput, postingsReader, fieldMetadata, blockDecoder, fieldInfos);
-  }
+	@Override
+	public TermsEnum iterator() throws IOException {
+		return new STBlockReader(dictionaryBrowserSupplier, blockInput, postingsReader, fieldMetadata, blockDecoder, fieldInfos);
+	}
 
-  STMergingBlockReader createMergingBlockReader() throws IOException {
-    return new STMergingBlockReader(dictionaryBrowserSupplier, blockInput, postingsReader, unionFieldMetadata, blockDecoder, fieldInfos);
-  }
+	STMergingBlockReader createMergingBlockReader() throws IOException {
+		return new STMergingBlockReader(dictionaryBrowserSupplier, blockInput, postingsReader, unionFieldMetadata, blockDecoder, fieldInfos);
+	}
 }

@@ -23,25 +23,25 @@ import org.apache.lucene.search.Scorer;
 
 class FakeScorer extends Scorer {
 
-  float score;
-  int doc = -1;
+	float score;
+	int doc = -1;
 
-  FakeScorer() {
-    super(null);
-  }
+	FakeScorer() {
+		super(null);
+	}
 
-  @Override
-  public int docID() {
-    return doc;
-  }
+	@Override
+	public int docID() {
+		return doc;
+	}
 
-  @Override
-  public DocIdSetIterator iterator() {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public DocIdSetIterator iterator() {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public float score() throws IOException {
-    return score;
-  }
+	@Override
+	public float score() throws IOException {
+		return score;
+	}
 }

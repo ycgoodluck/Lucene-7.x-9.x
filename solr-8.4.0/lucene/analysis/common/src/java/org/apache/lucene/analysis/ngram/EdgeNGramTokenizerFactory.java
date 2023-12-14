@@ -32,29 +32,33 @@ import java.util.Map;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class EdgeNGramTokenizerFactory extends TokenizerFactory {
 
-  /** SPI name */
-  public static final String NAME = "edgeNGram";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "edgeNGram";
 
-  private final int maxGramSize;
-  private final int minGramSize;
+	private final int maxGramSize;
+	private final int minGramSize;
 
-  /** Creates a new EdgeNGramTokenizerFactory */
-  public EdgeNGramTokenizerFactory(Map<String, String> args) {
-    super(args);
-    minGramSize = getInt(args, "minGramSize", EdgeNGramTokenizer.DEFAULT_MIN_GRAM_SIZE);
-    maxGramSize = getInt(args, "maxGramSize", EdgeNGramTokenizer.DEFAULT_MAX_GRAM_SIZE);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public Tokenizer create(AttributeFactory factory) {
-    return new EdgeNGramTokenizer(factory, minGramSize, maxGramSize);
-  }
+	/**
+	 * Creates a new EdgeNGramTokenizerFactory
+	 */
+	public EdgeNGramTokenizerFactory(Map<String, String> args) {
+		super(args);
+		minGramSize = getInt(args, "minGramSize", EdgeNGramTokenizer.DEFAULT_MIN_GRAM_SIZE);
+		maxGramSize = getInt(args, "maxGramSize", EdgeNGramTokenizer.DEFAULT_MAX_GRAM_SIZE);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public Tokenizer create(AttributeFactory factory) {
+		return new EdgeNGramTokenizer(factory, minGramSize, maxGramSize);
+	}
 }

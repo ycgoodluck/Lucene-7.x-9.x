@@ -27,22 +27,22 @@ import opennlp.tools.util.Span;
  * Requires binary models from OpenNLP project on SourceForge.
  */
 public class NLPTokenizerOp {
-  private final Tokenizer tokenizer;
+	private final Tokenizer tokenizer;
 
-  public NLPTokenizerOp(TokenizerModel model) {
-    tokenizer = new TokenizerME(model);
-  }
+	public NLPTokenizerOp(TokenizerModel model) {
+		tokenizer = new TokenizerME(model);
+	}
 
-  public NLPTokenizerOp() {
-    tokenizer = null;
-  }
+	public NLPTokenizerOp() {
+		tokenizer = null;
+	}
 
-  public synchronized Span[] getTerms(String sentence) {
-    if (tokenizer == null) {
-      Span[] span1 = new Span[1];
-      span1[0] = new Span(0, sentence.length());
-      return span1;
-    }
-    return tokenizer.tokenizePos(sentence);
-  }
+	public synchronized Span[] getTerms(String sentence) {
+		if (tokenizer == null) {
+			Span[] span1 = new Span[1];
+			span1[0] = new Span(0, sentence.length());
+			return span1;
+		}
+		return tokenizer.tokenizePos(sentence);
+	}
 }

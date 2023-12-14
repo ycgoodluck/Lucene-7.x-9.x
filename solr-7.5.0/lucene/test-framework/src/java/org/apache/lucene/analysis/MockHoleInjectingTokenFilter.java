@@ -27,54 +27,54 @@ import org.apache.lucene.util.TestUtil;
 // a MockRemovesTokensTF, ideally subclassing FilteringTF
 // (in modules/analysis)
 
-/** 
+/**
  * Randomly injects holes (similar to what a stopfilter would do)
  */
 public final class MockHoleInjectingTokenFilter extends TokenFilter {
 
-  private final long randomSeed;
-  private Random random;
-  private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
-  private final PositionLengthAttribute posLenAtt = addAttribute(PositionLengthAttribute.class);
-  private int maxPos;
-  private int pos;
+	private final long randomSeed;
+	private Random random;
+	private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
+	private final PositionLengthAttribute posLenAtt = addAttribute(PositionLengthAttribute.class);
+	private int maxPos;
+	private int pos;
 
-  public MockHoleInjectingTokenFilter(Random random, TokenStream in) {
-    super(in);
-    randomSeed = random.nextLong();
-  }
-  
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    random = new Random(randomSeed);
-    maxPos = -1;
-    pos = -1;
-  }
+	public MockHoleInjectingTokenFilter(Random random, TokenStream in) {
+		super(in);
+		randomSeed = random.nextLong();
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      final int posInc = posIncAtt.getPositionIncrement();
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		random = new Random(randomSeed);
+		maxPos = -1;
+		pos = -1;
+	}
 
-      int nextPos = pos + posInc;
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			final int posInc = posIncAtt.getPositionIncrement();
 
-      // Carefully inject a hole only where it won't mess up
-      // the graph:
-      if (posInc > 0 && maxPos <= nextPos && random.nextInt(5) == 3) {
-        final int holeSize = TestUtil.nextInt(random, 1, 5);
-        posIncAtt.setPositionIncrement(posInc + holeSize);
-        nextPos += holeSize;
-      }
+			int nextPos = pos + posInc;
 
-      pos = nextPos;
-      maxPos = Math.max(maxPos, pos + posLenAtt.getPositionLength());
+			// Carefully inject a hole only where it won't mess up
+			// the graph:
+			if (posInc > 0 && maxPos <= nextPos && random.nextInt(5) == 3) {
+				final int holeSize = TestUtil.nextInt(random, 1, 5);
+				posIncAtt.setPositionIncrement(posInc + holeSize);
+				nextPos += holeSize;
+			}
 
-      return true;
-    } else {
-      return false;
-    }
-  }
+			pos = nextPos;
+			maxPos = Math.max(maxPos, pos + posLenAtt.getPositionLength());
 
-  // TODO: end?
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	// TODO: end?
 }

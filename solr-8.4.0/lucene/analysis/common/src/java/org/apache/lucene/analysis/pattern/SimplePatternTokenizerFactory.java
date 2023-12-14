@@ -48,36 +48,38 @@ import org.apache.lucene.util.automaton.RegExp;
  *   &lt;analyzer&gt;
  *     &lt;tokenizer class="solr.SimplePatternTokenizerFactory" pattern="[^ \t\r\n]+"/&gt;
  *   &lt;/analyzer&gt;
- * &lt;/fieldType&gt;</pre> 
+ * &lt;/fieldType&gt;</pre>
  *
  * @lucene.experimental
- * 
- * @see SimplePatternTokenizer
- *
- * @since 6.5.0
  * @lucene.spi {@value #NAME}
+ * @see SimplePatternTokenizer
+ * @since 6.5.0
  */
 public class SimplePatternTokenizerFactory extends TokenizerFactory {
 
-  /** SPI name */
-  public static final String NAME = "simplePattern";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "simplePattern";
 
-  public static final String PATTERN = "pattern";
-  private final Automaton dfa;
-  private final int maxDeterminizedStates;
- 
-  /** Creates a new SimplePatternTokenizerFactory */
-  public SimplePatternTokenizerFactory(Map<String,String> args) {
-    super(args);
-    maxDeterminizedStates = getInt(args, "maxDeterminizedStates", Operations.DEFAULT_MAX_DETERMINIZED_STATES);
-    dfa = Operations.determinize(new RegExp(require(args, PATTERN)).toAutomaton(), maxDeterminizedStates);
-    if (args.isEmpty() == false) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public SimplePatternTokenizer create(final AttributeFactory factory) {
-    return new SimplePatternTokenizer(factory, dfa);
-  }
+	public static final String PATTERN = "pattern";
+	private final Automaton dfa;
+	private final int maxDeterminizedStates;
+
+	/**
+	 * Creates a new SimplePatternTokenizerFactory
+	 */
+	public SimplePatternTokenizerFactory(Map<String, String> args) {
+		super(args);
+		maxDeterminizedStates = getInt(args, "maxDeterminizedStates", Operations.DEFAULT_MAX_DETERMINIZED_STATES);
+		dfa = Operations.determinize(new RegExp(require(args, PATTERN)).toAutomaton(), maxDeterminizedStates);
+		if (args.isEmpty() == false) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public SimplePatternTokenizer create(final AttributeFactory factory) {
+		return new SimplePatternTokenizer(factory, dfa);
+	}
 }

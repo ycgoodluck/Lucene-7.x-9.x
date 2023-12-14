@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.lucene.search.highlight;
+
 import org.apache.lucene.analysis.TokenStream;
 
 /**
@@ -22,13 +23,13 @@ import org.apache.lucene.analysis.TokenStream;
  * This is useful for highlighting the entire content of a document or field.
  */
 public class NullFragmenter implements Fragmenter {
-  @Override
-  public void start(String s, TokenStream tokenStream) {
-  }
+	@Override
+	public void start(String s, TokenStream tokenStream) {
+	}
 
-  @Override
-  public boolean isNewFragment() {
-    return false;
-  }
+	@Override
+	public boolean isNewFragment() {
+		return false;
+	}
 
 }

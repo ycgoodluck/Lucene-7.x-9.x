@@ -35,95 +35,95 @@ import org.apache.lucene.util.mutable.MutableValueInt;
  */
 public class IntFieldSource extends FieldCacheSource {
 
-  public IntFieldSource(String field) {
-    super(field);
-  }
+	public IntFieldSource(String field) {
+		super(field);
+	}
 
-  @Override
-  public String description() {
-    return "int(" + field + ')';
-  }
+	@Override
+	public String description() {
+		return "int(" + field + ')';
+	}
 
-  @Override
-  public SortField getSortField(boolean reverse) {
-    return new SortField(field, Type.INT, reverse);
-  }
-  
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    
-    final NumericDocValues arr = getNumericDocValues(context, readerContext);
+	@Override
+	public SortField getSortField(boolean reverse) {
+		return new SortField(field, Type.INT, reverse);
+	}
 
-    return new IntDocValues(this) {
-      int lastDocID;
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
 
-      private int getValueForDoc(int doc) throws IOException {
-        if (doc < lastDocID) {
-          throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
-        }
-        lastDocID = doc;
-        int curDocID = arr.docID();
-        if (doc > curDocID) {
-          curDocID = arr.advance(doc);
-        }
-        if (doc == curDocID) {
-          return (int) arr.longValue();
-        } else {
-          return 0;
-        }
-      }
+		final NumericDocValues arr = getNumericDocValues(context, readerContext);
 
-      @Override
-      public int intVal(int doc) throws IOException {
-        return getValueForDoc(doc);
-      }
+		return new IntDocValues(this) {
+			int lastDocID;
 
-      @Override
-      public String strVal(int doc) throws IOException {
-        return Integer.toString(intVal(doc));
-      }
+			private int getValueForDoc(int doc) throws IOException {
+				if (doc < lastDocID) {
+					throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
+				}
+				lastDocID = doc;
+				int curDocID = arr.docID();
+				if (doc > curDocID) {
+					curDocID = arr.advance(doc);
+				}
+				if (doc == curDocID) {
+					return (int) arr.longValue();
+				} else {
+					return 0;
+				}
+			}
 
-      @Override
-      public boolean exists(int doc) throws IOException {
-        getValueForDoc(doc);
-        return arr.docID() == doc;
-      }
+			@Override
+			public int intVal(int doc) throws IOException {
+				return getValueForDoc(doc);
+			}
 
-      @Override
-      public ValueFiller getValueFiller() {
-        return new ValueFiller() {
-          private final MutableValueInt mval = new MutableValueInt();
+			@Override
+			public String strVal(int doc) throws IOException {
+				return Integer.toString(intVal(doc));
+			}
 
-          @Override
-          public MutableValue getValue() {
-            return mval;
-          }
+			@Override
+			public boolean exists(int doc) throws IOException {
+				getValueForDoc(doc);
+				return arr.docID() == doc;
+			}
 
-          @Override
-          public void fillValue(int doc) throws IOException {
-            mval.value = getValueForDoc(doc);
-            mval.exists = arr.docID() == doc;
-          }
-        };
-      }
-    };
-  }
+			@Override
+			public ValueFiller getValueFiller() {
+				return new ValueFiller() {
+					private final MutableValueInt mval = new MutableValueInt();
 
-  protected NumericDocValues getNumericDocValues(Map context, LeafReaderContext readerContext) throws IOException {
-    return DocValues.getNumeric(readerContext.reader(), field);
-  }
+					@Override
+					public MutableValue getValue() {
+						return mval;
+					}
 
-  @Override
-  public boolean equals(Object o) {
-    if (o.getClass() !=  IntFieldSource.class) return false;
-    IntFieldSource other = (IntFieldSource)o;
-    return super.equals(other);
-  }
+					@Override
+					public void fillValue(int doc) throws IOException {
+						mval.value = getValueForDoc(doc);
+						mval.exists = arr.docID() == doc;
+					}
+				};
+			}
+		};
+	}
 
-  @Override
-  public int hashCode() {
-    int h = Integer.class.hashCode();
-    h += super.hashCode();
-    return h;
-  }
+	protected NumericDocValues getNumericDocValues(Map context, LeafReaderContext readerContext) throws IOException {
+		return DocValues.getNumeric(readerContext.reader(), field);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o.getClass() != IntFieldSource.class) return false;
+		IntFieldSource other = (IntFieldSource) o;
+		return super.equals(other);
+	}
+
+	@Override
+	public int hashCode() {
+		int h = Integer.class.hashCode();
+		h += super.hashCode();
+		return h;
+	}
 }

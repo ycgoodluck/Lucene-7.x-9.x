@@ -36,124 +36,124 @@ import org.apache.lucene.util.TestUtil;
  * Just like the default stored fields format but with additional asserts.
  */
 public class AssertingStoredFieldsFormat extends StoredFieldsFormat {
-  private final StoredFieldsFormat in = TestUtil.getDefaultCodec().storedFieldsFormat();
+	private final StoredFieldsFormat in = TestUtil.getDefaultCodec().storedFieldsFormat();
 
-  @Override
-  public StoredFieldsReader fieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context) throws IOException {
-    return new AssertingStoredFieldsReader(in.fieldsReader(directory, si, fn, context), si.maxDoc());
-  }
+	@Override
+	public StoredFieldsReader fieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context) throws IOException {
+		return new AssertingStoredFieldsReader(in.fieldsReader(directory, si, fn, context), si.maxDoc());
+	}
 
-  @Override
-  public StoredFieldsWriter fieldsWriter(Directory directory, SegmentInfo si, IOContext context) throws IOException {
-    return new AssertingStoredFieldsWriter(in.fieldsWriter(directory, si, context));
-  }
-  
-  static class AssertingStoredFieldsReader extends StoredFieldsReader {
-    private final StoredFieldsReader in;
-    private final int maxDoc;
-    
-    AssertingStoredFieldsReader(StoredFieldsReader in, int maxDoc) {
-      this.in = in;
-      this.maxDoc = maxDoc;
-      // do a few simple checks on init
-      assert toString() != null;
-      assert ramBytesUsed() >= 0;
-      assert getChildResources() != null;
-    }
-    
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
+	@Override
+	public StoredFieldsWriter fieldsWriter(Directory directory, SegmentInfo si, IOContext context) throws IOException {
+		return new AssertingStoredFieldsWriter(in.fieldsWriter(directory, si, context));
+	}
 
-    @Override
-    public void visitDocument(int n, StoredFieldVisitor visitor) throws IOException {
-      assert n >= 0 && n < maxDoc;
-      in.visitDocument(n, visitor);
-    }
+	static class AssertingStoredFieldsReader extends StoredFieldsReader {
+		private final StoredFieldsReader in;
+		private final int maxDoc;
 
-    @Override
-    public StoredFieldsReader clone() {
-      return new AssertingStoredFieldsReader(in.clone(), maxDoc);
-    }
+		AssertingStoredFieldsReader(StoredFieldsReader in, int maxDoc) {
+			this.in = in;
+			this.maxDoc = maxDoc;
+			// do a few simple checks on init
+			assert toString() != null;
+			assert ramBytesUsed() >= 0;
+			assert getChildResources() != null;
+		}
 
-    @Override
-    public long ramBytesUsed() {
-      long v = in.ramBytesUsed();
-      assert v >= 0;
-      return v;
-    }
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
 
-    @Override
-    public Collection<Accountable> getChildResources() {
-      Collection<Accountable> res = in.getChildResources();
-      TestUtil.checkReadOnly(res);
-      return res;
-    }
+		@Override
+		public void visitDocument(int n, StoredFieldVisitor visitor) throws IOException {
+			assert n >= 0 && n < maxDoc;
+			in.visitDocument(n, visitor);
+		}
 
-    @Override
-    public void checkIntegrity() throws IOException {
-      in.checkIntegrity();
-    }
+		@Override
+		public StoredFieldsReader clone() {
+			return new AssertingStoredFieldsReader(in.clone(), maxDoc);
+		}
 
-    @Override
-    public StoredFieldsReader getMergeInstance() throws IOException {
-      return new AssertingStoredFieldsReader(in.getMergeInstance(), maxDoc);
-    }
+		@Override
+		public long ramBytesUsed() {
+			long v = in.ramBytesUsed();
+			assert v >= 0;
+			return v;
+		}
 
-    @Override
-    public String toString() {
-      return getClass().getSimpleName() + "(" + in.toString() + ")";
-    }
-  }
+		@Override
+		public Collection<Accountable> getChildResources() {
+			Collection<Accountable> res = in.getChildResources();
+			TestUtil.checkReadOnly(res);
+			return res;
+		}
 
-  enum Status {
-    UNDEFINED, STARTED, FINISHED;
-  }
+		@Override
+		public void checkIntegrity() throws IOException {
+			in.checkIntegrity();
+		}
 
-  static class AssertingStoredFieldsWriter extends StoredFieldsWriter {
-    private final StoredFieldsWriter in;
-    private int numWritten;
-    private Status docStatus;
-    
-    AssertingStoredFieldsWriter(StoredFieldsWriter in) {
-      this.in = in;
-      this.docStatus = Status.UNDEFINED;
-    }
+		@Override
+		public StoredFieldsReader getMergeInstance() throws IOException {
+			return new AssertingStoredFieldsReader(in.getMergeInstance(), maxDoc);
+		}
 
-    @Override
-    public void startDocument() throws IOException {
-      assert docStatus != Status.STARTED;
-      in.startDocument();
-      numWritten++;
-      docStatus = Status.STARTED;
-    }
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + "(" + in.toString() + ")";
+		}
+	}
 
-    @Override
-    public void finishDocument() throws IOException {
-      assert docStatus == Status.STARTED;
-      in.finishDocument();
-      docStatus = Status.FINISHED;
-    }
+	enum Status {
+		UNDEFINED, STARTED, FINISHED;
+	}
 
-    @Override
-    public void writeField(FieldInfo info, IndexableField field) throws IOException {
-      assert docStatus == Status.STARTED;
-      in.writeField(info, field);
-    }
+	static class AssertingStoredFieldsWriter extends StoredFieldsWriter {
+		private final StoredFieldsWriter in;
+		private int numWritten;
+		private Status docStatus;
 
-    @Override
-    public void finish(FieldInfos fis, int numDocs) throws IOException {
-      assert docStatus == (numDocs > 0 ? Status.FINISHED : Status.UNDEFINED);
-      in.finish(fis, numDocs);
-      assert numDocs == numWritten;
-    }
+		AssertingStoredFieldsWriter(StoredFieldsWriter in) {
+			this.in = in;
+			this.docStatus = Status.UNDEFINED;
+		}
 
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
-  }
+		@Override
+		public void startDocument() throws IOException {
+			assert docStatus != Status.STARTED;
+			in.startDocument();
+			numWritten++;
+			docStatus = Status.STARTED;
+		}
+
+		@Override
+		public void finishDocument() throws IOException {
+			assert docStatus == Status.STARTED;
+			in.finishDocument();
+			docStatus = Status.FINISHED;
+		}
+
+		@Override
+		public void writeField(FieldInfo info, IndexableField field) throws IOException {
+			assert docStatus == Status.STARTED;
+			in.writeField(info, field);
+		}
+
+		@Override
+		public void finish(FieldInfos fis, int numDocs) throws IOException {
+			assert docStatus == (numDocs > 0 ? Status.FINISHED : Status.UNDEFINED);
+			in.finish(fis, numDocs);
+			assert numDocs == numWritten;
+		}
+
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
+	}
 }

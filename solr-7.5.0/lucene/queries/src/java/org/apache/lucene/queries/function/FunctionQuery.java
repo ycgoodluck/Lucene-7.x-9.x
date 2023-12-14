@@ -35,128 +35,134 @@ import org.apache.lucene.search.Weight;
  * Returns a score for each document based on a ValueSource,
  * often some function of the value of a field.
  *
- * @see ValueSourceScorer
  * @lucene.experimental
+ * @see ValueSourceScorer
  */
 public class FunctionQuery extends Query {
-  final ValueSource func;
+	final ValueSource func;
 
-  /**
-   * @param func defines the function to be used for scoring
-   */
-  public FunctionQuery(ValueSource func) {
-    this.func=func;
-  }
+	/**
+	 * @param func defines the function to be used for scoring
+	 */
+	public FunctionQuery(ValueSource func) {
+		this.func = func;
+	}
 
-  /** @return The associated ValueSource */
-  public ValueSource getValueSource() {
-    return func;
-  }
+	/**
+	 * @return The associated ValueSource
+	 */
+	public ValueSource getValueSource() {
+		return func;
+	}
 
-  protected class FunctionWeight extends Weight {
-    protected final IndexSearcher searcher;
-    protected final float boost;
-    protected final Map context;
+	protected class FunctionWeight extends Weight {
+		protected final IndexSearcher searcher;
+		protected final float boost;
+		protected final Map context;
 
-    public FunctionWeight(IndexSearcher searcher, float boost) throws IOException {
-      super(FunctionQuery.this);
-      this.searcher = searcher;
-      this.context = ValueSource.newContext(searcher);
-      func.createWeight(context, searcher);
-      this.boost = boost;
-    }
+		public FunctionWeight(IndexSearcher searcher, float boost) throws IOException {
+			super(FunctionQuery.this);
+			this.searcher = searcher;
+			this.context = ValueSource.newContext(searcher);
+			func.createWeight(context, searcher);
+			this.boost = boost;
+		}
 
-    @Override
-    public void extractTerms(Set<Term> terms) {}
+		@Override
+		public void extractTerms(Set<Term> terms) {
+		}
 
-    @Override
-    public Scorer scorer(LeafReaderContext context) throws IOException {
-      return new AllScorer(context, this, boost);
-    }
+		@Override
+		public Scorer scorer(LeafReaderContext context) throws IOException {
+			return new AllScorer(context, this, boost);
+		}
 
-    @Override
-    public boolean isCacheable(LeafReaderContext ctx) {
-      return false;
-    }
+		@Override
+		public boolean isCacheable(LeafReaderContext ctx) {
+			return false;
+		}
 
-    @Override
-    public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-      return ((AllScorer)scorer(context)).explain(doc);
-    }
-  }
+		@Override
+		public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+			return ((AllScorer) scorer(context)).explain(doc);
+		}
+	}
 
-  protected class AllScorer extends Scorer {
-    final IndexReader reader;
-    final FunctionWeight weight;
-    final int maxDoc;
-    final float boost;
-    final DocIdSetIterator iterator;
-    final FunctionValues vals;
+	protected class AllScorer extends Scorer {
+		final IndexReader reader;
+		final FunctionWeight weight;
+		final int maxDoc;
+		final float boost;
+		final DocIdSetIterator iterator;
+		final FunctionValues vals;
 
-    public AllScorer(LeafReaderContext context, FunctionWeight w, float boost) throws IOException {
-      super(w);
-      this.weight = w;
-      this.boost = boost;
-      this.reader = context.reader();
-      this.maxDoc = reader.maxDoc();
-      iterator = DocIdSetIterator.all(context.reader().maxDoc());
-      vals = func.getValues(weight.context, context);
-    }
+		public AllScorer(LeafReaderContext context, FunctionWeight w, float boost) throws IOException {
+			super(w);
+			this.weight = w;
+			this.boost = boost;
+			this.reader = context.reader();
+			this.maxDoc = reader.maxDoc();
+			iterator = DocIdSetIterator.all(context.reader().maxDoc());
+			vals = func.getValues(weight.context, context);
+		}
 
-    @Override
-    public DocIdSetIterator iterator() {
-      return iterator;
-    }
+		@Override
+		public DocIdSetIterator iterator() {
+			return iterator;
+		}
 
-    @Override
-    public int docID() {
-      return iterator.docID();
-    }
+		@Override
+		public int docID() {
+			return iterator.docID();
+		}
 
-    @Override
-    public float score() throws IOException {
-      float score = boost * vals.floatVal(docID());
+		@Override
+		public float score() throws IOException {
+			float score = boost * vals.floatVal(docID());
 
-      // Current Lucene priority queues can't handle NaN and -Infinity, so
-      // map to -Float.MAX_VALUE. This conditional handles both -infinity
-      // and NaN since comparisons with NaN are always false.
-      return score>Float.NEGATIVE_INFINITY ? score : -Float.MAX_VALUE;
-    }
+			// Current Lucene priority queues can't handle NaN and -Infinity, so
+			// map to -Float.MAX_VALUE. This conditional handles both -infinity
+			// and NaN since comparisons with NaN are always false.
+			return score > Float.NEGATIVE_INFINITY ? score : -Float.MAX_VALUE;
+		}
 
-    public Explanation explain(int doc) throws IOException {
-      float sc = boost * vals.floatVal(doc);
+		public Explanation explain(int doc) throws IOException {
+			float sc = boost * vals.floatVal(doc);
 
-      return Explanation.match(sc, "FunctionQuery(" + func + "), product of:",
-          vals.explain(doc),
-          Explanation.match(weight.boost, "boost"));
-    }
+			return Explanation.match(sc, "FunctionQuery(" + func + "), product of:",
+				vals.explain(doc),
+				Explanation.match(weight.boost, "boost"));
+		}
 
-  }
-
-
-  @Override
-  public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-    return new FunctionQuery.FunctionWeight(searcher, boost);
-  }
+	}
 
 
-  /** Prints a user-readable version of this query. */
-  @Override
-  public String toString(String field)
-  {
-    return func.toString();
-  }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+		return new FunctionQuery.FunctionWeight(searcher, boost);
+	}
 
 
-  /** Returns true if <code>o</code> is equal to this. */
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           func.equals(((FunctionQuery) other).func);
-  }
+	/**
+	 * Prints a user-readable version of this query.
+	 */
+	@Override
+	public String toString(String field) {
+		return func.toString();
+	}
 
-  @Override
-  public int hashCode() {
-    return classHash() ^ func.hashCode();
-  }
+
+	/**
+	 * Returns true if <code>o</code> is equal to this.
+	 */
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			func.equals(((FunctionQuery) other).func);
+	}
+
+	@Override
+	public int hashCode() {
+		return classHash() ^ func.hashCode();
+	}
 }

@@ -22,45 +22,47 @@ import org.apache.lucene.geo.XYEncodingUtils;
 import org.apache.lucene.geo.XYPolygon;
 import org.apache.lucene.geo.XYPolygon2D;
 
-/** tests XYShape encoding */
+/**
+ * tests XYShape encoding
+ */
 public class TestXYShapeEncoding extends BaseShapeEncodingTestCase {
-  @Override
-  protected int encodeX(double x) {
-    return XYEncodingUtils.encode(x);
-  }
+	@Override
+	protected int encodeX(double x) {
+		return XYEncodingUtils.encode(x);
+	}
 
-  @Override
-  protected int encodeY(double y) {
-    return XYEncodingUtils.encode(y);
-  }
+	@Override
+	protected int encodeY(double y) {
+		return XYEncodingUtils.encode(y);
+	}
 
-  @Override
-  protected double decodeX(int xEncoded) {
-    return XYEncodingUtils.decode(xEncoded);
-  }
+	@Override
+	protected double decodeX(int xEncoded) {
+		return XYEncodingUtils.decode(xEncoded);
+	}
 
-  @Override
-  protected double decodeY(int yEncoded) {
-    return XYEncodingUtils.decode(yEncoded);
-  }
+	@Override
+	protected double decodeY(int yEncoded) {
+		return XYEncodingUtils.decode(yEncoded);
+	}
 
-  @Override
-  protected double nextX() {
-    return ShapeTestUtil.nextDouble();
-  }
+	@Override
+	protected double nextX() {
+		return ShapeTestUtil.nextDouble();
+	}
 
-  @Override
-  protected double nextY() {
-    return ShapeTestUtil.nextDouble();
-  }
+	@Override
+	protected double nextY() {
+		return ShapeTestUtil.nextDouble();
+	}
 
-  @Override
-  protected XYPolygon nextPolygon() {
-    return ShapeTestUtil.nextPolygon();
-  }
+	@Override
+	protected XYPolygon nextPolygon() {
+		return ShapeTestUtil.nextPolygon();
+	}
 
-  @Override
-  protected Component2D createPolygon2D(Object polygon) {
-    return XYPolygon2D.create((XYPolygon)polygon);
-  }
+	@Override
+	protected Component2D createPolygon2D(Object polygon) {
+		return XYPolygon2D.create((XYPolygon) polygon);
+	}
 }

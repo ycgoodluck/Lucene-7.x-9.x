@@ -90,67 +90,67 @@ import org.apache.lucene.util.fst.FST;
  */
 public abstract class CompletionPostingsFormat extends PostingsFormat {
 
-  static final int COMPLETION_CODEC_VERSION = 1;
-  static final int COMPLETION_VERSION_CURRENT = COMPLETION_CODEC_VERSION;
-  static final String INDEX_EXTENSION = "cmp";
-  static final String DICT_EXTENSION = "lkp";
+	static final int COMPLETION_CODEC_VERSION = 1;
+	static final int COMPLETION_VERSION_CURRENT = COMPLETION_CODEC_VERSION;
+	static final String INDEX_EXTENSION = "cmp";
+	static final String DICT_EXTENSION = "lkp";
 
-  /**
-   * An enum that allows to control if suggester FSTs are loaded into memory or read off-heap
-   */
-  public enum FSTLoadMode {
-    /**
-     * Always read FSTs from disk.
-     * NOTE: If this option is used the FST will be read off-heap even if buffered directory implementations
-     * are used.
-     */
-    OFF_HEAP,
-    /**
-     * Never read FSTs from disk ie. all suggest fields FSTs are loaded into memory
-     */
-    ON_HEAP,
-    /**
-     * Automatically make the decision if FSTs are read from disk depending if the segment read from an MMAPDirectory
-     */
-    AUTO
-  }
+	/**
+	 * An enum that allows to control if suggester FSTs are loaded into memory or read off-heap
+	 */
+	public enum FSTLoadMode {
+		/**
+		 * Always read FSTs from disk.
+		 * NOTE: If this option is used the FST will be read off-heap even if buffered directory implementations
+		 * are used.
+		 */
+		OFF_HEAP,
+		/**
+		 * Never read FSTs from disk ie. all suggest fields FSTs are loaded into memory
+		 */
+		ON_HEAP,
+		/**
+		 * Automatically make the decision if FSTs are read from disk depending if the segment read from an MMAPDirectory
+		 */
+		AUTO
+	}
 
-  private final FSTLoadMode fstLoadMode;
+	private final FSTLoadMode fstLoadMode;
 
-  /**
-   * Used only by core Lucene at read-time via Service Provider instantiation
-   */
-  public CompletionPostingsFormat(String name) {
-    this(name, FSTLoadMode.ON_HEAP);
-  }
+	/**
+	 * Used only by core Lucene at read-time via Service Provider instantiation
+	 */
+	public CompletionPostingsFormat(String name) {
+		this(name, FSTLoadMode.ON_HEAP);
+	}
 
-  /**
-   * Creates a {@link CompletionPostingsFormat} that will
-   * use the provided <code>fstLoadMode</code> to determine
-   * if the completion FST should be loaded on or off heap.
-   */
-  public CompletionPostingsFormat(String name, FSTLoadMode fstLoadMode) {
-    super(name);
-    this.fstLoadMode = fstLoadMode;
-  }
+	/**
+	 * Creates a {@link CompletionPostingsFormat} that will
+	 * use the provided <code>fstLoadMode</code> to determine
+	 * if the completion FST should be loaded on or off heap.
+	 */
+	public CompletionPostingsFormat(String name, FSTLoadMode fstLoadMode) {
+		super(name);
+		this.fstLoadMode = fstLoadMode;
+	}
 
-  /**
-   * Concrete implementation should specify the delegating postings format
-   */
-  protected abstract PostingsFormat delegatePostingsFormat();
+	/**
+	 * Concrete implementation should specify the delegating postings format
+	 */
+	protected abstract PostingsFormat delegatePostingsFormat();
 
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    PostingsFormat delegatePostingsFormat = delegatePostingsFormat();
-    if (delegatePostingsFormat == null) {
-      throw new UnsupportedOperationException("Error - " + getClass().getName()
-          + " has been constructed without a choice of PostingsFormat");
-    }
-    return new CompletionFieldsConsumer(getName(), delegatePostingsFormat, state);
-  }
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		PostingsFormat delegatePostingsFormat = delegatePostingsFormat();
+		if (delegatePostingsFormat == null) {
+			throw new UnsupportedOperationException("Error - " + getClass().getName()
+				+ " has been constructed without a choice of PostingsFormat");
+		}
+		return new CompletionFieldsConsumer(getName(), delegatePostingsFormat, state);
+	}
 
-  @Override
-  public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
-    return new CompletionFieldsProducer(getName(), state, fstLoadMode);
-  }
+	@Override
+	public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
+		return new CompletionFieldsProducer(getName(), state, fstLoadMode);
+	}
 }

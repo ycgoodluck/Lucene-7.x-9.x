@@ -33,32 +33,32 @@ import org.apache.lucene.search.TermQuery;
  */
 public class PhraseQueryNodeBuilder implements StandardQueryBuilder {
 
-  public PhraseQueryNodeBuilder() {
-    // empty constructor
-  }
+	public PhraseQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public Query build(QueryNode queryNode) throws QueryNodeException {
-    TokenizedPhraseQueryNode phraseNode = (TokenizedPhraseQueryNode) queryNode;
+	@Override
+	public Query build(QueryNode queryNode) throws QueryNodeException {
+		TokenizedPhraseQueryNode phraseNode = (TokenizedPhraseQueryNode) queryNode;
 
-    PhraseQuery.Builder builder = new PhraseQuery.Builder();
+		PhraseQuery.Builder builder = new PhraseQuery.Builder();
 
-    List<QueryNode> children = phraseNode.getChildren();
+		List<QueryNode> children = phraseNode.getChildren();
 
-    if (children != null) {
+		if (children != null) {
 
-      for (QueryNode child : children) {
-        TermQuery termQuery = (TermQuery) child
-            .getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
-        FieldQueryNode termNode = (FieldQueryNode) child;
+			for (QueryNode child : children) {
+				TermQuery termQuery = (TermQuery) child
+					.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+				FieldQueryNode termNode = (FieldQueryNode) child;
 
-        builder.add(termQuery.getTerm(), termNode.getPositionIncrement());
-      }
+				builder.add(termQuery.getTerm(), termNode.getPositionIncrement());
+			}
 
-    }
+		}
 
-    return builder.build();
+		return builder.build();
 
-  }
+	}
 
 }

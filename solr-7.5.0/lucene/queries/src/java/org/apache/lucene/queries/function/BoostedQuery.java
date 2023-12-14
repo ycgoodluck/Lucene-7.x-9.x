@@ -40,138 +40,143 @@ import org.apache.lucene.search.Weight;
  */
 @Deprecated
 public final class BoostedQuery extends Query {
-  private final Query q;
-  private final ValueSource boostVal; // optional, can be null
+	private final Query q;
+	private final ValueSource boostVal; // optional, can be null
 
-  public BoostedQuery(Query subQuery, ValueSource boostVal) {
-    this.q = subQuery;
-    this.boostVal = boostVal;
-  }
+	public BoostedQuery(Query subQuery, ValueSource boostVal) {
+		this.q = subQuery;
+		this.boostVal = boostVal;
+	}
 
-  public Query getQuery() { return q; }
-  public ValueSource getValueSource() { return boostVal; }
+	public Query getQuery() {
+		return q;
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    Query newQ = q.rewrite(reader);
-    if (newQ != q) {
-      return new BoostedQuery(newQ, boostVal);
-    }
-    return super.rewrite(reader);
-  }
+	public ValueSource getValueSource() {
+		return boostVal;
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-    return new BoostedQuery.BoostedWeight(searcher, needsScores, boost);
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		Query newQ = q.rewrite(reader);
+		if (newQ != q) {
+			return new BoostedQuery(newQ, boostVal);
+		}
+		return super.rewrite(reader);
+	}
 
-  private class BoostedWeight extends Weight {
-    Weight qWeight;
-    Map fcontext;
+	@Override
+	public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+		return new BoostedQuery.BoostedWeight(searcher, needsScores, boost);
+	}
 
-    public BoostedWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-      super(BoostedQuery.this);
-      this.qWeight = searcher.createWeight(q, needsScores, boost);
-      this.fcontext = ValueSource.newContext(searcher);
-      boostVal.createWeight(fcontext,searcher);
-    }
+	private class BoostedWeight extends Weight {
+		Weight qWeight;
+		Map fcontext;
 
-    @Override
-    public void extractTerms(Set<Term> terms) {
-      qWeight.extractTerms(terms);
-    }
+		public BoostedWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+			super(BoostedQuery.this);
+			this.qWeight = searcher.createWeight(q, needsScores, boost);
+			this.fcontext = ValueSource.newContext(searcher);
+			boostVal.createWeight(fcontext, searcher);
+		}
 
-    @Override
-    public Scorer scorer(LeafReaderContext context) throws IOException {
-      Scorer subQueryScorer = qWeight.scorer(context);
-      if (subQueryScorer == null) {
-        return null;
-      }
-      return new BoostedQuery.CustomScorer(context, this, subQueryScorer, boostVal);
-    }
+		@Override
+		public void extractTerms(Set<Term> terms) {
+			qWeight.extractTerms(terms);
+		}
 
-    @Override
-    public boolean isCacheable(LeafReaderContext ctx) {
-      return false;
-    }
+		@Override
+		public Scorer scorer(LeafReaderContext context) throws IOException {
+			Scorer subQueryScorer = qWeight.scorer(context);
+			if (subQueryScorer == null) {
+				return null;
+			}
+			return new BoostedQuery.CustomScorer(context, this, subQueryScorer, boostVal);
+		}
 
-    @Override
-    public Explanation explain(LeafReaderContext readerContext, int doc) throws IOException {
-      Explanation subQueryExpl = qWeight.explain(readerContext,doc);
-      if (!subQueryExpl.isMatch()) {
-        return subQueryExpl;
-      }
-      FunctionValues vals = boostVal.getValues(fcontext, readerContext);
-      float sc = subQueryExpl.getValue() * vals.floatVal(doc);
-      return Explanation.match(sc, BoostedQuery.this.toString() + ", product of:", subQueryExpl, vals.explain(doc));
-    }
-  }
+		@Override
+		public boolean isCacheable(LeafReaderContext ctx) {
+			return false;
+		}
 
-
-  private class CustomScorer extends FilterScorer {
-    private final BoostedQuery.BoostedWeight weight;
-    private final FunctionValues vals;
-    private final LeafReaderContext readerContext;
-
-    private CustomScorer(LeafReaderContext readerContext, BoostedQuery.BoostedWeight w,
-        Scorer scorer, ValueSource vs) throws IOException {
-      super(scorer);
-      this.weight = w;
-      this.readerContext = readerContext;
-      this.vals = vs.getValues(weight.fcontext, readerContext);
-    }
-
-    @Override   
-    public float score() throws IOException {
-      float score = in.score() * vals.floatVal(in.docID());
-
-      // Current Lucene priority queues can't handle NaN and -Infinity, so
-      // map to -Float.MAX_VALUE. This conditional handles both -infinity
-      // and NaN since comparisons with NaN are always false.
-      return score>Float.NEGATIVE_INFINITY ? score : -Float.MAX_VALUE;
-    }
-
-    @Override
-    public Collection<ChildScorer> getChildren() {
-      return Collections.singleton(new ChildScorer(in, "CUSTOM"));
-    }
-
-    public Explanation explain(int doc) throws IOException {
-      Explanation subQueryExpl = weight.qWeight.explain(readerContext ,doc);
-      if (!subQueryExpl.isMatch()) {
-        return subQueryExpl;
-      }
-      float sc = subQueryExpl.getValue() * vals.floatVal(doc);
-      return Explanation.match(sc, BoostedQuery.this.toString() + ", product of:", subQueryExpl, vals.explain(doc));
-    }
-
-  }
+		@Override
+		public Explanation explain(LeafReaderContext readerContext, int doc) throws IOException {
+			Explanation subQueryExpl = qWeight.explain(readerContext, doc);
+			if (!subQueryExpl.isMatch()) {
+				return subQueryExpl;
+			}
+			FunctionValues vals = boostVal.getValues(fcontext, readerContext);
+			float sc = subQueryExpl.getValue() * vals.floatVal(doc);
+			return Explanation.match(sc, BoostedQuery.this.toString() + ", product of:", subQueryExpl, vals.explain(doc));
+		}
+	}
 
 
-  @Override
-  public String toString(String field) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("boost(").append(q.toString(field)).append(',').append(boostVal).append(')');
-    return sb.toString();
-  }
+	private class CustomScorer extends FilterScorer {
+		private final BoostedQuery.BoostedWeight weight;
+		private final FunctionValues vals;
+		private final LeafReaderContext readerContext;
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
+		private CustomScorer(LeafReaderContext readerContext, BoostedQuery.BoostedWeight w,
+												 Scorer scorer, ValueSource vs) throws IOException {
+			super(scorer);
+			this.weight = w;
+			this.readerContext = readerContext;
+			this.vals = vs.getValues(weight.fcontext, readerContext);
+		}
 
-  private boolean equalsTo(BoostedQuery other) {
-    return q.equals(other.q) &&
-           boostVal.equals(other.boostVal);
-  }
+		@Override
+		public float score() throws IOException {
+			float score = in.score() * vals.floatVal(in.docID());
 
-  @Override
-  public int hashCode() {
-    int h = classHash();
-    h = 31 * h + q.hashCode();
-    h = 31 * h + boostVal.hashCode();
-    return h;
-  }
+			// Current Lucene priority queues can't handle NaN and -Infinity, so
+			// map to -Float.MAX_VALUE. This conditional handles both -infinity
+			// and NaN since comparisons with NaN are always false.
+			return score > Float.NEGATIVE_INFINITY ? score : -Float.MAX_VALUE;
+		}
+
+		@Override
+		public Collection<ChildScorer> getChildren() {
+			return Collections.singleton(new ChildScorer(in, "CUSTOM"));
+		}
+
+		public Explanation explain(int doc) throws IOException {
+			Explanation subQueryExpl = weight.qWeight.explain(readerContext, doc);
+			if (!subQueryExpl.isMatch()) {
+				return subQueryExpl;
+			}
+			float sc = subQueryExpl.getValue() * vals.floatVal(doc);
+			return Explanation.match(sc, BoostedQuery.this.toString() + ", product of:", subQueryExpl, vals.explain(doc));
+		}
+
+	}
+
+
+	@Override
+	public String toString(String field) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("boost(").append(q.toString(field)).append(',').append(boostVal).append(')');
+		return sb.toString();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
+
+	private boolean equalsTo(BoostedQuery other) {
+		return q.equals(other.q) &&
+			boostVal.equals(other.boostVal);
+	}
+
+	@Override
+	public int hashCode() {
+		int h = classHash();
+		h = 31 * h + q.hashCode();
+		h = 31 * h + boostVal.hashCode();
+		return h;
+	}
 
 }

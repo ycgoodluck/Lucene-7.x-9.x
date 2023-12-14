@@ -17,12 +17,14 @@
 
 package org.apache.lucene.analysis;
 
-/** adds synonym of "dog" for "dogs", and synonym of "cavy" for "guinea pig". */
+/**
+ * adds synonym of "dog" for "dogs", and synonym of "cavy" for "guinea pig".
+ */
 public class MockSynonymAnalyzer extends Analyzer {
-  @Override
-  protected TokenStreamComponents createComponents(String fieldName) {
-    MockTokenizer tokenizer = new MockTokenizer();
-    return new TokenStreamComponents(tokenizer, new MockSynonymFilter(tokenizer));
-  }
+	@Override
+	protected TokenStreamComponents createComponents(String fieldName) {
+		MockTokenizer tokenizer = new MockTokenizer();
+		return new TokenStreamComponents(tokenizer, new MockSynonymFilter(tokenizer));
+	}
 }
 

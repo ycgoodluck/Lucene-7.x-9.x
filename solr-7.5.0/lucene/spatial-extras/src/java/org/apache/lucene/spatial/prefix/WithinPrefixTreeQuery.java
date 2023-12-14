@@ -48,185 +48,186 @@ import org.apache.lucene.util.FixedBitSet;
  * @lucene.experimental
  */
 public class WithinPrefixTreeQuery extends AbstractVisitingPrefixTreeQuery {
-  //TODO LUCENE-4869: implement faster algorithm based on filtering out false-positives of a
-  //  minimal query buffer by looking in a DocValues cache holding a representative
-  //  point of each disjoint component of a document's shape(s).
+	//TODO LUCENE-4869: implement faster algorithm based on filtering out false-positives of a
+	//  minimal query buffer by looking in a DocValues cache holding a representative
+	//  point of each disjoint component of a document's shape(s).
 
-  //TODO Could the recursion in allCellsIntersectQuery() be eliminated when non-fuzzy or other
-  //  circumstances?
+	//TODO Could the recursion in allCellsIntersectQuery() be eliminated when non-fuzzy or other
+	//  circumstances?
 
-  private final Shape bufferedQueryShape;//if null then the whole world
+	private final Shape bufferedQueryShape;//if null then the whole world
 
-  /**
-   * See {@link AbstractVisitingPrefixTreeQuery#AbstractVisitingPrefixTreeQuery(org.locationtech.spatial4j.shape.Shape, String, org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree, int, int)}.
-   * {@code queryBuffer} is the (minimum) distance beyond the query shape edge
-   * where non-matching documents are looked for so they can be excluded. If
-   * -1 is used then the whole world is examined (a good default for correctness).
-   */
-  public WithinPrefixTreeQuery(Shape queryShape, String fieldName, SpatialPrefixTree grid,
-                               int detailLevel, int prefixGridScanLevel,
-                               double queryBuffer) {
-    super(queryShape, fieldName, grid, detailLevel, prefixGridScanLevel);
-    this.bufferedQueryShape = queryBuffer == -1 ? null : bufferShape(queryShape, queryBuffer);
-  }
+	/**
+	 * See {@link AbstractVisitingPrefixTreeQuery#AbstractVisitingPrefixTreeQuery(org.locationtech.spatial4j.shape.Shape, String, org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree, int, int)}.
+	 * {@code queryBuffer} is the (minimum) distance beyond the query shape edge
+	 * where non-matching documents are looked for so they can be excluded. If
+	 * -1 is used then the whole world is examined (a good default for correctness).
+	 */
+	public WithinPrefixTreeQuery(Shape queryShape, String fieldName, SpatialPrefixTree grid,
+															 int detailLevel, int prefixGridScanLevel,
+															 double queryBuffer) {
+		super(queryShape, fieldName, grid, detailLevel, prefixGridScanLevel);
+		this.bufferedQueryShape = queryBuffer == -1 ? null : bufferShape(queryShape, queryBuffer);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (!super.equals(o)) return false;//checks getClass == o.getClass & instanceof
+	@Override
+	public boolean equals(Object o) {
+		if (!super.equals(o)) return false;//checks getClass == o.getClass & instanceof
 
-    WithinPrefixTreeQuery that = (WithinPrefixTreeQuery) o;
+		WithinPrefixTreeQuery that = (WithinPrefixTreeQuery) o;
 
-    if (bufferedQueryShape != null ? !bufferedQueryShape.equals(that.bufferedQueryShape) : that.bufferedQueryShape != null)
-      return false;
+		if (bufferedQueryShape != null ? !bufferedQueryShape.equals(that.bufferedQueryShape) : that.bufferedQueryShape != null)
+			return false;
 
-    return true;
-  }
+		return true;
+	}
 
-  @Override
-  public int hashCode() {
-    int result = super.hashCode();
-    result = 31 * result + (bufferedQueryShape != null ? bufferedQueryShape.hashCode() : 0);
-    return result;
-  }
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + (bufferedQueryShape != null ? bufferedQueryShape.hashCode() : 0);
+		return result;
+	}
 
-  @Override
-  public String toString(String field) {
-    return getClass().getSimpleName() + "(" +
-             "fieldName=" + fieldName + "," +
-             "queryShape=" + queryShape + "," +
-             "detailLevel=" + detailLevel + "," +
-             "prefixGridScanLevel=" + prefixGridScanLevel +
-           ")";
-  }
+	@Override
+	public String toString(String field) {
+		return getClass().getSimpleName() + "(" +
+			"fieldName=" + fieldName + "," +
+			"queryShape=" + queryShape + "," +
+			"detailLevel=" + detailLevel + "," +
+			"prefixGridScanLevel=" + prefixGridScanLevel +
+			")";
+	}
 
-  /** Returns a new shape that is larger than shape by at distErr.
-   */
-  //TODO move this generic code elsewhere?  Spatial4j?
-  protected Shape bufferShape(Shape shape, double distErr) {
-    if (distErr <= 0)
-      throw new IllegalArgumentException("distErr must be > 0");
-    SpatialContext ctx = grid.getSpatialContext();
-    if (shape instanceof Point) {
-      return ctx.makeCircle((Point)shape, distErr);
-    } else if (shape instanceof Circle) {
-      Circle circle = (Circle) shape;
-      double newDist = circle.getRadius() + distErr;
-      if (ctx.isGeo() && newDist > 180)
-        newDist = 180;
-      return ctx.makeCircle(circle.getCenter(), newDist);
-    } else {
-      Rectangle bbox = shape.getBoundingBox();
-      double newMinX = bbox.getMinX() - distErr;
-      double newMaxX = bbox.getMaxX() + distErr;
-      double newMinY = bbox.getMinY() - distErr;
-      double newMaxY = bbox.getMaxY() + distErr;
-      if (ctx.isGeo()) {
-        if (newMinY < -90)
-          newMinY = -90;
-        if (newMaxY > 90)
-          newMaxY = 90;
-        if (newMinY == -90 || newMaxY == 90 || bbox.getWidth() + 2*distErr > 360) {
-          newMinX = -180;
-          newMaxX = 180;
-        } else {
-          newMinX = DistanceUtils.normLonDEG(newMinX);
-          newMaxX = DistanceUtils.normLonDEG(newMaxX);
-        }
-      } else {
-        //restrict to world bounds
-        newMinX = Math.max(newMinX, ctx.getWorldBounds().getMinX());
-        newMaxX = Math.min(newMaxX, ctx.getWorldBounds().getMaxX());
-        newMinY = Math.max(newMinY, ctx.getWorldBounds().getMinY());
-        newMaxY = Math.min(newMaxY, ctx.getWorldBounds().getMaxY());
-      }
-      return ctx.makeRectangle(newMinX, newMaxX, newMinY, newMaxY);
-    }
-  }
+	/**
+	 * Returns a new shape that is larger than shape by at distErr.
+	 */
+	//TODO move this generic code elsewhere?  Spatial4j?
+	protected Shape bufferShape(Shape shape, double distErr) {
+		if (distErr <= 0)
+			throw new IllegalArgumentException("distErr must be > 0");
+		SpatialContext ctx = grid.getSpatialContext();
+		if (shape instanceof Point) {
+			return ctx.makeCircle((Point) shape, distErr);
+		} else if (shape instanceof Circle) {
+			Circle circle = (Circle) shape;
+			double newDist = circle.getRadius() + distErr;
+			if (ctx.isGeo() && newDist > 180)
+				newDist = 180;
+			return ctx.makeCircle(circle.getCenter(), newDist);
+		} else {
+			Rectangle bbox = shape.getBoundingBox();
+			double newMinX = bbox.getMinX() - distErr;
+			double newMaxX = bbox.getMaxX() + distErr;
+			double newMinY = bbox.getMinY() - distErr;
+			double newMaxY = bbox.getMaxY() + distErr;
+			if (ctx.isGeo()) {
+				if (newMinY < -90)
+					newMinY = -90;
+				if (newMaxY > 90)
+					newMaxY = 90;
+				if (newMinY == -90 || newMaxY == 90 || bbox.getWidth() + 2 * distErr > 360) {
+					newMinX = -180;
+					newMaxX = 180;
+				} else {
+					newMinX = DistanceUtils.normLonDEG(newMinX);
+					newMaxX = DistanceUtils.normLonDEG(newMaxX);
+				}
+			} else {
+				//restrict to world bounds
+				newMinX = Math.max(newMinX, ctx.getWorldBounds().getMinX());
+				newMaxX = Math.min(newMaxX, ctx.getWorldBounds().getMaxX());
+				newMinY = Math.max(newMinY, ctx.getWorldBounds().getMinY());
+				newMaxY = Math.min(newMaxY, ctx.getWorldBounds().getMaxY());
+			}
+			return ctx.makeRectangle(newMinX, newMaxX, newMinY, newMaxY);
+		}
+	}
 
 
-  @Override
-  protected DocIdSet getDocIdSet(LeafReaderContext context) throws IOException {
-    return new VisitorTemplate(context) {
-      private FixedBitSet inside;
-      private FixedBitSet outside;
+	@Override
+	protected DocIdSet getDocIdSet(LeafReaderContext context) throws IOException {
+		return new VisitorTemplate(context) {
+			private FixedBitSet inside;
+			private FixedBitSet outside;
 
-      @Override
-      protected void start() {
-        inside = new FixedBitSet(maxDoc);
-        outside = new FixedBitSet(maxDoc);
-      }
+			@Override
+			protected void start() {
+				inside = new FixedBitSet(maxDoc);
+				outside = new FixedBitSet(maxDoc);
+			}
 
-      @Override
-      protected DocIdSet finish() {
-        inside.andNot(outside);
-        return new BitDocIdSet(inside);
-      }
+			@Override
+			protected DocIdSet finish() {
+				inside.andNot(outside);
+				return new BitDocIdSet(inside);
+			}
 
-      @Override
-      protected CellIterator findSubCellsToVisit(Cell cell) {
-        //use buffered query shape instead of orig.  Works with null too.
-        return cell.getNextLevelCells(bufferedQueryShape);
-      }
+			@Override
+			protected CellIterator findSubCellsToVisit(Cell cell) {
+				//use buffered query shape instead of orig.  Works with null too.
+				return cell.getNextLevelCells(bufferedQueryShape);
+			}
 
-      @Override
-      protected boolean visitPrefix(Cell cell) throws IOException {
-        //cell.relate is based on the bufferedQueryShape; we need to examine what
-        // the relation is against the queryShape
-        SpatialRelation visitRelation = cell.getShape().relate(queryShape);
-        if (cell.getLevel() == detailLevel) {
-          collectDocs(visitRelation.intersects() ? inside : outside);
-          return false;
-        } else if (visitRelation == SpatialRelation.WITHIN) {
-          collectDocs(inside);
-          return false;
-        } else if (visitRelation == SpatialRelation.DISJOINT) {
-          collectDocs(outside);
-          return false;
-        }
-        return true;
-      }
+			@Override
+			protected boolean visitPrefix(Cell cell) throws IOException {
+				//cell.relate is based on the bufferedQueryShape; we need to examine what
+				// the relation is against the queryShape
+				SpatialRelation visitRelation = cell.getShape().relate(queryShape);
+				if (cell.getLevel() == detailLevel) {
+					collectDocs(visitRelation.intersects() ? inside : outside);
+					return false;
+				} else if (visitRelation == SpatialRelation.WITHIN) {
+					collectDocs(inside);
+					return false;
+				} else if (visitRelation == SpatialRelation.DISJOINT) {
+					collectDocs(outside);
+					return false;
+				}
+				return true;
+			}
 
-      @Override
-      protected void visitLeaf(Cell cell) throws IOException {
-        if (allCellsIntersectQuery(cell))
-          collectDocs(inside);
-        else
-          collectDocs(outside);
-      }
+			@Override
+			protected void visitLeaf(Cell cell) throws IOException {
+				if (allCellsIntersectQuery(cell))
+					collectDocs(inside);
+				else
+					collectDocs(outside);
+			}
 
-      /** Returns true if the provided cell, and all its sub-cells down to
-       * detailLevel all intersect the queryShape.
-       */
-      private boolean allCellsIntersectQuery(Cell cell) {
-        SpatialRelation relate = cell.getShape().relate(queryShape);
-        if (cell.getLevel() == detailLevel)
-          return relate.intersects();
-        if (relate == SpatialRelation.WITHIN)
-          return true;
-        if (relate == SpatialRelation.DISJOINT)
-          return false;
-        // Note: Generating all these cells just to determine intersection is not ideal.
-        // The real solution is LUCENE-4869.
-        CellIterator subCells = cell.getNextLevelCells(null);
-        while (subCells.hasNext()) {
-          Cell subCell = subCells.next();
-          if (!allCellsIntersectQuery(subCell))//recursion
-            return false;
-        }
-        return true;
-      }
+			/** Returns true if the provided cell, and all its sub-cells down to
+			 * detailLevel all intersect the queryShape.
+			 */
+			private boolean allCellsIntersectQuery(Cell cell) {
+				SpatialRelation relate = cell.getShape().relate(queryShape);
+				if (cell.getLevel() == detailLevel)
+					return relate.intersects();
+				if (relate == SpatialRelation.WITHIN)
+					return true;
+				if (relate == SpatialRelation.DISJOINT)
+					return false;
+				// Note: Generating all these cells just to determine intersection is not ideal.
+				// The real solution is LUCENE-4869.
+				CellIterator subCells = cell.getNextLevelCells(null);
+				while (subCells.hasNext()) {
+					Cell subCell = subCells.next();
+					if (!allCellsIntersectQuery(subCell))//recursion
+						return false;
+				}
+				return true;
+			}
 
-      @Override
-      protected void visitScanned(Cell cell) throws IOException {
-        visitLeaf(cell);//collects as we want, even if not a leaf
+			@Override
+			protected void visitScanned(Cell cell) throws IOException {
+				visitLeaf(cell);//collects as we want, even if not a leaf
 //        if (cell.isLeaf()) {
 //          visitLeaf(cell);
 //        } else {
 //          visitPrefix(cell);
 //        }
-      }
+			}
 
-    }.getDocIdSet();
-  }
+		}.getDocIdSet();
+	}
 
 }

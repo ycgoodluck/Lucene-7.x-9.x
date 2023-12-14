@@ -24,12 +24,14 @@ package org.apache.lucene.spatial3d.geom;
  */
 abstract class GeoBaseBBox extends GeoBaseAreaShape implements GeoBBox {
 
-  /** Construct, given planet model.
-   *@param planetModel is the planet model.
-   */
-  public GeoBaseBBox(final PlanetModel planetModel) {
-    super(planetModel);
-  }
+	/**
+	 * Construct, given planet model.
+	 *
+	 * @param planetModel is the planet model.
+	 */
+	public GeoBaseBBox(final PlanetModel planetModel) {
+		super(planetModel);
+	}
 
 
 }

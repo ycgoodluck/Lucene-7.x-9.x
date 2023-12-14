@@ -35,7 +35,7 @@
  * <p>
  * See the Snowball <a href ="http://snowball.tartarus.org/">home page</a> for more information about the algorithms.
  * </p>
- * 
+ *
  * <p>
  * <b>IMPORTANT NOTICE ON BACKWARDS COMPATIBILITY!</b>
  * </p>

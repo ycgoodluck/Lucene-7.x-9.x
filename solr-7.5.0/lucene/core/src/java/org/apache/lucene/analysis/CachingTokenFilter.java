@@ -35,70 +35,74 @@ import org.apache.lucene.util.AttributeSource;
  * first time. Prior to  Lucene 5, it was never propagated.
  */
 public final class CachingTokenFilter extends TokenFilter {
-  private List<AttributeSource.State> cache = null;
-  private Iterator<AttributeSource.State> iterator = null; 
-  private AttributeSource.State finalState;
-  
-  /**
-   * Create a new CachingTokenFilter around <code>input</code>. As with
-   * any normal TokenFilter, do <em>not</em> call reset on the input; this filter
-   * will do it normally.
-   */
-  public CachingTokenFilter(TokenStream input) {
-    super(input);
-  }
+	private List<AttributeSource.State> cache = null;
+	private Iterator<AttributeSource.State> iterator = null;
+	private AttributeSource.State finalState;
 
-  /**
-   * Propagates reset if incrementToken has not yet been called. Otherwise
-   * it rewinds the iterator to the beginning of the cached list.
-   */
-  @Override
-  public void reset() throws IOException {
-    if (cache == null) {//first time
-      input.reset();
-    } else {
-      iterator = cache.iterator();
-    }
-  }
+	/**
+	 * Create a new CachingTokenFilter around <code>input</code>. As with
+	 * any normal TokenFilter, do <em>not</em> call reset on the input; this filter
+	 * will do it normally.
+	 */
+	public CachingTokenFilter(TokenStream input) {
+		super(input);
+	}
 
-  /** The first time called, it'll read and cache all tokens from the input. */
-  @Override
-  public final boolean incrementToken() throws IOException {
-    if (cache == null) {//first-time
-      // fill cache lazily
-      cache = new ArrayList<>(64);
-      fillCache();
-      iterator = cache.iterator();
-    }
-    
-    if (!iterator.hasNext()) {
-      // the cache is exhausted, return false
-      return false;
-    }
-    // Since the TokenFilter can be reset, the tokens need to be preserved as immutable.
-    restoreState(iterator.next());
-    return true;
-  }
+	/**
+	 * Propagates reset if incrementToken has not yet been called. Otherwise
+	 * it rewinds the iterator to the beginning of the cached list.
+	 */
+	@Override
+	public void reset() throws IOException {
+		if (cache == null) {//first time
+			input.reset();
+		} else {
+			iterator = cache.iterator();
+		}
+	}
 
-  @Override
-  public final void end() {
-    if (finalState != null) {
-      restoreState(finalState);
-    }
-  }
+	/**
+	 * The first time called, it'll read and cache all tokens from the input.
+	 */
+	@Override
+	public final boolean incrementToken() throws IOException {
+		if (cache == null) {//first-time
+			// fill cache lazily
+			cache = new ArrayList<>(64);
+			fillCache();
+			iterator = cache.iterator();
+		}
 
-  private void fillCache() throws IOException {
-    while (input.incrementToken()) {
-      cache.add(captureState());
-    }
-    // capture final state
-    input.end();
-    finalState = captureState();
-  }
+		if (!iterator.hasNext()) {
+			// the cache is exhausted, return false
+			return false;
+		}
+		// Since the TokenFilter can be reset, the tokens need to be preserved as immutable.
+		restoreState(iterator.next());
+		return true;
+	}
 
-  /** If the underlying token stream was consumed and cached. */
-  public boolean isCached() {
-    return cache != null;
-  }
+	@Override
+	public final void end() {
+		if (finalState != null) {
+			restoreState(finalState);
+		}
+	}
+
+	private void fillCache() throws IOException {
+		while (input.incrementToken()) {
+			cache.add(captureState());
+		}
+		// capture final state
+		input.end();
+		finalState = captureState();
+	}
+
+	/**
+	 * If the underlying token stream was consumed and cached.
+	 */
+	public boolean isCached() {
+		return cache != null;
+	}
 
 }

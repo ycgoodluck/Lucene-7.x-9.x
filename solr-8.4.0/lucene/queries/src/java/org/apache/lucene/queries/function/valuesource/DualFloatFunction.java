@@ -30,71 +30,74 @@ import java.util.Map;
  * and applies an extendible float function to their values.
  **/
 public abstract class DualFloatFunction extends ValueSource {
-  protected final ValueSource a;
-  protected final ValueSource b;
+	protected final ValueSource a;
+	protected final ValueSource b;
 
- /**
-   * @param   a  the base.
-   * @param   b  the exponent.
-   */
-  public DualFloatFunction(ValueSource a, ValueSource b) {
-    this.a = a;
-    this.b = b;
-  }
+	/**
+	 * @param a the base.
+	 * @param b the exponent.
+	 */
+	public DualFloatFunction(ValueSource a, ValueSource b) {
+		this.a = a;
+		this.b = b;
+	}
 
-  protected abstract String name();
-  protected abstract float func(int doc, FunctionValues aVals, FunctionValues bVals) throws IOException;
+	protected abstract String name();
 
-  @Override
-  public String description() {
-    return name() + "(" + a.description() + "," + b.description() + ")";
-  }
+	protected abstract float func(int doc, FunctionValues aVals, FunctionValues bVals) throws IOException;
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    final FunctionValues aVals =  a.getValues(context, readerContext);
-    final FunctionValues bVals =  b.getValues(context, readerContext);
-    return new FloatDocValues(this) {
-      @Override
-      public float floatVal(int doc) throws IOException {
-        return func(doc, aVals, bVals);
-      }
-      /** 
-       * True if and only if <em>all</em> of the wrapped {@link FunctionValues} 
-       * <code>exists</code> for the specified doc 
-       */
-      @Override
-      public boolean exists(int doc) throws IOException {
-        return MultiFunction.allExists(doc, aVals, bVals);
-      }
-      @Override
-      public String toString(int doc) throws IOException {
-        return name() + '(' + aVals.toString(doc) + ',' + bVals.toString(doc) + ')';
-      }
-    };
-  }
+	@Override
+	public String description() {
+		return name() + "(" + a.description() + "," + b.description() + ")";
+	}
 
-  @Override
-  public void createWeight(Map context, IndexSearcher searcher) throws IOException {
-    a.createWeight(context,searcher);
-    b.createWeight(context,searcher);
-  }
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+		final FunctionValues aVals = a.getValues(context, readerContext);
+		final FunctionValues bVals = b.getValues(context, readerContext);
+		return new FloatDocValues(this) {
+			@Override
+			public float floatVal(int doc) throws IOException {
+				return func(doc, aVals, bVals);
+			}
 
-  @Override
-  public int hashCode() {
-    int h = a.hashCode();
-    h ^= (h << 13) | (h >>> 20);
-    h += b.hashCode();
-    h ^= (h << 23) | (h >>> 10);
-    h += name().hashCode();
-    return h;
-  }
+			/**
+			 * True if and only if <em>all</em> of the wrapped {@link FunctionValues}
+			 * <code>exists</code> for the specified doc
+			 */
+			@Override
+			public boolean exists(int doc) throws IOException {
+				return MultiFunction.allExists(doc, aVals, bVals);
+			}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this.getClass() != o.getClass()) return false;
-    DualFloatFunction other = (DualFloatFunction)o;
-    return this.a.equals(other.a)
-        && this.b.equals(other.b);
-  }
+			@Override
+			public String toString(int doc) throws IOException {
+				return name() + '(' + aVals.toString(doc) + ',' + bVals.toString(doc) + ')';
+			}
+		};
+	}
+
+	@Override
+	public void createWeight(Map context, IndexSearcher searcher) throws IOException {
+		a.createWeight(context, searcher);
+		b.createWeight(context, searcher);
+	}
+
+	@Override
+	public int hashCode() {
+		int h = a.hashCode();
+		h ^= (h << 13) | (h >>> 20);
+		h += b.hashCode();
+		h ^= (h << 23) | (h >>> 10);
+		h += name().hashCode();
+		return h;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this.getClass() != o.getClass()) return false;
+		DualFloatFunction other = (DualFloatFunction) o;
+		return this.a.equals(other.a)
+			&& this.b.equals(other.b);
+	}
 }

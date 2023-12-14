@@ -33,36 +33,36 @@ import org.apache.lucene.misc.HighFreqTerms;
  */
 final class TopTerms {
 
-  private final IndexReader reader;
+	private final IndexReader reader;
 
-  private final Map<String, List<TermStats>> topTermsCache;
+	private final Map<String, List<TermStats>> topTermsCache;
 
-  TopTerms(IndexReader reader) {
-    this.reader = Objects.requireNonNull(reader);
-    this.topTermsCache = new WeakHashMap<>();
-  }
+	TopTerms(IndexReader reader) {
+		this.reader = Objects.requireNonNull(reader);
+		this.topTermsCache = new WeakHashMap<>();
+	}
 
-  /**
-   * Returns the top indexed terms with their statistics for the specified field.
-   *
-   * @param field - the field name
-   * @param numTerms - the max number of terms to be returned
-   * @throws Exception - if an error occurs when collecting term statistics
-   */
-  List<TermStats> getTopTerms(String field, int numTerms) throws Exception {
+	/**
+	 * Returns the top indexed terms with their statistics for the specified field.
+	 *
+	 * @param field    - the field name
+	 * @param numTerms - the max number of terms to be returned
+	 * @throws Exception - if an error occurs when collecting term statistics
+	 */
+	List<TermStats> getTopTerms(String field, int numTerms) throws Exception {
 
-    if (!topTermsCache.containsKey(field) || topTermsCache.get(field).size() < numTerms) {
-      org.apache.lucene.misc.TermStats[] stats =
-          HighFreqTerms.getHighFreqTerms(reader, numTerms, field, new HighFreqTerms.DocFreqComparator());
+		if (!topTermsCache.containsKey(field) || topTermsCache.get(field).size() < numTerms) {
+			org.apache.lucene.misc.TermStats[] stats =
+				HighFreqTerms.getHighFreqTerms(reader, numTerms, field, new HighFreqTerms.DocFreqComparator());
 
-      List<TermStats> topTerms = Arrays.stream(stats)
-          .map(TermStats::of)
-          .collect(Collectors.toList());
+			List<TermStats> topTerms = Arrays.stream(stats)
+				.map(TermStats::of)
+				.collect(Collectors.toList());
 
-      // cache computed statistics for later uses
-      topTermsCache.put(field, topTerms);
-    }
+			// cache computed statistics for later uses
+			topTermsCache.put(field, topTerms);
+		}
 
-    return Collections.unmodifiableList(topTermsCache.get(field));
-  }
+		return Collections.unmodifiableList(topTermsCache.get(field));
+	}
 }

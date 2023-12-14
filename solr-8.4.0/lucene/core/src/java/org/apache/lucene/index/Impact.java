@@ -21,41 +21,41 @@ package org.apache.lucene.index;
  */
 public final class Impact {
 
-  /**
-   * Term frequency of the term in the document.
-   */
-  public int freq;
+	/**
+	 * Term frequency of the term in the document.
+	 */
+	public int freq;
 
-  /**
-   * Norm factor of the document.
-   */
-  public long norm;
+	/**
+	 * Norm factor of the document.
+	 */
+	public long norm;
 
-  /**
-   * Constructor.
-   */
-  public Impact(int freq, long norm) {
-    this.freq = freq;
-    this.norm = norm;
-  }
+	/**
+	 * Constructor.
+	 */
+	public Impact(int freq, long norm) {
+		this.freq = freq;
+		this.norm = norm;
+	}
 
-  @Override
-  public String toString() {
-    return "{freq=" + freq + ",norm=" + norm + "}";
-  }
+	@Override
+	public String toString() {
+		return "{freq=" + freq + ",norm=" + norm + "}";
+	}
 
-  @Override
-  public int hashCode() {
-    int h = freq;
-    h = 31 * h + Long.hashCode(norm);
-    return h;
-  }
+	@Override
+	public int hashCode() {
+		int h = freq;
+		h = 31 * h + Long.hashCode(norm);
+		return h;
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == null || getClass() != obj.getClass()) return false;
-    Impact other = (Impact) obj;
-    return freq == other.freq && norm == other.norm;
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || getClass() != obj.getClass()) return false;
+		Impact other = (Impact) obj;
+		return freq == other.freq && norm == other.norm;
+	}
 
 }

@@ -26,61 +26,61 @@ import org.apache.lucene.util.LongsRef;
 
 final class PackedReaderIterator extends PackedInts.ReaderIteratorImpl {
 
-  final int packedIntsVersion;
-  final PackedInts.Format format;
-  final BulkOperation bulkOperation;
-  final byte[] nextBlocks;
-  final LongsRef nextValues;
-  final int iterations;
-  int position;
+	final int packedIntsVersion;
+	final PackedInts.Format format;
+	final BulkOperation bulkOperation;
+	final byte[] nextBlocks;
+	final LongsRef nextValues;
+	final int iterations;
+	int position;
 
-  PackedReaderIterator(PackedInts.Format format, int packedIntsVersion, int valueCount, int bitsPerValue, DataInput in, int mem) {
-    super(valueCount, bitsPerValue, in);
-    this.format = format;
-    this.packedIntsVersion = packedIntsVersion;
-    bulkOperation = BulkOperation.of(format, bitsPerValue);
-    iterations = bulkOperation.computeIterations(valueCount, mem);
-    assert valueCount == 0 || iterations > 0;
-    nextBlocks = new byte[iterations * bulkOperation.byteBlockCount()];
-    nextValues = new LongsRef(new long[iterations * bulkOperation.byteValueCount()], 0, 0);
-    nextValues.offset = nextValues.longs.length;
-    position = -1;
-  }
+	PackedReaderIterator(PackedInts.Format format, int packedIntsVersion, int valueCount, int bitsPerValue, DataInput in, int mem) {
+		super(valueCount, bitsPerValue, in);
+		this.format = format;
+		this.packedIntsVersion = packedIntsVersion;
+		bulkOperation = BulkOperation.of(format, bitsPerValue);
+		iterations = bulkOperation.computeIterations(valueCount, mem);
+		assert valueCount == 0 || iterations > 0;
+		nextBlocks = new byte[iterations * bulkOperation.byteBlockCount()];
+		nextValues = new LongsRef(new long[iterations * bulkOperation.byteValueCount()], 0, 0);
+		nextValues.offset = nextValues.longs.length;
+		position = -1;
+	}
 
-  @Override
-  public LongsRef next(int count) throws IOException {
-    assert nextValues.length >= 0;
-    assert count > 0;
-    assert nextValues.offset + nextValues.length <= nextValues.longs.length;
-    
-    nextValues.offset += nextValues.length;
+	@Override
+	public LongsRef next(int count) throws IOException {
+		assert nextValues.length >= 0;
+		assert count > 0;
+		assert nextValues.offset + nextValues.length <= nextValues.longs.length;
 
-    final int remaining = valueCount - position - 1;
-    if (remaining <= 0) {
-      throw new EOFException();
-    }
-    count = Math.min(remaining, count);
+		nextValues.offset += nextValues.length;
 
-    if (nextValues.offset == nextValues.longs.length) {
-      final long remainingBlocks = format.byteCount(packedIntsVersion, remaining, bitsPerValue);
-      final int blocksToRead = (int) Math.min(remainingBlocks, nextBlocks.length);
-      in.readBytes(nextBlocks, 0, blocksToRead);
-      if (blocksToRead < nextBlocks.length) {
-        Arrays.fill(nextBlocks, blocksToRead, nextBlocks.length, (byte) 0);
-      }
+		final int remaining = valueCount - position - 1;
+		if (remaining <= 0) {
+			throw new EOFException();
+		}
+		count = Math.min(remaining, count);
 
-      bulkOperation.decode(nextBlocks, 0, nextValues.longs, 0, iterations);
-      nextValues.offset = 0;
-    }
+		if (nextValues.offset == nextValues.longs.length) {
+			final long remainingBlocks = format.byteCount(packedIntsVersion, remaining, bitsPerValue);
+			final int blocksToRead = (int) Math.min(remainingBlocks, nextBlocks.length);
+			in.readBytes(nextBlocks, 0, blocksToRead);
+			if (blocksToRead < nextBlocks.length) {
+				Arrays.fill(nextBlocks, blocksToRead, nextBlocks.length, (byte) 0);
+			}
 
-    nextValues.length = Math.min(nextValues.longs.length - nextValues.offset, count);
-    position += nextValues.length;
-    return nextValues;
-  }
+			bulkOperation.decode(nextBlocks, 0, nextValues.longs, 0, iterations);
+			nextValues.offset = 0;
+		}
 
-  @Override
-  public int ord() {
-    return position;
-  }
+		nextValues.length = Math.min(nextValues.longs.length - nextValues.offset, count);
+		position += nextValues.length;
+		return nextValues;
+	}
+
+	@Override
+	public int ord() {
+		return position;
+	}
 
 }

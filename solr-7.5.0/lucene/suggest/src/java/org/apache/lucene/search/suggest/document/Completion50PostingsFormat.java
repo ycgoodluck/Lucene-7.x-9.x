@@ -26,15 +26,15 @@ import org.apache.lucene.codecs.PostingsFormat;
  */
 public class Completion50PostingsFormat extends CompletionPostingsFormat {
 
-  /**
-   * Sole Constructor
-   */
-  public Completion50PostingsFormat() {
-    super();
-  }
+	/**
+	 * Sole Constructor
+	 */
+	public Completion50PostingsFormat() {
+		super();
+	}
 
-  @Override
-  protected PostingsFormat delegatePostingsFormat() {
-    return PostingsFormat.forName("Lucene50");
-  }
+	@Override
+	protected PostingsFormat delegatePostingsFormat() {
+		return PostingsFormat.forName("Lucene50");
+	}
 }

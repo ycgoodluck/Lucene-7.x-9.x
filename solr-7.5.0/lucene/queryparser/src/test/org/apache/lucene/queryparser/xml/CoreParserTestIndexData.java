@@ -35,38 +35,38 @@ import java.nio.charset.StandardCharsets;
 
 class CoreParserTestIndexData implements Closeable {
 
-  final Directory dir;
-  final IndexReader reader;
-  final IndexSearcher searcher;
+	final Directory dir;
+	final IndexReader reader;
+	final IndexSearcher searcher;
 
-  CoreParserTestIndexData(Analyzer analyzer) throws Exception {
-    BufferedReader d = new BufferedReader(new InputStreamReader(
-        TestCoreParser.class.getResourceAsStream("reuters21578.txt"), StandardCharsets.US_ASCII));
-    dir = LuceneTestCase.newDirectory();
-    IndexWriter writer = new IndexWriter(dir, LuceneTestCase.newIndexWriterConfig(analyzer));
-    String line = d.readLine();
-    while (line != null) {
-      int endOfDate = line.indexOf('\t');
-      String date = line.substring(0, endOfDate).trim();
-      String content = line.substring(endOfDate).trim();
-      Document doc = new Document();
-      doc.add(LuceneTestCase.newTextField("date", date, Field.Store.YES));
-      doc.add(LuceneTestCase.newTextField("contents", content, Field.Store.YES));
-      doc.add(new IntPoint("date3", Integer.parseInt(date)));
-      writer.addDocument(doc);
-      line = d.readLine();
-    }
-    d.close();
-    writer.close();
-    reader = DirectoryReader.open(dir);
-    searcher = LuceneTestCase.newSearcher(reader, false);
-  }
+	CoreParserTestIndexData(Analyzer analyzer) throws Exception {
+		BufferedReader d = new BufferedReader(new InputStreamReader(
+			TestCoreParser.class.getResourceAsStream("reuters21578.txt"), StandardCharsets.US_ASCII));
+		dir = LuceneTestCase.newDirectory();
+		IndexWriter writer = new IndexWriter(dir, LuceneTestCase.newIndexWriterConfig(analyzer));
+		String line = d.readLine();
+		while (line != null) {
+			int endOfDate = line.indexOf('\t');
+			String date = line.substring(0, endOfDate).trim();
+			String content = line.substring(endOfDate).trim();
+			Document doc = new Document();
+			doc.add(LuceneTestCase.newTextField("date", date, Field.Store.YES));
+			doc.add(LuceneTestCase.newTextField("contents", content, Field.Store.YES));
+			doc.add(new IntPoint("date3", Integer.parseInt(date)));
+			writer.addDocument(doc);
+			line = d.readLine();
+		}
+		d.close();
+		writer.close();
+		reader = DirectoryReader.open(dir);
+		searcher = LuceneTestCase.newSearcher(reader, false);
+	}
 
-  @Override
-  public void close() throws IOException {
-    reader.close();
-    dir.close();
-  }
+	@Override
+	public void close() throws IOException {
+		reader.close();
+		dir.close();
+	}
 
 }
 

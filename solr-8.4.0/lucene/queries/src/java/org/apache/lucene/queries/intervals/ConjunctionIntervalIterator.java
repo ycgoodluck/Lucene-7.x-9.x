@@ -24,49 +24,49 @@ import org.apache.lucene.search.DocIdSetIterator;
 
 abstract class ConjunctionIntervalIterator extends IntervalIterator {
 
-  final DocIdSetIterator approximation;
-  final List<IntervalIterator> subIterators;
-  final float cost;
+	final DocIdSetIterator approximation;
+	final List<IntervalIterator> subIterators;
+	final float cost;
 
-  ConjunctionIntervalIterator(List<IntervalIterator> subIterators) {
-    this.approximation = ConjunctionDISI.intersectIterators(subIterators);
-    this.subIterators = subIterators;
-    float costsum = 0;
-    for (IntervalIterator it : subIterators) {
-      costsum += it.matchCost();
-    }
-    this.cost = costsum;
-  }
+	ConjunctionIntervalIterator(List<IntervalIterator> subIterators) {
+		this.approximation = ConjunctionDISI.intersectIterators(subIterators);
+		this.subIterators = subIterators;
+		float costsum = 0;
+		for (IntervalIterator it : subIterators) {
+			costsum += it.matchCost();
+		}
+		this.cost = costsum;
+	}
 
-  @Override
-  public int docID() {
-    return approximation.docID();
-  }
+	@Override
+	public int docID() {
+		return approximation.docID();
+	}
 
-  @Override
-  public int nextDoc() throws IOException {
-    int doc = approximation.nextDoc();
-    reset();
-    return doc;
-  }
+	@Override
+	public int nextDoc() throws IOException {
+		int doc = approximation.nextDoc();
+		reset();
+		return doc;
+	}
 
-  @Override
-  public int advance(int target) throws IOException {
-    int doc = approximation.advance(target);
-    reset();
-    return doc;
-  }
+	@Override
+	public int advance(int target) throws IOException {
+		int doc = approximation.advance(target);
+		reset();
+		return doc;
+	}
 
-  protected abstract void reset() throws IOException;
+	protected abstract void reset() throws IOException;
 
-  @Override
-  public long cost() {
-    return approximation.cost();
-  }
+	@Override
+	public long cost() {
+		return approximation.cost();
+	}
 
-  @Override
-  public final float matchCost() {
-    return cost;
-  }
+	@Override
+	public final float matchCost() {
+		return cost;
+	}
 
 }

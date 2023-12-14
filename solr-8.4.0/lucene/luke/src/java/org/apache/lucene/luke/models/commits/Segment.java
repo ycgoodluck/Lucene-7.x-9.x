@@ -26,70 +26,70 @@ import org.apache.lucene.index.SegmentCommitInfo;
  */
 public final class Segment {
 
-  private String name;
+	private String name;
 
-  private int maxDoc;
+	private int maxDoc;
 
-  private long delGen;
+	private long delGen;
 
-  private int delCount;
+	private int delCount;
 
-  private String luceneVer;
+	private String luceneVer;
 
-  private String codecName;
+	private String codecName;
 
-  private String displaySize;
+	private String displaySize;
 
-  private boolean useCompoundFile;
+	private boolean useCompoundFile;
 
-  static Segment of(SegmentCommitInfo segInfo) {
-    Segment segment = new Segment();
-    segment.name = segInfo.info.name;
-    segment.maxDoc = segInfo.info.maxDoc();
-    segment.delGen = segInfo.getDelGen();
-    segment.delCount = segInfo.getDelCount();
-    segment.luceneVer = segInfo.info.getVersion().toString();
-    segment.codecName = segInfo.info.getCodec().getName();
-    try {
-      segment.displaySize = CommitsImpl.toDisplaySize(segInfo.sizeInBytes());
-    } catch (IOException e) {
-    }
-    segment.useCompoundFile = segInfo.info.getUseCompoundFile();
-    return segment;
-  }
+	static Segment of(SegmentCommitInfo segInfo) {
+		Segment segment = new Segment();
+		segment.name = segInfo.info.name;
+		segment.maxDoc = segInfo.info.maxDoc();
+		segment.delGen = segInfo.getDelGen();
+		segment.delCount = segInfo.getDelCount();
+		segment.luceneVer = segInfo.info.getVersion().toString();
+		segment.codecName = segInfo.info.getCodec().getName();
+		try {
+			segment.displaySize = CommitsImpl.toDisplaySize(segInfo.sizeInBytes());
+		} catch (IOException e) {
+		}
+		segment.useCompoundFile = segInfo.info.getUseCompoundFile();
+		return segment;
+	}
 
-  public String getName() {
-    return name;
-  }
+	public String getName() {
+		return name;
+	}
 
-  public int getMaxDoc() {
-    return maxDoc;
-  }
+	public int getMaxDoc() {
+		return maxDoc;
+	}
 
-  public long getDelGen() {
-    return delGen;
-  }
+	public long getDelGen() {
+		return delGen;
+	}
 
-  public int getDelCount() {
-    return delCount;
-  }
+	public int getDelCount() {
+		return delCount;
+	}
 
-  public String getLuceneVer() {
-    return luceneVer;
-  }
+	public String getLuceneVer() {
+		return luceneVer;
+	}
 
-  public String getCodecName() {
-    return codecName;
-  }
+	public String getCodecName() {
+		return codecName;
+	}
 
-  public String getDisplaySize() {
-    return displaySize;
-  }
+	public String getDisplaySize() {
+		return displaySize;
+	}
 
-  public boolean isUseCompoundFile() {
-    return useCompoundFile;
-  }
+	public boolean isUseCompoundFile() {
+		return useCompoundFile;
+	}
 
-  private Segment() {
-  }
+	private Segment() {
+	}
 }

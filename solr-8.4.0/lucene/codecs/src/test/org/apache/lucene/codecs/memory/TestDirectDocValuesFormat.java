@@ -25,10 +25,10 @@ import org.apache.lucene.util.TestUtil;
  * Tests DirectDocValuesFormat
  */
 public class TestDirectDocValuesFormat extends BaseDocValuesFormatTestCase {
-  private final Codec codec = TestUtil.alwaysDocValuesFormat(new DirectDocValuesFormat());
+	private final Codec codec = TestUtil.alwaysDocValuesFormat(new DirectDocValuesFormat());
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

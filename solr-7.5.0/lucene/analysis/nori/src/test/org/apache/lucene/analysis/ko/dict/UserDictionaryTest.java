@@ -25,38 +25,38 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.junit.Test;
 
 public class UserDictionaryTest extends LuceneTestCase {
-  @Test
-  public void testLookup() throws IOException {
-    UserDictionary dictionary = TestKoreanTokenizer.readDict();
-    String s = "세종";
-    char[] sArray = s.toCharArray();
-    List<Integer> wordIds = dictionary.lookup(sArray, 0, s.length());
-    assertEquals(1, wordIds.size());
-    assertNull(dictionary.getMorphemes(wordIds.get(0), sArray, 0, s.length()));
+	@Test
+	public void testLookup() throws IOException {
+		UserDictionary dictionary = TestKoreanTokenizer.readDict();
+		String s = "세종";
+		char[] sArray = s.toCharArray();
+		List<Integer> wordIds = dictionary.lookup(sArray, 0, s.length());
+		assertEquals(1, wordIds.size());
+		assertNull(dictionary.getMorphemes(wordIds.get(0), sArray, 0, s.length()));
 
-    s = "세종시";
-    sArray = s.toCharArray();
-    wordIds = dictionary.lookup(sArray, 0, s.length());
-    assertEquals(2, wordIds.size());
-    assertNull(dictionary.getMorphemes(wordIds.get(0), sArray, 0, s.length()));
+		s = "세종시";
+		sArray = s.toCharArray();
+		wordIds = dictionary.lookup(sArray, 0, s.length());
+		assertEquals(2, wordIds.size());
+		assertNull(dictionary.getMorphemes(wordIds.get(0), sArray, 0, s.length()));
 
-    Dictionary.Morpheme[] decompound = dictionary.getMorphemes(wordIds.get(1), sArray, 0, s.length());
-    assertTrue(decompound.length == 2);
-    assertEquals(decompound[0].posTag, POS.Tag.NNG);
-    assertEquals(decompound[0].surfaceForm, "세종");
-    assertEquals(decompound[1].posTag, POS.Tag.NNG);
-    assertEquals(decompound[1].surfaceForm, "시");
+		Dictionary.Morpheme[] decompound = dictionary.getMorphemes(wordIds.get(1), sArray, 0, s.length());
+		assertTrue(decompound.length == 2);
+		assertEquals(decompound[0].posTag, POS.Tag.NNG);
+		assertEquals(decompound[0].surfaceForm, "세종");
+		assertEquals(decompound[1].posTag, POS.Tag.NNG);
+		assertEquals(decompound[1].surfaceForm, "시");
 
-    s = "c++";
-    sArray = s.toCharArray();
-    wordIds = dictionary.lookup(sArray, 0, s.length());
-    assertEquals(1, wordIds.size());
-    assertNull(dictionary.getMorphemes(wordIds.get(0), sArray, 0, s.length()));
-  }
-  
-  @Test
-  public void testRead() throws IOException {
-    UserDictionary dictionary = TestKoreanTokenizer.readDict();
-    assertNotNull(dictionary);
-  }
+		s = "c++";
+		sArray = s.toCharArray();
+		wordIds = dictionary.lookup(sArray, 0, s.length());
+		assertEquals(1, wordIds.size());
+		assertNull(dictionary.getMorphemes(wordIds.get(0), sArray, 0, s.length()));
+	}
+
+	@Test
+	public void testRead() throws IOException {
+		UserDictionary dictionary = TestKoreanTokenizer.readDict();
+		assertNotNull(dictionary);
+	}
 }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/** 
+/**
  * Grouping.
  * <p>
  * This module enables search result grouping with Lucene, where hits
@@ -24,16 +24,16 @@
  * field, then all documents with the same value in the <code>author</code>
  * field fall into a single group.
  * </p>
- * 
+ *
  * <p>Grouping requires a number of inputs:</p>
- * 
+ *
  * <ul>
  *   <li><code>groupField</code>: this is the field used for grouping.
  *       For example, if you use the <code>author</code> field then each
  *       group has all books by the same author.  Documents that don't
  *       have this field are grouped under a single group with
  *       a <code>null</code> group value.
- * 
+ *
  *   <li><code>groupSort</code>: how the groups are sorted.  For sorting
  *       purposes, each group is "represented" by the highest-sorted
  *       document according to the <code>groupSort</code> within it.  For
@@ -41,26 +41,26 @@
  *       is the one with the lowest price book within it.  Or if you
  *       specify relevance group sort, then the first group is the one
  *       containing the highest scoring book.
- * 
+ *
  *   <li><code>topNGroups</code>: how many top groups to keep.  For
  *       example, 10 means the top 10 groups are computed.
- * 
+ *
  *   <li><code>groupOffset</code>: which "slice" of top groups you want to
  *       retrieve.  For example, 3 means you'll get 7 groups back
  *       (assuming <code>topNGroups</code> is 10).  This is useful for
  *       paging, where you might show 5 groups per page.
- * 
+ *
  *   <li><code>withinGroupSort</code>: how the documents within each group
  *       are sorted.  This can be different from the group sort.
- * 
+ *
  *   <li><code>maxDocsPerGroup</code>: how many top documents within each
  *       group to keep.
- * 
+ *
  *   <li><code>withinGroupOffset</code>: which "slice" of top
  *       documents you want to retrieve from each group.
- * 
+ *
  * </ul>
- * 
+ *
  * <p>The implementation is two-pass: the first pass ({@link
  *   org.apache.lucene.search.grouping.FirstPassGroupingCollector})
  *   gathers the top groups, and the second pass ({@link
@@ -72,7 +72,7 @@
  *   way you only run the query once, but you pay a RAM cost to (briefly)
  *   hold all hits.  Results are returned as a {@link
  *   org.apache.lucene.search.grouping.TopGroups} instance.</p>
- * 
+ *
  * <p>Groups are defined by {@link org.apache.lucene.search.grouping.GroupSelector}
  *   implementations:</p>
  *   <ul>
@@ -81,82 +81,82 @@
  *     <li>{@link org.apache.lucene.search.grouping.ValueSourceGroupSelector} groups based on
  *     the value of a {@link org.apache.lucene.queries.function.ValueSource}</li>
  *   </ul>
- * 
+ *
  * <p>Known limitations:</p>
  * <ul>
  *   <li> Sharding is not directly supported, though is not too
  *     difficult, if you can merge the top groups and top documents per
  *     group yourself.
  * </ul>
- * 
+ *
  * <p>Typical usage for the generic two-pass grouping search looks like this using the grouping convenience utility
  *   (optionally using caching for the second pass search):</p>
- * 
+ *
  * <pre class="prettyprint">
  *   GroupingSearch groupingSearch = new GroupingSearch("author");
  *   groupingSearch.setGroupSort(groupSort);
  *   groupingSearch.setFillSortFields(fillFields);
- * 
+ *
  *   if (useCache) {
  *     // Sets cache in MB
  *     groupingSearch.setCachingInMB(4.0, true);
  *   }
- * 
+ *
  *   if (requiredTotalGroupCount) {
  *     groupingSearch.setAllGroups(true);
  *   }
- * 
+ *
  *   TermQuery query = new TermQuery(new Term("content", searchTerm));
  *   TopGroups&lt;BytesRef&gt; result = groupingSearch.search(indexSearcher, query, groupOffset, groupLimit);
- * 
+ *
  *   // Render groupsResult...
  *   if (requiredTotalGroupCount) {
  *     int totalGroupCount = result.totalGroupCount;
  *   }
  * </pre>
- * 
+ *
  * <p>To use the single-pass <code>BlockGroupingCollector</code>,
  *    first, at indexing time, you must ensure all docs in each group
  *    are added as a block, and you have some way to find the last
  *    document of each group.  One simple way to do this is to add a
  *    marker binary field:</p>
- * 
+ *
  * <pre class="prettyprint">
  *   // Create Documents from your source:
  *   List&lt;Document&gt; oneGroup = ...;
- *   
+ *
  *   Field groupEndField = new Field("groupEnd", "x", Field.Store.NO, Field.Index.NOT_ANALYZED);
  *   groupEndField.setIndexOptions(IndexOptions.DOCS_ONLY);
  *   groupEndField.setOmitNorms(true);
  *   oneGroup.get(oneGroup.size()-1).add(groupEndField);
- * 
+ *
  *   // You can also use writer.updateDocuments(); just be sure you
  *   // replace an entire previous doc block with this new one.  For
  *   // example, each group could have a "groupID" field, with the same
  *   // value for all docs in this group:
  *   writer.addDocuments(oneGroup);
  * </pre>
- * 
+ * <p>
  * Then, at search time, do this up front:
- * 
+ *
  * <pre class="prettyprint">
  *   // Set this once in your app &amp; save away for reusing across all queries:
  *   Filter groupEndDocs = new CachingWrapperFilter(new QueryWrapperFilter(new TermQuery(new Term("groupEnd", "x"))));
  * </pre>
- * 
+ * <p>
  * Finally, do this per search:
- * 
+ *
  * <pre class="prettyprint">
  *   // Per search:
  *   BlockGroupingCollector c = new BlockGroupingCollector(groupSort, groupOffset+topNGroups, needsScores, groupEndDocs);
  *   s.search(new TermQuery(new Term("content", searchTerm)), c);
  *   TopGroups groupsResult = c.getTopGroups(withinGroupSort, groupOffset, docOffset, docOffset+docsPerGroup, fillFields);
- * 
+ *
  *   // Render groupsResult...
  * </pre>
- * 
+ * <p>
  * Or alternatively use the <code>GroupingSearch</code> convenience utility:
- * 
+ *
  * <pre class="prettyprint">
  *   // Per search:
  *   GroupingSearch groupingSearch = new GroupingSearch(groupEndDocs);
@@ -167,18 +167,18 @@
  *
  *   // Render groupsResult...
  * </pre>
- * 
+ * <p>
  * Note that the <code>groupValue</code> of each <code>GroupDocs</code>
  * will be <code>null</code>, so if you need to present this value you'll
  * have to separately retrieve it (for example using stored
  * fields, <code>FieldCache</code>, etc.).
- * 
+ *
  * <p>Another collector is the <code>AllGroupHeadsCollector</code> that can be used to retrieve all most relevant
  *    documents per group. Also known as group heads. This can be useful in situations when one wants to compute group
  *    based facets / statistics on the complete query result. The collector can be executed during the first or second
  *    phase. This collector can also be used with the <code>GroupingSearch</code> convenience utility, but when if one only
  *    wants to compute the most relevant documents per group it is better to just use the collector as done here below.</p>
- * 
+ *
  * <pre class="prettyprint">
  *   TermGroupSelector grouper = new TermGroupSelector(groupField);
  *   AllGroupHeadsCollector c = AllGroupHeadsCollector.newCollector(grouper, sortWithinGroup);
@@ -189,6 +189,5 @@
  *   int maxDoc = s.maxDoc();
  *   FixedBitSet groupHeadsBitSet = c.retrieveGroupHeads(maxDoc)
  * </pre>
- *
  */
 package org.apache.lucene.search.grouping;

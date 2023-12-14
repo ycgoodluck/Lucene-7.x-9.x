@@ -29,28 +29,28 @@ import org.apache.lucene.search.spans.SpanQuery;
 /**
  * This builder creates {@link SpanOrQuery}s from a {@link BooleanQueryNode}.<br>
  * <br>
- * 
+ * <p>
  * It assumes that the {@link BooleanQueryNode} instance has at least one child.
  */
 public class SpanOrQueryNodeBuilder implements StandardQueryBuilder {
 
-  @Override
-  public SpanOrQuery build(QueryNode node) throws QueryNodeException {
+	@Override
+	public SpanOrQuery build(QueryNode node) throws QueryNodeException {
 
-    // validates node
-    BooleanQueryNode booleanNode = (BooleanQueryNode) node;
+		// validates node
+		BooleanQueryNode booleanNode = (BooleanQueryNode) node;
 
-    List<QueryNode> children = booleanNode.getChildren();
-    SpanQuery[] spanQueries = new SpanQuery[children.size()];
+		List<QueryNode> children = booleanNode.getChildren();
+		SpanQuery[] spanQueries = new SpanQuery[children.size()];
 
-    int i = 0;
-    for (QueryNode child : children) {
-      spanQueries[i++] = (SpanQuery) child
-          .getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
-    }
+		int i = 0;
+		for (QueryNode child : children) {
+			spanQueries[i++] = (SpanQuery) child
+				.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+		}
 
-    return new SpanOrQuery(spanQueries);
+		return new SpanOrQuery(spanQueries);
 
-  }
+	}
 
 }

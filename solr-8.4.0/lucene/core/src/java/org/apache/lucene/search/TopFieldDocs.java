@@ -17,22 +17,26 @@
 package org.apache.lucene.search;
 
 
-
-/** Represents hits returned by {@link
- * IndexSearcher#search(Query,int,Sort)}.
+/**
+ * Represents hits returned by {@link
+ * IndexSearcher#search(Query, int, Sort)}.
  */
 public class TopFieldDocs extends TopDocs {
 
-  /** The fields which were used to sort results by. */
-  public SortField[] fields;
-        
-  /** Creates one of these objects.
-   * @param totalHits  Total number of hits for the query.
-   * @param scoreDocs  The top hits for the query.
-   * @param fields     The sort criteria used to find the top hits.
-   */
-  public TopFieldDocs (TotalHits totalHits, ScoreDoc[] scoreDocs, SortField[] fields) {
-    super (totalHits, scoreDocs);
-    this.fields = fields;
-  }
+	/**
+	 * The fields which were used to sort results by.
+	 */
+	public SortField[] fields;
+
+	/**
+	 * Creates one of these objects.
+	 *
+	 * @param totalHits Total number of hits for the query.
+	 * @param scoreDocs The top hits for the query.
+	 * @param fields    The sort criteria used to find the top hits.
+	 */
+	public TopFieldDocs(TotalHits totalHits, ScoreDoc[] scoreDocs, SortField[] fields) {
+		super(totalHits, scoreDocs);
+		this.fields = fields;
+	}
 }

@@ -26,16 +26,17 @@ import org.locationtech.spatial4j.shape.Shape;
  */
 public abstract class ShapeValues {
 
-  /**
-   * Advance the iterator to the given document
-   * @param doc the document to advance to
-   * @return {@code true} if there is a value for this document
-   */
-  public abstract boolean advanceExact(int doc) throws IOException;
+	/**
+	 * Advance the iterator to the given document
+	 *
+	 * @param doc the document to advance to
+	 * @return {@code true} if there is a value for this document
+	 */
+	public abstract boolean advanceExact(int doc) throws IOException;
 
-  /**
-   * Returns a {@link Shape} for the current document
-   */
-  public abstract Shape value() throws IOException;
+	/**
+	 * Returns a {@link Shape} for the current document
+	 */
+	public abstract Shape value() throws IOException;
 
 }

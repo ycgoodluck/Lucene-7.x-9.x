@@ -33,185 +33,186 @@ import org.apache.lucene.util.mutable.MutableValueStr;
 
 /**
  * Serves as base class for FunctionValues based on DocTermsIndex.
+ *
  * @lucene.internal
  */
 public abstract class DocTermsIndexDocValues extends FunctionValues {
-  protected final SortedDocValues termsIndex;
-  protected final ValueSource vs;
-  protected final MutableValueStr val = new MutableValueStr();
-  protected final CharsRefBuilder spareChars = new CharsRefBuilder();
-  private final String field;
-  private int lastDocID;
+	protected final SortedDocValues termsIndex;
+	protected final ValueSource vs;
+	protected final MutableValueStr val = new MutableValueStr();
+	protected final CharsRefBuilder spareChars = new CharsRefBuilder();
+	private final String field;
+	private int lastDocID;
 
-  public DocTermsIndexDocValues(ValueSource vs, LeafReaderContext context, String field) throws IOException {
-    this(field, vs, open(context, field));
-  }
-  
-  protected DocTermsIndexDocValues(String field, ValueSource vs, SortedDocValues termsIndex) {
-    this.field = field;
-    this.vs = vs;
-    this.termsIndex = termsIndex;
-  }
+	public DocTermsIndexDocValues(ValueSource vs, LeafReaderContext context, String field) throws IOException {
+		this(field, vs, open(context, field));
+	}
 
-  protected int getOrdForDoc(int doc) throws IOException {
-    if (doc < lastDocID) {
-      throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
-    }
-    lastDocID = doc;
-    int curDocID = termsIndex.docID();
-    if (doc > curDocID) {
-      curDocID = termsIndex.advance(doc);
-    }
-    if (doc == curDocID) {
-      return termsIndex.ordValue();
-    } else {
-      return -1;
-    }
-  }
+	protected DocTermsIndexDocValues(String field, ValueSource vs, SortedDocValues termsIndex) {
+		this.field = field;
+		this.vs = vs;
+		this.termsIndex = termsIndex;
+	}
 
-  protected abstract String toTerm(String readableValue);
+	protected int getOrdForDoc(int doc) throws IOException {
+		if (doc < lastDocID) {
+			throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
+		}
+		lastDocID = doc;
+		int curDocID = termsIndex.docID();
+		if (doc > curDocID) {
+			curDocID = termsIndex.advance(doc);
+		}
+		if (doc == curDocID) {
+			return termsIndex.ordValue();
+		} else {
+			return -1;
+		}
+	}
 
-  @Override
-  public boolean exists(int doc) throws IOException {
-    return getOrdForDoc(doc) >= 0;
-  }
+	protected abstract String toTerm(String readableValue);
 
-  @Override
-  public int ordVal(int doc) throws IOException {
-    return getOrdForDoc(doc);
-  }
+	@Override
+	public boolean exists(int doc) throws IOException {
+		return getOrdForDoc(doc) >= 0;
+	}
 
-  @Override
-  public int numOrd() {
-    return termsIndex.getValueCount();
-  }
+	@Override
+	public int ordVal(int doc) throws IOException {
+		return getOrdForDoc(doc);
+	}
 
-  @Override
-  public boolean bytesVal(int doc, BytesRefBuilder target) throws IOException {
-    target.clear();
-    if (getOrdForDoc(doc) == -1) {
-      return false;
-    } else {
-      target.copyBytes(termsIndex.binaryValue());
-      return true;
-    }
-  }
+	@Override
+	public int numOrd() {
+		return termsIndex.getValueCount();
+	}
 
-  @Override
-  public String strVal(int doc) throws IOException {
-    if (getOrdForDoc(doc) == -1) {
-      return null;
-    }
-    final BytesRef term = termsIndex.binaryValue();
-    spareChars.copyUTF8Bytes(term);
-    return spareChars.toString();
-  }
+	@Override
+	public boolean bytesVal(int doc, BytesRefBuilder target) throws IOException {
+		target.clear();
+		if (getOrdForDoc(doc) == -1) {
+			return false;
+		} else {
+			target.copyBytes(termsIndex.binaryValue());
+			return true;
+		}
+	}
 
-  @Override
-  public boolean boolVal(int doc) throws IOException {
-    return exists(doc);
-  }
+	@Override
+	public String strVal(int doc) throws IOException {
+		if (getOrdForDoc(doc) == -1) {
+			return null;
+		}
+		final BytesRef term = termsIndex.binaryValue();
+		spareChars.copyUTF8Bytes(term);
+		return spareChars.toString();
+	}
 
-  @Override
-  public abstract Object objectVal(int doc) throws IOException;  // force subclasses to override
+	@Override
+	public boolean boolVal(int doc) throws IOException {
+		return exists(doc);
+	}
 
-  @Override
-  public ValueSourceScorer getRangeScorer(Weight weight, LeafReaderContext readerContext, String lowerVal, String upperVal, boolean includeLower, boolean includeUpper) throws IOException {
-    // TODO: are lowerVal and upperVal in indexed form or not?
-    lowerVal = lowerVal == null ? null : toTerm(lowerVal);
-    upperVal = upperVal == null ? null : toTerm(upperVal);
+	@Override
+	public abstract Object objectVal(int doc) throws IOException;  // force subclasses to override
 
-    int lower = Integer.MIN_VALUE;
-    if (lowerVal != null) {
-      lower = termsIndex.lookupTerm(new BytesRef(lowerVal));
-      if (lower < 0) {
-        lower = -lower-1;
-      } else if (!includeLower) {
-        lower++;
-      }
-    }
+	@Override
+	public ValueSourceScorer getRangeScorer(Weight weight, LeafReaderContext readerContext, String lowerVal, String upperVal, boolean includeLower, boolean includeUpper) throws IOException {
+		// TODO: are lowerVal and upperVal in indexed form or not?
+		lowerVal = lowerVal == null ? null : toTerm(lowerVal);
+		upperVal = upperVal == null ? null : toTerm(upperVal);
 
-    int upper = Integer.MAX_VALUE;
-    if (upperVal != null) {
-      upper = termsIndex.lookupTerm(new BytesRef(upperVal));
-      if (upper < 0) {
-        upper = -upper-2;
-      } else if (!includeUpper) {
-        upper--;
-      }
-    }
+		int lower = Integer.MIN_VALUE;
+		if (lowerVal != null) {
+			lower = termsIndex.lookupTerm(new BytesRef(lowerVal));
+			if (lower < 0) {
+				lower = -lower - 1;
+			} else if (!includeLower) {
+				lower++;
+			}
+		}
 
-    final int ll = lower;
-    final int uu = upper;
+		int upper = Integer.MAX_VALUE;
+		if (upperVal != null) {
+			upper = termsIndex.lookupTerm(new BytesRef(upperVal));
+			if (upper < 0) {
+				upper = -upper - 2;
+			} else if (!includeUpper) {
+				upper--;
+			}
+		}
 
-    return new ValueSourceScorer(weight, readerContext, this) {
-      final SortedDocValues values = readerContext.reader().getSortedDocValues(field);
-      private int lastDocID;
-      
-      @Override
-      public boolean matches(int doc) throws IOException {
-        if (doc < lastDocID) {
-          throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
-        }
-        if (doc > values.docID()) {
-          values.advance(doc);
-        }
-        if (doc == values.docID()) {
-          int ord = values.ordValue();
-          return ord >= ll && ord <= uu;
-        } else {
-          return false;
-        }
-      }
-    };
-  }
+		final int ll = lower;
+		final int uu = upper;
 
-  @Override
-  public String toString(int doc) throws IOException {
-    return vs.description() + '=' + strVal(doc);
-  }
+		return new ValueSourceScorer(weight, readerContext, this) {
+			final SortedDocValues values = readerContext.reader().getSortedDocValues(field);
+			private int lastDocID;
 
-  @Override
-  public ValueFiller getValueFiller() {
-    return new ValueFiller() {
-      private final MutableValueStr mval = new MutableValueStr();
+			@Override
+			public boolean matches(int doc) throws IOException {
+				if (doc < lastDocID) {
+					throw new IllegalArgumentException("docs were sent out-of-order: lastDocID=" + lastDocID + " vs docID=" + doc);
+				}
+				if (doc > values.docID()) {
+					values.advance(doc);
+				}
+				if (doc == values.docID()) {
+					int ord = values.ordValue();
+					return ord >= ll && ord <= uu;
+				} else {
+					return false;
+				}
+			}
+		};
+	}
 
-      @Override
-      public MutableValue getValue() {
-        return mval;
-      }
+	@Override
+	public String toString(int doc) throws IOException {
+		return vs.description() + '=' + strVal(doc);
+	}
 
-      @Override
-      public void fillValue(int doc) throws IOException {
-        int ord = getOrdForDoc(doc);
-        mval.value.clear();
-        mval.exists = ord >= 0;
-        if (mval.exists) {
-          mval.value.copyBytes(termsIndex.lookupOrd(ord));
-        }
-      }
-    };
-  }
+	@Override
+	public ValueFiller getValueFiller() {
+		return new ValueFiller() {
+			private final MutableValueStr mval = new MutableValueStr();
 
-  // TODO: why?
-  static SortedDocValues open(LeafReaderContext context, String field) throws IOException {
-    try {
-      return DocValues.getSorted(context.reader(), field);
-    } catch (RuntimeException e) {
-      throw new DocTermsIndexException(field, e);
-    }
-  }
-  
-  /**
-   * Custom Exception to be thrown when the DocTermsIndex for a field cannot be generated
-   */
-  public static final class DocTermsIndexException extends RuntimeException {
+			@Override
+			public MutableValue getValue() {
+				return mval;
+			}
 
-    public DocTermsIndexException(final String fieldName, final RuntimeException cause) {
-      super("Can't initialize DocTermsIndex to generate (function) FunctionValues for field: " + fieldName, cause);
-    }
+			@Override
+			public void fillValue(int doc) throws IOException {
+				int ord = getOrdForDoc(doc);
+				mval.value.clear();
+				mval.exists = ord >= 0;
+				if (mval.exists) {
+					mval.value.copyBytes(termsIndex.lookupOrd(ord));
+				}
+			}
+		};
+	}
 
-  }
+	// TODO: why?
+	static SortedDocValues open(LeafReaderContext context, String field) throws IOException {
+		try {
+			return DocValues.getSorted(context.reader(), field);
+		} catch (RuntimeException e) {
+			throw new DocTermsIndexException(field, e);
+		}
+	}
+
+	/**
+	 * Custom Exception to be thrown when the DocTermsIndex for a field cannot be generated
+	 */
+	public static final class DocTermsIndexException extends RuntimeException {
+
+		public DocTermsIndexException(final String fieldName, final RuntimeException cause) {
+			super("Can't initialize DocTermsIndex to generate (function) FunctionValues for field: " + fieldName, cause);
+		}
+
+	}
 
 
 }

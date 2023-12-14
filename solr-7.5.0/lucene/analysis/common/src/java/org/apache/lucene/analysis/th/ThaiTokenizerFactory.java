@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.util.AttributeFactory;
 
-/** 
+/**
  * Factory for {@link ThaiTokenizer}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_thai" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -33,18 +33,20 @@ import org.apache.lucene.util.AttributeFactory;
  * &lt;/fieldType&gt;</pre>
  */
 public class ThaiTokenizerFactory extends TokenizerFactory {
-  
-  /** Creates a new ThaiTokenizerFactory */
-  public ThaiTokenizerFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public Tokenizer create(AttributeFactory factory) {
-    return new ThaiTokenizer(factory);
-  }
+
+	/**
+	 * Creates a new ThaiTokenizerFactory
+	 */
+	public ThaiTokenizerFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public Tokenizer create(AttributeFactory factory) {
+		return new ThaiTokenizer(factory);
+	}
 }
 

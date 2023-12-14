@@ -34,53 +34,53 @@ import org.junit.Test;
 
 public class TestCachedOrdinalsReader extends FacetTestCase {
 
-  @Test
-  public void testWithThreads() throws Exception {
-    // LUCENE-5303: OrdinalsCache used the ThreadLocal BinaryDV instead of reader.getCoreCacheKey().
-    Directory indexDir = newDirectory();
-    Directory taxoDir = newDirectory();
-    IndexWriterConfig conf = newIndexWriterConfig(new MockAnalyzer(random()));
-    IndexWriter writer = new IndexWriter(indexDir, conf);
-    DirectoryTaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
-    FacetsConfig config = new FacetsConfig();
-    
-    Document doc = new Document();
-    doc.add(new FacetField("A", "1"));
-    writer.addDocument(config.build(taxoWriter, doc));
-    doc = new Document();
-    doc.add(new FacetField("A", "2"));
-    writer.addDocument(config.build(taxoWriter, doc));
-    
-    final DirectoryReader reader = DirectoryReader.open(writer);
-    final CachedOrdinalsReader ordsReader = new CachedOrdinalsReader(new DocValuesOrdinalsReader(FacetsConfig.DEFAULT_INDEX_FIELD_NAME));
-    Thread[] threads = new Thread[3];
-    for (int i = 0; i < threads.length; i++) {
-      threads[i] = new Thread("CachedOrdsThread-" + i) {
-        @Override
-        public void run() {
-          for (LeafReaderContext context : reader.leaves()) {
-            try {
-              ordsReader.getReader(context);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        }
-      };
-    }
+	@Test
+	public void testWithThreads() throws Exception {
+		// LUCENE-5303: OrdinalsCache used the ThreadLocal BinaryDV instead of reader.getCoreCacheKey().
+		Directory indexDir = newDirectory();
+		Directory taxoDir = newDirectory();
+		IndexWriterConfig conf = newIndexWriterConfig(new MockAnalyzer(random()));
+		IndexWriter writer = new IndexWriter(indexDir, conf);
+		DirectoryTaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
+		FacetsConfig config = new FacetsConfig();
 
-    long ramBytesUsed = 0;
-    for (Thread t : threads) {
-      t.start();
-      t.join();
-      if (ramBytesUsed == 0) {
-        ramBytesUsed = ordsReader.ramBytesUsed();
-      } else {
-        assertEquals(ramBytesUsed, ordsReader.ramBytesUsed());
-      }
-    }
+		Document doc = new Document();
+		doc.add(new FacetField("A", "1"));
+		writer.addDocument(config.build(taxoWriter, doc));
+		doc = new Document();
+		doc.add(new FacetField("A", "2"));
+		writer.addDocument(config.build(taxoWriter, doc));
 
-    writer.close();
-    IOUtils.close(taxoWriter, reader, indexDir, taxoDir);
-  }
+		final DirectoryReader reader = DirectoryReader.open(writer);
+		final CachedOrdinalsReader ordsReader = new CachedOrdinalsReader(new DocValuesOrdinalsReader(FacetsConfig.DEFAULT_INDEX_FIELD_NAME));
+		Thread[] threads = new Thread[3];
+		for (int i = 0; i < threads.length; i++) {
+			threads[i] = new Thread("CachedOrdsThread-" + i) {
+				@Override
+				public void run() {
+					for (LeafReaderContext context : reader.leaves()) {
+						try {
+							ordsReader.getReader(context);
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						}
+					}
+				}
+			};
+		}
+
+		long ramBytesUsed = 0;
+		for (Thread t : threads) {
+			t.start();
+			t.join();
+			if (ramBytesUsed == 0) {
+				ramBytesUsed = ordsReader.ramBytesUsed();
+			} else {
+				assertEquals(ramBytesUsed, ordsReader.ramBytesUsed());
+			}
+		}
+
+		writer.close();
+		IOUtils.close(taxoWriter, reader, indexDir, taxoDir);
+	}
 }

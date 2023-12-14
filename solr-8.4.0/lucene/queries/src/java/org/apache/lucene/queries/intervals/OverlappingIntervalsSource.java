@@ -25,65 +25,65 @@ import java.util.Objects;
 
 class OverlappingIntervalsSource extends ConjunctionIntervalsSource {
 
-  private final IntervalsSource source;
-  private final IntervalsSource reference;
+	private final IntervalsSource source;
+	private final IntervalsSource reference;
 
-  OverlappingIntervalsSource(IntervalsSource source, IntervalsSource reference) {
-    super(Arrays.asList(source, reference), false);
-    this.source = source;
-    this.reference = reference;
-  }
+	OverlappingIntervalsSource(IntervalsSource source, IntervalsSource reference) {
+		super(Arrays.asList(source, reference), false);
+		this.source = source;
+		this.reference = reference;
+	}
 
-  @Override
-  protected IntervalIterator combine(List<IntervalIterator> iterators) {
-    assert iterators.size() == 2;
-    IntervalIterator a = iterators.get(0);
-    IntervalIterator b = iterators.get(1);
-    return new FilteringIntervalIterator(a, b) {
-      @Override
-      public int nextInterval() throws IOException {
-        if (bpos == false)
-          return IntervalIterator.NO_MORE_INTERVALS;
-        while (a.nextInterval() != IntervalIterator.NO_MORE_INTERVALS) {
-          while (b.end() < a.start()) {
-            if (b.nextInterval() == IntervalIterator.NO_MORE_INTERVALS) {
-              bpos = false;
-              return IntervalIterator.NO_MORE_INTERVALS;
-            }
-          }
-          if (b.start() <= a.end())
-            return a.start();
-        }
-        bpos = false;
-        return IntervalIterator.NO_MORE_INTERVALS;
-      }
-    };
-  }
+	@Override
+	protected IntervalIterator combine(List<IntervalIterator> iterators) {
+		assert iterators.size() == 2;
+		IntervalIterator a = iterators.get(0);
+		IntervalIterator b = iterators.get(1);
+		return new FilteringIntervalIterator(a, b) {
+			@Override
+			public int nextInterval() throws IOException {
+				if (bpos == false)
+					return IntervalIterator.NO_MORE_INTERVALS;
+				while (a.nextInterval() != IntervalIterator.NO_MORE_INTERVALS) {
+					while (b.end() < a.start()) {
+						if (b.nextInterval() == IntervalIterator.NO_MORE_INTERVALS) {
+							bpos = false;
+							return IntervalIterator.NO_MORE_INTERVALS;
+						}
+					}
+					if (b.start() <= a.end())
+						return a.start();
+				}
+				bpos = false;
+				return IntervalIterator.NO_MORE_INTERVALS;
+			}
+		};
+	}
 
-  @Override
-  public int minExtent() {
-    return source.minExtent();
-  }
+	@Override
+	public int minExtent() {
+		return source.minExtent();
+	}
 
-  @Override
-  public Collection<IntervalsSource> pullUpDisjunctions() {
-    return Disjunctions.pullUp(Arrays.asList(source, reference), ss -> new OverlappingIntervalsSource(ss.get(0), ss.get(1)));
-  }
+	@Override
+	public Collection<IntervalsSource> pullUpDisjunctions() {
+		return Disjunctions.pullUp(Arrays.asList(source, reference), ss -> new OverlappingIntervalsSource(ss.get(0), ss.get(1)));
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.subSources);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.subSources);
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    if (other instanceof OverlappingIntervalsSource == false) return false;
-    OverlappingIntervalsSource o = (OverlappingIntervalsSource) other;
-    return Objects.equals(this.subSources, o.subSources);
-  }
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof OverlappingIntervalsSource == false) return false;
+		OverlappingIntervalsSource o = (OverlappingIntervalsSource) other;
+		return Objects.equals(this.subSources, o.subSources);
+	}
 
-  @Override
-  public String toString() {
-    return "OVERLAPPING(" + source + "," + reference + ")";
-  }
+	@Override
+	public String toString() {
+		return "OVERLAPPING(" + source + "," + reference + ")";
+	}
 }

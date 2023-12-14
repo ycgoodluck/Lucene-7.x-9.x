@@ -33,64 +33,66 @@ import org.apache.lucene.analysis.util.ResourceLoader;
  * Test for {@link MorfologikFilterFactory}.
  */
 public class TestMorfologikFilterFactory extends BaseTokenStreamTestCase {
-  private static class ForbidResourcesLoader implements ResourceLoader {
-    @Override
-    public InputStream openResource(String resource) throws IOException {
-      throw new UnsupportedOperationException();
-    }
+	private static class ForbidResourcesLoader implements ResourceLoader {
+		@Override
+		public InputStream openResource(String resource) throws IOException {
+			throw new UnsupportedOperationException();
+		}
 
-    @Override
-    public <T> Class<? extends T> findClass(String cname, Class<T> expectedType) {
-      throw new UnsupportedOperationException();
-    }
+		@Override
+		public <T> Class<? extends T> findClass(String cname, Class<T> expectedType) {
+			throw new UnsupportedOperationException();
+		}
 
-    @Override
-    public <T> T newInstance(String cname, Class<T> expectedType) {
-      throw new UnsupportedOperationException();
-    }
-  }
+		@Override
+		public <T> T newInstance(String cname, Class<T> expectedType) {
+			throw new UnsupportedOperationException();
+		}
+	}
 
-  public void testDefaultDictionary() throws Exception {
-    StringReader reader = new StringReader("rowery bilety");
-    MorfologikFilterFactory factory = new MorfologikFilterFactory(Collections.<String,String>emptyMap());
-    factory.inform(new ForbidResourcesLoader());
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = factory.create(stream);
-    assertTokenStreamContents(stream, new String[] {"rower", "bilet"});
-  }
+	public void testDefaultDictionary() throws Exception {
+		StringReader reader = new StringReader("rowery bilety");
+		MorfologikFilterFactory factory = new MorfologikFilterFactory(Collections.<String, String>emptyMap());
+		factory.inform(new ForbidResourcesLoader());
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = factory.create(stream);
+		assertTokenStreamContents(stream, new String[]{"rower", "bilet"});
+	}
 
-  public void testExplicitDictionary() throws Exception {
-    final ResourceLoader loader = new ClasspathResourceLoader(TestMorfologikFilterFactory.class);
+	public void testExplicitDictionary() throws Exception {
+		final ResourceLoader loader = new ClasspathResourceLoader(TestMorfologikFilterFactory.class);
 
-    StringReader reader = new StringReader("inflected1 inflected2");
-    Map<String,String> params = new HashMap<>();
-    params.put(MorfologikFilterFactory.DICTIONARY_ATTRIBUTE, "custom-dictionary.dict");
-    MorfologikFilterFactory factory = new MorfologikFilterFactory(params);
-    factory.inform(loader);
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = factory.create(stream);
-    assertTokenStreamContents(stream, new String[] {"lemma1", "lemma2"});
-  }
+		StringReader reader = new StringReader("inflected1 inflected2");
+		Map<String, String> params = new HashMap<>();
+		params.put(MorfologikFilterFactory.DICTIONARY_ATTRIBUTE, "custom-dictionary.dict");
+		MorfologikFilterFactory factory = new MorfologikFilterFactory(params);
+		factory.inform(loader);
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = factory.create(stream);
+		assertTokenStreamContents(stream, new String[]{"lemma1", "lemma2"});
+	}
 
-  public void testMissingDictionary() throws Exception {
-    final ResourceLoader loader = new ClasspathResourceLoader(TestMorfologikFilterFactory.class);
+	public void testMissingDictionary() throws Exception {
+		final ResourceLoader loader = new ClasspathResourceLoader(TestMorfologikFilterFactory.class);
 
-    IOException expected = expectThrows(IOException.class, () -> {
-      Map<String,String> params = new HashMap<>();
-      params.put(MorfologikFilterFactory.DICTIONARY_ATTRIBUTE, "missing-dictionary-resource.dict");
-      MorfologikFilterFactory factory = new MorfologikFilterFactory(params);
-      factory.inform(loader);
-    });
-    assertTrue(expected.getMessage().contains("Resource not found"));
-  }
+		IOException expected = expectThrows(IOException.class, () -> {
+			Map<String, String> params = new HashMap<>();
+			params.put(MorfologikFilterFactory.DICTIONARY_ATTRIBUTE, "missing-dictionary-resource.dict");
+			MorfologikFilterFactory factory = new MorfologikFilterFactory(params);
+			factory.inform(loader);
+		});
+		assertTrue(expected.getMessage().contains("Resource not found"));
+	}
 
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      HashMap<String,String> params = new HashMap<String,String>();
-      params.put("bogusArg", "bogusValue");
-      new MorfologikFilterFactory(params);
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			HashMap<String, String> params = new HashMap<String, String>();
+			params.put("bogusArg", "bogusValue");
+			new MorfologikFilterFactory(params);
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

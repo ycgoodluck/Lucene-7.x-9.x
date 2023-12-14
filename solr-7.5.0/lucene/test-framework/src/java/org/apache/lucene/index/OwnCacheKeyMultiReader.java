@@ -28,39 +28,41 @@ import org.apache.lucene.util.IOUtils;
  */
 public final class OwnCacheKeyMultiReader extends MultiReader {
 
-  private final Set<ClosedListener> readerClosedListeners = new CopyOnWriteArraySet<>();
+	private final Set<ClosedListener> readerClosedListeners = new CopyOnWriteArraySet<>();
 
-  private final CacheHelper cacheHelper = new CacheHelper() {
-    private final CacheKey cacheKey = new CacheKey();
+	private final CacheHelper cacheHelper = new CacheHelper() {
+		private final CacheKey cacheKey = new CacheKey();
 
-    @Override
-    public CacheKey getKey() {
-      return cacheKey;
-    }
+		@Override
+		public CacheKey getKey() {
+			return cacheKey;
+		}
 
-    @Override
-    public void addClosedListener(ClosedListener listener) {
-      ensureOpen();
-      readerClosedListeners.add(listener);
-    }
+		@Override
+		public void addClosedListener(ClosedListener listener) {
+			ensureOpen();
+			readerClosedListeners.add(listener);
+		}
 
-  };
+	};
 
-  /** Sole constructor. */
-  public OwnCacheKeyMultiReader(IndexReader... subReaders) throws IOException {
-    super(subReaders);
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public OwnCacheKeyMultiReader(IndexReader... subReaders) throws IOException {
+		super(subReaders);
+	}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    return cacheHelper;
-  }
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		return cacheHelper;
+	}
 
-  @Override
-  void notifyReaderClosedListeners() throws IOException {
-    synchronized(readerClosedListeners) {
-      IOUtils.applyToAll(readerClosedListeners, l -> l.onClose(cacheHelper.getKey()));
-    }
-  }
+	@Override
+	void notifyReaderClosedListeners() throws IOException {
+		synchronized (readerClosedListeners) {
+			IOUtils.applyToAll(readerClosedListeners, l -> l.onClose(cacheHelper.getKey()));
+		}
+	}
 
 }

@@ -25,88 +25,90 @@ import org.apache.lucene.luke.models.LukeException;
 import org.apache.lucene.luke.models.util.IndexUtils;
 import org.apache.lucene.store.Directory;
 
-/** Directory open/close handler */
+/**
+ * Directory open/close handler
+ */
 public final class DirectoryHandler extends AbstractHandler<DirectoryObserver> {
 
-  private static final DirectoryHandler instance = new DirectoryHandler();
+	private static final DirectoryHandler instance = new DirectoryHandler();
 
-  private LukeStateImpl state;
+	private LukeStateImpl state;
 
-  public static DirectoryHandler getInstance() {
-    return instance;
-  }
+	public static DirectoryHandler getInstance() {
+		return instance;
+	}
 
-  @Override
-  protected void notifyOne(DirectoryObserver observer) {
-    if (state.closed) {
-      observer.closeDirectory();
-    } else {
-      observer.openDirectory(state);
-    }
-  }
+	@Override
+	protected void notifyOne(DirectoryObserver observer) {
+		if (state.closed) {
+			observer.closeDirectory();
+		} else {
+			observer.openDirectory(state);
+		}
+	}
 
-  public boolean directoryOpened() {
-    return state != null && !state.closed;
-  }
+	public boolean directoryOpened() {
+		return state != null && !state.closed;
+	}
 
-  public void open(String indexPath, String dirImpl) {
-    Objects.requireNonNull(indexPath);
+	public void open(String indexPath, String dirImpl) {
+		Objects.requireNonNull(indexPath);
 
-    if (directoryOpened()) {
-      close();
-    }
+		if (directoryOpened()) {
+			close();
+		}
 
-    Directory dir;
-    try {
-      dir = IndexUtils.openDirectory(indexPath, dirImpl);
-    } catch (IOException e) {
-      throw new LukeException(MessageUtils.getLocalizedMessage("openindex.message.index_path_invalid", indexPath), e);
-    }
+		Directory dir;
+		try {
+			dir = IndexUtils.openDirectory(indexPath, dirImpl);
+		} catch (IOException e) {
+			throw new LukeException(MessageUtils.getLocalizedMessage("openindex.message.index_path_invalid", indexPath), e);
+		}
 
-    state = new LukeStateImpl();
-    state.indexPath = indexPath;
-    state.dirImpl = dirImpl;
-    state.dir = dir;
+		state = new LukeStateImpl();
+		state.indexPath = indexPath;
+		state.dirImpl = dirImpl;
+		state.dir = dir;
 
-    notifyObservers();
-  }
+		notifyObservers();
+	}
 
-  public void close() {
-    if (state == null) {
-      return;
-    }
+	public void close() {
+		if (state == null) {
+			return;
+		}
 
-    IndexUtils.close(state.dir);
+		IndexUtils.close(state.dir);
 
-    state.closed = true;
-    notifyObservers();
-  }
+		state.closed = true;
+		notifyObservers();
+	}
 
-  public LukeState getState() {
-    return state;
-  }
+	public LukeState getState() {
+		return state;
+	}
 
-  private static class LukeStateImpl implements LukeState {
-    private boolean closed = false;
+	private static class LukeStateImpl implements LukeState {
+		private boolean closed = false;
 
-    private String indexPath;
-    private String dirImpl;
-    private Directory dir;
+		private String indexPath;
+		private String dirImpl;
+		private Directory dir;
 
-    @Override
-    public String getIndexPath() {
-      return indexPath;
-    }
+		@Override
+		public String getIndexPath() {
+			return indexPath;
+		}
 
-    @Override
-    public String getDirImpl() {
-      return dirImpl;
-    }
+		@Override
+		public String getDirImpl() {
+			return dirImpl;
+		}
 
-    @Override
-    public Directory getDirectory() {
-      return dir;
-    }
-  }
+		@Override
+		public Directory getDirectory() {
+			return dir;
+		}
+	}
 
 }

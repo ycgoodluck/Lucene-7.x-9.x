@@ -29,26 +29,28 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Dictionary compound filter factory is working.
  */
 public class TestDictionaryCompoundWordTokenFilterFactory extends BaseTokenStreamFactoryTestCase {
-  /**
-   * Ensure the filter actually decompounds text.
-   */
-  public void testDecompounding() throws Exception {
-    Reader reader = new StringReader("I like to play softball");
-    TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("DictionaryCompoundWord", 
-        "dictionary", "compoundDictionary.txt").create(stream);
-    assertTokenStreamContents(stream, 
-        new String[] { "I", "like", "to", "play", "softball", "soft", "ball" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {      
-      tokenFilterFactory("DictionaryCompoundWord", 
-          "dictionary", "compoundDictionary.txt", 
-          "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Ensure the filter actually decompounds text.
+	 */
+	public void testDecompounding() throws Exception {
+		Reader reader = new StringReader("I like to play softball");
+		TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		((Tokenizer) stream).setReader(reader);
+		stream = tokenFilterFactory("DictionaryCompoundWord",
+			"dictionary", "compoundDictionary.txt").create(stream);
+		assertTokenStreamContents(stream,
+			new String[]{"I", "like", "to", "play", "softball", "soft", "ball"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("DictionaryCompoundWord",
+				"dictionary", "compoundDictionary.txt",
+				"bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

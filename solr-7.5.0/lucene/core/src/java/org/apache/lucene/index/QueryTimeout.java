@@ -22,17 +22,19 @@ package org.apache.lucene.index;
  * used with {@link ExitableDirectoryReader}.
  */
 public interface QueryTimeout {
-  
-  /**
-   * Called from {@link ExitableDirectoryReader.ExitableTermsEnum#next()} 
-   * to determine whether to stop processing a query.
-   */
-  public abstract boolean shouldExit();
 
-  /** Returns true if timeouts are enabled for this query (i.e. if shouldExit would ever return true) */
-  public default boolean isTimeoutEnabled() {
-    return true;
-  }
+	/**
+	 * Called from {@link ExitableDirectoryReader.ExitableTermsEnum#next()}
+	 * to determine whether to stop processing a query.
+	 */
+	public abstract boolean shouldExit();
+
+	/**
+	 * Returns true if timeouts are enabled for this query (i.e. if shouldExit would ever return true)
+	 */
+	public default boolean isTimeoutEnabled() {
+		return true;
+	}
 
 }
 

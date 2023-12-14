@@ -28,25 +28,27 @@ import org.apache.lucene.index.LeafReaderContext;
  */
 public abstract class FilterCollector implements Collector {
 
-  protected final Collector in;
+	protected final Collector in;
 
-  /** Sole constructor. */
-  public FilterCollector(Collector in) {
-    this.in = in;
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public FilterCollector(Collector in) {
+		this.in = in;
+	}
 
-  @Override
-  public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
-    return in.getLeafCollector(context);
-  }
+	@Override
+	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
+		return in.getLeafCollector(context);
+	}
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "(" + in + ")";
-  }
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(" + in + ")";
+	}
 
-  @Override
-  public ScoreMode scoreMode() {
-    return in.scoreMode();
-  }
+	@Override
+	public ScoreMode scoreMode() {
+		return in.scoreMode();
+	}
 }

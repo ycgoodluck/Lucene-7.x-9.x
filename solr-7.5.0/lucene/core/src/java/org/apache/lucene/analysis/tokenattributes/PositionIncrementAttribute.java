@@ -19,7 +19,8 @@ package org.apache.lucene.analysis.tokenattributes;
 
 import org.apache.lucene.util.Attribute;
 
-/** Determines the position of this token
+/**
+ * Determines the position of this token
  * relative to the previous Token in a TokenStream, used in phrase
  * searching.
  *
@@ -42,21 +43,24 @@ import org.apache.lucene.util.Attribute;
  * occur with no intervening stop words.
  *
  * </ul>
- * 
+ *
  * @see org.apache.lucene.index.PostingsEnum
  */
 public interface PositionIncrementAttribute extends Attribute {
-  /** Set the position increment. The default value is one.
-   *
-   * @param positionIncrement the distance from the prior term
-   * @throws IllegalArgumentException if <code>positionIncrement</code> 
-   *         is negative.
-   * @see #getPositionIncrement()
-   */
-  public void setPositionIncrement(int positionIncrement);
+	/**
+	 * Set the position increment. The default value is one.
+	 *
+	 * @param positionIncrement the distance from the prior term
+	 * @throws IllegalArgumentException if <code>positionIncrement</code>
+	 *                                  is negative.
+	 * @see #getPositionIncrement()
+	 */
+	public void setPositionIncrement(int positionIncrement);
 
-  /** Returns the position increment of this Token.
-   * @see #setPositionIncrement(int)
-   */
-  public int getPositionIncrement();
+	/**
+	 * Returns the position increment of this Token.
+	 *
+	 * @see #setPositionIncrement(int)
+	 */
+	public int getPositionIncrement();
 }

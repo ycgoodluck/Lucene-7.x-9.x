@@ -28,15 +28,17 @@ import java.io.IOException;
  */
 public final class ForceMergePolicy extends FilterMergePolicy {
 
-  /** Create a new {@code ForceMergePolicy} around the given {@code MergePolicy} */
-  public ForceMergePolicy(MergePolicy in) {
-    super(in);
-  }
+	/**
+	 * Create a new {@code ForceMergePolicy} around the given {@code MergePolicy}
+	 */
+	public ForceMergePolicy(MergePolicy in) {
+		super(in);
+	}
 
-  @Override
-  public MergeSpecification findMerges(MergeTrigger mergeTrigger, SegmentInfos segmentInfos, MergeContext mergeContext)
-      throws IOException {
-    return null;
-  }
+	@Override
+	public MergeSpecification findMerges(MergeTrigger mergeTrigger, SegmentInfos segmentInfos, MergeContext mergeContext)
+		throws IOException {
+		return null;
+	}
 
 }

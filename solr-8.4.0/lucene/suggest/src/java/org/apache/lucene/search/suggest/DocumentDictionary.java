@@ -32,253 +32,260 @@ import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
 
 
-
 /**
  * <p>
  * Dictionary with terms, weights, payload (optional) and contexts (optional)
  * information taken from stored/indexed fields in a Lucene index.
  * </p>
- * <b>NOTE:</b> 
- *  <ul>
- *    <li>
- *      The term field has to be stored; if it is missing, the document is skipped.
- *    </li>
- *    <li>
- *      The payload and contexts field are optional and are not required to be stored.
- *    </li>
- *    <li>
- *      The weight field can be stored or can be a {@link NumericDocValues}.
- *      If the weight field is not defined, the value of the weight is <code>0</code>
- *    </li>
- *  </ul>
+ * <b>NOTE:</b>
+ * <ul>
+ *   <li>
+ *     The term field has to be stored; if it is missing, the document is skipped.
+ *   </li>
+ *   <li>
+ *     The payload and contexts field are optional and are not required to be stored.
+ *   </li>
+ *   <li>
+ *     The weight field can be stored or can be a {@link NumericDocValues}.
+ *     If the weight field is not defined, the value of the weight is <code>0</code>
+ *   </li>
+ * </ul>
  */
 public class DocumentDictionary implements Dictionary {
-  
-  /** {@link IndexReader} to load documents from */
-  protected final IndexReader reader;
 
-  /** Field to read payload from */
-  protected final String payloadField;
-  /** Field to read contexts from */
-  protected final String contextsField;
-  private final String field;
-  private final String weightField;
-  
-  /**
-   * Creates a new dictionary with the contents of the fields named <code>field</code>
-   * for the terms and <code>weightField</code> for the weights that will be used for
-   * the corresponding terms.
-   */
-  public DocumentDictionary(IndexReader reader, String field, String weightField) {
-    this(reader, field, weightField, null);
-  }
-  
-  /**
-   * Creates a new dictionary with the contents of the fields named <code>field</code>
-   * for the terms, <code>weightField</code> for the weights that will be used for the 
-   * the corresponding terms and <code>payloadField</code> for the corresponding payloads
-   * for the entry.
-   */
-  public DocumentDictionary(IndexReader reader, String field, String weightField, String payloadField) {
-    this(reader, field, weightField, payloadField, null);
-  }
+	/**
+	 * {@link IndexReader} to load documents from
+	 */
+	protected final IndexReader reader;
 
-  /**
-   * Creates a new dictionary with the contents of the fields named <code>field</code>
-   * for the terms, <code>weightField</code> for the weights that will be used for the 
-   * the corresponding terms, <code>payloadField</code> for the corresponding payloads
-   * for the entry and <code>contextsField</code> for associated contexts.
-   */
-  public DocumentDictionary(IndexReader reader, String field, String weightField, String payloadField, String contextsField) {
-    this.reader = reader;
-    this.field = field;
-    this.weightField = weightField;
-    this.payloadField = payloadField;
-    this.contextsField = contextsField;
-  }
+	/**
+	 * Field to read payload from
+	 */
+	protected final String payloadField;
+	/**
+	 * Field to read contexts from
+	 */
+	protected final String contextsField;
+	private final String field;
+	private final String weightField;
 
-  @Override
-  public InputIterator getEntryIterator() throws IOException {
-    return new DocumentInputIterator(payloadField!=null, contextsField!=null);
-  }
+	/**
+	 * Creates a new dictionary with the contents of the fields named <code>field</code>
+	 * for the terms and <code>weightField</code> for the weights that will be used for
+	 * the corresponding terms.
+	 */
+	public DocumentDictionary(IndexReader reader, String field, String weightField) {
+		this(reader, field, weightField, null);
+	}
 
-  /** Implements {@link InputIterator} from stored fields. */
-  protected class DocumentInputIterator implements InputIterator {
+	/**
+	 * Creates a new dictionary with the contents of the fields named <code>field</code>
+	 * for the terms, <code>weightField</code> for the weights that will be used for the
+	 * the corresponding terms and <code>payloadField</code> for the corresponding payloads
+	 * for the entry.
+	 */
+	public DocumentDictionary(IndexReader reader, String field, String weightField, String payloadField) {
+		this(reader, field, weightField, payloadField, null);
+	}
 
-    private final int docCount;
-    private final Set<String> relevantFields;
-    private final boolean hasPayloads;
-    private final boolean hasContexts;
-    private final Bits liveDocs;
-    private int currentDocId = -1;
-    private long currentWeight = 0;
-    private BytesRef currentPayload = null;
-    private Set<BytesRef> currentContexts;
-    private final NumericDocValues weightValues;
-    IndexableField[] currentDocFields = new IndexableField[0];
-    int nextFieldsPosition = 0;
+	/**
+	 * Creates a new dictionary with the contents of the fields named <code>field</code>
+	 * for the terms, <code>weightField</code> for the weights that will be used for the
+	 * the corresponding terms, <code>payloadField</code> for the corresponding payloads
+	 * for the entry and <code>contextsField</code> for associated contexts.
+	 */
+	public DocumentDictionary(IndexReader reader, String field, String weightField, String payloadField, String contextsField) {
+		this.reader = reader;
+		this.field = field;
+		this.weightField = weightField;
+		this.payloadField = payloadField;
+		this.contextsField = contextsField;
+	}
 
-    /**
-     * Creates an iterator over term, weight and payload fields from the lucene
-     * index. setting <code>withPayload</code> to false, implies an iterator
-     * over only term and weight.
-     */
-    public DocumentInputIterator(boolean hasPayloads, boolean hasContexts) throws IOException {
-      this.hasPayloads = hasPayloads;
-      this.hasContexts = hasContexts;
-      docCount = reader.maxDoc() - 1;
-      weightValues = (weightField != null) ? MultiDocValues.getNumericValues(reader, weightField) : null;
-      liveDocs = (reader.leaves().size() > 0) ? MultiBits.getLiveDocs(reader) : null;
-      relevantFields = getRelevantFields(new String [] {field, weightField, payloadField, contextsField});
-    }
+	@Override
+	public InputIterator getEntryIterator() throws IOException {
+		return new DocumentInputIterator(payloadField != null, contextsField != null);
+	}
 
-    @Override
-    public long weight() {
-      return currentWeight;
-    }
+	/**
+	 * Implements {@link InputIterator} from stored fields.
+	 */
+	protected class DocumentInputIterator implements InputIterator {
 
-    @Override
-    public BytesRef next() throws IOException {
-      while (true) {
-        if (nextFieldsPosition < currentDocFields.length) {
-          // Still values left from the document
-          IndexableField fieldValue = currentDocFields[nextFieldsPosition++];
-          if (fieldValue.binaryValue() != null) {
-            return fieldValue.binaryValue();
-          } else if (fieldValue.stringValue() != null) {
-            return new BytesRef(fieldValue.stringValue());
-          } else {
-            continue;
-          }
-        }
+		private final int docCount;
+		private final Set<String> relevantFields;
+		private final boolean hasPayloads;
+		private final boolean hasContexts;
+		private final Bits liveDocs;
+		private int currentDocId = -1;
+		private long currentWeight = 0;
+		private BytesRef currentPayload = null;
+		private Set<BytesRef> currentContexts;
+		private final NumericDocValues weightValues;
+		IndexableField[] currentDocFields = new IndexableField[0];
+		int nextFieldsPosition = 0;
 
-        if (currentDocId == docCount) {
-          // Iterated over all the documents.
-          break;
-        }
+		/**
+		 * Creates an iterator over term, weight and payload fields from the lucene
+		 * index. setting <code>withPayload</code> to false, implies an iterator
+		 * over only term and weight.
+		 */
+		public DocumentInputIterator(boolean hasPayloads, boolean hasContexts) throws IOException {
+			this.hasPayloads = hasPayloads;
+			this.hasContexts = hasContexts;
+			docCount = reader.maxDoc() - 1;
+			weightValues = (weightField != null) ? MultiDocValues.getNumericValues(reader, weightField) : null;
+			liveDocs = (reader.leaves().size() > 0) ? MultiBits.getLiveDocs(reader) : null;
+			relevantFields = getRelevantFields(new String[]{field, weightField, payloadField, contextsField});
+		}
 
-        currentDocId++;
-        if (liveDocs != null && !liveDocs.get(currentDocId)) { 
-          continue;
-        }
+		@Override
+		public long weight() {
+			return currentWeight;
+		}
 
-        Document doc = reader.document(currentDocId, relevantFields);
+		@Override
+		public BytesRef next() throws IOException {
+			while (true) {
+				if (nextFieldsPosition < currentDocFields.length) {
+					// Still values left from the document
+					IndexableField fieldValue = currentDocFields[nextFieldsPosition++];
+					if (fieldValue.binaryValue() != null) {
+						return fieldValue.binaryValue();
+					} else if (fieldValue.stringValue() != null) {
+						return new BytesRef(fieldValue.stringValue());
+					} else {
+						continue;
+					}
+				}
 
-        BytesRef tempPayload = null;
-        if (hasPayloads) {
-          IndexableField payload = doc.getField(payloadField);
-          if (payload != null) {
-            if (payload.binaryValue() != null) {
-              tempPayload =  payload.binaryValue();
-            } else if (payload.stringValue() != null) {
-              tempPayload = new BytesRef(payload.stringValue());
-            }
-          }
-          // in case that the iterator has payloads configured, use empty values
-          // instead of null for payload
-          if (tempPayload == null) {
-            tempPayload = new BytesRef();
-          }
-        }
+				if (currentDocId == docCount) {
+					// Iterated over all the documents.
+					break;
+				}
 
-        Set<BytesRef> tempContexts;
-        if (hasContexts) {
-          tempContexts = new HashSet<>();
-          final IndexableField[] contextFields = doc.getFields(contextsField);
-          for (IndexableField contextField : contextFields) {
-            if (contextField.binaryValue() != null) {
-              tempContexts.add(contextField.binaryValue());
-            } else if (contextField.stringValue() != null) {
-              tempContexts.add(new BytesRef(contextField.stringValue()));
-            } else {
-              continue;
-            }
-          }
-        } else {
-          tempContexts = Collections.emptySet();
-        }
+				currentDocId++;
+				if (liveDocs != null && !liveDocs.get(currentDocId)) {
+					continue;
+				}
 
-        currentDocFields = doc.getFields(field);
-        nextFieldsPosition = 0;
-        if (currentDocFields.length == 0) { // no values in this document
-          continue;
-        }
-        IndexableField fieldValue = currentDocFields[nextFieldsPosition++];
-        BytesRef tempTerm;
-        if (fieldValue.binaryValue() != null) {
-          tempTerm = fieldValue.binaryValue();
-        } else if (fieldValue.stringValue() != null) {
-          tempTerm = new BytesRef(fieldValue.stringValue());
-        } else {
-          continue;
-        }
+				Document doc = reader.document(currentDocId, relevantFields);
 
-        currentPayload = tempPayload;
-        currentContexts = tempContexts;
-        currentWeight = getWeight(doc, currentDocId);
+				BytesRef tempPayload = null;
+				if (hasPayloads) {
+					IndexableField payload = doc.getField(payloadField);
+					if (payload != null) {
+						if (payload.binaryValue() != null) {
+							tempPayload = payload.binaryValue();
+						} else if (payload.stringValue() != null) {
+							tempPayload = new BytesRef(payload.stringValue());
+						}
+					}
+					// in case that the iterator has payloads configured, use empty values
+					// instead of null for payload
+					if (tempPayload == null) {
+						tempPayload = new BytesRef();
+					}
+				}
 
-        return tempTerm;
-      }
+				Set<BytesRef> tempContexts;
+				if (hasContexts) {
+					tempContexts = new HashSet<>();
+					final IndexableField[] contextFields = doc.getFields(contextsField);
+					for (IndexableField contextField : contextFields) {
+						if (contextField.binaryValue() != null) {
+							tempContexts.add(contextField.binaryValue());
+						} else if (contextField.stringValue() != null) {
+							tempContexts.add(new BytesRef(contextField.stringValue()));
+						} else {
+							continue;
+						}
+					}
+				} else {
+					tempContexts = Collections.emptySet();
+				}
 
-      return null;
-    }
+				currentDocFields = doc.getFields(field);
+				nextFieldsPosition = 0;
+				if (currentDocFields.length == 0) { // no values in this document
+					continue;
+				}
+				IndexableField fieldValue = currentDocFields[nextFieldsPosition++];
+				BytesRef tempTerm;
+				if (fieldValue.binaryValue() != null) {
+					tempTerm = fieldValue.binaryValue();
+				} else if (fieldValue.stringValue() != null) {
+					tempTerm = new BytesRef(fieldValue.stringValue());
+				} else {
+					continue;
+				}
 
-    @Override
-    public BytesRef payload() {
-      return currentPayload;
-    }
+				currentPayload = tempPayload;
+				currentContexts = tempContexts;
+				currentWeight = getWeight(doc, currentDocId);
 
-    @Override
-    public boolean hasPayloads() {
-      return hasPayloads;
-    }
-    
-    /** 
-     * Returns the value of the <code>weightField</code> for the current document.
-     * Retrieves the value for the <code>weightField</code> if it's stored (using <code>doc</code>)
-     * or if it's indexed as {@link NumericDocValues} (using <code>docId</code>) for the document.
-     * If no value is found, then the weight is 0.
-     */
-    protected long getWeight(Document doc, int docId) throws IOException {
-      IndexableField weight = doc.getField(weightField);
-      if (weight != null) { // found weight as stored
-        return (weight.numericValue() != null) ? weight.numericValue().longValue() : 0;
-      } else if (weightValues != null) {  // found weight as NumericDocValue
-        if (weightValues.docID() < docId) {
-          weightValues.advance(docId);
-        }
-        if (weightValues.docID() == docId) {
-          return weightValues.longValue();
-        } else {
-          // missing
-          return 0;
-        }
-      } else { // fall back
-        return 0;
-      }
-    }
-    
-    private Set<String> getRelevantFields(String... fields) {
-      Set<String> relevantFields = new HashSet<>();
-      for (String relevantField : fields) {
-        if (relevantField != null) {
-          relevantFields.add(relevantField);
-        }
-      }
-      return relevantFields;
-    }
+				return tempTerm;
+			}
 
-    @Override
-    public Set<BytesRef> contexts() {
-      if (hasContexts) {
-        return currentContexts;
-      }
-      return null;
-    }
+			return null;
+		}
 
-    @Override
-    public boolean hasContexts() {
-      return hasContexts;
-    }
-  }
+		@Override
+		public BytesRef payload() {
+			return currentPayload;
+		}
+
+		@Override
+		public boolean hasPayloads() {
+			return hasPayloads;
+		}
+
+		/**
+		 * Returns the value of the <code>weightField</code> for the current document.
+		 * Retrieves the value for the <code>weightField</code> if it's stored (using <code>doc</code>)
+		 * or if it's indexed as {@link NumericDocValues} (using <code>docId</code>) for the document.
+		 * If no value is found, then the weight is 0.
+		 */
+		protected long getWeight(Document doc, int docId) throws IOException {
+			IndexableField weight = doc.getField(weightField);
+			if (weight != null) { // found weight as stored
+				return (weight.numericValue() != null) ? weight.numericValue().longValue() : 0;
+			} else if (weightValues != null) {  // found weight as NumericDocValue
+				if (weightValues.docID() < docId) {
+					weightValues.advance(docId);
+				}
+				if (weightValues.docID() == docId) {
+					return weightValues.longValue();
+				} else {
+					// missing
+					return 0;
+				}
+			} else { // fall back
+				return 0;
+			}
+		}
+
+		private Set<String> getRelevantFields(String... fields) {
+			Set<String> relevantFields = new HashSet<>();
+			for (String relevantField : fields) {
+				if (relevantField != null) {
+					relevantFields.add(relevantField);
+				}
+			}
+			return relevantFields;
+		}
+
+		@Override
+		public Set<BytesRef> contexts() {
+			if (hasContexts) {
+				return currentContexts;
+			}
+			return null;
+		}
+
+		@Override
+		public boolean hasContexts() {
+			return hasContexts;
+		}
+	}
 }

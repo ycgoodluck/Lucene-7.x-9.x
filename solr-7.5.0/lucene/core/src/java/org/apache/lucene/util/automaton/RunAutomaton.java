@@ -1,9 +1,9 @@
 /*
  * dk.brics.automaton
- * 
+ *
  * Copyright (c) 2001-2009 Anders Moeller
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -14,7 +14,7 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -33,181 +33,181 @@ import java.util.Arrays;
 
 /**
  * Finite-state automaton with fast run operation.  The initial state is always 0.
- * 
+ *
  * @lucene.experimental
  */
 public abstract class RunAutomaton {
-  final Automaton automaton;
-  final int alphabetSize;
-  final int size;
-  final boolean[] accept;
-  final int[] transitions; // delta(state,c) = transitions[state*points.length +
-                     // getCharClass(c)]
-  final int[] points; // char interval start points
-  final int[] classmap; // map from char number to class
-  
-  /**
-   * Constructs a new <code>RunAutomaton</code> from a deterministic
-   * <code>Automaton</code>.
-   * 
-   * @param a an automaton
-   */
-  protected RunAutomaton(Automaton a, int alphabetSize) {
-    this(a, alphabetSize, Operations.DEFAULT_MAX_DETERMINIZED_STATES);
-  }
+	final Automaton automaton;
+	final int alphabetSize;
+	final int size;
+	final boolean[] accept;
+	final int[] transitions; // delta(state,c) = transitions[state*points.length +
+	// getCharClass(c)]
+	final int[] points; // char interval start points
+	final int[] classmap; // map from char number to class
 
-  /**
-   * Constructs a new <code>RunAutomaton</code> from a deterministic
-   * <code>Automaton</code>.
-   * 
-   * @param a an automaton
-   * @param maxDeterminizedStates maximum number of states that can be created
-   *   while determinizing a
-   */
-  protected RunAutomaton(Automaton a, int alphabetSize, int maxDeterminizedStates) {
-    this.alphabetSize = alphabetSize;
-    a = Operations.determinize(a, maxDeterminizedStates);
-    this.automaton = a;
-    points = a.getStartPoints();
-    size = Math.max(1,a.getNumStates());
-    accept = new boolean[size];
-    // transitions数组根据state的个数，数组分为state个区域，第一个区域额也就是 state = 0，第二个区域也就是state = 1.。如此类推
-    // 拿第二个区域举例，这块区域表示 state中是否有一个转换(transition)可以使得 某个一个字节在这个区域内
-    // 比如state的转换区间是 99~255，即state的min是99，max为255, 那么某一个字节，即100就在这个区域内。
-    transitions = new int[size * points.length];
-    Arrays.fill(transitions, -1);
-    for (int n=0;n<size;n++) {
-      accept[n] = a.isAccept(n);
-      for (int c = 0; c < points.length; c++) {
-        int dest = a.step(n, points[c]);
-        assert dest == -1 || dest < size;
-        transitions[n * points.length + c] = dest;
-      }
-    }
+	/**
+	 * Constructs a new <code>RunAutomaton</code> from a deterministic
+	 * <code>Automaton</code>.
+	 *
+	 * @param a an automaton
+	 */
+	protected RunAutomaton(Automaton a, int alphabetSize) {
+		this(a, alphabetSize, Operations.DEFAULT_MAX_DETERMINIZED_STATES);
+	}
 
-    /*
-     * Set alphabet table for optimal run performance.
-     */
-    // classmap数组的下标值是0~255的值，数组元素是 point中的数组元素在point数组中的下标值
-    classmap = new int[Math.min(256, alphabetSize)];
-    int i = 0;
-    for (int j = 0; j < classmap.length; j++) {
-      if (i + 1 < points.length && j == points[i + 1]) {
-        i++;
-      }
-      classmap[j] = i;
-    }
-  }
-  
-  /**
-   * Returns a string representation of this automaton.
-   */
-  @Override
-  public String toString() {
-    StringBuilder b = new StringBuilder();
-    b.append("initial state: 0\n");
-    for (int i = 0; i < size; i++) {
-      b.append("state " + i);
-      if (accept[i]) b.append(" [accept]:\n");
-      else b.append(" [reject]:\n");
-      for (int j = 0; j < points.length; j++) {
-        int k = transitions[i * points.length + j];
-        if (k != -1) {
-          int min = points[j];
-          int max;
-          if (j + 1 < points.length) max = (points[j + 1] - 1);
-          else max = alphabetSize;
-          b.append(" ");
-          Automaton.appendCharString(min, b);
-          if (min != max) {
-            b.append("-");
-            Automaton.appendCharString(max, b);
-          }
-          b.append(" -> ").append(k).append("\n");
-        }
-      }
-    }
-    return b.toString();
-  }
-  
-  /**
-   * Returns number of states in automaton.
-   */
-  public final int getSize() {
-    return size;
-  }
-  
-  /**
-   * Returns acceptance status for given state.
-   */
-  public final boolean isAccept(int state) {
-    return accept[state];
-  }
-  
-  /**
-   * Returns array of codepoint class interval start points. The array should
-   * not be modified by the caller.
-   */
-  public final int[] getCharIntervals() {
-    return points.clone();
-  }
-  
-  /**
-   * Gets character class of given codepoint
-   */
-  final int getCharClass(int c) {
+	/**
+	 * Constructs a new <code>RunAutomaton</code> from a deterministic
+	 * <code>Automaton</code>.
+	 *
+	 * @param a                     an automaton
+	 * @param maxDeterminizedStates maximum number of states that can be created
+	 *                              while determinizing a
+	 */
+	protected RunAutomaton(Automaton a, int alphabetSize, int maxDeterminizedStates) {
+		this.alphabetSize = alphabetSize;
+		a = Operations.determinize(a, maxDeterminizedStates);
+		this.automaton = a;
+		points = a.getStartPoints();
+		size = Math.max(1, a.getNumStates());
+		accept = new boolean[size];
+		// transitions数组根据state的个数，数组分为state个区域，第一个区域额也就是 state = 0，第二个区域也就是state = 1.。如此类推
+		// 拿第二个区域举例，这块区域表示 state中是否有一个转换(transition)可以使得 某个一个字节在这个区域内
+		// 比如state的转换区间是 99~255，即state的min是99，max为255, 那么某一个字节，即100就在这个区域内。
+		transitions = new int[size * points.length];
+		Arrays.fill(transitions, -1);
+		for (int n = 0; n < size; n++) {
+			accept[n] = a.isAccept(n);
+			for (int c = 0; c < points.length; c++) {
+				int dest = a.step(n, points[c]);
+				assert dest == -1 || dest < size;
+				transitions[n * points.length + c] = dest;
+			}
+		}
 
-    // binary search
-    int a = 0;
-    int b = points.length;
-    while (b - a > 1) {
-      int d = (a + b) >>> 1;
-      if (points[d] > c) b = d;
-      else if (points[d] < c) a = d;
-      else return d;
-    }
-    return a;
-  }
+		/*
+		 * Set alphabet table for optimal run performance.
+		 */
+		// classmap数组的下标值是0~255的值，数组元素是 point中的数组元素在point数组中的下标值
+		classmap = new int[Math.min(256, alphabetSize)];
+		int i = 0;
+		for (int j = 0; j < classmap.length; j++) {
+			if (i + 1 < points.length && j == points[i + 1]) {
+				i++;
+			}
+			classmap[j] = i;
+		}
+	}
 
-  /**
-   * Returns the state obtained by reading the given char from the given state.
-   * Returns -1 if not obtaining any such state. (If the original
-   * <code>Automaton</code> had no dead states, -1 is returned here if and only
-   * if a dead state is entered in an equivalent automaton with a total
-   * transition function.)
-   */
-  public final int step(int state, int c) {
-    assert c < alphabetSize;
-    if (c >= classmap.length) {
-      return transitions[state * points.length + getCharClass(c)];
-    } else {
-      // state * points.length 用来确定当前state对应的信息在transitions[]数组中的起始位置。
-      //
-      return transitions[state * points.length + classmap[c]];
-    }
-  }
+	/**
+	 * Returns a string representation of this automaton.
+	 */
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append("initial state: 0\n");
+		for (int i = 0; i < size; i++) {
+			b.append("state " + i);
+			if (accept[i]) b.append(" [accept]:\n");
+			else b.append(" [reject]:\n");
+			for (int j = 0; j < points.length; j++) {
+				int k = transitions[i * points.length + j];
+				if (k != -1) {
+					int min = points[j];
+					int max;
+					if (j + 1 < points.length) max = (points[j + 1] - 1);
+					else max = alphabetSize;
+					b.append(" ");
+					Automaton.appendCharString(min, b);
+					if (min != max) {
+						b.append("-");
+						Automaton.appendCharString(max, b);
+					}
+					b.append(" -> ").append(k).append("\n");
+				}
+			}
+		}
+		return b.toString();
+	}
 
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + alphabetSize;
-    result = prime * result + points.length;
-    result = prime * result + size;
-    return result;
-  }
+	/**
+	 * Returns number of states in automaton.
+	 */
+	public final int getSize() {
+		return size;
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
-    RunAutomaton other = (RunAutomaton) obj;
-    if (alphabetSize != other.alphabetSize) return false;
-    if (size != other.size) return false;
-    if (!Arrays.equals(points, other.points)) return false;
-    if (!Arrays.equals(accept, other.accept)) return false;
-    if (!Arrays.equals(transitions, other.transitions)) return false;
-    return true;
-  }
+	/**
+	 * Returns acceptance status for given state.
+	 */
+	public final boolean isAccept(int state) {
+		return accept[state];
+	}
+
+	/**
+	 * Returns array of codepoint class interval start points. The array should
+	 * not be modified by the caller.
+	 */
+	public final int[] getCharIntervals() {
+		return points.clone();
+	}
+
+	/**
+	 * Gets character class of given codepoint
+	 */
+	final int getCharClass(int c) {
+
+		// binary search
+		int a = 0;
+		int b = points.length;
+		while (b - a > 1) {
+			int d = (a + b) >>> 1;
+			if (points[d] > c) b = d;
+			else if (points[d] < c) a = d;
+			else return d;
+		}
+		return a;
+	}
+
+	/**
+	 * Returns the state obtained by reading the given char from the given state.
+	 * Returns -1 if not obtaining any such state. (If the original
+	 * <code>Automaton</code> had no dead states, -1 is returned here if and only
+	 * if a dead state is entered in an equivalent automaton with a total
+	 * transition function.)
+	 */
+	public final int step(int state, int c) {
+		assert c < alphabetSize;
+		if (c >= classmap.length) {
+			return transitions[state * points.length + getCharClass(c)];
+		} else {
+			// state * points.length 用来确定当前state对应的信息在transitions[]数组中的起始位置。
+			//
+			return transitions[state * points.length + classmap[c]];
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + alphabetSize;
+		result = prime * result + points.length;
+		result = prime * result + size;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		RunAutomaton other = (RunAutomaton) obj;
+		if (alphabetSize != other.alphabetSize) return false;
+		if (size != other.size) return false;
+		if (!Arrays.equals(points, other.points)) return false;
+		if (!Arrays.equals(accept, other.accept)) return false;
+		if (!Arrays.equals(transitions, other.transitions)) return false;
+		return true;
+	}
 }

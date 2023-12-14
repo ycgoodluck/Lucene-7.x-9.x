@@ -29,34 +29,34 @@ import org.junit.runners.model.Statement;
  * case.
  */
 class TestRuleSetupTeardownChained implements TestRule {
-  /**
-   * @see TestRuleSetupTeardownChained  
-   */
-  public boolean setupCalled;
+	/**
+	 * @see TestRuleSetupTeardownChained
+	 */
+	public boolean setupCalled;
 
-  /**
-   * @see TestRuleSetupTeardownChained
-   */
-  public boolean teardownCalled;
+	/**
+	 * @see TestRuleSetupTeardownChained
+	 */
+	public boolean teardownCalled;
 
-  @Override
-  public Statement apply(final Statement base, Description description) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        setupCalled = false;
-        teardownCalled = false;
-        base.evaluate();
+	@Override
+	public Statement apply(final Statement base, Description description) {
+		return new Statement() {
+			@Override
+			public void evaluate() throws Throwable {
+				setupCalled = false;
+				teardownCalled = false;
+				base.evaluate();
 
-        // I assume we don't want to check teardown chaining if something happens in the
-        // test because this would obscure the original exception?
-        if (!setupCalled) { 
-          Assert.fail("One of the overrides of setUp does not propagate the call.");
-        }
-        if (!teardownCalled) { 
-          Assert.fail("One of the overrides of tearDown does not propagate the call.");
-        }
-      }
-    };
-  }
+				// I assume we don't want to check teardown chaining if something happens in the
+				// test because this would obscure the original exception?
+				if (!setupCalled) {
+					Assert.fail("One of the overrides of setUp does not propagate the call.");
+				}
+				if (!teardownCalled) {
+					Assert.fail("One of the overrides of tearDown does not propagate the call.");
+				}
+			}
+		};
+	}
 }

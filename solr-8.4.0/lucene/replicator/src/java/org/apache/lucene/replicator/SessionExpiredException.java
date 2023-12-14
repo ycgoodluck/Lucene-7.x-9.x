@@ -21,33 +21,32 @@ import java.io.IOException;
 /**
  * Exception indicating that a revision update session was expired due to lack
  * of activity.
- * 
+ *
+ * @lucene.experimental
  * @see LocalReplicator#DEFAULT_SESSION_EXPIRATION_THRESHOLD
  * @see LocalReplicator#setExpirationThreshold(long)
- * 
- * @lucene.experimental
  */
 public class SessionExpiredException extends IOException {
-  
-  /**
-   * @see IOException#IOException(String, Throwable)
-   */
-  public SessionExpiredException(String message, Throwable cause) {
-    super(message, cause);
-  }
-  
-  /**
-   * @see IOException#IOException(String)
-   */
-  public SessionExpiredException(String message) {
-    super(message);
-  }
-  
-  /**
-   * @see IOException#IOException(Throwable)
-   */
-  public SessionExpiredException(Throwable cause) {
-    super(cause);
-  }
-  
+
+	/**
+	 * @see IOException#IOException(String, Throwable)
+	 */
+	public SessionExpiredException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	/**
+	 * @see IOException#IOException(String)
+	 */
+	public SessionExpiredException(String message) {
+		super(message);
+	}
+
+	/**
+	 * @see IOException#IOException(Throwable)
+	 */
+	public SessionExpiredException(Throwable cause) {
+		super(cause);
+	}
+
 }

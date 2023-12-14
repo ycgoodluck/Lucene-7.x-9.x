@@ -28,53 +28,55 @@ import org.apache.lucene.util.BytesRef;
  */
 public final class CannedBinaryTokenStream extends TokenStream {
 
-  /** Represents a binary token. */
-  public final static class BinaryToken {
-    BytesRef term;
-    int posInc;
-    int posLen;
-    int startOffset;
-    int endOffset;
+	/**
+	 * Represents a binary token.
+	 */
+	public final static class BinaryToken {
+		BytesRef term;
+		int posInc;
+		int posLen;
+		int startOffset;
+		int endOffset;
 
-    public BinaryToken(BytesRef term) {
-      this.term = term;
-      this.posInc = 1;
-      this.posLen = 1;
-    }
+		public BinaryToken(BytesRef term) {
+			this.term = term;
+			this.posInc = 1;
+			this.posLen = 1;
+		}
 
-    public BinaryToken(BytesRef term, int posInc, int posLen) {
-      this.term = term;
-      this.posInc = posInc;
-      this.posLen = posLen;
-    }
-  }
+		public BinaryToken(BytesRef term, int posInc, int posLen) {
+			this.term = term;
+			this.posInc = posInc;
+			this.posLen = posLen;
+		}
+	}
 
-  private final BinaryToken[] tokens;
-  private int upto = 0;
-  private final BytesTermAttribute termAtt = addAttribute(BytesTermAttribute.class);
-  private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
-  private final PositionLengthAttribute posLengthAtt = addAttribute(PositionLengthAttribute.class);
-  private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
+	private final BinaryToken[] tokens;
+	private int upto = 0;
+	private final BytesTermAttribute termAtt = addAttribute(BytesTermAttribute.class);
+	private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
+	private final PositionLengthAttribute posLengthAtt = addAttribute(PositionLengthAttribute.class);
+	private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
 
-  public CannedBinaryTokenStream(BinaryToken... tokens) {
-    super(Token.TOKEN_ATTRIBUTE_FACTORY);
-    this.tokens = tokens;
-  }
-  
-  @Override
-  public boolean incrementToken() {
-    if (upto < tokens.length) {
-      final BinaryToken token = tokens[upto++];     
-      // TODO: can we just capture/restoreState so
-      // we get all attrs...?
-      clearAttributes();      
-      termAtt.setBytesRef(token.term);
-      posIncrAtt.setPositionIncrement(token.posInc);
-      posLengthAtt.setPositionLength(token.posLen);
-      offsetAtt.setOffset(token.startOffset, token.endOffset);
-      return true;
-    } else {
-      return false;
-    }
-  }
+	public CannedBinaryTokenStream(BinaryToken... tokens) {
+		super(Token.TOKEN_ATTRIBUTE_FACTORY);
+		this.tokens = tokens;
+	}
+
+	@Override
+	public boolean incrementToken() {
+		if (upto < tokens.length) {
+			final BinaryToken token = tokens[upto++];
+			// TODO: can we just capture/restoreState so
+			// we get all attrs...?
+			clearAttributes();
+			termAtt.setBytesRef(token.term);
+			posIncrAtt.setPositionIncrement(token.posInc);
+			posLengthAtt.setPositionLength(token.posLen);
+			offsetAtt.setOffset(token.startOffset, token.endOffset);
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

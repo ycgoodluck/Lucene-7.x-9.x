@@ -31,85 +31,85 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IOContext;
 
 class CrankyStoredFieldsFormat extends StoredFieldsFormat {
-  final StoredFieldsFormat delegate;
-  final Random random;
-  
-  CrankyStoredFieldsFormat(StoredFieldsFormat delegate, Random random) {
-    this.delegate = delegate;
-    this.random = random;
-  }
+	final StoredFieldsFormat delegate;
+	final Random random;
 
-  @Override
-  public StoredFieldsReader fieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context) throws IOException {
-    return delegate.fieldsReader(directory, si, fn, context);
-  }
+	CrankyStoredFieldsFormat(StoredFieldsFormat delegate, Random random) {
+		this.delegate = delegate;
+		this.random = random;
+	}
 
-  @Override
-  public StoredFieldsWriter fieldsWriter(Directory directory, SegmentInfo si, IOContext context) throws IOException {
-    if (random.nextInt(100) == 0) {
-      throw new IOException("Fake IOException from StoredFieldsFormat.fieldsWriter()");
-    }
-    return new CrankyStoredFieldsWriter(delegate.fieldsWriter(directory, si, context), random);
-  }
-  
-  static class CrankyStoredFieldsWriter extends StoredFieldsWriter {
-    
-    final StoredFieldsWriter delegate;
-    final Random random;
-    
-    CrankyStoredFieldsWriter(StoredFieldsWriter delegate, Random random) {
-      this.delegate = delegate;
-      this.random = random;
-    }
+	@Override
+	public StoredFieldsReader fieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context) throws IOException {
+		return delegate.fieldsReader(directory, si, fn, context);
+	}
 
-    @Override
-    public void finish(FieldInfos fis, int numDocs) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from StoredFieldsWriter.finish()");
-      }
-      delegate.finish(fis, numDocs);
-    }
+	@Override
+	public StoredFieldsWriter fieldsWriter(Directory directory, SegmentInfo si, IOContext context) throws IOException {
+		if (random.nextInt(100) == 0) {
+			throw new IOException("Fake IOException from StoredFieldsFormat.fieldsWriter()");
+		}
+		return new CrankyStoredFieldsWriter(delegate.fieldsWriter(directory, si, context), random);
+	}
 
-    @Override
-    public int merge(MergeState mergeState) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException from StoredFieldsWriter.merge()");
-      }
-      return super.merge(mergeState);
-    }
-    
-    @Override
-    public void close() throws IOException {
-      delegate.close();
-      if (random.nextInt(1000) == 0) {
-        throw new IOException("Fake IOException from StoredFieldsWriter.close()");
-      }
-    }
-    
-    // per doc/field methods: lower probability since they are invoked so many times.
+	static class CrankyStoredFieldsWriter extends StoredFieldsWriter {
 
-    @Override
-    public void startDocument() throws IOException {
-      if (random.nextInt(10000) == 0) {
-        throw new IOException("Fake IOException from StoredFieldsWriter.startDocument()");
-      }
-      delegate.startDocument();
-    }
-    
-    @Override
-    public void finishDocument() throws IOException {
-      if (random.nextInt(10000) == 0) {
-        throw new IOException("Fake IOException from StoredFieldsWriter.finishDocument()");
-      }
-      delegate.finishDocument();
-    }
+		final StoredFieldsWriter delegate;
+		final Random random;
 
-    @Override
-    public void writeField(FieldInfo info, IndexableField field) throws IOException {
-      if (random.nextInt(10000) == 0) {
-        throw new IOException("Fake IOException from StoredFieldsWriter.writeField()");
-      }
-      delegate.writeField(info, field);
-    }
-  }
+		CrankyStoredFieldsWriter(StoredFieldsWriter delegate, Random random) {
+			this.delegate = delegate;
+			this.random = random;
+		}
+
+		@Override
+		public void finish(FieldInfos fis, int numDocs) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from StoredFieldsWriter.finish()");
+			}
+			delegate.finish(fis, numDocs);
+		}
+
+		@Override
+		public int merge(MergeState mergeState) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException from StoredFieldsWriter.merge()");
+			}
+			return super.merge(mergeState);
+		}
+
+		@Override
+		public void close() throws IOException {
+			delegate.close();
+			if (random.nextInt(1000) == 0) {
+				throw new IOException("Fake IOException from StoredFieldsWriter.close()");
+			}
+		}
+
+		// per doc/field methods: lower probability since they are invoked so many times.
+
+		@Override
+		public void startDocument() throws IOException {
+			if (random.nextInt(10000) == 0) {
+				throw new IOException("Fake IOException from StoredFieldsWriter.startDocument()");
+			}
+			delegate.startDocument();
+		}
+
+		@Override
+		public void finishDocument() throws IOException {
+			if (random.nextInt(10000) == 0) {
+				throw new IOException("Fake IOException from StoredFieldsWriter.finishDocument()");
+			}
+			delegate.finishDocument();
+		}
+
+		@Override
+		public void writeField(FieldInfo info, IndexableField field) throws IOException {
+			if (random.nextInt(10000) == 0) {
+				throw new IOException("Fake IOException from StoredFieldsWriter.writeField()");
+			}
+			delegate.writeField(info, field);
+		}
+	}
 }

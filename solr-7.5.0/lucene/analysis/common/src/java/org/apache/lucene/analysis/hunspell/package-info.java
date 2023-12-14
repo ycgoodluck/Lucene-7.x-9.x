@@ -16,7 +16,7 @@
  */
 
 /**
- * Stemming TokenFilter using a Java implementation of the 
+ * Stemming TokenFilter using a Java implementation of the
  * <a href="http://www.ldc.upenn.edu/Catalog/docs/LDC2008T01/acta04.pdf">Hunspell stemming algorithm.</a>
  * <p>
  * Dictionaries can be found on <a href="http://wiki.services.openoffice.org/wiki/Dictionaries">OpenOffice's wiki</a>

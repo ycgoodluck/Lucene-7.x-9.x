@@ -44,109 +44,109 @@ import org.junit.Test;
  */
 public class DataSplitterTest extends LuceneTestCase {
 
-  private LeafReader originalIndex;
-  private RandomIndexWriter indexWriter;
-  private Directory dir;
+	private LeafReader originalIndex;
+	private RandomIndexWriter indexWriter;
+	private Directory dir;
 
-  private static final String textFieldName = "text";
-  private static final String classFieldName = "class";
-  private static final String idFieldName = "id";
+	private static final String textFieldName = "text";
+	private static final String classFieldName = "class";
+	private static final String idFieldName = "id";
 
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    dir = newDirectory();
-    indexWriter = new RandomIndexWriter(random(), dir);
+	@Override
+	@Before
+	public void setUp() throws Exception {
+		super.setUp();
+		dir = newDirectory();
+		indexWriter = new RandomIndexWriter(random(), dir);
 
-    FieldType ft = new FieldType(TextField.TYPE_STORED);
-    ft.setStoreTermVectors(true);
-    ft.setStoreTermVectorOffsets(true);
-    ft.setStoreTermVectorPositions(true);
+		FieldType ft = new FieldType(TextField.TYPE_STORED);
+		ft.setStoreTermVectors(true);
+		ft.setStoreTermVectorOffsets(true);
+		ft.setStoreTermVectorPositions(true);
 
-    Document doc;
-    Random rnd = random();
-    for (int i = 0; i < 1000; i++) {
-      doc = new Document();
-      doc.add(new Field(idFieldName, "id" + Integer.toString(i), ft));
-      doc.add(new Field(textFieldName, TestUtil.randomUnicodeString(rnd, 1024), ft));
-      String className = Integer.toString(rnd.nextInt(10));
-      doc.add(new Field(classFieldName, className, ft));
-      doc.add(new SortedDocValuesField(classFieldName, new BytesRef(className)));
-      indexWriter.addDocument(doc);
-    }
+		Document doc;
+		Random rnd = random();
+		for (int i = 0; i < 1000; i++) {
+			doc = new Document();
+			doc.add(new Field(idFieldName, "id" + Integer.toString(i), ft));
+			doc.add(new Field(textFieldName, TestUtil.randomUnicodeString(rnd, 1024), ft));
+			String className = Integer.toString(rnd.nextInt(10));
+			doc.add(new Field(classFieldName, className, ft));
+			doc.add(new SortedDocValuesField(classFieldName, new BytesRef(className)));
+			indexWriter.addDocument(doc);
+		}
 
-    indexWriter.commit();
-    indexWriter.forceMerge(1);
+		indexWriter.commit();
+		indexWriter.forceMerge(1);
 
-    originalIndex = getOnlyLeafReader(indexWriter.getReader());
-  }
+		originalIndex = getOnlyLeafReader(indexWriter.getReader());
+	}
 
-  @Override
-  @After
-  public void tearDown() throws Exception {
-    originalIndex.close();
-    indexWriter.close();
-    dir.close();
-    super.tearDown();
-  }
+	@Override
+	@After
+	public void tearDown() throws Exception {
+		originalIndex.close();
+		indexWriter.close();
+		dir.close();
+		super.tearDown();
+	}
 
-  @Test
-  public void testSplitOnAllFields() throws Exception {
-    assertSplit(originalIndex, 0.1, 0.1);
-  }
+	@Test
+	public void testSplitOnAllFields() throws Exception {
+		assertSplit(originalIndex, 0.1, 0.1);
+	}
 
-  @Test
-  public void testSplitOnSomeFields() throws Exception {
-    assertSplit(originalIndex, 0.2, 0.35, idFieldName, textFieldName);
-  }
+	@Test
+	public void testSplitOnSomeFields() throws Exception {
+		assertSplit(originalIndex, 0.2, 0.35, idFieldName, textFieldName);
+	}
 
-  public static void assertSplit(LeafReader originalIndex, double testRatio, double crossValidationRatio, String... fieldNames) throws Exception {
+	public static void assertSplit(LeafReader originalIndex, double testRatio, double crossValidationRatio, String... fieldNames) throws Exception {
 
-    BaseDirectoryWrapper trainingIndex = newDirectory();
-    BaseDirectoryWrapper testIndex = newDirectory();
-    BaseDirectoryWrapper crossValidationIndex = newDirectory();
+		BaseDirectoryWrapper trainingIndex = newDirectory();
+		BaseDirectoryWrapper testIndex = newDirectory();
+		BaseDirectoryWrapper crossValidationIndex = newDirectory();
 
-    try {
-      DatasetSplitter datasetSplitter = new DatasetSplitter(testRatio, crossValidationRatio);
-      datasetSplitter.split(originalIndex, trainingIndex, testIndex, crossValidationIndex, new MockAnalyzer(random()), true, classFieldName, fieldNames);
+		try {
+			DatasetSplitter datasetSplitter = new DatasetSplitter(testRatio, crossValidationRatio);
+			datasetSplitter.split(originalIndex, trainingIndex, testIndex, crossValidationIndex, new MockAnalyzer(random()), true, classFieldName, fieldNames);
 
-      assertNotNull(trainingIndex);
-      assertNotNull(testIndex);
-      assertNotNull(crossValidationIndex);
+			assertNotNull(trainingIndex);
+			assertNotNull(testIndex);
+			assertNotNull(crossValidationIndex);
 
-      DirectoryReader trainingReader = DirectoryReader.open(trainingIndex);
-      assertEquals((int) (originalIndex.maxDoc() * (1d - testRatio - crossValidationRatio)), trainingReader.maxDoc(), 20);
-      DirectoryReader testReader = DirectoryReader.open(testIndex);
-      assertEquals((int) (originalIndex.maxDoc() * testRatio), testReader.maxDoc(), 20);
-      DirectoryReader cvReader = DirectoryReader.open(crossValidationIndex);
-      assertEquals((int) (originalIndex.maxDoc() * crossValidationRatio), cvReader.maxDoc(), 20);
+			DirectoryReader trainingReader = DirectoryReader.open(trainingIndex);
+			assertEquals((int) (originalIndex.maxDoc() * (1d - testRatio - crossValidationRatio)), trainingReader.maxDoc(), 20);
+			DirectoryReader testReader = DirectoryReader.open(testIndex);
+			assertEquals((int) (originalIndex.maxDoc() * testRatio), testReader.maxDoc(), 20);
+			DirectoryReader cvReader = DirectoryReader.open(crossValidationIndex);
+			assertEquals((int) (originalIndex.maxDoc() * crossValidationRatio), cvReader.maxDoc(), 20);
 
-      trainingReader.close();
-      testReader.close();
-      cvReader.close();
-      closeQuietly(trainingReader);
-      closeQuietly(testReader);
-      closeQuietly(cvReader);
-    } finally {
-      if (trainingIndex != null) {
-        trainingIndex.close();
-      }
-      if (testIndex != null) {
-        testIndex.close();
-      }
-      if (crossValidationIndex != null) {
-        crossValidationIndex.close();
-      }
-    }
-  }
+			trainingReader.close();
+			testReader.close();
+			cvReader.close();
+			closeQuietly(trainingReader);
+			closeQuietly(testReader);
+			closeQuietly(cvReader);
+		} finally {
+			if (trainingIndex != null) {
+				trainingIndex.close();
+			}
+			if (testIndex != null) {
+				testIndex.close();
+			}
+			if (crossValidationIndex != null) {
+				crossValidationIndex.close();
+			}
+		}
+	}
 
-  private static void closeQuietly(IndexReader reader) throws IOException {
-    try {
-      if (reader != null)
-        reader.close();
-    } catch (Exception e) {
-      // do nothing
-    }
-  }
+	private static void closeQuietly(IndexReader reader) throws IOException {
+		try {
+			if (reader != null)
+				reader.close();
+		} catch (Exception e) {
+			// do nothing
+		}
+	}
 }

@@ -31,120 +31,120 @@ import java.util.Map;
  * returns the value of the <code>trueSource</code> or <code>falseSource</code> function.
  */
 public class IfFunction extends BoolFunction {
-  private final ValueSource ifSource;
-  private final ValueSource trueSource;
-  private final ValueSource falseSource;
+	private final ValueSource ifSource;
+	private final ValueSource trueSource;
+	private final ValueSource falseSource;
 
 
-  public IfFunction(ValueSource ifSource, ValueSource trueSource, ValueSource falseSource) {
-    this.ifSource = ifSource;
-    this.trueSource = trueSource;
-    this.falseSource = falseSource;
-  }
+	public IfFunction(ValueSource ifSource, ValueSource trueSource, ValueSource falseSource) {
+		this.ifSource = ifSource;
+		this.trueSource = trueSource;
+		this.falseSource = falseSource;
+	}
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    final FunctionValues ifVals = ifSource.getValues(context, readerContext);
-    final FunctionValues trueVals = trueSource.getValues(context, readerContext);
-    final FunctionValues falseVals = falseSource.getValues(context, readerContext);
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+		final FunctionValues ifVals = ifSource.getValues(context, readerContext);
+		final FunctionValues trueVals = trueSource.getValues(context, readerContext);
+		final FunctionValues falseVals = falseSource.getValues(context, readerContext);
 
-    return new FunctionValues() {
-      @Override
-      public byte byteVal(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.byteVal(doc) : falseVals.byteVal(doc);
-      }
+		return new FunctionValues() {
+			@Override
+			public byte byteVal(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.byteVal(doc) : falseVals.byteVal(doc);
+			}
 
-      @Override
-      public short shortVal(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.shortVal(doc) : falseVals.shortVal(doc);
-      }
+			@Override
+			public short shortVal(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.shortVal(doc) : falseVals.shortVal(doc);
+			}
 
-      @Override
-      public float floatVal(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.floatVal(doc) : falseVals.floatVal(doc);
-      }
+			@Override
+			public float floatVal(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.floatVal(doc) : falseVals.floatVal(doc);
+			}
 
-      @Override
-      public int intVal(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.intVal(doc) : falseVals.intVal(doc);
-      }
+			@Override
+			public int intVal(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.intVal(doc) : falseVals.intVal(doc);
+			}
 
-      @Override
-      public long longVal(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.longVal(doc) : falseVals.longVal(doc);
-      }
+			@Override
+			public long longVal(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.longVal(doc) : falseVals.longVal(doc);
+			}
 
-      @Override
-      public double doubleVal(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.doubleVal(doc) : falseVals.doubleVal(doc);
-      }
+			@Override
+			public double doubleVal(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.doubleVal(doc) : falseVals.doubleVal(doc);
+			}
 
-      @Override
-      public String strVal(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.strVal(doc) : falseVals.strVal(doc);
-      }
+			@Override
+			public String strVal(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.strVal(doc) : falseVals.strVal(doc);
+			}
 
-      @Override
-      public boolean boolVal(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.boolVal(doc) : falseVals.boolVal(doc);
-      }
+			@Override
+			public boolean boolVal(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.boolVal(doc) : falseVals.boolVal(doc);
+			}
 
-      @Override
-      public boolean bytesVal(int doc, BytesRefBuilder target) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.bytesVal(doc, target) : falseVals.bytesVal(doc, target);
-      }
+			@Override
+			public boolean bytesVal(int doc, BytesRefBuilder target) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.bytesVal(doc, target) : falseVals.bytesVal(doc, target);
+			}
 
-      @Override
-      public Object objectVal(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.objectVal(doc) : falseVals.objectVal(doc);
-      }
+			@Override
+			public Object objectVal(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.objectVal(doc) : falseVals.objectVal(doc);
+			}
 
-      @Override
-      public boolean exists(int doc) throws IOException {
-        return ifVals.boolVal(doc) ? trueVals.exists(doc) : falseVals.exists(doc);
-      }
+			@Override
+			public boolean exists(int doc) throws IOException {
+				return ifVals.boolVal(doc) ? trueVals.exists(doc) : falseVals.exists(doc);
+			}
 
-      @Override
-      public ValueFiller getValueFiller() {
-        // TODO: we need types of trueSource / falseSource to handle this
-        // for now, use float.
-        return super.getValueFiller();
-      }
+			@Override
+			public ValueFiller getValueFiller() {
+				// TODO: we need types of trueSource / falseSource to handle this
+				// for now, use float.
+				return super.getValueFiller();
+			}
 
-      @Override
-      public String toString(int doc) throws IOException {
-        return "if(" + ifVals.toString(doc) + ',' + trueVals.toString(doc) + ',' + falseVals.toString(doc) + ')';
-      }
-    };
+			@Override
+			public String toString(int doc) throws IOException {
+				return "if(" + ifVals.toString(doc) + ',' + trueVals.toString(doc) + ',' + falseVals.toString(doc) + ')';
+			}
+		};
 
-  }
+	}
 
-  @Override
-  public String description() {
-    return "if(" + ifSource.description() + ',' + trueSource.description() + ',' + falseSource + ')';
-  }
+	@Override
+	public String description() {
+		return "if(" + ifSource.description() + ',' + trueSource.description() + ',' + falseSource + ')';
+	}
 
-  @Override
-  public int hashCode() {
-    int h = ifSource.hashCode();
-    h = h * 31 + trueSource.hashCode();
-    h = h * 31 + falseSource.hashCode();
-    return h;
-  }
+	@Override
+	public int hashCode() {
+		int h = ifSource.hashCode();
+		h = h * 31 + trueSource.hashCode();
+		h = h * 31 + falseSource.hashCode();
+		return h;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof IfFunction)) return false;
-    IfFunction other = (IfFunction)o;
-    return ifSource.equals(other.ifSource)
-        && trueSource.equals(other.trueSource)
-        && falseSource.equals(other.falseSource);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof IfFunction)) return false;
+		IfFunction other = (IfFunction) o;
+		return ifSource.equals(other.ifSource)
+			&& trueSource.equals(other.trueSource)
+			&& falseSource.equals(other.falseSource);
+	}
 
-  @Override
-  public void createWeight(Map context, IndexSearcher searcher) throws IOException {
-    ifSource.createWeight(context, searcher);
-    trueSource.createWeight(context, searcher);
-    falseSource.createWeight(context, searcher);
-  }
+	@Override
+	public void createWeight(Map context, IndexSearcher searcher) throws IOException {
+		ifSource.createWeight(context, searcher);
+		trueSource.createWeight(context, searcher);
+		falseSource.createWeight(context, searcher);
+	}
 }

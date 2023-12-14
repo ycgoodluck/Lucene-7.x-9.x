@@ -21,9 +21,9 @@ package org.apache.lucene.codecs.lucene50;
  */
 public class TestLucene50StoredFieldsFormatMergeInstance extends TestLucene50StoredFieldsFormat {
 
-  @Override
-  protected boolean shouldTestMergeInstance() {
-    return true;
-  }
+	@Override
+	protected boolean shouldTestMergeInstance() {
+		return true;
+	}
 
 }

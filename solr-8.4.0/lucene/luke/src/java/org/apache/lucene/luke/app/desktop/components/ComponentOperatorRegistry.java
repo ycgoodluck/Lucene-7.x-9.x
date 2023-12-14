@@ -21,30 +21,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/** An utility class for interaction between components */
+/**
+ * An utility class for interaction between components
+ */
 public class ComponentOperatorRegistry {
 
-  private static final ComponentOperatorRegistry instance = new ComponentOperatorRegistry();
+	private static final ComponentOperatorRegistry instance = new ComponentOperatorRegistry();
 
-  private final Map<Class<?>, Object> operators = new HashMap<>();
+	private final Map<Class<?>, Object> operators = new HashMap<>();
 
-  public static ComponentOperatorRegistry getInstance() {
-    return instance;
-  }
+	public static ComponentOperatorRegistry getInstance() {
+		return instance;
+	}
 
-  public <T extends ComponentOperator> void register(Class<T> type, T operator) {
-    if (!operators.containsKey(type)) {
-      operators.put(type, operator);
-    }
-  }
+	public <T extends ComponentOperator> void register(Class<T> type, T operator) {
+		if (!operators.containsKey(type)) {
+			operators.put(type, operator);
+		}
+	}
 
-  @SuppressWarnings("unchecked")
-  public <T extends ComponentOperator> Optional<T> get(Class<T> type) {
-    return Optional.ofNullable((T) operators.get(type));
-  }
+	@SuppressWarnings("unchecked")
+	public <T extends ComponentOperator> Optional<T> get(Class<T> type) {
+		return Optional.ofNullable((T) operators.get(type));
+	}
 
-  /** marker interface for operators */
-  public interface ComponentOperator {
-  }
+	/**
+	 * marker interface for operators
+	 */
+	public interface ComponentOperator {
+	}
 
 }

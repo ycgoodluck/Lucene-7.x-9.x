@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Models and APIs for the Overview tab */
+/**
+ * Models and APIs for the Overview tab
+ */
 package org.apache.lucene.luke.models.overview;

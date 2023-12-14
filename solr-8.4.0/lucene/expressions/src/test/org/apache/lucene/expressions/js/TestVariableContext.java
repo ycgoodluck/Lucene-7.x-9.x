@@ -26,66 +26,66 @@ import static org.apache.lucene.expressions.js.VariableContext.Type.METHOD;
 
 public class TestVariableContext extends LuceneTestCase {
 
-  public void testSimpleVar() {
-    VariableContext[] x = VariableContext.parse("foo");
-    assertEquals(1, x.length);
-    assertEquals(x[0].type, MEMBER);
-    assertEquals(x[0].text, "foo");
-  }
+	public void testSimpleVar() {
+		VariableContext[] x = VariableContext.parse("foo");
+		assertEquals(1, x.length);
+		assertEquals(x[0].type, MEMBER);
+		assertEquals(x[0].text, "foo");
+	}
 
-  public void testEmptyString() {
-    VariableContext[] x = VariableContext.parse("foo['']");
-    assertEquals(2, x.length);
-    assertEquals(x[1].type, STR_INDEX);
-    assertEquals(x[1].text, "");
-  }
+	public void testEmptyString() {
+		VariableContext[] x = VariableContext.parse("foo['']");
+		assertEquals(2, x.length);
+		assertEquals(x[1].type, STR_INDEX);
+		assertEquals(x[1].text, "");
+	}
 
-  public void testUnescapeString() {
-    VariableContext[] x = VariableContext.parse("foo['\\'\\\\']");
-    assertEquals(2, x.length);
-    assertEquals(x[1].type, STR_INDEX);
-    assertEquals(x[1].text, "'\\");
-  }
+	public void testUnescapeString() {
+		VariableContext[] x = VariableContext.parse("foo['\\'\\\\']");
+		assertEquals(2, x.length);
+		assertEquals(x[1].type, STR_INDEX);
+		assertEquals(x[1].text, "'\\");
+	}
 
-  public void testMember() {
-    VariableContext[] x = VariableContext.parse("foo.bar");
-    assertEquals(2, x.length);
-    assertEquals(x[1].type, MEMBER);
-    assertEquals(x[1].text, "bar");
-  }
+	public void testMember() {
+		VariableContext[] x = VariableContext.parse("foo.bar");
+		assertEquals(2, x.length);
+		assertEquals(x[1].type, MEMBER);
+		assertEquals(x[1].text, "bar");
+	}
 
-  public void testMemberFollowedByMember() {
-    VariableContext[] x = VariableContext.parse("foo.bar.baz");
-    assertEquals(3, x.length);
-    assertEquals(x[2].type, MEMBER);
-    assertEquals(x[2].text, "baz");
-  }
+	public void testMemberFollowedByMember() {
+		VariableContext[] x = VariableContext.parse("foo.bar.baz");
+		assertEquals(3, x.length);
+		assertEquals(x[2].type, MEMBER);
+		assertEquals(x[2].text, "baz");
+	}
 
-  public void testMemberFollowedByIntArray() {
-    VariableContext[] x = VariableContext.parse("foo.bar[1]");
-    assertEquals(3, x.length);
-    assertEquals(x[2].type, INT_INDEX);
-    assertEquals(x[2].integer, 1);
-  }
+	public void testMemberFollowedByIntArray() {
+		VariableContext[] x = VariableContext.parse("foo.bar[1]");
+		assertEquals(3, x.length);
+		assertEquals(x[2].type, INT_INDEX);
+		assertEquals(x[2].integer, 1);
+	}
 
-  public void testMethodWithMember() {
-    VariableContext[] x = VariableContext.parse("m.m()");
-    assertEquals(2, x.length);
-    assertEquals(x[1].type, METHOD);
-    assertEquals(x[1].text, "m");
-  }
+	public void testMethodWithMember() {
+		VariableContext[] x = VariableContext.parse("m.m()");
+		assertEquals(2, x.length);
+		assertEquals(x[1].type, METHOD);
+		assertEquals(x[1].text, "m");
+	}
 
-  public void testMethodWithStrIndex() {
-    VariableContext[] x = VariableContext.parse("member['blah'].getMethod()");
-    assertEquals(3, x.length);
-    assertEquals(x[2].type, METHOD);
-    assertEquals(x[2].text, "getMethod");
-  }
+	public void testMethodWithStrIndex() {
+		VariableContext[] x = VariableContext.parse("member['blah'].getMethod()");
+		assertEquals(3, x.length);
+		assertEquals(x[2].type, METHOD);
+		assertEquals(x[2].text, "getMethod");
+	}
 
-  public void testMethodWithNumericalIndex() {
-    VariableContext[] x = VariableContext.parse("member[0].getMethod()");
-    assertEquals(3, x.length);
-    assertEquals(x[2].type, METHOD);
-    assertEquals(x[2].text, "getMethod");
-  }
+	public void testMethodWithNumericalIndex() {
+		VariableContext[] x = VariableContext.parse("member[0].getMethod()");
+		assertEquals(3, x.length);
+		assertEquals(x[2].type, METHOD);
+		assertEquals(x[2].text, "getMethod");
+	}
 }

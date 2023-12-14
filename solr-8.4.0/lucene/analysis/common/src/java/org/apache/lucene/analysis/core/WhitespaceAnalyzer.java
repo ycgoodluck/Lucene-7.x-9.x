@@ -25,15 +25,15 @@ import org.apache.lucene.analysis.Analyzer;
  * @since 3.1
  **/
 public final class WhitespaceAnalyzer extends Analyzer {
-  
-  /**
-   * Creates a new {@link WhitespaceAnalyzer}
-   */
-  public WhitespaceAnalyzer() {
-  }
-  
-  @Override
-  protected TokenStreamComponents createComponents(final String fieldName) {
-    return new TokenStreamComponents(new WhitespaceTokenizer());
-  }
+
+	/**
+	 * Creates a new {@link WhitespaceAnalyzer}
+	 */
+	public WhitespaceAnalyzer() {
+	}
+
+	@Override
+	protected TokenStreamComponents createComponents(final String fieldName) {
+		return new TokenStreamComponents(new WhitespaceTokenizer());
+	}
 }

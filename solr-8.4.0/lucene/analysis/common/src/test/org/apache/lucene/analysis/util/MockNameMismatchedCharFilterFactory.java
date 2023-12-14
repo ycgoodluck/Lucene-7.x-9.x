@@ -20,19 +20,23 @@ package org.apache.lucene.analysis.util;
 import java.io.Reader;
 import java.util.Map;
 
-/** Fake token filter factory for tests. */
+/**
+ * Fake token filter factory for tests.
+ */
 public class MockNameMismatchedCharFilterFactory extends CharFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "mock";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "mock";
 
-  public MockNameMismatchedCharFilterFactory(Map<String, String> args) {
-    super(args);
-  }
+	public MockNameMismatchedCharFilterFactory(Map<String, String> args) {
+		super(args);
+	}
 
-  @Override
-  public Reader create(Reader input) {
-    return input;
-  }
+	@Override
+	public Reader create(Reader input) {
+		return input;
+	}
 
 }

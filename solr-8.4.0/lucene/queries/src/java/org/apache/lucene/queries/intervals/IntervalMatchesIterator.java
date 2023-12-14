@@ -22,7 +22,7 @@ import org.apache.lucene.search.MatchesIterator;
 /**
  * An extension of MatchesIterator that allows the gaps from a wrapped
  * IntervalIterator to be reported.
- *
+ * <p>
  * This is necessary because {@link MatchesIterator#getSubMatches()} returns
  * the submatches of all nested matches as a flat iterator, but
  * {@link IntervalIterator#gaps()} only returns the gaps between its immediate
@@ -30,9 +30,9 @@ import org.apache.lucene.search.MatchesIterator;
  */
 interface IntervalMatchesIterator extends MatchesIterator {
 
-  /**
-   * The number of top-level gaps inside the current match
-   */
-  int gaps();
+	/**
+	 * The number of top-level gaps inside the current match
+	 */
+	int gaps();
 
 }

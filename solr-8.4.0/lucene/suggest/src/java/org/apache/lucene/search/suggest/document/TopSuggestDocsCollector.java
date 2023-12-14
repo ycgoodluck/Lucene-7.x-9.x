@@ -51,154 +51,162 @@ import static org.apache.lucene.search.suggest.document.TopSuggestDocs.SuggestSc
  */
 public class TopSuggestDocsCollector extends SimpleCollector {
 
-  private final SuggestScoreDocPriorityQueue priorityQueue;
-  private final int num;
+	private final SuggestScoreDocPriorityQueue priorityQueue;
+	private final int num;
 
-  /** Only set if we are deduplicating hits: holds all per-segment hits until the end, when we dedup them */
-  private final List<SuggestScoreDoc> pendingResults;
+	/**
+	 * Only set if we are deduplicating hits: holds all per-segment hits until the end, when we dedup them
+	 */
+	private final List<SuggestScoreDoc> pendingResults;
 
-  /** Only set if we are deduplicating hits: holds all surface forms seen so far in the current segment */
-  final CharArraySet seenSurfaceForms;
+	/**
+	 * Only set if we are deduplicating hits: holds all surface forms seen so far in the current segment
+	 */
+	final CharArraySet seenSurfaceForms;
 
-  /** Document base offset for the current Leaf */
-  protected int docBase;
+	/**
+	 * Document base offset for the current Leaf
+	 */
+	protected int docBase;
 
-  /**
-   * Sole constructor
-   *
-   * Collects at most <code>num</code> completions
-   * with corresponding document and weight
-   */
-  public TopSuggestDocsCollector(int num, boolean skipDuplicates) {
-    if (num <= 0) {
-      throw new IllegalArgumentException("'num' must be > 0");
-    }
-    this.num = num;
-    this.priorityQueue = new SuggestScoreDocPriorityQueue(num);
-    if (skipDuplicates) {
-      seenSurfaceForms = new CharArraySet(num, false);
-      pendingResults = new ArrayList<>();
-    } else {
-      seenSurfaceForms = null;
-      pendingResults = null;
-    }
-  }
+	/**
+	 * Sole constructor
+	 * <p>
+	 * Collects at most <code>num</code> completions
+	 * with corresponding document and weight
+	 */
+	public TopSuggestDocsCollector(int num, boolean skipDuplicates) {
+		if (num <= 0) {
+			throw new IllegalArgumentException("'num' must be > 0");
+		}
+		this.num = num;
+		this.priorityQueue = new SuggestScoreDocPriorityQueue(num);
+		if (skipDuplicates) {
+			seenSurfaceForms = new CharArraySet(num, false);
+			pendingResults = new ArrayList<>();
+		} else {
+			seenSurfaceForms = null;
+			pendingResults = null;
+		}
+	}
 
-  /** Returns true if duplicates are filtered out */
-  protected boolean doSkipDuplicates() {
-    return seenSurfaceForms != null;
-  }
+	/**
+	 * Returns true if duplicates are filtered out
+	 */
+	protected boolean doSkipDuplicates() {
+		return seenSurfaceForms != null;
+	}
 
-  /**
-   * Returns the number of results to be collected
-   */
-  public int getCountToCollect() {
-    return num;
-  }
+	/**
+	 * Returns the number of results to be collected
+	 */
+	public int getCountToCollect() {
+		return num;
+	}
 
-  @Override
-  protected void doSetNextReader(LeafReaderContext context) throws IOException {
-    docBase = context.docBase;
-    if (seenSurfaceForms != null) {
-      seenSurfaceForms.clear();
-      // NOTE: this also clears the priorityQueue:
-      for (SuggestScoreDoc hit : priorityQueue.getResults()) {
-        pendingResults.add(hit);
-      }
-    }
-  }
+	@Override
+	protected void doSetNextReader(LeafReaderContext context) throws IOException {
+		docBase = context.docBase;
+		if (seenSurfaceForms != null) {
+			seenSurfaceForms.clear();
+			// NOTE: this also clears the priorityQueue:
+			for (SuggestScoreDoc hit : priorityQueue.getResults()) {
+				pendingResults.add(hit);
+			}
+		}
+	}
 
-  /**
-   * Called for every matched completion,
-   * similar to {@link org.apache.lucene.search.LeafCollector#collect(int)}
-   * but for completions.
-   *
-   * NOTE: collection at the leaf level is guaranteed to be in
-   * descending order of score
-   */
-  public void collect(int docID, CharSequence key, CharSequence context, float score) throws IOException {
-    SuggestScoreDoc current = new SuggestScoreDoc(docBase + docID, key, context, score);
-    if (current == priorityQueue.insertWithOverflow(current)) {
-      // if the current SuggestScoreDoc has overflown from pq,
-      // we can assume all of the successive collections from
-      // this leaf will be overflown as well
-      // TODO: reuse the overflow instance?
-      throw new CollectionTerminatedException();
-    }
-  }
+	/**
+	 * Called for every matched completion,
+	 * similar to {@link org.apache.lucene.search.LeafCollector#collect(int)}
+	 * but for completions.
+	 * <p>
+	 * NOTE: collection at the leaf level is guaranteed to be in
+	 * descending order of score
+	 */
+	public void collect(int docID, CharSequence key, CharSequence context, float score) throws IOException {
+		SuggestScoreDoc current = new SuggestScoreDoc(docBase + docID, key, context, score);
+		if (current == priorityQueue.insertWithOverflow(current)) {
+			// if the current SuggestScoreDoc has overflown from pq,
+			// we can assume all of the successive collections from
+			// this leaf will be overflown as well
+			// TODO: reuse the overflow instance?
+			throw new CollectionTerminatedException();
+		}
+	}
 
-  /**
-   * Returns at most <code>num</code> Top scoring {@link org.apache.lucene.search.suggest.document.TopSuggestDocs}s
-   */
-  public TopSuggestDocs get() throws IOException {
+	/**
+	 * Returns at most <code>num</code> Top scoring {@link org.apache.lucene.search.suggest.document.TopSuggestDocs}s
+	 */
+	public TopSuggestDocs get() throws IOException {
 
-    SuggestScoreDoc[] suggestScoreDocs;
-    
-    if (seenSurfaceForms != null) {
-      // NOTE: this also clears the priorityQueue:
-      for (SuggestScoreDoc hit : priorityQueue.getResults()) {
-        pendingResults.add(hit);
-      }
+		SuggestScoreDoc[] suggestScoreDocs;
 
-      // Deduplicate all hits: we already dedup'd efficiently within each segment by
-      // truncating the FST top paths search, but across segments there may still be dups:
-      seenSurfaceForms.clear();
+		if (seenSurfaceForms != null) {
+			// NOTE: this also clears the priorityQueue:
+			for (SuggestScoreDoc hit : priorityQueue.getResults()) {
+				pendingResults.add(hit);
+			}
 
-      // TODO: we could use a priority queue here to make cost O(N * log(num)) instead of O(N * log(N)), where N = O(num *
-      // numSegments), but typically numSegments is smallish and num is smallish so this won't matter much in practice:
+			// Deduplicate all hits: we already dedup'd efficiently within each segment by
+			// truncating the FST top paths search, but across segments there may still be dups:
+			seenSurfaceForms.clear();
 
-      Collections.sort(pendingResults,
-          (a, b) -> {
-            // sort by higher score
-            int cmp = Float.compare(b.score, a.score);
-            if (cmp == 0) {
-              // tie break by completion key
-              cmp = Lookup.CHARSEQUENCE_COMPARATOR.compare(a.key, b.key);
-              if (cmp == 0) {
-                // prefer smaller doc id, in case of a tie
-                cmp = Integer.compare(a.doc, b.doc);
-              }
-            }
-            return cmp;
-          });
+			// TODO: we could use a priority queue here to make cost O(N * log(num)) instead of O(N * log(N)), where N = O(num *
+			// numSegments), but typically numSegments is smallish and num is smallish so this won't matter much in practice:
 
-      List<SuggestScoreDoc> hits = new ArrayList<>();
-      
-      for (SuggestScoreDoc hit : pendingResults) {
-        if (seenSurfaceForms.contains(hit.key) == false) {
-          seenSurfaceForms.add(hit.key);
-          hits.add(hit);
-          if (hits.size() == num) {
-            break;
-          }
-        }
-      }
-      suggestScoreDocs = hits.toArray(new SuggestScoreDoc[0]);
-    } else {
-      suggestScoreDocs = priorityQueue.getResults();
-    }
+			Collections.sort(pendingResults,
+				(a, b) -> {
+					// sort by higher score
+					int cmp = Float.compare(b.score, a.score);
+					if (cmp == 0) {
+						// tie break by completion key
+						cmp = Lookup.CHARSEQUENCE_COMPARATOR.compare(a.key, b.key);
+						if (cmp == 0) {
+							// prefer smaller doc id, in case of a tie
+							cmp = Integer.compare(a.doc, b.doc);
+						}
+					}
+					return cmp;
+				});
 
-    if (suggestScoreDocs.length > 0) {
-      return new TopSuggestDocs(new TotalHits(suggestScoreDocs.length, TotalHits.Relation.EQUAL_TO), suggestScoreDocs);
-    } else {
-      return TopSuggestDocs.EMPTY;
-    }
-  }
+			List<SuggestScoreDoc> hits = new ArrayList<>();
 
-  /**
-   * Ignored
-   */
-  @Override
-  public void collect(int doc) throws IOException {
-    // {@link #collect(int, CharSequence, CharSequence, long)} is used
-    // instead
-  }
+			for (SuggestScoreDoc hit : pendingResults) {
+				if (seenSurfaceForms.contains(hit.key) == false) {
+					seenSurfaceForms.add(hit.key);
+					hits.add(hit);
+					if (hits.size() == num) {
+						break;
+					}
+				}
+			}
+			suggestScoreDocs = hits.toArray(new SuggestScoreDoc[0]);
+		} else {
+			suggestScoreDocs = priorityQueue.getResults();
+		}
 
-  /**
-   * Ignored
-   */
-  @Override
-  public ScoreMode scoreMode() {
-    return ScoreMode.COMPLETE;
-  }
+		if (suggestScoreDocs.length > 0) {
+			return new TopSuggestDocs(new TotalHits(suggestScoreDocs.length, TotalHits.Relation.EQUAL_TO), suggestScoreDocs);
+		} else {
+			return TopSuggestDocs.EMPTY;
+		}
+	}
+
+	/**
+	 * Ignored
+	 */
+	@Override
+	public void collect(int doc) throws IOException {
+		// {@link #collect(int, CharSequence, CharSequence, long)} is used
+		// instead
+	}
+
+	/**
+	 * Ignored
+	 */
+	@Override
+	public ScoreMode scoreMode() {
+		return ScoreMode.COMPLETE;
+	}
 }

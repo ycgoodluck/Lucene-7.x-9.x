@@ -20,19 +20,19 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestCircumfix extends StemmerTestBase {
-  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("circumfix.aff", "circumfix.dic");
-  }
-  
-  public void testCircumfix() {
-    assertStemsTo("nagy", "nagy");
-    assertStemsTo("nagyobb", "nagy");
-    assertStemsTo("legnagyobb", "nagy");
-    assertStemsTo("legeslegnagyobb", "nagy");
-    assertStemsTo("nagyobbobb");
-    assertStemsTo("legnagy");
-    assertStemsTo("legeslegnagy");
-  }
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("circumfix.aff", "circumfix.dic");
+	}
+
+	public void testCircumfix() {
+		assertStemsTo("nagy", "nagy");
+		assertStemsTo("nagyobb", "nagy");
+		assertStemsTo("legnagyobb", "nagy");
+		assertStemsTo("legeslegnagyobb", "nagy");
+		assertStemsTo("nagyobbobb");
+		assertStemsTo("legnagy");
+		assertStemsTo("legeslegnagy");
+	}
 }

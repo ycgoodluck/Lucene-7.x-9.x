@@ -24,13 +24,13 @@ import org.apache.lucene.queryparser.flexible.standard.processors.BooleanQuery2M
  * A {@link BooleanModifierNode} has the same behaviour as
  * {@link ModifierQueryNode}, it only indicates that this modifier was added by
  * {@link BooleanQuery2ModifierNodeProcessor} and not by the user.
- * 
+ *
  * @see ModifierQueryNode
  */
 public class BooleanModifierNode extends ModifierQueryNode {
 
-  public BooleanModifierNode(QueryNode node, Modifier mod) {
-    super(node, mod);
-  }
+	public BooleanModifierNode(QueryNode node, Modifier mod) {
+		super(node, mod);
+	}
 
 }

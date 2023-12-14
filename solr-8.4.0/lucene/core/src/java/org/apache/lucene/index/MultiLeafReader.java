@@ -25,10 +25,12 @@ package org.apache.lucene.index;
  * {@link IndexReader#getContext()} to get the
  * atomic leaves and then operate per-LeafReader,
  * instead of using this class.
+ *
  * @lucene.experimental
  */
 public class MultiLeafReader {
 
-  private MultiLeafReader() {}
+	private MultiLeafReader() {
+	}
 
 }

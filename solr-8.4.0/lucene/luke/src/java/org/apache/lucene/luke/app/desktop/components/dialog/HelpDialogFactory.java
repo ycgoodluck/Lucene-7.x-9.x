@@ -36,71 +36,73 @@ import org.apache.lucene.luke.app.desktop.PreferencesFactory;
 import org.apache.lucene.luke.app.desktop.util.DialogOpener;
 import org.apache.lucene.luke.app.desktop.util.MessageUtils;
 
-/** Factory of help dialog */
+/**
+ * Factory of help dialog
+ */
 public final class HelpDialogFactory implements DialogOpener.DialogFactory {
 
-  private static HelpDialogFactory instance;
+	private static HelpDialogFactory instance;
 
-  private final Preferences prefs;
+	private final Preferences prefs;
 
-  private JDialog dialog;
+	private JDialog dialog;
 
-  private String desc;
+	private String desc;
 
-  private JComponent helpContent;
+	private JComponent helpContent;
 
-  public synchronized static HelpDialogFactory getInstance() throws IOException {
-    if (instance == null) {
-      instance = new HelpDialogFactory();
-    }
-    return instance;
-  }
+	public synchronized static HelpDialogFactory getInstance() throws IOException {
+		if (instance == null) {
+			instance = new HelpDialogFactory();
+		}
+		return instance;
+	}
 
-  private HelpDialogFactory() throws IOException {
-    this.prefs = PreferencesFactory.getInstance();
-  }
+	private HelpDialogFactory() throws IOException {
+		this.prefs = PreferencesFactory.getInstance();
+	}
 
-  public void setDesc(String desc) {
-    this.desc = desc;
-  }
+	public void setDesc(String desc) {
+		this.desc = desc;
+	}
 
-  public void setContent(JComponent helpContent) {
-    this.helpContent = helpContent;
-  }
+	public void setContent(JComponent helpContent) {
+		this.helpContent = helpContent;
+	}
 
-  @Override
-  public JDialog create(Window owner, String title, int width, int height) {
-    dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
-    dialog.add(content());
-    dialog.setSize(new Dimension(width, height));
-    dialog.setLocationRelativeTo(owner);
-    dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
-    return dialog;
-  }
+	@Override
+	public JDialog create(Window owner, String title, int width, int height) {
+		dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
+		dialog.add(content());
+		dialog.setSize(new Dimension(width, height));
+		dialog.setLocationRelativeTo(owner);
+		dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
+		return dialog;
+	}
 
-  private JPanel content() {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setOpaque(false);
-    panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+	private JPanel content() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setOpaque(false);
+		panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-    JPanel header = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    header.setOpaque(false);
-    header.add(new JLabel(desc));
-    panel.add(header, BorderLayout.PAGE_START);
+		JPanel header = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		header.setOpaque(false);
+		header.add(new JLabel(desc));
+		panel.add(header, BorderLayout.PAGE_START);
 
-    JPanel center = new JPanel(new GridLayout(1, 1));
-    center.setOpaque(false);
-    center.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-    center.add(helpContent);
-    panel.add(center, BorderLayout.CENTER);
+		JPanel center = new JPanel(new GridLayout(1, 1));
+		center.setOpaque(false);
+		center.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		center.add(helpContent);
+		panel.add(center, BorderLayout.CENTER);
 
-    JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    footer.setOpaque(false);
-    JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
-    closeBtn.addActionListener(e -> dialog.dispose());
-    footer.add(closeBtn);
-    panel.add(footer, BorderLayout.PAGE_END);
+		JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+		footer.setOpaque(false);
+		JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
+		closeBtn.addActionListener(e -> dialog.dispose());
+		footer.add(closeBtn);
+		panel.add(footer, BorderLayout.PAGE_END);
 
-    return panel;
-  }
+		return panel;
+	}
 }

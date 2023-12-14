@@ -31,74 +31,76 @@ import org.apache.lucene.replicator.http.ReplicationService.ReplicationAction;
 /**
  * An HTTP implementation of {@link Replicator}. Assumes the API supported by
  * {@link ReplicationService}.
- * 
+ *
  * @lucene.experimental
  */
 public class HttpReplicator extends HttpClientBase implements Replicator {
-  
-  /** Construct with specified connection manager. */
-  public HttpReplicator(String host, int port, String path, HttpClientConnectionManager conMgr) {
-    super(host, port, path, conMgr, null);
-  }
-  
-  @Override
-  public SessionToken checkForUpdate(String currVersion) throws IOException {
-    String[] params = null;
-    if (currVersion != null) {
-      params = new String[] { ReplicationService.REPLICATE_VERSION_PARAM, currVersion };
-    }
-    final HttpResponse response = executeGET(ReplicationAction.UPDATE.name(), params);
-    return doAction(response, new Callable<SessionToken>() {
-      @Override
-      public SessionToken call() throws Exception {
-        final DataInputStream dis = new DataInputStream(responseInputStream(response));
-        try {
-          if (dis.readByte() == 0) {
-            return null;
-          } else {
-            return new SessionToken(dis);
-          }
-        } finally {
-          dis.close();
-        }
-      }
-    });
-  }
-  
-  @Override
-  public InputStream obtainFile(String sessionID, String source, String fileName) throws IOException {
-    String[] params = new String[] {
-        ReplicationService.REPLICATE_SESSION_ID_PARAM, sessionID,
-        ReplicationService.REPLICATE_SOURCE_PARAM, source,
-        ReplicationService.REPLICATE_FILENAME_PARAM, fileName,
-    };
-    final HttpResponse response = executeGET(ReplicationAction.OBTAIN.name(), params);
-    return doAction(response, false, new Callable<InputStream>() {
-      @Override
-      public InputStream call() throws Exception {
-        return responseInputStream(response, true);
-      }
-    });
-  }
-  
-  @Override
-  public void publish(Revision revision) throws IOException {
-    throw new UnsupportedOperationException(
-        "this replicator implementation does not support remote publishing of revisions");
-  }
-  
-  @Override
-  public void release(String sessionID) throws IOException {
-    String[] params = new String[] {
-        ReplicationService.REPLICATE_SESSION_ID_PARAM, sessionID
-    };
-    final HttpResponse response = executeGET(ReplicationAction.RELEASE.name(), params);
-    doAction(response, new Callable<Object>() {
-      @Override
-      public Object call() throws Exception {
-        return null; // do not remove this call: as it is still validating for us!
-      }
-    });
-  }
-  
+
+	/**
+	 * Construct with specified connection manager.
+	 */
+	public HttpReplicator(String host, int port, String path, HttpClientConnectionManager conMgr) {
+		super(host, port, path, conMgr, null);
+	}
+
+	@Override
+	public SessionToken checkForUpdate(String currVersion) throws IOException {
+		String[] params = null;
+		if (currVersion != null) {
+			params = new String[]{ReplicationService.REPLICATE_VERSION_PARAM, currVersion};
+		}
+		final HttpResponse response = executeGET(ReplicationAction.UPDATE.name(), params);
+		return doAction(response, new Callable<SessionToken>() {
+			@Override
+			public SessionToken call() throws Exception {
+				final DataInputStream dis = new DataInputStream(responseInputStream(response));
+				try {
+					if (dis.readByte() == 0) {
+						return null;
+					} else {
+						return new SessionToken(dis);
+					}
+				} finally {
+					dis.close();
+				}
+			}
+		});
+	}
+
+	@Override
+	public InputStream obtainFile(String sessionID, String source, String fileName) throws IOException {
+		String[] params = new String[]{
+			ReplicationService.REPLICATE_SESSION_ID_PARAM, sessionID,
+			ReplicationService.REPLICATE_SOURCE_PARAM, source,
+			ReplicationService.REPLICATE_FILENAME_PARAM, fileName,
+		};
+		final HttpResponse response = executeGET(ReplicationAction.OBTAIN.name(), params);
+		return doAction(response, false, new Callable<InputStream>() {
+			@Override
+			public InputStream call() throws Exception {
+				return responseInputStream(response, true);
+			}
+		});
+	}
+
+	@Override
+	public void publish(Revision revision) throws IOException {
+		throw new UnsupportedOperationException(
+			"this replicator implementation does not support remote publishing of revisions");
+	}
+
+	@Override
+	public void release(String sessionID) throws IOException {
+		String[] params = new String[]{
+			ReplicationService.REPLICATE_SESSION_ID_PARAM, sessionID
+		};
+		final HttpResponse response = executeGET(ReplicationAction.RELEASE.name(), params);
+		doAction(response, new Callable<Object>() {
+			@Override
+			public Object call() throws Exception {
+				return null; // do not remove this call: as it is still validating for us!
+			}
+		});
+	}
+
 }

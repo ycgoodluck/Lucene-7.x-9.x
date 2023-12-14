@@ -28,78 +28,78 @@ import java.io.IOException;
 
 public class TestIsCurrent extends LuceneTestCase {
 
-  private RandomIndexWriter writer;
+	private RandomIndexWriter writer;
 
-  private Directory directory;
+	private Directory directory;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
 
-    // initialize directory
-    directory = newDirectory();
-    writer = new RandomIndexWriter(random(), directory);
+		// initialize directory
+		directory = newDirectory();
+		writer = new RandomIndexWriter(random(), directory);
 
-    // write document
-    Document doc = new Document();
-    doc.add(newTextField("UUID", "1", Field.Store.YES));
-    writer.addDocument(doc);
-    writer.commit();
-  }
+		// write document
+		Document doc = new Document();
+		doc.add(newTextField("UUID", "1", Field.Store.YES));
+		writer.addDocument(doc);
+		writer.commit();
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    super.tearDown();
-    writer.close();
-    directory.close();
-  }
+	@Override
+	public void tearDown() throws Exception {
+		super.tearDown();
+		writer.close();
+		directory.close();
+	}
 
-  /**
-   * Failing testcase showing the trouble
-   */
-  @Test
-  public void testDeleteByTermIsCurrent() throws IOException {
+	/**
+	 * Failing testcase showing the trouble
+	 */
+	@Test
+	public void testDeleteByTermIsCurrent() throws IOException {
 
-    // get reader
-    DirectoryReader reader = writer.getReader();
+		// get reader
+		DirectoryReader reader = writer.getReader();
 
-    // assert index has a document and reader is up2date 
-    assertEquals("One document should be in the index", 1, writer.numDocs());
-    assertTrue("One document added, reader should be current", reader.isCurrent());
+		// assert index has a document and reader is up2date
+		assertEquals("One document should be in the index", 1, writer.numDocs());
+		assertTrue("One document added, reader should be current", reader.isCurrent());
 
-    // remove document
-    Term idTerm = new Term("UUID", "1");
-    writer.deleteDocuments(idTerm);
-    writer.commit();
+		// remove document
+		Term idTerm = new Term("UUID", "1");
+		writer.deleteDocuments(idTerm);
+		writer.commit();
 
-    // assert document has been deleted (index changed), reader is stale
-    assertEquals("Document should be removed", 0, writer.numDocs());
-    assertFalse("Reader should be stale", reader.isCurrent());
+		// assert document has been deleted (index changed), reader is stale
+		assertEquals("Document should be removed", 0, writer.numDocs());
+		assertFalse("Reader should be stale", reader.isCurrent());
 
-    reader.close();
-  }
+		reader.close();
+	}
 
-  /**
-   * Testcase for example to show that writer.deleteAll() is working as expected
-   */
-  @Test
-  public void testDeleteAllIsCurrent() throws IOException {
+	/**
+	 * Testcase for example to show that writer.deleteAll() is working as expected
+	 */
+	@Test
+	public void testDeleteAllIsCurrent() throws IOException {
 
-    // get reader
-    DirectoryReader reader = writer.getReader();
+		// get reader
+		DirectoryReader reader = writer.getReader();
 
-    // assert index has a document and reader is up2date 
-    assertEquals("One document should be in the index", 1, writer.numDocs());
-    assertTrue("Document added, reader should be stale ", reader.isCurrent());
+		// assert index has a document and reader is up2date
+		assertEquals("One document should be in the index", 1, writer.numDocs());
+		assertTrue("Document added, reader should be stale ", reader.isCurrent());
 
-    // remove all documents
-    writer.deleteAll();
-    writer.commit();
+		// remove all documents
+		writer.deleteAll();
+		writer.commit();
 
-    // assert document has been deleted (index changed), reader is stale
-    assertEquals("Document should be removed", 0, writer.numDocs());
-    assertFalse("Reader should be stale", reader.isCurrent());
+		// assert document has been deleted (index changed), reader is stale
+		assertEquals("Document should be removed", 0, writer.numDocs());
+		assertFalse("Reader should be stale", reader.isCurrent());
 
-    reader.close();
-  }
+		reader.close();
+	}
 }

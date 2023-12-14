@@ -31,505 +31,506 @@ import org.apache.lucene.util.ArrayUtil;
  * Sequence of parallel or sequential tasks.
  */
 public class TaskSequence extends PerfTask {
-  public static int REPEAT_EXHAUST = -2; 
-  private ArrayList<PerfTask> tasks;
-  private int repetitions = 1;
-  private boolean parallel;
-  private TaskSequence parent;
-  private boolean letChildReport = true;
-  private int rate = 0;
-  private boolean perMin = false; // rate, if set, is, by default, be sec.
-  private String seqName;
-  private boolean exhausted = false;
-  private boolean resetExhausted = false;
-  private PerfTask[] tasksArray;
-  private boolean anyExhaustibleTasks;
-  private boolean collapsable = false; // to not collapse external sequence named in alg.  
-  
-  private boolean fixedTime;                      // true if we run for fixed time
-  private double runTimeSec;                      // how long to run for
-  private final long logByTimeMsec;
+	public static int REPEAT_EXHAUST = -2;
+	private ArrayList<PerfTask> tasks;
+	private int repetitions = 1;
+	private boolean parallel;
+	private TaskSequence parent;
+	private boolean letChildReport = true;
+	private int rate = 0;
+	private boolean perMin = false; // rate, if set, is, by default, be sec.
+	private String seqName;
+	private boolean exhausted = false;
+	private boolean resetExhausted = false;
+	private PerfTask[] tasksArray;
+	private boolean anyExhaustibleTasks;
+	private boolean collapsable = false; // to not collapse external sequence named in alg.
 
-  public TaskSequence (PerfRunData runData, String name, TaskSequence parent, boolean parallel) {
-    super(runData);
-    collapsable = (name == null);
-    name = (name!=null ? name : (parallel ? "Par" : "Seq"));
-    setName(name);
-    setSequenceName();
-    this.parent = parent;
-    this.parallel = parallel;
-    tasks = new ArrayList<>();
-    logByTimeMsec = runData.getConfig().get("report.time.step.msec", 0);
-  }
+	private boolean fixedTime;                      // true if we run for fixed time
+	private double runTimeSec;                      // how long to run for
+	private final long logByTimeMsec;
 
-  @Override
-  public void close() throws Exception {
-    initTasksArray();
-    for(int i=0;i<tasksArray.length;i++) {
-      tasksArray[i].close();
-    }
-    getRunData().getDocMaker().close();
-  }
+	public TaskSequence(PerfRunData runData, String name, TaskSequence parent, boolean parallel) {
+		super(runData);
+		collapsable = (name == null);
+		name = (name != null ? name : (parallel ? "Par" : "Seq"));
+		setName(name);
+		setSequenceName();
+		this.parent = parent;
+		this.parallel = parallel;
+		tasks = new ArrayList<>();
+		logByTimeMsec = runData.getConfig().get("report.time.step.msec", 0);
+	}
 
-  private void initTasksArray() {
-    if (tasksArray == null) {
-      final int numTasks = tasks.size();
-      tasksArray = new PerfTask[numTasks];
-      for(int k=0;k<numTasks;k++) {
-        tasksArray[k] = tasks.get(k);
-        anyExhaustibleTasks |= tasksArray[k] instanceof ResetInputsTask;
-        anyExhaustibleTasks |= tasksArray[k] instanceof TaskSequence;
-      }
-    }
-    if (!parallel && logByTimeMsec != 0 && !letChildReport) {
-      countsByTime = new int[1];
-    }
-  }
+	@Override
+	public void close() throws Exception {
+		initTasksArray();
+		for (int i = 0; i < tasksArray.length; i++) {
+			tasksArray[i].close();
+		}
+		getRunData().getDocMaker().close();
+	}
 
-  /**
-   * @return Returns the parallel.
-   */
-  public boolean isParallel() {
-    return parallel;
-  }
+	private void initTasksArray() {
+		if (tasksArray == null) {
+			final int numTasks = tasks.size();
+			tasksArray = new PerfTask[numTasks];
+			for (int k = 0; k < numTasks; k++) {
+				tasksArray[k] = tasks.get(k);
+				anyExhaustibleTasks |= tasksArray[k] instanceof ResetInputsTask;
+				anyExhaustibleTasks |= tasksArray[k] instanceof TaskSequence;
+			}
+		}
+		if (!parallel && logByTimeMsec != 0 && !letChildReport) {
+			countsByTime = new int[1];
+		}
+	}
 
-  /**
-   * @return Returns the repetitions.
-   */
-  public int getRepetitions() {
-    return repetitions;
-  }
+	/**
+	 * @return Returns the parallel.
+	 */
+	public boolean isParallel() {
+		return parallel;
+	}
 
-  private int[] countsByTime;
+	/**
+	 * @return Returns the repetitions.
+	 */
+	public int getRepetitions() {
+		return repetitions;
+	}
 
-  public void setRunTime(double sec) throws Exception {
-    runTimeSec = sec;
-    fixedTime = true;
-  }
+	private int[] countsByTime;
 
-  /**
-   * @param repetitions The repetitions to set.
-   */
-  public void setRepetitions(int repetitions) throws Exception {
-    fixedTime = false;
-    this.repetitions = repetitions;
-    if (repetitions==REPEAT_EXHAUST) {
-      if (isParallel()) {
-        throw new Exception("REPEAT_EXHAUST is not allowed for parallel tasks");
-      }
-    }
-    setSequenceName();
-  }
+	public void setRunTime(double sec) throws Exception {
+		runTimeSec = sec;
+		fixedTime = true;
+	}
 
-  /**
-   * @return Returns the parent.
-   */
-  public TaskSequence getParent() {
-    return parent;
-  }
+	/**
+	 * @param repetitions The repetitions to set.
+	 */
+	public void setRepetitions(int repetitions) throws Exception {
+		fixedTime = false;
+		this.repetitions = repetitions;
+		if (repetitions == REPEAT_EXHAUST) {
+			if (isParallel()) {
+				throw new Exception("REPEAT_EXHAUST is not allowed for parallel tasks");
+			}
+		}
+		setSequenceName();
+	}
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.lucene.benchmark.byTask.tasks.PerfTask#doLogic()
-   */
-  @Override
-  public int doLogic() throws Exception {
-    exhausted = resetExhausted = false;
-    return ( parallel ? doParallelTasks() : doSerialTasks());
-  }
+	/**
+	 * @return Returns the parent.
+	 */
+	public TaskSequence getParent() {
+		return parent;
+	}
 
-  private static class RunBackgroundTask extends Thread {
-    private final PerfTask task;
-    private final boolean letChildReport;
-    private volatile int count;
+	/*
+	 * (non-Javadoc)
+	 * @see org.apache.lucene.benchmark.byTask.tasks.PerfTask#doLogic()
+	 */
+	@Override
+	public int doLogic() throws Exception {
+		exhausted = resetExhausted = false;
+		return (parallel ? doParallelTasks() : doSerialTasks());
+	}
 
-    public RunBackgroundTask(PerfTask task, boolean letChildReport) {
-      this.task = task;
-      this.letChildReport = letChildReport;
-    }
+	private static class RunBackgroundTask extends Thread {
+		private final PerfTask task;
+		private final boolean letChildReport;
+		private volatile int count;
 
-    public void stopNow() throws InterruptedException {
-      task.stopNow();
-    }
+		public RunBackgroundTask(PerfTask task, boolean letChildReport) {
+			this.task = task;
+			this.letChildReport = letChildReport;
+		}
 
-    public int getCount() {
-      return count;
-    }
+		public void stopNow() throws InterruptedException {
+			task.stopNow();
+		}
 
-    @Override
-    public void run() {
-      try {
-        count = task.runAndMaybeStats(letChildReport);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
+		public int getCount() {
+			return count;
+		}
 
-  private int doSerialTasks() throws Exception {
-    if (rate > 0) {
-      return doSerialTasksWithRate();
-    }
-    
-    initTasksArray();
-    int count = 0;
+		@Override
+		public void run() {
+			try {
+				count = task.runAndMaybeStats(letChildReport);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 
-    final long runTime = (long) (runTimeSec*1000);
-    List<RunBackgroundTask> bgTasks = null;
+	private int doSerialTasks() throws Exception {
+		if (rate > 0) {
+			return doSerialTasksWithRate();
+		}
 
-    final long t0 = System.currentTimeMillis();
-    for (int k=0; fixedTime || (repetitions==REPEAT_EXHAUST && !exhausted) || k<repetitions; k++) {
-      if (stopNow) {
-        break;
-      }
-      for(int l=0;l<tasksArray.length;l++) {
-        final PerfTask task = tasksArray[l];
-        if (task.getRunInBackground()) {
-          if (bgTasks == null) {
-            bgTasks = new ArrayList<>();
-          }
-          RunBackgroundTask bgTask = new RunBackgroundTask(task, letChildReport);
-          bgTask.setPriority(task.getBackgroundDeltaPriority() + Thread.currentThread().getPriority());
-          bgTask.start();
-          bgTasks.add(bgTask);
-        } else {
-          try {
-            final int inc = task.runAndMaybeStats(letChildReport);
-            count += inc;
-            if (countsByTime != null) {
-              final int slot = (int) ((System.currentTimeMillis()-t0)/logByTimeMsec);
-              if (slot >= countsByTime.length) {
-                countsByTime = ArrayUtil.grow(countsByTime, 1+slot);
-              }
-              countsByTime[slot] += inc;
-            }
-            if (anyExhaustibleTasks)
-              updateExhausted(task);
-          } catch (NoMoreDataException e) {
-            exhausted = true;
-          }
-        }
-      }
-      if (fixedTime && System.currentTimeMillis()-t0 > runTime) {
-        repetitions = k+1;
-        break;
-      }
-    }
+		initTasksArray();
+		int count = 0;
 
-    if (bgTasks != null) {
-      for(RunBackgroundTask bgTask : bgTasks) {
-        bgTask.stopNow();
-      }
-      for(RunBackgroundTask bgTask : bgTasks) {
-        bgTask.join();
-        count += bgTask.getCount();
-      }
-    }
+		final long runTime = (long) (runTimeSec * 1000);
+		List<RunBackgroundTask> bgTasks = null;
 
-    if (countsByTime != null) {
-      getRunData().getPoints().getCurrentStats().setCountsByTime(countsByTime, logByTimeMsec);
-    }
+		final long t0 = System.currentTimeMillis();
+		for (int k = 0; fixedTime || (repetitions == REPEAT_EXHAUST && !exhausted) || k < repetitions; k++) {
+			if (stopNow) {
+				break;
+			}
+			for (int l = 0; l < tasksArray.length; l++) {
+				final PerfTask task = tasksArray[l];
+				if (task.getRunInBackground()) {
+					if (bgTasks == null) {
+						bgTasks = new ArrayList<>();
+					}
+					RunBackgroundTask bgTask = new RunBackgroundTask(task, letChildReport);
+					bgTask.setPriority(task.getBackgroundDeltaPriority() + Thread.currentThread().getPriority());
+					bgTask.start();
+					bgTasks.add(bgTask);
+				} else {
+					try {
+						final int inc = task.runAndMaybeStats(letChildReport);
+						count += inc;
+						if (countsByTime != null) {
+							final int slot = (int) ((System.currentTimeMillis() - t0) / logByTimeMsec);
+							if (slot >= countsByTime.length) {
+								countsByTime = ArrayUtil.grow(countsByTime, 1 + slot);
+							}
+							countsByTime[slot] += inc;
+						}
+						if (anyExhaustibleTasks)
+							updateExhausted(task);
+					} catch (NoMoreDataException e) {
+						exhausted = true;
+					}
+				}
+			}
+			if (fixedTime && System.currentTimeMillis() - t0 > runTime) {
+				repetitions = k + 1;
+				break;
+			}
+		}
 
-    stopNow = false;
+		if (bgTasks != null) {
+			for (RunBackgroundTask bgTask : bgTasks) {
+				bgTask.stopNow();
+			}
+			for (RunBackgroundTask bgTask : bgTasks) {
+				bgTask.join();
+				count += bgTask.getCount();
+			}
+		}
 
-    return count;
-  }
+		if (countsByTime != null) {
+			getRunData().getPoints().getCurrentStats().setCountsByTime(countsByTime, logByTimeMsec);
+		}
 
-  private int doSerialTasksWithRate() throws Exception {
-    initTasksArray();
-    long delayStep = (perMin ? 60000 : 1000) /rate;
-    long nextStartTime = System.currentTimeMillis();
-    int count = 0;
-    final long t0 = System.currentTimeMillis();
-    for (int k=0; (repetitions==REPEAT_EXHAUST && !exhausted) || k<repetitions; k++) {
-      if (stopNow) {
-        break;
-      }
-      for (int l=0;l<tasksArray.length;l++) {
-        final PerfTask task = tasksArray[l];
-        while(!stopNow) {
-          long waitMore = nextStartTime - System.currentTimeMillis();
-          if (waitMore > 0) {
-            // TODO: better to use condition to notify
-            Thread.sleep(1);
-          } else {
-            break;
-          }
-        }
-        if (stopNow) {
-          break;
-        }
-        nextStartTime += delayStep; // this aims at avarage rate. 
-        try {
-          final int inc = task.runAndMaybeStats(letChildReport);
-          count += inc;
-          if (countsByTime != null) {
-            final int slot = (int) ((System.currentTimeMillis()-t0)/logByTimeMsec);
-            if (slot >= countsByTime.length) {
-              countsByTime = ArrayUtil.grow(countsByTime, 1+slot);
-            }
-            countsByTime[slot] += inc;
-          }
+		stopNow = false;
 
-          if (anyExhaustibleTasks)
-            updateExhausted(task);
-        } catch (NoMoreDataException e) {
-          exhausted = true;
-        }
-      }
-    }
-    stopNow = false;
-    return count;
-  }
+		return count;
+	}
 
-  // update state regarding exhaustion.
-  private void updateExhausted(PerfTask task) {
-    if (task instanceof ResetInputsTask) {
-      exhausted = false;
-      resetExhausted = true;
-    } else if (task instanceof TaskSequence) {
-      TaskSequence t = (TaskSequence) task;
-      if (t.resetExhausted) {
-        exhausted = false;
-        resetExhausted = true;
-        t.resetExhausted = false;
-      } else {
-        exhausted |= t.exhausted;
-      }
-    }
-  }
+	private int doSerialTasksWithRate() throws Exception {
+		initTasksArray();
+		long delayStep = (perMin ? 60000 : 1000) / rate;
+		long nextStartTime = System.currentTimeMillis();
+		int count = 0;
+		final long t0 = System.currentTimeMillis();
+		for (int k = 0; (repetitions == REPEAT_EXHAUST && !exhausted) || k < repetitions; k++) {
+			if (stopNow) {
+				break;
+			}
+			for (int l = 0; l < tasksArray.length; l++) {
+				final PerfTask task = tasksArray[l];
+				while (!stopNow) {
+					long waitMore = nextStartTime - System.currentTimeMillis();
+					if (waitMore > 0) {
+						// TODO: better to use condition to notify
+						Thread.sleep(1);
+					} else {
+						break;
+					}
+				}
+				if (stopNow) {
+					break;
+				}
+				nextStartTime += delayStep; // this aims at avarage rate.
+				try {
+					final int inc = task.runAndMaybeStats(letChildReport);
+					count += inc;
+					if (countsByTime != null) {
+						final int slot = (int) ((System.currentTimeMillis() - t0) / logByTimeMsec);
+						if (slot >= countsByTime.length) {
+							countsByTime = ArrayUtil.grow(countsByTime, 1 + slot);
+						}
+						countsByTime[slot] += inc;
+					}
 
-  private class ParallelTask extends Thread {
+					if (anyExhaustibleTasks)
+						updateExhausted(task);
+				} catch (NoMoreDataException e) {
+					exhausted = true;
+				}
+			}
+		}
+		stopNow = false;
+		return count;
+	}
 
-    public int count;
-    public final PerfTask task;
+	// update state regarding exhaustion.
+	private void updateExhausted(PerfTask task) {
+		if (task instanceof ResetInputsTask) {
+			exhausted = false;
+			resetExhausted = true;
+		} else if (task instanceof TaskSequence) {
+			TaskSequence t = (TaskSequence) task;
+			if (t.resetExhausted) {
+				exhausted = false;
+				resetExhausted = true;
+				t.resetExhausted = false;
+			} else {
+				exhausted |= t.exhausted;
+			}
+		}
+	}
 
-    public ParallelTask(PerfTask task) {
-      this.task = task;
-    }
+	private class ParallelTask extends Thread {
 
-    @Override
-    public void run() {
-      try {
-        int n = task.runAndMaybeStats(letChildReport);
-        if (anyExhaustibleTasks) {
-          updateExhausted(task);
-        }
-        count += n;
-      } catch (NoMoreDataException e) {
-        exhausted = true;
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
+		public int count;
+		public final PerfTask task;
 
-  @Override
-  public void stopNow() {
-    super.stopNow();
-    // Forwards top request to children
-    if (runningParallelTasks != null) {
-      for(ParallelTask t : runningParallelTasks) {
-        if (t != null) {
-          t.task.stopNow();
-        }
-      }
-    }
-  }
+		public ParallelTask(PerfTask task) {
+			this.task = task;
+		}
 
-  ParallelTask[] runningParallelTasks;
+		@Override
+		public void run() {
+			try {
+				int n = task.runAndMaybeStats(letChildReport);
+				if (anyExhaustibleTasks) {
+					updateExhausted(task);
+				}
+				count += n;
+			} catch (NoMoreDataException e) {
+				exhausted = true;
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 
-  private int doParallelTasks() throws Exception {
+	@Override
+	public void stopNow() {
+		super.stopNow();
+		// Forwards top request to children
+		if (runningParallelTasks != null) {
+			for (ParallelTask t : runningParallelTasks) {
+				if (t != null) {
+					t.task.stopNow();
+				}
+			}
+		}
+	}
 
-    final TaskStats stats = getRunData().getPoints().getCurrentStats();
+	ParallelTask[] runningParallelTasks;
 
-    initTasksArray();
-    ParallelTask t[] = runningParallelTasks = new ParallelTask[repetitions * tasks.size()];
-    // prepare threads
-    int index = 0;
-    for (int k=0; k<repetitions; k++) {
-      for (int i = 0; i < tasksArray.length; i++) {
-        final PerfTask task = tasksArray[i].clone();
-        t[index++] = new ParallelTask(task);
-      }
-    }
-    // run threads
-    startThreads(t);
+	private int doParallelTasks() throws Exception {
 
-    if (stopNow) {
-      for (ParallelTask task : t) {
-        task.task.stopNow();
-      }
-    }
+		final TaskStats stats = getRunData().getPoints().getCurrentStats();
 
-    // wait for all threads to complete
-    int count = 0;
-    for (int i = 0; i < t.length; i++) {
-      t[i].join();
-      count += t[i].count;
-      if (t[i].task instanceof TaskSequence) {
-        TaskSequence sub = (TaskSequence) t[i].task;
-        if (sub.countsByTime != null) {
-          if (countsByTime == null) {
-            countsByTime = new int[sub.countsByTime.length];
-          } else if (countsByTime.length < sub.countsByTime.length) {
-            countsByTime = ArrayUtil.grow(countsByTime, sub.countsByTime.length);
-          }
-          for(int j=0;j<sub.countsByTime.length;j++) {
-            countsByTime[j] += sub.countsByTime[j];
-          }
-        }
-      }
-    }
+		initTasksArray();
+		ParallelTask t[] = runningParallelTasks = new ParallelTask[repetitions * tasks.size()];
+		// prepare threads
+		int index = 0;
+		for (int k = 0; k < repetitions; k++) {
+			for (int i = 0; i < tasksArray.length; i++) {
+				final PerfTask task = tasksArray[i].clone();
+				t[index++] = new ParallelTask(task);
+			}
+		}
+		// run threads
+		startThreads(t);
 
-    if (countsByTime != null) {
-      stats.setCountsByTime(countsByTime, logByTimeMsec);
-    }
+		if (stopNow) {
+			for (ParallelTask task : t) {
+				task.task.stopNow();
+			}
+		}
 
-    // return total count
-    return count;
-  }
+		// wait for all threads to complete
+		int count = 0;
+		for (int i = 0; i < t.length; i++) {
+			t[i].join();
+			count += t[i].count;
+			if (t[i].task instanceof TaskSequence) {
+				TaskSequence sub = (TaskSequence) t[i].task;
+				if (sub.countsByTime != null) {
+					if (countsByTime == null) {
+						countsByTime = new int[sub.countsByTime.length];
+					} else if (countsByTime.length < sub.countsByTime.length) {
+						countsByTime = ArrayUtil.grow(countsByTime, sub.countsByTime.length);
+					}
+					for (int j = 0; j < sub.countsByTime.length; j++) {
+						countsByTime[j] += sub.countsByTime[j];
+					}
+				}
+			}
+		}
 
-  // run threads
-  private void startThreads(ParallelTask[] t) throws InterruptedException {
-    if (rate > 0) {
-      startlThreadsWithRate(t);
-      return;
-    }
-    for (int i = 0; i < t.length; i++) {
-      t[i].start();
-    }
-  }
+		if (countsByTime != null) {
+			stats.setCountsByTime(countsByTime, logByTimeMsec);
+		}
 
-  // run threads with rate
-  private void startlThreadsWithRate(ParallelTask[] t) throws InterruptedException {
-    long delayStep = (perMin ? 60000 : 1000) /rate;
-    long nextStartTime = System.currentTimeMillis();
-    for (int i = 0; i < t.length; i++) {
-      long waitMore = nextStartTime - System.currentTimeMillis();
-      if (waitMore > 0) {
-        Thread.sleep(waitMore);
-      }
-      nextStartTime += delayStep; // this aims at average rate of starting threads. 
-      t[i].start();
-    }
-  }
+		// return total count
+		return count;
+	}
 
-  public void addTask(PerfTask task) {
-    tasks.add(task);
-    task.setDepth(getDepth()+1);
-  }
-  
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    String padd = getPadding();
-    StringBuilder sb = new StringBuilder(super.toString());
-    sb.append(parallel ? " [" : " {");
-    sb.append(NEW_LINE);
-    for (final PerfTask task : tasks) {
-      sb.append(task.toString());
-      sb.append(NEW_LINE);
-    }
-    sb.append(padd);
-    sb.append(!letChildReport ? ">" : (parallel ? "]" : "}"));
-    if (fixedTime) {
-      sb.append(' ').append(NumberFormat.getNumberInstance(Locale.ROOT).format(runTimeSec)).append('s');
-    } else if (repetitions>1) {
-      sb.append(" * ").append(repetitions);
-    } else if (repetitions==REPEAT_EXHAUST) {
-      sb.append(" * EXHAUST");
-    }
-    if (rate>0) {
-      sb.append(",  rate: ").append(rate).append('/').append(perMin ? "min" : "sec");
-    }
-    if (getRunInBackground()) {
-      sb.append(" &");
-      int x = getBackgroundDeltaPriority();
-      if (x != 0) {
-        sb.append(x);
-      }
-    }
-    return sb.toString();
-  }
+	// run threads
+	private void startThreads(ParallelTask[] t) throws InterruptedException {
+		if (rate > 0) {
+			startlThreadsWithRate(t);
+			return;
+		}
+		for (int i = 0; i < t.length; i++) {
+			t[i].start();
+		}
+	}
 
-  /**
-   * Execute child tasks in a way that they do not report their time separately.
-   */
-  public void setNoChildReport() {
-    letChildReport  = false;
-    for (final PerfTask task : tasks) {
-      if (task instanceof TaskSequence) {
-        ((TaskSequence)task).setNoChildReport();
-  }
-    }
-  }
+	// run threads with rate
+	private void startlThreadsWithRate(ParallelTask[] t) throws InterruptedException {
+		long delayStep = (perMin ? 60000 : 1000) / rate;
+		long nextStartTime = System.currentTimeMillis();
+		for (int i = 0; i < t.length; i++) {
+			long waitMore = nextStartTime - System.currentTimeMillis();
+			if (waitMore > 0) {
+				Thread.sleep(waitMore);
+			}
+			nextStartTime += delayStep; // this aims at average rate of starting threads.
+			t[i].start();
+		}
+	}
 
-  /**
-   * Returns the rate per minute: how many operations should be performed in a minute.
-   * If 0 this has no effect.
-   * @return the rate per min: how many operations should be performed in a minute.
-   */
-  public int getRate() {
-    return (perMin ? rate : 60*rate);
-  }
+	public void addTask(PerfTask task) {
+		tasks.add(task);
+		task.setDepth(getDepth() + 1);
+	}
 
-  /**
-   * @param rate The rate to set.
-   */
-  public void setRate(int rate, boolean perMin) {
-    this.rate = rate;
-    this.perMin = perMin;
-    setSequenceName();
-  }
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		String padd = getPadding();
+		StringBuilder sb = new StringBuilder(super.toString());
+		sb.append(parallel ? " [" : " {");
+		sb.append(NEW_LINE);
+		for (final PerfTask task : tasks) {
+			sb.append(task.toString());
+			sb.append(NEW_LINE);
+		}
+		sb.append(padd);
+		sb.append(!letChildReport ? ">" : (parallel ? "]" : "}"));
+		if (fixedTime) {
+			sb.append(' ').append(NumberFormat.getNumberInstance(Locale.ROOT).format(runTimeSec)).append('s');
+		} else if (repetitions > 1) {
+			sb.append(" * ").append(repetitions);
+		} else if (repetitions == REPEAT_EXHAUST) {
+			sb.append(" * EXHAUST");
+		}
+		if (rate > 0) {
+			sb.append(",  rate: ").append(rate).append('/').append(perMin ? "min" : "sec");
+		}
+		if (getRunInBackground()) {
+			sb.append(" &");
+			int x = getBackgroundDeltaPriority();
+			if (x != 0) {
+				sb.append(x);
+			}
+		}
+		return sb.toString();
+	}
 
-  private void setSequenceName() {
-    seqName = super.getName();
-    if (repetitions==REPEAT_EXHAUST) {
-      seqName += "_Exhaust";
-    } else if (repetitions>1) {
-      seqName += "_"+repetitions;
-    }
-    if (rate>0) {
-      seqName += "_" + rate + (perMin?"/min":"/sec"); 
-    }
-    if (parallel && seqName.toLowerCase(Locale.ROOT).indexOf("par")<0) {
-      seqName += "_Par";
-    }
-  }
+	/**
+	 * Execute child tasks in a way that they do not report their time separately.
+	 */
+	public void setNoChildReport() {
+		letChildReport = false;
+		for (final PerfTask task : tasks) {
+			if (task instanceof TaskSequence) {
+				((TaskSequence) task).setNoChildReport();
+			}
+		}
+	}
 
-  @Override
-  public String getName() {
-    return seqName; // override to include more info 
-  }
+	/**
+	 * Returns the rate per minute: how many operations should be performed in a minute.
+	 * If 0 this has no effect.
+	 *
+	 * @return the rate per min: how many operations should be performed in a minute.
+	 */
+	public int getRate() {
+		return (perMin ? rate : 60 * rate);
+	}
 
-  /**
-   * @return Returns the tasks.
-   */
-  public ArrayList<PerfTask> getTasks() {
-    return tasks;
-  }
+	/**
+	 * @param rate The rate to set.
+	 */
+	public void setRate(int rate, boolean perMin) {
+		this.rate = rate;
+		this.perMin = perMin;
+		setSequenceName();
+	}
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#clone()
-   */
-  @Override
-  protected TaskSequence clone() throws CloneNotSupportedException {
-    TaskSequence res = (TaskSequence) super.clone();
-    res.tasks = new ArrayList<>();
-    for (int i = 0; i < tasks.size(); i++) {
-      res.tasks.add(tasks.get(i).clone());
-    }
-    return res;
-  }
+	private void setSequenceName() {
+		seqName = super.getName();
+		if (repetitions == REPEAT_EXHAUST) {
+			seqName += "_Exhaust";
+		} else if (repetitions > 1) {
+			seqName += "_" + repetitions;
+		}
+		if (rate > 0) {
+			seqName += "_" + rate + (perMin ? "/min" : "/sec");
+		}
+		if (parallel && seqName.toLowerCase(Locale.ROOT).indexOf("par") < 0) {
+			seqName += "_Par";
+		}
+	}
 
-  /**
-   * Return true if can be collapsed in case it is outermost sequence
-   */
-  public boolean isCollapsable() {
-    return collapsable;
-  }
-  
+	@Override
+	public String getName() {
+		return seqName; // override to include more info
+	}
+
+	/**
+	 * @return Returns the tasks.
+	 */
+	public ArrayList<PerfTask> getTasks() {
+		return tasks;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#clone()
+	 */
+	@Override
+	protected TaskSequence clone() throws CloneNotSupportedException {
+		TaskSequence res = (TaskSequence) super.clone();
+		res.tasks = new ArrayList<>();
+		for (int i = 0; i < tasks.size(); i++) {
+			res.tasks.add(tasks.get(i).clone());
+		}
+		return res;
+	}
+
+	/**
+	 * Return true if can be collapsed in case it is outermost sequence
+	 */
+	public boolean isCollapsable() {
+		return collapsable;
+	}
+
 }

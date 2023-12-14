@@ -27,18 +27,20 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the French light stem factory is working.
  */
 public class TestFrenchLightStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("administrativement");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("FrenchLightStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "administratif" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("FrenchLightStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("administrativement");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("FrenchLightStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"administratif"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("FrenchLightStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

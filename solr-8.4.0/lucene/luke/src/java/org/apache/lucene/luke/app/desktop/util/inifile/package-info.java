@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Ini file parser / writer */
+/**
+ * Ini file parser / writer
+ */
 package org.apache.lucene.luke.app.desktop.util.inifile;

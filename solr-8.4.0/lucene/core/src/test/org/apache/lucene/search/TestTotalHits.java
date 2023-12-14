@@ -22,35 +22,35 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestTotalHits extends LuceneTestCase {
 
-  public void testEqualsAndHashcode() {
-    TotalHits totalHits1 = randomTotalHits();
-    assertFalse(totalHits1.equals(null));
-    assertFalse(totalHits1.equals(totalHits1.value));
-    assertEquals(totalHits1, totalHits1);
-    assertEquals(totalHits1.hashCode(), totalHits1.hashCode());
+	public void testEqualsAndHashcode() {
+		TotalHits totalHits1 = randomTotalHits();
+		assertFalse(totalHits1.equals(null));
+		assertFalse(totalHits1.equals(totalHits1.value));
+		assertEquals(totalHits1, totalHits1);
+		assertEquals(totalHits1.hashCode(), totalHits1.hashCode());
 
-    TotalHits totalHits2 = new TotalHits(totalHits1.value, totalHits1.relation);
-    assertEquals(totalHits1, totalHits2);
-    assertEquals(totalHits2, totalHits1);
-    assertEquals(totalHits1.hashCode(), totalHits2.hashCode());
+		TotalHits totalHits2 = new TotalHits(totalHits1.value, totalHits1.relation);
+		assertEquals(totalHits1, totalHits2);
+		assertEquals(totalHits2, totalHits1);
+		assertEquals(totalHits1.hashCode(), totalHits2.hashCode());
 
-    TotalHits totalHits4 = randomTotalHits();
-    if (totalHits4.value == totalHits1.value && totalHits4.relation == totalHits1.relation) {
-      assertEquals(totalHits1, totalHits4);
-      assertEquals(totalHits2, totalHits4);
-      assertEquals(totalHits1.hashCode(), totalHits4.hashCode());
-      assertEquals(totalHits2.hashCode(), totalHits4.hashCode());
-    } else {
-      assertNotEquals(totalHits1, totalHits4);
-      assertNotEquals(totalHits2, totalHits4);
-      assertNotEquals(totalHits1.hashCode(), totalHits4.hashCode());
-      assertNotEquals(totalHits2.hashCode(), totalHits4.hashCode());
-    }
-  }
+		TotalHits totalHits4 = randomTotalHits();
+		if (totalHits4.value == totalHits1.value && totalHits4.relation == totalHits1.relation) {
+			assertEquals(totalHits1, totalHits4);
+			assertEquals(totalHits2, totalHits4);
+			assertEquals(totalHits1.hashCode(), totalHits4.hashCode());
+			assertEquals(totalHits2.hashCode(), totalHits4.hashCode());
+		} else {
+			assertNotEquals(totalHits1, totalHits4);
+			assertNotEquals(totalHits2, totalHits4);
+			assertNotEquals(totalHits1.hashCode(), totalHits4.hashCode());
+			assertNotEquals(totalHits2.hashCode(), totalHits4.hashCode());
+		}
+	}
 
-  private static TotalHits randomTotalHits() {
-    long value = RandomizedTest.randomLongBetween(0, Long.MAX_VALUE);
-    TotalHits.Relation relation = RandomizedTest.randomFrom(TotalHits.Relation.values());
-    return new TotalHits(value, relation);
-  }
+	private static TotalHits randomTotalHits() {
+		long value = RandomizedTest.randomLongBetween(0, Long.MAX_VALUE);
+		TotalHits.Relation relation = RandomizedTest.randomFrom(TotalHits.Relation.values());
+		return new TotalHits(value, relation);
+	}
 }

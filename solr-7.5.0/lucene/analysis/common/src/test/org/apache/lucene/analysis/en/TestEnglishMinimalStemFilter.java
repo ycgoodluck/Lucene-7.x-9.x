@@ -29,53 +29,57 @@ import org.apache.lucene.analysis.core.KeywordTokenizer;
  * Simple tests for {@link EnglishMinimalStemFilter}
  */
 public class TestEnglishMinimalStemFilter extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-        return new TokenStreamComponents(source, new EnglishMinimalStemFilter(source));
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    analyzer.close();
-    super.tearDown();
-  }
-    
-  /** Test some examples from various papers about this technique */
-  public void testExamples() throws IOException {
-    checkOneTerm(analyzer, "queries", "query");
-    checkOneTerm(analyzer, "phrases", "phrase");
-    checkOneTerm(analyzer, "corpus", "corpus");
-    checkOneTerm(analyzer, "stress", "stress");
-    checkOneTerm(analyzer, "kings", "king");
-    checkOneTerm(analyzer, "panels", "panel");
-    checkOneTerm(analyzer, "aerodynamics", "aerodynamic");
-    checkOneTerm(analyzer, "congress", "congress");
-    checkOneTerm(analyzer, "serious", "serious");
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new EnglishMinimalStemFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	private Analyzer analyzer;
+
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+				return new TokenStreamComponents(source, new EnglishMinimalStemFilter(source));
+			}
+		};
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		analyzer.close();
+		super.tearDown();
+	}
+
+	/**
+	 * Test some examples from various papers about this technique
+	 */
+	public void testExamples() throws IOException {
+		checkOneTerm(analyzer, "queries", "query");
+		checkOneTerm(analyzer, "phrases", "phrase");
+		checkOneTerm(analyzer, "corpus", "corpus");
+		checkOneTerm(analyzer, "stress", "stress");
+		checkOneTerm(analyzer, "kings", "king");
+		checkOneTerm(analyzer, "panels", "panel");
+		checkOneTerm(analyzer, "aerodynamics", "aerodynamic");
+		checkOneTerm(analyzer, "congress", "congress");
+		checkOneTerm(analyzer, "serious", "serious");
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new EnglishMinimalStemFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

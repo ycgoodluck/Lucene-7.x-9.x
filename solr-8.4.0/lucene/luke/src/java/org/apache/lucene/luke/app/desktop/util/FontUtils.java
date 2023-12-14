@@ -25,47 +25,49 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-/** Font utilities */
+/**
+ * Font utilities
+ */
 public class FontUtils {
 
-  public static final String TTF_RESOURCE_NAME = "org/apache/lucene/luke/app/desktop/font/ElegantIcons.ttf";
+	public static final String TTF_RESOURCE_NAME = "org/apache/lucene/luke/app/desktop/font/ElegantIcons.ttf";
 
-  @SuppressWarnings("unchecked")
-  public static JLabel toLinkText(JLabel label) {
-    label.setForeground(StyleConstants.LINK_COLOR);
-    Font font = label.getFont();
-    Map<TextAttribute, Object> attributes = (Map<TextAttribute, Object>) font.getAttributes();
-    attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-    label.setFont(font.deriveFont(attributes));
-    return label;
-  }
+	@SuppressWarnings("unchecked")
+	public static JLabel toLinkText(JLabel label) {
+		label.setForeground(StyleConstants.LINK_COLOR);
+		Font font = label.getFont();
+		Map<TextAttribute, Object> attributes = (Map<TextAttribute, Object>) font.getAttributes();
+		attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+		label.setFont(font.deriveFont(attributes));
+		return label;
+	}
 
-  public static Font createElegantIconFont() throws IOException, FontFormatException {
-    InputStream is = FontUtils.class.getClassLoader().getResourceAsStream(TTF_RESOURCE_NAME);
-    return Font.createFont(Font.TRUETYPE_FONT, is);
-  }
+	public static Font createElegantIconFont() throws IOException, FontFormatException {
+		InputStream is = FontUtils.class.getClassLoader().getResourceAsStream(TTF_RESOURCE_NAME);
+		return Font.createFont(Font.TRUETYPE_FONT, is);
+	}
 
-  /**
-   * Generates HTML text with embedded Elegant Icon Font.
-   * See: https://www.elegantthemes.com/blog/resources/elegant-icon-font
-   *
-   * @param iconRef HTML numeric character reference of the icon
-   */
-  public static String elegantIconHtml(String iconRef) {
-    return "<html><font face=\"ElegantIcons\">" + iconRef + "</font></html>";
-  }
+	/**
+	 * Generates HTML text with embedded Elegant Icon Font.
+	 * See: https://www.elegantthemes.com/blog/resources/elegant-icon-font
+	 *
+	 * @param iconRef HTML numeric character reference of the icon
+	 */
+	public static String elegantIconHtml(String iconRef) {
+		return "<html><font face=\"ElegantIcons\">" + iconRef + "</font></html>";
+	}
 
-  /**
-   * Generates HTML text with embedded Elegant Icon Font.
-   *
-   * @param iconRef HTML numeric character reference of the icon
-   * @param text - HTML text
-   */
-  public static String elegantIconHtml(String iconRef, String text) {
-    return "<html><font face=\"ElegantIcons\">" + iconRef + "</font>&nbsp;" + text + "</html>";
-  }
+	/**
+	 * Generates HTML text with embedded Elegant Icon Font.
+	 *
+	 * @param iconRef HTML numeric character reference of the icon
+	 * @param text    - HTML text
+	 */
+	public static String elegantIconHtml(String iconRef, String text) {
+		return "<html><font face=\"ElegantIcons\">" + iconRef + "</font>&nbsp;" + text + "</html>";
+	}
 
-  private FontUtils() {
-  }
+	private FontUtils() {
+	}
 
 }

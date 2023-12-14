@@ -19,11 +19,13 @@ package org.apache.lucene.luke.models.search;
 
 import org.apache.lucene.index.IndexReader;
 
-/** Factory of {@link Search} */
+/**
+ * Factory of {@link Search}
+ */
 public class SearchFactory {
 
-  public Search newInstance(IndexReader reader) {
-    return new SearchImpl(reader);
-  }
+	public Search newInstance(IndexReader reader) {
+		return new SearchImpl(reader);
+	}
 
 }

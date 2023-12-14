@@ -39,120 +39,122 @@ import java.util.Map;
  * to a value in the real range.
  */
 public class ScaleFloatFunction extends ValueSource {
-  protected final ValueSource source;
-  protected final float min;
-  protected final float max;
+	protected final ValueSource source;
+	protected final float min;
+	protected final float max;
 
-  public ScaleFloatFunction(ValueSource source, float min, float max) {
-    this.source = source;
-    this.min = min;
-    this.max = max;
-  }
+	public ScaleFloatFunction(ValueSource source, float min, float max) {
+		this.source = source;
+		this.min = min;
+		this.max = max;
+	}
 
-  @Override
-  public String description() {
-    return "scale(" + source.description() + "," + min + "," + max + ")";
-  }
+	@Override
+	public String description() {
+		return "scale(" + source.description() + "," + min + "," + max + ")";
+	}
 
-  private static class ScaleInfo {
-    float minVal;
-    float maxVal;
-  }
+	private static class ScaleInfo {
+		float minVal;
+		float maxVal;
+	}
 
-  private ScaleInfo createScaleInfo(Map context, LeafReaderContext readerContext) throws IOException {
-    final List<LeafReaderContext> leaves = ReaderUtil.getTopLevelContext(readerContext).leaves();
+	private ScaleInfo createScaleInfo(Map context, LeafReaderContext readerContext) throws IOException {
+		final List<LeafReaderContext> leaves = ReaderUtil.getTopLevelContext(readerContext).leaves();
 
-    float minVal = Float.POSITIVE_INFINITY;
-    float maxVal = Float.NEGATIVE_INFINITY;
+		float minVal = Float.POSITIVE_INFINITY;
+		float maxVal = Float.NEGATIVE_INFINITY;
 
-    for (LeafReaderContext leaf : leaves) {
-      int maxDoc = leaf.reader().maxDoc();
-      FunctionValues vals =  source.getValues(context, leaf);
-      for (int i=0; i<maxDoc; i++) {
-        if ( ! vals.exists(i) ) {
-          continue;
-        }
-        float val = vals.floatVal(i);
-        if ((Float.floatToRawIntBits(val) & (0xff<<23)) == 0xff<<23) {
-          // if the exponent in the float is all ones, then this is +Inf, -Inf or NaN
-          // which don't make sense to factor into the scale function
-          continue;
-        }
-        if (val < minVal) {
-          minVal = val;
-        }
-        if (val > maxVal) {
-          maxVal = val;
-        }
-      }
-    }
+		for (LeafReaderContext leaf : leaves) {
+			int maxDoc = leaf.reader().maxDoc();
+			FunctionValues vals = source.getValues(context, leaf);
+			for (int i = 0; i < maxDoc; i++) {
+				if (!vals.exists(i)) {
+					continue;
+				}
+				float val = vals.floatVal(i);
+				if ((Float.floatToRawIntBits(val) & (0xff << 23)) == 0xff << 23) {
+					// if the exponent in the float is all ones, then this is +Inf, -Inf or NaN
+					// which don't make sense to factor into the scale function
+					continue;
+				}
+				if (val < minVal) {
+					minVal = val;
+				}
+				if (val > maxVal) {
+					maxVal = val;
+				}
+			}
+		}
 
-    if (minVal == Float.POSITIVE_INFINITY) {
-    // must have been an empty index
-      minVal = maxVal = 0;
-    }
+		if (minVal == Float.POSITIVE_INFINITY) {
+			// must have been an empty index
+			minVal = maxVal = 0;
+		}
 
-    ScaleInfo scaleInfo = new ScaleInfo();
-    scaleInfo.minVal = minVal;
-    scaleInfo.maxVal = maxVal;
-    context.put(ScaleFloatFunction.this, scaleInfo);
-    return scaleInfo;
-  }
+		ScaleInfo scaleInfo = new ScaleInfo();
+		scaleInfo.minVal = minVal;
+		scaleInfo.maxVal = maxVal;
+		context.put(ScaleFloatFunction.this, scaleInfo);
+		return scaleInfo;
+	}
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
 
-    ScaleInfo scaleInfo = (ScaleInfo)context.get(ScaleFloatFunction.this);
-    if (scaleInfo == null) {
-      scaleInfo = createScaleInfo(context, readerContext);
-    }
+		ScaleInfo scaleInfo = (ScaleInfo) context.get(ScaleFloatFunction.this);
+		if (scaleInfo == null) {
+			scaleInfo = createScaleInfo(context, readerContext);
+		}
 
-    final float scale = (scaleInfo.maxVal-scaleInfo.minVal==0) ? 0 : (max-min)/(scaleInfo.maxVal-scaleInfo.minVal);
-    final float minSource = scaleInfo.minVal;
-    final float maxSource = scaleInfo.maxVal;
+		final float scale = (scaleInfo.maxVal - scaleInfo.minVal == 0) ? 0 : (max - min) / (scaleInfo.maxVal - scaleInfo.minVal);
+		final float minSource = scaleInfo.minVal;
+		final float maxSource = scaleInfo.maxVal;
 
-    final FunctionValues vals =  source.getValues(context, readerContext);
+		final FunctionValues vals = source.getValues(context, readerContext);
 
-    return new FloatDocValues(this) {
-      @Override
-      public boolean exists(int doc) throws IOException {
-        return vals.exists(doc);
-      }
-      @Override
-      public float floatVal(int doc) throws IOException {
-        return (vals.floatVal(doc) - minSource) * scale + min;
-      }
-      @Override
-      public String toString(int doc) throws IOException {
-        return "scale(" + vals.toString(doc) + ",toMin=" + min + ",toMax=" + max
-                + ",fromMin=" + minSource
-                + ",fromMax=" + maxSource
-                + ")";
-      }
-    };
-  }
+		return new FloatDocValues(this) {
+			@Override
+			public boolean exists(int doc) throws IOException {
+				return vals.exists(doc);
+			}
 
-  @Override
-  public void createWeight(Map context, IndexSearcher searcher) throws IOException {
-    source.createWeight(context, searcher);
-  }
+			@Override
+			public float floatVal(int doc) throws IOException {
+				return (vals.floatVal(doc) - minSource) * scale + min;
+			}
 
-  @Override
-  public int hashCode() {
-    int h = Float.floatToIntBits(min);
-    h = h*29;
-    h += Float.floatToIntBits(max);
-    h = h*29;
-    h += source.hashCode();
-    return h;
-  }
+			@Override
+			public String toString(int doc) throws IOException {
+				return "scale(" + vals.toString(doc) + ",toMin=" + min + ",toMax=" + max
+					+ ",fromMin=" + minSource
+					+ ",fromMax=" + maxSource
+					+ ")";
+			}
+		};
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (ScaleFloatFunction.class != o.getClass()) return false;
-    ScaleFloatFunction other = (ScaleFloatFunction)o;
-    return this.min == other.min
-         && this.max == other.max
-         && this.source.equals(other.source);
-  }
+	@Override
+	public void createWeight(Map context, IndexSearcher searcher) throws IOException {
+		source.createWeight(context, searcher);
+	}
+
+	@Override
+	public int hashCode() {
+		int h = Float.floatToIntBits(min);
+		h = h * 29;
+		h += Float.floatToIntBits(max);
+		h = h * 29;
+		h += source.hashCode();
+		return h;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (ScaleFloatFunction.class != o.getClass()) return false;
+		ScaleFloatFunction other = (ScaleFloatFunction) o;
+		return this.min == other.min
+			&& this.max == other.max
+			&& this.source.equals(other.source);
+	}
 }

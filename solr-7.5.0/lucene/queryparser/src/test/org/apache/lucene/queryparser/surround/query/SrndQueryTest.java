@@ -24,26 +24,25 @@ import org.junit.Test;
 
 /**
  *
- *
  **/
 public class SrndQueryTest extends LuceneTestCase {
-  
-  void checkEqualParsings(String s1, String s2) throws Exception {
-    String fieldName = "foo";
-    BasicQueryFactory qf = new BasicQueryFactory(16);
-    Query lq1, lq2;
-    lq1 = QueryParser.parse(s1).makeLuceneQueryField(fieldName, qf);
-    lq2 = QueryParser.parse(s2).makeLuceneQueryField(fieldName, qf);
-    QueryUtils.checkEqual(lq1, lq2);
-  }
 
-  @Test
-  public void testHashEquals() throws Exception {
-    //grab some sample queries from Test02Boolean and Test03Distance and
-    //check there hashes and equals
-    checkEqualParsings("word1 w word2", " word1  w  word2 ");
-    checkEqualParsings("2N(w1,w2,w3)", " 2N(w1, w2 , w3)");
-    checkEqualParsings("abc?", " abc? ");
-    checkEqualParsings("w*rd?", " w*rd?");
-  }
+	void checkEqualParsings(String s1, String s2) throws Exception {
+		String fieldName = "foo";
+		BasicQueryFactory qf = new BasicQueryFactory(16);
+		Query lq1, lq2;
+		lq1 = QueryParser.parse(s1).makeLuceneQueryField(fieldName, qf);
+		lq2 = QueryParser.parse(s2).makeLuceneQueryField(fieldName, qf);
+		QueryUtils.checkEqual(lq1, lq2);
+	}
+
+	@Test
+	public void testHashEquals() throws Exception {
+		//grab some sample queries from Test02Boolean and Test03Distance and
+		//check there hashes and equals
+		checkEqualParsings("word1 w word2", " word1  w  word2 ");
+		checkEqualParsings("2N(w1,w2,w3)", " 2N(w1, w2 , w3)");
+		checkEqualParsings("abc?", " abc? ");
+		checkEqualParsings("w*rd?", " w*rd?");
+	}
 }

@@ -23,28 +23,28 @@ import org.apache.lucene.util.Version;
 
 public class TestLucene50SegmentInfoFormat extends BaseSegmentInfoFormatTestCase {
 
-  @Override
-  protected Codec getCodec() {
-    return new Lucene60RWCodec();
-  }
+	@Override
+	protected Codec getCodec() {
+		return new Lucene60RWCodec();
+	}
 
-  @Override
-  protected int getCreatedVersionMajor() {
-    return Version.LUCENE_6_0_0.major;
-  }
+	@Override
+	protected int getCreatedVersionMajor() {
+		return Version.LUCENE_6_0_0.major;
+	}
 
-  @Override
-  protected Version[] getVersions() {
-    return new Version[] { Version.LUCENE_6_0_0 };
-  }
+	@Override
+	protected Version[] getVersions() {
+		return new Version[]{Version.LUCENE_6_0_0};
+	}
 
-  @Override
-  protected boolean supportsIndexSort() {
-    return false;
-  }
+	@Override
+	protected boolean supportsIndexSort() {
+		return false;
+	}
 
-  @Override
-  protected boolean supportsMinVersion() {
-    return false;
-  }
+	@Override
+	protected boolean supportsMinVersion() {
+		return false;
+	}
 }

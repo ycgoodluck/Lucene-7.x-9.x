@@ -28,57 +28,67 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;
 import org.junit.Assert;
 
-/** Utility class for doing vocabulary-based stemming tests */
+/**
+ * Utility class for doing vocabulary-based stemming tests
+ */
 public class VocabularyAssert {
-  /** Run a vocabulary test against two data files. */
-  public static void assertVocabulary(Analyzer a, InputStream voc, InputStream out)
-  throws IOException {
-    BufferedReader vocReader = new BufferedReader(
-        new InputStreamReader(voc, StandardCharsets.UTF_8));
-    BufferedReader outputReader = new BufferedReader(
-        new InputStreamReader(out, StandardCharsets.UTF_8));
-    String inputWord = null;
-    while ((inputWord = vocReader.readLine()) != null) {
-      String expectedWord = outputReader.readLine();
-      Assert.assertNotNull(expectedWord);
-      BaseTokenStreamTestCase.checkOneTerm(a, inputWord, expectedWord);
-    }
-  }
-  
-  /** Run a vocabulary test against one file: tab separated. */
-  public static void assertVocabulary(Analyzer a, InputStream vocOut)
-  throws IOException {
-    BufferedReader vocReader = new BufferedReader(
-        new InputStreamReader(vocOut, StandardCharsets.UTF_8));
-    String inputLine = null;
-    while ((inputLine = vocReader.readLine()) != null) {
-      if (inputLine.startsWith("#") || inputLine.trim().length() == 0)
-        continue; /* comment */
-      String words[] = inputLine.split("\t");
-      BaseTokenStreamTestCase.checkOneTerm(a, words[0], words[1]);
-    }
-  }
-  
-  /** Run a vocabulary test against two data files inside a zip file */
-  public static void assertVocabulary(Analyzer a, Path zipFile, String voc, String out) throws IOException {
-    Path tmp = LuceneTestCase.createTempDir();
-    try (InputStream in = Files.newInputStream(zipFile)) {
-      TestUtil.unzip(in, tmp);
-    }
-    try (InputStream v = Files.newInputStream(tmp.resolve(voc)); 
-         InputStream o = Files.newInputStream(tmp.resolve(out))) {
-      assertVocabulary(a, v, o);
-    }
-  }
-  
-  /** Run a vocabulary test against a tab-separated data file inside a zip file */
-  public static void assertVocabulary(Analyzer a, Path zipFile, String vocOut) throws IOException {
-    Path tmp = LuceneTestCase.createTempDir();
-    try (InputStream in = Files.newInputStream(zipFile)) {
-      TestUtil.unzip(in, tmp);
-    }
-    try (InputStream in = Files.newInputStream(tmp.resolve(vocOut))) {
-      assertVocabulary(a, in);
-    }
-  }
+	/**
+	 * Run a vocabulary test against two data files.
+	 */
+	public static void assertVocabulary(Analyzer a, InputStream voc, InputStream out)
+		throws IOException {
+		BufferedReader vocReader = new BufferedReader(
+			new InputStreamReader(voc, StandardCharsets.UTF_8));
+		BufferedReader outputReader = new BufferedReader(
+			new InputStreamReader(out, StandardCharsets.UTF_8));
+		String inputWord = null;
+		while ((inputWord = vocReader.readLine()) != null) {
+			String expectedWord = outputReader.readLine();
+			Assert.assertNotNull(expectedWord);
+			BaseTokenStreamTestCase.checkOneTerm(a, inputWord, expectedWord);
+		}
+	}
+
+	/**
+	 * Run a vocabulary test against one file: tab separated.
+	 */
+	public static void assertVocabulary(Analyzer a, InputStream vocOut)
+		throws IOException {
+		BufferedReader vocReader = new BufferedReader(
+			new InputStreamReader(vocOut, StandardCharsets.UTF_8));
+		String inputLine = null;
+		while ((inputLine = vocReader.readLine()) != null) {
+			if (inputLine.startsWith("#") || inputLine.trim().length() == 0)
+				continue; /* comment */
+			String words[] = inputLine.split("\t");
+			BaseTokenStreamTestCase.checkOneTerm(a, words[0], words[1]);
+		}
+	}
+
+	/**
+	 * Run a vocabulary test against two data files inside a zip file
+	 */
+	public static void assertVocabulary(Analyzer a, Path zipFile, String voc, String out) throws IOException {
+		Path tmp = LuceneTestCase.createTempDir();
+		try (InputStream in = Files.newInputStream(zipFile)) {
+			TestUtil.unzip(in, tmp);
+		}
+		try (InputStream v = Files.newInputStream(tmp.resolve(voc));
+				 InputStream o = Files.newInputStream(tmp.resolve(out))) {
+			assertVocabulary(a, v, o);
+		}
+	}
+
+	/**
+	 * Run a vocabulary test against a tab-separated data file inside a zip file
+	 */
+	public static void assertVocabulary(Analyzer a, Path zipFile, String vocOut) throws IOException {
+		Path tmp = LuceneTestCase.createTempDir();
+		try (InputStream in = Files.newInputStream(zipFile)) {
+			TestUtil.unzip(in, tmp);
+		}
+		try (InputStream in = Files.newInputStream(tmp.resolve(vocOut))) {
+			assertVocabulary(a, in);
+		}
+	}
 }

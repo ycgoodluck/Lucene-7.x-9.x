@@ -127,49 +127,52 @@ import org.apache.lucene.util.packed.DirectWriter;
  *   <li><tt>.dvd</tt>: DocValues data</li>
  *   <li><tt>.dvm</tt>: DocValues metadata</li>
  * </ol>
+ *
  * @lucene.experimental
  */
 public final class Lucene80DocValuesFormat extends DocValuesFormat {
 
-  /** Sole Constructor */
-  public Lucene80DocValuesFormat() {
-    super("Lucene80");
-  }
+	/**
+	 * Sole Constructor
+	 */
+	public Lucene80DocValuesFormat() {
+		super("Lucene80");
+	}
 
-  @Override
-  public DocValuesConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    return new Lucene80DocValuesConsumer(state, DATA_CODEC, DATA_EXTENSION, META_CODEC, META_EXTENSION);
-  }
+	@Override
+	public DocValuesConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		return new Lucene80DocValuesConsumer(state, DATA_CODEC, DATA_EXTENSION, META_CODEC, META_EXTENSION);
+	}
 
-  @Override
-  public DocValuesProducer fieldsProducer(SegmentReadState state) throws IOException {
-    return new Lucene80DocValuesProducer(state, DATA_CODEC, DATA_EXTENSION, META_CODEC, META_EXTENSION);
-  }
+	@Override
+	public DocValuesProducer fieldsProducer(SegmentReadState state) throws IOException {
+		return new Lucene80DocValuesProducer(state, DATA_CODEC, DATA_EXTENSION, META_CODEC, META_EXTENSION);
+	}
 
-  static final String DATA_CODEC = "Lucene80DocValuesData";
-  static final String DATA_EXTENSION = "dvd";
-  static final String META_CODEC = "Lucene80DocValuesMetadata";
-  static final String META_EXTENSION = "dvm";
-  static final int VERSION_START = 0;
-  static final int VERSION_CURRENT = VERSION_START;
+	static final String DATA_CODEC = "Lucene80DocValuesData";
+	static final String DATA_EXTENSION = "dvd";
+	static final String META_CODEC = "Lucene80DocValuesMetadata";
+	static final String META_EXTENSION = "dvm";
+	static final int VERSION_START = 0;
+	static final int VERSION_CURRENT = VERSION_START;
 
-  // indicates docvalues type
-  static final byte NUMERIC = 0;
-  static final byte BINARY = 1;
-  static final byte SORTED = 2;
-  static final byte SORTED_SET = 3;
-  static final byte SORTED_NUMERIC = 4;
+	// indicates docvalues type
+	static final byte NUMERIC = 0;
+	static final byte BINARY = 1;
+	static final byte SORTED = 2;
+	static final byte SORTED_SET = 3;
+	static final byte SORTED_NUMERIC = 4;
 
-  static final int DIRECT_MONOTONIC_BLOCK_SHIFT = 16;
+	static final int DIRECT_MONOTONIC_BLOCK_SHIFT = 16;
 
-  static final int NUMERIC_BLOCK_SHIFT = 14;
-  static final int NUMERIC_BLOCK_SIZE = 1 << NUMERIC_BLOCK_SHIFT;
+	static final int NUMERIC_BLOCK_SHIFT = 14;
+	static final int NUMERIC_BLOCK_SIZE = 1 << NUMERIC_BLOCK_SHIFT;
 
-  static final int TERMS_DICT_BLOCK_SHIFT = 4;
-  static final int TERMS_DICT_BLOCK_SIZE = 1 << TERMS_DICT_BLOCK_SHIFT;
-  static final int TERMS_DICT_BLOCK_MASK = TERMS_DICT_BLOCK_SIZE - 1;
+	static final int TERMS_DICT_BLOCK_SHIFT = 4;
+	static final int TERMS_DICT_BLOCK_SIZE = 1 << TERMS_DICT_BLOCK_SHIFT;
+	static final int TERMS_DICT_BLOCK_MASK = TERMS_DICT_BLOCK_SIZE - 1;
 
-  static final int TERMS_DICT_REVERSE_INDEX_SHIFT = 10;
-  static final int TERMS_DICT_REVERSE_INDEX_SIZE = 1 << TERMS_DICT_REVERSE_INDEX_SHIFT;
-  static final int TERMS_DICT_REVERSE_INDEX_MASK = TERMS_DICT_REVERSE_INDEX_SIZE - 1;
+	static final int TERMS_DICT_REVERSE_INDEX_SHIFT = 10;
+	static final int TERMS_DICT_REVERSE_INDEX_SIZE = 1 << TERMS_DICT_REVERSE_INDEX_SHIFT;
+	static final int TERMS_DICT_REVERSE_INDEX_MASK = TERMS_DICT_REVERSE_INDEX_SIZE - 1;
 }

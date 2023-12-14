@@ -38,137 +38,137 @@ import org.apache.lucene.util.Version;
 import org.apache.lucene.util.packed.PackedLongValues;
 
 public class TestSegmentMerger extends LuceneTestCase {
-  //The variables for the new merged segment
-  private Directory mergedDir;
-  private String mergedSegment = "test";
-  //First segment to be merged
-  private Directory merge1Dir;
-  private Document doc1 = new Document();
-  private SegmentReader reader1 = null;
-  //Second Segment to be merged
-  private Directory merge2Dir;
-  private Document doc2 = new Document();
-  private SegmentReader reader2 = null;
+	//The variables for the new merged segment
+	private Directory mergedDir;
+	private String mergedSegment = "test";
+	//First segment to be merged
+	private Directory merge1Dir;
+	private Document doc1 = new Document();
+	private SegmentReader reader1 = null;
+	//Second Segment to be merged
+	private Directory merge2Dir;
+	private Document doc2 = new Document();
+	private SegmentReader reader2 = null;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    mergedDir = newDirectory();
-    merge1Dir = newDirectory();
-    merge2Dir = newDirectory();
-    DocHelper.setupDoc(doc1);
-    SegmentCommitInfo info1 = DocHelper.writeDoc(random(), merge1Dir, doc1);
-    DocHelper.setupDoc(doc2);
-    SegmentCommitInfo info2 = DocHelper.writeDoc(random(), merge2Dir, doc2);
-    reader1 = new SegmentReader(info1, Version.LATEST.major, newIOContext(random()));
-    reader2 = new SegmentReader(info2, Version.LATEST.major, newIOContext(random()));
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		mergedDir = newDirectory();
+		merge1Dir = newDirectory();
+		merge2Dir = newDirectory();
+		DocHelper.setupDoc(doc1);
+		SegmentCommitInfo info1 = DocHelper.writeDoc(random(), merge1Dir, doc1);
+		DocHelper.setupDoc(doc2);
+		SegmentCommitInfo info2 = DocHelper.writeDoc(random(), merge2Dir, doc2);
+		reader1 = new SegmentReader(info1, Version.LATEST.major, newIOContext(random()));
+		reader2 = new SegmentReader(info2, Version.LATEST.major, newIOContext(random()));
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    reader1.close();
-    reader2.close();
-    mergedDir.close();
-    merge1Dir.close();
-    merge2Dir.close();
-    super.tearDown();
-  }
+	@Override
+	public void tearDown() throws Exception {
+		reader1.close();
+		reader2.close();
+		mergedDir.close();
+		merge1Dir.close();
+		merge2Dir.close();
+		super.tearDown();
+	}
 
-  public void test() {
-    assertTrue(mergedDir != null);
-    assertTrue(merge1Dir != null);
-    assertTrue(merge2Dir != null);
-    assertTrue(reader1 != null);
-    assertTrue(reader2 != null);
-  }
+	public void test() {
+		assertTrue(mergedDir != null);
+		assertTrue(merge1Dir != null);
+		assertTrue(merge2Dir != null);
+		assertTrue(reader1 != null);
+		assertTrue(reader2 != null);
+	}
 
-  public void testMerge() throws IOException {
-    final Codec codec = Codec.getDefault();
-    final SegmentInfo si = new SegmentInfo(mergedDir, Version.LATEST, null, mergedSegment, -1, false, codec, Collections.emptyMap(), StringHelper.randomId(), new HashMap<>(), null);
+	public void testMerge() throws IOException {
+		final Codec codec = Codec.getDefault();
+		final SegmentInfo si = new SegmentInfo(mergedDir, Version.LATEST, null, mergedSegment, -1, false, codec, Collections.emptyMap(), StringHelper.randomId(), new HashMap<>(), null);
 
-    SegmentMerger merger = new SegmentMerger(Arrays.<CodecReader>asList(reader1, reader2),
-                                             si, InfoStream.getDefault(), mergedDir,
-                                             new FieldInfos.FieldNumbers(null),
-                                             newIOContext(random(), new IOContext(new MergeInfo(-1, -1, false, -1))));
-    MergeState mergeState = merger.merge();
-    int docsMerged = mergeState.segmentInfo.maxDoc();
-    assertTrue(docsMerged == 2);
-    //Should be able to open a new SegmentReader against the new directory
-    SegmentReader mergedReader = new SegmentReader(new SegmentCommitInfo(
-                                                         mergeState.segmentInfo,
-                                                         0, 0, -1L, -1L, -1L),
-                                                   Version.LATEST.major,
-                                                   newIOContext(random()));
-    assertTrue(mergedReader != null);
-    assertTrue(mergedReader.numDocs() == 2);
-    Document newDoc1 = mergedReader.document(0);
-    assertTrue(newDoc1 != null);
-    //There are 2 unstored fields on the document
-    assertTrue(DocHelper.numFields(newDoc1) == DocHelper.numFields(doc1) - DocHelper.unstored.size());
-    Document newDoc2 = mergedReader.document(1);
-    assertTrue(newDoc2 != null);
-    assertTrue(DocHelper.numFields(newDoc2) == DocHelper.numFields(doc2) - DocHelper.unstored.size());
+		SegmentMerger merger = new SegmentMerger(Arrays.<CodecReader>asList(reader1, reader2),
+			si, InfoStream.getDefault(), mergedDir,
+			new FieldInfos.FieldNumbers(null),
+			newIOContext(random(), new IOContext(new MergeInfo(-1, -1, false, -1))));
+		MergeState mergeState = merger.merge();
+		int docsMerged = mergeState.segmentInfo.maxDoc();
+		assertTrue(docsMerged == 2);
+		//Should be able to open a new SegmentReader against the new directory
+		SegmentReader mergedReader = new SegmentReader(new SegmentCommitInfo(
+			mergeState.segmentInfo,
+			0, 0, -1L, -1L, -1L),
+			Version.LATEST.major,
+			newIOContext(random()));
+		assertTrue(mergedReader != null);
+		assertTrue(mergedReader.numDocs() == 2);
+		Document newDoc1 = mergedReader.document(0);
+		assertTrue(newDoc1 != null);
+		//There are 2 unstored fields on the document
+		assertTrue(DocHelper.numFields(newDoc1) == DocHelper.numFields(doc1) - DocHelper.unstored.size());
+		Document newDoc2 = mergedReader.document(1);
+		assertTrue(newDoc2 != null);
+		assertTrue(DocHelper.numFields(newDoc2) == DocHelper.numFields(doc2) - DocHelper.unstored.size());
 
-    PostingsEnum termDocs = TestUtil.docs(random(), mergedReader,
-        DocHelper.TEXT_FIELD_2_KEY,
-        new BytesRef("field"),
-        null,
-        0);
-    assertTrue(termDocs != null);
-    assertTrue(termDocs.nextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+		PostingsEnum termDocs = TestUtil.docs(random(), mergedReader,
+			DocHelper.TEXT_FIELD_2_KEY,
+			new BytesRef("field"),
+			null,
+			0);
+		assertTrue(termDocs != null);
+		assertTrue(termDocs.nextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 
-    int tvCount = 0;
-    for(FieldInfo fieldInfo : mergedReader.getFieldInfos()) {
-      if (fieldInfo.hasVectors()) {
-        tvCount++;
-      }
-    }
-    
-    //System.out.println("stored size: " + stored.size());
-    assertEquals("We do not have 3 fields that were indexed with term vector", 3, tvCount);
+		int tvCount = 0;
+		for (FieldInfo fieldInfo : mergedReader.getFieldInfos()) {
+			if (fieldInfo.hasVectors()) {
+				tvCount++;
+			}
+		}
 
-    Terms vector = mergedReader.getTermVectors(0).terms(DocHelper.TEXT_FIELD_2_KEY);
-    assertNotNull(vector);
-    assertEquals(3, vector.size());
-    TermsEnum termsEnum = vector.iterator();
+		//System.out.println("stored size: " + stored.size());
+		assertEquals("We do not have 3 fields that were indexed with term vector", 3, tvCount);
 
-    int i = 0;
-    while (termsEnum.next() != null) {
-      String term = termsEnum.term().utf8ToString();
-      int freq = (int) termsEnum.totalTermFreq();
-      //System.out.println("Term: " + term + " Freq: " + freq);
-      assertTrue(DocHelper.FIELD_2_TEXT.indexOf(term) != -1);
-      assertTrue(DocHelper.FIELD_2_FREQS[i] == freq);
-      i++;
-    }
+		Terms vector = mergedReader.getTermVectors(0).terms(DocHelper.TEXT_FIELD_2_KEY);
+		assertNotNull(vector);
+		assertEquals(3, vector.size());
+		TermsEnum termsEnum = vector.iterator();
 
-    TestSegmentReader.checkNorms(mergedReader);
-    mergedReader.close();
-  }
+		int i = 0;
+		while (termsEnum.next() != null) {
+			String term = termsEnum.term().utf8ToString();
+			int freq = (int) termsEnum.totalTermFreq();
+			//System.out.println("Term: " + term + " Freq: " + freq);
+			assertTrue(DocHelper.FIELD_2_TEXT.indexOf(term) != -1);
+			assertTrue(DocHelper.FIELD_2_FREQS[i] == freq);
+			i++;
+		}
 
-  public void testBuildDocMap() {
-    final int maxDoc = TestUtil.nextInt(random(), 1, 128);
-    final int numDocs = TestUtil.nextInt(random(), 0, maxDoc);
-    final FixedBitSet liveDocs = new FixedBitSet(maxDoc);
-    for (int i = 0; i < numDocs; ++i) {
-      while (true) {
-        final int docID = random().nextInt(maxDoc);
-        if (!liveDocs.get(docID)) {
-          liveDocs.set(docID);
-          break;
-        }
-      }
-    }
+		TestSegmentReader.checkNorms(mergedReader);
+		mergedReader.close();
+	}
 
-    final PackedLongValues docMap = MergeState.removeDeletes(maxDoc, liveDocs);
+	public void testBuildDocMap() {
+		final int maxDoc = TestUtil.nextInt(random(), 1, 128);
+		final int numDocs = TestUtil.nextInt(random(), 0, maxDoc);
+		final FixedBitSet liveDocs = new FixedBitSet(maxDoc);
+		for (int i = 0; i < numDocs; ++i) {
+			while (true) {
+				final int docID = random().nextInt(maxDoc);
+				if (!liveDocs.get(docID)) {
+					liveDocs.set(docID);
+					break;
+				}
+			}
+		}
 
-    // assert the mapping is compact
-    for (int i = 0, del = 0; i < maxDoc; ++i) {
-      if (liveDocs.get(i) == false) {
-        ++del;
-      } else {
-        assertEquals(i - del, docMap.get(i));
-      }
-    }
-  }
+		final PackedLongValues docMap = MergeState.removeDeletes(maxDoc, liveDocs);
+
+		// assert the mapping is compact
+		for (int i = 0, del = 0; i < maxDoc; ++i) {
+			if (liveDocs.get(i) == false) {
+				++del;
+			} else {
+				assertEquals(i - del, docMap.get(i));
+			}
+		}
+	}
 }

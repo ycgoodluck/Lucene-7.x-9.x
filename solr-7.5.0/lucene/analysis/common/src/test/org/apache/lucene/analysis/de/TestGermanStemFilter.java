@@ -33,67 +33,68 @@ import org.apache.lucene.analysis.miscellaneous.SetKeywordMarkerFilter;
 import static org.apache.lucene.analysis.VocabularyAssert.*;
 
 /**
- * Test the German stemmer. The stemming algorithm is known to work less 
- * than perfect, as it doesn't use any word lists with exceptions. We 
+ * Test the German stemmer. The stemming algorithm is known to work less
+ * than perfect, as it doesn't use any word lists with exceptions. We
  * also check some of the cases where the algorithm is wrong.
- *
  */
 public class TestGermanStemFilter extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer t = new MockTokenizer(MockTokenizer.KEYWORD, false);
-        return new TokenStreamComponents(t,
-            new GermanStemFilter(new LowerCaseFilter(t)));
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    analyzer.close();
-    super.tearDown();
-  }
+	private Analyzer analyzer;
 
-  public void testStemming() throws Exception {  
-    InputStream vocOut = getClass().getResourceAsStream("data.txt");
-    assertVocabulary(analyzer, vocOut);
-    vocOut.close();
-  }
-  
-  public void testKeyword() throws IOException {
-    final CharArraySet exclusionSet = new CharArraySet( asSet("sängerinnen"), false);
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-        TokenStream sink = new SetKeywordMarkerFilter(source, exclusionSet);
-        return new TokenStreamComponents(source, new GermanStemFilter(sink));
-      }
-    };
-    checkOneTerm(a, "sängerinnen", "sängerinnen");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new GermanStemFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer t = new MockTokenizer(MockTokenizer.KEYWORD, false);
+				return new TokenStreamComponents(t,
+					new GermanStemFilter(new LowerCaseFilter(t)));
+			}
+		};
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		analyzer.close();
+		super.tearDown();
+	}
+
+	public void testStemming() throws Exception {
+		InputStream vocOut = getClass().getResourceAsStream("data.txt");
+		assertVocabulary(analyzer, vocOut);
+		vocOut.close();
+	}
+
+	public void testKeyword() throws IOException {
+		final CharArraySet exclusionSet = new CharArraySet(asSet("sängerinnen"), false);
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer source = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+				TokenStream sink = new SetKeywordMarkerFilter(source, exclusionSet);
+				return new TokenStreamComponents(source, new GermanStemFilter(sink));
+			}
+		};
+		checkOneTerm(a, "sängerinnen", "sängerinnen");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new GermanStemFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 }

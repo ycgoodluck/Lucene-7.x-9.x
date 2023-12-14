@@ -31,29 +31,33 @@ import java.util.Map;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class ClassicTokenizerFactory extends TokenizerFactory {
 
-  /** SPI name */
-  public static final String NAME = "classic";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "classic";
 
-  private final int maxTokenLength;
+	private final int maxTokenLength;
 
-  /** Creates a new ClassicTokenizerFactory */
-  public ClassicTokenizerFactory(Map<String,String> args) {
-    super(args);
-    maxTokenLength = getInt(args, "maxTokenLength", StandardAnalyzer.DEFAULT_MAX_TOKEN_LENGTH);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new ClassicTokenizerFactory
+	 */
+	public ClassicTokenizerFactory(Map<String, String> args) {
+		super(args);
+		maxTokenLength = getInt(args, "maxTokenLength", StandardAnalyzer.DEFAULT_MAX_TOKEN_LENGTH);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public ClassicTokenizer create(AttributeFactory factory) {
-    ClassicTokenizer tokenizer = new ClassicTokenizer(factory);
-    tokenizer.setMaxTokenLength(maxTokenLength);
-    return tokenizer;
-  }
+	@Override
+	public ClassicTokenizer create(AttributeFactory factory) {
+		ClassicTokenizer tokenizer = new ClassicTokenizer(factory);
+		tokenizer.setMaxTokenLength(maxTokenLength);
+		return tokenizer;
+	}
 }

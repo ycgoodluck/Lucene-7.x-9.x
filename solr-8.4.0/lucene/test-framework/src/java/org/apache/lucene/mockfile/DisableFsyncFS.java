@@ -26,33 +26,35 @@ import java.nio.file.attribute.FileAttribute;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-/** 
+/**
  * Disables actual calls to fsync.
  * <p>
  * All other filesystem operations are passed thru as normal.
  */
 public class DisableFsyncFS extends FilterFileSystemProvider {
-  
-  /** 
-   * Create a new instance, wrapping {@code delegate}.
-   */
-  public DisableFsyncFS(FileSystem delegate) {
-    super("disablefsync://", delegate);
-  }
 
-  @Override
-  public FileChannel newFileChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
-    return new FilterFileChannel(super.newFileChannel(path, options, attrs)) {
-      @Override
-      public void force(boolean metaData) throws IOException {}
-    };
-  }
+	/**
+	 * Create a new instance, wrapping {@code delegate}.
+	 */
+	public DisableFsyncFS(FileSystem delegate) {
+		super("disablefsync://", delegate);
+	}
 
-  @Override
-  public AsynchronousFileChannel newAsynchronousFileChannel(Path path, Set<? extends OpenOption> options, ExecutorService executor, FileAttribute<?>... attrs) throws IOException {
-    return new FilterAsynchronousFileChannel(super.newAsynchronousFileChannel(path, options, executor, attrs)) {
-      @Override
-      public void force(boolean metaData) throws IOException {}
-    };
-  }
+	@Override
+	public FileChannel newFileChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
+		return new FilterFileChannel(super.newFileChannel(path, options, attrs)) {
+			@Override
+			public void force(boolean metaData) throws IOException {
+			}
+		};
+	}
+
+	@Override
+	public AsynchronousFileChannel newAsynchronousFileChannel(Path path, Set<? extends OpenOption> options, ExecutorService executor, FileAttribute<?>... attrs) throws IOException {
+		return new FilterAsynchronousFileChannel(super.newAsynchronousFileChannel(path, options, executor, attrs)) {
+			@Override
+			public void force(boolean metaData) throws IOException {
+			}
+		};
+	}
 }

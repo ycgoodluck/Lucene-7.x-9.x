@@ -45,194 +45,194 @@ import org.locationtech.spatial4j.shape.SpatialRelation;
  */
 public class IntersectsRPTVerifyQuery extends Query {
 
-  private final IntersectsDifferentiatingQuery intersectsDiffQuery;
-  private final ShapeValuesPredicate predicateValueSource;
+	private final IntersectsDifferentiatingQuery intersectsDiffQuery;
+	private final ShapeValuesPredicate predicateValueSource;
 
-  public IntersectsRPTVerifyQuery(Shape queryShape, String fieldName, SpatialPrefixTree grid, int detailLevel,
-                                  int prefixGridScanLevel, ShapeValuesPredicate predicateValueSource) {
-    this.predicateValueSource = predicateValueSource;
-    this.intersectsDiffQuery = new IntersectsDifferentiatingQuery(queryShape, fieldName, grid, detailLevel,
-        prefixGridScanLevel);
-  }
+	public IntersectsRPTVerifyQuery(Shape queryShape, String fieldName, SpatialPrefixTree grid, int detailLevel,
+																	int prefixGridScanLevel, ShapeValuesPredicate predicateValueSource) {
+		this.predicateValueSource = predicateValueSource;
+		this.intersectsDiffQuery = new IntersectsDifferentiatingQuery(queryShape, fieldName, grid, detailLevel,
+			prefixGridScanLevel);
+	}
 
-  @Override
-  public String toString(String field) {
-    return "IntersectsVerified(fieldName=" + field + ")";
-  }
+	@Override
+	public String toString(String field) {
+		return "IntersectsVerified(fieldName=" + field + ")";
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
 
-  private boolean equalsTo(IntersectsRPTVerifyQuery other) {
-    return intersectsDiffQuery.equals(other.intersectsDiffQuery) &&
-           predicateValueSource.equals(other.predicateValueSource);
-  }
+	private boolean equalsTo(IntersectsRPTVerifyQuery other) {
+		return intersectsDiffQuery.equals(other.intersectsDiffQuery) &&
+			predicateValueSource.equals(other.predicateValueSource);
+	}
 
-  @Override
-  public int hashCode() {
-    int result = classHash();
-    result = 31 * result + intersectsDiffQuery.hashCode();
-    result = 31 * result + predicateValueSource.hashCode();
-    return result;
-  }
+	@Override
+	public int hashCode() {
+		int result = classHash();
+		result = 31 * result + intersectsDiffQuery.hashCode();
+		result = 31 * result + predicateValueSource.hashCode();
+		return result;
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+	@Override
+	public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
 
-    return new ConstantScoreWeight(this, boost) {
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        // Compute approx & exact
-        final IntersectsDifferentiatingQuery.IntersectsDifferentiatingVisitor result =
-            intersectsDiffQuery.compute(context);
-        if (result.approxDocIdSet == null) {
-          return null;
-        }
-        final DocIdSetIterator approxDISI = result.approxDocIdSet.iterator();
-        if (approxDISI == null) {
-          return null;
-        }
-        final DocIdSetIterator exactIterator;
-        if (result.exactDocIdSet != null) {
-          // If both sets are the same, there's nothing to verify; we needn't return a TwoPhaseIterator
-          if (result.approxDocIdSet == result.exactDocIdSet) {
-            return new ConstantScoreScorer(this, score(), approxDISI);
-          }
-          exactIterator = result.exactDocIdSet.iterator();
-          assert exactIterator != null;
-        } else {
-          exactIterator = null;
-        }
+		return new ConstantScoreWeight(this, boost) {
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				// Compute approx & exact
+				final IntersectsDifferentiatingQuery.IntersectsDifferentiatingVisitor result =
+					intersectsDiffQuery.compute(context);
+				if (result.approxDocIdSet == null) {
+					return null;
+				}
+				final DocIdSetIterator approxDISI = result.approxDocIdSet.iterator();
+				if (approxDISI == null) {
+					return null;
+				}
+				final DocIdSetIterator exactIterator;
+				if (result.exactDocIdSet != null) {
+					// If both sets are the same, there's nothing to verify; we needn't return a TwoPhaseIterator
+					if (result.approxDocIdSet == result.exactDocIdSet) {
+						return new ConstantScoreScorer(this, score(), approxDISI);
+					}
+					exactIterator = result.exactDocIdSet.iterator();
+					assert exactIterator != null;
+				} else {
+					exactIterator = null;
+				}
 
-        final TwoPhaseIterator twoPhaseIterator = new TwoPhaseIterator(approxDISI) {
+				final TwoPhaseIterator twoPhaseIterator = new TwoPhaseIterator(approxDISI) {
 
-          final TwoPhaseIterator predFuncValues = predicateValueSource.iterator(context, approxDISI);
+					final TwoPhaseIterator predFuncValues = predicateValueSource.iterator(context, approxDISI);
 
-          @Override
-          public boolean matches() throws IOException {
-            final int doc = approxDISI.docID();
-            if (exactIterator != null) {
-              if (exactIterator.docID() < doc) {
-                exactIterator.advance(doc);
-              }
-              if (exactIterator.docID() == doc) {
-                return true;
-              }
-            }
-            return predFuncValues.matches();
-          }
+					@Override
+					public boolean matches() throws IOException {
+						final int doc = approxDISI.docID();
+						if (exactIterator != null) {
+							if (exactIterator.docID() < doc) {
+								exactIterator.advance(doc);
+							}
+							if (exactIterator.docID() == doc) {
+								return true;
+							}
+						}
+						return predFuncValues.matches();
+					}
 
-          @Override
-          public float matchCost() {
-            return 100; // TODO: use cost of exactIterator.advance() and predFuncValues.cost()
-          }
-        };
+					@Override
+					public float matchCost() {
+						return 100; // TODO: use cost of exactIterator.advance() and predFuncValues.cost()
+					}
+				};
 
-        return new ConstantScoreScorer(this, score(), twoPhaseIterator);
-      }
+				return new ConstantScoreScorer(this, score(), twoPhaseIterator);
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return predicateValueSource.isCacheable(ctx);
-      }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return predicateValueSource.isCacheable(ctx);
+			}
 
-    };
-  }
+		};
+	}
 
-  //This may be a "Query" but we don't use it as-such; the caller calls the constructor and then compute() and examines
-  // the results which consists of two parts -- the approximated results, and a subset of exact matches. The
-  // difference needs to be verified.
-  // TODO refactor AVPTQ to not be a Query?
-  private static class IntersectsDifferentiatingQuery extends AbstractVisitingPrefixTreeQuery {
+	//This may be a "Query" but we don't use it as-such; the caller calls the constructor and then compute() and examines
+	// the results which consists of two parts -- the approximated results, and a subset of exact matches. The
+	// difference needs to be verified.
+	// TODO refactor AVPTQ to not be a Query?
+	private static class IntersectsDifferentiatingQuery extends AbstractVisitingPrefixTreeQuery {
 
-    public IntersectsDifferentiatingQuery(Shape queryShape, String fieldName, SpatialPrefixTree grid,
-                                          int detailLevel, int prefixGridScanLevel) {
-      super(queryShape, fieldName, grid, detailLevel, prefixGridScanLevel);
-    }
+		public IntersectsDifferentiatingQuery(Shape queryShape, String fieldName, SpatialPrefixTree grid,
+																					int detailLevel, int prefixGridScanLevel) {
+			super(queryShape, fieldName, grid, detailLevel, prefixGridScanLevel);
+		}
 
-    IntersectsDifferentiatingQuery.IntersectsDifferentiatingVisitor compute(LeafReaderContext context)
-        throws IOException {
-      final IntersectsDifferentiatingQuery.IntersectsDifferentiatingVisitor result =
-          new IntersectsDifferentiatingQuery.IntersectsDifferentiatingVisitor(context);
-      result.getDocIdSet();//computes
-      return result;
-    }
+		IntersectsDifferentiatingQuery.IntersectsDifferentiatingVisitor compute(LeafReaderContext context)
+			throws IOException {
+			final IntersectsDifferentiatingQuery.IntersectsDifferentiatingVisitor result =
+				new IntersectsDifferentiatingQuery.IntersectsDifferentiatingVisitor(context);
+			result.getDocIdSet();//computes
+			return result;
+		}
 
-    // TODO consider if IntersectsPrefixTreeQuery should simply do this and provide both sets
+		// TODO consider if IntersectsPrefixTreeQuery should simply do this and provide both sets
 
-    class IntersectsDifferentiatingVisitor extends VisitorTemplate {
-      DocIdSetBuilder approxBuilder;
-      DocIdSetBuilder exactBuilder;
-      boolean approxIsEmpty = true;
-      boolean exactIsEmpty = true;
-      DocIdSet exactDocIdSet;
-      DocIdSet approxDocIdSet;
+		class IntersectsDifferentiatingVisitor extends VisitorTemplate {
+			DocIdSetBuilder approxBuilder;
+			DocIdSetBuilder exactBuilder;
+			boolean approxIsEmpty = true;
+			boolean exactIsEmpty = true;
+			DocIdSet exactDocIdSet;
+			DocIdSet approxDocIdSet;
 
-      public IntersectsDifferentiatingVisitor(LeafReaderContext context) throws IOException {
-        super(context);
-      }
+			public IntersectsDifferentiatingVisitor(LeafReaderContext context) throws IOException {
+				super(context);
+			}
 
-      @Override
-      protected void start() throws IOException {
-        approxBuilder = new DocIdSetBuilder(maxDoc, terms);
-        exactBuilder = new DocIdSetBuilder(maxDoc, terms);
-      }
+			@Override
+			protected void start() throws IOException {
+				approxBuilder = new DocIdSetBuilder(maxDoc, terms);
+				exactBuilder = new DocIdSetBuilder(maxDoc, terms);
+			}
 
-      @Override
-      protected DocIdSet finish() throws IOException {
-        if (exactIsEmpty) {
-          exactDocIdSet = null;
-        } else {
-          exactDocIdSet = exactBuilder.build();
-        }
-        if (approxIsEmpty) {
-          approxDocIdSet = exactDocIdSet;//optimization
-        } else {
-          if (exactDocIdSet != null) {
-            approxBuilder.add(exactDocIdSet.iterator());
-          }
-          approxDocIdSet = approxBuilder.build();
-        }
-        return null;//unused in this weird re-use of AVPTQ
-      }
+			@Override
+			protected DocIdSet finish() throws IOException {
+				if (exactIsEmpty) {
+					exactDocIdSet = null;
+				} else {
+					exactDocIdSet = exactBuilder.build();
+				}
+				if (approxIsEmpty) {
+					approxDocIdSet = exactDocIdSet;//optimization
+				} else {
+					if (exactDocIdSet != null) {
+						approxBuilder.add(exactDocIdSet.iterator());
+					}
+					approxDocIdSet = approxBuilder.build();
+				}
+				return null;//unused in this weird re-use of AVPTQ
+			}
 
-      @Override
-      protected boolean visitPrefix(Cell cell) throws IOException {
-        if (cell.getShapeRel() == SpatialRelation.WITHIN) {
-          exactIsEmpty = false;
-          collectDocs(exactBuilder);//note: we'll add exact to approx on finish()
-          return false;
-        } else if (cell.getLevel() == detailLevel) {
-          approxIsEmpty = false;
-          collectDocs(approxBuilder);
-          return false;
-        }
-        return true;
-      }
+			@Override
+			protected boolean visitPrefix(Cell cell) throws IOException {
+				if (cell.getShapeRel() == SpatialRelation.WITHIN) {
+					exactIsEmpty = false;
+					collectDocs(exactBuilder);//note: we'll add exact to approx on finish()
+					return false;
+				} else if (cell.getLevel() == detailLevel) {
+					approxIsEmpty = false;
+					collectDocs(approxBuilder);
+					return false;
+				}
+				return true;
+			}
 
-      @Override
-      protected void visitLeaf(Cell cell) throws IOException {
-        if (cell.getShapeRel() == SpatialRelation.WITHIN) {
-          exactIsEmpty = false;
-          collectDocs(exactBuilder);//note: we'll add exact to approx on finish()
-        } else {
-          approxIsEmpty = false;
-          collectDocs(approxBuilder);
-        }
-      }
-    }
+			@Override
+			protected void visitLeaf(Cell cell) throws IOException {
+				if (cell.getShapeRel() == SpatialRelation.WITHIN) {
+					exactIsEmpty = false;
+					collectDocs(exactBuilder);//note: we'll add exact to approx on finish()
+				} else {
+					approxIsEmpty = false;
+					collectDocs(approxBuilder);
+				}
+			}
+		}
 
-    @Override
-    public DocIdSet getDocIdSet(LeafReaderContext context) throws IOException {
-      throw new IllegalStateException();
-    }
+		@Override
+		public DocIdSet getDocIdSet(LeafReaderContext context) throws IOException {
+			throw new IllegalStateException();
+		}
 
-    @Override
-    public String toString(String field) {
-      throw new IllegalStateException();
-    }
-  }
+		@Override
+		public String toString(String field) {
+			throw new IllegalStateException();
+		}
+	}
 }

@@ -32,241 +32,243 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.LuceneTestCase;
 
-/** Tests helper methods in DocValues */
+/**
+ * Tests helper methods in DocValues
+ */
 public class TestDocValues extends LuceneTestCase {
 
-  /** 
-   * If the field doesn't exist, we return empty instances:
-   * it can easily happen that a segment just doesn't have any docs with the field.
-   */
-  public void testEmptyIndex() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    iw.addDocument(new Document());
-    DirectoryReader dr = DirectoryReader.open(iw);
-    LeafReader r = getOnlyLeafReader(dr);
-    
-    // ok
-    assertNotNull(DocValues.getBinary(r, "bogus"));
-    assertNotNull(DocValues.getNumeric(r, "bogus"));
-    assertNotNull(DocValues.getSorted(r, "bogus"));
-    assertNotNull(DocValues.getSortedSet(r, "bogus"));
-    assertNotNull(DocValues.getSortedNumeric(r, "bogus"));
-    
-    dr.close();
-    iw.close();
-    dir.close();
-  }
-  
-  /** 
-   * field just doesnt have any docvalues at all: exception
-   */
-  public void testMisconfiguredField() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    doc.add(new StringField("foo", "bar", Field.Store.NO));
-    iw.addDocument(doc);
-    DirectoryReader dr = DirectoryReader.open(iw);
-    LeafReader r = getOnlyLeafReader(dr);
-   
-    // errors
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getBinary(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getNumeric(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSorted(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSortedSet(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSortedNumeric(r, "foo");
-    });
-    
-    dr.close();
-    iw.close();
-    dir.close();
-  }
-  
-  /** 
-   * field with numeric docvalues
-   */
-  public void testNumericField() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    doc.add(new NumericDocValuesField("foo", 3));
-    iw.addDocument(doc);
-    DirectoryReader dr = DirectoryReader.open(iw);
-    LeafReader r = getOnlyLeafReader(dr);
-    
-    // ok
-    assertNotNull(DocValues.getNumeric(r, "foo"));
-    assertNotNull(DocValues.getSortedNumeric(r, "foo"));
-    
-    // errors
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getBinary(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSorted(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSortedSet(r, "foo");
-    });
-    
-    dr.close();
-    iw.close();
-    dir.close();
-  }
+	/**
+	 * If the field doesn't exist, we return empty instances:
+	 * it can easily happen that a segment just doesn't have any docs with the field.
+	 */
+	public void testEmptyIndex() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		iw.addDocument(new Document());
+		DirectoryReader dr = DirectoryReader.open(iw);
+		LeafReader r = getOnlyLeafReader(dr);
 
-  /**
-   * field with binary docvalues
-   */
-  public void testBinaryField() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    doc.add(new BinaryDocValuesField("foo", new BytesRef("bar")));
-    iw.addDocument(doc);
-    DirectoryReader dr = DirectoryReader.open(iw);
-    LeafReader r = getOnlyLeafReader(dr);
-    
-    // ok
-    assertNotNull(DocValues.getBinary(r, "foo"));
-    
-    // errors
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getNumeric(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSorted(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSortedSet(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSortedNumeric(r, "foo");
-    });
-    
-    dr.close();
-    iw.close();
-    dir.close();
-  }
-  
-  /** 
-   * field with sorted docvalues
-   */
-  public void testSortedField() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    doc.add(new SortedDocValuesField("foo", new BytesRef("bar")));
-    iw.addDocument(doc);
-    DirectoryReader dr = DirectoryReader.open(iw);
-    LeafReader r = getOnlyLeafReader(dr);
-    
-    // ok
-    assertNotNull(DocValues.getBinary(r, "foo"));
-    assertNotNull(DocValues.getSorted(r, "foo"));
-    assertNotNull(DocValues.getSortedSet(r, "foo"));
-    
-    // errors
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getNumeric(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSortedNumeric(r, "foo");
-    });
-    
-    dr.close();
-    iw.close();
-    dir.close();
-  }
-  
-  /** 
-   * field with sortedset docvalues
-   */
-  public void testSortedSetField() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    doc.add(new SortedSetDocValuesField("foo", new BytesRef("bar")));
-    iw.addDocument(doc);
-    DirectoryReader dr = DirectoryReader.open(iw);
-    LeafReader r = getOnlyLeafReader(dr);
-    
-    // ok
-    assertNotNull(DocValues.getSortedSet(r, "foo"));
-    
-    // errors
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getBinary(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getNumeric(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSorted(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSortedNumeric(r, "foo");
-    });
-    
-    dr.close();
-    iw.close();
-    dir.close();
-  }
-  
-  /** 
-   * field with sortednumeric docvalues
-   */
-  public void testSortedNumericField() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    doc.add(new SortedNumericDocValuesField("foo", 3));
-    iw.addDocument(doc);
-    DirectoryReader dr = DirectoryReader.open(iw);
-    LeafReader r = getOnlyLeafReader(dr);
-    
-    // ok
-    assertNotNull(DocValues.getSortedNumeric(r, "foo"));
-    
-    // errors
-    expectThrows(IllegalStateException.class, () -> {
-        DocValues.getBinary(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getNumeric(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSorted(r, "foo");
-    });
-    expectThrows(IllegalStateException.class, () -> {
-      DocValues.getSortedSet(r, "foo");
-    });
-    
-    dr.close();
-    iw.close();
-    dir.close();
-  }
+		// ok
+		assertNotNull(DocValues.getBinary(r, "bogus"));
+		assertNotNull(DocValues.getNumeric(r, "bogus"));
+		assertNotNull(DocValues.getSorted(r, "bogus"));
+		assertNotNull(DocValues.getSortedSet(r, "bogus"));
+		assertNotNull(DocValues.getSortedNumeric(r, "bogus"));
 
-  public void testAddNullNumericDocValues() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    if (random().nextBoolean()) {
-      doc.add(new NumericDocValuesField("foo", null));
-    } else {
-      doc.add(new BinaryDocValuesField("foo", null));
-    }
-    IllegalArgumentException iae = expectThrows(IllegalArgumentException.class, () -> iw.addDocument(doc));
-    assertEquals("field=\"foo\": null value not allowed", iae.getMessage());
-    IOUtils.close(iw, dir);
-  }
+		dr.close();
+		iw.close();
+		dir.close();
+	}
+
+	/**
+	 * field just doesnt have any docvalues at all: exception
+	 */
+	public void testMisconfiguredField() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		doc.add(new StringField("foo", "bar", Field.Store.NO));
+		iw.addDocument(doc);
+		DirectoryReader dr = DirectoryReader.open(iw);
+		LeafReader r = getOnlyLeafReader(dr);
+
+		// errors
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getBinary(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getNumeric(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSorted(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSortedSet(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSortedNumeric(r, "foo");
+		});
+
+		dr.close();
+		iw.close();
+		dir.close();
+	}
+
+	/**
+	 * field with numeric docvalues
+	 */
+	public void testNumericField() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		doc.add(new NumericDocValuesField("foo", 3));
+		iw.addDocument(doc);
+		DirectoryReader dr = DirectoryReader.open(iw);
+		LeafReader r = getOnlyLeafReader(dr);
+
+		// ok
+		assertNotNull(DocValues.getNumeric(r, "foo"));
+		assertNotNull(DocValues.getSortedNumeric(r, "foo"));
+
+		// errors
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getBinary(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSorted(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSortedSet(r, "foo");
+		});
+
+		dr.close();
+		iw.close();
+		dir.close();
+	}
+
+	/**
+	 * field with binary docvalues
+	 */
+	public void testBinaryField() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		doc.add(new BinaryDocValuesField("foo", new BytesRef("bar")));
+		iw.addDocument(doc);
+		DirectoryReader dr = DirectoryReader.open(iw);
+		LeafReader r = getOnlyLeafReader(dr);
+
+		// ok
+		assertNotNull(DocValues.getBinary(r, "foo"));
+
+		// errors
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getNumeric(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSorted(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSortedSet(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSortedNumeric(r, "foo");
+		});
+
+		dr.close();
+		iw.close();
+		dir.close();
+	}
+
+	/**
+	 * field with sorted docvalues
+	 */
+	public void testSortedField() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		doc.add(new SortedDocValuesField("foo", new BytesRef("bar")));
+		iw.addDocument(doc);
+		DirectoryReader dr = DirectoryReader.open(iw);
+		LeafReader r = getOnlyLeafReader(dr);
+
+		// ok
+		assertNotNull(DocValues.getBinary(r, "foo"));
+		assertNotNull(DocValues.getSorted(r, "foo"));
+		assertNotNull(DocValues.getSortedSet(r, "foo"));
+
+		// errors
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getNumeric(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSortedNumeric(r, "foo");
+		});
+
+		dr.close();
+		iw.close();
+		dir.close();
+	}
+
+	/**
+	 * field with sortedset docvalues
+	 */
+	public void testSortedSetField() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		doc.add(new SortedSetDocValuesField("foo", new BytesRef("bar")));
+		iw.addDocument(doc);
+		DirectoryReader dr = DirectoryReader.open(iw);
+		LeafReader r = getOnlyLeafReader(dr);
+
+		// ok
+		assertNotNull(DocValues.getSortedSet(r, "foo"));
+
+		// errors
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getBinary(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getNumeric(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSorted(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSortedNumeric(r, "foo");
+		});
+
+		dr.close();
+		iw.close();
+		dir.close();
+	}
+
+	/**
+	 * field with sortednumeric docvalues
+	 */
+	public void testSortedNumericField() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		doc.add(new SortedNumericDocValuesField("foo", 3));
+		iw.addDocument(doc);
+		DirectoryReader dr = DirectoryReader.open(iw);
+		LeafReader r = getOnlyLeafReader(dr);
+
+		// ok
+		assertNotNull(DocValues.getSortedNumeric(r, "foo"));
+
+		// errors
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getBinary(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getNumeric(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSorted(r, "foo");
+		});
+		expectThrows(IllegalStateException.class, () -> {
+			DocValues.getSortedSet(r, "foo");
+		});
+
+		dr.close();
+		iw.close();
+		dir.close();
+	}
+
+	public void testAddNullNumericDocValues() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		if (random().nextBoolean()) {
+			doc.add(new NumericDocValuesField("foo", null));
+		} else {
+			doc.add(new BinaryDocValuesField("foo", null));
+		}
+		IllegalArgumentException iae = expectThrows(IllegalArgumentException.class, () -> iw.addDocument(doc));
+		assertEquals("field=\"foo\": null value not allowed", iae.getMessage());
+		IOUtils.close(iw, dir);
+	}
 }

@@ -35,104 +35,104 @@ import org.apache.lucene.util.SuppressForbidden;
  * @lucene.experimental
  */
 public class FixBrokenOffsets {
-  public SegmentInfos infos;
+	public SegmentInfos infos;
 
-  FSDirectory fsDir;
+	FSDirectory fsDir;
 
-  Path dir;
+	Path dir;
 
-  @SuppressForbidden(reason = "System.out required: command line tool")
-  public static void main(String[] args) throws IOException {
-    if (args.length < 2) {
-      System.err.println("Usage: FixBrokenOffsetse <srcDir> <destDir>");
-      return;
-    }
-    Path srcPath = Paths.get(args[0]);
-    if (!Files.exists(srcPath)) {
-      throw new RuntimeException("srcPath " + srcPath.toAbsolutePath() + " doesn't exist");
-    }
-    Path destPath = Paths.get(args[1]);
-    if (Files.exists(destPath)) {
-      throw new RuntimeException("destPath " + destPath.toAbsolutePath() + " already exists; please remove it and re-run");
-    }
-    Directory srcDir = FSDirectory.open(srcPath);
-    DirectoryReader reader = DirectoryReader.open(srcDir);
+	@SuppressForbidden(reason = "System.out required: command line tool")
+	public static void main(String[] args) throws IOException {
+		if (args.length < 2) {
+			System.err.println("Usage: FixBrokenOffsetse <srcDir> <destDir>");
+			return;
+		}
+		Path srcPath = Paths.get(args[0]);
+		if (!Files.exists(srcPath)) {
+			throw new RuntimeException("srcPath " + srcPath.toAbsolutePath() + " doesn't exist");
+		}
+		Path destPath = Paths.get(args[1]);
+		if (Files.exists(destPath)) {
+			throw new RuntimeException("destPath " + destPath.toAbsolutePath() + " already exists; please remove it and re-run");
+		}
+		Directory srcDir = FSDirectory.open(srcPath);
+		DirectoryReader reader = DirectoryReader.open(srcDir);
 
-    List<LeafReaderContext> leaves = reader.leaves();
-    CodecReader[] filtered = new CodecReader[leaves.size()];
-    for(int i=0;i<leaves.size();i++) {
-      filtered[i] = SlowCodecReaderWrapper.wrap(new FilterLeafReader(leaves.get(i).reader()) {
-          @Override
-          public Fields getTermVectors(int docID) throws IOException {
-            Fields termVectors = in.getTermVectors(docID);
-            if (termVectors == null) {
-              return null;
-            }
-            return new FilterFields(termVectors) {
-              @Override
-              public Terms terms(String field) throws IOException {
-                return new FilterTerms(super.terms(field)) {
-                  @Override
-                  public TermsEnum iterator() throws IOException {
-                    return new FilterTermsEnum(super.iterator()) {
-                      @Override
-                      public PostingsEnum postings(PostingsEnum reuse, int flags) throws IOException {
-                        return new FilterPostingsEnum(super.postings(reuse, flags)) {
-                          int nextLastStartOffset = 0;
-                          int lastStartOffset = 0;
+		List<LeafReaderContext> leaves = reader.leaves();
+		CodecReader[] filtered = new CodecReader[leaves.size()];
+		for (int i = 0; i < leaves.size(); i++) {
+			filtered[i] = SlowCodecReaderWrapper.wrap(new FilterLeafReader(leaves.get(i).reader()) {
+				@Override
+				public Fields getTermVectors(int docID) throws IOException {
+					Fields termVectors = in.getTermVectors(docID);
+					if (termVectors == null) {
+						return null;
+					}
+					return new FilterFields(termVectors) {
+						@Override
+						public Terms terms(String field) throws IOException {
+							return new FilterTerms(super.terms(field)) {
+								@Override
+								public TermsEnum iterator() throws IOException {
+									return new FilterTermsEnum(super.iterator()) {
+										@Override
+										public PostingsEnum postings(PostingsEnum reuse, int flags) throws IOException {
+											return new FilterPostingsEnum(super.postings(reuse, flags)) {
+												int nextLastStartOffset = 0;
+												int lastStartOffset = 0;
 
-                          @Override
-                          public int nextPosition() throws IOException {
-                            int pos = super.nextPosition();
-                            lastStartOffset = nextLastStartOffset;
-                            nextLastStartOffset = startOffset();
-                            return pos;
-                          }
-                          
-                          @Override
-                          public int startOffset() throws IOException {
-                            int offset = super.startOffset();
-                            if (offset < lastStartOffset) {
-                              offset = lastStartOffset;
-                            }
-                            return offset;
-                          }
-                          
-                          @Override
-                          public int endOffset() throws IOException {
-                            int offset = super.endOffset();
-                            if (offset < lastStartOffset) {
-                              offset = lastStartOffset;
-                            }
-                            return offset;
-                          }
-                        };
-                      }
-                    };
-                  }
-                };
-              }
-            };
-          }
+												@Override
+												public int nextPosition() throws IOException {
+													int pos = super.nextPosition();
+													lastStartOffset = nextLastStartOffset;
+													nextLastStartOffset = startOffset();
+													return pos;
+												}
 
-          @Override
-          public CacheHelper getCoreCacheHelper() {
-            return null;
-          }
+												@Override
+												public int startOffset() throws IOException {
+													int offset = super.startOffset();
+													if (offset < lastStartOffset) {
+														offset = lastStartOffset;
+													}
+													return offset;
+												}
 
-          @Override
-          public CacheHelper getReaderCacheHelper() {
-            return null;
-          }
-        });
-    }
+												@Override
+												public int endOffset() throws IOException {
+													int offset = super.endOffset();
+													if (offset < lastStartOffset) {
+														offset = lastStartOffset;
+													}
+													return offset;
+												}
+											};
+										}
+									};
+								}
+							};
+						}
+					};
+				}
 
-    Directory destDir = FSDirectory.open(destPath);
-    // We need to maintain the same major version
-    int createdMajor = SegmentInfos.readLatestCommit(srcDir).getIndexCreatedVersionMajor();
-    new SegmentInfos(createdMajor).commit(destDir);
-    IndexWriter writer = new IndexWriter(destDir, new IndexWriterConfig());
-    writer.addIndexes(filtered);
-    IOUtils.close(writer, reader, srcDir, destDir);
-  }
+				@Override
+				public CacheHelper getCoreCacheHelper() {
+					return null;
+				}
+
+				@Override
+				public CacheHelper getReaderCacheHelper() {
+					return null;
+				}
+			});
+		}
+
+		Directory destDir = FSDirectory.open(destPath);
+		// We need to maintain the same major version
+		int createdMajor = SegmentInfos.readLatestCommit(srcDir).getIndexCreatedVersionMajor();
+		new SegmentInfos(createdMajor).commit(destDir);
+		IndexWriter writer = new IndexWriter(destDir, new IndexWriterConfig());
+		writer.addIndexes(filtered);
+		IOUtils.close(writer, reader, srcDir, destDir);
+	}
 }

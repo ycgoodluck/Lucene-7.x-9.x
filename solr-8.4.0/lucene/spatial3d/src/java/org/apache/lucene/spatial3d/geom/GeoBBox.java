@@ -25,12 +25,12 @@ package org.apache.lucene.spatial3d.geom;
  */
 public interface GeoBBox extends GeoAreaShape, GeoSizeable {
 
-  /**
-   * Expand box by specified angle.
-   *
-   * @param angle is the angle amount to expand the GeoBBox by.
-   * @return a new GeoBBox.
-   */
-  public GeoBBox expand(double angle);
+	/**
+	 * Expand box by specified angle.
+	 *
+	 * @param angle is the angle amount to expand the GeoBBox by.
+	 * @return a new GeoBBox.
+	 */
+	public GeoBBox expand(double angle);
 
 }

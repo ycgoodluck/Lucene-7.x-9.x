@@ -27,74 +27,74 @@ import org.apache.lucene.search.Query;
 
 class MinimizingConjunctionMatchesIterator implements IntervalMatchesIterator {
 
-  final IntervalIterator iterator;
-  private final List<CachingMatchesIterator> subs = new ArrayList<>();
-  private boolean cached = true;
+	final IntervalIterator iterator;
+	private final List<CachingMatchesIterator> subs = new ArrayList<>();
+	private boolean cached = true;
 
-  MinimizingConjunctionMatchesIterator(IntervalIterator iterator, List<MatchesIterator> subs) {
-    this.iterator = iterator;
-    for (MatchesIterator mi : subs) {
-      assert mi instanceof CachingMatchesIterator;
-      this.subs.add((CachingMatchesIterator)mi);
-    }
-  }
+	MinimizingConjunctionMatchesIterator(IntervalIterator iterator, List<MatchesIterator> subs) {
+		this.iterator = iterator;
+		for (MatchesIterator mi : subs) {
+			assert mi instanceof CachingMatchesIterator;
+			this.subs.add((CachingMatchesIterator) mi);
+		}
+	}
 
-  @Override
-  public boolean next() throws IOException {
-    if (cached) {
-      cached = false;
-      return true;
-    }
-    return iterator.nextInterval() != IntervalIterator.NO_MORE_INTERVALS;
-  }
+	@Override
+	public boolean next() throws IOException {
+		if (cached) {
+			cached = false;
+			return true;
+		}
+		return iterator.nextInterval() != IntervalIterator.NO_MORE_INTERVALS;
+	}
 
-  @Override
-  public int startPosition() {
-    return iterator.start();
-  }
+	@Override
+	public int startPosition() {
+		return iterator.start();
+	}
 
-  @Override
-  public int endPosition() {
-    return iterator.end();
-  }
+	@Override
+	public int endPosition() {
+		return iterator.end();
+	}
 
-  @Override
-  public int startOffset() throws IOException {
-    int start = Integer.MAX_VALUE;
-    int endPos = endPosition();
-    for (CachingMatchesIterator s : subs) {
-      start = Math.min(start, s.startOffset(endPos));
-    }
-    return start;
-  }
+	@Override
+	public int startOffset() throws IOException {
+		int start = Integer.MAX_VALUE;
+		int endPos = endPosition();
+		for (CachingMatchesIterator s : subs) {
+			start = Math.min(start, s.startOffset(endPos));
+		}
+		return start;
+	}
 
-  @Override
-  public int endOffset() throws IOException {
-    int end = 0;
-    int endPos = endPosition();
-    for (CachingMatchesIterator s : subs) {
-      end = Math.max(end, s.endOffset(endPos));
-    }
-    return end;
-  }
+	@Override
+	public int endOffset() throws IOException {
+		int end = 0;
+		int endPos = endPosition();
+		for (CachingMatchesIterator s : subs) {
+			end = Math.max(end, s.endOffset(endPos));
+		}
+		return end;
+	}
 
-  @Override
-  public int gaps() {
-    return iterator.gaps();
-  }
+	@Override
+	public int gaps() {
+		return iterator.gaps();
+	}
 
-  @Override
-  public MatchesIterator getSubMatches() throws IOException {
-    List<MatchesIterator> mis = new ArrayList<>();
-    int endPos = endPosition();
-    for (CachingMatchesIterator s : subs) {
-      mis.add(s.getSubMatches(endPos));
-    }
-    return MatchesUtils.disjunction(mis);
-  }
+	@Override
+	public MatchesIterator getSubMatches() throws IOException {
+		List<MatchesIterator> mis = new ArrayList<>();
+		int endPos = endPosition();
+		for (CachingMatchesIterator s : subs) {
+			mis.add(s.getSubMatches(endPos));
+		}
+		return MatchesUtils.disjunction(mis);
+	}
 
-  @Override
-  public Query getQuery() {
-    return null;
-  }
+	@Override
+	public Query getQuery() {
+		return null;
+	}
 }

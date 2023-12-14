@@ -45,88 +45,88 @@ import org.apache.lucene.index.SortedNumericDocValues;
  */
 public class DocValuesNumbersQuery extends Query {
 
-  private final String field;
-  private final LongHashSet numbers;
+	private final String field;
+	private final LongHashSet numbers;
 
-  public DocValuesNumbersQuery(String field, long[] numbers) {
-    this.field = Objects.requireNonNull(field);
-    this.numbers = new LongHashSet(numbers);
-  }
+	public DocValuesNumbersQuery(String field, long[] numbers) {
+		this.field = Objects.requireNonNull(field);
+		this.numbers = new LongHashSet(numbers);
+	}
 
-  public DocValuesNumbersQuery(String field, Collection<Long> numbers) {
-    this.field = Objects.requireNonNull(field);
-    this.numbers = new LongHashSet(numbers.stream().mapToLong(Long::longValue).toArray());
-  }
+	public DocValuesNumbersQuery(String field, Collection<Long> numbers) {
+		this.field = Objects.requireNonNull(field);
+		this.numbers = new LongHashSet(numbers.stream().mapToLong(Long::longValue).toArray());
+	}
 
-  public DocValuesNumbersQuery(String field, Long... numbers) {
-    this(field, new HashSet<Long>(Arrays.asList(numbers)));
-  }
+	public DocValuesNumbersQuery(String field, Long... numbers) {
+		this(field, new HashSet<Long>(Arrays.asList(numbers)));
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
 
-  private boolean equalsTo(DocValuesNumbersQuery other) {
-    return field.equals(other.field) &&
-           numbers.equals(other.numbers);
-  }
+	private boolean equalsTo(DocValuesNumbersQuery other) {
+		return field.equals(other.field) &&
+			numbers.equals(other.numbers);
+	}
 
-  @Override
-  public int hashCode() {
-    return 31 * classHash() + Objects.hash(field, numbers);
-  }
+	@Override
+	public int hashCode() {
+		return 31 * classHash() + Objects.hash(field, numbers);
+	}
 
-  public String getField() {
-    return field;
-  }
+	public String getField() {
+		return field;
+	}
 
-  public Set<Long> getNumbers() {
-    return numbers;
-  }
+	public Set<Long> getNumbers() {
+		return numbers;
+	}
 
-  @Override
-  public String toString(String defaultField) {
-    return new StringBuilder()
-        .append(field)
-        .append(": ")
-        .append(numbers.toString())
-        .toString();
-  }
+	@Override
+	public String toString(String defaultField) {
+		return new StringBuilder()
+			.append(field)
+			.append(": ")
+			.append(numbers.toString())
+			.toString();
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-    return new ConstantScoreWeight(this, boost) {
+	@Override
+	public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+		return new ConstantScoreWeight(this, boost) {
 
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        final SortedNumericDocValues values = DocValues.getSortedNumeric(context.reader(), field);
-        return new ConstantScoreScorer(this, score(), new TwoPhaseIterator(values) {
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				final SortedNumericDocValues values = DocValues.getSortedNumeric(context.reader(), field);
+				return new ConstantScoreScorer(this, score(), new TwoPhaseIterator(values) {
 
-          @Override
-          public boolean matches() throws IOException {
-            int count = values.docValueCount();
-            for(int i=0;i<count;i++) {
-              if (numbers.contains(values.nextValue())) {
-                return true;
-              }
-            }
-            return false;
-          }
+					@Override
+					public boolean matches() throws IOException {
+						int count = values.docValueCount();
+						for (int i = 0; i < count; i++) {
+							if (numbers.contains(values.nextValue())) {
+								return true;
+							}
+						}
+						return false;
+					}
 
-          @Override
-          public float matchCost() {
-            return 5; // lookup in the set
-          }
-        });
-      }
+					@Override
+					public float matchCost() {
+						return 5; // lookup in the set
+					}
+				});
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return true;
-      }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return true;
+			}
 
-    };
-  }
+		};
+	}
 }

@@ -24,37 +24,45 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestSpanishAnalyzer extends BaseTokenStreamTestCase {
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new SpanishAnalyzer().close();
-  }
-  
-  /** test stopwords and stemming */
-  public void testBasics() throws IOException {
-    Analyzer a = new SpanishAnalyzer();
-    // stemming
-    checkOneTerm(a, "chicana", "chican");
-    checkOneTerm(a, "chicano", "chican");
-    // stopword
-    assertAnalyzesTo(a, "los", new String[] {});
-    a.close();
-  }
-  
-  /** test use of exclusion set */
-  public void testExclude() throws IOException {
-    CharArraySet exclusionSet = new CharArraySet( asSet("chicano"), false);
-    Analyzer a = new SpanishAnalyzer( 
-        SpanishAnalyzer.getDefaultStopSet(), exclusionSet);
-    checkOneTerm(a, "chicana", "chican");
-    checkOneTerm(a, "chicano", "chicano");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer a = new SpanishAnalyzer();
-    checkRandomData(random(), a, 1000*RANDOM_MULTIPLIER);
-    a.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new SpanishAnalyzer().close();
+	}
+
+	/**
+	 * test stopwords and stemming
+	 */
+	public void testBasics() throws IOException {
+		Analyzer a = new SpanishAnalyzer();
+		// stemming
+		checkOneTerm(a, "chicana", "chican");
+		checkOneTerm(a, "chicano", "chican");
+		// stopword
+		assertAnalyzesTo(a, "los", new String[]{});
+		a.close();
+	}
+
+	/**
+	 * test use of exclusion set
+	 */
+	public void testExclude() throws IOException {
+		CharArraySet exclusionSet = new CharArraySet(asSet("chicano"), false);
+		Analyzer a = new SpanishAnalyzer(
+			SpanishAnalyzer.getDefaultStopSet(), exclusionSet);
+		checkOneTerm(a, "chicana", "chican");
+		checkOneTerm(a, "chicano", "chicano");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer a = new SpanishAnalyzer();
+		checkRandomData(random(), a, 1000 * RANDOM_MULTIPLIER);
+		a.close();
+	}
 }

@@ -27,88 +27,91 @@ import org.apache.lucene.util.packed.PagedMutable;
 /**
  * A {@link DocValuesFieldUpdates} which holds updates of documents, of a single
  * {@link NumericDocValuesField}.
- * 
+ *
  * @lucene.experimental
  */
 final class NumericDocValuesFieldUpdates extends DocValuesFieldUpdates {
 
-  // TODO: can't this just be NumericDocValues now?  avoid boxing the long value...
-  final static class Iterator extends DocValuesFieldUpdates.AbstractIterator {
-    private final PagedGrowableWriter values;
-    private long value;
+	// TODO: can't this just be NumericDocValues now?  avoid boxing the long value...
+	final static class Iterator extends DocValuesFieldUpdates.AbstractIterator {
+		private final PagedGrowableWriter values;
+		private long value;
 
-    Iterator(int size, PagedGrowableWriter values, PagedMutable docs, long delGen) {
-      super(size, docs, delGen);
-      this.values = values;
-    }
-    @Override
-    long longValue() {
-      return value;
-    }
+		Iterator(int size, PagedGrowableWriter values, PagedMutable docs, long delGen) {
+			super(size, docs, delGen);
+			this.values = values;
+		}
 
-    @Override
-    BytesRef binaryValue() {
-      throw new UnsupportedOperationException();
-    }
+		@Override
+		long longValue() {
+			return value;
+		}
 
-    @Override
-    protected void set(long idx) {
-      value = values.get(idx);
-    }
-  }
-  private PagedGrowableWriter values;
+		@Override
+		BytesRef binaryValue() {
+			throw new UnsupportedOperationException();
+		}
 
-  public NumericDocValuesFieldUpdates(long delGen, String field, int maxDoc) {
-    super(maxDoc, delGen, field, DocValuesType.NUMERIC);
-    values = new PagedGrowableWriter(1, PAGE_SIZE, 1, PackedInts.FAST);
-  }
-  @Override
-  void add(int doc, BytesRef value) {
-    throw new UnsupportedOperationException();
-  }
+		@Override
+		protected void set(long idx) {
+			value = values.get(idx);
+		}
+	}
 
-  @Override
-  void add(int docId, DocValuesFieldUpdates.Iterator iterator) {
-    add(docId, iterator.longValue());
-  }
+	private PagedGrowableWriter values;
 
-  @Override
-  synchronized void add(int doc, long value) {
-    int add = add(doc);
-    values.set(add, value);
-  }
+	public NumericDocValuesFieldUpdates(long delGen, String field, int maxDoc) {
+		super(maxDoc, delGen, field, DocValuesType.NUMERIC);
+		values = new PagedGrowableWriter(1, PAGE_SIZE, 1, PackedInts.FAST);
+	}
 
-  @Override
-  protected void swap(int i, int j) {
-    super.swap(i, j);
-    long tmpVal = values.get(j);
-    values.set(j, values.get(i));
-    values.set(i, tmpVal);
-  }
+	@Override
+	void add(int doc, BytesRef value) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  protected void grow(int size) {
-    super.grow(size);
-    values = values.grow(size);
-  }
+	@Override
+	void add(int docId, DocValuesFieldUpdates.Iterator iterator) {
+		add(docId, iterator.longValue());
+	}
 
-  @Override
-  protected void resize(int size) {
-    super.resize(size);
-    values = values.resize(size);
-  }
+	@Override
+	synchronized void add(int doc, long value) {
+		int add = add(doc);
+		values.set(add, value);
+	}
 
-  @Override
-  Iterator iterator() {
-    ensureFinished();
-    return new Iterator(size, values, docs, delGen);
-  }
-  
-  @Override
-  public long ramBytesUsed() {
-    return values.ramBytesUsed()
-        + super.ramBytesUsed()
-        + Long.BYTES
-        + RamUsageEstimator.NUM_BYTES_OBJECT_REF;
-  }
+	@Override
+	protected void swap(int i, int j) {
+		super.swap(i, j);
+		long tmpVal = values.get(j);
+		values.set(j, values.get(i));
+		values.set(i, tmpVal);
+	}
+
+	@Override
+	protected void grow(int size) {
+		super.grow(size);
+		values = values.grow(size);
+	}
+
+	@Override
+	protected void resize(int size) {
+		super.resize(size);
+		values = values.resize(size);
+	}
+
+	@Override
+	Iterator iterator() {
+		ensureFinished();
+		return new Iterator(size, values, docs, delGen);
+	}
+
+	@Override
+	public long ramBytesUsed() {
+		return values.ramBytesUsed()
+			+ super.ramBytesUsed()
+			+ Long.BYTES
+			+ RamUsageEstimator.NUM_BYTES_OBJECT_REF;
+	}
 }

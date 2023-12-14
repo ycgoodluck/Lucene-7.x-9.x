@@ -29,70 +29,70 @@ import java.nio.file.Paths;
 import java.util.Random;
 
 public class TestImpactDISI {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 
-    public void doSearch() throws Exception {
-        IndexWriter indexWriter = new IndexWriter(directory, new IndexWriterConfig(new WhitespaceAnalyzer()));
-        addSegment(indexWriter, 10000);
+	public void doSearch() throws Exception {
+		IndexWriter indexWriter = new IndexWriter(directory, new IndexWriterConfig(new WhitespaceAnalyzer()));
+		addSegment(indexWriter, 10000);
 
-        DirectoryReader reader = DirectoryReader.open(indexWriter);
-        Query query = new TermQuery(new Term("name", new BytesRef("abc")));
-        IndexSearcher searcher = new IndexSearcher(reader);
-        SortField sortField = new SortField("name", SortField.Type.SCORE);
-        CollectorManager<TopFieldCollector, TopFieldDocs> manager =
-                TopFieldCollector.createSharedManager(new Sort(sortField), 20, null, 20);
-        TopDocs topDocs = searcher.search(query, manager);
-        for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
-            System.out.println(scoreDoc.doc);
-            System.out.println(scoreDoc.score);
-            System.out.println("------------------");
-        }
-        indexWriter.close();
-        reader.close();
-        directory.close();
-        System.out.println("total hits: " + topDocs.totalHits.value);
-        System.out.println("DONE");
-    }
+		DirectoryReader reader = DirectoryReader.open(indexWriter);
+		Query query = new TermQuery(new Term("name", new BytesRef("abc")));
+		IndexSearcher searcher = new IndexSearcher(reader);
+		SortField sortField = new SortField("name", SortField.Type.SCORE);
+		CollectorManager<TopFieldCollector, TopFieldDocs> manager =
+			TopFieldCollector.createSharedManager(new Sort(sortField), 20, null, 20);
+		TopDocs topDocs = searcher.search(query, manager);
+		for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+			System.out.println(scoreDoc.doc);
+			System.out.println(scoreDoc.score);
+			System.out.println("------------------");
+		}
+		indexWriter.close();
+		reader.close();
+		directory.close();
+		System.out.println("total hits: " + topDocs.totalHits.value);
+		System.out.println("DONE");
+	}
 
-    void addSegment(IndexWriter indexWriter, int documentSize) throws Exception{
-        Document doc;
-        int count = 0;
-        Random random = new Random();
-        while (count++ != documentSize){
-            doc = new Document();
-            doc.add(new TextField("name", termValue(), Field.Store.YES));
-            indexWriter.addDocument(doc);
-        }
-        indexWriter.commit();
-    }
+	void addSegment(IndexWriter indexWriter, int documentSize) throws Exception {
+		Document doc;
+		int count = 0;
+		Random random = new Random();
+		while (count++ != documentSize) {
+			doc = new Document();
+			doc.add(new TextField("name", termValue(), Field.Store.YES));
+			indexWriter.addDocument(doc);
+		}
+		indexWriter.commit();
+	}
 
-    String termValue(){
-       Random random = new Random();
-       String value = "abc";
-       int count = -1;
-       while (count ++ < random.nextInt(6)){
-           value = value + " abc";
-       }
-       String pengdingValue = " " + String.valueOf(random.nextInt(5));
-       count = 0;
-        while (count ++ < random.nextInt(10)){
-            value = value + pengdingValue;
-        }
-      return value;
-    }
+	String termValue() {
+		Random random = new Random();
+		String value = "abc";
+		int count = -1;
+		while (count++ < random.nextInt(6)) {
+			value = value + " abc";
+		}
+		String pengdingValue = " " + String.valueOf(random.nextInt(5));
+		count = 0;
+		while (count++ < random.nextInt(10)) {
+			value = value + pengdingValue;
+		}
+		return value;
+	}
 
-    public static void main(String[] args) throws Exception {
-        TestImpactDISI test = new TestImpactDISI();
-        test.doSearch();
-    }
+	public static void main(String[] args) throws Exception {
+		TestImpactDISI test = new TestImpactDISI();
+		test.doSearch();
+	}
 }

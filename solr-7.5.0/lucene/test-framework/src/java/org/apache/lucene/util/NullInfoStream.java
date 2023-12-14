@@ -21,23 +21,24 @@ import java.io.IOException;
 /**
  * Prints nothing. Just to make sure tests pass w/ and without enabled InfoStream
  * without actually making noise.
+ *
  * @lucene.experimental
  */
 public class NullInfoStream extends InfoStream {
 
-  @Override
-  public void message(String component, String message) {
-    assert component != null;
-    assert message != null;
-  }
-  
-  @Override
-  public boolean isEnabled(String component) {
-    assert component != null;
-    return true; // to actually enable logging, we just ignore on message()
-  }
+	@Override
+	public void message(String component, String message) {
+		assert component != null;
+		assert message != null;
+	}
 
-  @Override
-  public void close() throws IOException {   
-  }
+	@Override
+	public boolean isEnabled(String component) {
+		assert component != null;
+		return true; // to actually enable logging, we just ignore on message()
+	}
+
+	@Override
+	public void close() throws IOException {
+	}
 }

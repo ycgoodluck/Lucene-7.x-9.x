@@ -18,14 +18,16 @@ package org.apache.lucene.search.spell;
 
 /**
  * Levenshtein edit distance class.
+ *
  * @deprecated Use {@link LevenshteinDistance} instead.
  */
 @Deprecated
 public class LevensteinDistance extends LevenshteinDistance {
 
-  /**
-   * Sole constructor.
-   */
-  public LevensteinDistance() {}
+	/**
+	 * Sole constructor.
+	 */
+	public LevensteinDistance() {
+	}
 
 }

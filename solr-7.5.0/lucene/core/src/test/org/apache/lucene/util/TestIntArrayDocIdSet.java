@@ -24,17 +24,17 @@ import org.apache.lucene.search.DocIdSetIterator;
 
 public class TestIntArrayDocIdSet extends BaseDocIdSetTestCase<IntArrayDocIdSet> {
 
-  @Override
-  public IntArrayDocIdSet copyOf(BitSet bs, int length) throws IOException {
-    int[] docs = new int[0];
-    int l = 0;
-    for (int i = bs.nextSetBit(0); i != -1; i = bs.nextSetBit(i + 1)) {
-      docs = ArrayUtil.grow(docs, length + 1);
-      docs[l++] = i;
-    }
-    docs = ArrayUtil.grow(docs, length + 1);
-    docs[l] = DocIdSetIterator.NO_MORE_DOCS;
-    return new IntArrayDocIdSet(docs, l);
-  }
-  
+	@Override
+	public IntArrayDocIdSet copyOf(BitSet bs, int length) throws IOException {
+		int[] docs = new int[0];
+		int l = 0;
+		for (int i = bs.nextSetBit(0); i != -1; i = bs.nextSetBit(i + 1)) {
+			docs = ArrayUtil.grow(docs, length + 1);
+			docs[l++] = i;
+		}
+		docs = ArrayUtil.grow(docs, length + 1);
+		docs[l] = DocIdSetIterator.NO_MORE_DOCS;
+		return new IntArrayDocIdSet(docs, l);
+	}
+
 }

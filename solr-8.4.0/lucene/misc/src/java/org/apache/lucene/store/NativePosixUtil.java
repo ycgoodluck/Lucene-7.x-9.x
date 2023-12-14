@@ -25,28 +25,32 @@ import java.nio.ByteBuffer;
  * {@link NativeUnixDirectory}
  */
 public final class NativePosixUtil {
-  public final static int NORMAL = 0;
-  public final static int SEQUENTIAL = 1;
-  public final static int RANDOM = 2;
-  public final static int WILLNEED = 3;
-  public final static int DONTNEED = 4;
-  public final static int NOREUSE = 5;
+	public final static int NORMAL = 0;
+	public final static int SEQUENTIAL = 1;
+	public final static int RANDOM = 2;
+	public final static int WILLNEED = 3;
+	public final static int DONTNEED = 4;
+	public final static int NOREUSE = 5;
 
-  static {
-    System.loadLibrary("NativePosixUtil");
-  }
+	static {
+		System.loadLibrary("NativePosixUtil");
+	}
 
-  private static native int posix_fadvise(FileDescriptor fd, long offset, long len, int advise) throws IOException;
-  public static native int posix_madvise(ByteBuffer buf, int advise) throws IOException;
-  public static native int madvise(ByteBuffer buf, int advise) throws IOException;
-  public static native FileDescriptor open_direct(String filename, boolean read) throws IOException;
-  public static native long pread(FileDescriptor fd, long pos, ByteBuffer byteBuf) throws IOException;
+	private static native int posix_fadvise(FileDescriptor fd, long offset, long len, int advise) throws IOException;
 
-  public static void advise(FileDescriptor fd, long offset, long len, int advise) throws IOException {
-    final int code = posix_fadvise(fd, offset, len, advise);
-    if (code != 0) {
-      throw new RuntimeException("posix_fadvise failed code=" + code);
-    }
-  }
+	public static native int posix_madvise(ByteBuffer buf, int advise) throws IOException;
+
+	public static native int madvise(ByteBuffer buf, int advise) throws IOException;
+
+	public static native FileDescriptor open_direct(String filename, boolean read) throws IOException;
+
+	public static native long pread(FileDescriptor fd, long pos, ByteBuffer byteBuf) throws IOException;
+
+	public static void advise(FileDescriptor fd, long offset, long len, int advise) throws IOException {
+		final int code = posix_fadvise(fd, offset, len, advise);
+		if (code != 0) {
+			throw new RuntimeException("posix_fadvise failed code=" + code);
+		}
+	}
 }
-    
+

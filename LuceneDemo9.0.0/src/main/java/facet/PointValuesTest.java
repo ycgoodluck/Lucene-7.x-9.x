@@ -21,43 +21,43 @@ import java.nio.file.Paths;
 import java.util.Random;
 
 public class PointValuesTest {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private Analyzer analyzer = new WhitespaceAnalyzer();
-    private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-    private IndexWriter indexWriter;
+	private Analyzer analyzer = new WhitespaceAnalyzer();
+	private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private IndexWriter indexWriter;
 
-    public void doSearch() throws Exception {
-        conf.setUseCompoundFile(false);
-        indexWriter = new IndexWriter(directory, conf);
+	public void doSearch() throws Exception {
+		conf.setUseCompoundFile(false);
+		indexWriter = new IndexWriter(directory, conf);
 
-        Random random = new Random();
-        Document doc;
-        // 文档0
-        doc = new Document();
-        doc.add(new IntPoint("book", 1, 1));
-        doc.add(new IntPoint("book", 3, 1));
-        indexWriter.addDocument(doc);
-        // 文档1
-        doc = new Document();
-        doc.add(new IntPoint("book", 100, 100));
-        doc.add(new IntPoint("book", 100, 100));
-        doc.add(new IntPoint("book", 100, 100));
-        doc.add(new IntPoint("good", 100, 100));
-        indexWriter.addDocument(doc);
+		Random random = new Random();
+		Document doc;
+		// 文档0
+		doc = new Document();
+		doc.add(new IntPoint("book", 1, 1));
+		doc.add(new IntPoint("book", 3, 1));
+		indexWriter.addDocument(doc);
+		// 文档1
+		doc = new Document();
+		doc.add(new IntPoint("book", 100, 100));
+		doc.add(new IntPoint("book", 100, 100));
+		doc.add(new IntPoint("book", 100, 100));
+		doc.add(new IntPoint("good", 100, 100));
+		indexWriter.addDocument(doc);
 
-        doc = new Document();
-        doc.add(new StringField("boo1k", "good", Field.Store.YES));
-        indexWriter.addDocument(doc);
+		doc = new Document();
+		doc.add(new StringField("boo1k", "good", Field.Store.YES));
+		indexWriter.addDocument(doc);
 
 //        // 文档2
 //        doc = new Document();
@@ -74,28 +74,29 @@ public class PointValuesTest {
 //            doc.add(new IntPoint("book", a, c));
 //            indexWriter.addDocument(doc);
 //        }
-        indexWriter.commit();
-        DirectoryReader reader = DirectoryReader.open(indexWriter);
-        IndexSearcher searcher = new IndexSearcher(reader);
-        int [] lowValue = {-1, -1};
-        int [] upValue = {60, 60};
-        Query query = IntPoint.newRangeQuery("book", lowValue, upValue);
+		indexWriter.commit();
+		DirectoryReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
+		int[] lowValue = {-1, -1};
+		int[] upValue = {60, 60};
+		Query query = IntPoint.newRangeQuery("book", lowValue, upValue);
 
 
-        // 返回Top5的结果
-        int resultTopN = 5;
+		// 返回Top5的结果
+		int resultTopN = 5;
 
-        ScoreDoc[] scoreDocs = searcher.search(query, resultTopN).scoreDocs;
+		ScoreDoc[] scoreDocs = searcher.search(query, resultTopN).scoreDocs;
 
-        System.out.println("Total Result Number: "+scoreDocs.length+"");
-        for (int i = 0; i < scoreDocs.length; i++) {
-            ScoreDoc scoreDoc = scoreDocs[i];
-            // 输出满足查询条件的 文档号
-            System.out.println("result"+i+": 文档"+scoreDoc.doc+"");
-        }
-    }
-    public static void main(String[] args) throws Exception{
-        PointValuesTest test = new PointValuesTest();
-        test.doSearch();
-    }
+		System.out.println("Total Result Number: " + scoreDocs.length + "");
+		for (int i = 0; i < scoreDocs.length; i++) {
+			ScoreDoc scoreDoc = scoreDocs[i];
+			// 输出满足查询条件的 文档号
+			System.out.println("result" + i + ": 文档" + scoreDoc.doc + "");
+		}
+	}
+
+	public static void main(String[] args) throws Exception {
+		PointValuesTest test = new PointValuesTest();
+		test.doSearch();
+	}
 }

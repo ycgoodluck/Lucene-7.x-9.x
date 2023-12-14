@@ -44,161 +44,161 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestBlockJoinValidation extends LuceneTestCase {
 
-  public static final int AMOUNT_OF_SEGMENTS = 5;
-  public static final int AMOUNT_OF_PARENT_DOCS = 10;
-  public static final int AMOUNT_OF_CHILD_DOCS = 5;
-  public static final int AMOUNT_OF_DOCS_IN_SEGMENT = AMOUNT_OF_PARENT_DOCS + AMOUNT_OF_PARENT_DOCS * AMOUNT_OF_CHILD_DOCS;
+	public static final int AMOUNT_OF_SEGMENTS = 5;
+	public static final int AMOUNT_OF_PARENT_DOCS = 10;
+	public static final int AMOUNT_OF_CHILD_DOCS = 5;
+	public static final int AMOUNT_OF_DOCS_IN_SEGMENT = AMOUNT_OF_PARENT_DOCS + AMOUNT_OF_PARENT_DOCS * AMOUNT_OF_CHILD_DOCS;
 
-  private Directory directory;
-  private IndexReader indexReader;
-  private IndexSearcher indexSearcher;
-  private BitSetProducer parentsFilter;
+	private Directory directory;
+	private IndexReader indexReader;
+	private IndexSearcher indexSearcher;
+	private BitSetProducer parentsFilter;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    directory = newDirectory();
-    final IndexWriterConfig config = new IndexWriterConfig(new MockAnalyzer(random()));
-    final IndexWriter indexWriter = new IndexWriter(directory, config);
-    for (int i = 0; i < AMOUNT_OF_SEGMENTS; i++) {
-      List<Document> segmentDocs = createDocsForSegment(i);
-      indexWriter.addDocuments(segmentDocs);
-      indexWriter.commit();
-    }
-    indexReader = DirectoryReader.open(indexWriter);
-    indexWriter.close();
-    indexSearcher = new IndexSearcher(indexReader);
-    parentsFilter = new QueryBitSetProducer(new WildcardQuery(new Term("parent", "*")));
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		directory = newDirectory();
+		final IndexWriterConfig config = new IndexWriterConfig(new MockAnalyzer(random()));
+		final IndexWriter indexWriter = new IndexWriter(directory, config);
+		for (int i = 0; i < AMOUNT_OF_SEGMENTS; i++) {
+			List<Document> segmentDocs = createDocsForSegment(i);
+			indexWriter.addDocuments(segmentDocs);
+			indexWriter.commit();
+		}
+		indexReader = DirectoryReader.open(indexWriter);
+		indexWriter.close();
+		indexSearcher = new IndexSearcher(indexReader);
+		parentsFilter = new QueryBitSetProducer(new WildcardQuery(new Term("parent", "*")));
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    indexReader.close();
-    directory.close();
-    super.tearDown();
-  }
+	@Override
+	public void tearDown() throws Exception {
+		indexReader.close();
+		directory.close();
+		super.tearDown();
+	}
 
-  public void testNextDocValidationForToParentBjq() throws Exception {
-    Query parentQueryWithRandomChild = createChildrenQueryWithOneParent(getRandomChildNumber(0));
-    ToParentBlockJoinQuery blockJoinQuery = new ToParentBlockJoinQuery(parentQueryWithRandomChild, parentsFilter, ScoreMode.None);
-    IllegalStateException expected = expectThrows(IllegalStateException.class, () -> {
-      indexSearcher.search(blockJoinQuery, 1);
-    });
-    assertTrue(expected.getMessage() != null && expected.getMessage().contains("Child query must not match same docs with parent filter"));
-  }
+	public void testNextDocValidationForToParentBjq() throws Exception {
+		Query parentQueryWithRandomChild = createChildrenQueryWithOneParent(getRandomChildNumber(0));
+		ToParentBlockJoinQuery blockJoinQuery = new ToParentBlockJoinQuery(parentQueryWithRandomChild, parentsFilter, ScoreMode.None);
+		IllegalStateException expected = expectThrows(IllegalStateException.class, () -> {
+			indexSearcher.search(blockJoinQuery, 1);
+		});
+		assertTrue(expected.getMessage() != null && expected.getMessage().contains("Child query must not match same docs with parent filter"));
+	}
 
-  public void testNextDocValidationForToChildBjq() throws Exception {
-    Query parentQueryWithRandomChild = createParentsQueryWithOneChild(getRandomChildNumber(0));
+	public void testNextDocValidationForToChildBjq() throws Exception {
+		Query parentQueryWithRandomChild = createParentsQueryWithOneChild(getRandomChildNumber(0));
 
-    ToChildBlockJoinQuery blockJoinQuery = new ToChildBlockJoinQuery(parentQueryWithRandomChild, parentsFilter);
-    
-    IllegalStateException expected = expectThrows(IllegalStateException.class, () -> {
-      indexSearcher.search(blockJoinQuery, 1);
-    });
-    assertTrue(expected.getMessage() != null && expected.getMessage().contains(ToChildBlockJoinQuery.INVALID_QUERY_MESSAGE));
-  }
+		ToChildBlockJoinQuery blockJoinQuery = new ToChildBlockJoinQuery(parentQueryWithRandomChild, parentsFilter);
 
-  public void testAdvanceValidationForToChildBjq() throws Exception {
-    Query parentQuery = new MatchAllDocsQuery();
-    ToChildBlockJoinQuery blockJoinQuery = new ToChildBlockJoinQuery(parentQuery, parentsFilter);
+		IllegalStateException expected = expectThrows(IllegalStateException.class, () -> {
+			indexSearcher.search(blockJoinQuery, 1);
+		});
+		assertTrue(expected.getMessage() != null && expected.getMessage().contains(ToChildBlockJoinQuery.INVALID_QUERY_MESSAGE));
+	}
 
-    final LeafReaderContext context = indexSearcher.getIndexReader().leaves().get(0);
-    Weight weight = indexSearcher.createWeight(indexSearcher.rewrite(blockJoinQuery), org.apache.lucene.search.ScoreMode.COMPLETE, 1);
-    Scorer scorer = weight.scorer(context);
-    final Bits parentDocs = parentsFilter.getBitSet(context);
+	public void testAdvanceValidationForToChildBjq() throws Exception {
+		Query parentQuery = new MatchAllDocsQuery();
+		ToChildBlockJoinQuery blockJoinQuery = new ToChildBlockJoinQuery(parentQuery, parentsFilter);
 
-    int target;
-    do {
-      // make the parent scorer advance to a doc ID which is not a parent
-      target = TestUtil.nextInt(random(), 0, context.reader().maxDoc() - 2);
-    } while (parentDocs.get(target + 1));
+		final LeafReaderContext context = indexSearcher.getIndexReader().leaves().get(0);
+		Weight weight = indexSearcher.createWeight(indexSearcher.rewrite(blockJoinQuery), org.apache.lucene.search.ScoreMode.COMPLETE, 1);
+		Scorer scorer = weight.scorer(context);
+		final Bits parentDocs = parentsFilter.getBitSet(context);
 
-    final int illegalTarget = target;
-    IllegalStateException expected = expectThrows(IllegalStateException.class, () -> {
-      scorer.iterator().advance(illegalTarget);
-    });
-    assertTrue(expected.getMessage() != null && expected.getMessage().contains(ToChildBlockJoinQuery.INVALID_QUERY_MESSAGE));
-  }
+		int target;
+		do {
+			// make the parent scorer advance to a doc ID which is not a parent
+			target = TestUtil.nextInt(random(), 0, context.reader().maxDoc() - 2);
+		} while (parentDocs.get(target + 1));
 
-  private static List<Document> createDocsForSegment(int segmentNumber) {
-    List<List<Document>> blocks = new ArrayList<>(AMOUNT_OF_PARENT_DOCS);
-    for (int i = 0; i < AMOUNT_OF_PARENT_DOCS; i++) {
-      blocks.add(createParentDocWithChildren(segmentNumber, i));
-    }
-    List<Document> result = new ArrayList<>(AMOUNT_OF_DOCS_IN_SEGMENT);
-    for (List<Document> block : blocks) {
-      result.addAll(block);
-    }
-    return result;
-  }
+		final int illegalTarget = target;
+		IllegalStateException expected = expectThrows(IllegalStateException.class, () -> {
+			scorer.iterator().advance(illegalTarget);
+		});
+		assertTrue(expected.getMessage() != null && expected.getMessage().contains(ToChildBlockJoinQuery.INVALID_QUERY_MESSAGE));
+	}
 
-  private static List<Document> createParentDocWithChildren(int segmentNumber, int parentNumber) {
-    List<Document> result = new ArrayList<>(AMOUNT_OF_CHILD_DOCS + 1);
-    for (int i = 0; i < AMOUNT_OF_CHILD_DOCS; i++) {
-      result.add(createChildDoc(segmentNumber, parentNumber, i));
-    }
-    result.add(createParentDoc(segmentNumber, parentNumber));
-    return result;
-  }
+	private static List<Document> createDocsForSegment(int segmentNumber) {
+		List<List<Document>> blocks = new ArrayList<>(AMOUNT_OF_PARENT_DOCS);
+		for (int i = 0; i < AMOUNT_OF_PARENT_DOCS; i++) {
+			blocks.add(createParentDocWithChildren(segmentNumber, i));
+		}
+		List<Document> result = new ArrayList<>(AMOUNT_OF_DOCS_IN_SEGMENT);
+		for (List<Document> block : blocks) {
+			result.addAll(block);
+		}
+		return result;
+	}
 
-  private static Document createParentDoc(int segmentNumber, int parentNumber) {
-    Document result = new Document();
-    result.add(newStringField("id", createFieldValue(segmentNumber * AMOUNT_OF_PARENT_DOCS + parentNumber), Field.Store.YES));
-    result.add(newStringField("parent", createFieldValue(parentNumber), Field.Store.NO));
-    result.add(newStringField("common_field", "1", Field.Store.NO));
-    return result;
-  }
+	private static List<Document> createParentDocWithChildren(int segmentNumber, int parentNumber) {
+		List<Document> result = new ArrayList<>(AMOUNT_OF_CHILD_DOCS + 1);
+		for (int i = 0; i < AMOUNT_OF_CHILD_DOCS; i++) {
+			result.add(createChildDoc(segmentNumber, parentNumber, i));
+		}
+		result.add(createParentDoc(segmentNumber, parentNumber));
+		return result;
+	}
 
-  private static Document createChildDoc(int segmentNumber, int parentNumber, int childNumber) {
-    Document result = new Document();
-    result.add(newStringField("id", createFieldValue(segmentNumber * AMOUNT_OF_PARENT_DOCS + parentNumber, childNumber), Field.Store.YES));
-    result.add(newStringField("child", createFieldValue(childNumber), Field.Store.NO));
-    result.add(newStringField("common_field", "1", Field.Store.NO));
-    return result;
-  }
+	private static Document createParentDoc(int segmentNumber, int parentNumber) {
+		Document result = new Document();
+		result.add(newStringField("id", createFieldValue(segmentNumber * AMOUNT_OF_PARENT_DOCS + parentNumber), Field.Store.YES));
+		result.add(newStringField("parent", createFieldValue(parentNumber), Field.Store.NO));
+		result.add(newStringField("common_field", "1", Field.Store.NO));
+		return result;
+	}
 
-  private static String createFieldValue(int... documentNumbers) {
-    StringBuilder stringBuilder = new StringBuilder();
-    for (int documentNumber : documentNumbers) {
-      if (stringBuilder.length() > 0) {
-        stringBuilder.append("_");
-      }
-      stringBuilder.append(documentNumber);
-    }
-    return stringBuilder.toString();
-  }
+	private static Document createChildDoc(int segmentNumber, int parentNumber, int childNumber) {
+		Document result = new Document();
+		result.add(newStringField("id", createFieldValue(segmentNumber * AMOUNT_OF_PARENT_DOCS + parentNumber, childNumber), Field.Store.YES));
+		result.add(newStringField("child", createFieldValue(childNumber), Field.Store.NO));
+		result.add(newStringField("common_field", "1", Field.Store.NO));
+		return result;
+	}
 
-  private static Query createChildrenQueryWithOneParent(int childNumber) {
-    TermQuery childQuery = new TermQuery(new Term("child", createFieldValue(childNumber)));
-    Query randomParentQuery = new TermQuery(new Term("id", createFieldValue(getRandomParentId())));
-    BooleanQuery.Builder childrenQueryWithRandomParent = new BooleanQuery.Builder();
-    childrenQueryWithRandomParent.add(new BooleanClause(childQuery, BooleanClause.Occur.SHOULD));
-    childrenQueryWithRandomParent.add(new BooleanClause(randomParentQuery, BooleanClause.Occur.SHOULD));
-    return childrenQueryWithRandomParent.build();
-  }
+	private static String createFieldValue(int... documentNumbers) {
+		StringBuilder stringBuilder = new StringBuilder();
+		for (int documentNumber : documentNumbers) {
+			if (stringBuilder.length() > 0) {
+				stringBuilder.append("_");
+			}
+			stringBuilder.append(documentNumber);
+		}
+		return stringBuilder.toString();
+	}
 
-  private static Query createParentsQueryWithOneChild(int randomChildNumber) {
-    BooleanQuery.Builder childQueryWithRandomParent = new BooleanQuery.Builder();
-    Query parentsQuery = new TermQuery(new Term("parent", createFieldValue(getRandomParentNumber())));
-    childQueryWithRandomParent.add(new BooleanClause(parentsQuery, BooleanClause.Occur.SHOULD));
-    childQueryWithRandomParent.add(new BooleanClause(randomChildQuery(randomChildNumber), BooleanClause.Occur.SHOULD));
-    return childQueryWithRandomParent.build();
-  }
+	private static Query createChildrenQueryWithOneParent(int childNumber) {
+		TermQuery childQuery = new TermQuery(new Term("child", createFieldValue(childNumber)));
+		Query randomParentQuery = new TermQuery(new Term("id", createFieldValue(getRandomParentId())));
+		BooleanQuery.Builder childrenQueryWithRandomParent = new BooleanQuery.Builder();
+		childrenQueryWithRandomParent.add(new BooleanClause(childQuery, BooleanClause.Occur.SHOULD));
+		childrenQueryWithRandomParent.add(new BooleanClause(randomParentQuery, BooleanClause.Occur.SHOULD));
+		return childrenQueryWithRandomParent.build();
+	}
 
-  private static int getRandomParentId() {
-    return random().nextInt(AMOUNT_OF_PARENT_DOCS * AMOUNT_OF_SEGMENTS);
-  }
+	private static Query createParentsQueryWithOneChild(int randomChildNumber) {
+		BooleanQuery.Builder childQueryWithRandomParent = new BooleanQuery.Builder();
+		Query parentsQuery = new TermQuery(new Term("parent", createFieldValue(getRandomParentNumber())));
+		childQueryWithRandomParent.add(new BooleanClause(parentsQuery, BooleanClause.Occur.SHOULD));
+		childQueryWithRandomParent.add(new BooleanClause(randomChildQuery(randomChildNumber), BooleanClause.Occur.SHOULD));
+		return childQueryWithRandomParent.build();
+	}
 
-  private static int getRandomParentNumber() {
-    return random().nextInt(AMOUNT_OF_PARENT_DOCS);
-  }
+	private static int getRandomParentId() {
+		return random().nextInt(AMOUNT_OF_PARENT_DOCS * AMOUNT_OF_SEGMENTS);
+	}
 
-  private static Query randomChildQuery(int randomChildNumber) {
-    return new TermQuery(new Term("id", createFieldValue(getRandomParentId(), randomChildNumber)));
-  }
+	private static int getRandomParentNumber() {
+		return random().nextInt(AMOUNT_OF_PARENT_DOCS);
+	}
 
-  private static int getRandomChildNumber(int notLessThan) {
-    return notLessThan + random().nextInt(AMOUNT_OF_CHILD_DOCS - notLessThan);
-  }
+	private static Query randomChildQuery(int randomChildNumber) {
+		return new TermQuery(new Term("id", createFieldValue(getRandomParentId(), randomChildNumber)));
+	}
+
+	private static int getRandomChildNumber(int notLessThan) {
+		return notLessThan + random().nextInt(AMOUNT_OF_CHILD_DOCS - notLessThan);
+	}
 
 }

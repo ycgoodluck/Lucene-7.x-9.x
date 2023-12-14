@@ -24,23 +24,25 @@ import java.io.IOException;
  */
 public abstract class ScorerSupplier {
 
-  /**
-   * Get the {@link Scorer}. This may not return {@code null} and must be called
-   * at most once.
-   * @param leadCost Cost of the scorer that will be used in order to lead
-   * iteration. This can be interpreted as an upper bound of the number of times
-   * that {@link DocIdSetIterator#nextDoc}, {@link DocIdSetIterator#advance}
-   * and {@link TwoPhaseIterator#matches} will be called. Under doubt, pass
-   * {@link Long#MAX_VALUE}, which will produce a {@link Scorer} that has good
-   * iteration capabilities.
-   */
-  public abstract Scorer get(long leadCost) throws IOException;
+	/**
+	 * Get the {@link Scorer}. This may not return {@code null} and must be called
+	 * at most once.
+	 *
+	 * @param leadCost Cost of the scorer that will be used in order to lead
+	 *                 iteration. This can be interpreted as an upper bound of the number of times
+	 *                 that {@link DocIdSetIterator#nextDoc}, {@link DocIdSetIterator#advance}
+	 *                 and {@link TwoPhaseIterator#matches} will be called. Under doubt, pass
+	 *                 {@link Long#MAX_VALUE}, which will produce a {@link Scorer} that has good
+	 *                 iteration capabilities.
+	 */
+	public abstract Scorer get(long leadCost) throws IOException;
 
-  /**
-   * Get an estimate of the {@link Scorer} that would be returned by {@link #get}.
-   * This may be a costly operation, so it should only be called if necessary.
-   * @see DocIdSetIterator#cost
-   */
-  public abstract long cost();
+	/**
+	 * Get an estimate of the {@link Scorer} that would be returned by {@link #get}.
+	 * This may be a costly operation, so it should only be called if necessary.
+	 *
+	 * @see DocIdSetIterator#cost
+	 */
+	public abstract long cost();
 
 }

@@ -34,42 +34,47 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.ICUFoldingFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.1.0
  */
 public class ICUFoldingFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "icuFolding";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "icuFolding";
 
-  private final Normalizer2 normalizer;
+	private final Normalizer2 normalizer;
 
-  /** Creates a new ICUFoldingFilterFactory */
-  public ICUFoldingFilterFactory(Map<String,String> args) {
-    super(args);
+	/**
+	 * Creates a new ICUFoldingFilterFactory
+	 */
+	public ICUFoldingFilterFactory(Map<String, String> args) {
+		super(args);
 
-    Normalizer2 normalizer = ICUFoldingFilter.NORMALIZER;
-    String filter = get(args, "filter");
-    if (filter != null) {
-      UnicodeSet set = new UnicodeSet(filter);
-      if (!set.isEmpty()) {
-        set.freeze();
-        normalizer = new FilteredNormalizer2(normalizer, set);
-      }
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-    this.normalizer = normalizer;
-  }
+		Normalizer2 normalizer = ICUFoldingFilter.NORMALIZER;
+		String filter = get(args, "filter");
+		if (filter != null) {
+			UnicodeSet set = new UnicodeSet(filter);
+			if (!set.isEmpty()) {
+				set.freeze();
+				normalizer = new FilteredNormalizer2(normalizer, set);
+			}
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+		this.normalizer = normalizer;
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new ICUFoldingFilter(input, normalizer);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new ICUFoldingFilter(input, normalizer);
+	}
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

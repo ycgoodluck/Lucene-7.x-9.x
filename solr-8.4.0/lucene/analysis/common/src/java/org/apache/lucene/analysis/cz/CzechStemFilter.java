@@ -32,29 +32,30 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  * {@link SetKeywordMarkerFilter} or a custom {@link TokenFilter} that sets
  * the {@link KeywordAttribute} before this {@link TokenStream}.
  * </p>
- * <p><b>NOTE</b>: Input is expected to be in lowercase, 
+ * <p><b>NOTE</b>: Input is expected to be in lowercase,
  * but with diacritical marks</p>
+ *
  * @see SetKeywordMarkerFilter
  */
 public final class CzechStemFilter extends TokenFilter {
-  private final CzechStemmer stemmer = new CzechStemmer();
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
-  
-  public CzechStemFilter(TokenStream input) {
-    super(input);
-  }
+	private final CzechStemmer stemmer = new CzechStemmer();
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if(!keywordAttr.isKeyword()) {
-        final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
-        termAtt.setLength(newlen);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	public CzechStemFilter(TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
+				termAtt.setLength(newlen);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

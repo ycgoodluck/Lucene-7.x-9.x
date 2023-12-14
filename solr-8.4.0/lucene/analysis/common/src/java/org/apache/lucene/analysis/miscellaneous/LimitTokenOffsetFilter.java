@@ -39,44 +39,44 @@ import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
  */
 public final class LimitTokenOffsetFilter extends TokenFilter {
 
-  private final OffsetAttribute offsetAttrib = addAttribute(OffsetAttribute.class);
-  private int maxStartOffset;
-  private final boolean consumeAllTokens;
+	private final OffsetAttribute offsetAttrib = addAttribute(OffsetAttribute.class);
+	private int maxStartOffset;
+	private final boolean consumeAllTokens;
 
-  // some day we may limit by end offset too but no need right now
+	// some day we may limit by end offset too but no need right now
 
-  /**
-   * Lets all tokens pass through until it sees one with a start offset &lt;= {@code maxStartOffset}
-   * which won't pass and ends the stream. It won't consume any tokens afterwards.
-   *
-   * @param maxStartOffset the maximum start offset allowed
-   */
-  public LimitTokenOffsetFilter(TokenStream input, int maxStartOffset) {
-    this(input, maxStartOffset, false);
-  }
+	/**
+	 * Lets all tokens pass through until it sees one with a start offset &lt;= {@code maxStartOffset}
+	 * which won't pass and ends the stream. It won't consume any tokens afterwards.
+	 *
+	 * @param maxStartOffset the maximum start offset allowed
+	 */
+	public LimitTokenOffsetFilter(TokenStream input, int maxStartOffset) {
+		this(input, maxStartOffset, false);
+	}
 
-  public LimitTokenOffsetFilter(TokenStream input, int maxStartOffset, boolean consumeAllTokens) {
-    super(input);
-    if (maxStartOffset < 0) {
-      throw new IllegalArgumentException("maxStartOffset must be >= zero");
-    }
-    this.maxStartOffset = maxStartOffset;
-    this.consumeAllTokens = consumeAllTokens;
-  }
+	public LimitTokenOffsetFilter(TokenStream input, int maxStartOffset, boolean consumeAllTokens) {
+		super(input);
+		if (maxStartOffset < 0) {
+			throw new IllegalArgumentException("maxStartOffset must be >= zero");
+		}
+		this.maxStartOffset = maxStartOffset;
+		this.consumeAllTokens = consumeAllTokens;
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (!input.incrementToken()) {
-      return false;
-    }
-    if (offsetAttrib.startOffset() <= maxStartOffset) {
-      return true;
-    }
-    if (consumeAllTokens) {
-      while (input.incrementToken()) {
-        // no-op
-      }
-    }
-    return false;
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (!input.incrementToken()) {
+			return false;
+		}
+		if (offsetAttrib.startOffset() <= maxStartOffset) {
+			return true;
+		}
+		if (consumeAllTokens) {
+			while (input.incrementToken()) {
+				// no-op
+			}
+		}
+		return false;
+	}
 }

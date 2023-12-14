@@ -40,27 +40,30 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * <ul>
  *   <li>tags: List of stop tags. if not specified, {@link KoreanPartOfSpeechStopFilter#DEFAULT_STOP_TAGS} is used.</li>
  * </ul>
+ *
  * @lucene.experimental
  */
 public class KoreanPartOfSpeechStopFilterFactory extends TokenFilterFactory {
-  private Set<POS.Tag> stopTags;
+	private Set<POS.Tag> stopTags;
 
-  /** Creates a new KoreanPartOfSpeechStopFilterFactory */
-  public KoreanPartOfSpeechStopFilterFactory(Map<String,String> args) {
-    super(args);
-    Set<String> stopTagStr = getSet(args, "tags");
-    if (stopTagStr == null) {
-      stopTags = KoreanPartOfSpeechStopFilter.DEFAULT_STOP_TAGS;
-    } else {
-      stopTags = stopTagStr.stream().map(POS::resolveTag).collect(Collectors.toSet());
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream stream) {
-      return new KoreanPartOfSpeechStopFilter(stream, stopTags);
-  }
+	/**
+	 * Creates a new KoreanPartOfSpeechStopFilterFactory
+	 */
+	public KoreanPartOfSpeechStopFilterFactory(Map<String, String> args) {
+		super(args);
+		Set<String> stopTagStr = getSet(args, "tags");
+		if (stopTagStr == null) {
+			stopTags = KoreanPartOfSpeechStopFilter.DEFAULT_STOP_TAGS;
+		} else {
+			stopTags = stopTagStr.stream().map(POS::resolveTag).collect(Collectors.toSet());
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream stream) {
+		return new KoreanPartOfSpeechStopFilter(stream, stopTags);
+	}
 }

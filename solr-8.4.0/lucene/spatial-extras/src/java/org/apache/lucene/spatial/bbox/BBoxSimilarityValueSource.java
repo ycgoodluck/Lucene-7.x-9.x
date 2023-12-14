@@ -40,89 +40,92 @@ import org.locationtech.spatial4j.shape.Rectangle;
  */
 public abstract class BBoxSimilarityValueSource extends DoubleValuesSource {
 
-  private final ShapeValuesSource bboxValueSource;
+	private final ShapeValuesSource bboxValueSource;
 
-  public BBoxSimilarityValueSource(ShapeValuesSource bboxValueSource) {
-    this.bboxValueSource = bboxValueSource;
-  }
+	public BBoxSimilarityValueSource(ShapeValuesSource bboxValueSource) {
+		this.bboxValueSource = bboxValueSource;
+	}
 
-  @Override
-  public DoubleValuesSource rewrite(IndexSearcher searcher) throws IOException {
-    return this;
-  }
+	@Override
+	public DoubleValuesSource rewrite(IndexSearcher searcher) throws IOException {
+		return this;
+	}
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName()+"(" + bboxValueSource.toString() + "," + similarityDescription() + ")";
-  }
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(" + bboxValueSource.toString() + "," + similarityDescription() + ")";
+	}
 
-  /** A comma-separated list of configurable items of the subclass to put into {@link #toString()}. */
-  protected abstract String similarityDescription();
+	/**
+	 * A comma-separated list of configurable items of the subclass to put into {@link #toString()}.
+	 */
+	protected abstract String similarityDescription();
 
-  @Override
-  public DoubleValues getValues(LeafReaderContext readerContext, DoubleValues scores) throws IOException {
+	@Override
+	public DoubleValues getValues(LeafReaderContext readerContext, DoubleValues scores) throws IOException {
 
-    final ShapeValues shapeValues = bboxValueSource.getValues(readerContext);
-    return DoubleValues.withDefault(new DoubleValues() {
-      @Override
-      public double doubleValue() throws IOException {
-        return score((Rectangle) shapeValues.value(), null);
-      }
+		final ShapeValues shapeValues = bboxValueSource.getValues(readerContext);
+		return DoubleValues.withDefault(new DoubleValues() {
+			@Override
+			public double doubleValue() throws IOException {
+				return score((Rectangle) shapeValues.value(), null);
+			}
 
-      @Override
-      public boolean advanceExact(int doc) throws IOException {
-        return shapeValues.advanceExact(doc);
-      }
-    }, 0);
+			@Override
+			public boolean advanceExact(int doc) throws IOException {
+				return shapeValues.advanceExact(doc);
+			}
+		}, 0);
 
-  }
+	}
 
-  /**
-   * Return a relevancy score. If {@code exp} is provided then diagnostic information is added.
-   * @param rect The indexed rectangle; not null.
-   * @param exp Optional diagnostic holder.
-   * @return a score.
-   */
-  protected abstract double score(Rectangle rect, AtomicReference<Explanation> exp);
+	/**
+	 * Return a relevancy score. If {@code exp} is provided then diagnostic information is added.
+	 *
+	 * @param rect The indexed rectangle; not null.
+	 * @param exp  Optional diagnostic holder.
+	 * @return a score.
+	 */
+	protected abstract double score(Rectangle rect, AtomicReference<Explanation> exp);
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;//same class
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;//same class
 
-    BBoxSimilarityValueSource that = (BBoxSimilarityValueSource) o;
+		BBoxSimilarityValueSource that = (BBoxSimilarityValueSource) o;
 
-    if (!bboxValueSource.equals(that.bboxValueSource)) return false;
+		if (!bboxValueSource.equals(that.bboxValueSource)) return false;
 
-    return true;
-  }
+		return true;
+	}
 
-  @Override
-  public int hashCode() {
-    return bboxValueSource.hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return bboxValueSource.hashCode();
+	}
 
-  @Override
-  public Explanation explain(LeafReaderContext ctx, int docId, Explanation scoreExplanation) throws IOException {
-    DoubleValues dv = getValues(ctx, DoubleValuesSource.constant(scoreExplanation.getValue().doubleValue()).getValues(ctx, null));
-    if (dv.advanceExact(docId)) {
-      AtomicReference<Explanation> explanation = new AtomicReference<>();
-      final ShapeValues shapeValues = bboxValueSource.getValues(ctx);
-      if (shapeValues.advanceExact(docId)) {
-        score((Rectangle) shapeValues.value(), explanation);
-        return explanation.get();
-      }
-    }
-    return Explanation.noMatch(this.toString());
-  }
+	@Override
+	public Explanation explain(LeafReaderContext ctx, int docId, Explanation scoreExplanation) throws IOException {
+		DoubleValues dv = getValues(ctx, DoubleValuesSource.constant(scoreExplanation.getValue().doubleValue()).getValues(ctx, null));
+		if (dv.advanceExact(docId)) {
+			AtomicReference<Explanation> explanation = new AtomicReference<>();
+			final ShapeValues shapeValues = bboxValueSource.getValues(ctx);
+			if (shapeValues.advanceExact(docId)) {
+				score((Rectangle) shapeValues.value(), explanation);
+				return explanation.get();
+			}
+		}
+		return Explanation.noMatch(this.toString());
+	}
 
-  @Override
-  public boolean isCacheable(LeafReaderContext ctx) {
-    return bboxValueSource.isCacheable(ctx);
-  }
+	@Override
+	public boolean isCacheable(LeafReaderContext ctx) {
+		return bboxValueSource.isCacheable(ctx);
+	}
 
-  @Override
-  public boolean needsScores() {
-    return false;
-  }
+	@Override
+	public boolean needsScores() {
+		return false;
+	}
 }

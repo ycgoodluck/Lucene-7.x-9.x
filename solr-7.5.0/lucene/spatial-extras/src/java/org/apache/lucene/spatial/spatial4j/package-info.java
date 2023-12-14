@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Spatial4j stuff that ideally belongs in Spatial4j (isn't related to Lucene). */
+/**
+ * Spatial4j stuff that ideally belongs in Spatial4j (isn't related to Lucene).
+ */
 package org.apache.lucene.spatial.spatial4j;

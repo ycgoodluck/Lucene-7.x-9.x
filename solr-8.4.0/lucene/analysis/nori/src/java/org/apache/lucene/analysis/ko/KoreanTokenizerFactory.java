@@ -59,65 +59,69 @@ import org.apache.lucene.analysis.ko.KoreanTokenizer.DecompoundMode;
  *   <li>outputUnknownUnigrams: If true outputs unigrams for unknown words.</li>
  *   <li>discardPunctuation: true if punctuation tokens should be dropped from the output.</li>
  * </ul>
- * @lucene.experimental
  *
- * @since 7.4.0
+ * @lucene.experimental
  * @lucene.spi {@value #NAME}
+ * @since 7.4.0
  */
 public class KoreanTokenizerFactory extends TokenizerFactory implements ResourceLoaderAware {
 
-  /** SPI name */
-  public static final String NAME = "korean";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "korean";
 
-  private static final String USER_DICT_PATH = "userDictionary";
-  private static final String USER_DICT_ENCODING = "userDictionaryEncoding";
-  private static final String DECOMPOUND_MODE = "decompoundMode";
-  private static final String OUTPUT_UNKNOWN_UNIGRAMS = "outputUnknownUnigrams";
-  private static final String DISCARD_PUNCTUATION = "discardPunctuation";
+	private static final String USER_DICT_PATH = "userDictionary";
+	private static final String USER_DICT_ENCODING = "userDictionaryEncoding";
+	private static final String DECOMPOUND_MODE = "decompoundMode";
+	private static final String OUTPUT_UNKNOWN_UNIGRAMS = "outputUnknownUnigrams";
+	private static final String DISCARD_PUNCTUATION = "discardPunctuation";
 
-  private final String userDictionaryPath;
-  private final String userDictionaryEncoding;
-  private UserDictionary userDictionary;
+	private final String userDictionaryPath;
+	private final String userDictionaryEncoding;
+	private UserDictionary userDictionary;
 
-  private final KoreanTokenizer.DecompoundMode mode;
-  private final boolean outputUnknownUnigrams;
-  private final boolean discardPunctuation;
+	private final KoreanTokenizer.DecompoundMode mode;
+	private final boolean outputUnknownUnigrams;
+	private final boolean discardPunctuation;
 
-  /** Creates a new KoreanTokenizerFactory */
-  public KoreanTokenizerFactory(Map<String, String> args) {
-    super(args);
-    userDictionaryPath = args.remove(USER_DICT_PATH);
-    userDictionaryEncoding = args.remove(USER_DICT_ENCODING);
-    mode = KoreanTokenizer.DecompoundMode.valueOf(get(args, DECOMPOUND_MODE, KoreanTokenizer.DEFAULT_DECOMPOUND.toString()).toUpperCase(Locale.ROOT));
-    outputUnknownUnigrams = getBoolean(args, OUTPUT_UNKNOWN_UNIGRAMS, false);
-    discardPunctuation = getBoolean(args, DISCARD_PUNCTUATION, true);
+	/**
+	 * Creates a new KoreanTokenizerFactory
+	 */
+	public KoreanTokenizerFactory(Map<String, String> args) {
+		super(args);
+		userDictionaryPath = args.remove(USER_DICT_PATH);
+		userDictionaryEncoding = args.remove(USER_DICT_ENCODING);
+		mode = KoreanTokenizer.DecompoundMode.valueOf(get(args, DECOMPOUND_MODE, KoreanTokenizer.DEFAULT_DECOMPOUND.toString()).toUpperCase(Locale.ROOT));
+		outputUnknownUnigrams = getBoolean(args, OUTPUT_UNKNOWN_UNIGRAMS, false);
+		discardPunctuation = getBoolean(args, DISCARD_PUNCTUATION, true);
 
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    if (userDictionaryPath != null) {
-      try (InputStream stream = loader.openResource(userDictionaryPath)) {
-        String encoding = userDictionaryEncoding;
-        if (encoding == null) {
-          encoding = IOUtils.UTF_8;
-        }
-        CharsetDecoder decoder = Charset.forName(encoding).newDecoder()
-          .onMalformedInput(CodingErrorAction.REPORT)
-          .onUnmappableCharacter(CodingErrorAction.REPORT);
-        Reader reader = new InputStreamReader(stream, decoder);
-        userDictionary = UserDictionary.open(reader);
-      }
-    } else {
-      userDictionary = null;
-    }
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		if (userDictionaryPath != null) {
+			try (InputStream stream = loader.openResource(userDictionaryPath)) {
+				String encoding = userDictionaryEncoding;
+				if (encoding == null) {
+					encoding = IOUtils.UTF_8;
+				}
+				CharsetDecoder decoder = Charset.forName(encoding).newDecoder()
+					.onMalformedInput(CodingErrorAction.REPORT)
+					.onUnmappableCharacter(CodingErrorAction.REPORT);
+				Reader reader = new InputStreamReader(stream, decoder);
+				userDictionary = UserDictionary.open(reader);
+			}
+		} else {
+			userDictionary = null;
+		}
+	}
 
-  @Override
-  public KoreanTokenizer create(AttributeFactory factory) {
-    return new KoreanTokenizer(factory, userDictionary, mode, outputUnknownUnigrams, discardPunctuation);
-  }
+	@Override
+	public KoreanTokenizer create(AttributeFactory factory) {
+		return new KoreanTokenizer(factory, userDictionary, mode, outputUnknownUnigrams, discardPunctuation);
+	}
 }

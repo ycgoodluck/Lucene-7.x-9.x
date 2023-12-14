@@ -26,13 +26,13 @@ import com.carrotsearch.randomizedtesting.RandomizedRunner;
 @RunWith(RandomizedRunner.class)
 public class TestInPlaceMergeSorter extends BaseSortTestCase {
 
-  public TestInPlaceMergeSorter() {
-    super(true);
-  }
+	public TestInPlaceMergeSorter() {
+		super(true);
+	}
 
-  @Override
-  public Sorter newSorter(Entry[] arr) {
-    return new ArrayInPlaceMergeSorter<>(arr, Comparator.naturalOrder());
-  }
+	@Override
+	public Sorter newSorter(Entry[] arr) {
+		return new ArrayInPlaceMergeSorter<>(arr, Comparator.naturalOrder());
+	}
 
 }

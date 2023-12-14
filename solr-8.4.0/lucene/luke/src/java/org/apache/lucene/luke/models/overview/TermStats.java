@@ -24,53 +24,53 @@ import org.apache.lucene.luke.util.BytesRefUtils;
  */
 public final class TermStats {
 
-  private final String decodedTermText;
+	private final String decodedTermText;
 
-  private final String field;
+	private final String field;
 
-  private final int docFreq;
+	private final int docFreq;
 
-  /**
-   * Returns a TermStats instance representing the specified {@link org.apache.lucene.misc.TermStats} value.
-   */
-  static TermStats of(org.apache.lucene.misc.TermStats stats) {
-    String termText = BytesRefUtils.decode(stats.termtext);
-    return new TermStats(termText, stats.field, stats.docFreq);
-  }
+	/**
+	 * Returns a TermStats instance representing the specified {@link org.apache.lucene.misc.TermStats} value.
+	 */
+	static TermStats of(org.apache.lucene.misc.TermStats stats) {
+		String termText = BytesRefUtils.decode(stats.termtext);
+		return new TermStats(termText, stats.field, stats.docFreq);
+	}
 
-  private TermStats(String decodedTermText, String field, int docFreq) {
-    this.decodedTermText = decodedTermText;
-    this.field = field;
-    this.docFreq = docFreq;
-  }
+	private TermStats(String decodedTermText, String field, int docFreq) {
+		this.decodedTermText = decodedTermText;
+		this.field = field;
+		this.docFreq = docFreq;
+	}
 
-  /**
-   * Returns the string representation for this term.
-   */
-  public String getDecodedTermText() {
-    return decodedTermText;
-  }
+	/**
+	 * Returns the string representation for this term.
+	 */
+	public String getDecodedTermText() {
+		return decodedTermText;
+	}
 
-  /**
-   * Returns the field name.
-   */
-  public String getField() {
-    return field;
-  }
+	/**
+	 * Returns the field name.
+	 */
+	public String getField() {
+		return field;
+	}
 
-  /**
-   * Returns the document frequency of this term.
-   */
-  public int getDocFreq() {
-    return docFreq;
-  }
+	/**
+	 * Returns the document frequency of this term.
+	 */
+	public int getDocFreq() {
+		return docFreq;
+	}
 
-  @Override
-  public String toString() {
-    return "TermStats{" +
-        "decodedTermText='" + decodedTermText + '\'' +
-        ", field='" + field + '\'' +
-        ", docFreq=" + docFreq +
-        '}';
-  }
+	@Override
+	public String toString() {
+		return "TermStats{" +
+			"decodedTermText='" + decodedTermText + '\'' +
+			", field='" + field + '\'' +
+			", docFreq=" + docFreq +
+			'}';
+	}
 }

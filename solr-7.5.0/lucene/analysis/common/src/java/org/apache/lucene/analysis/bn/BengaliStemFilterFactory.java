@@ -22,8 +22,8 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 import java.util.Map;
 
-/** 
- * Factory for {@link BengaliStemFilter}. 
+/**
+ * Factory for {@link BengaliStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_histem" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -31,19 +31,20 @@ import java.util.Map;
  *     &lt;filter class="solr.BengaliStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 7.1.0
  */
 public class BengaliStemFilterFactory extends TokenFilterFactory {
 
-  public BengaliStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new BengaliStemFilter(input);
-  }
+	public BengaliStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new BengaliStemFilter(input);
+	}
 }

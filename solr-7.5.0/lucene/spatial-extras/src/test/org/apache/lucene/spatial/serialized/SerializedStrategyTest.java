@@ -26,36 +26,36 @@ import org.locationtech.spatial4j.context.SpatialContext;
 
 public class SerializedStrategyTest extends StrategyTestCase {
 
-  @Before
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    this.ctx = SpatialContext.GEO;
-    this.strategy = new SerializedDVStrategy(ctx, "serialized");
-  }
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		this.ctx = SpatialContext.GEO;
+		this.strategy = new SerializedDVStrategy(ctx, "serialized");
+	}
 
-  @Test
-  public void testBasicOperaions() throws IOException {
-    getAddAndVerifyIndexedDocuments(DATA_SIMPLE_BBOX);
+	@Test
+	public void testBasicOperaions() throws IOException {
+		getAddAndVerifyIndexedDocuments(DATA_SIMPLE_BBOX);
 
-    executeQueries(SpatialMatchConcern.EXACT, QTEST_Simple_Queries_BBox);
-  }
+		executeQueries(SpatialMatchConcern.EXACT, QTEST_Simple_Queries_BBox);
+	}
 
-  @Test
-  public void testStatesBBox() throws IOException {
-    getAddAndVerifyIndexedDocuments(DATA_STATES_BBOX);
+	@Test
+	public void testStatesBBox() throws IOException {
+		getAddAndVerifyIndexedDocuments(DATA_STATES_BBOX);
 
-    executeQueries(SpatialMatchConcern.FILTER, QTEST_States_IsWithin_BBox);
-    executeQueries(SpatialMatchConcern.FILTER, QTEST_States_Intersects_BBox);
-  }
+		executeQueries(SpatialMatchConcern.FILTER, QTEST_States_IsWithin_BBox);
+		executeQueries(SpatialMatchConcern.FILTER, QTEST_States_Intersects_BBox);
+	}
 
-  @Test
-  public void testCitiesIntersectsBBox() throws IOException {
-    getAddAndVerifyIndexedDocuments(DATA_WORLD_CITIES_POINTS);
+	@Test
+	public void testCitiesIntersectsBBox() throws IOException {
+		getAddAndVerifyIndexedDocuments(DATA_WORLD_CITIES_POINTS);
 
-    executeQueries(SpatialMatchConcern.FILTER, QTEST_Cities_Intersects_BBox);
-  }
+		executeQueries(SpatialMatchConcern.FILTER, QTEST_Cities_Intersects_BBox);
+	}
 
-  //sorting is tested in DistanceStrategyTest
+	//sorting is tested in DistanceStrategyTest
 
 }

@@ -18,9 +18,9 @@ package org.apache.lucene.search.similarities;
 
 public class TestAxiomaticF2EXP extends AxiomaticTestCase {
 
-  @Override
-  protected final Similarity getAxiomaticModel(float s, int queryLen, float k) {
-    return new AxiomaticF2EXP(s, k);
-  }
+	@Override
+	protected final Similarity getAxiomaticModel(float s, int queryLen, float k) {
+		return new AxiomaticF2EXP(s, k);
+	}
 
 }

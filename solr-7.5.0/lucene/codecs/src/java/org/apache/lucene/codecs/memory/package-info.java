@@ -16,7 +16,7 @@
  */
 
 /**
- * Term dictionary, DocValues or Postings formats that are read 
+ * Term dictionary, DocValues or Postings formats that are read
  * entirely into memory.
  */
 package org.apache.lucene.codecs.memory;

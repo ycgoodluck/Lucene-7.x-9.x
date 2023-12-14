@@ -28,16 +28,16 @@ import org.apache.lucene.util.IOUtils;
  */
 public class CloseTaxonomyIndexTask extends PerfTask {
 
-  public CloseTaxonomyIndexTask(PerfRunData runData) {
-    super(runData);
-  }
+	public CloseTaxonomyIndexTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  public int doLogic() throws IOException {
-    IOUtils.close(getRunData().getTaxonomyWriter());
-    getRunData().setTaxonomyWriter(null);
+	@Override
+	public int doLogic() throws IOException {
+		IOUtils.close(getRunData().getTaxonomyWriter());
+		getRunData().setTaxonomyWriter(null);
 
-    return 1;
-  }
+		return 1;
+	}
 
 }

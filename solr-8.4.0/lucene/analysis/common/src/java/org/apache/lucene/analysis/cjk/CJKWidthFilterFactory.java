@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link CJKWidthFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_cjk" class="solr.TextField"&gt;
@@ -33,29 +33,34 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.CJKBigramFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.6.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.6.0
  */
 public class CJKWidthFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "cjkWidth";
-  
-  /** Creates a new CJKWidthFilterFactory */
-  public CJKWidthFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new CJKWidthFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "cjkWidth";
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	/**
+	 * Creates a new CJKWidthFilterFactory
+	 */
+	public CJKWidthFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new CJKWidthFilter(input);
+	}
+
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

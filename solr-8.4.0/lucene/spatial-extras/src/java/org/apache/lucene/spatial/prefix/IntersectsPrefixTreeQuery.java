@@ -34,14 +34,14 @@ import org.locationtech.spatial4j.shape.SpatialRelation;
  */
 public class IntersectsPrefixTreeQuery extends AbstractVisitingPrefixTreeQuery {
 
-  public IntersectsPrefixTreeQuery(Shape queryShape, String fieldName,
-                                   SpatialPrefixTree grid, int detailLevel,
-                                   int prefixGridScanLevel) {
-    super(queryShape, fieldName, grid, detailLevel, prefixGridScanLevel);
-  }
+	public IntersectsPrefixTreeQuery(Shape queryShape, String fieldName,
+																	 SpatialPrefixTree grid, int detailLevel,
+																	 int prefixGridScanLevel) {
+		super(queryShape, fieldName, grid, detailLevel, prefixGridScanLevel);
+	}
 
-  @Override
-  protected DocIdSet getDocIdSet(LeafReaderContext context) throws IOException {
+	@Override
+	protected DocIdSet getDocIdSet(LeafReaderContext context) throws IOException {
     /* Possible optimizations (in IN ADDITION TO THOSE LISTED IN VISITORTEMPLATE):
 
     * If docFreq is 1 (or < than some small threshold), then check to see if we've already
@@ -51,44 +51,44 @@ public class IntersectsPrefixTreeQuery extends AbstractVisitingPrefixTreeQuery {
     * Point query shape optimization when the only indexed data is a point (no leaves).  Result is a term query.
 
      */
-    return new VisitorTemplate(context) {
-      private DocIdSetBuilder results;
+		return new VisitorTemplate(context) {
+			private DocIdSetBuilder results;
 
-      @Override
-      protected void start() throws IOException {
-        results = new DocIdSetBuilder(maxDoc, terms);
-      }
+			@Override
+			protected void start() throws IOException {
+				results = new DocIdSetBuilder(maxDoc, terms);
+			}
 
-      @Override
-      protected DocIdSet finish() {
-        return results.build();
-      }
+			@Override
+			protected DocIdSet finish() {
+				return results.build();
+			}
 
-      @Override
-      protected boolean visitPrefix(Cell cell) throws IOException {
-        if (cell.getShapeRel() == SpatialRelation.WITHIN || cell.getLevel() == detailLevel) {
-          collectDocs(results);
-          return false;
-        }
-        return true;
-      }
+			@Override
+			protected boolean visitPrefix(Cell cell) throws IOException {
+				if (cell.getShapeRel() == SpatialRelation.WITHIN || cell.getLevel() == detailLevel) {
+					collectDocs(results);
+					return false;
+				}
+				return true;
+			}
 
-      @Override
-      protected void visitLeaf(Cell cell) throws IOException {
-        collectDocs(results);
-      }
+			@Override
+			protected void visitLeaf(Cell cell) throws IOException {
+				collectDocs(results);
+			}
 
-    }.getDocIdSet();
-  }
+		}.getDocIdSet();
+	}
 
-  @Override
-  public String toString(String field) {
-    return getClass().getSimpleName() + "(" +
-        "fieldName=" + fieldName + "," +
-        "queryShape=" + queryShape + "," +
-        "detailLevel=" + detailLevel + "," +
-        "prefixGridScanLevel=" + prefixGridScanLevel +
-        ")";
-  }
+	@Override
+	public String toString(String field) {
+		return getClass().getSimpleName() + "(" +
+			"fieldName=" + fieldName + "," +
+			"queryShape=" + queryShape + "," +
+			"detailLevel=" + detailLevel + "," +
+			"prefixGridScanLevel=" + prefixGridScanLevel +
+			")";
+	}
 
 }

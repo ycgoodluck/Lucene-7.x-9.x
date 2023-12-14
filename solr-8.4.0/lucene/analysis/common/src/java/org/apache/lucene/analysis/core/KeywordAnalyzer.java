@@ -26,11 +26,11 @@ import org.apache.lucene.analysis.Analyzer;
  * @since 3.1
  */
 public final class KeywordAnalyzer extends Analyzer {
-  public KeywordAnalyzer() {
-  }
+	public KeywordAnalyzer() {
+	}
 
-  @Override
-  protected TokenStreamComponents createComponents(final String fieldName) {
-    return new TokenStreamComponents(new KeywordTokenizer());
-  }
+	@Override
+	protected TokenStreamComponents createComponents(final String fieldName) {
+		return new TokenStreamComponents(new KeywordTokenizer());
+	}
 }

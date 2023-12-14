@@ -36,7 +36,7 @@ import org.apache.lucene.index.SegmentWriteState;
  *
  * <p>The <code>.dim</code> file has both blocks and the index split
  * values, for each field.  The file starts with {@link CodecUtil#writeIndexHeader}.
-
+ *
  * <p>The blocks are written like this:
  *
  * <ul>
@@ -75,36 +75,38 @@ import org.apache.lucene.index.SegmentWriteState;
 
 public final class Lucene60PointsFormat extends PointsFormat {
 
-  static final String DATA_CODEC_NAME = "Lucene60PointsFormatData";
-  static final String META_CODEC_NAME = "Lucene60PointsFormatMeta";
+	static final String DATA_CODEC_NAME = "Lucene60PointsFormatData";
+	static final String META_CODEC_NAME = "Lucene60PointsFormatMeta";
 
-  /**
-   * Filename extension for the leaf blocks
-   */
-  public static final String DATA_EXTENSION = "dim";
+	/**
+	 * Filename extension for the leaf blocks
+	 */
+	public static final String DATA_EXTENSION = "dim";
 
-  /**
-   * Filename extension for the index per field
-   */
-  public static final String INDEX_EXTENSION = "dii";
+	/**
+	 * Filename extension for the index per field
+	 */
+	public static final String INDEX_EXTENSION = "dii";
 
-  static final int DATA_VERSION_START = 0;
-  static final int DATA_VERSION_CURRENT = DATA_VERSION_START;
+	static final int DATA_VERSION_START = 0;
+	static final int DATA_VERSION_CURRENT = DATA_VERSION_START;
 
-  static final int INDEX_VERSION_START = 0;
-  static final int INDEX_VERSION_CURRENT = INDEX_VERSION_START;
+	static final int INDEX_VERSION_START = 0;
+	static final int INDEX_VERSION_CURRENT = INDEX_VERSION_START;
 
-  /** Sole constructor */
-  public Lucene60PointsFormat() {
-  }
+	/**
+	 * Sole constructor
+	 */
+	public Lucene60PointsFormat() {
+	}
 
-  @Override
-  public PointsWriter fieldsWriter(SegmentWriteState state) throws IOException {
-    return new Lucene60PointsWriter(state);
-  }
+	@Override
+	public PointsWriter fieldsWriter(SegmentWriteState state) throws IOException {
+		return new Lucene60PointsWriter(state);
+	}
 
-  @Override
-  public PointsReader fieldsReader(SegmentReadState state) throws IOException {
-    return new Lucene60PointsReader(state);
-  }
+	@Override
+	public PointsReader fieldsReader(SegmentReadState state) throws IOException {
+		return new Lucene60PointsReader(state);
+	}
 }

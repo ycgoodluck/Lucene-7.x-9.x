@@ -21,24 +21,26 @@ package org.apache.lucene.search.similarities;
  * Normalized chi-squared measure of distance from independence
  * <p>
  * Described as:
- * "can be used for tasks that require high precision, against both 
- *  short and long queries."
+ * "can be used for tasks that require high precision, against both
+ * short and long queries."
+ *
  * @lucene.experimental
  */
 public class IndependenceChiSquared extends Independence {
-  
-  /**
-   * Sole constructor.
-   */
-  public IndependenceChiSquared() {}
 
-  @Override
-  public float score(float freq, float expected) {
-    return (freq - expected) * (freq - expected) / expected;
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public IndependenceChiSquared() {
+	}
 
-  @Override
-  public String toString() {
-    return "ChiSquared";
-  }
+	@Override
+	public float score(float freq, float expected) {
+		return (freq - expected) * (freq - expected) / expected;
+	}
+
+	@Override
+	public String toString() {
+		return "ChiSquared";
+	}
 }

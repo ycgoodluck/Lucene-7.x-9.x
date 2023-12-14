@@ -21,18 +21,18 @@ import org.apache.lucene.search.Query;
 
 public class TestCorePlusExtensionsParser extends TestCorePlusQueriesParser {
 
-  @Override
-  protected CoreParser newCoreParser(String defaultField, Analyzer analyzer) {
-    return new CorePlusExtensionsParser(defaultField, analyzer);
-  }
+	@Override
+	protected CoreParser newCoreParser(String defaultField, Analyzer analyzer) {
+		return new CorePlusExtensionsParser(defaultField, analyzer);
+	}
 
-  public void testFuzzyLikeThisQueryXML() throws Exception {
-    Query q = parse("FuzzyLikeThisQuery.xml");
-    //show rewritten fuzzyLikeThisQuery - see what is being matched on
-    if (VERBOSE) {
-      System.out.println(rewrite(q));
-    }
-    dumpResults("FuzzyLikeThis", q, 5);
-  }
+	public void testFuzzyLikeThisQueryXML() throws Exception {
+		Query q = parse("FuzzyLikeThisQuery.xml");
+		//show rewritten fuzzyLikeThisQuery - see what is being matched on
+		if (VERBOSE) {
+			System.out.println(rewrite(q));
+		}
+		dumpResults("FuzzyLikeThis", q, 5);
+	}
 
 }

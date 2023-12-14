@@ -29,24 +29,26 @@ import java.util.HashMap;
  * Simple tests for {@link JapaneseReadingFormFilterFactory}
  */
 public class TestJapaneseReadingFormFilterFactory extends BaseTokenStreamTestCase {
-  public void testReadings() throws IOException {
-    JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String,String>());
-    tokenizerFactory.inform(new StringMockResourceLoader(""));
-    TokenStream tokenStream = tokenizerFactory.create();
-    ((Tokenizer)tokenStream).setReader(new StringReader("先ほどベルリンから来ました。"));
-    JapaneseReadingFormFilterFactory filterFactory = new JapaneseReadingFormFilterFactory(new HashMap<String,String>());
-    assertTokenStreamContents(filterFactory.create(tokenStream),
-        new String[] { "サキ", "ホド", "ベルリン", "カラ", "キ", "マシ", "タ" }
-    );
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new JapaneseReadingFormFilterFactory(new HashMap<String,String>() {{
-        put("bogusArg", "bogusValue");
-      }});
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testReadings() throws IOException {
+		JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String, String>());
+		tokenizerFactory.inform(new StringMockResourceLoader(""));
+		TokenStream tokenStream = tokenizerFactory.create();
+		((Tokenizer) tokenStream).setReader(new StringReader("先ほどベルリンから来ました。"));
+		JapaneseReadingFormFilterFactory filterFactory = new JapaneseReadingFormFilterFactory(new HashMap<String, String>());
+		assertTokenStreamContents(filterFactory.create(tokenStream),
+			new String[]{"サキ", "ホド", "ベルリン", "カラ", "キ", "マシ", "タ"}
+		);
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new JapaneseReadingFormFilterFactory(new HashMap<String, String>() {{
+				put("bogusArg", "bogusValue");
+			}});
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

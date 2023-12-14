@@ -26,64 +26,70 @@ import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.util.BytesRef;
 
-/** Aggregates sum of int values previously indexed with
- *  {@link IntAssociationFacetField}, assuming the default
- *  encoding.
+/**
+ * Aggregates sum of int values previously indexed with
+ * {@link IntAssociationFacetField}, assuming the default
+ * encoding.
  *
- *  @lucene.experimental */
+ * @lucene.experimental
+ */
 public class TaxonomyFacetSumIntAssociations extends IntTaxonomyFacets {
 
-  /** Create {@code TaxonomyFacetSumIntAssociations} against
-   *  the default index field. */
-  public TaxonomyFacetSumIntAssociations(TaxonomyReader taxoReader, FacetsConfig config, FacetsCollector fc) throws IOException {
-    this(FacetsConfig.DEFAULT_INDEX_FIELD_NAME, taxoReader, config, fc);
-  }
+	/**
+	 * Create {@code TaxonomyFacetSumIntAssociations} against
+	 * the default index field.
+	 */
+	public TaxonomyFacetSumIntAssociations(TaxonomyReader taxoReader, FacetsConfig config, FacetsCollector fc) throws IOException {
+		this(FacetsConfig.DEFAULT_INDEX_FIELD_NAME, taxoReader, config, fc);
+	}
 
-  /** Create {@code TaxonomyFacetSumIntAssociations} against
-   *  the specified index field. */
-  public TaxonomyFacetSumIntAssociations(String indexFieldName, TaxonomyReader taxoReader, FacetsConfig config, FacetsCollector fc) throws IOException {
-    super(indexFieldName, taxoReader, config, fc);
-    sumValues(fc.getMatchingDocs());
-  }
+	/**
+	 * Create {@code TaxonomyFacetSumIntAssociations} against
+	 * the specified index field.
+	 */
+	public TaxonomyFacetSumIntAssociations(String indexFieldName, TaxonomyReader taxoReader, FacetsConfig config, FacetsCollector fc) throws IOException {
+		super(indexFieldName, taxoReader, config, fc);
+		sumValues(fc.getMatchingDocs());
+	}
 
-  private final void sumValues(List<MatchingDocs> matchingDocs) throws IOException {
-    //System.out.println("count matchingDocs=" + matchingDocs + " facetsField=" + facetsFieldName);
-    for(MatchingDocs hits : matchingDocs) {
-      BinaryDocValues dv = hits.context.reader().getBinaryDocValues(indexFieldName);
-      if (dv == null) { // this reader does not have DocValues for the requested category list
-        continue;
-      }
+	private final void sumValues(List<MatchingDocs> matchingDocs) throws IOException {
+		//System.out.println("count matchingDocs=" + matchingDocs + " facetsField=" + facetsFieldName);
+		for (MatchingDocs hits : matchingDocs) {
+			BinaryDocValues dv = hits.context.reader().getBinaryDocValues(indexFieldName);
+			if (dv == null) { // this reader does not have DocValues for the requested category list
+				continue;
+			}
 
-      DocIdSetIterator docs = hits.bits.iterator();
-      
-      int doc;
-      while ((doc = docs.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
-        //System.out.println("  doc=" + doc);
-        // TODO: use OrdinalsReader?  we'd need to add a
-        // BytesRef getAssociation()?
-        if (dv.docID() < doc) {
-          dv.advance(doc);
-        }
-        if (dv.docID() == doc) {
-          final BytesRef bytesRef = dv.binaryValue();
-          byte[] bytes = bytesRef.bytes;
-          int end = bytesRef.offset + bytesRef.length;
-          int offset = bytesRef.offset;
-          while (offset < end) {
-            int ord = ((bytes[offset]&0xFF) << 24) |
-              ((bytes[offset+1]&0xFF) << 16) |
-              ((bytes[offset+2]&0xFF) << 8) |
-              (bytes[offset+3]&0xFF);
-            offset += 4;
-            int value = ((bytes[offset]&0xFF) << 24) |
-              ((bytes[offset+1]&0xFF) << 16) |
-              ((bytes[offset+2]&0xFF) << 8) |
-              (bytes[offset+3]&0xFF);
-            offset += 4;
-            increment(ord, value);
-          }
-        }
-      }
-    }
-  }
+			DocIdSetIterator docs = hits.bits.iterator();
+
+			int doc;
+			while ((doc = docs.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
+				//System.out.println("  doc=" + doc);
+				// TODO: use OrdinalsReader?  we'd need to add a
+				// BytesRef getAssociation()?
+				if (dv.docID() < doc) {
+					dv.advance(doc);
+				}
+				if (dv.docID() == doc) {
+					final BytesRef bytesRef = dv.binaryValue();
+					byte[] bytes = bytesRef.bytes;
+					int end = bytesRef.offset + bytesRef.length;
+					int offset = bytesRef.offset;
+					while (offset < end) {
+						int ord = ((bytes[offset] & 0xFF) << 24) |
+							((bytes[offset + 1] & 0xFF) << 16) |
+							((bytes[offset + 2] & 0xFF) << 8) |
+							(bytes[offset + 3] & 0xFF);
+						offset += 4;
+						int value = ((bytes[offset] & 0xFF) << 24) |
+							((bytes[offset + 1] & 0xFF) << 16) |
+							((bytes[offset + 2] & 0xFF) << 8) |
+							(bytes[offset + 3] & 0xFF);
+						offset += 4;
+						increment(ord, value);
+					}
+				}
+			}
+		}
+	}
 }

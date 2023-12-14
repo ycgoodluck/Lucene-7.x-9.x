@@ -48,36 +48,38 @@ import org.apache.lucene.util.automaton.RegExp;
  *   &lt;analyzer&gt;
  *     &lt;tokenizer class="solr.SimplePatternSplitTokenizerFactory" pattern="[ \t\r\n]+"/&gt;
  *   &lt;/analyzer&gt;
- * &lt;/fieldType&gt;</pre> 
- * 
+ * &lt;/fieldType&gt;</pre>
+ *
  * @lucene.experimental
- *
- * @see SimplePatternSplitTokenizer
- *
- * @since 6.5.0
  * @lucene.spi {@value #NAME}
+ * @see SimplePatternSplitTokenizer
+ * @since 6.5.0
  */
 public class SimplePatternSplitTokenizerFactory extends TokenizerFactory {
 
-  /** SPI name */
-  public static final String NAME = "simplePatternSplit";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "simplePatternSplit";
 
-  public static final String PATTERN = "pattern";
-  private final Automaton dfa;
-  private final int maxDeterminizedStates;
- 
-  /** Creates a new SimpleSplitPatternTokenizerFactory */
-  public SimplePatternSplitTokenizerFactory(Map<String,String> args) {
-    super(args);
-    maxDeterminizedStates = getInt(args, "maxDeterminizedStates", Operations.DEFAULT_MAX_DETERMINIZED_STATES);
-    dfa = Operations.determinize(new RegExp(require(args, PATTERN)).toAutomaton(), maxDeterminizedStates);
-    if (args.isEmpty() == false) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public SimplePatternSplitTokenizer create(final AttributeFactory factory) {
-    return new SimplePatternSplitTokenizer(factory, dfa);
-  }
+	public static final String PATTERN = "pattern";
+	private final Automaton dfa;
+	private final int maxDeterminizedStates;
+
+	/**
+	 * Creates a new SimpleSplitPatternTokenizerFactory
+	 */
+	public SimplePatternSplitTokenizerFactory(Map<String, String> args) {
+		super(args);
+		maxDeterminizedStates = getInt(args, "maxDeterminizedStates", Operations.DEFAULT_MAX_DETERMINIZED_STATES);
+		dfa = Operations.determinize(new RegExp(require(args, PATTERN)).toAutomaton(), maxDeterminizedStates);
+		if (args.isEmpty() == false) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public SimplePatternSplitTokenizer create(final AttributeFactory factory) {
+		return new SimplePatternSplitTokenizer(factory, dfa);
+	}
 }

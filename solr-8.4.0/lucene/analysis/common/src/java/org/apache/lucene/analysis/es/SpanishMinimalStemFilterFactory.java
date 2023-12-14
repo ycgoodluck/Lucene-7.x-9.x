@@ -32,21 +32,28 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.SpanishMinimalStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @lucene.spi {@value #NAME}
  */
 public class SpanishMinimalStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "spanishMinimalStem";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "spanishMinimalStem";
 
-  /** Creates a new SpanishMinimalStemFilterFactory */
-  public SpanishMinimalStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new SpanishMinimalStemFilterFactory
+	 */
+	public SpanishMinimalStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) { return new SpanishMinimalStemFilter(input); }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new SpanishMinimalStemFilter(input);
+	}
 }

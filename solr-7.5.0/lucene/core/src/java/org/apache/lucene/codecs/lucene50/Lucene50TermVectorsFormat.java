@@ -121,13 +121,16 @@ import org.apache.lucene.util.packed.PackedInts;
  * </ul>
  * </li>
  * </ol>
+ *
  * @lucene.experimental
  */
 public final class Lucene50TermVectorsFormat extends CompressingTermVectorsFormat {
 
-  /** Sole constructor. */
-  public Lucene50TermVectorsFormat() {
-    super("Lucene50TermVectors", "", CompressionMode.FAST, 1 << 12, 1024);
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public Lucene50TermVectorsFormat() {
+		super("Lucene50TermVectors", "", CompressionMode.FAST, 1 << 12, 1024);
+	}
 
 }

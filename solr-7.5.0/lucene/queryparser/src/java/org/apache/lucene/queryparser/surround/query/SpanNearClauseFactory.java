@@ -25,8 +25,8 @@ Operations:
 - add a weighted Term
   this should add a corresponding SpanTermQuery, or
   increase the weight of an existing one.
-  
-- add a weighted subquery SpanNearQuery 
+
+- add a weighted subquery SpanNearQuery
 
 - create a clause for SpanNearQuery from the things added above.
   For this, create an array of SpanQuery's from the added ones.
@@ -40,7 +40,7 @@ Operations:
    Idem SpanNearQuery: hash on the subqueries and the slop.
    Evt. merge SpanNearQuery's by adding the weights of the corresponding subqueries.
  */
- 
+
 /* To be determined:
    Are SpanQuery weights handled correctly during search by Lucene?
    Should the resulting SpanOrQuery be sorted?
@@ -69,73 +69,84 @@ import org.apache.lucene.search.spans.SpanTermQuery;
  * Factory for {@link SpanOrQuery}
  */
 public class SpanNearClauseFactory { // FIXME: rename to SpanClauseFactory
-  public SpanNearClauseFactory(IndexReader reader, String fieldName, BasicQueryFactory qf) {
-    this.reader = reader;
-    this.fieldName = fieldName;
-    this.weightBySpanQuery = new HashMap<>();
-    this.qf = qf;
-  }
-  private IndexReader reader;
-  private String fieldName;
-  private HashMap<SpanQuery, Float> weightBySpanQuery;
-  private BasicQueryFactory qf;
-  
-  public IndexReader getIndexReader() {return reader;}
-  
-  public String getFieldName() {return fieldName;}
+	public SpanNearClauseFactory(IndexReader reader, String fieldName, BasicQueryFactory qf) {
+		this.reader = reader;
+		this.fieldName = fieldName;
+		this.weightBySpanQuery = new HashMap<>();
+		this.qf = qf;
+	}
 
-  public BasicQueryFactory getBasicQueryFactory() {return qf;}
-  
-  public int size() {return weightBySpanQuery.size();}
-  
-  public void clear() {weightBySpanQuery.clear();}
+	private IndexReader reader;
+	private String fieldName;
+	private HashMap<SpanQuery, Float> weightBySpanQuery;
+	private BasicQueryFactory qf;
 
-  protected void addSpanQueryWeighted(SpanQuery sq, float weight) {
-    Float w = weightBySpanQuery.get(sq);
-    if (w != null)
-      w = Float.valueOf(w.floatValue() + weight);
-    else
-      w = Float.valueOf(weight);
-    weightBySpanQuery.put(sq, w); 
-  }
-  
-  public void addTermWeighted(Term t, float weight) throws IOException {   
-    SpanTermQuery stq = qf.newSpanTermQuery(t);
-    /* CHECKME: wrap in Hashable...? */
-    addSpanQueryWeighted(stq, weight);
-  }
+	public IndexReader getIndexReader() {
+		return reader;
+	}
 
-  public void addSpanQuery(Query q) {
-    if (q.getClass() == MatchNoDocsQuery.class)
-      return;
-    if (! (q instanceof SpanQuery))
-      throw new AssertionError("Expected SpanQuery: " + q.toString(getFieldName()));
-    float boost = 1f;
-    if (q instanceof SpanBoostQuery) {
-      SpanBoostQuery bq = (SpanBoostQuery) q;
-      boost = bq.getBoost();
-      q = bq.getQuery();
-    }
-    addSpanQueryWeighted((SpanQuery)q, boost);
-  }
+	public String getFieldName() {
+		return fieldName;
+	}
 
-  public SpanQuery makeSpanClause() {
-    SpanQuery [] spanQueries = new SpanQuery[size()];
-    Iterator<SpanQuery> sqi = weightBySpanQuery.keySet().iterator();
-    int i = 0;
-    while (sqi.hasNext()) {
-      SpanQuery sq = sqi.next();
-      float boost = weightBySpanQuery.get(sq);
-      if (boost != 1f) {
-        sq = new SpanBoostQuery(sq, boost);
-      }
-      spanQueries[i++] = sq;
-    }
-    
-    if (spanQueries.length == 1)
-      return spanQueries[0];
-    else
-      return new SpanOrQuery(spanQueries);
-  }
+	public BasicQueryFactory getBasicQueryFactory() {
+		return qf;
+	}
+
+	public int size() {
+		return weightBySpanQuery.size();
+	}
+
+	public void clear() {
+		weightBySpanQuery.clear();
+	}
+
+	protected void addSpanQueryWeighted(SpanQuery sq, float weight) {
+		Float w = weightBySpanQuery.get(sq);
+		if (w != null)
+			w = Float.valueOf(w.floatValue() + weight);
+		else
+			w = Float.valueOf(weight);
+		weightBySpanQuery.put(sq, w);
+	}
+
+	public void addTermWeighted(Term t, float weight) throws IOException {
+		SpanTermQuery stq = qf.newSpanTermQuery(t);
+		/* CHECKME: wrap in Hashable...? */
+		addSpanQueryWeighted(stq, weight);
+	}
+
+	public void addSpanQuery(Query q) {
+		if (q.getClass() == MatchNoDocsQuery.class)
+			return;
+		if (!(q instanceof SpanQuery))
+			throw new AssertionError("Expected SpanQuery: " + q.toString(getFieldName()));
+		float boost = 1f;
+		if (q instanceof SpanBoostQuery) {
+			SpanBoostQuery bq = (SpanBoostQuery) q;
+			boost = bq.getBoost();
+			q = bq.getQuery();
+		}
+		addSpanQueryWeighted((SpanQuery) q, boost);
+	}
+
+	public SpanQuery makeSpanClause() {
+		SpanQuery[] spanQueries = new SpanQuery[size()];
+		Iterator<SpanQuery> sqi = weightBySpanQuery.keySet().iterator();
+		int i = 0;
+		while (sqi.hasNext()) {
+			SpanQuery sq = sqi.next();
+			float boost = weightBySpanQuery.get(sq);
+			if (boost != 1f) {
+				sq = new SpanBoostQuery(sq, boost);
+			}
+			spanQueries[i++] = sq;
+		}
+
+		if (spanQueries.length == 1)
+			return spanQueries[0];
+		else
+			return new SpanOrQuery(spanQueries);
+	}
 }
 

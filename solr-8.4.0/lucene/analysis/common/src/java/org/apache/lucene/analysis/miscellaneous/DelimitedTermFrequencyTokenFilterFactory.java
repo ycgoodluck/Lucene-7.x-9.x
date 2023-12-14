@@ -31,29 +31,34 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.DelimitedTermFrequencyTokenFilterFactory" delimiter="|"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 7.0.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 7.0.0
  */
 public class DelimitedTermFrequencyTokenFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "delimitedTermFrequency";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "delimitedTermFrequency";
 
-  public static final String DELIMITER_ATTR = "delimiter";
+	public static final String DELIMITER_ATTR = "delimiter";
 
-  private final char delimiter;
+	private final char delimiter;
 
-  /** Creates a new DelimitedPayloadTokenFilterFactory */
-  public DelimitedTermFrequencyTokenFilterFactory(Map<String, String> args) {
-    super(args);
-    delimiter = getChar(args, DELIMITER_ATTR, DelimitedTermFrequencyTokenFilter.DEFAULT_DELIMITER);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new DelimitedPayloadTokenFilterFactory
+	 */
+	public DelimitedTermFrequencyTokenFilterFactory(Map<String, String> args) {
+		super(args);
+		delimiter = getChar(args, DELIMITER_ATTR, DelimitedTermFrequencyTokenFilter.DEFAULT_DELIMITER);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public DelimitedTermFrequencyTokenFilter create(TokenStream input) {
-    return new DelimitedTermFrequencyTokenFilter(input, delimiter);
-  }
+	@Override
+	public DelimitedTermFrequencyTokenFilter create(TokenStream input) {
+		return new DelimitedTermFrequencyTokenFilter(input, delimiter);
+	}
 }

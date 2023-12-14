@@ -19,26 +19,28 @@ package org.apache.lucene.spatial.prefix;
 import org.apache.lucene.spatial.prefix.tree.Cell;
 import org.apache.lucene.util.BytesRef;
 
-/** For testing Lucene <= 5.0. Index redundant prefixes for leaf cells. Fixed in LUCENE-4942. */
+/**
+ * For testing Lucene <= 5.0. Index redundant prefixes for leaf cells. Fixed in LUCENE-4942.
+ */
 class CellToBytesRefIterator50 extends CellToBytesRefIterator {
 
-  Cell repeatCell;
+	Cell repeatCell;
 
-  @Override
-  public BytesRef next() {
-    if (repeatCell != null) {
-      bytesRef = repeatCell.getTokenBytesWithLeaf(bytesRef);
-      repeatCell = null;
-      return bytesRef;
-    }
-    if (!cellIter.hasNext()) {
-      return null;
-    }
-    Cell cell = cellIter.next();
-    bytesRef = cell.getTokenBytesNoLeaf(bytesRef);
-    if (cell.isLeaf()) {
-      repeatCell = cell;
-    }
-    return bytesRef;
-  }
+	@Override
+	public BytesRef next() {
+		if (repeatCell != null) {
+			bytesRef = repeatCell.getTokenBytesWithLeaf(bytesRef);
+			repeatCell = null;
+			return bytesRef;
+		}
+		if (!cellIter.hasNext()) {
+			return null;
+		}
+		Cell cell = cellIter.next();
+		bytesRef = cell.getTokenBytesNoLeaf(bytesRef);
+		if (cell.isLeaf()) {
+			repeatCell = cell;
+		}
+		return bytesRef;
+	}
 }

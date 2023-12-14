@@ -24,26 +24,26 @@ import org.apache.lucene.queryparser.flexible.core.parser.EscapeQuerySyntax;
  */
 public class MatchAllDocsQueryNode extends QueryNodeImpl {
 
-  public MatchAllDocsQueryNode() {
-    // empty constructor
-  }
+	public MatchAllDocsQueryNode() {
+		// empty constructor
+	}
 
-  @Override
-  public String toString() {
-    return "<matchAllDocs field='*' term='*'/>";
-  }
+	@Override
+	public String toString() {
+		return "<matchAllDocs field='*' term='*'/>";
+	}
 
-  @Override
-  public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser) {
-    return "*:*";
-  }
+	@Override
+	public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser) {
+		return "*:*";
+	}
 
-  @Override
-  public MatchAllDocsQueryNode cloneTree() throws CloneNotSupportedException {
-    MatchAllDocsQueryNode clone = (MatchAllDocsQueryNode) super.cloneTree();
+	@Override
+	public MatchAllDocsQueryNode cloneTree() throws CloneNotSupportedException {
+		MatchAllDocsQueryNode clone = (MatchAllDocsQueryNode) super.cloneTree();
 
-    // nothing to clone
+		// nothing to clone
 
-    return clone;
-  }
+		return clone;
+	}
 }

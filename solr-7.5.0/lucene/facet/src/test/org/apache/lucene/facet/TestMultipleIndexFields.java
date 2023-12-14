@@ -42,258 +42,258 @@ import org.junit.Test;
 
 public class TestMultipleIndexFields extends FacetTestCase {
 
-  private static final FacetField[] CATEGORIES = new FacetField[] {
-    new FacetField("Author", "Mark Twain"),
-    new FacetField("Author", "Stephen King"),
-    new FacetField("Author", "Kurt Vonnegut"),
-    new FacetField("Band", "Rock & Pop", "The Beatles"),
-    new FacetField("Band", "Punk", "The Ramones"),
-    new FacetField("Band", "Rock & Pop", "U2"),
-    new FacetField("Band", "Rock & Pop", "REM"),
-    new FacetField("Band", "Rock & Pop", "Dave Matthews Band"),
-    new FacetField("Composer", "Bach"),
-  };
+	private static final FacetField[] CATEGORIES = new FacetField[]{
+		new FacetField("Author", "Mark Twain"),
+		new FacetField("Author", "Stephen King"),
+		new FacetField("Author", "Kurt Vonnegut"),
+		new FacetField("Band", "Rock & Pop", "The Beatles"),
+		new FacetField("Band", "Punk", "The Ramones"),
+		new FacetField("Band", "Rock & Pop", "U2"),
+		new FacetField("Band", "Rock & Pop", "REM"),
+		new FacetField("Band", "Rock & Pop", "Dave Matthews Band"),
+		new FacetField("Composer", "Bach"),
+	};
 
-  private FacetsConfig getConfig() {
-    FacetsConfig config = new FacetsConfig();
-    config.setHierarchical("Band", true);
-    return config;
-  }
-  
-  @Test
-  public void testDefault() throws Exception {
-    Directory indexDir = newDirectory();
-    Directory taxoDir = newDirectory();
-    
-    // create and open an index writer
-    RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
-        new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
-    // create and open a taxonomy writer
-    TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
-    FacetsConfig config = getConfig();
+	private FacetsConfig getConfig() {
+		FacetsConfig config = new FacetsConfig();
+		config.setHierarchical("Band", true);
+		return config;
+	}
 
-    seedIndex(tw, iw, config);
+	@Test
+	public void testDefault() throws Exception {
+		Directory indexDir = newDirectory();
+		Directory taxoDir = newDirectory();
 
-    IndexReader ir = iw.getReader();
-    tw.commit();
+		// create and open an index writer
+		RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
+			new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
+		// create and open a taxonomy writer
+		TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
+		FacetsConfig config = getConfig();
 
-    // prepare index reader and taxonomy.
-    TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
+		seedIndex(tw, iw, config);
 
-    // prepare searcher to search against
-    IndexSearcher searcher = newSearcher(ir);
+		IndexReader ir = iw.getReader();
+		tw.commit();
 
-    FacetsCollector sfc = performSearch(tr, ir, searcher);
+		// prepare index reader and taxonomy.
+		TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
 
-    // Obtain facets results and hand-test them
-    assertCorrectResults(getTaxonomyFacetCounts(tr, config, sfc));
+		// prepare searcher to search against
+		IndexSearcher searcher = newSearcher(ir);
 
-    assertOrdinalsExist("$facets", ir);
+		FacetsCollector sfc = performSearch(tr, ir, searcher);
 
-    iw.close();
-    IOUtils.close(tr, ir, tw, indexDir, taxoDir);
-  }
+		// Obtain facets results and hand-test them
+		assertCorrectResults(getTaxonomyFacetCounts(tr, config, sfc));
 
-  @Test
-  public void testCustom() throws Exception {
-    Directory indexDir = newDirectory();
-    Directory taxoDir = newDirectory();
-    
-    // create and open an index writer
-    RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
-        new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
-    // create and open a taxonomy writer
-    TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
+		assertOrdinalsExist("$facets", ir);
 
-    FacetsConfig config = getConfig();
-    config.setIndexFieldName("Author", "$author");
-    seedIndex(tw, iw, config);
+		iw.close();
+		IOUtils.close(tr, ir, tw, indexDir, taxoDir);
+	}
 
-    IndexReader ir = iw.getReader();
-    tw.commit();
+	@Test
+	public void testCustom() throws Exception {
+		Directory indexDir = newDirectory();
+		Directory taxoDir = newDirectory();
 
-    // prepare index reader and taxonomy.
-    TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
+		// create and open an index writer
+		RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
+			new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
+		// create and open a taxonomy writer
+		TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
 
-    // prepare searcher to search against
-    IndexSearcher searcher = newSearcher(ir);
+		FacetsConfig config = getConfig();
+		config.setIndexFieldName("Author", "$author");
+		seedIndex(tw, iw, config);
 
-    FacetsCollector sfc = performSearch(tr, ir, searcher);
+		IndexReader ir = iw.getReader();
+		tw.commit();
 
-    Map<String,Facets> facetsMap = new HashMap<>();
-    facetsMap.put("Author", getTaxonomyFacetCounts(tr, config, sfc, "$author"));
-    Facets facets = new MultiFacets(facetsMap, getTaxonomyFacetCounts(tr, config, sfc));
+		// prepare index reader and taxonomy.
+		TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
 
-    // Obtain facets results and hand-test them
-    assertCorrectResults(facets);
+		// prepare searcher to search against
+		IndexSearcher searcher = newSearcher(ir);
 
-    assertOrdinalsExist("$facets", ir);
-    assertOrdinalsExist("$author", ir);
+		FacetsCollector sfc = performSearch(tr, ir, searcher);
 
-    iw.close();
-    IOUtils.close(tr, ir, tw, indexDir, taxoDir);
-  }
+		Map<String, Facets> facetsMap = new HashMap<>();
+		facetsMap.put("Author", getTaxonomyFacetCounts(tr, config, sfc, "$author"));
+		Facets facets = new MultiFacets(facetsMap, getTaxonomyFacetCounts(tr, config, sfc));
 
-  @Test
-  public void testTwoCustomsSameField() throws Exception {
-    Directory indexDir = newDirectory();
-    Directory taxoDir = newDirectory();
-    
-    // create and open an index writer
-    RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
-        new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
-    // create and open a taxonomy writer
-    TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
+		// Obtain facets results and hand-test them
+		assertCorrectResults(facets);
 
-    FacetsConfig config = getConfig();
-    config.setIndexFieldName("Band", "$music");
-    config.setIndexFieldName("Composer", "$music");
-    seedIndex(tw, iw, config);
+		assertOrdinalsExist("$facets", ir);
+		assertOrdinalsExist("$author", ir);
 
-    IndexReader ir = iw.getReader();
-    tw.commit();
+		iw.close();
+		IOUtils.close(tr, ir, tw, indexDir, taxoDir);
+	}
 
-    // prepare index reader and taxonomy.
-    TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
+	@Test
+	public void testTwoCustomsSameField() throws Exception {
+		Directory indexDir = newDirectory();
+		Directory taxoDir = newDirectory();
 
-    // prepare searcher to search against
-    IndexSearcher searcher = newSearcher(ir);
+		// create and open an index writer
+		RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
+			new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
+		// create and open a taxonomy writer
+		TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
 
-    FacetsCollector sfc = performSearch(tr, ir, searcher);
+		FacetsConfig config = getConfig();
+		config.setIndexFieldName("Band", "$music");
+		config.setIndexFieldName("Composer", "$music");
+		seedIndex(tw, iw, config);
 
-    Map<String,Facets> facetsMap = new HashMap<>();
-    Facets facets2 = getTaxonomyFacetCounts(tr, config, sfc, "$music");
-    facetsMap.put("Band", facets2);
-    facetsMap.put("Composer", facets2);
-    Facets facets = new MultiFacets(facetsMap, getTaxonomyFacetCounts(tr, config, sfc));
+		IndexReader ir = iw.getReader();
+		tw.commit();
 
-    // Obtain facets results and hand-test them
-    assertCorrectResults(facets);
+		// prepare index reader and taxonomy.
+		TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
 
-    assertOrdinalsExist("$facets", ir);
-    assertOrdinalsExist("$music", ir);
-    assertOrdinalsExist("$music", ir);
+		// prepare searcher to search against
+		IndexSearcher searcher = newSearcher(ir);
 
-    iw.close();
-    IOUtils.close(tr, ir, tw, indexDir, taxoDir);
-  }
+		FacetsCollector sfc = performSearch(tr, ir, searcher);
 
-  private void assertOrdinalsExist(String field, IndexReader ir) throws IOException {
-    for (LeafReaderContext context : ir.leaves()) {
-      LeafReader r = context.reader();
-      if (r.getBinaryDocValues(field) != null) {
-        return; // not all segments must have this DocValues
-      }
-    }
-    fail("no ordinals found for " + field);
-  }
+		Map<String, Facets> facetsMap = new HashMap<>();
+		Facets facets2 = getTaxonomyFacetCounts(tr, config, sfc, "$music");
+		facetsMap.put("Band", facets2);
+		facetsMap.put("Composer", facets2);
+		Facets facets = new MultiFacets(facetsMap, getTaxonomyFacetCounts(tr, config, sfc));
 
-  @Test
-  public void testDifferentFieldsAndText() throws Exception {
-    Directory indexDir = newDirectory();
-    Directory taxoDir = newDirectory();
+		// Obtain facets results and hand-test them
+		assertCorrectResults(facets);
 
-    // create and open an index writer
-    RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
-        new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
-    // create and open a taxonomy writer
-    TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
+		assertOrdinalsExist("$facets", ir);
+		assertOrdinalsExist("$music", ir);
+		assertOrdinalsExist("$music", ir);
 
-    FacetsConfig config = getConfig();
-    config.setIndexFieldName("Band", "$bands");
-    config.setIndexFieldName("Composer", "$composers");
-    seedIndex(tw, iw, config);
+		iw.close();
+		IOUtils.close(tr, ir, tw, indexDir, taxoDir);
+	}
 
-    IndexReader ir = iw.getReader();
-    tw.commit();
+	private void assertOrdinalsExist(String field, IndexReader ir) throws IOException {
+		for (LeafReaderContext context : ir.leaves()) {
+			LeafReader r = context.reader();
+			if (r.getBinaryDocValues(field) != null) {
+				return; // not all segments must have this DocValues
+			}
+		}
+		fail("no ordinals found for " + field);
+	}
 
-    // prepare index reader and taxonomy.
-    TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
+	@Test
+	public void testDifferentFieldsAndText() throws Exception {
+		Directory indexDir = newDirectory();
+		Directory taxoDir = newDirectory();
 
-    // prepare searcher to search against
-    IndexSearcher searcher = newSearcher(ir);
+		// create and open an index writer
+		RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
+			new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
+		// create and open a taxonomy writer
+		TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
 
-    FacetsCollector sfc = performSearch(tr, ir, searcher);
+		FacetsConfig config = getConfig();
+		config.setIndexFieldName("Band", "$bands");
+		config.setIndexFieldName("Composer", "$composers");
+		seedIndex(tw, iw, config);
 
-    Map<String,Facets> facetsMap = new HashMap<>();
-    facetsMap.put("Band", getTaxonomyFacetCounts(tr, config, sfc, "$bands"));
-    facetsMap.put("Composer", getTaxonomyFacetCounts(tr, config, sfc, "$composers"));
-    Facets facets = new MultiFacets(facetsMap, getTaxonomyFacetCounts(tr, config, sfc));
+		IndexReader ir = iw.getReader();
+		tw.commit();
 
-    // Obtain facets results and hand-test them
-    assertCorrectResults(facets);
-    assertOrdinalsExist("$facets", ir);
-    assertOrdinalsExist("$bands", ir);
-    assertOrdinalsExist("$composers", ir);
+		// prepare index reader and taxonomy.
+		TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
 
-    iw.close();
-    IOUtils.close(tr, ir, tw, indexDir, taxoDir);
-  }
+		// prepare searcher to search against
+		IndexSearcher searcher = newSearcher(ir);
 
-  @Test
-  public void testSomeSameSomeDifferent() throws Exception {
-    Directory indexDir = newDirectory();
-    Directory taxoDir = newDirectory();
-    
-    // create and open an index writer
-    RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
-        new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
-    // create and open a taxonomy writer
-    TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
+		FacetsCollector sfc = performSearch(tr, ir, searcher);
 
-    FacetsConfig config = getConfig();
-    config.setIndexFieldName("Band", "$music");
-    config.setIndexFieldName("Composer", "$music");
-    config.setIndexFieldName("Author", "$literature");
-    seedIndex(tw, iw, config);
+		Map<String, Facets> facetsMap = new HashMap<>();
+		facetsMap.put("Band", getTaxonomyFacetCounts(tr, config, sfc, "$bands"));
+		facetsMap.put("Composer", getTaxonomyFacetCounts(tr, config, sfc, "$composers"));
+		Facets facets = new MultiFacets(facetsMap, getTaxonomyFacetCounts(tr, config, sfc));
 
-    IndexReader ir = iw.getReader();
-    tw.commit();
+		// Obtain facets results and hand-test them
+		assertCorrectResults(facets);
+		assertOrdinalsExist("$facets", ir);
+		assertOrdinalsExist("$bands", ir);
+		assertOrdinalsExist("$composers", ir);
 
-    // prepare index reader and taxonomy.
-    TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
+		iw.close();
+		IOUtils.close(tr, ir, tw, indexDir, taxoDir);
+	}
 
-    // prepare searcher to search against
-    IndexSearcher searcher = newSearcher(ir);
+	@Test
+	public void testSomeSameSomeDifferent() throws Exception {
+		Directory indexDir = newDirectory();
+		Directory taxoDir = newDirectory();
 
-    FacetsCollector sfc = performSearch(tr, ir, searcher);
+		// create and open an index writer
+		RandomIndexWriter iw = new RandomIndexWriter(random(), indexDir, newIndexWriterConfig(
+			new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)));
+		// create and open a taxonomy writer
+		TaxonomyWriter tw = new DirectoryTaxonomyWriter(taxoDir, OpenMode.CREATE);
 
-    Map<String,Facets> facetsMap = new HashMap<>();
-    Facets facets2 = getTaxonomyFacetCounts(tr, config, sfc, "$music");
-    facetsMap.put("Band", facets2);
-    facetsMap.put("Composer", facets2);
-    facetsMap.put("Author", getTaxonomyFacetCounts(tr, config, sfc, "$literature"));
-    Facets facets = new MultiFacets(facetsMap, getTaxonomyFacetCounts(tr, config, sfc));
+		FacetsConfig config = getConfig();
+		config.setIndexFieldName("Band", "$music");
+		config.setIndexFieldName("Composer", "$music");
+		config.setIndexFieldName("Author", "$literature");
+		seedIndex(tw, iw, config);
 
-    // Obtain facets results and hand-test them
-    assertCorrectResults(facets);
-    assertOrdinalsExist("$music", ir);
-    assertOrdinalsExist("$literature", ir);
+		IndexReader ir = iw.getReader();
+		tw.commit();
 
-    iw.close();
-    IOUtils.close(tr, ir, iw, tw, indexDir, taxoDir);
-  }
+		// prepare index reader and taxonomy.
+		TaxonomyReader tr = new DirectoryTaxonomyReader(taxoDir);
 
-  private void assertCorrectResults(Facets facets) throws IOException {
-    assertEquals(5, facets.getSpecificValue("Band"));
-    assertEquals("dim=Band path=[] value=5 childCount=2\n  Rock & Pop (4)\n  Punk (1)\n", facets.getTopChildren(10, "Band").toString());
-    assertEquals("dim=Band path=[Rock & Pop] value=4 childCount=4\n  The Beatles (1)\n  U2 (1)\n  REM (1)\n  Dave Matthews Band (1)\n", facets.getTopChildren(10, "Band", "Rock & Pop").toString());
-    assertEquals("dim=Author path=[] value=3 childCount=3\n  Mark Twain (1)\n  Stephen King (1)\n  Kurt Vonnegut (1)\n", facets.getTopChildren(10, "Author").toString());
-  }
+		// prepare searcher to search against
+		IndexSearcher searcher = newSearcher(ir);
 
-  private FacetsCollector performSearch(TaxonomyReader tr, IndexReader ir, 
-      IndexSearcher searcher) throws IOException {
-    FacetsCollector fc = new FacetsCollector();
-    FacetsCollector.search(searcher, new MatchAllDocsQuery(), 10, fc);
-    return fc;
-  }
+		FacetsCollector sfc = performSearch(tr, ir, searcher);
 
-  private void seedIndex(TaxonomyWriter tw, RandomIndexWriter iw, FacetsConfig config) throws IOException {
-    for (FacetField ff : CATEGORIES) {
-      Document doc = new Document();
-      doc.add(ff);
-      doc.add(new TextField("content", "alpha", Field.Store.YES));
-      iw.addDocument(config.build(tw, doc));
-    }
-  }
+		Map<String, Facets> facetsMap = new HashMap<>();
+		Facets facets2 = getTaxonomyFacetCounts(tr, config, sfc, "$music");
+		facetsMap.put("Band", facets2);
+		facetsMap.put("Composer", facets2);
+		facetsMap.put("Author", getTaxonomyFacetCounts(tr, config, sfc, "$literature"));
+		Facets facets = new MultiFacets(facetsMap, getTaxonomyFacetCounts(tr, config, sfc));
+
+		// Obtain facets results and hand-test them
+		assertCorrectResults(facets);
+		assertOrdinalsExist("$music", ir);
+		assertOrdinalsExist("$literature", ir);
+
+		iw.close();
+		IOUtils.close(tr, ir, iw, tw, indexDir, taxoDir);
+	}
+
+	private void assertCorrectResults(Facets facets) throws IOException {
+		assertEquals(5, facets.getSpecificValue("Band"));
+		assertEquals("dim=Band path=[] value=5 childCount=2\n  Rock & Pop (4)\n  Punk (1)\n", facets.getTopChildren(10, "Band").toString());
+		assertEquals("dim=Band path=[Rock & Pop] value=4 childCount=4\n  The Beatles (1)\n  U2 (1)\n  REM (1)\n  Dave Matthews Band (1)\n", facets.getTopChildren(10, "Band", "Rock & Pop").toString());
+		assertEquals("dim=Author path=[] value=3 childCount=3\n  Mark Twain (1)\n  Stephen King (1)\n  Kurt Vonnegut (1)\n", facets.getTopChildren(10, "Author").toString());
+	}
+
+	private FacetsCollector performSearch(TaxonomyReader tr, IndexReader ir,
+																				IndexSearcher searcher) throws IOException {
+		FacetsCollector fc = new FacetsCollector();
+		FacetsCollector.search(searcher, new MatchAllDocsQuery(), 10, fc);
+		return fc;
+	}
+
+	private void seedIndex(TaxonomyWriter tw, RandomIndexWriter iw, FacetsConfig config) throws IOException {
+		for (FacetField ff : CATEGORIES) {
+			Document doc = new Document();
+			doc.add(ff);
+			doc.add(new TextField("content", "alpha", Field.Store.YES));
+			iw.addDocument(config.build(tw, doc));
+		}
+	}
 }

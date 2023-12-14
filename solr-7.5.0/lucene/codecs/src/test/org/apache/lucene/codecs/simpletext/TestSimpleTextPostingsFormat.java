@@ -26,10 +26,10 @@ import org.apache.lucene.util.LuceneTestCase.Nightly;
  */
 @Nightly // please figure out why I am so horrendously slow!
 public class TestSimpleTextPostingsFormat extends BasePostingsFormatTestCase {
-  private final Codec codec = new SimpleTextCodec();
+	private final Codec codec = new SimpleTextCodec();
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

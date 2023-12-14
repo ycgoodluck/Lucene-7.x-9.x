@@ -32,18 +32,18 @@ import org.apache.lucene.util.LuceneTestCase;
  * exist).
  */
 public class TestIndexWriterLockRelease extends LuceneTestCase {
-  
-  public void testIndexWriterLockRelease() throws IOException {
-    Directory dir = newFSDirectory(createTempDir("testLockRelease"));
-    try {
-      new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())).setOpenMode(OpenMode.APPEND));
-    } catch (FileNotFoundException | NoSuchFileException e) {
-      try {
-        new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())).setOpenMode(OpenMode.APPEND));
-      } catch (FileNotFoundException | NoSuchFileException e1) {
-      }
-    } finally {
-      dir.close();
-    }
-  }
+
+	public void testIndexWriterLockRelease() throws IOException {
+		Directory dir = newFSDirectory(createTempDir("testLockRelease"));
+		try {
+			new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())).setOpenMode(OpenMode.APPEND));
+		} catch (FileNotFoundException | NoSuchFileException e) {
+			try {
+				new IndexWriter(dir, new IndexWriterConfig(new MockAnalyzer(random())).setOpenMode(OpenMode.APPEND));
+			} catch (FileNotFoundException | NoSuchFileException e1) {
+			}
+		} finally {
+			dir.close();
+		}
+	}
 }

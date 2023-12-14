@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.es.SpanishLightStemFilter;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link SpanishLightStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_eslgtstem" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -33,20 +33,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.SpanishLightStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class SpanishLightStemFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new SpanishLightStemFilterFactory */
-  public SpanishLightStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new SpanishLightStemFilter(input);
-  }
+
+	/**
+	 * Creates a new SpanishLightStemFilterFactory
+	 */
+	public SpanishLightStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new SpanishLightStemFilter(input);
+	}
 }

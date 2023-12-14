@@ -24,12 +24,12 @@ package org.apache.lucene.spatial3d.geom;
  */
 public interface Bounded {
 
-  /**
-   * Compute bounds for the shape.
-   *
-   * @param bounds is the input bounds object.
-   *             The input object will be modified.
-   */
-  public void getBounds(final Bounds bounds);
+	/**
+	 * Compute bounds for the shape.
+	 *
+	 * @param bounds is the input bounds object.
+	 *               The input object will be modified.
+	 */
+	public void getBounds(final Bounds bounds);
 
 }

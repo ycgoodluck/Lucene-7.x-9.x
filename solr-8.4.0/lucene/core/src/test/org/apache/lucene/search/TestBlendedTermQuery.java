@@ -30,93 +30,93 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestBlendedTermQuery extends LuceneTestCase {
 
-  public void testEquals() {
-    Term t1 = new Term("foo", "bar");
+	public void testEquals() {
+		Term t1 = new Term("foo", "bar");
 
-    BlendedTermQuery bt1 = new BlendedTermQuery.Builder()
-        .add(t1)
-        .build();
-    BlendedTermQuery bt2 = new BlendedTermQuery.Builder()
-        .add(t1)
-        .build();
-    QueryUtils.checkEqual(bt1, bt2);
+		BlendedTermQuery bt1 = new BlendedTermQuery.Builder()
+			.add(t1)
+			.build();
+		BlendedTermQuery bt2 = new BlendedTermQuery.Builder()
+			.add(t1)
+			.build();
+		QueryUtils.checkEqual(bt1, bt2);
 
-    bt1 = new BlendedTermQuery.Builder()
-        .setRewriteMethod(BlendedTermQuery.BOOLEAN_REWRITE)
-        .add(t1)
-        .build();
-    bt2 = new BlendedTermQuery.Builder()
-        .setRewriteMethod(BlendedTermQuery.DISJUNCTION_MAX_REWRITE)
-        .add(t1)
-        .build();
-    QueryUtils.checkUnequal(bt1, bt2);
+		bt1 = new BlendedTermQuery.Builder()
+			.setRewriteMethod(BlendedTermQuery.BOOLEAN_REWRITE)
+			.add(t1)
+			.build();
+		bt2 = new BlendedTermQuery.Builder()
+			.setRewriteMethod(BlendedTermQuery.DISJUNCTION_MAX_REWRITE)
+			.add(t1)
+			.build();
+		QueryUtils.checkUnequal(bt1, bt2);
 
-    Term t2 = new Term("foo", "baz");
+		Term t2 = new Term("foo", "baz");
 
-    bt1 = new BlendedTermQuery.Builder()
-        .add(t1)
-        .add(t2)
-        .build();
-    bt2 = new BlendedTermQuery.Builder()
-        .add(t2)
-        .add(t1)
-        .build();
-    QueryUtils.checkEqual(bt1, bt2);
+		bt1 = new BlendedTermQuery.Builder()
+			.add(t1)
+			.add(t2)
+			.build();
+		bt2 = new BlendedTermQuery.Builder()
+			.add(t2)
+			.add(t1)
+			.build();
+		QueryUtils.checkEqual(bt1, bt2);
 
-    float boost1 = random().nextFloat();
-    float boost2 = random().nextFloat();
-    bt1 = new BlendedTermQuery.Builder()
-        .add(t1, boost1)
-        .add(t2, boost2)
-        .build();
-    bt2 = new BlendedTermQuery.Builder()
-        .add(t2, boost2)
-        .add(t1, boost1)
-        .build();
-    QueryUtils.checkEqual(bt1, bt2);
-  }
+		float boost1 = random().nextFloat();
+		float boost2 = random().nextFloat();
+		bt1 = new BlendedTermQuery.Builder()
+			.add(t1, boost1)
+			.add(t2, boost2)
+			.build();
+		bt2 = new BlendedTermQuery.Builder()
+			.add(t2, boost2)
+			.add(t1, boost1)
+			.build();
+		QueryUtils.checkEqual(bt1, bt2);
+	}
 
-  public void testToString() {
-    assertEquals("Blended()", new BlendedTermQuery.Builder().build().toString());
-    Term t1 = new Term("foo", "bar");
-    assertEquals("Blended(foo:bar)", new BlendedTermQuery.Builder().add(t1).build().toString());
-    Term t2 = new Term("foo", "baz");
-    assertEquals("Blended(foo:bar foo:baz)", new BlendedTermQuery.Builder().add(t1).add(t2).build().toString());
-    assertEquals("Blended((foo:bar)^4.0 (foo:baz)^3.0)", new BlendedTermQuery.Builder().add(t1, 4).add(t2, 3).build().toString());
-  }
+	public void testToString() {
+		assertEquals("Blended()", new BlendedTermQuery.Builder().build().toString());
+		Term t1 = new Term("foo", "bar");
+		assertEquals("Blended(foo:bar)", new BlendedTermQuery.Builder().add(t1).build().toString());
+		Term t2 = new Term("foo", "baz");
+		assertEquals("Blended(foo:bar foo:baz)", new BlendedTermQuery.Builder().add(t1).add(t2).build().toString());
+		assertEquals("Blended((foo:bar)^4.0 (foo:baz)^3.0)", new BlendedTermQuery.Builder().add(t1, 4).add(t2, 3).build().toString());
+	}
 
-  public void testBlendedScores() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+	public void testBlendedScores() throws IOException {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir);
 
-    Document doc = new Document();
-    doc.add(new StringField("f", "a", Store.NO));
-    w.addDocument(doc);
+		Document doc = new Document();
+		doc.add(new StringField("f", "a", Store.NO));
+		w.addDocument(doc);
 
-    doc = new Document();
-    doc.add(new StringField("f", "b", Store.NO));
-    for (int i = 0; i < 10; ++i) {
-      w.addDocument(doc);
-    }
+		doc = new Document();
+		doc.add(new StringField("f", "b", Store.NO));
+		for (int i = 0; i < 10; ++i) {
+			w.addDocument(doc);
+		}
 
-    IndexReader reader = w.getReader();
-    IndexSearcher searcher = newSearcher(reader);
-    BlendedTermQuery query = new BlendedTermQuery.Builder()
-        .setRewriteMethod(new BlendedTermQuery.DisjunctionMaxRewrite(0f))
-        .add(new Term("f", "a"))
-        .add(new Term("f", "b"))
-        .build();
+		IndexReader reader = w.getReader();
+		IndexSearcher searcher = newSearcher(reader);
+		BlendedTermQuery query = new BlendedTermQuery.Builder()
+			.setRewriteMethod(new BlendedTermQuery.DisjunctionMaxRewrite(0f))
+			.add(new Term("f", "a"))
+			.add(new Term("f", "b"))
+			.build();
 
-    TopDocs topDocs = searcher.search(query, 20);
-    assertEquals(11, topDocs.totalHits.value);
-    // All docs must have the same score
-    for (int i = 0; i < topDocs.scoreDocs.length; ++i) {
-      assertEquals(topDocs.scoreDocs[0].score, topDocs.scoreDocs[i].score, 0.0f);
-    }
+		TopDocs topDocs = searcher.search(query, 20);
+		assertEquals(11, topDocs.totalHits.value);
+		// All docs must have the same score
+		for (int i = 0; i < topDocs.scoreDocs.length; ++i) {
+			assertEquals(topDocs.scoreDocs[0].score, topDocs.scoreDocs[i].score, 0.0f);
+		}
 
-    reader.close();
-    w.close();
-    dir.close();
-  }
+		reader.close();
+		w.close();
+		dir.close();
+	}
 
 }

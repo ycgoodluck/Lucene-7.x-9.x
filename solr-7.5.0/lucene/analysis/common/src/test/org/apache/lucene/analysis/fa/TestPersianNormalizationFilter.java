@@ -27,51 +27,50 @@ import org.apache.lucene.analysis.core.KeywordTokenizer;
 
 /**
  * Test the Persian Normalization Filter
- * 
  */
 public class TestPersianNormalizationFilter extends BaseTokenStreamTestCase {
 
-  public void testFarsiYeh() throws IOException {
-    check("های", "هاي");
-  }
+	public void testFarsiYeh() throws IOException {
+		check("های", "هاي");
+	}
 
-  public void testYehBarree() throws IOException {
-    check("هاے", "هاي");
-  }
+	public void testYehBarree() throws IOException {
+		check("هاے", "هاي");
+	}
 
-  public void testKeheh() throws IOException {
-    check("کشاندن", "كشاندن");
-  }
+	public void testKeheh() throws IOException {
+		check("کشاندن", "كشاندن");
+	}
 
-  public void testHehYeh() throws IOException {
-    check("كتابۀ", "كتابه");
-  }
+	public void testHehYeh() throws IOException {
+		check("كتابۀ", "كتابه");
+	}
 
-  public void testHehHamzaAbove() throws IOException {
-    check("كتابهٔ", "كتابه");
-  }
+	public void testHehHamzaAbove() throws IOException {
+		check("كتابهٔ", "كتابه");
+	}
 
-  public void testHehGoal() throws IOException {
-    check("زادہ", "زاده");
-  }
+	public void testHehGoal() throws IOException {
+		check("زادہ", "زاده");
+	}
 
-  private void check(final String input, final String expected) throws IOException {
-    MockTokenizer tokenStream = whitespaceMockTokenizer(input);
-    PersianNormalizationFilter filter = new PersianNormalizationFilter(
-        tokenStream);
-    assertTokenStreamContents(filter, new String[]{expected});
-  }
-  
-  public void testEmptyTerm() throws IOException {
-    Analyzer a = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new KeywordTokenizer();
-        return new TokenStreamComponents(tokenizer, new PersianNormalizationFilter(tokenizer));
-      }
-    };
-    checkOneTerm(a, "", "");
-    a.close();
-  }
+	private void check(final String input, final String expected) throws IOException {
+		MockTokenizer tokenStream = whitespaceMockTokenizer(input);
+		PersianNormalizationFilter filter = new PersianNormalizationFilter(
+			tokenStream);
+		assertTokenStreamContents(filter, new String[]{expected});
+	}
+
+	public void testEmptyTerm() throws IOException {
+		Analyzer a = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				Tokenizer tokenizer = new KeywordTokenizer();
+				return new TokenStreamComponents(tokenizer, new PersianNormalizationFilter(tokenizer));
+			}
+		};
+		checkOneTerm(a, "", "");
+		a.close();
+	}
 
 }

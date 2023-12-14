@@ -36,38 +36,38 @@ import org.apache.lucene.search.Query;
  * <br>
  * The result query node tree can be used to build a {@link Query} object using
  * {@link StandardQueryTreeBuilder}.
- * 
+ *
  * @see StandardQueryTreeBuilder
  * @see StandardQueryConfigHandler
  * @see StandardSyntaxParser
  */
 public class StandardQueryNodeProcessorPipeline extends
-    QueryNodeProcessorPipeline {
+	QueryNodeProcessorPipeline {
 
-  public StandardQueryNodeProcessorPipeline(QueryConfigHandler queryConfig) {
-    super(queryConfig);
+	public StandardQueryNodeProcessorPipeline(QueryConfigHandler queryConfig) {
+		super(queryConfig);
 
-    add(new WildcardQueryNodeProcessor());   
-    add(new MultiFieldQueryNodeProcessor());
-    add(new FuzzyQueryNodeProcessor());
-    add(new RegexpQueryNodeProcessor());
-    add(new MatchAllDocsQueryNodeProcessor());
-    add(new OpenRangeQueryNodeProcessor());
-    add(new PointQueryNodeProcessor());
-    add(new PointRangeQueryNodeProcessor());
-    add(new TermRangeQueryNodeProcessor());
-    add(new AllowLeadingWildcardProcessor());    
-    add(new AnalyzerQueryNodeProcessor());
-    add(new PhraseSlopQueryNodeProcessor());
-    //add(new GroupQueryNodeProcessor());
-    add(new BooleanQuery2ModifierNodeProcessor());
-    add(new NoChildOptimizationQueryNodeProcessor());
-    add(new RemoveDeletedQueryNodesProcessor());
-    add(new RemoveEmptyNonLeafQueryNodeProcessor());
-    add(new BooleanSingleChildOptimizationQueryNodeProcessor());
-    add(new DefaultPhraseSlopQueryNodeProcessor());
-    add(new BoostQueryNodeProcessor());    
-    add(new MultiTermRewriteMethodProcessor());
-  }
+		add(new WildcardQueryNodeProcessor());
+		add(new MultiFieldQueryNodeProcessor());
+		add(new FuzzyQueryNodeProcessor());
+		add(new RegexpQueryNodeProcessor());
+		add(new MatchAllDocsQueryNodeProcessor());
+		add(new OpenRangeQueryNodeProcessor());
+		add(new PointQueryNodeProcessor());
+		add(new PointRangeQueryNodeProcessor());
+		add(new TermRangeQueryNodeProcessor());
+		add(new AllowLeadingWildcardProcessor());
+		add(new AnalyzerQueryNodeProcessor());
+		add(new PhraseSlopQueryNodeProcessor());
+		//add(new GroupQueryNodeProcessor());
+		add(new BooleanQuery2ModifierNodeProcessor());
+		add(new NoChildOptimizationQueryNodeProcessor());
+		add(new RemoveDeletedQueryNodesProcessor());
+		add(new RemoveEmptyNonLeafQueryNodeProcessor());
+		add(new BooleanSingleChildOptimizationQueryNodeProcessor());
+		add(new DefaultPhraseSlopQueryNodeProcessor());
+		add(new BoostQueryNodeProcessor());
+		add(new MultiTermRewriteMethodProcessor());
+	}
 
 }

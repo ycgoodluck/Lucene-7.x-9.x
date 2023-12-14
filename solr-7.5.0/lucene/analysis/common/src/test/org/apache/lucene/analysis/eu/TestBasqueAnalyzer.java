@@ -24,37 +24,45 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestBasqueAnalyzer extends BaseTokenStreamTestCase {
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new BasqueAnalyzer().close();
-  }
-  
-  /** test stopwords and stemming */
-  public void testBasics() throws IOException {
-    Analyzer a = new BasqueAnalyzer();
-    // stemming
-    checkOneTerm(a, "zaldi", "zaldi");
-    checkOneTerm(a, "zaldiak", "zaldi");
-    // stopword
-    assertAnalyzesTo(a, "izan", new String[] { });
-    a.close();
-  }
-  
-  /** test use of exclusion set */
-  public void testExclude() throws IOException {
-    CharArraySet exclusionSet = new CharArraySet( asSet("zaldiak"), false);
-    Analyzer a = new BasqueAnalyzer( 
-        BasqueAnalyzer.getDefaultStopSet(), exclusionSet);
-    checkOneTerm(a, "zaldiak", "zaldiak");
-    checkOneTerm(a, "mendiari", "mendi");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer a = new BasqueAnalyzer();
-    checkRandomData(random(), a, 1000*RANDOM_MULTIPLIER);
-    a.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new BasqueAnalyzer().close();
+	}
+
+	/**
+	 * test stopwords and stemming
+	 */
+	public void testBasics() throws IOException {
+		Analyzer a = new BasqueAnalyzer();
+		// stemming
+		checkOneTerm(a, "zaldi", "zaldi");
+		checkOneTerm(a, "zaldiak", "zaldi");
+		// stopword
+		assertAnalyzesTo(a, "izan", new String[]{});
+		a.close();
+	}
+
+	/**
+	 * test use of exclusion set
+	 */
+	public void testExclude() throws IOException {
+		CharArraySet exclusionSet = new CharArraySet(asSet("zaldiak"), false);
+		Analyzer a = new BasqueAnalyzer(
+			BasqueAnalyzer.getDefaultStopSet(), exclusionSet);
+		checkOneTerm(a, "zaldiak", "zaldiak");
+		checkOneTerm(a, "mendiari", "mendi");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer a = new BasqueAnalyzer();
+		checkRandomData(random(), a, 1000 * RANDOM_MULTIPLIER);
+		a.close();
+	}
 }

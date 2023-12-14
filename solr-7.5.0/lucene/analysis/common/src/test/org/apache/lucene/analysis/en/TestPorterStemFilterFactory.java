@@ -27,21 +27,23 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Porter stem filter factory is working.
  */
 public class TestPorterStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  /**
-   * Ensure the filter actually stems text.
-   */
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("dogs");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("PorterStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "dog" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("PorterStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Ensure the filter actually stems text.
+	 */
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("dogs");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("PorterStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"dog"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("PorterStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

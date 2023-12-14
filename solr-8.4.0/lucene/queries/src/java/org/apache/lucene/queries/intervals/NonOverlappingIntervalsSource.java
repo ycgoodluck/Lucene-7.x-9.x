@@ -24,58 +24,58 @@ import java.util.Objects;
 
 class NonOverlappingIntervalsSource extends DifferenceIntervalsSource {
 
-  NonOverlappingIntervalsSource(IntervalsSource minuend, IntervalsSource subtrahend) {
-    super(minuend, subtrahend);
-  }
+	NonOverlappingIntervalsSource(IntervalsSource minuend, IntervalsSource subtrahend) {
+		super(minuend, subtrahend);
+	}
 
-  @Override
-  protected IntervalIterator combine(IntervalIterator minuend, IntervalIterator subtrahend) {
-    return new NonOverlappingIterator(minuend, subtrahend);
-  }
+	@Override
+	protected IntervalIterator combine(IntervalIterator minuend, IntervalIterator subtrahend) {
+		return new NonOverlappingIterator(minuend, subtrahend);
+	}
 
-  @Override
-  public Collection<IntervalsSource> pullUpDisjunctions() {
-    return Collections.singletonList(this);
-  }
+	@Override
+	public Collection<IntervalsSource> pullUpDisjunctions() {
+		return Collections.singletonList(this);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(minuend, subtrahend);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(minuend, subtrahend);
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    if (other instanceof NonOverlappingIntervalsSource == false) return false;
-    NonOverlappingIntervalsSource o = (NonOverlappingIntervalsSource) other;
-    return Objects.equals(this.minuend, o.minuend) && Objects.equals(this.subtrahend, o.subtrahend);
-  }
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof NonOverlappingIntervalsSource == false) return false;
+		NonOverlappingIntervalsSource o = (NonOverlappingIntervalsSource) other;
+		return Objects.equals(this.minuend, o.minuend) && Objects.equals(this.subtrahend, o.subtrahend);
+	}
 
-  @Override
-  public String toString() {
-    return "NON_OVERLAPPING(" + minuend + "," + subtrahend + ")";
-  }
+	@Override
+	public String toString() {
+		return "NON_OVERLAPPING(" + minuend + "," + subtrahend + ")";
+	}
 
-  private static class NonOverlappingIterator extends RelativeIterator {
+	private static class NonOverlappingIterator extends RelativeIterator {
 
-    private NonOverlappingIterator(IntervalIterator minuend, IntervalIterator subtrahend) {
-      super(minuend, subtrahend);
-    }
+		private NonOverlappingIterator(IntervalIterator minuend, IntervalIterator subtrahend) {
+			super(minuend, subtrahend);
+		}
 
-    @Override
-    public int nextInterval() throws IOException {
-      if (bpos == false)
-        return a.nextInterval();
-      while (a.nextInterval() != NO_MORE_INTERVALS) {
-        while (b.end() < a.start()) {
-          if (b.nextInterval() == NO_MORE_INTERVALS) {
-            bpos = false;
-            return a.start();
-          }
-        }
-        if (b.start() > a.end())
-          return a.start();
-      }
-      return NO_MORE_INTERVALS;
-    }
-  }
+		@Override
+		public int nextInterval() throws IOException {
+			if (bpos == false)
+				return a.nextInterval();
+			while (a.nextInterval() != NO_MORE_INTERVALS) {
+				while (b.end() < a.start()) {
+					if (b.nextInterval() == NO_MORE_INTERVALS) {
+						bpos = false;
+						return a.start();
+					}
+				}
+				if (b.start() > a.end())
+					return a.start();
+			}
+			return NO_MORE_INTERVALS;
+		}
+	}
 }

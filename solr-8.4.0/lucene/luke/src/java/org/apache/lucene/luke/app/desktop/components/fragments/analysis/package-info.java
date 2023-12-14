@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** UI parts embedded in the Analysis tab */
+/**
+ * UI parts embedded in the Analysis tab
+ */
 package org.apache.lucene.luke.app.desktop.components.fragments.analysis;

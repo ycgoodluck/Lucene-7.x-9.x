@@ -19,30 +19,30 @@ package org.apache.lucene.util;
 
 public class TestCharsRefBuilder extends LuceneTestCase {
 
-  public void testAppend() {
-    final String s = TestUtil.randomUnicodeString(random(), 100);
-    CharsRefBuilder builder = new CharsRefBuilder();
-    while (builder.length() < s.length()) {
-      if (random().nextBoolean()) {
-        builder.append(s.charAt(builder.length()));
-      } else {
-        final int start = builder.length();
-        final int end = TestUtil.nextInt(random(), start, s.length());
-        if (random().nextBoolean()) {
-          builder.append(s.substring(start, end));
-        } else {
-          builder.append(s, start, end);
-        }
-      }
-    }
-    assertEquals(s, builder.toString());
-  }
+	public void testAppend() {
+		final String s = TestUtil.randomUnicodeString(random(), 100);
+		CharsRefBuilder builder = new CharsRefBuilder();
+		while (builder.length() < s.length()) {
+			if (random().nextBoolean()) {
+				builder.append(s.charAt(builder.length()));
+			} else {
+				final int start = builder.length();
+				final int end = TestUtil.nextInt(random(), start, s.length());
+				if (random().nextBoolean()) {
+					builder.append(s.substring(start, end));
+				} else {
+					builder.append(s, start, end);
+				}
+			}
+		}
+		assertEquals(s, builder.toString());
+	}
 
-  public void testAppendNull() {
-    CharsRefBuilder builder = new CharsRefBuilder();
-    builder.append(null);
-    builder.append((CharSequence) null, 1, 3);
-    assertEquals("nullnull", builder.toString());
-  }
+	public void testAppendNull() {
+		CharsRefBuilder builder = new CharsRefBuilder();
+		builder.append(null);
+		builder.append((CharSequence) null, 1, 3);
+		assertEquals("nullnull", builder.toString());
+	}
 
 }

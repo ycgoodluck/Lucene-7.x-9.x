@@ -25,64 +25,65 @@ import org.apache.lucene.analysis.cn.smart.hhmm.SegTokenFilter;
 
 /**
  * Segment a sentence of Chinese text into words.
+ *
  * @lucene.experimental
  */
 class WordSegmenter {
 
-  private HHMMSegmenter hhmmSegmenter = new HHMMSegmenter();
+	private HHMMSegmenter hhmmSegmenter = new HHMMSegmenter();
 
-  private SegTokenFilter tokenFilter = new SegTokenFilter();
+	private SegTokenFilter tokenFilter = new SegTokenFilter();
 
-  /**
-   * Segment a sentence into words with {@link HHMMSegmenter}
-   * 
-   * @param sentence input sentence
-   * @param startOffset start offset of sentence
-   * @return {@link List} of {@link SegToken}
-   */
-  public List<SegToken> segmentSentence(String sentence, int startOffset) {
+	/**
+	 * Segment a sentence into words with {@link HHMMSegmenter}
+	 *
+	 * @param sentence    input sentence
+	 * @param startOffset start offset of sentence
+	 * @return {@link List} of {@link SegToken}
+	 */
+	public List<SegToken> segmentSentence(String sentence, int startOffset) {
 
-    List<SegToken> segTokenList = hhmmSegmenter.process(sentence);
-    // tokens from sentence, excluding WordType.SENTENCE_BEGIN and WordType.SENTENCE_END
-    List<SegToken> result = Collections.emptyList();
-    
-    if (segTokenList.size() > 2) // if it's not an empty sentence
-      result = segTokenList.subList(1, segTokenList.size() - 1);
-    
-    for (SegToken st : result)
-      convertSegToken(st, sentence, startOffset);
-    
-    return result;
-  }
+		List<SegToken> segTokenList = hhmmSegmenter.process(sentence);
+		// tokens from sentence, excluding WordType.SENTENCE_BEGIN and WordType.SENTENCE_END
+		List<SegToken> result = Collections.emptyList();
 
-  /**
-   * Process a {@link SegToken} so that it is ready for indexing.
-   * 
-   * This method calculates offsets and normalizes the token with {@link SegTokenFilter}.
-   * 
-   * @param st input {@link SegToken}
-   * @param sentence associated Sentence
-   * @param sentenceStartOffset offset into sentence
-   * @return Lucene {@link SegToken}
-   */
-  public SegToken convertSegToken(SegToken st, String sentence,
-      int sentenceStartOffset) {
+		if (segTokenList.size() > 2) // if it's not an empty sentence
+			result = segTokenList.subList(1, segTokenList.size() - 1);
 
-    switch (st.wordType) {
-      case WordType.STRING:
-      case WordType.NUMBER:
-      case WordType.FULLWIDTH_NUMBER:
-      case WordType.FULLWIDTH_STRING:
-        st.charArray = sentence.substring(st.startOffset, st.endOffset)
-            .toCharArray();
-        break;
-      default:
-        break;
-    }
+		for (SegToken st : result)
+			convertSegToken(st, sentence, startOffset);
 
-    st = tokenFilter.filter(st);
-    st.startOffset += sentenceStartOffset;
-    st.endOffset += sentenceStartOffset;
-    return st;
-  }
+		return result;
+	}
+
+	/**
+	 * Process a {@link SegToken} so that it is ready for indexing.
+	 * <p>
+	 * This method calculates offsets and normalizes the token with {@link SegTokenFilter}.
+	 *
+	 * @param st                  input {@link SegToken}
+	 * @param sentence            associated Sentence
+	 * @param sentenceStartOffset offset into sentence
+	 * @return Lucene {@link SegToken}
+	 */
+	public SegToken convertSegToken(SegToken st, String sentence,
+																	int sentenceStartOffset) {
+
+		switch (st.wordType) {
+			case WordType.STRING:
+			case WordType.NUMBER:
+			case WordType.FULLWIDTH_NUMBER:
+			case WordType.FULLWIDTH_STRING:
+				st.charArray = sentence.substring(st.startOffset, st.endOffset)
+					.toCharArray();
+				break;
+			default:
+				break;
+		}
+
+		st = tokenFilter.filter(st);
+		st.startOffset += sentenceStartOffset;
+		st.endOffset += sentenceStartOffset;
+		return st;
+	}
 }

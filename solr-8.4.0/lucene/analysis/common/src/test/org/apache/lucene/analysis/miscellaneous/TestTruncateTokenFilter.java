@@ -26,14 +26,14 @@ import org.junit.Test;
  */
 public class TestTruncateTokenFilter extends BaseTokenStreamTestCase {
 
-  public void testTruncating() throws Exception {
-    TokenStream stream = whitespaceMockTokenizer("abcdefg 1234567 ABCDEFG abcde abc 12345 123");
-    stream = new TruncateTokenFilter(stream, 5);
-    assertTokenStreamContents(stream, new String[]{"abcde", "12345", "ABCDE", "abcde", "abc", "12345", "123"});
-  }
+	public void testTruncating() throws Exception {
+		TokenStream stream = whitespaceMockTokenizer("abcdefg 1234567 ABCDEFG abcde abc 12345 123");
+		stream = new TruncateTokenFilter(stream, 5);
+		assertTokenStreamContents(stream, new String[]{"abcde", "12345", "ABCDE", "abcde", "abc", "12345", "123"});
+	}
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testNonPositiveLength() throws Exception {
-    new TruncateTokenFilter(whitespaceMockTokenizer("length must be a positive number"), -48);
-  }
+	@Test(expected = IllegalArgumentException.class)
+	public void testNonPositiveLength() throws Exception {
+		new TruncateTokenFilter(whitespaceMockTokenizer("length must be a positive number"), -48);
+	}
 }

@@ -37,21 +37,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  */
 public class ArabicNormalizationFilterFactory extends TokenFilterFactory implements MultiTermAwareComponent {
 
-  /** Creates a new ArabicNormalizationFilterFactory */
-  public ArabicNormalizationFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new ArabicNormalizationFilterFactory
+	 */
+	public ArabicNormalizationFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public ArabicNormalizationFilter create(TokenStream input) {
-    return new ArabicNormalizationFilter(input);
-  }
+	@Override
+	public ArabicNormalizationFilter create(TokenStream input) {
+		return new ArabicNormalizationFilter(input);
+	}
 
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

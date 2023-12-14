@@ -38,21 +38,23 @@ import org.apache.lucene.analysis.util.MultiTermAwareComponent;
  */
 public class PersianCharFilterFactory extends CharFilterFactory implements MultiTermAwareComponent {
 
-  /** Creates a new PersianCharFilterFactory */
-  public PersianCharFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public CharFilter create(Reader input) {
-    return new PersianCharFilter(input);
-  }
+	/**
+	 * Creates a new PersianCharFilterFactory
+	 */
+	public PersianCharFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	@Override
+	public CharFilter create(Reader input) {
+		return new PersianCharFilter(input);
+	}
+
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

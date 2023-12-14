@@ -29,48 +29,48 @@ import java.io.IOException;
  */
 public final class RemoveDuplicatesTokenFilter extends TokenFilter {
 
-  private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
-  private final PositionIncrementAttribute posIncAttribute =  addAttribute(PositionIncrementAttribute.class);
-  
-  private final CharArraySet previous = new CharArraySet(8, false);
+	private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
+	private final PositionIncrementAttribute posIncAttribute = addAttribute(PositionIncrementAttribute.class);
 
-  /**
-   * Creates a new RemoveDuplicatesTokenFilter
-   *
-   * @param in TokenStream that will be filtered
-   */
-  public RemoveDuplicatesTokenFilter(TokenStream in) {
-    super(in);
-  }
+	private final CharArraySet previous = new CharArraySet(8, false);
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    while (input.incrementToken()) {
-      final char term[] = termAttribute.buffer();
-      final int length = termAttribute.length();
-      final int posIncrement = posIncAttribute.getPositionIncrement();
-      
-      if (posIncrement > 0) {
-        previous.clear();
-      }
-      
-      boolean duplicate = (posIncrement == 0 && previous.contains(term, 0, length));
-      
-      // clone the term, and add to the set of seen terms.
-      char saved[] = new char[length];
-      System.arraycopy(term, 0, saved, 0, length);
-      previous.add(saved);
-      
-      if (!duplicate) {
-        return true;
-      }
-    }
-    return false;
-  }
+	/**
+	 * Creates a new RemoveDuplicatesTokenFilter
+	 *
+	 * @param in TokenStream that will be filtered
+	 */
+	public RemoveDuplicatesTokenFilter(TokenStream in) {
+		super(in);
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    previous.clear();
-  }
-} 
+	@Override
+	public boolean incrementToken() throws IOException {
+		while (input.incrementToken()) {
+			final char term[] = termAttribute.buffer();
+			final int length = termAttribute.length();
+			final int posIncrement = posIncAttribute.getPositionIncrement();
+
+			if (posIncrement > 0) {
+				previous.clear();
+			}
+
+			boolean duplicate = (posIncrement == 0 && previous.contains(term, 0, length));
+
+			// clone the term, and add to the set of seen terms.
+			char saved[] = new char[length];
+			System.arraycopy(term, 0, saved, 0, length);
+			previous.add(saved);
+
+			if (!duplicate) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		previous.clear();
+	}
+}

@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Models and APIs for the Documents tab */
+/**
+ * Models and APIs for the Documents tab
+ */
 package org.apache.lucene.luke.models.documents;

@@ -37,86 +37,86 @@ import org.locationtech.spatial4j.shape.Point;
  */
 public class ShapeFieldCacheDistanceValueSource extends DoubleValuesSource {
 
-  private final SpatialContext ctx;
-  private final Point from;
-  private final ShapeFieldCacheProvider<Point> provider;
-  private final double multiplier;
+	private final SpatialContext ctx;
+	private final Point from;
+	private final ShapeFieldCacheProvider<Point> provider;
+	private final double multiplier;
 
-  public ShapeFieldCacheDistanceValueSource(SpatialContext ctx,
-      ShapeFieldCacheProvider<Point> provider, Point from, double multiplier) {
-    this.ctx = ctx;
-    this.from = from;
-    this.provider = provider;
-    this.multiplier = multiplier;
-  }
+	public ShapeFieldCacheDistanceValueSource(SpatialContext ctx,
+																						ShapeFieldCacheProvider<Point> provider, Point from, double multiplier) {
+		this.ctx = ctx;
+		this.from = from;
+		this.provider = provider;
+		this.multiplier = multiplier;
+	}
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName()+"("+provider+", "+from+")";
-  }
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(" + provider + ", " + from + ")";
+	}
 
-  @Override
-  public DoubleValues getValues(LeafReaderContext readerContext, DoubleValues scores) throws IOException {
+	@Override
+	public DoubleValues getValues(LeafReaderContext readerContext, DoubleValues scores) throws IOException {
 
-    final double nullValue = (ctx.isGeo() ? 180 * multiplier : Double.MAX_VALUE);
+		final double nullValue = (ctx.isGeo() ? 180 * multiplier : Double.MAX_VALUE);
 
-    return DoubleValues.withDefault(new DoubleValues() {
-      private final ShapeFieldCache<Point> cache =
-          provider.getCache(readerContext.reader());
-      private final Point from = ShapeFieldCacheDistanceValueSource.this.from;
-      private final DistanceCalculator calculator = ctx.getDistCalc();
+		return DoubleValues.withDefault(new DoubleValues() {
+			private final ShapeFieldCache<Point> cache =
+				provider.getCache(readerContext.reader());
+			private final Point from = ShapeFieldCacheDistanceValueSource.this.from;
+			private final DistanceCalculator calculator = ctx.getDistCalc();
 
-      private List<Point> currentVals;
+			private List<Point> currentVals;
 
-      @Override
-      public double doubleValue() throws IOException {
-        double v = calculator.distance(from, currentVals.get(0));
-        for (int i = 1; i < currentVals.size(); i++) {
-          v = Math.min(v, calculator.distance(from, currentVals.get(i)));
-        }
-        return v * multiplier;
-      }
+			@Override
+			public double doubleValue() throws IOException {
+				double v = calculator.distance(from, currentVals.get(0));
+				for (int i = 1; i < currentVals.size(); i++) {
+					v = Math.min(v, calculator.distance(from, currentVals.get(i)));
+				}
+				return v * multiplier;
+			}
 
-      @Override
-      public boolean advanceExact(int doc) throws IOException {
-        currentVals = cache.getShapes(doc);
-        return currentVals != null;
-      }
-    }, nullValue);
-  }
+			@Override
+			public boolean advanceExact(int doc) throws IOException {
+				currentVals = cache.getShapes(doc);
+				return currentVals != null;
+			}
+		}, nullValue);
+	}
 
-  @Override
-  public boolean needsScores() {
-    return false;
-  }
+	@Override
+	public boolean needsScores() {
+		return false;
+	}
 
-  @Override
-  public boolean isCacheable(LeafReaderContext ctx) {
-    return true;
-  }
+	@Override
+	public boolean isCacheable(LeafReaderContext ctx) {
+		return true;
+	}
 
-  @Override
-  public DoubleValuesSource rewrite(IndexSearcher searcher) throws IOException {
-    return this;
-  }
+	@Override
+	public DoubleValuesSource rewrite(IndexSearcher searcher) throws IOException {
+		return this;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 
-    ShapeFieldCacheDistanceValueSource that = (ShapeFieldCacheDistanceValueSource) o;
+		ShapeFieldCacheDistanceValueSource that = (ShapeFieldCacheDistanceValueSource) o;
 
-    if (!ctx.equals(that.ctx)) return false;
-    if (!from.equals(that.from)) return false;
-    if (!provider.equals(that.provider)) return false;
-    if (multiplier != that.multiplier) return false;
+		if (!ctx.equals(that.ctx)) return false;
+		if (!from.equals(that.from)) return false;
+		if (!provider.equals(that.provider)) return false;
+		if (multiplier != that.multiplier) return false;
 
-    return true;
-  }
+		return true;
+	}
 
-  @Override
-  public int hashCode() {
-    return from.hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return from.hashCode();
+	}
 }

@@ -20,19 +20,24 @@ package org.apache.lucene.util.bkd;
 import java.io.Closeable;
 import java.io.IOException;
 
-/** One pass iterator through all points previously written with a
- *  {@link PointWriter}, abstracting away whether points are read
- *  from (offline) disk or simple arrays in heap.
+/**
+ * One pass iterator through all points previously written with a
+ * {@link PointWriter}, abstracting away whether points are read
+ * from (offline) disk or simple arrays in heap.
  *
  * @lucene.internal
- * */
+ */
 public interface PointReader extends Closeable {
 
-  /** Returns false once iteration is done, else true. */
-  boolean next() throws IOException;
+	/**
+	 * Returns false once iteration is done, else true.
+	 */
+	boolean next() throws IOException;
 
-  /** Sets the packed value in the provided ByteRef */
-  PointValue pointValue();
+	/**
+	 * Sets the packed value in the provided ByteRef
+	 */
+	PointValue pointValue();
 
 }
 

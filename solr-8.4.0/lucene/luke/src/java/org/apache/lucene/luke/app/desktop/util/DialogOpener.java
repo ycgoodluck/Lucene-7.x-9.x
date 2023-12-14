@@ -23,30 +23,34 @@ import java.util.function.Consumer;
 
 import org.apache.lucene.luke.app.desktop.LukeMain;
 
-/** An utility class for opening a dialog */
+/**
+ * An utility class for opening a dialog
+ */
 public class DialogOpener<T extends DialogOpener.DialogFactory> {
 
-  private final T factory;
+	private final T factory;
 
-  public DialogOpener(T factory) {
-    this.factory = factory;
-  }
+	public DialogOpener(T factory) {
+		this.factory = factory;
+	}
 
-  public void open(String title, int width, int height, Consumer<? super T> initializer,
-                   String... styleSheets) {
-    open(LukeMain.getOwnerFrame(), title, width, height, initializer, styleSheets);
-  }
+	public void open(String title, int width, int height, Consumer<? super T> initializer,
+									 String... styleSheets) {
+		open(LukeMain.getOwnerFrame(), title, width, height, initializer, styleSheets);
+	}
 
-  public void open(Window owner, String title, int width, int height, Consumer<? super T> initializer,
-                   String... styleSheets) {
-    initializer.accept(factory);
-    JDialog dialog = factory.create(owner, title, width, height);
-    dialog.setVisible(true);
-  }
+	public void open(Window owner, String title, int width, int height, Consumer<? super T> initializer,
+									 String... styleSheets) {
+		initializer.accept(factory);
+		JDialog dialog = factory.create(owner, title, width, height);
+		dialog.setVisible(true);
+	}
 
-  /** factory interface to create a dialog */
-  public interface DialogFactory {
-    JDialog create(Window owner, String title, int width, int height);
-  }
+	/**
+	 * factory interface to create a dialog
+	 */
+	public interface DialogFactory {
+		JDialog create(Window owner, String title, int width, int height);
+	}
 
 }

@@ -26,35 +26,37 @@ import org.apache.lucene.analysis.phonetic.DoubleMetaphoneFilter;
 
 public class TestDoubleMetaphoneFilterFactory extends BaseTokenStreamTestCase {
 
-  public void testDefaults() throws Exception {
-    DoubleMetaphoneFilterFactory factory = new DoubleMetaphoneFilterFactory(new HashMap<String, String>());
-    TokenStream inputStream = whitespaceMockTokenizer("international");
+	public void testDefaults() throws Exception {
+		DoubleMetaphoneFilterFactory factory = new DoubleMetaphoneFilterFactory(new HashMap<String, String>());
+		TokenStream inputStream = whitespaceMockTokenizer("international");
 
-    TokenStream filteredStream = factory.create(inputStream);
-    assertEquals(DoubleMetaphoneFilter.class, filteredStream.getClass());
-    assertTokenStreamContents(filteredStream, new String[] { "international", "ANTR" });
-  }
+		TokenStream filteredStream = factory.create(inputStream);
+		assertEquals(DoubleMetaphoneFilter.class, filteredStream.getClass());
+		assertTokenStreamContents(filteredStream, new String[]{"international", "ANTR"});
+	}
 
-  public void testSettingSizeAndInject() throws Exception {
-    Map<String,String> parameters = new HashMap<>();
-    parameters.put("inject", "false");
-    parameters.put("maxCodeLength", "8");
-    DoubleMetaphoneFilterFactory factory = new DoubleMetaphoneFilterFactory(parameters);
+	public void testSettingSizeAndInject() throws Exception {
+		Map<String, String> parameters = new HashMap<>();
+		parameters.put("inject", "false");
+		parameters.put("maxCodeLength", "8");
+		DoubleMetaphoneFilterFactory factory = new DoubleMetaphoneFilterFactory(parameters);
 
-    TokenStream inputStream = whitespaceMockTokenizer("international");
+		TokenStream inputStream = whitespaceMockTokenizer("international");
 
-    TokenStream filteredStream = factory.create(inputStream);
-    assertEquals(DoubleMetaphoneFilter.class, filteredStream.getClass());
-    assertTokenStreamContents(filteredStream, new String[] { "ANTRNXNL" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new DoubleMetaphoneFilterFactory(new HashMap<String,String>() {{
-        put("bogusArg", "bogusValue");
-      }});
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+		TokenStream filteredStream = factory.create(inputStream);
+		assertEquals(DoubleMetaphoneFilter.class, filteredStream.getClass());
+		assertTokenStreamContents(filteredStream, new String[]{"ANTRNXNL"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new DoubleMetaphoneFilterFactory(new HashMap<String, String>() {{
+				put("bogusArg", "bogusValue");
+			}});
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

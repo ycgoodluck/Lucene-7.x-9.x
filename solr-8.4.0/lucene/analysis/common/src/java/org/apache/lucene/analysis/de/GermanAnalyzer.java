@@ -37,7 +37,7 @@ import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.util.IOUtils;
 
 /**
- * {@link Analyzer} for German language. 
+ * {@link Analyzer} for German language.
  * <p>
  * Supports an external list of stopwords (words that
  * will not be indexed at all) and an external list of exclusions (word that will
@@ -45,105 +45,106 @@ import org.apache.lucene.util.IOUtils;
  * A default set of stopwords is used unless an alternative list is specified, but the
  * exclusion list is empty by default.
  * </p>
- * 
+ *
  * <p><b>NOTE</b>: This class uses the same {@link org.apache.lucene.util.Version}
  * dependent settings as {@link StandardAnalyzer}.</p>
  *
  * @since 3.1
  */
 public final class GermanAnalyzer extends StopwordAnalyzerBase {
-  
-  /** File containing default German stopwords. */
-  public final static String DEFAULT_STOPWORD_FILE = "german_stop.txt";
-  
-  /**
-   * Returns a set of default German-stopwords 
-   * @return a set of default German-stopwords 
-   */
-  public static final CharArraySet getDefaultStopSet(){
-    return DefaultSetHolder.DEFAULT_SET;
-  }
-  
-  private static class DefaultSetHolder {
-    private static final CharArraySet DEFAULT_SET;
-    static {
-      try {
-        DEFAULT_SET = WordlistLoader.getSnowballWordSet(IOUtils.getDecodingReader(SnowballFilter.class, 
-            DEFAULT_STOPWORD_FILE, StandardCharsets.UTF_8));
-      } catch (IOException ex) {
-        // default set should always be present as it is part of the
-        // distribution (JAR)
-        throw new RuntimeException("Unable to load default stopword set");
-      }
-    }
-  }
 
-  /**
-   * Contains the stopwords used with the {@link StopFilter}.
-   */
- 
-  /**
-   * Contains words that should be indexed but not stemmed.
-   */
-  private final CharArraySet exclusionSet;
+	/**
+	 * File containing default German stopwords.
+	 */
+	public final static String DEFAULT_STOPWORD_FILE = "german_stop.txt";
 
-  /**
-   * Builds an analyzer with the default stop words:
-   * {@link #getDefaultStopSet()}.
-   */
-  public GermanAnalyzer() {
-    this(DefaultSetHolder.DEFAULT_SET);
-  }
-  
-  /**
-   * Builds an analyzer with the given stop words 
-   * 
-   * @param stopwords
-   *          a stopword set
-   */
-  public GermanAnalyzer(CharArraySet stopwords) {
-    this(stopwords, CharArraySet.EMPTY_SET);
-  }
-  
-  /**
-   * Builds an analyzer with the given stop words
-   * 
-   * @param stopwords
-   *          a stopword set
-   * @param stemExclusionSet
-   *          a stemming exclusion set
-   */
-  public GermanAnalyzer(CharArraySet stopwords, CharArraySet stemExclusionSet) {
-    super(stopwords);
-    exclusionSet = CharArraySet.unmodifiableSet(CharArraySet.copy(stemExclusionSet));
-  }
+	/**
+	 * Returns a set of default German-stopwords
+	 *
+	 * @return a set of default German-stopwords
+	 */
+	public static final CharArraySet getDefaultStopSet() {
+		return DefaultSetHolder.DEFAULT_SET;
+	}
 
-  /**
-   * Creates
-   * {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
-   * used to tokenize all the text in the provided {@link Reader}.
-   * 
-   * @return {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
-   *         built from a {@link StandardTokenizer} filtered with
-   *         {@link LowerCaseFilter}, {@link StopFilter}
-   *         , {@link SetKeywordMarkerFilter} if a stem exclusion set is
-   *         provided, {@link GermanNormalizationFilter} and {@link GermanLightStemFilter}
-   */
-  @Override
-  protected TokenStreamComponents createComponents(String fieldName) {
-    final Tokenizer source = new StandardTokenizer();
-    TokenStream result = new LowerCaseFilter(source);
-    result = new StopFilter(result, stopwords);
-    result = new SetKeywordMarkerFilter(result, exclusionSet);
-    result = new GermanNormalizationFilter(result);
-    result = new GermanLightStemFilter(result);
-    return new TokenStreamComponents(source, result);
-  }
+	private static class DefaultSetHolder {
+		private static final CharArraySet DEFAULT_SET;
 
-  @Override
-  protected TokenStream normalize(String fieldName, TokenStream in) {
-    TokenStream result = new LowerCaseFilter(in);
-    result = new GermanNormalizationFilter(result);
-    return result;
-  }
+		static {
+			try {
+				DEFAULT_SET = WordlistLoader.getSnowballWordSet(IOUtils.getDecodingReader(SnowballFilter.class,
+					DEFAULT_STOPWORD_FILE, StandardCharsets.UTF_8));
+			} catch (IOException ex) {
+				// default set should always be present as it is part of the
+				// distribution (JAR)
+				throw new RuntimeException("Unable to load default stopword set");
+			}
+		}
+	}
+
+	/**
+	 * Contains the stopwords used with the {@link StopFilter}.
+	 */
+
+	/**
+	 * Contains words that should be indexed but not stemmed.
+	 */
+	private final CharArraySet exclusionSet;
+
+	/**
+	 * Builds an analyzer with the default stop words:
+	 * {@link #getDefaultStopSet()}.
+	 */
+	public GermanAnalyzer() {
+		this(DefaultSetHolder.DEFAULT_SET);
+	}
+
+	/**
+	 * Builds an analyzer with the given stop words
+	 *
+	 * @param stopwords a stopword set
+	 */
+	public GermanAnalyzer(CharArraySet stopwords) {
+		this(stopwords, CharArraySet.EMPTY_SET);
+	}
+
+	/**
+	 * Builds an analyzer with the given stop words
+	 *
+	 * @param stopwords        a stopword set
+	 * @param stemExclusionSet a stemming exclusion set
+	 */
+	public GermanAnalyzer(CharArraySet stopwords, CharArraySet stemExclusionSet) {
+		super(stopwords);
+		exclusionSet = CharArraySet.unmodifiableSet(CharArraySet.copy(stemExclusionSet));
+	}
+
+	/**
+	 * Creates
+	 * {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
+	 * used to tokenize all the text in the provided {@link Reader}.
+	 *
+	 * @return {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
+	 * built from a {@link StandardTokenizer} filtered with
+	 * {@link LowerCaseFilter}, {@link StopFilter}
+	 * , {@link SetKeywordMarkerFilter} if a stem exclusion set is
+	 * provided, {@link GermanNormalizationFilter} and {@link GermanLightStemFilter}
+	 */
+	@Override
+	protected TokenStreamComponents createComponents(String fieldName) {
+		final Tokenizer source = new StandardTokenizer();
+		TokenStream result = new LowerCaseFilter(source);
+		result = new StopFilter(result, stopwords);
+		result = new SetKeywordMarkerFilter(result, exclusionSet);
+		result = new GermanNormalizationFilter(result);
+		result = new GermanLightStemFilter(result);
+		return new TokenStreamComponents(source, result);
+	}
+
+	@Override
+	protected TokenStream normalize(String fieldName, TokenStream in) {
+		TokenStream result = new LowerCaseFilter(in);
+		result = new GermanNormalizationFilter(result);
+		return result;
+	}
 }

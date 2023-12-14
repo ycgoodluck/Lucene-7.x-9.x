@@ -41,67 +41,67 @@ import org.junit.BeforeClass;
 
 public class TestLongNormValueSource extends LuceneTestCase {
 
-  static Directory dir;
-  static IndexReader reader;
-  static IndexSearcher searcher;
-  static Analyzer analyzer;
-  
-  private static Similarity sim = new ClassicSimilarity();
+	static Directory dir;
+	static IndexReader reader;
+	static IndexSearcher searcher;
+	static Analyzer analyzer;
 
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    dir = newDirectory();
-    analyzer = new MockAnalyzer(random());
-    IndexWriterConfig iwConfig = newIndexWriterConfig(analyzer);
-    iwConfig.setMergePolicy(newLogMergePolicy());
-    iwConfig.setSimilarity(sim);
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir, iwConfig);
+	private static Similarity sim = new ClassicSimilarity();
 
-    Document doc = new Document();
-    doc.add(new TextField("text", "this is a test test test", Field.Store.NO));
-    iw.addDocument(doc);
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		dir = newDirectory();
+		analyzer = new MockAnalyzer(random());
+		IndexWriterConfig iwConfig = newIndexWriterConfig(analyzer);
+		iwConfig.setMergePolicy(newLogMergePolicy());
+		iwConfig.setSimilarity(sim);
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir, iwConfig);
 
-    doc = new Document();
-    doc.add(new TextField("text", "second test", Field.Store.NO));
-    iw.addDocument(doc);
+		Document doc = new Document();
+		doc.add(new TextField("text", "this is a test test test", Field.Store.NO));
+		iw.addDocument(doc);
 
-    reader = iw.getReader();
-    searcher = newSearcher(reader);
-    iw.close();
-  }
+		doc = new Document();
+		doc.add(new TextField("text", "second test", Field.Store.NO));
+		iw.addDocument(doc);
 
-  @AfterClass
-  public static void afterClass() throws Exception {
-    searcher = null;
-    reader.close();
-    reader = null;
-    dir.close();
-    dir = null;
-    analyzer.close();
-    analyzer = null;
-  }
+		reader = iw.getReader();
+		searcher = newSearcher(reader);
+		iw.close();
+	}
 
-  public void testNorm() throws Exception {
-    Similarity saved = searcher.getSimilarity();
-    try {
-      // no norm field (so agnostic to indexed similarity)
-      searcher.setSimilarity(sim);
-      assertHits(new FunctionQuery(
-          new NormValueSource("text")),
-          new float[] { 0f, 0f });
-    } finally {
-      searcher.setSimilarity(saved);
-    }
-  }
+	@AfterClass
+	public static void afterClass() throws Exception {
+		searcher = null;
+		reader.close();
+		reader = null;
+		dir.close();
+		dir = null;
+		analyzer.close();
+		analyzer = null;
+	}
 
-  void assertHits(Query q, float scores[]) throws Exception {
-    ScoreDoc expected[] = new ScoreDoc[scores.length];
-    int expectedDocs[] = new int[scores.length];
-    for (int i = 0; i < expected.length; i++) {
-      expectedDocs[i] = i;
-      expected[i] = new ScoreDoc(i, scores[i]);
-    }
-    TopDocs docs = searcher.search(q, 2, new Sort(new SortField("id", SortField.Type.STRING)));
+	public void testNorm() throws Exception {
+		Similarity saved = searcher.getSimilarity();
+		try {
+			// no norm field (so agnostic to indexed similarity)
+			searcher.setSimilarity(sim);
+			assertHits(new FunctionQuery(
+					new NormValueSource("text")),
+				new float[]{0f, 0f});
+		} finally {
+			searcher.setSimilarity(saved);
+		}
+	}
+
+	void assertHits(Query q, float scores[]) throws Exception {
+		ScoreDoc expected[] = new ScoreDoc[scores.length];
+		int expectedDocs[] = new int[scores.length];
+		for (int i = 0; i < expected.length; i++) {
+			expectedDocs[i] = i;
+			expected[i] = new ScoreDoc(i, scores[i]);
+		}
+		TopDocs docs = searcher.search(q, 2, new Sort(new SortField("id", SortField.Type.STRING)));
 
     /*
     for (int i=0;i<docs.scoreDocs.length;i++) {
@@ -109,8 +109,8 @@ public class TestLongNormValueSource extends LuceneTestCase {
     }
     */
 
-    CheckHits.checkHits(random(), q, "", searcher, expectedDocs);
-    CheckHits.checkHitsQuery(q, expected, docs.scoreDocs, expectedDocs);
-    CheckHits.checkExplanations(q, "", searcher);
-  }
+		CheckHits.checkHits(random(), q, "", searcher, expectedDocs);
+		CheckHits.checkHitsQuery(q, expected, docs.scoreDocs, expectedDocs);
+		CheckHits.checkExplanations(q, "", searcher);
+	}
 }

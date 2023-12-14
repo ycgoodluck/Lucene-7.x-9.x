@@ -38,103 +38,106 @@ import org.locationtech.spatial4j.shape.Shape;
 
 /**
  * Base class for Lucene Queries on SpatialPrefixTree fields.
+ *
  * @lucene.internal
  */
 public abstract class AbstractPrefixTreeQuery extends Query {
 
-  protected final Shape queryShape;
-  protected final String fieldName;
-  protected final SpatialPrefixTree grid;//not in equals/hashCode since it's implied for a specific field
-  protected final int detailLevel;
+	protected final Shape queryShape;
+	protected final String fieldName;
+	protected final SpatialPrefixTree grid;//not in equals/hashCode since it's implied for a specific field
+	protected final int detailLevel;
 
-  public AbstractPrefixTreeQuery(Shape queryShape, String fieldName, SpatialPrefixTree grid, int detailLevel) {
-    this.queryShape = queryShape;
-    this.fieldName = fieldName;
-    this.grid = grid;
-    this.detailLevel = detailLevel;
-  }
+	public AbstractPrefixTreeQuery(Shape queryShape, String fieldName, SpatialPrefixTree grid, int detailLevel) {
+		this.queryShape = queryShape;
+		this.fieldName = fieldName;
+		this.grid = grid;
+		this.detailLevel = detailLevel;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    return sameClassAs(o) &&
-           equalsTo(getClass().cast(o));
-  }
+	@Override
+	public boolean equals(Object o) {
+		return sameClassAs(o) &&
+			equalsTo(getClass().cast(o));
+	}
 
-  private boolean equalsTo(AbstractPrefixTreeQuery other) {
-    return detailLevel == other.detailLevel &&
-           fieldName.equals(other.fieldName) &&
-           queryShape.equals(other.queryShape);
-  }
+	private boolean equalsTo(AbstractPrefixTreeQuery other) {
+		return detailLevel == other.detailLevel &&
+			fieldName.equals(other.fieldName) &&
+			queryShape.equals(other.queryShape);
+	}
 
-  @Override
-  public int hashCode() {
-    int result = classHash();
-    result = 31 * result + queryShape.hashCode();
-    result = 31 * result + fieldName.hashCode();
-    result = 31 * result + detailLevel;
-    return result;
-  }
+	@Override
+	public int hashCode() {
+		int result = classHash();
+		result = 31 * result + queryShape.hashCode();
+		result = 31 * result + fieldName.hashCode();
+		result = 31 * result + detailLevel;
+		return result;
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-    return new ConstantScoreWeight(this, boost) {
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        DocIdSet docSet = getDocIdSet(context);
-        if (docSet == null) {
-          return null;
-        }
-        DocIdSetIterator disi = docSet.iterator();
-        if (disi == null) {
-          return null;
-        }
-        return new ConstantScoreScorer(this, score(), disi);
-      }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+		return new ConstantScoreWeight(this, boost) {
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				DocIdSet docSet = getDocIdSet(context);
+				if (docSet == null) {
+					return null;
+				}
+				DocIdSetIterator disi = docSet.iterator();
+				if (disi == null) {
+					return null;
+				}
+				return new ConstantScoreScorer(this, score(), disi);
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return true;
-      }
-    };
-  }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return true;
+			}
+		};
+	}
 
-  protected abstract DocIdSet getDocIdSet(LeafReaderContext context) throws IOException;
+	protected abstract DocIdSet getDocIdSet(LeafReaderContext context) throws IOException;
 
-  /** Holds transient state and docid collecting utility methods as part of
-   * traversing a {@link TermsEnum} for a {@link org.apache.lucene.index.LeafReaderContext}. */
-  public abstract class BaseTermsEnumTraverser {//TODO rename to LeafTermsEnumTraverser ?
-    //note: only 'fieldName' (accessed in constructor) keeps this from being a static inner class
+	/**
+	 * Holds transient state and docid collecting utility methods as part of
+	 * traversing a {@link TermsEnum} for a {@link org.apache.lucene.index.LeafReaderContext}.
+	 */
+	public abstract class BaseTermsEnumTraverser {//TODO rename to LeafTermsEnumTraverser ?
+		//note: only 'fieldName' (accessed in constructor) keeps this from being a static inner class
 
-    protected final LeafReaderContext context;
-    protected final int maxDoc;
+		protected final LeafReaderContext context;
+		protected final int maxDoc;
 
-    protected final Terms terms; // maybe null
-    protected final TermsEnum termsEnum;//remember to check for null!
-    protected PostingsEnum postingsEnum;
+		protected final Terms terms; // maybe null
+		protected final TermsEnum termsEnum;//remember to check for null!
+		protected PostingsEnum postingsEnum;
 
-    public BaseTermsEnumTraverser(LeafReaderContext context) throws IOException {
-      this.context = context;
-      LeafReader reader = context.reader();
-      this.maxDoc = reader.maxDoc();
-      terms = reader.terms(fieldName);
-      if (terms != null) {
-        this.termsEnum = terms.iterator();
-      } else {
-        this.termsEnum = null;
-      }
-    }
+		public BaseTermsEnumTraverser(LeafReaderContext context) throws IOException {
+			this.context = context;
+			LeafReader reader = context.reader();
+			this.maxDoc = reader.maxDoc();
+			terms = reader.terms(fieldName);
+			if (terms != null) {
+				this.termsEnum = terms.iterator();
+			} else {
+				this.termsEnum = null;
+			}
+		}
 
-    protected void collectDocs(BitSet bitSet) throws IOException {
-      assert termsEnum != null;
-      postingsEnum = termsEnum.postings(postingsEnum, PostingsEnum.NONE);
-      bitSet.or(postingsEnum);
-    }
+		protected void collectDocs(BitSet bitSet) throws IOException {
+			assert termsEnum != null;
+			postingsEnum = termsEnum.postings(postingsEnum, PostingsEnum.NONE);
+			bitSet.or(postingsEnum);
+		}
 
-    protected void collectDocs(DocIdSetBuilder docSetBuilder) throws IOException {
-      assert termsEnum != null;
-      postingsEnum = termsEnum.postings(postingsEnum, PostingsEnum.NONE);
-      docSetBuilder.add(postingsEnum);
-    }
-  }
+		protected void collectDocs(DocIdSetBuilder docSetBuilder) throws IOException {
+			assert termsEnum != null;
+			postingsEnum = termsEnum.postings(postingsEnum, PostingsEnum.NONE);
+			docSetBuilder.add(postingsEnum);
+		}
+	}
 
 }

@@ -28,23 +28,26 @@ import org.apache.lucene.index.LeafReaderContext;
  */
 public abstract class SimpleCollector implements Collector, LeafCollector {
 
-  @Override
-  public final LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
-    doSetNextReader(context);
-    return this;
-  }
+	@Override
+	public final LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
+		doSetNextReader(context);
+		return this;
+	}
 
-  /** This method is called before collecting <code>context</code>. */
-  protected void doSetNextReader(LeafReaderContext context) throws IOException {}
+	/**
+	 * This method is called before collecting <code>context</code>.
+	 */
+	protected void doSetNextReader(LeafReaderContext context) throws IOException {
+	}
 
-  @Override
-  public void setScorer(Scorable scorer) throws IOException {
-    // no-op by default
-  }
+	@Override
+	public void setScorer(Scorable scorer) throws IOException {
+		// no-op by default
+	}
 
-  // redeclare methods so that javadocs are inherited on sub-classes
+	// redeclare methods so that javadocs are inherited on sub-classes
 
-  @Override
-  public abstract void collect(int doc) throws IOException;
+	@Override
+	public abstract void collect(int doc) throws IOException;
 
 }

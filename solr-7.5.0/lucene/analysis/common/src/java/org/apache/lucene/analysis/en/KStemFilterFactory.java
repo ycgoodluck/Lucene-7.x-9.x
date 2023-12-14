@@ -34,20 +34,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.KStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.3.0
  */
 public class KStemFilterFactory extends TokenFilterFactory {
 
-  /** Creates a new KStemFilterFactory */
-  public KStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenFilter create(TokenStream input) {
-    return new KStemFilter(input);
-  }
+	/**
+	 * Creates a new KStemFilterFactory
+	 */
+	public KStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenFilter create(TokenStream input) {
+		return new KStemFilter(input);
+	}
 }

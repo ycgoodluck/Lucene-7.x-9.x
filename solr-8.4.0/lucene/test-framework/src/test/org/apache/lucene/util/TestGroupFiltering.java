@@ -24,35 +24,42 @@ import java.lang.annotation.RetentionPolicy;
 import com.carrotsearch.randomizedtesting.annotations.TestGroup;
 
 public class TestGroupFiltering extends LuceneTestCase {
-  @Documented
-  @Inherited
-  @Retention(RetentionPolicy.RUNTIME)
-  @TestGroup(enabled = false)
-  public @interface Foo {}
-  
-  @Documented
-  @Inherited
-  @Retention(RetentionPolicy.RUNTIME)
-  @TestGroup(enabled = false)
-  public @interface Bar {}
+	@Documented
+	@Inherited
+	@Retention(RetentionPolicy.RUNTIME)
+	@TestGroup(enabled = false)
+	public @interface Foo {
+	}
 
-  @Documented
-  @Inherited
-  @Retention(RetentionPolicy.RUNTIME)
-  @TestGroup(enabled = false)
-  public @interface Jira {
-    String bug();
-  }
-  
-  @Foo
-  public void testFoo() {}
-  
-  @Foo @Bar
-  public void testFooBar() {}
+	@Documented
+	@Inherited
+	@Retention(RetentionPolicy.RUNTIME)
+	@TestGroup(enabled = false)
+	public @interface Bar {
+	}
 
-  @Bar
-  public void testBar() {}
+	@Documented
+	@Inherited
+	@Retention(RetentionPolicy.RUNTIME)
+	@TestGroup(enabled = false)
+	public @interface Jira {
+		String bug();
+	}
 
-  @Jira(bug = "JIRA bug reference")
-  public void testJira() {}
+	@Foo
+	public void testFoo() {
+	}
+
+	@Foo
+	@Bar
+	public void testFooBar() {
+	}
+
+	@Bar
+	public void testBar() {
+	}
+
+	@Jira(bug = "JIRA bug reference")
+	public void testJira() {
+	}
 }

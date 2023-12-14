@@ -33,7 +33,7 @@ import org.apache.lucene.util.IOUtils;
 
 /**
  * Dictionary represented by a text file.
- * 
+ *
  * <p>Format allowed: 1 word per line:<br>
  * word1<br>
  * word2<br>
@@ -41,65 +41,66 @@ import org.apache.lucene.util.IOUtils;
  */
 public class PlainTextDictionary implements Dictionary {
 
-  private BufferedReader in;
+	private BufferedReader in;
 
-  /**
-   * Creates a dictionary based on a Path.
-   * <p>
-   * NOTE: content is treated as UTF-8
-   */
-  public PlainTextDictionary(Path path) throws IOException {
-    in = Files.newBufferedReader(path, StandardCharsets.UTF_8);
-  }
+	/**
+	 * Creates a dictionary based on a Path.
+	 * <p>
+	 * NOTE: content is treated as UTF-8
+	 */
+	public PlainTextDictionary(Path path) throws IOException {
+		in = Files.newBufferedReader(path, StandardCharsets.UTF_8);
+	}
 
-  /**
-   * Creates a dictionary based on an inputstream.
-   * <p>
-   * NOTE: content is treated as UTF-8
-   */
-  public PlainTextDictionary(InputStream dictFile) {
-    in = new BufferedReader(IOUtils.getDecodingReader(dictFile, StandardCharsets.UTF_8));
-  }
+	/**
+	 * Creates a dictionary based on an inputstream.
+	 * <p>
+	 * NOTE: content is treated as UTF-8
+	 */
+	public PlainTextDictionary(InputStream dictFile) {
+		in = new BufferedReader(IOUtils.getDecodingReader(dictFile, StandardCharsets.UTF_8));
+	}
 
-  /**
-   * Creates a dictionary based on a reader.
-   */
-  public PlainTextDictionary(Reader reader) {
-    in = new BufferedReader(reader);
-  }
+	/**
+	 * Creates a dictionary based on a reader.
+	 */
+	public PlainTextDictionary(Reader reader) {
+		in = new BufferedReader(reader);
+	}
 
-  @Override
-  public InputIterator getEntryIterator() throws IOException {
-    return new InputIterator.InputIteratorWrapper(new FileIterator());
-  }
+	@Override
+	public InputIterator getEntryIterator() throws IOException {
+		return new InputIterator.InputIteratorWrapper(new FileIterator());
+	}
 
-  final class FileIterator implements BytesRefIterator {
-    private boolean done = false;
-    private final BytesRefBuilder spare = new BytesRefBuilder();
-    @Override
-    public BytesRef next() throws IOException {
-      if (done) {
-        return null;
-      }
-      boolean success = false;
-      BytesRef result;
-      try {
-        String line;
-        if ((line = in.readLine()) != null) {
-          spare.copyChars(line);
-          result = spare.get();
-        } else {
-          done = true;
-          IOUtils.close(in);
-          result = null;
-        }
-        success = true;
-      } finally {
-        if (!success) {
-          IOUtils.closeWhileHandlingException(in);
-        }
-      }
-      return result;
-    }
-  }
+	final class FileIterator implements BytesRefIterator {
+		private boolean done = false;
+		private final BytesRefBuilder spare = new BytesRefBuilder();
+
+		@Override
+		public BytesRef next() throws IOException {
+			if (done) {
+				return null;
+			}
+			boolean success = false;
+			BytesRef result;
+			try {
+				String line;
+				if ((line = in.readLine()) != null) {
+					spare.copyChars(line);
+					result = spare.get();
+				} else {
+					done = true;
+					IOUtils.close(in);
+					result = null;
+				}
+				success = true;
+			} finally {
+				if (!success) {
+					IOUtils.closeWhileHandlingException(in);
+				}
+			}
+			return result;
+		}
+	}
 }

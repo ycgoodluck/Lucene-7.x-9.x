@@ -27,55 +27,55 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class TestBooleanWeight {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    public void doSearch() throws Exception {
-        IndexWriter indexWriter = new IndexWriter(directory, new IndexWriterConfig(new WhitespaceAnalyzer()));
-        addSegment(indexWriter, 1600);
-
-        DirectoryReader reader = DirectoryReader.open(indexWriter);
-        BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        Query query1 = new TermQuery(new Term("name", new BytesRef("abc")));
-        Query query2 = new TermQuery(new Term("name", new BytesRef("dabc")));
-        Query queryNot = new TermQuery(new Term("name", new BytesRef("efg")));
-        builder.add(new BooleanClause(query1, BooleanClause.Occur.MUST));
-        builder.add(new BooleanClause(query2, BooleanClause.Occur.SHOULD));
-        builder.add(new BooleanClause(queryNot, BooleanClause.Occur.MUST_NOT));
-
-        IndexSearcher searcher = new IndexSearcher(reader);
-        searcher.search(builder.build(), 100);
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 
-        indexWriter.close();
-        reader.close();
-        directory.close();
-        System.out.println("DONE");
-    }
+	public void doSearch() throws Exception {
+		IndexWriter indexWriter = new IndexWriter(directory, new IndexWriterConfig(new WhitespaceAnalyzer()));
+		addSegment(indexWriter, 1600);
 
-    void addSegment(IndexWriter indexWriter, int documentSize) throws Exception{
-        Document doc;
-        int count = 0;
-        Random random = new Random();
-        while (count++ != documentSize){
-            doc = new Document();
-            doc.add(new StringField("name", String.valueOf(random.nextInt(1000000)), StringField.Store.YES));
-            indexWriter.addDocument(doc);
-        }
-        indexWriter.commit();
-    }
+		DirectoryReader reader = DirectoryReader.open(indexWriter);
+		BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		Query query1 = new TermQuery(new Term("name", new BytesRef("abc")));
+		Query query2 = new TermQuery(new Term("name", new BytesRef("dabc")));
+		Query queryNot = new TermQuery(new Term("name", new BytesRef("efg")));
+		builder.add(new BooleanClause(query1, BooleanClause.Occur.MUST));
+		builder.add(new BooleanClause(query2, BooleanClause.Occur.SHOULD));
+		builder.add(new BooleanClause(queryNot, BooleanClause.Occur.MUST_NOT));
 
-    public static void main(String[] args) throws Exception {
-        TestBooleanWeight test = new TestBooleanWeight();
-        test.doSearch();
-    }
+		IndexSearcher searcher = new IndexSearcher(reader);
+		searcher.search(builder.build(), 100);
+
+
+		indexWriter.close();
+		reader.close();
+		directory.close();
+		System.out.println("DONE");
+	}
+
+	void addSegment(IndexWriter indexWriter, int documentSize) throws Exception {
+		Document doc;
+		int count = 0;
+		Random random = new Random();
+		while (count++ != documentSize) {
+			doc = new Document();
+			doc.add(new StringField("name", String.valueOf(random.nextInt(1000000)), StringField.Store.YES));
+			indexWriter.addDocument(doc);
+		}
+		indexWriter.commit();
+	}
+
+	public static void main(String[] args) throws Exception {
+		TestBooleanWeight test = new TestBooleanWeight();
+		test.doSearch();
+	}
 }

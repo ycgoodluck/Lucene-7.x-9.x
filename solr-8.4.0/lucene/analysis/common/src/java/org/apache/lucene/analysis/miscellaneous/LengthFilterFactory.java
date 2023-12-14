@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link LengthFilter}. 
+ * Factory for {@link LengthFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_lngth" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -32,32 +32,36 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class LengthFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "length";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "length";
 
-  final int min;
-  final int max;
-  public static final String MIN_KEY = "min";
-  public static final String MAX_KEY = "max";
+	final int min;
+	final int max;
+	public static final String MIN_KEY = "min";
+	public static final String MAX_KEY = "max";
 
-  /** Creates a new LengthFilterFactory */
-  public LengthFilterFactory(Map<String, String> args) {
-    super(args);
-    min = requireInt(args, MIN_KEY);
-    max = requireInt(args, MAX_KEY);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public LengthFilter create(TokenStream input) {
-    final LengthFilter filter = new LengthFilter(input,min,max);
-    return filter;
-  }
+	/**
+	 * Creates a new LengthFilterFactory
+	 */
+	public LengthFilterFactory(Map<String, String> args) {
+		super(args);
+		min = requireInt(args, MIN_KEY);
+		max = requireInt(args, MAX_KEY);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public LengthFilter create(TokenStream input) {
+		final LengthFilter filter = new LengthFilter(input, min, max);
+		return filter;
+	}
 }

@@ -27,58 +27,62 @@ import org.apache.lucene.util.automaton.CompiledAutomaton;
  */
 public class FilterSortedSetDocValues extends SortedSetDocValues {
 
-  /** Wrapped values */
-  protected final SortedSetDocValues in;
+	/**
+	 * Wrapped values
+	 */
+	protected final SortedSetDocValues in;
 
-  /** Initializes delegate */
-  public FilterSortedSetDocValues(SortedSetDocValues in) {
-    Objects.requireNonNull(in);
-    this.in = in;
-  }
+	/**
+	 * Initializes delegate
+	 */
+	public FilterSortedSetDocValues(SortedSetDocValues in) {
+		Objects.requireNonNull(in);
+		this.in = in;
+	}
 
-  public boolean advanceExact(int target) throws IOException {
-    return in.advanceExact(target);
-  }
+	public boolean advanceExact(int target) throws IOException {
+		return in.advanceExact(target);
+	}
 
-  public long nextOrd() throws IOException {
-    return in.nextOrd();
-  }
+	public long nextOrd() throws IOException {
+		return in.nextOrd();
+	}
 
-  public BytesRef lookupOrd(long ord) throws IOException {
-    return in.lookupOrd(ord);
-  }
+	public BytesRef lookupOrd(long ord) throws IOException {
+		return in.lookupOrd(ord);
+	}
 
-  public long getValueCount() {
-    return in.getValueCount();
-  }
+	public long getValueCount() {
+		return in.getValueCount();
+	}
 
-  public long lookupTerm(BytesRef key) throws IOException {
-    return in.lookupTerm(key);
-  }
+	public long lookupTerm(BytesRef key) throws IOException {
+		return in.lookupTerm(key);
+	}
 
-  public TermsEnum termsEnum() throws IOException {
-    return in.termsEnum();
-  }
+	public TermsEnum termsEnum() throws IOException {
+		return in.termsEnum();
+	}
 
-  public TermsEnum intersect(CompiledAutomaton automaton) throws IOException {
-    return in.intersect(automaton);
-  }
+	public TermsEnum intersect(CompiledAutomaton automaton) throws IOException {
+		return in.intersect(automaton);
+	}
 
-  public int docID() {
-    return in.docID();
-  }
+	public int docID() {
+		return in.docID();
+	}
 
-  public int nextDoc() throws IOException {
-    return in.nextDoc();
-  }
+	public int nextDoc() throws IOException {
+		return in.nextDoc();
+	}
 
-  public int advance(int target) throws IOException {
-    return in.advance(target);
-  }
+	public int advance(int target) throws IOException {
+		return in.advance(target);
+	}
 
-  public long cost() {
-    return in.cost();
-  }
-  
-    
+	public long cost() {
+		return in.cost();
+	}
+
+
 }

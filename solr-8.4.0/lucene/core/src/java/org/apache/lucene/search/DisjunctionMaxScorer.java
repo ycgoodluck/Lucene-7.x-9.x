@@ -28,95 +28,92 @@ import org.apache.lucene.util.MathUtil;
  * for the other subqueries that generate the document.
  */
 final class DisjunctionMaxScorer extends DisjunctionScorer {
-  private final List<Scorer> subScorers;
-  /* Multiplier applied to non-maximum-scoring subqueries for a document as they are summed into the result. */
-  private final float tieBreakerMultiplier;
+	private final List<Scorer> subScorers;
+	/* Multiplier applied to non-maximum-scoring subqueries for a document as they are summed into the result. */
+	private final float tieBreakerMultiplier;
 
-  private final DisjunctionScoreBlockBoundaryPropagator disjunctionBlockPropagator;
+	private final DisjunctionScoreBlockBoundaryPropagator disjunctionBlockPropagator;
 
-  /**
-   * Creates a new instance of DisjunctionMaxScorer
-   * 
-   * @param weight
-   *          The Weight to be used.
-   * @param tieBreakerMultiplier
-   *          Multiplier applied to non-maximum-scoring subqueries for a
-   *          document as they are summed into the result.
-   * @param subScorers
-   *          The sub scorers this Scorer should iterate on
-   */
-  DisjunctionMaxScorer(Weight weight, float tieBreakerMultiplier, List<Scorer> subScorers, ScoreMode scoreMode) throws IOException {
-    super(weight, subScorers, scoreMode);
-    this.subScorers = subScorers;
-    this.tieBreakerMultiplier = tieBreakerMultiplier;
-    if (tieBreakerMultiplier < 0 || tieBreakerMultiplier > 1) {
-      throw new IllegalArgumentException("tieBreakerMultiplier must be in [0, 1]");
-    }
-    if (scoreMode == ScoreMode.TOP_SCORES) {
-      this.disjunctionBlockPropagator = new DisjunctionScoreBlockBoundaryPropagator(subScorers);
-    } else {
-      this.disjunctionBlockPropagator = null;
-    }
-  }
+	/**
+	 * Creates a new instance of DisjunctionMaxScorer
+	 *
+	 * @param weight               The Weight to be used.
+	 * @param tieBreakerMultiplier Multiplier applied to non-maximum-scoring subqueries for a
+	 *                             document as they are summed into the result.
+	 * @param subScorers           The sub scorers this Scorer should iterate on
+	 */
+	DisjunctionMaxScorer(Weight weight, float tieBreakerMultiplier, List<Scorer> subScorers, ScoreMode scoreMode) throws IOException {
+		super(weight, subScorers, scoreMode);
+		this.subScorers = subScorers;
+		this.tieBreakerMultiplier = tieBreakerMultiplier;
+		if (tieBreakerMultiplier < 0 || tieBreakerMultiplier > 1) {
+			throw new IllegalArgumentException("tieBreakerMultiplier must be in [0, 1]");
+		}
+		if (scoreMode == ScoreMode.TOP_SCORES) {
+			this.disjunctionBlockPropagator = new DisjunctionScoreBlockBoundaryPropagator(subScorers);
+		} else {
+			this.disjunctionBlockPropagator = null;
+		}
+	}
 
-  @Override
-  protected float score(DisiWrapper topList) throws IOException {
-    float scoreMax = 0;
-    double otherScoreSum = 0;
-    for (DisiWrapper w = topList; w != null; w = w.next) {
-      float subScore = w.scorer.score();
-      if (subScore >= scoreMax) {
-        otherScoreSum += scoreMax;
-        scoreMax = subScore;
-      } else {
-        otherScoreSum += subScore;
-      }
-    }
-    return (float) (scoreMax + otherScoreSum * tieBreakerMultiplier);
-  }
+	@Override
+	protected float score(DisiWrapper topList) throws IOException {
+		float scoreMax = 0;
+		double otherScoreSum = 0;
+		for (DisiWrapper w = topList; w != null; w = w.next) {
+			float subScore = w.scorer.score();
+			if (subScore >= scoreMax) {
+				otherScoreSum += scoreMax;
+				scoreMax = subScore;
+			} else {
+				otherScoreSum += subScore;
+			}
+		}
+		return (float) (scoreMax + otherScoreSum * tieBreakerMultiplier);
+	}
 
-  @Override
-  public int advanceShallow(int target) throws IOException {
-    return disjunctionBlockPropagator.advanceShallow(target);
-  }
+	@Override
+	public int advanceShallow(int target) throws IOException {
+		return disjunctionBlockPropagator.advanceShallow(target);
+	}
 
-  @Override
-  public float getMaxScore(int upTo) throws IOException {
-    float scoreMax = 0;
-    double otherScoreSum = 0;
-    for (Scorer scorer : subScorers) {
-      if (scorer.docID() <= upTo) {
-        float subScore = scorer.getMaxScore(upTo);
-        if (subScore >= scoreMax) {
-          otherScoreSum += scoreMax;
-          scoreMax = subScore;
-        } else {
-          otherScoreSum += subScore;
-        }
-      }
-    }
+	@Override
+	public float getMaxScore(int upTo) throws IOException {
+		float scoreMax = 0;
+		double otherScoreSum = 0;
+		for (Scorer scorer : subScorers) {
+			if (scorer.docID() <= upTo) {
+				float subScore = scorer.getMaxScore(upTo);
+				if (subScore >= scoreMax) {
+					otherScoreSum += scoreMax;
+					scoreMax = subScore;
+				} else {
+					otherScoreSum += subScore;
+				}
+			}
+		}
 
-    if (tieBreakerMultiplier == 0) {
-      return scoreMax;
-    } else {
-      // The error of sums depends on the order in which values are summed up. In
-      // order to avoid this issue, we compute an upper bound of the value that
-      // the sum may take. If the max relative error is b, then it means that two
-      // sums are always within 2*b of each other.
-      otherScoreSum *= (1 + 2 * MathUtil.sumRelativeErrorBound(subScorers.size() - 1));
-      return (float) (scoreMax + otherScoreSum * tieBreakerMultiplier);
-    }
-  }
+		if (tieBreakerMultiplier == 0) {
+			return scoreMax;
+		} else {
+			// The error of sums depends on the order in which values are summed up. In
+			// order to avoid this issue, we compute an upper bound of the value that
+			// the sum may take. If the max relative error is b, then it means that two
+			// sums are always within 2*b of each other.
+			otherScoreSum *= (1 + 2 * MathUtil.sumRelativeErrorBound(subScorers.size() - 1));
+			return (float) (scoreMax + otherScoreSum * tieBreakerMultiplier);
+		}
+	}
 
-  @Override
-  public void setMinCompetitiveScore(float minScore) throws IOException {
-    getBlockMaxApprox().setMinCompetitiveScore(minScore);
-    disjunctionBlockPropagator.setMinCompetitiveScore(minScore);
-    if (tieBreakerMultiplier == 0) {
-      // TODO: we could even remove some scorers from the priority queue?
-      for (Scorer scorer : subScorers) {
-        scorer.setMinCompetitiveScore(minScore);
-      }
-    }
-  }
+	@Override
+	public void setMinCompetitiveScore(float minScore) throws IOException {
+		getBlockMaxApprox().setMinCompetitiveScore(minScore);
+		disjunctionBlockPropagator.setMinCompetitiveScore(minScore);
+		if (tieBreakerMultiplier == 0) {
+			// TODO: we could even remove some scorers from the priority queue?
+			for (Scorer scorer : subScorers) {
+				scorer.setMinCompetitiveScore(minScore);
+			}
+		}
+	}
 }

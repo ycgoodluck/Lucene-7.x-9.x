@@ -24,34 +24,34 @@ import java.util.Iterator;
 
 class AssertingMatches implements Matches {
 
-  private final Matches in;
+	private final Matches in;
 
-  AssertingMatches(Matches matches) {
-    this.in = matches;
-  }
+	AssertingMatches(Matches matches) {
+		this.in = matches;
+	}
 
-  @Override
-  public MatchesIterator getMatches(String field) throws IOException {
-    MatchesIterator mi = in.getMatches(field);
-    if (mi == null)
-      return null;
-    return new AssertingMatchesIterator(mi);
-  }
+	@Override
+	public MatchesIterator getMatches(String field) throws IOException {
+		MatchesIterator mi = in.getMatches(field);
+		if (mi == null)
+			return null;
+		return new AssertingMatchesIterator(mi);
+	}
 
-  @Override
-  public Collection<Matches> getSubMatches() {
-    return Collections.singleton(in);
-  }
+	@Override
+	public Collection<Matches> getSubMatches() {
+		return Collections.singleton(in);
+	}
 
-  @Override
-  public Iterator<String> iterator() {
-    return in.iterator();
-  }
+	@Override
+	public Iterator<String> iterator() {
+		return in.iterator();
+	}
 
-  public static Matches unWrap(Matches m) {
-    while (m instanceof AssertingMatches) {
-      m = (((AssertingMatches)m).in);
-    }
-    return m;
-  }
+	public static Matches unWrap(Matches m) {
+		while (m instanceof AssertingMatches) {
+			m = (((AssertingMatches) m).in);
+		}
+		return m;
+	}
 }

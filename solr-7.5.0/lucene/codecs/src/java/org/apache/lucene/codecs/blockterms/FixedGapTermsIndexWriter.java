@@ -42,205 +42,210 @@ import java.io.IOException;
  * VariableGapTermsIndexWriter} for a more memory efficient
  * terms index that does not support seeking by ord.
  *
- * @lucene.experimental */
+ * @lucene.experimental
+ */
 public class FixedGapTermsIndexWriter extends TermsIndexWriterBase {
-  protected IndexOutput out;
+	protected IndexOutput out;
 
-  /** Extension of terms index file */
-  static final String TERMS_INDEX_EXTENSION = "tii";
+	/**
+	 * Extension of terms index file
+	 */
+	static final String TERMS_INDEX_EXTENSION = "tii";
 
-  final static String CODEC_NAME = "FixedGapTermsIndex";
-  final static int VERSION_START = 4;
-  final static int VERSION_CURRENT = VERSION_START;
+	final static String CODEC_NAME = "FixedGapTermsIndex";
+	final static int VERSION_START = 4;
+	final static int VERSION_CURRENT = VERSION_START;
 
-  final static int BLOCKSIZE = 4096;
-  final private int termIndexInterval;
-  public static final int DEFAULT_TERM_INDEX_INTERVAL = 32;
+	final static int BLOCKSIZE = 4096;
+	final private int termIndexInterval;
+	public static final int DEFAULT_TERM_INDEX_INTERVAL = 32;
 
-  private final List<SimpleFieldWriter> fields = new ArrayList<>();
-  
-  public FixedGapTermsIndexWriter(SegmentWriteState state) throws IOException {
-    this(state, DEFAULT_TERM_INDEX_INTERVAL);
-  }
-  
-  public FixedGapTermsIndexWriter(SegmentWriteState state, int termIndexInterval) throws IOException {
-    if (termIndexInterval <= 0) {
-      throw new IllegalArgumentException("invalid termIndexInterval: " + termIndexInterval);
-    }
-    this.termIndexInterval = termIndexInterval;
-    final String indexFileName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, TERMS_INDEX_EXTENSION);
-    out = state.directory.createOutput(indexFileName, state.context);
-    boolean success = false;
-    try {
-      CodecUtil.writeIndexHeader(out, CODEC_NAME, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
-      out.writeVInt(termIndexInterval);
-      out.writeVInt(PackedInts.VERSION_CURRENT);
-      out.writeVInt(BLOCKSIZE);
-      success = true;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(out);
-      }
-    }
-  }
+	private final List<SimpleFieldWriter> fields = new ArrayList<>();
 
-  @Override
-  public FieldWriter addField(FieldInfo field, long termsFilePointer) {
-    //System.out.println("FGW: addFfield=" + field.name);
-    SimpleFieldWriter writer = new SimpleFieldWriter(field, termsFilePointer);
-    fields.add(writer);
-    return writer;
-  }
+	public FixedGapTermsIndexWriter(SegmentWriteState state) throws IOException {
+		this(state, DEFAULT_TERM_INDEX_INTERVAL);
+	}
 
-  /** NOTE: if your codec does not sort in unicode code
-   *  point order, you must override this method, to simply
-   *  return indexedTerm.length. */
-  protected int indexedTermPrefixLength(final BytesRef priorTerm, final BytesRef indexedTerm) {
-    // As long as codec sorts terms in unicode codepoint
-    // order, we can safely strip off the non-distinguishing
-    // suffix to save RAM in the loaded terms index.
-    return StringHelper.sortKeyLength(priorTerm, indexedTerm);
-  }
+	public FixedGapTermsIndexWriter(SegmentWriteState state, int termIndexInterval) throws IOException {
+		if (termIndexInterval <= 0) {
+			throw new IllegalArgumentException("invalid termIndexInterval: " + termIndexInterval);
+		}
+		this.termIndexInterval = termIndexInterval;
+		final String indexFileName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, TERMS_INDEX_EXTENSION);
+		out = state.directory.createOutput(indexFileName, state.context);
+		boolean success = false;
+		try {
+			CodecUtil.writeIndexHeader(out, CODEC_NAME, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
+			out.writeVInt(termIndexInterval);
+			out.writeVInt(PackedInts.VERSION_CURRENT);
+			out.writeVInt(BLOCKSIZE);
+			success = true;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(out);
+			}
+		}
+	}
 
-  private class SimpleFieldWriter extends FieldWriter {
-    final FieldInfo fieldInfo;
-    int numIndexTerms;
-    final long indexStart;
-    final long termsStart;
-    long packedIndexStart;
-    long packedOffsetsStart;
-    private long numTerms;
+	@Override
+	public FieldWriter addField(FieldInfo field, long termsFilePointer) {
+		//System.out.println("FGW: addFfield=" + field.name);
+		SimpleFieldWriter writer = new SimpleFieldWriter(field, termsFilePointer);
+		fields.add(writer);
+		return writer;
+	}
 
-    private RAMOutputStream offsetsBuffer = new RAMOutputStream();
-    private MonotonicBlockPackedWriter termOffsets = new MonotonicBlockPackedWriter(offsetsBuffer, BLOCKSIZE);
-    private long currentOffset;
+	/**
+	 * NOTE: if your codec does not sort in unicode code
+	 * point order, you must override this method, to simply
+	 * return indexedTerm.length.
+	 */
+	protected int indexedTermPrefixLength(final BytesRef priorTerm, final BytesRef indexedTerm) {
+		// As long as codec sorts terms in unicode codepoint
+		// order, we can safely strip off the non-distinguishing
+		// suffix to save RAM in the loaded terms index.
+		return StringHelper.sortKeyLength(priorTerm, indexedTerm);
+	}
 
-    private RAMOutputStream addressBuffer = new RAMOutputStream();
-    private MonotonicBlockPackedWriter termAddresses = new MonotonicBlockPackedWriter(addressBuffer, BLOCKSIZE);
+	private class SimpleFieldWriter extends FieldWriter {
+		final FieldInfo fieldInfo;
+		int numIndexTerms;
+		final long indexStart;
+		final long termsStart;
+		long packedIndexStart;
+		long packedOffsetsStart;
+		private long numTerms;
 
-    private final BytesRefBuilder lastTerm = new BytesRefBuilder();
+		private RAMOutputStream offsetsBuffer = new RAMOutputStream();
+		private MonotonicBlockPackedWriter termOffsets = new MonotonicBlockPackedWriter(offsetsBuffer, BLOCKSIZE);
+		private long currentOffset;
 
-    SimpleFieldWriter(FieldInfo fieldInfo, long termsFilePointer) {
-      this.fieldInfo = fieldInfo;
-      indexStart = out.getFilePointer();
-      termsStart = termsFilePointer;
-      // we write terms+1 offsets, term n's length is n+1 - n
-      try {
-        termOffsets.add(0L);
-      } catch (IOException bogus) {
-        throw new RuntimeException(bogus);
-      }
-    }
+		private RAMOutputStream addressBuffer = new RAMOutputStream();
+		private MonotonicBlockPackedWriter termAddresses = new MonotonicBlockPackedWriter(addressBuffer, BLOCKSIZE);
 
-    @Override
-    public boolean checkIndexTerm(BytesRef text, TermStats stats) throws IOException {
-      // First term is first indexed term:
-      //System.out.println("FGW: checkIndexTerm text=" + text.utf8ToString());
-      if (0 == (numTerms++ % termIndexInterval)) {
-        return true;
-      } else {
-        if (0 == numTerms % termIndexInterval) {
-          // save last term just before next index term so we
-          // can compute wasted suffix
-          lastTerm.copyBytes(text);
-        }
-        return false;
-      }
-    }
+		private final BytesRefBuilder lastTerm = new BytesRefBuilder();
 
-    @Override
-    public void add(BytesRef text, TermStats stats, long termsFilePointer) throws IOException {
-      final int indexedTermLength;
-      if (numIndexTerms == 0) {
-        // no previous term: no bytes to write
-        indexedTermLength = 0;
-      } else {
-        indexedTermLength = indexedTermPrefixLength(lastTerm.get(), text);
-      }
-      //System.out.println("FGW: add text=" + text.utf8ToString() + " " + text + " fp=" + termsFilePointer);
+		SimpleFieldWriter(FieldInfo fieldInfo, long termsFilePointer) {
+			this.fieldInfo = fieldInfo;
+			indexStart = out.getFilePointer();
+			termsStart = termsFilePointer;
+			// we write terms+1 offsets, term n's length is n+1 - n
+			try {
+				termOffsets.add(0L);
+			} catch (IOException bogus) {
+				throw new RuntimeException(bogus);
+			}
+		}
 
-      // write only the min prefix that shows the diff
-      // against prior term
-      out.writeBytes(text.bytes, text.offset, indexedTermLength);
+		@Override
+		public boolean checkIndexTerm(BytesRef text, TermStats stats) throws IOException {
+			// First term is first indexed term:
+			//System.out.println("FGW: checkIndexTerm text=" + text.utf8ToString());
+			if (0 == (numTerms++ % termIndexInterval)) {
+				return true;
+			} else {
+				if (0 == numTerms % termIndexInterval) {
+					// save last term just before next index term so we
+					// can compute wasted suffix
+					lastTerm.copyBytes(text);
+				}
+				return false;
+			}
+		}
 
-      // save delta terms pointer
-      termAddresses.add(termsFilePointer - termsStart);
+		@Override
+		public void add(BytesRef text, TermStats stats, long termsFilePointer) throws IOException {
+			final int indexedTermLength;
+			if (numIndexTerms == 0) {
+				// no previous term: no bytes to write
+				indexedTermLength = 0;
+			} else {
+				indexedTermLength = indexedTermPrefixLength(lastTerm.get(), text);
+			}
+			//System.out.println("FGW: add text=" + text.utf8ToString() + " " + text + " fp=" + termsFilePointer);
 
-      // save term length (in bytes)
-      assert indexedTermLength <= Short.MAX_VALUE;
-      currentOffset += indexedTermLength;
-      termOffsets.add(currentOffset);
+			// write only the min prefix that shows the diff
+			// against prior term
+			out.writeBytes(text.bytes, text.offset, indexedTermLength);
 
-      lastTerm.copyBytes(text);
-      numIndexTerms++;
-    }
+			// save delta terms pointer
+			termAddresses.add(termsFilePointer - termsStart);
 
-    @Override
-    public void finish(long termsFilePointer) throws IOException {
+			// save term length (in bytes)
+			assert indexedTermLength <= Short.MAX_VALUE;
+			currentOffset += indexedTermLength;
+			termOffsets.add(currentOffset);
 
-      // write primary terms dict offsets
-      packedIndexStart = out.getFilePointer();
+			lastTerm.copyBytes(text);
+			numIndexTerms++;
+		}
 
-      // relative to our indexStart
-      termAddresses.finish();
-      addressBuffer.writeTo(out);
+		@Override
+		public void finish(long termsFilePointer) throws IOException {
 
-      packedOffsetsStart = out.getFilePointer();
+			// write primary terms dict offsets
+			packedIndexStart = out.getFilePointer();
 
-      // write offsets into the byte[] terms
-      termOffsets.finish();
-      offsetsBuffer.writeTo(out);
+			// relative to our indexStart
+			termAddresses.finish();
+			addressBuffer.writeTo(out);
 
-      // our referrer holds onto us, while other fields are
-      // being written, so don't tie up this RAM:
-      termOffsets = termAddresses = null;
-      addressBuffer = offsetsBuffer = null;
-    }
-  }
+			packedOffsetsStart = out.getFilePointer();
 
-  @Override
-  public void close() throws IOException {
-    if (out != null) {
-      boolean success = false;
-      try {
-        final long dirStart = out.getFilePointer();
-        final int fieldCount = fields.size();
-        
-        int nonNullFieldCount = 0;
-        for(int i=0;i<fieldCount;i++) {
-          SimpleFieldWriter field = fields.get(i);
-          if (field.numIndexTerms > 0) {
-            nonNullFieldCount++;
-          }
-        }
-        
-        out.writeVInt(nonNullFieldCount);
-        for(int i=0;i<fieldCount;i++) {
-          SimpleFieldWriter field = fields.get(i);
-          if (field.numIndexTerms > 0) {
-            out.writeVInt(field.fieldInfo.number);
-            out.writeVInt(field.numIndexTerms);
-            out.writeVLong(field.termsStart);
-            out.writeVLong(field.indexStart);
-            out.writeVLong(field.packedIndexStart);
-            out.writeVLong(field.packedOffsetsStart);
-          }
-        }
-        writeTrailer(dirStart);
-        CodecUtil.writeFooter(out);
-        success = true;
-      } finally {
-        if (success) {
-          IOUtils.close(out);
-        } else {
-          IOUtils.closeWhileHandlingException(out);
-        }
-        out = null;
-      }
-    }
-  }
+			// write offsets into the byte[] terms
+			termOffsets.finish();
+			offsetsBuffer.writeTo(out);
 
-  private void writeTrailer(long dirStart) throws IOException {
-    out.writeLong(dirStart);
-  }
+			// our referrer holds onto us, while other fields are
+			// being written, so don't tie up this RAM:
+			termOffsets = termAddresses = null;
+			addressBuffer = offsetsBuffer = null;
+		}
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (out != null) {
+			boolean success = false;
+			try {
+				final long dirStart = out.getFilePointer();
+				final int fieldCount = fields.size();
+
+				int nonNullFieldCount = 0;
+				for (int i = 0; i < fieldCount; i++) {
+					SimpleFieldWriter field = fields.get(i);
+					if (field.numIndexTerms > 0) {
+						nonNullFieldCount++;
+					}
+				}
+
+				out.writeVInt(nonNullFieldCount);
+				for (int i = 0; i < fieldCount; i++) {
+					SimpleFieldWriter field = fields.get(i);
+					if (field.numIndexTerms > 0) {
+						out.writeVInt(field.fieldInfo.number);
+						out.writeVInt(field.numIndexTerms);
+						out.writeVLong(field.termsStart);
+						out.writeVLong(field.indexStart);
+						out.writeVLong(field.packedIndexStart);
+						out.writeVLong(field.packedOffsetsStart);
+					}
+				}
+				writeTrailer(dirStart);
+				CodecUtil.writeFooter(out);
+				success = true;
+			} finally {
+				if (success) {
+					IOUtils.close(out);
+				} else {
+					IOUtils.closeWhileHandlingException(out);
+				}
+				out = null;
+			}
+		}
+	}
+
+	private void writeTrailer(long dirStart) throws IOException {
+		out.writeLong(dirStart);
+	}
 }

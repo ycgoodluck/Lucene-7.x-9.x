@@ -22,20 +22,20 @@ import java.util.BitSet;
 
 public class TestRoaringDocIdSet extends BaseDocIdSetTestCase<RoaringDocIdSet> {
 
-  @Override
-  public RoaringDocIdSet copyOf(BitSet bs, int length) throws IOException {
-    final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(length);
-    for (int i = bs.nextSetBit(0); i != -1; i = bs.nextSetBit(i + 1)) {
-      builder.add(i);
-    }
-    return builder.build();
-  }
+	@Override
+	public RoaringDocIdSet copyOf(BitSet bs, int length) throws IOException {
+		final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(length);
+		for (int i = bs.nextSetBit(0); i != -1; i = bs.nextSetBit(i + 1)) {
+			builder.add(i);
+		}
+		return builder.build();
+	}
 
-  @Override
-  public void assertEquals(int numBits, BitSet ds1, RoaringDocIdSet ds2)
-      throws IOException {
-    super.assertEquals(numBits, ds1, ds2);
-    assertEquals(ds1.cardinality(), ds2.cardinality());
-  }
+	@Override
+	public void assertEquals(int numBits, BitSet ds1, RoaringDocIdSet ds2)
+		throws IOException {
+		super.assertEquals(numBits, ds1, ds2);
+		assertEquals(ds1.cardinality(), ds2.cardinality());
+	}
 
 }

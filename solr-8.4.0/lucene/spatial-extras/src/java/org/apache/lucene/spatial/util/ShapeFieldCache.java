@@ -31,24 +31,24 @@ import java.util.List;
  * @lucene.internal
  */
 public class ShapeFieldCache<T extends Shape> {
-  private final List<T>[] cache;
-  public final int defaultLength;
+	private final List<T>[] cache;
+	public final int defaultLength;
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  public ShapeFieldCache( int length, int defaultLength ) {
-    cache = new List[length];
-    this.defaultLength= defaultLength;
-  }
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public ShapeFieldCache(int length, int defaultLength) {
+		cache = new List[length];
+		this.defaultLength = defaultLength;
+	}
 
-  public void add( int docid, T s ) {
-    List<T> list = cache[docid];
-    if( list == null ) {
-      list = cache[docid] = new ArrayList<>(defaultLength);
-    }
-    list.add( s );
-  }
+	public void add(int docid, T s) {
+		List<T> list = cache[docid];
+		if (list == null) {
+			list = cache[docid] = new ArrayList<>(defaultLength);
+		}
+		list.add(s);
+	}
 
-  public List<T> getShapes( int docid ) {
-    return cache[docid];
-  }
+	public List<T> getShapes(int docid) {
+		return cache[docid];
+	}
 }

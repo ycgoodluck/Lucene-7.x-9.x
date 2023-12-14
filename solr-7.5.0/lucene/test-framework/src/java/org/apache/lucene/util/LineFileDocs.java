@@ -44,231 +44,237 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexableField;
 
-/** Minimal port of benchmark's LneDocSource +
+/**
+ * Minimal port of benchmark's LneDocSource +
  * DocMaker, so tests can enum docs from a line file created
- * by benchmark's WriteLineDoc task */
+ * by benchmark's WriteLineDoc task
+ */
 public class LineFileDocs implements Closeable {
 
-  private BufferedReader reader;
-  private final static int BUFFER_SIZE = 1 << 16;     // 64K
-  private final AtomicInteger id = new AtomicInteger();
-  private final String path;
-  private final Random random;
+	private BufferedReader reader;
+	private final static int BUFFER_SIZE = 1 << 16;     // 64K
+	private final AtomicInteger id = new AtomicInteger();
+	private final String path;
+	private final Random random;
 
-  /** If forever is true, we rewind the file at EOF (repeat
-   * the docs over and over) */
-  public LineFileDocs(Random random, String path) throws IOException {
-    this.path = path;
-    this.random = new Random(random.nextLong());
-    open(random);
-  }
+	/**
+	 * If forever is true, we rewind the file at EOF (repeat
+	 * the docs over and over)
+	 */
+	public LineFileDocs(Random random, String path) throws IOException {
+		this.path = path;
+		this.random = new Random(random.nextLong());
+		open(random);
+	}
 
-  public LineFileDocs(Random random) throws IOException {
-    this(random, LuceneTestCase.TEST_LINE_DOCS_FILE);
-  }
+	public LineFileDocs(Random random) throws IOException {
+		this(random, LuceneTestCase.TEST_LINE_DOCS_FILE);
+	}
 
-  @Override
-  public synchronized void close() throws IOException {
-    IOUtils.close(reader, threadDocs);
-    reader = null;
-  }
-  
-  private long randomSeekPos(Random random, long size) {
-    if (random == null || size <= 3L)
-      return 0L;
-    return (random.nextLong()&Long.MAX_VALUE) % (size/3);
-  }
+	@Override
+	public synchronized void close() throws IOException {
+		IOUtils.close(reader, threadDocs);
+		reader = null;
+	}
 
-  private synchronized void open(Random random) throws IOException {
-    InputStream is = getClass().getResourceAsStream(path);
-    boolean needSkip = true;
-    long size = 0L, seekTo = 0L;
-    if (is == null) {
-      // if it's not in classpath, we load it as absolute filesystem path (e.g. Hudson's home dir)
-      Path file = Paths.get(path);
-      size = Files.size(file);
-      if (path.endsWith(".gz")) {
-        // if it is a gzip file, we need to use InputStream and slowly skipTo:
-        is = Files.newInputStream(file);
-      } else {
-        // optimized seek using SeekableByteChannel
-        seekTo = randomSeekPos(random, size);
-        final SeekableByteChannel channel = Files.newByteChannel(file);
-        if (LuceneTestCase.VERBOSE) {
-          System.out.println("TEST: LineFileDocs: file seek to fp=" + seekTo + " on open");
-        }
-        channel.position(seekTo);
-        is = Channels.newInputStream(channel);
-        needSkip = false;
-      }
-    } else {
-      // if the file comes from Classpath:
-      size = is.available();
-    }
-    
-    if (path.endsWith(".gz")) {
-      is = new GZIPInputStream(is);
-      // guestimate:
-      size *= 2.8;
-    }
-    
-    // If we only have an InputStream, we need to seek now,
-    // but this seek is a scan, so very inefficient!!!
-    if (needSkip) {
-      seekTo = randomSeekPos(random, size);
-      if (LuceneTestCase.VERBOSE) {
-        System.out.println("TEST: LineFileDocs: stream skip to fp=" + seekTo + " on open");
-      }
-      is.skip(seekTo);
-    }
-    
-    // if we seeked somewhere, read until newline char
-    if (seekTo > 0L) {
-      int b;
-      do {
-        b = is.read();
-      } while (b >= 0 && b != 13 && b != 10);
-    }
-    
-    CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
-        .onMalformedInput(CodingErrorAction.REPORT)
-        .onUnmappableCharacter(CodingErrorAction.REPORT);
-    reader = new BufferedReader(new InputStreamReader(is, decoder), BUFFER_SIZE);
-    
-    if (seekTo > 0L) {
-      // read one more line, to make sure we are not inside a Windows linebreak (\r\n):
-      reader.readLine();
-    }
-  }
+	private long randomSeekPos(Random random, long size) {
+		if (random == null || size <= 3L)
+			return 0L;
+		return (random.nextLong() & Long.MAX_VALUE) % (size / 3);
+	}
 
-  public synchronized void reset(Random random) throws IOException {
-    reader.close();
-    reader = null;
-    open(random);
-    id.set(0);
-  }
+	private synchronized void open(Random random) throws IOException {
+		InputStream is = getClass().getResourceAsStream(path);
+		boolean needSkip = true;
+		long size = 0L, seekTo = 0L;
+		if (is == null) {
+			// if it's not in classpath, we load it as absolute filesystem path (e.g. Hudson's home dir)
+			Path file = Paths.get(path);
+			size = Files.size(file);
+			if (path.endsWith(".gz")) {
+				// if it is a gzip file, we need to use InputStream and slowly skipTo:
+				is = Files.newInputStream(file);
+			} else {
+				// optimized seek using SeekableByteChannel
+				seekTo = randomSeekPos(random, size);
+				final SeekableByteChannel channel = Files.newByteChannel(file);
+				if (LuceneTestCase.VERBOSE) {
+					System.out.println("TEST: LineFileDocs: file seek to fp=" + seekTo + " on open");
+				}
+				channel.position(seekTo);
+				is = Channels.newInputStream(channel);
+				needSkip = false;
+			}
+		} else {
+			// if the file comes from Classpath:
+			size = is.available();
+		}
 
-  private final static char SEP = '\t';
+		if (path.endsWith(".gz")) {
+			is = new GZIPInputStream(is);
+			// guestimate:
+			size *= 2.8;
+		}
 
-  private static final class DocState {
-    final Document doc;
-    final Field titleTokenized;
-    final Field title;
-    final Field titleDV;
-    final Field body;
-    final Field id;
-    final Field idNum;
-    final Field idNumDV;
-    final Field date;
+		// If we only have an InputStream, we need to seek now,
+		// but this seek is a scan, so very inefficient!!!
+		if (needSkip) {
+			seekTo = randomSeekPos(random, size);
+			if (LuceneTestCase.VERBOSE) {
+				System.out.println("TEST: LineFileDocs: stream skip to fp=" + seekTo + " on open");
+			}
+			is.skip(seekTo);
+		}
 
-    public DocState() {
-      doc = new Document();
-      
-      title = new StringField("title", "", Field.Store.NO);
-      doc.add(title);
+		// if we seeked somewhere, read until newline char
+		if (seekTo > 0L) {
+			int b;
+			do {
+				b = is.read();
+			} while (b >= 0 && b != 13 && b != 10);
+		}
 
-      FieldType ft = new FieldType(TextField.TYPE_STORED);
-      ft.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
-      ft.setStoreTermVectors(true);
-      ft.setStoreTermVectorOffsets(true);
-      ft.setStoreTermVectorPositions(true);
-      
-      titleTokenized = new Field("titleTokenized", "", ft);
-      doc.add(titleTokenized);
+		CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+			.onMalformedInput(CodingErrorAction.REPORT)
+			.onUnmappableCharacter(CodingErrorAction.REPORT);
+		reader = new BufferedReader(new InputStreamReader(is, decoder), BUFFER_SIZE);
 
-      body = new Field("body", "", ft);
-      doc.add(body);
+		if (seekTo > 0L) {
+			// read one more line, to make sure we are not inside a Windows linebreak (\r\n):
+			reader.readLine();
+		}
+	}
 
-      id = new StringField("docid", "", Field.Store.YES);
-      doc.add(id);
+	public synchronized void reset(Random random) throws IOException {
+		reader.close();
+		reader = null;
+		open(random);
+		id.set(0);
+	}
 
-      idNum = new IntPoint("docid_int", 0);
-      doc.add(idNum);
+	private final static char SEP = '\t';
 
-      date = new StringField("date", "", Field.Store.YES);
-      doc.add(date);
+	private static final class DocState {
+		final Document doc;
+		final Field titleTokenized;
+		final Field title;
+		final Field titleDV;
+		final Field body;
+		final Field id;
+		final Field idNum;
+		final Field idNumDV;
+		final Field date;
 
-      titleDV = new SortedDocValuesField("titleDV", new BytesRef());
-      idNumDV = new NumericDocValuesField("docid_intDV", 0);
-      doc.add(titleDV);
-      doc.add(idNumDV);
-    }
-  }
+		public DocState() {
+			doc = new Document();
 
-  private final CloseableThreadLocal<DocState> threadDocs = new CloseableThreadLocal<>();
+			title = new StringField("title", "", Field.Store.NO);
+			doc.add(title);
 
-  /** Note: Document instance is re-used per-thread */
-  public Document nextDoc() throws IOException {
-    String line;
-    synchronized(this) {
-      line = reader.readLine();
-      if (line == null) {
-        // Always rewind at end:
-        if (LuceneTestCase.VERBOSE) {
-          System.out.println("TEST: LineFileDocs: now rewind file...");
-        }
-        reader.close();
-        reader = null;
-        open(null);
-        line = reader.readLine();
-      }
-    }
+			FieldType ft = new FieldType(TextField.TYPE_STORED);
+			ft.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+			ft.setStoreTermVectors(true);
+			ft.setStoreTermVectorOffsets(true);
+			ft.setStoreTermVectorPositions(true);
 
-    DocState docState = threadDocs.get();
-    if (docState == null) {
-      docState = new DocState();
-      threadDocs.set(docState);
-    }
+			titleTokenized = new Field("titleTokenized", "", ft);
+			doc.add(titleTokenized);
 
-    int spot = line.indexOf(SEP);
-    if (spot == -1) {
-      throw new RuntimeException("line: [" + line + "] is in an invalid format !");
-    }
-    int spot2 = line.indexOf(SEP, 1 + spot);
-    if (spot2 == -1) {
-      throw new RuntimeException("line: [" + line + "] is in an invalid format !");
-    }
+			body = new Field("body", "", ft);
+			doc.add(body);
 
-    docState.body.setStringValue(line.substring(1+spot2, line.length()));
-    final String title = line.substring(0, spot);
-    docState.title.setStringValue(title);
-    if (docState.titleDV != null) {
-      docState.titleDV.setBytesValue(new BytesRef(title));
-    }
-    docState.titleTokenized.setStringValue(title);
-    docState.date.setStringValue(line.substring(1+spot, spot2));
-    final int i = id.getAndIncrement();
-    docState.id.setStringValue(Integer.toString(i));
-    docState.idNum.setIntValue(i);
-    if (docState.idNumDV != null) {
-      docState.idNumDV.setLongValue(i);
-    }
+			id = new StringField("docid", "", Field.Store.YES);
+			doc.add(id);
 
-    if (random.nextInt(5) == 4) {
-      // Make some sparse fields
-      Document doc = new Document();
-      for(IndexableField field : docState.doc) {
-        doc.add(field);
-      }
+			idNum = new IntPoint("docid_int", 0);
+			doc.add(idNum);
 
-      if (random.nextInt(3) == 1) {
-        int x = random.nextInt(4);
-        doc.add(new IntPoint("docLength" + x, line.length()));
-      }
+			date = new StringField("date", "", Field.Store.YES);
+			doc.add(date);
 
-      if (random.nextInt(3) == 1) {
-        int x = random.nextInt(4);
-        doc.add(new IntPoint("docTitleLength" + x, title.length()));
-      }
+			titleDV = new SortedDocValuesField("titleDV", new BytesRef());
+			idNumDV = new NumericDocValuesField("docid_intDV", 0);
+			doc.add(titleDV);
+			doc.add(idNumDV);
+		}
+	}
 
-      if (random.nextInt(3) == 1) {
-        int x = random.nextInt(4);
-        doc.add(new NumericDocValuesField("docLength" + x, line.length()));
-      }
+	private final CloseableThreadLocal<DocState> threadDocs = new CloseableThreadLocal<>();
 
-      // TODO: more random sparse fields here too
-    }
+	/**
+	 * Note: Document instance is re-used per-thread
+	 */
+	public Document nextDoc() throws IOException {
+		String line;
+		synchronized (this) {
+			line = reader.readLine();
+			if (line == null) {
+				// Always rewind at end:
+				if (LuceneTestCase.VERBOSE) {
+					System.out.println("TEST: LineFileDocs: now rewind file...");
+				}
+				reader.close();
+				reader = null;
+				open(null);
+				line = reader.readLine();
+			}
+		}
 
-    return docState.doc;
-  }
+		DocState docState = threadDocs.get();
+		if (docState == null) {
+			docState = new DocState();
+			threadDocs.set(docState);
+		}
+
+		int spot = line.indexOf(SEP);
+		if (spot == -1) {
+			throw new RuntimeException("line: [" + line + "] is in an invalid format !");
+		}
+		int spot2 = line.indexOf(SEP, 1 + spot);
+		if (spot2 == -1) {
+			throw new RuntimeException("line: [" + line + "] is in an invalid format !");
+		}
+
+		docState.body.setStringValue(line.substring(1 + spot2, line.length()));
+		final String title = line.substring(0, spot);
+		docState.title.setStringValue(title);
+		if (docState.titleDV != null) {
+			docState.titleDV.setBytesValue(new BytesRef(title));
+		}
+		docState.titleTokenized.setStringValue(title);
+		docState.date.setStringValue(line.substring(1 + spot, spot2));
+		final int i = id.getAndIncrement();
+		docState.id.setStringValue(Integer.toString(i));
+		docState.idNum.setIntValue(i);
+		if (docState.idNumDV != null) {
+			docState.idNumDV.setLongValue(i);
+		}
+
+		if (random.nextInt(5) == 4) {
+			// Make some sparse fields
+			Document doc = new Document();
+			for (IndexableField field : docState.doc) {
+				doc.add(field);
+			}
+
+			if (random.nextInt(3) == 1) {
+				int x = random.nextInt(4);
+				doc.add(new IntPoint("docLength" + x, line.length()));
+			}
+
+			if (random.nextInt(3) == 1) {
+				int x = random.nextInt(4);
+				doc.add(new IntPoint("docTitleLength" + x, title.length()));
+			}
+
+			if (random.nextInt(3) == 1) {
+				int x = random.nextInt(4);
+				doc.add(new NumericDocValuesField("docLength" + x, line.length()));
+			}
+
+			// TODO: more random sparse fields here too
+		}
+
+		return docState.doc;
+	}
 }

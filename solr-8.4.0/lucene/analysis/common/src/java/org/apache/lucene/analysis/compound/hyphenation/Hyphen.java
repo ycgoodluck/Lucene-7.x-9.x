@@ -25,43 +25,43 @@ package org.apache.lucene.analysis.compound.hyphenation;
  * cases in some languages where words change spelling if they're split across
  * lines, like german's 'backen' which hyphenates 'bak-ken'. BTW, this comes
  * from TeX.
- * 
- * This class has been taken from the Apache FOP project (http://xmlgraphics.apache.org/fop/). They have been slightly modified. 
+ * <p>
+ * This class has been taken from the Apache FOP project (http://xmlgraphics.apache.org/fop/). They have been slightly modified.
  */
 
 public class Hyphen {
-  public String preBreak;
+	public String preBreak;
 
-  public String noBreak;
+	public String noBreak;
 
-  public String postBreak;
+	public String postBreak;
 
-  Hyphen(String pre, String no, String post) {
-    preBreak = pre;
-    noBreak = no;
-    postBreak = post;
-  }
+	Hyphen(String pre, String no, String post) {
+		preBreak = pre;
+		noBreak = no;
+		postBreak = post;
+	}
 
-  Hyphen(String pre) {
-    preBreak = pre;
-    noBreak = null;
-    postBreak = null;
-  }
+	Hyphen(String pre) {
+		preBreak = pre;
+		noBreak = null;
+		postBreak = null;
+	}
 
-  @Override
-  public String toString() {
-    if (noBreak == null && postBreak == null && preBreak != null
-        && preBreak.equals("-")) {
-      return "-";
-    }
-    StringBuilder res = new StringBuilder("{");
-    res.append(preBreak);
-    res.append("}{");
-    res.append(postBreak);
-    res.append("}{");
-    res.append(noBreak);
-    res.append('}');
-    return res.toString();
-  }
+	@Override
+	public String toString() {
+		if (noBreak == null && postBreak == null && preBreak != null
+			&& preBreak.equals("-")) {
+			return "-";
+		}
+		StringBuilder res = new StringBuilder("{");
+		res.append(preBreak);
+		res.append("}{");
+		res.append(postBreak);
+		res.append("}{");
+		res.append(noBreak);
+		res.append('}');
+		return res.toString();
+	}
 
 }

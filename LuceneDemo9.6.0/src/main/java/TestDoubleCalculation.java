@@ -6,7 +6,7 @@ import org.apache.lucene.util.NumericUtils;
 
 public class TestDoubleCalculation {
 
-    public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception {
 
 //        int aInt = 4;
 //        int maxInt = Integer.MAX_VALUE;
@@ -85,27 +85,27 @@ public class TestDoubleCalculation {
 //        System.out.println("double less result: "+DoublePoint.decodeDimension(subtractResult, 0)+"");
 //        System.out.println("------------------------");
 
-        int maxInt = Integer.MAX_VALUE;
-        int minInt = Integer.MIN_VALUE;
-        byte[] maxIntByte = new byte[Integer.BYTES];
-        byte[] minIntByte = new byte[Integer.BYTES];
-        IntPoint.encodeDimension(maxInt, maxIntByte, 0);
-        IntPoint.encodeDimension(minInt, minIntByte, 0);
-        System.out.println("------------------------");
+		int maxInt = Integer.MAX_VALUE;
+		int minInt = Integer.MIN_VALUE;
+		byte[] maxIntByte = new byte[Integer.BYTES];
+		byte[] minIntByte = new byte[Integer.BYTES];
+		IntPoint.encodeDimension(maxInt, maxIntByte, 0);
+		IntPoint.encodeDimension(minInt, minIntByte, 0);
+		System.out.println("------------------------");
 
-        float maxFloat = Float.MAX_VALUE;
-        float minFloat = Float.MIN_VALUE;
-        byte[] maxFloatByte = new byte[Float.BYTES];
-        byte[] minFloatByte = new byte[Float.BYTES];
-        FloatPoint.encodeDimension(maxFloat, maxFloatByte, 0);
-        FloatPoint.encodeDimension(minFloat, minFloatByte, 0);
+		float maxFloat = Float.MAX_VALUE;
+		float minFloat = Float.MIN_VALUE;
+		byte[] maxFloatByte = new byte[Float.BYTES];
+		byte[] minFloatByte = new byte[Float.BYTES];
+		FloatPoint.encodeDimension(maxFloat, maxFloatByte, 0);
+		FloatPoint.encodeDimension(minFloat, minFloatByte, 0);
 
-        float floatA = FloatPoint.decodeDimension(maxFloatByte, 0);
-        float floatB = floatA + 0.1f;
+		float floatA = FloatPoint.decodeDimension(maxFloatByte, 0);
+		float floatB = floatA + 0.1f;
 
-        int a = 100;
+		int a = 100;
 
 
-        System.out.println("abc");
-    }
+		System.out.println("abc");
+	}
 }

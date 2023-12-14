@@ -21,9 +21,9 @@ import java.util.Collections;
 
 public class TestFieldFilteredMultipassPresearcher extends FieldFilterPresearcherComponentTestBase {
 
-  @Override
-  protected Presearcher createPresearcher() {
-    return new MultipassTermFilteredPresearcher(2, 0, TermWeightor.DEFAULT,
-        Collections.emptyList(), Collections.singleton("language"));
-  }
+	@Override
+	protected Presearcher createPresearcher() {
+		return new MultipassTermFilteredPresearcher(2, 0, TermWeightor.DEFAULT,
+			Collections.emptyList(), Collections.singleton("language"));
+	}
 }

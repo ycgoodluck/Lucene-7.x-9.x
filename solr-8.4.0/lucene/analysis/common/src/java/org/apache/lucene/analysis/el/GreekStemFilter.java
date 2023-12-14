@@ -35,29 +35,30 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  * </p>
  * <p>
  * NOTE: Input is expected to be casefolded for Greek (including folding of final
- * sigma to sigma), and with diacritics removed. This can be achieved by using 
+ * sigma to sigma), and with diacritics removed. This can be achieved by using
  * either {@link GreekLowerCaseFilter} or ICUFoldingFilter before GreekStemFilter.
+ *
  * @lucene.experimental
  */
 public final class GreekStemFilter extends TokenFilter {
-  private final GreekStemmer stemmer = new GreekStemmer();
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
-  
-  public GreekStemFilter(TokenStream input) {
-    super(input);
-  }
-  
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if(!keywordAttr.isKeyword()) {
-        final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
-        termAtt.setLength(newlen);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	private final GreekStemmer stemmer = new GreekStemmer();
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+
+	public GreekStemFilter(TokenStream input) {
+		super(input);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
+				termAtt.setLength(newlen);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

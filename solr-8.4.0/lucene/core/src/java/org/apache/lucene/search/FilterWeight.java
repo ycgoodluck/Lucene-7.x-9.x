@@ -25,7 +25,7 @@ import org.apache.lucene.index.Term;
 /**
  * A {@code FilterWeight} contains another {@code Weight} and implements
  * all abstract methods by calling the contained weight's method.
- *
+ * <p>
  * Note that {@code FilterWeight} does not override the non-abstract
  * {@link Weight#bulkScorer(LeafReaderContext)} method and subclasses of
  * {@code FilterWeight} must provide their bulkScorer implementation
@@ -35,48 +35,48 @@ import org.apache.lucene.index.Term;
  */
 public abstract class FilterWeight extends Weight {
 
-  final protected Weight in;
+	final protected Weight in;
 
-  /**
-   * Default constructor.
-   */
-  protected FilterWeight(Weight weight) {
-    this(weight.getQuery(), weight);
-  }
+	/**
+	 * Default constructor.
+	 */
+	protected FilterWeight(Weight weight) {
+		this(weight.getQuery(), weight);
+	}
 
-  /**
-   * Alternative constructor.
-   * Use this variant only if the <code>weight</code> was not obtained
-   * via the {@link Query#createWeight(IndexSearcher, ScoreMode, float)}
-   * method of the <code>query</code> object.
-   */
-  protected FilterWeight(Query query, Weight weight) {
-    super(query);
-    this.in = weight;
-  }
+	/**
+	 * Alternative constructor.
+	 * Use this variant only if the <code>weight</code> was not obtained
+	 * via the {@link Query#createWeight(IndexSearcher, ScoreMode, float)}
+	 * method of the <code>query</code> object.
+	 */
+	protected FilterWeight(Query query, Weight weight) {
+		super(query);
+		this.in = weight;
+	}
 
-  @Override
-  public boolean isCacheable(LeafReaderContext ctx) {
-    return in.isCacheable(ctx);
-  }
+	@Override
+	public boolean isCacheable(LeafReaderContext ctx) {
+		return in.isCacheable(ctx);
+	}
 
-  @Override
-  public void extractTerms(Set<Term> terms) {
-    in.extractTerms(terms);
-  }
+	@Override
+	public void extractTerms(Set<Term> terms) {
+		in.extractTerms(terms);
+	}
 
-  @Override
-  public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-    return in.explain(context, doc);
-  }
+	@Override
+	public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+		return in.explain(context, doc);
+	}
 
-  @Override
-  public Scorer scorer(LeafReaderContext context) throws IOException {
-    return in.scorer(context);
-  }
+	@Override
+	public Scorer scorer(LeafReaderContext context) throws IOException {
+		return in.scorer(context);
+	}
 
-  @Override
-  public Matches matches(LeafReaderContext context, int doc) throws IOException {
-    return in.matches(context, doc);
-  }
+	@Override
+	public Matches matches(LeafReaderContext context, int doc) throws IOException {
+		return in.matches(context, doc);
+	}
 }

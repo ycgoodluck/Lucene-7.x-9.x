@@ -22,10 +22,10 @@ import org.apache.lucene.index.BaseCompoundFormatTestCase;
 import org.apache.lucene.util.TestUtil;
 
 public class TestLucene50CompoundFormat extends BaseCompoundFormatTestCase {
-  private final Codec codec = TestUtil.getDefaultCodec();
-  
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	private final Codec codec = TestUtil.getDefaultCodec();
+
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

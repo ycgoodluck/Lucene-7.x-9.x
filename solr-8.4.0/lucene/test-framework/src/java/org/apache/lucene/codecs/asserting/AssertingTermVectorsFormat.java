@@ -37,178 +37,178 @@ import org.apache.lucene.util.TestUtil;
  * Just like the default vectors format but with additional asserts.
  */
 public class AssertingTermVectorsFormat extends TermVectorsFormat {
-  private final TermVectorsFormat in = TestUtil.getDefaultCodec().termVectorsFormat();
+	private final TermVectorsFormat in = TestUtil.getDefaultCodec().termVectorsFormat();
 
-  @Override
-  public TermVectorsReader vectorsReader(Directory directory, SegmentInfo segmentInfo, FieldInfos fieldInfos, IOContext context) throws IOException {
-    return new AssertingTermVectorsReader(in.vectorsReader(directory, segmentInfo, fieldInfos, context));
-  }
+	@Override
+	public TermVectorsReader vectorsReader(Directory directory, SegmentInfo segmentInfo, FieldInfos fieldInfos, IOContext context) throws IOException {
+		return new AssertingTermVectorsReader(in.vectorsReader(directory, segmentInfo, fieldInfos, context));
+	}
 
-  @Override
-  public TermVectorsWriter vectorsWriter(Directory directory, SegmentInfo segmentInfo, IOContext context) throws IOException {
-    return new AssertingTermVectorsWriter(in.vectorsWriter(directory, segmentInfo, context));
-  }
+	@Override
+	public TermVectorsWriter vectorsWriter(Directory directory, SegmentInfo segmentInfo, IOContext context) throws IOException {
+		return new AssertingTermVectorsWriter(in.vectorsWriter(directory, segmentInfo, context));
+	}
 
-  static class AssertingTermVectorsReader extends TermVectorsReader {
-    private final TermVectorsReader in;
+	static class AssertingTermVectorsReader extends TermVectorsReader {
+		private final TermVectorsReader in;
 
-    AssertingTermVectorsReader(TermVectorsReader in) {
-      this.in = in;
-      // do a few simple checks on init
-      assert toString() != null;
-      assert ramBytesUsed() >= 0;
-      assert getChildResources() != null;
-    }
+		AssertingTermVectorsReader(TermVectorsReader in) {
+			this.in = in;
+			// do a few simple checks on init
+			assert toString() != null;
+			assert ramBytesUsed() >= 0;
+			assert getChildResources() != null;
+		}
 
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
 
-    @Override
-    public Fields get(int doc) throws IOException {
-      Fields fields = in.get(doc);
-      return fields == null ? null : new AssertingLeafReader.AssertingFields(fields);
-    }
+		@Override
+		public Fields get(int doc) throws IOException {
+			Fields fields = in.get(doc);
+			return fields == null ? null : new AssertingLeafReader.AssertingFields(fields);
+		}
 
-    @Override
-    public TermVectorsReader clone() {
-      return new AssertingTermVectorsReader(in.clone());
-    }
+		@Override
+		public TermVectorsReader clone() {
+			return new AssertingTermVectorsReader(in.clone());
+		}
 
-    @Override
-    public long ramBytesUsed() {
-      long v = in.ramBytesUsed();
-      assert v >= 0;
-      return v;
-    }
-    
-    @Override
-    public Collection<Accountable> getChildResources() {
-      Collection<Accountable> res = in.getChildResources();
-      TestUtil.checkReadOnly(res);
-      return res;
-    }
+		@Override
+		public long ramBytesUsed() {
+			long v = in.ramBytesUsed();
+			assert v >= 0;
+			return v;
+		}
 
-    @Override
-    public void checkIntegrity() throws IOException {
-      in.checkIntegrity();
-    }
-    
-    @Override
-    public TermVectorsReader getMergeInstance() {
-      return new AssertingTermVectorsReader(in.getMergeInstance());
-    }
+		@Override
+		public Collection<Accountable> getChildResources() {
+			Collection<Accountable> res = in.getChildResources();
+			TestUtil.checkReadOnly(res);
+			return res;
+		}
 
-    @Override
-    public String toString() {
-      return getClass().getSimpleName() + "(" + in.toString() + ")";
-    }
-  }
+		@Override
+		public void checkIntegrity() throws IOException {
+			in.checkIntegrity();
+		}
 
-  enum Status {
-    UNDEFINED, STARTED, FINISHED;
-  }
+		@Override
+		public TermVectorsReader getMergeInstance() {
+			return new AssertingTermVectorsReader(in.getMergeInstance());
+		}
 
-  static class AssertingTermVectorsWriter extends TermVectorsWriter {
-    private final TermVectorsWriter in;
-    private Status docStatus, fieldStatus, termStatus;
-    private int docCount, fieldCount, termCount, positionCount;
-    boolean hasPositions;
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + "(" + in.toString() + ")";
+		}
+	}
 
-    AssertingTermVectorsWriter(TermVectorsWriter in) {
-      this.in = in;
-      docStatus = Status.UNDEFINED;
-      fieldStatus = Status.UNDEFINED;
-      termStatus = Status.UNDEFINED;
-      fieldCount = termCount = positionCount = 0;
-    }
+	enum Status {
+		UNDEFINED, STARTED, FINISHED;
+	}
 
-    @Override
-    public void startDocument(int numVectorFields) throws IOException {
-      assert fieldCount == 0;
-      assert docStatus != Status.STARTED;
-      in.startDocument(numVectorFields);
-      docStatus = Status.STARTED;
-      fieldCount = numVectorFields;
-      docCount++;
-    }
+	static class AssertingTermVectorsWriter extends TermVectorsWriter {
+		private final TermVectorsWriter in;
+		private Status docStatus, fieldStatus, termStatus;
+		private int docCount, fieldCount, termCount, positionCount;
+		boolean hasPositions;
 
-    @Override
-    public void finishDocument() throws IOException {
-      assert fieldCount == 0;
-      assert docStatus == Status.STARTED;
-      in.finishDocument();
-      docStatus = Status.FINISHED;
-    }
+		AssertingTermVectorsWriter(TermVectorsWriter in) {
+			this.in = in;
+			docStatus = Status.UNDEFINED;
+			fieldStatus = Status.UNDEFINED;
+			termStatus = Status.UNDEFINED;
+			fieldCount = termCount = positionCount = 0;
+		}
 
-    @Override
-    public void startField(FieldInfo info, int numTerms, boolean positions,
-        boolean offsets, boolean payloads) throws IOException {
-      assert termCount == 0;
-      assert docStatus == Status.STARTED;
-      assert fieldStatus != Status.STARTED;
-      in.startField(info, numTerms, positions, offsets, payloads);
-      fieldStatus = Status.STARTED;
-      termCount = numTerms;
-      hasPositions = positions || offsets || payloads;
-    }
+		@Override
+		public void startDocument(int numVectorFields) throws IOException {
+			assert fieldCount == 0;
+			assert docStatus != Status.STARTED;
+			in.startDocument(numVectorFields);
+			docStatus = Status.STARTED;
+			fieldCount = numVectorFields;
+			docCount++;
+		}
 
-    @Override
-    public void finishField() throws IOException {
-      assert termCount == 0;
-      assert fieldStatus == Status.STARTED;
-      in.finishField();
-      fieldStatus = Status.FINISHED;
-      --fieldCount;
-    }
+		@Override
+		public void finishDocument() throws IOException {
+			assert fieldCount == 0;
+			assert docStatus == Status.STARTED;
+			in.finishDocument();
+			docStatus = Status.FINISHED;
+		}
 
-    @Override
-    public void startTerm(BytesRef term, int freq) throws IOException {
-      assert docStatus == Status.STARTED;
-      assert fieldStatus == Status.STARTED;
-      assert termStatus != Status.STARTED;
-      in.startTerm(term, freq);
-      termStatus = Status.STARTED;
-      positionCount = hasPositions ? freq : 0;
-    }
+		@Override
+		public void startField(FieldInfo info, int numTerms, boolean positions,
+													 boolean offsets, boolean payloads) throws IOException {
+			assert termCount == 0;
+			assert docStatus == Status.STARTED;
+			assert fieldStatus != Status.STARTED;
+			in.startField(info, numTerms, positions, offsets, payloads);
+			fieldStatus = Status.STARTED;
+			termCount = numTerms;
+			hasPositions = positions || offsets || payloads;
+		}
 
-    @Override
-    public void finishTerm() throws IOException {
-      assert positionCount == 0;
-      assert docStatus == Status.STARTED;
-      assert fieldStatus == Status.STARTED;
-      assert termStatus == Status.STARTED;
-      in.finishTerm();
-      termStatus = Status.FINISHED;
-      --termCount;
-    }
+		@Override
+		public void finishField() throws IOException {
+			assert termCount == 0;
+			assert fieldStatus == Status.STARTED;
+			in.finishField();
+			fieldStatus = Status.FINISHED;
+			--fieldCount;
+		}
 
-    @Override
-    public void addPosition(int position, int startOffset, int endOffset,
-        BytesRef payload) throws IOException {
-      assert docStatus == Status.STARTED;
-      assert fieldStatus == Status.STARTED;
-      assert termStatus == Status.STARTED;
-      in.addPosition(position, startOffset, endOffset, payload);
-      --positionCount;
-    }
+		@Override
+		public void startTerm(BytesRef term, int freq) throws IOException {
+			assert docStatus == Status.STARTED;
+			assert fieldStatus == Status.STARTED;
+			assert termStatus != Status.STARTED;
+			in.startTerm(term, freq);
+			termStatus = Status.STARTED;
+			positionCount = hasPositions ? freq : 0;
+		}
 
-    @Override
-    public void finish(FieldInfos fis, int numDocs) throws IOException {
-      assert docCount == numDocs;
-      assert docStatus == (numDocs > 0 ? Status.FINISHED : Status.UNDEFINED);
-      assert fieldStatus != Status.STARTED;
-      assert termStatus != Status.STARTED;
-      in.finish(fis, numDocs);
-    }
+		@Override
+		public void finishTerm() throws IOException {
+			assert positionCount == 0;
+			assert docStatus == Status.STARTED;
+			assert fieldStatus == Status.STARTED;
+			assert termStatus == Status.STARTED;
+			in.finishTerm();
+			termStatus = Status.FINISHED;
+			--termCount;
+		}
 
-    @Override
-    public void close() throws IOException {
-      in.close();
-      in.close(); // close again
-    }
+		@Override
+		public void addPosition(int position, int startOffset, int endOffset,
+														BytesRef payload) throws IOException {
+			assert docStatus == Status.STARTED;
+			assert fieldStatus == Status.STARTED;
+			assert termStatus == Status.STARTED;
+			in.addPosition(position, startOffset, endOffset, payload);
+			--positionCount;
+		}
 
-  }
+		@Override
+		public void finish(FieldInfos fis, int numDocs) throws IOException {
+			assert docCount == numDocs;
+			assert docStatus == (numDocs > 0 ? Status.FINISHED : Status.UNDEFINED);
+			assert fieldStatus != Status.STARTED;
+			assert termStatus != Status.STARTED;
+			in.finish(fis, numDocs);
+		}
+
+		@Override
+		public void close() throws IOException {
+			in.close();
+			in.close(); // close again
+		}
+
+	}
 }

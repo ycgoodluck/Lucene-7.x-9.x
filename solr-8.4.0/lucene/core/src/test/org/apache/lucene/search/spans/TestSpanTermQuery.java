@@ -30,35 +30,37 @@ import org.apache.lucene.search.QueryUtils;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 
-/** Basic tests for SpanTermQuery */
+/**
+ * Basic tests for SpanTermQuery
+ */
 public class TestSpanTermQuery extends LuceneTestCase {
-  
-  public void testHashcodeEquals() {
-    SpanTermQuery q1 = new SpanTermQuery(new Term("field", "foo"));
-    SpanTermQuery q2 = new SpanTermQuery(new Term("field", "bar"));
-    QueryUtils.check(q1);
-    QueryUtils.check(q2);
-    QueryUtils.checkUnequal(q1, q2);
-  }
-  
-  public void testNoPositions() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
-    Document doc = new Document();
-    doc.add(new StringField("foo", "bar", Field.Store.NO));
-    iw.addDocument(doc);
-    
-    IndexReader ir = iw.getReader();
-    iw.close();
-    
-    IndexSearcher is = new IndexSearcher(ir);
-    SpanTermQuery query = new SpanTermQuery(new Term("foo", "bar"));
-    IllegalStateException expected = expectThrows(IllegalStateException.class, () -> {
-      is.search(query, 5);
-    });
-    assertTrue(expected.getMessage().contains("was indexed without position data"));
 
-    ir.close();
-    dir.close();
-  }
+	public void testHashcodeEquals() {
+		SpanTermQuery q1 = new SpanTermQuery(new Term("field", "foo"));
+		SpanTermQuery q2 = new SpanTermQuery(new Term("field", "bar"));
+		QueryUtils.check(q1);
+		QueryUtils.check(q2);
+		QueryUtils.checkUnequal(q1, q2);
+	}
+
+	public void testNoPositions() throws IOException {
+		Directory dir = newDirectory();
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
+		Document doc = new Document();
+		doc.add(new StringField("foo", "bar", Field.Store.NO));
+		iw.addDocument(doc);
+
+		IndexReader ir = iw.getReader();
+		iw.close();
+
+		IndexSearcher is = new IndexSearcher(ir);
+		SpanTermQuery query = new SpanTermQuery(new Term("foo", "bar"));
+		IllegalStateException expected = expectThrows(IllegalStateException.class, () -> {
+			is.search(query, 5);
+		});
+		assertTrue(expected.getMessage().contains("was indexed without position data"));
+
+		ir.close();
+		dir.close();
+	}
 }

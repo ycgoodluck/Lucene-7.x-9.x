@@ -25,13 +25,13 @@ import org.apache.lucene.search.Query;
 /**
  * This interface should be implemented by every class that wants to build
  * {@link Query} objects from {@link QueryNode} objects.
- * 
+ *
  * @see QueryBuilder
  * @see QueryTreeBuilder
  */
 public interface StandardQueryBuilder extends QueryBuilder {
 
-  @Override
-  public Query build(QueryNode queryNode) throws QueryNodeException;
+	@Override
+	public Query build(QueryNode queryNode) throws QueryNodeException;
 
 }

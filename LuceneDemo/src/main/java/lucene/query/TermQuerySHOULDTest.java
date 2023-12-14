@@ -20,93 +20,93 @@ import java.nio.file.Paths;
  */
 public class TermQuerySHOULDTest {
 
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private Analyzer analyzer = new WhitespaceAnalyzer();
-    private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-    private IndexWriter indexWriter;
+	private Analyzer analyzer = new WhitespaceAnalyzer();
+	private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private IndexWriter indexWriter;
 
-    public void doSearch() throws Exception {
-        conf.setUseCompoundFile(false);
-        indexWriter = new IndexWriter(directory, conf);
+	public void doSearch() throws Exception {
+		conf.setUseCompoundFile(false);
+		indexWriter = new IndexWriter(directory, conf);
 
-        Document doc ;
-        // 0
-        doc = new Document();
-        doc.add(new TextField("content", "h", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 1
-        doc = new Document();
-        doc.add(new TextField("content", "b", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 2
-        doc = new Document();
-        doc.add(new TextField("content", "a c", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 3
-        doc = new Document();
-        doc.add(new TextField("content", "a c e", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 4
-        doc = new Document();
-        doc.add(new TextField("content", "h", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 5
-        doc = new Document();
-        doc.add(new TextField("content", "c e", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 6
-        doc = new Document();
-        doc.add(new TextField("content", "c a e", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 7
-        doc = new Document();
-        doc.add(new TextField("content", "f", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 8
-        doc = new Document();
-        doc.add(new TextField("content", "b c d e c e", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 9
-        doc = new Document();
-        doc.add(new TextField("content", "a c e a b c", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        indexWriter.commit();
+		Document doc;
+		// 0
+		doc = new Document();
+		doc.add(new TextField("content", "h", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 1
+		doc = new Document();
+		doc.add(new TextField("content", "b", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 2
+		doc = new Document();
+		doc.add(new TextField("content", "a c", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 3
+		doc = new Document();
+		doc.add(new TextField("content", "a c e", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 4
+		doc = new Document();
+		doc.add(new TextField("content", "h", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 5
+		doc = new Document();
+		doc.add(new TextField("content", "c e", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 6
+		doc = new Document();
+		doc.add(new TextField("content", "c a e", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 7
+		doc = new Document();
+		doc.add(new TextField("content", "f", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 8
+		doc = new Document();
+		doc.add(new TextField("content", "b c d e c e", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 9
+		doc = new Document();
+		doc.add(new TextField("content", "a c e a b c", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		indexWriter.commit();
 
-        IndexReader reader = DirectoryReader.open(indexWriter);
-        IndexSearcher searcher = new IndexSearcher(reader);
+		IndexReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
 
-        BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        builder.add(new TermQuery(new Term("content", "a")), BooleanClause.Occur.SHOULD);
-        builder.add(new TermQuery(new Term("content", "b")), BooleanClause.Occur.SHOULD);
-        builder.add(new TermQuery(new Term("content", "c")), BooleanClause.Occur.SHOULD);
-        builder.add(new TermQuery(new Term("content", "e")), BooleanClause.Occur.SHOULD);
-        builder.setMinimumNumberShouldMatch(5);
+		BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		builder.add(new TermQuery(new Term("content", "a")), BooleanClause.Occur.SHOULD);
+		builder.add(new TermQuery(new Term("content", "b")), BooleanClause.Occur.SHOULD);
+		builder.add(new TermQuery(new Term("content", "c")), BooleanClause.Occur.SHOULD);
+		builder.add(new TermQuery(new Term("content", "e")), BooleanClause.Occur.SHOULD);
+		builder.setMinimumNumberShouldMatch(5);
 
 
-        ScoreDoc []docs = searcher.search(builder.build(), 10).scoreDocs;
+		ScoreDoc[] docs = searcher.search(builder.build(), 10).scoreDocs;
 //        ScoreDoc []docs = searcher.search(new TermQuery(new Term("content", "a")), 10).scoreDocs;
 
-        Query query = new TermQuery(new Term("content", "a"));
+		Query query = new TermQuery(new Term("content", "a"));
 
-        ScoreDoc [] scoreDoc = searcher.search(query, 3).scoreDocs;
+		ScoreDoc[] scoreDoc = searcher.search(query, 3).scoreDocs;
 
-        System.out.println(docs.length);
+		System.out.println(docs.length);
 
-        System.out.println("hah");
-    }
+		System.out.println("hah");
+	}
 
-    public static void main(String[] args) throws Exception{
-        TermQuerySHOULDTest termQuerySHOULDTest = new TermQuerySHOULDTest();
-        termQuerySHOULDTest.doSearch();
-    }
+	public static void main(String[] args) throws Exception {
+		TermQuerySHOULDTest termQuerySHOULDTest = new TermQuerySHOULDTest();
+		termQuerySHOULDTest.doSearch();
+	}
 }

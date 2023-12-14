@@ -32,183 +32,187 @@ import org.apache.lucene.util.CharsRef;
 import org.apache.lucene.util.CharsRefBuilder;
 
 /**
- * Suggest implementation based on 
+ * Suggest implementation based on
  * <a href="http://jaspell.sourceforge.net/">JaSpell</a>.
- * 
+ *
  * @see JaspellTernarySearchTrie
  * @deprecated Migrate to one of the newer suggesters which are much more RAM efficient.
  */
 @Deprecated
 public class JaspellLookup extends Lookup implements Accountable {
-  JaspellTernarySearchTrie trie = new JaspellTernarySearchTrie();
-  private boolean usePrefix = true;
-  private int editDistance = 2;
+	JaspellTernarySearchTrie trie = new JaspellTernarySearchTrie();
+	private boolean usePrefix = true;
+	private int editDistance = 2;
 
-  /** Number of entries the lookup was built with */
-  private long count = 0;
-  
-  /** 
-   * Creates a new empty trie 
-   * @see #build(InputIterator)
-   * */
-  public JaspellLookup() {}
+	/**
+	 * Number of entries the lookup was built with
+	 */
+	private long count = 0;
 
-  @Override
-  public void build(InputIterator iterator) throws IOException {
-    if (iterator.hasPayloads()) {
-      throw new IllegalArgumentException("this suggester doesn't support payloads");
-    }
-    if (iterator.hasContexts()) {
-      throw new IllegalArgumentException("this suggester doesn't support contexts");
-    }
-    count = 0;
-    trie = new JaspellTernarySearchTrie();
-    trie.setMatchAlmostDiff(editDistance);
-    BytesRef spare;
-    final CharsRefBuilder charsSpare = new CharsRefBuilder();
+	/**
+	 * Creates a new empty trie
+	 *
+	 * @see #build(InputIterator)
+	 */
+	public JaspellLookup() {
+	}
 
-    while ((spare = iterator.next()) != null) {
-      final long weight = iterator.weight();
-      if (spare.length == 0) {
-        continue;
-      }
-      charsSpare.copyUTF8Bytes(spare);
-      trie.put(charsSpare.toString(), Long.valueOf(weight));
-      count++;
-    }
-  }
+	@Override
+	public void build(InputIterator iterator) throws IOException {
+		if (iterator.hasPayloads()) {
+			throw new IllegalArgumentException("this suggester doesn't support payloads");
+		}
+		if (iterator.hasContexts()) {
+			throw new IllegalArgumentException("this suggester doesn't support contexts");
+		}
+		count = 0;
+		trie = new JaspellTernarySearchTrie();
+		trie.setMatchAlmostDiff(editDistance);
+		BytesRef spare;
+		final CharsRefBuilder charsSpare = new CharsRefBuilder();
 
-  /** 
-   * Adds a new node if <code>key</code> already exists,
-   * otherwise replaces its value.
-   * <p>
-   * This method always returns false.
-   */
-  public boolean add(CharSequence key, Object value) {
-    trie.put(key, value);
-    // XXX
-    return false;
-  }
+		while ((spare = iterator.next()) != null) {
+			final long weight = iterator.weight();
+			if (spare.length == 0) {
+				continue;
+			}
+			charsSpare.copyUTF8Bytes(spare);
+			trie.put(charsSpare.toString(), Long.valueOf(weight));
+			count++;
+		}
+	}
 
-  /**
-   * Returns the value for the specified key, or null
-   * if the key does not exist.
-   */
-  public Object get(CharSequence key) {
-    return trie.get(key);
-  }
+	/**
+	 * Adds a new node if <code>key</code> already exists,
+	 * otherwise replaces its value.
+	 * <p>
+	 * This method always returns false.
+	 */
+	public boolean add(CharSequence key, Object value) {
+		trie.put(key, value);
+		// XXX
+		return false;
+	}
 
-  @Override
-  public List<LookupResult> lookup(CharSequence key, Set<BytesRef> contexts, boolean onlyMorePopular, int num) {
-    if (contexts != null) {
-      throw new IllegalArgumentException("this suggester doesn't support contexts");
-    }
-    List<LookupResult> res = new ArrayList<>();
-    List<String> list;
-    int count = onlyMorePopular ? num * 2 : num;
-    if (usePrefix) {
-      list = trie.matchPrefix(key, count);
-    } else {
-      list = trie.matchAlmost(key, count);
-    }
-    if (list == null || list.size() == 0) {
-      return res;
-      
-    }
-    int maxCnt = Math.min(num, list.size());
-    if (onlyMorePopular) {
-      LookupPriorityQueue queue = new LookupPriorityQueue(num);
-      for (String s : list) {
-        long freq = ((Number)trie.get(s)).longValue();
-        queue.insertWithOverflow(new LookupResult(new CharsRef(s), freq));
-      }
-      for (LookupResult lr : queue.getResults()) {
-        res.add(lr);
-      }
-    } else {
-      for (int i = 0; i < maxCnt; i++) {
-        String s = list.get(i);
-        long freq = ((Number)trie.get(s)).longValue();
-        res.add(new LookupResult(new CharsRef(s), freq));
-      }      
-    }
-    return res;
-  }
+	/**
+	 * Returns the value for the specified key, or null
+	 * if the key does not exist.
+	 */
+	public Object get(CharSequence key) {
+		return trie.get(key);
+	}
 
-  private static final byte LO_KID = 0x01;
-  private static final byte EQ_KID = 0x02;
-  private static final byte HI_KID = 0x04;
-  private static final byte HAS_VALUE = 0x08;
- 
-  private void readRecursively(DataInput in, TSTNode node) throws IOException {
-    node.splitchar = in.readString().charAt(0);
-    byte mask = in.readByte();
-    if ((mask & HAS_VALUE) != 0) {
-      node.data = Long.valueOf(in.readLong());
-    }
-    if ((mask & LO_KID) != 0) {
-      TSTNode kid = new TSTNode('\0', node);
-      node.relatives[TSTNode.LOKID] = kid;
-      readRecursively(in, kid);
-    }
-    if ((mask & EQ_KID) != 0) {
-      TSTNode kid = new TSTNode('\0', node);
-      node.relatives[TSTNode.EQKID] = kid;
-      readRecursively(in, kid);
-    }
-    if ((mask & HI_KID) != 0) {
-      TSTNode kid = new TSTNode('\0', node);
-      node.relatives[TSTNode.HIKID] = kid;
-      readRecursively(in, kid);
-    }
-  }
+	@Override
+	public List<LookupResult> lookup(CharSequence key, Set<BytesRef> contexts, boolean onlyMorePopular, int num) {
+		if (contexts != null) {
+			throw new IllegalArgumentException("this suggester doesn't support contexts");
+		}
+		List<LookupResult> res = new ArrayList<>();
+		List<String> list;
+		int count = onlyMorePopular ? num * 2 : num;
+		if (usePrefix) {
+			list = trie.matchPrefix(key, count);
+		} else {
+			list = trie.matchAlmost(key, count);
+		}
+		if (list == null || list.size() == 0) {
+			return res;
 
-  private void writeRecursively(DataOutput out, TSTNode node) throws IOException {
-    if (node == null) {
-      return;
-    }
-    out.writeString(new String(new char[] {node.splitchar}, 0, 1));
-    byte mask = 0;
-    if (node.relatives[TSTNode.LOKID] != null) mask |= LO_KID;
-    if (node.relatives[TSTNode.EQKID] != null) mask |= EQ_KID;
-    if (node.relatives[TSTNode.HIKID] != null) mask |= HI_KID;
-    if (node.data != null) mask |= HAS_VALUE;
-    out.writeByte(mask);
-    if (node.data != null) {
-      out.writeLong(((Number)node.data).longValue());
-    }
-    writeRecursively(out, node.relatives[TSTNode.LOKID]);
-    writeRecursively(out, node.relatives[TSTNode.EQKID]);
-    writeRecursively(out, node.relatives[TSTNode.HIKID]);
-  }
+		}
+		int maxCnt = Math.min(num, list.size());
+		if (onlyMorePopular) {
+			LookupPriorityQueue queue = new LookupPriorityQueue(num);
+			for (String s : list) {
+				long freq = ((Number) trie.get(s)).longValue();
+				queue.insertWithOverflow(new LookupResult(new CharsRef(s), freq));
+			}
+			for (LookupResult lr : queue.getResults()) {
+				res.add(lr);
+			}
+		} else {
+			for (int i = 0; i < maxCnt; i++) {
+				String s = list.get(i);
+				long freq = ((Number) trie.get(s)).longValue();
+				res.add(new LookupResult(new CharsRef(s), freq));
+			}
+		}
+		return res;
+	}
 
-  @Override
-  public boolean store(DataOutput output) throws IOException {
-    output.writeVLong(count);
-    TSTNode root = trie.getRoot();
-    if (root == null) { // empty tree
-      return false;
-    }
-    writeRecursively(output, root);
-    return true;
-  }
+	private static final byte LO_KID = 0x01;
+	private static final byte EQ_KID = 0x02;
+	private static final byte HI_KID = 0x04;
+	private static final byte HAS_VALUE = 0x08;
 
-  @Override
-  public boolean load(DataInput input) throws IOException {
-    count = input.readVLong();
-    TSTNode root = new TSTNode('\0', null);
-    readRecursively(input, root);
-    trie.setRoot(root);
-    return true;
-  }
+	private void readRecursively(DataInput in, TSTNode node) throws IOException {
+		node.splitchar = in.readString().charAt(0);
+		byte mask = in.readByte();
+		if ((mask & HAS_VALUE) != 0) {
+			node.data = Long.valueOf(in.readLong());
+		}
+		if ((mask & LO_KID) != 0) {
+			TSTNode kid = new TSTNode('\0', node);
+			node.relatives[TSTNode.LOKID] = kid;
+			readRecursively(in, kid);
+		}
+		if ((mask & EQ_KID) != 0) {
+			TSTNode kid = new TSTNode('\0', node);
+			node.relatives[TSTNode.EQKID] = kid;
+			readRecursively(in, kid);
+		}
+		if ((mask & HI_KID) != 0) {
+			TSTNode kid = new TSTNode('\0', node);
+			node.relatives[TSTNode.HIKID] = kid;
+			readRecursively(in, kid);
+		}
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return trie.ramBytesUsed();
-  }
-  
-  @Override
-  public long getCount() {
-    return count;
-  }
+	private void writeRecursively(DataOutput out, TSTNode node) throws IOException {
+		if (node == null) {
+			return;
+		}
+		out.writeString(new String(new char[]{node.splitchar}, 0, 1));
+		byte mask = 0;
+		if (node.relatives[TSTNode.LOKID] != null) mask |= LO_KID;
+		if (node.relatives[TSTNode.EQKID] != null) mask |= EQ_KID;
+		if (node.relatives[TSTNode.HIKID] != null) mask |= HI_KID;
+		if (node.data != null) mask |= HAS_VALUE;
+		out.writeByte(mask);
+		if (node.data != null) {
+			out.writeLong(((Number) node.data).longValue());
+		}
+		writeRecursively(out, node.relatives[TSTNode.LOKID]);
+		writeRecursively(out, node.relatives[TSTNode.EQKID]);
+		writeRecursively(out, node.relatives[TSTNode.HIKID]);
+	}
+
+	@Override
+	public boolean store(DataOutput output) throws IOException {
+		output.writeVLong(count);
+		TSTNode root = trie.getRoot();
+		if (root == null) { // empty tree
+			return false;
+		}
+		writeRecursively(output, root);
+		return true;
+	}
+
+	@Override
+	public boolean load(DataInput input) throws IOException {
+		count = input.readVLong();
+		TSTNode root = new TSTNode('\0', null);
+		readRecursively(input, root);
+		trie.setRoot(root);
+		return true;
+	}
+
+	@Override
+	public long ramBytesUsed() {
+		return trie.ramBytesUsed();
+	}
+
+	@Override
+	public long getCount() {
+		return count;
+	}
 }

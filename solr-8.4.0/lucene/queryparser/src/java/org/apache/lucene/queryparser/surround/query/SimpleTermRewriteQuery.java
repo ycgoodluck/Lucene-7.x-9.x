@@ -29,34 +29,34 @@ import org.apache.lucene.search.QueryVisitor;
 
 class SimpleTermRewriteQuery extends RewriteQuery<SimpleTerm> {
 
-  SimpleTermRewriteQuery(
-      SimpleTerm srndQuery,
-      String fieldName,
-      BasicQueryFactory qf) {
-    super(srndQuery, fieldName, qf);
-  }
+	SimpleTermRewriteQuery(
+		SimpleTerm srndQuery,
+		String fieldName,
+		BasicQueryFactory qf) {
+		super(srndQuery, fieldName, qf);
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    final List<Query> luceneSubQueries = new ArrayList<>();
-    srndQuery.visitMatchingTerms(reader, fieldName,
-    new SimpleTerm.MatchingTermVisitor() {
-      @Override
-      public void visitMatchingTerm(Term term) throws IOException {
-        luceneSubQueries.add(qf.newTermQuery(term));
-      }
-    });
-    return  (luceneSubQueries.size() == 0) ? new MatchNoDocsQuery()
-    : (luceneSubQueries.size() == 1) ? luceneSubQueries.get(0)
-    : SrndBooleanQuery.makeBooleanQuery(
-      /* luceneSubQueries all have default weight */
-      luceneSubQueries, BooleanClause.Occur.SHOULD); /* OR the subquery terms */
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		final List<Query> luceneSubQueries = new ArrayList<>();
+		srndQuery.visitMatchingTerms(reader, fieldName,
+			new SimpleTerm.MatchingTermVisitor() {
+				@Override
+				public void visitMatchingTerm(Term term) throws IOException {
+					luceneSubQueries.add(qf.newTermQuery(term));
+				}
+			});
+		return (luceneSubQueries.size() == 0) ? new MatchNoDocsQuery()
+			: (luceneSubQueries.size() == 1) ? luceneSubQueries.get(0)
+			: SrndBooleanQuery.makeBooleanQuery(
+			/* luceneSubQueries all have default weight */
+			luceneSubQueries, BooleanClause.Occur.SHOULD); /* OR the subquery terms */
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    // TODO: implement this
-    visitor.visitLeaf(this);
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		// TODO: implement this
+		visitor.visitLeaf(this);
+	}
 }
 

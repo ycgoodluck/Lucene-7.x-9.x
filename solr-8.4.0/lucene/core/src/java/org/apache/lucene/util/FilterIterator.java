@@ -22,57 +22,59 @@ import java.util.NoSuchElementException;
 /**
  * An {@link Iterator} implementation that filters elements with a boolean predicate.
  *
- * @param <T> generic parameter for this iterator instance: this iterator implements {@link Iterator Iterator&lt;T&gt;}
+ * @param <T>      generic parameter for this iterator instance: this iterator implements {@link Iterator Iterator&lt;T&gt;}
  * @param <InnerT> generic parameter of the wrapped iterator, must be <tt>T</tt> or extend <tt>T</tt>
- * @see #predicateFunction
  * @lucene.internal
+ * @see #predicateFunction
  */
 public abstract class FilterIterator<T, InnerT extends T> implements Iterator<T> {
-  
-  private final Iterator<InnerT> iterator;
-  private T next = null;
-  private boolean nextIsSet = false;
-  
-  /** returns true, if this element should be returned by {@link #next()}. */
-  protected abstract boolean predicateFunction(InnerT object);
-  
-  public FilterIterator(Iterator<InnerT> baseIterator) {
-    this.iterator = baseIterator;
-  }
-  
-  @Override
-  public final boolean hasNext() {
-    return nextIsSet || setNext();
-  }
-  
-  @Override
-  public final T next() {
-    if (!hasNext()) {
-      throw new NoSuchElementException();
-    }
-    assert nextIsSet;
-    try {
-      return next;
-    } finally {
-      nextIsSet = false;
-      next = null;
-    }
-  }
-  
-  @Override
-  public final void remove() {
-    throw new UnsupportedOperationException();
-  }
-  
-  private boolean setNext() {
-    while (iterator.hasNext()) {
-      final InnerT object = iterator.next();
-      if (predicateFunction(object)) {
-        next = object;
-        nextIsSet = true;
-        return true;
-      }
-    }
-    return false;
-  }
+
+	private final Iterator<InnerT> iterator;
+	private T next = null;
+	private boolean nextIsSet = false;
+
+	/**
+	 * returns true, if this element should be returned by {@link #next()}.
+	 */
+	protected abstract boolean predicateFunction(InnerT object);
+
+	public FilterIterator(Iterator<InnerT> baseIterator) {
+		this.iterator = baseIterator;
+	}
+
+	@Override
+	public final boolean hasNext() {
+		return nextIsSet || setNext();
+	}
+
+	@Override
+	public final T next() {
+		if (!hasNext()) {
+			throw new NoSuchElementException();
+		}
+		assert nextIsSet;
+		try {
+			return next;
+		} finally {
+			nextIsSet = false;
+			next = null;
+		}
+	}
+
+	@Override
+	public final void remove() {
+		throw new UnsupportedOperationException();
+	}
+
+	private boolean setNext() {
+		while (iterator.hasNext()) {
+			final InnerT object = iterator.next();
+			if (predicateFunction(object)) {
+				next = object;
+				nextIsSet = true;
+				return true;
+			}
+		}
+		return false;
+	}
 }

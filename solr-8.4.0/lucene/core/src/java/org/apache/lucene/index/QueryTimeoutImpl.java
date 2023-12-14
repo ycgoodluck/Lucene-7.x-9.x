@@ -28,53 +28,53 @@ import static java.lang.System.nanoTime;
  */
 public class QueryTimeoutImpl implements QueryTimeout {
 
-  /**
-   * The local variable to store the time beyond which, the processing should exit.
-   */
-  private Long timeoutAt;
+	/**
+	 * The local variable to store the time beyond which, the processing should exit.
+	 */
+	private Long timeoutAt;
 
-  /** 
-   * Sets the time at which to time out by adding the given timeAllowed to the current time.
-   * 
-   * @param timeAllowed Number of milliseconds after which to time out. Use {@code Long.MAX_VALUE}
-   *                    to effectively never time out.
-   */                    
-  public QueryTimeoutImpl(long timeAllowed) {
-    if (timeAllowed < 0L) {
-      timeAllowed = Long.MAX_VALUE;
-    }
-    timeoutAt = nanoTime() + TimeUnit.NANOSECONDS.convert(timeAllowed, TimeUnit.MILLISECONDS);
-  }
+	/**
+	 * Sets the time at which to time out by adding the given timeAllowed to the current time.
+	 *
+	 * @param timeAllowed Number of milliseconds after which to time out. Use {@code Long.MAX_VALUE}
+	 *                    to effectively never time out.
+	 */
+	public QueryTimeoutImpl(long timeAllowed) {
+		if (timeAllowed < 0L) {
+			timeAllowed = Long.MAX_VALUE;
+		}
+		timeoutAt = nanoTime() + TimeUnit.NANOSECONDS.convert(timeAllowed, TimeUnit.MILLISECONDS);
+	}
 
-  /**
-   * Returns time at which to time out, in nanoseconds relative to the (JVM-specific)
-   * epoch for {@link System#nanoTime()}, to compare with the value returned by
-   * {@code nanoTime()}.
-   */
-  public Long getTimeoutAt() {
-    return timeoutAt;
-  }
+	/**
+	 * Returns time at which to time out, in nanoseconds relative to the (JVM-specific)
+	 * epoch for {@link System#nanoTime()}, to compare with the value returned by
+	 * {@code nanoTime()}.
+	 */
+	public Long getTimeoutAt() {
+		return timeoutAt;
+	}
 
-  /**
-   * Return true if {@link #reset()} has not been called
-   * and the elapsed time has exceeded the time allowed.
-   */
-  @Override
-  public boolean shouldExit() {
-    return timeoutAt != null && nanoTime() - timeoutAt > 0;
-  }
+	/**
+	 * Return true if {@link #reset()} has not been called
+	 * and the elapsed time has exceeded the time allowed.
+	 */
+	@Override
+	public boolean shouldExit() {
+		return timeoutAt != null && nanoTime() - timeoutAt > 0;
+	}
 
-  /**
-   * Reset the timeout value.
-   */
-  public void reset() {
-    timeoutAt = null;
-  }
-  
-  @Override
-  public String toString() {
-    return "timeoutAt: " + timeoutAt + " (System.nanoTime(): " + nanoTime() + ")";
-  }
+	/**
+	 * Reset the timeout value.
+	 */
+	public void reset() {
+		timeoutAt = null;
+	}
+
+	@Override
+	public String toString() {
+		return "timeoutAt: " + timeoutAt + " (System.nanoTime(): " + nanoTime() + ")";
+	}
 }
 
 

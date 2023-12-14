@@ -27,49 +27,52 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 
 /**
- * Simplistic quality query parser. A Lucene query is created by passing 
- * the value of the specified QualityQuery name-value pair(s) into 
- * a Lucene's QueryParser using StandardAnalyzer. */
+ * Simplistic quality query parser. A Lucene query is created by passing
+ * the value of the specified QualityQuery name-value pair(s) into
+ * a Lucene's QueryParser using StandardAnalyzer.
+ */
 public class SimpleQQParser implements QualityQueryParser {
 
-  private String qqNames[];
-  private String indexField;
-  ThreadLocal<QueryParser> queryParser = new ThreadLocal<>();
+	private String qqNames[];
+	private String indexField;
+	ThreadLocal<QueryParser> queryParser = new ThreadLocal<>();
 
-  /**
-   * Constructor of a simple qq parser.
-   * @param qqNames name-value pairs of quality query to use for creating the query
-   * @param indexField corresponding index field  
-   */
-  public SimpleQQParser(String qqNames[], String indexField) {
-    this.qqNames = qqNames;
-    this.indexField = indexField;
-  }
+	/**
+	 * Constructor of a simple qq parser.
+	 *
+	 * @param qqNames    name-value pairs of quality query to use for creating the query
+	 * @param indexField corresponding index field
+	 */
+	public SimpleQQParser(String qqNames[], String indexField) {
+		this.qqNames = qqNames;
+		this.indexField = indexField;
+	}
 
-  /**
-   * Constructor of a simple qq parser.
-   * @param qqName name-value pair of quality query to use for creating the query
-   * @param indexField corresponding index field  
-   */
-  public SimpleQQParser(String qqName, String indexField) {
-    this(new String[] { qqName }, indexField);
-  }
+	/**
+	 * Constructor of a simple qq parser.
+	 *
+	 * @param qqName     name-value pair of quality query to use for creating the query
+	 * @param indexField corresponding index field
+	 */
+	public SimpleQQParser(String qqName, String indexField) {
+		this(new String[]{qqName}, indexField);
+	}
 
-  /* (non-Javadoc)
-   * @see org.apache.lucene.benchmark.quality.QualityQueryParser#parse(org.apache.lucene.benchmark.quality.QualityQuery)
-   */
-  @Override
-  public Query parse(QualityQuery qq) throws ParseException {
-    QueryParser qp = queryParser.get();
-    if (qp==null) {
-      qp = new QueryParser(indexField, new StandardAnalyzer());
-      queryParser.set(qp);
-    }
-    BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    for (int i = 0; i < qqNames.length; i++)
-      bq.add(qp.parse(QueryParserBase.escape(qq.getValue(qqNames[i]))), BooleanClause.Occur.SHOULD);
-    
-    return bq.build();
-  }
+	/* (non-Javadoc)
+	 * @see org.apache.lucene.benchmark.quality.QualityQueryParser#parse(org.apache.lucene.benchmark.quality.QualityQuery)
+	 */
+	@Override
+	public Query parse(QualityQuery qq) throws ParseException {
+		QueryParser qp = queryParser.get();
+		if (qp == null) {
+			qp = new QueryParser(indexField, new StandardAnalyzer());
+			queryParser.set(qp);
+		}
+		BooleanQuery.Builder bq = new BooleanQuery.Builder();
+		for (int i = 0; i < qqNames.length; i++)
+			bq.add(qp.parse(QueryParserBase.escape(qq.getValue(qqNames[i]))), BooleanClause.Occur.SHOULD);
+
+		return bq.build();
+	}
 
 }

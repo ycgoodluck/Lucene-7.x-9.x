@@ -25,58 +25,60 @@ import static org.apache.lucene.geo.GeoEncodingUtils.decodeLongitude;
 import static org.apache.lucene.geo.GeoEncodingUtils.encodeLatitude;
 import static org.apache.lucene.geo.GeoEncodingUtils.encodeLongitude;
 
-/** random bounding box and polygon query tests for random generated {@code latitude, longitude} points */
+/**
+ * random bounding box and polygon query tests for random generated {@code latitude, longitude} points
+ */
 public class TestLatLonPointShapeQueries extends BaseLatLonShapeTestCase {
 
-  protected final PointValidator VALIDATOR = new PointValidator();
+	protected final PointValidator VALIDATOR = new PointValidator();
 
-  @Override
-  protected ShapeType getShapeType() {
-    return ShapeType.POINT;
-  }
+	@Override
+	protected ShapeType getShapeType() {
+		return ShapeType.POINT;
+	}
 
-  @Override
-  protected Field[] createIndexableFields(String field, Object point) {
-    Point p = (Point)point;
-    return LatLonShape.createIndexableFields(field, p.lat, p.lon);
-  }
+	@Override
+	protected Field[] createIndexableFields(String field, Object point) {
+		Point p = (Point) point;
+		return LatLonShape.createIndexableFields(field, p.lat, p.lon);
+	}
 
-  @Override
-  protected Validator getValidator(QueryRelation relation) {
-    VALIDATOR.setRelation(relation);
-    return VALIDATOR;
-  }
+	@Override
+	protected Validator getValidator(QueryRelation relation) {
+		VALIDATOR.setRelation(relation);
+		return VALIDATOR;
+	}
 
-  protected class PointValidator extends Validator {
-    @Override
-    public boolean testBBoxQuery(double minLat, double maxLat, double minLon, double maxLon, Object shape) {
-      Point p = (Point)shape;
-      double lat = decodeLatitude(encodeLatitude(p.lat));
-      double lon = decodeLongitude(encodeLongitude(p.lon));
-      boolean isDisjoint = lat < minLat || lat > maxLat || lon < minLon || lon > maxLon;
-      if (queryRelation == QueryRelation.DISJOINT) {
-        return isDisjoint;
-      }
-      return isDisjoint == false;
-    }
+	protected class PointValidator extends Validator {
+		@Override
+		public boolean testBBoxQuery(double minLat, double maxLat, double minLon, double maxLon, Object shape) {
+			Point p = (Point) shape;
+			double lat = decodeLatitude(encodeLatitude(p.lat));
+			double lon = decodeLongitude(encodeLongitude(p.lon));
+			boolean isDisjoint = lat < minLat || lat > maxLat || lon < minLon || lon > maxLon;
+			if (queryRelation == QueryRelation.DISJOINT) {
+				return isDisjoint;
+			}
+			return isDisjoint == false;
+		}
 
-    @Override
-    public boolean testPolygonQuery(Polygon2D poly2d, Object shape) {
-      Point p = (Point) shape;
-      double lat = decodeLatitude(encodeLatitude(p.lat));
-      double lon = decodeLongitude(encodeLongitude(p.lon));
-      // for consistency w/ the query we test the point as a triangle
-      Relation r = poly2d.relateTriangle(lon, lat, lon, lat, lon, lat);
-      if (queryRelation == QueryRelation.WITHIN) {
-        return r == Relation.CELL_INSIDE_QUERY;
-      } else if (queryRelation == QueryRelation.DISJOINT) {
-        return r == Relation.CELL_OUTSIDE_QUERY;
-      }
-      return r != Relation.CELL_OUTSIDE_QUERY;
-    }
-  }
+		@Override
+		public boolean testPolygonQuery(Polygon2D poly2d, Object shape) {
+			Point p = (Point) shape;
+			double lat = decodeLatitude(encodeLatitude(p.lat));
+			double lon = decodeLongitude(encodeLongitude(p.lon));
+			// for consistency w/ the query we test the point as a triangle
+			Relation r = poly2d.relateTriangle(lon, lat, lon, lat, lon, lat);
+			if (queryRelation == QueryRelation.WITHIN) {
+				return r == Relation.CELL_INSIDE_QUERY;
+			} else if (queryRelation == QueryRelation.DISJOINT) {
+				return r == Relation.CELL_OUTSIDE_QUERY;
+			}
+			return r != Relation.CELL_OUTSIDE_QUERY;
+		}
+	}
 
-  @Override
-  public void testRandomTiny() throws Exception {
-  }
+	@Override
+	public void testRandomTiny() throws Exception {
+	}
 }

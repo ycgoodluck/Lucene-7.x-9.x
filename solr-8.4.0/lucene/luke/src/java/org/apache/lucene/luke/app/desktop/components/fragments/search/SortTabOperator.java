@@ -23,12 +23,14 @@ import org.apache.lucene.luke.app.desktop.components.ComponentOperatorRegistry;
 import org.apache.lucene.luke.models.search.Search;
 import org.apache.lucene.search.Sort;
 
-/** Operator for the Sort tab */
+/**
+ * Operator for the Sort tab
+ */
 public interface SortTabOperator extends ComponentOperatorRegistry.ComponentOperator {
-  void setSearchModel(Search model);
+	void setSearchModel(Search model);
 
-  void setSortableFields(Collection<String> sortableFields);
+	void setSortableFields(Collection<String> sortableFields);
 
-  Sort getSort();
+	Sort getSort();
 }
 

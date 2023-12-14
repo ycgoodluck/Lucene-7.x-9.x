@@ -30,9 +30,9 @@ import org.apache.lucene.util.RamUsageEstimator;
  * more of its output values.  You can use this when a single
  * input may need to map to more than one output,
  * maintaining order: pass the same input with a different
- * output by calling {@link Builder#add(IntsRef,Object)} multiple
+ * output by calling {@link Builder#add(IntsRef, Object)} multiple
  * times.  The builder will then combine the outputs using
- * the {@link Outputs#merge(Object,Object)} method.
+ * the {@link Outputs#merge(Object, Object)} method.
  *
  * <p>The resulting FST may not be minimal when an input has
  * more than one output, as this requires pushing all
@@ -64,168 +64,168 @@ import org.apache.lucene.util.RamUsageEstimator;
 
 @SuppressWarnings("unchecked")
 public final class ListOfOutputs<T> extends Outputs<Object> {
-  
-  private final Outputs<T> outputs;
 
-  public ListOfOutputs(Outputs<T> outputs) {
-    this.outputs = outputs;
-  }
+	private final Outputs<T> outputs;
 
-  @Override
-  public Object common(Object output1, Object output2) {
-    // These will never be a list:
-    return outputs.common((T) output1, (T) output2);
-  }
+	public ListOfOutputs(Outputs<T> outputs) {
+		this.outputs = outputs;
+	}
 
-  @Override
-  public Object subtract(Object object, Object inc) {
-    // These will never be a list:
-    return outputs.subtract((T) object, (T) inc);
-  }
+	@Override
+	public Object common(Object output1, Object output2) {
+		// These will never be a list:
+		return outputs.common((T) output1, (T) output2);
+	}
 
-  @Override
-  public Object add(Object prefix, Object output) {
-    assert !(prefix instanceof List);
-    if (!(output instanceof List)) {
-      return outputs.add((T) prefix, (T) output);
-    } else {
-      List<T> outputList = (List<T>) output;
-      List<T> addedList = new ArrayList<>(outputList.size());
-      for(T _output : outputList) {
-        addedList.add(outputs.add((T) prefix, _output));
-      }
-      return addedList;
-    }
-  }
+	@Override
+	public Object subtract(Object object, Object inc) {
+		// These will never be a list:
+		return outputs.subtract((T) object, (T) inc);
+	}
 
-  @Override
-  public void write(Object output, DataOutput out) throws IOException {
-    assert !(output instanceof List);
-    outputs.write((T) output, out);
-  }
+	@Override
+	public Object add(Object prefix, Object output) {
+		assert !(prefix instanceof List);
+		if (!(output instanceof List)) {
+			return outputs.add((T) prefix, (T) output);
+		} else {
+			List<T> outputList = (List<T>) output;
+			List<T> addedList = new ArrayList<>(outputList.size());
+			for (T _output : outputList) {
+				addedList.add(outputs.add((T) prefix, _output));
+			}
+			return addedList;
+		}
+	}
 
-  @Override
-  public void writeFinalOutput(Object output, DataOutput out) throws IOException {
-    if (!(output instanceof List)) {
-      out.writeVInt(1);
-      outputs.write((T) output, out);
-    } else {
-      List<T> outputList = (List<T>) output;
-      out.writeVInt(outputList.size());
-      for(T eachOutput : outputList) {
-        outputs.write(eachOutput, out);
-      }
-    }
-  }
+	@Override
+	public void write(Object output, DataOutput out) throws IOException {
+		assert !(output instanceof List);
+		outputs.write((T) output, out);
+	}
 
-  @Override
-  public Object read(DataInput in) throws IOException {
-    return outputs.read(in);
-  }
-  
-  @Override
-  public void skipOutput(DataInput in) throws IOException {
-    outputs.skipOutput(in);
-  }
+	@Override
+	public void writeFinalOutput(Object output, DataOutput out) throws IOException {
+		if (!(output instanceof List)) {
+			out.writeVInt(1);
+			outputs.write((T) output, out);
+		} else {
+			List<T> outputList = (List<T>) output;
+			out.writeVInt(outputList.size());
+			for (T eachOutput : outputList) {
+				outputs.write(eachOutput, out);
+			}
+		}
+	}
 
-  @Override
-  public Object readFinalOutput(DataInput in) throws IOException {
-    int count = in.readVInt();
-    if (count == 1) {
-      return outputs.read(in);
-    } else {
-      List<T> outputList = new ArrayList<>(count);
-      for(int i=0;i<count;i++) {
-        outputList.add(outputs.read(in));
-      }
-      return outputList;
-    }
-  }
-  
-  @Override
-  public void skipFinalOutput(DataInput in) throws IOException {
-    int count = in.readVInt();
-    for(int i=0;i<count;i++) {
-      outputs.skipOutput(in);
-    }
-  }
+	@Override
+	public Object read(DataInput in) throws IOException {
+		return outputs.read(in);
+	}
 
-  @Override
-  public Object getNoOutput() {
-    return outputs.getNoOutput();
-  }
+	@Override
+	public void skipOutput(DataInput in) throws IOException {
+		outputs.skipOutput(in);
+	}
 
-  @Override
-  public String outputToString(Object output) {
-    if (!(output instanceof List)) {
-      return outputs.outputToString((T) output);
-    } else {
-      List<T> outputList = (List<T>) output;
+	@Override
+	public Object readFinalOutput(DataInput in) throws IOException {
+		int count = in.readVInt();
+		if (count == 1) {
+			return outputs.read(in);
+		} else {
+			List<T> outputList = new ArrayList<>(count);
+			for (int i = 0; i < count; i++) {
+				outputList.add(outputs.read(in));
+			}
+			return outputList;
+		}
+	}
 
-      StringBuilder b = new StringBuilder();
-      b.append('[');
-      
-      for(int i=0;i<outputList.size();i++) {
-        if (i > 0) {
-          b.append(", ");
-        }
-        b.append(outputs.outputToString(outputList.get(i)));
-      }
-      b.append(']');
-      return b.toString();
-    }
-  }
+	@Override
+	public void skipFinalOutput(DataInput in) throws IOException {
+		int count = in.readVInt();
+		for (int i = 0; i < count; i++) {
+			outputs.skipOutput(in);
+		}
+	}
 
-  @Override
-  public Object merge(Object first, Object second) {
-    List<T> outputList = new ArrayList<>();
-    if (!(first instanceof List)) {
-      outputList.add((T) first);
-    } else {
-      outputList.addAll((List<T>) first);
-    }
-    if (!(second instanceof List)) {
-      outputList.add((T) second);
-    } else {
-      outputList.addAll((List<T>) second);
-    }
-    //System.out.println("MERGE: now " + outputList.size() + " first=" + outputToString(first) + " second=" + outputToString(second));
-    //System.out.println("  return " + outputToString(outputList));
-    return outputList;
-  }
+	@Override
+	public Object getNoOutput() {
+		return outputs.getNoOutput();
+	}
 
-  @Override
-  public String toString() {
-    return "OneOrMoreOutputs(" + outputs + ")";
-  }
+	@Override
+	public String outputToString(Object output) {
+		if (!(output instanceof List)) {
+			return outputs.outputToString((T) output);
+		} else {
+			List<T> outputList = (List<T>) output;
 
-  public List<T> asList(Object output) { 
-    if (!(output instanceof List)) {
-      List<T> result = new ArrayList<>(1);
-      result.add((T) output);
-      return result;
-    } else {
-      return (List<T>) output;
-    }
-  }
+			StringBuilder b = new StringBuilder();
+			b.append('[');
 
-  private static final long BASE_LIST_NUM_BYTES = RamUsageEstimator.shallowSizeOf(new ArrayList<Object>());
+			for (int i = 0; i < outputList.size(); i++) {
+				if (i > 0) {
+					b.append(", ");
+				}
+				b.append(outputs.outputToString(outputList.get(i)));
+			}
+			b.append(']');
+			return b.toString();
+		}
+	}
 
-  @Override
-  public long ramBytesUsed(Object output) {
-    long bytes = 0;
-    if (output instanceof List) {
-      bytes += BASE_LIST_NUM_BYTES;
-      List<T> outputList = (List<T>) output;
-      for(T _output : outputList) {
-        bytes += outputs.ramBytesUsed(_output);
-      }
-      // 2 * to allow for ArrayList's oversizing:
-      bytes += 2 * outputList.size() * RamUsageEstimator.NUM_BYTES_OBJECT_REF;
-    } else {
-      bytes += outputs.ramBytesUsed((T) output);
-    }
+	@Override
+	public Object merge(Object first, Object second) {
+		List<T> outputList = new ArrayList<>();
+		if (!(first instanceof List)) {
+			outputList.add((T) first);
+		} else {
+			outputList.addAll((List<T>) first);
+		}
+		if (!(second instanceof List)) {
+			outputList.add((T) second);
+		} else {
+			outputList.addAll((List<T>) second);
+		}
+		//System.out.println("MERGE: now " + outputList.size() + " first=" + outputToString(first) + " second=" + outputToString(second));
+		//System.out.println("  return " + outputToString(outputList));
+		return outputList;
+	}
 
-    return bytes;
-  }
+	@Override
+	public String toString() {
+		return "OneOrMoreOutputs(" + outputs + ")";
+	}
+
+	public List<T> asList(Object output) {
+		if (!(output instanceof List)) {
+			List<T> result = new ArrayList<>(1);
+			result.add((T) output);
+			return result;
+		} else {
+			return (List<T>) output;
+		}
+	}
+
+	private static final long BASE_LIST_NUM_BYTES = RamUsageEstimator.shallowSizeOf(new ArrayList<Object>());
+
+	@Override
+	public long ramBytesUsed(Object output) {
+		long bytes = 0;
+		if (output instanceof List) {
+			bytes += BASE_LIST_NUM_BYTES;
+			List<T> outputList = (List<T>) output;
+			for (T _output : outputList) {
+				bytes += outputs.ramBytesUsed(_output);
+			}
+			// 2 * to allow for ArrayList's oversizing:
+			bytes += 2 * outputList.size() * RamUsageEstimator.NUM_BYTES_OBJECT_REF;
+		} else {
+			bytes += outputs.ramBytesUsed((T) output);
+		}
+
+		return bytes;
+	}
 }

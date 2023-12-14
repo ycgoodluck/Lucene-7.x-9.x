@@ -65,16 +65,15 @@ import org.apache.lucene.index.LeafReaderContext;
  */
 public interface Collector {
 
-  /**
-   * Create a new {@link LeafCollector collector} to collect the given context.
-   *
-   * @param context
-   *          next atomic reader context
-   */
-  LeafCollector getLeafCollector(LeafReaderContext context) throws IOException;
-  
-  /**
-   * Indicates what features are required from the scorer.
-   */
-  ScoreMode scoreMode();
+	/**
+	 * Create a new {@link LeafCollector collector} to collect the given context.
+	 *
+	 * @param context next atomic reader context
+	 */
+	LeafCollector getLeafCollector(LeafReaderContext context) throws IOException;
+
+	/**
+	 * Indicates what features are required from the scorer.
+	 */
+	ScoreMode scoreMode();
 }

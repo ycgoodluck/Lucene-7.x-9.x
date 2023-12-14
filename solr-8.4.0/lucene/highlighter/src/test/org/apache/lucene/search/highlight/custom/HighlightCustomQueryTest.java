@@ -47,149 +47,149 @@ import org.apache.lucene.util.LuceneTestCase;
  */
 public class HighlightCustomQueryTest extends LuceneTestCase {
 
-  private static final String FIELD_NAME = "contents";
+	private static final String FIELD_NAME = "contents";
 
-  public void testHighlightCustomQuery() throws IOException,
-      InvalidTokenOffsetsException {
-    String s1 = "I call our world Flatland, not because we call it so,";
+	public void testHighlightCustomQuery() throws IOException,
+		InvalidTokenOffsetsException {
+		String s1 = "I call our world Flatland, not because we call it so,";
 
-    // Verify that a query against the default field results in text being
-    // highlighted
-    // regardless of the field name.
+		// Verify that a query against the default field results in text being
+		// highlighted
+		// regardless of the field name.
 
-    CustomQuery q = new CustomQuery(new Term(FIELD_NAME, "world"));
+		CustomQuery q = new CustomQuery(new Term(FIELD_NAME, "world"));
 
-    String expected = "I call our <B>world</B> Flatland, not because we call it so,";
-    String observed = highlightField(q, "SOME_FIELD_NAME", s1);
-    if (VERBOSE)
-      System.out.println("Expected: \"" + expected + "\n" + "Observed: \""
-          + observed);
-    assertEquals(
-        "Query in the default field results in text for *ANY* field being highlighted",
-        expected, observed);
+		String expected = "I call our <B>world</B> Flatland, not because we call it so,";
+		String observed = highlightField(q, "SOME_FIELD_NAME", s1);
+		if (VERBOSE)
+			System.out.println("Expected: \"" + expected + "\n" + "Observed: \""
+				+ observed);
+		assertEquals(
+			"Query in the default field results in text for *ANY* field being highlighted",
+			expected, observed);
 
-    // Verify that a query against a named field does not result in any
-    // highlighting
-    // when the query field name differs from the name of the field being
-    // highlighted,
-    // which in this example happens to be the default field name.
-    q = new CustomQuery(new Term("text", "world"));
+		// Verify that a query against a named field does not result in any
+		// highlighting
+		// when the query field name differs from the name of the field being
+		// highlighted,
+		// which in this example happens to be the default field name.
+		q = new CustomQuery(new Term("text", "world"));
 
-    expected = s1;
-    observed = highlightField(q, FIELD_NAME, s1);
-    if (VERBOSE)
-      System.out.println("Expected: \"" + expected + "\n" + "Observed: \""
-          + observed);
-    assertEquals(
-        "Query in a named field does not result in highlighting when that field isn't in the query",
-        s1, highlightField(q, FIELD_NAME, s1));
+		expected = s1;
+		observed = highlightField(q, FIELD_NAME, s1);
+		if (VERBOSE)
+			System.out.println("Expected: \"" + expected + "\n" + "Observed: \""
+				+ observed);
+		assertEquals(
+			"Query in a named field does not result in highlighting when that field isn't in the query",
+			s1, highlightField(q, FIELD_NAME, s1));
 
-  }
+	}
 
-  public void testHighlightKnownQuery() throws IOException {
-    WeightedSpanTermExtractor extractor = new WeightedSpanTermExtractor() {
-      @Override
-      protected void extractUnknownQuery(Query query, Map<String,WeightedSpanTerm> terms) throws IOException {
-        terms.put("foo", new WeightedSpanTerm(3, "foo"));
-      }
-    };
-    Map<String,WeightedSpanTerm> terms = extractor.getWeightedSpanTerms(
-        new TermQuery(new Term("bar", "quux")), 3, new CannedTokenStream());
-    // no foo
-    assertEquals(Collections.singleton("quux"), terms.keySet());
-  }
+	public void testHighlightKnownQuery() throws IOException {
+		WeightedSpanTermExtractor extractor = new WeightedSpanTermExtractor() {
+			@Override
+			protected void extractUnknownQuery(Query query, Map<String, WeightedSpanTerm> terms) throws IOException {
+				terms.put("foo", new WeightedSpanTerm(3, "foo"));
+			}
+		};
+		Map<String, WeightedSpanTerm> terms = extractor.getWeightedSpanTerms(
+			new TermQuery(new Term("bar", "quux")), 3, new CannedTokenStream());
+		// no foo
+		assertEquals(Collections.singleton("quux"), terms.keySet());
+	}
 
-  /**
-   * This method intended for use with
-   * <tt>testHighlightingWithDefaultField()</tt>
-   */
-  private String highlightField(Query query, String fieldName,
-      String text) throws IOException, InvalidTokenOffsetsException {
-    TokenStream tokenStream = new MockAnalyzer(random(), MockTokenizer.SIMPLE,
-        true, MockTokenFilter.ENGLISH_STOPSET).tokenStream(fieldName, text);
-    // Assuming "<B>", "</B>" used to highlight
-    SimpleHTMLFormatter formatter = new SimpleHTMLFormatter();
-    MyQueryScorer scorer = new MyQueryScorer(query, fieldName, FIELD_NAME);
-    Highlighter highlighter = new Highlighter(formatter, scorer);
-    highlighter.setTextFragmenter(new SimpleFragmenter(Integer.MAX_VALUE));
+	/**
+	 * This method intended for use with
+	 * <tt>testHighlightingWithDefaultField()</tt>
+	 */
+	private String highlightField(Query query, String fieldName,
+																String text) throws IOException, InvalidTokenOffsetsException {
+		TokenStream tokenStream = new MockAnalyzer(random(), MockTokenizer.SIMPLE,
+			true, MockTokenFilter.ENGLISH_STOPSET).tokenStream(fieldName, text);
+		// Assuming "<B>", "</B>" used to highlight
+		SimpleHTMLFormatter formatter = new SimpleHTMLFormatter();
+		MyQueryScorer scorer = new MyQueryScorer(query, fieldName, FIELD_NAME);
+		Highlighter highlighter = new Highlighter(formatter, scorer);
+		highlighter.setTextFragmenter(new SimpleFragmenter(Integer.MAX_VALUE));
 
-    String rv = highlighter.getBestFragments(tokenStream, text, 1,
-        "(FIELD TEXT TRUNCATED)");
-    return rv.length() == 0 ? text : rv;
-  }
+		String rv = highlighter.getBestFragments(tokenStream, text, 1,
+			"(FIELD TEXT TRUNCATED)");
+		return rv.length() == 0 ? text : rv;
+	}
 
-  public static class MyWeightedSpanTermExtractor extends
-      WeightedSpanTermExtractor {
+	public static class MyWeightedSpanTermExtractor extends
+		WeightedSpanTermExtractor {
 
-    public MyWeightedSpanTermExtractor() {
-      super();
-    }
+		public MyWeightedSpanTermExtractor() {
+			super();
+		}
 
-    public MyWeightedSpanTermExtractor(String defaultField) {
-      super(defaultField);
-    }
+		public MyWeightedSpanTermExtractor(String defaultField) {
+			super(defaultField);
+		}
 
-    @Override
-    protected void extractUnknownQuery(Query query,
-        Map<String, WeightedSpanTerm> terms) throws IOException {
-      float boost = 1f;
-      while (query instanceof BoostQuery) {
-        BoostQuery bq = (BoostQuery) query;
-        boost *= bq.getBoost();
-        query = bq.getQuery();
-      }
-      if (query instanceof CustomQuery) {
-        extractWeightedTerms(terms, new TermQuery(((CustomQuery) query).term), boost);
-      }
-    }
+		@Override
+		protected void extractUnknownQuery(Query query,
+																			 Map<String, WeightedSpanTerm> terms) throws IOException {
+			float boost = 1f;
+			while (query instanceof BoostQuery) {
+				BoostQuery bq = (BoostQuery) query;
+				boost *= bq.getBoost();
+				query = bq.getQuery();
+			}
+			if (query instanceof CustomQuery) {
+				extractWeightedTerms(terms, new TermQuery(((CustomQuery) query).term), boost);
+			}
+		}
 
-  }
+	}
 
-  public static class MyQueryScorer extends QueryScorer {
+	public static class MyQueryScorer extends QueryScorer {
 
-    public MyQueryScorer(Query query, String field, String defaultField) {
-      super(query, field, defaultField);
-    }
+		public MyQueryScorer(Query query, String field, String defaultField) {
+			super(query, field, defaultField);
+		}
 
-    @Override
-    protected WeightedSpanTermExtractor newTermExtractor(String defaultField) {
-      return defaultField == null ? new MyWeightedSpanTermExtractor()
-          : new MyWeightedSpanTermExtractor(defaultField);
-    }
+		@Override
+		protected WeightedSpanTermExtractor newTermExtractor(String defaultField) {
+			return defaultField == null ? new MyWeightedSpanTermExtractor()
+				: new MyWeightedSpanTermExtractor(defaultField);
+		}
 
-  }
+	}
 
-  public static class CustomQuery extends Query {
-    private final Term term;
+	public static class CustomQuery extends Query {
+		private final Term term;
 
-    public CustomQuery(Term term) {
-      this.term = term;
-    }
+		public CustomQuery(Term term) {
+			this.term = term;
+		}
 
-    @Override
-    public String toString(String field) {
-      return new TermQuery(term).toString(field);
-    }
+		@Override
+		public String toString(String field) {
+			return new TermQuery(term).toString(field);
+		}
 
-    @Override
-    public Query rewrite(IndexReader reader) throws IOException {
-      return new TermQuery(term);
-    }
+		@Override
+		public Query rewrite(IndexReader reader) throws IOException {
+			return new TermQuery(term);
+		}
 
-    @Override
-    public void visit(QueryVisitor visitor) {
-      visitor.consumeTerms(this, term);
-    }
+		@Override
+		public void visit(QueryVisitor visitor) {
+			visitor.consumeTerms(this, term);
+		}
 
-    @Override
-    public int hashCode() {
-      return classHash() + Objects.hashCode(term);
-    }
+		@Override
+		public int hashCode() {
+			return classHash() + Objects.hashCode(term);
+		}
 
-    @Override
-    public boolean equals(Object other) {
-      return sameClassAs(other) &&
-             Objects.equals(term, ((CustomQuery) other).term);
-    }
-  }
+		@Override
+		public boolean equals(Object other) {
+			return sameClassAs(other) &&
+				Objects.equals(term, ((CustomQuery) other).term);
+		}
+	}
 }

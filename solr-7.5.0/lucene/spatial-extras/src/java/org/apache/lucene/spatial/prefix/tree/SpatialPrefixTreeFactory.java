@@ -29,74 +29,76 @@ import org.locationtech.spatial4j.distance.DistanceUtils;
  */
 public abstract class SpatialPrefixTreeFactory {
 
-  private static final double DEFAULT_GEO_MAX_DETAIL_KM = 0.001;//1m
-  public static final String PREFIX_TREE = "prefixTree";
-  public static final String MAX_LEVELS = "maxLevels";
-  public static final String MAX_DIST_ERR = "maxDistErr";
+	private static final double DEFAULT_GEO_MAX_DETAIL_KM = 0.001;//1m
+	public static final String PREFIX_TREE = "prefixTree";
+	public static final String MAX_LEVELS = "maxLevels";
+	public static final String MAX_DIST_ERR = "maxDistErr";
 
-  protected Map<String, String> args;
-  protected SpatialContext ctx;
-  protected Integer maxLevels;
+	protected Map<String, String> args;
+	protected SpatialContext ctx;
+	protected Integer maxLevels;
 
-  /**
-   * The factory  is looked up via "prefixTree" in args, expecting "geohash" or "quad".
-   * If it's neither of these, then "geohash" is chosen for a geo context, otherwise "quad" is chosen.
-   */
-  public static SpatialPrefixTree makeSPT(Map<String,String> args, ClassLoader classLoader, SpatialContext ctx) {
-    //TODO refactor to use Java SPI like how Lucene already does for codecs/postingsFormats, etc
-    SpatialPrefixTreeFactory instance;
-    String cname = args.get(PREFIX_TREE);
-    if (cname == null)
-      cname = ctx.isGeo() ? "geohash" : "quad";
-    if ("geohash".equalsIgnoreCase(cname))
-      instance = new GeohashPrefixTree.Factory();
-    else if ("quad".equalsIgnoreCase(cname))
-      instance = new QuadPrefixTree.Factory();
-    else if ("packedQuad".equalsIgnoreCase(cname))
-      instance = new PackedQuadPrefixTree.Factory();
-    else if ("s2".equalsIgnoreCase(cname))
-      instance = new S2PrefixTree.Factory();
-    else {
-      try {
-        Class<?> c = classLoader.loadClass(cname);
-        instance = (SpatialPrefixTreeFactory) c.newInstance();
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-    instance.init(args,ctx);
-    return instance.newSPT();
-  }
+	/**
+	 * The factory  is looked up via "prefixTree" in args, expecting "geohash" or "quad".
+	 * If it's neither of these, then "geohash" is chosen for a geo context, otherwise "quad" is chosen.
+	 */
+	public static SpatialPrefixTree makeSPT(Map<String, String> args, ClassLoader classLoader, SpatialContext ctx) {
+		//TODO refactor to use Java SPI like how Lucene already does for codecs/postingsFormats, etc
+		SpatialPrefixTreeFactory instance;
+		String cname = args.get(PREFIX_TREE);
+		if (cname == null)
+			cname = ctx.isGeo() ? "geohash" : "quad";
+		if ("geohash".equalsIgnoreCase(cname))
+			instance = new GeohashPrefixTree.Factory();
+		else if ("quad".equalsIgnoreCase(cname))
+			instance = new QuadPrefixTree.Factory();
+		else if ("packedQuad".equalsIgnoreCase(cname))
+			instance = new PackedQuadPrefixTree.Factory();
+		else if ("s2".equalsIgnoreCase(cname))
+			instance = new S2PrefixTree.Factory();
+		else {
+			try {
+				Class<?> c = classLoader.loadClass(cname);
+				instance = (SpatialPrefixTreeFactory) c.newInstance();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		instance.init(args, ctx);
+		return instance.newSPT();
+	}
 
-  protected void init(Map<String, String> args, SpatialContext ctx) {
-    this.args = args;
-    this.ctx = ctx;
-    initMaxLevels();
-  }
+	protected void init(Map<String, String> args, SpatialContext ctx) {
+		this.args = args;
+		this.ctx = ctx;
+		initMaxLevels();
+	}
 
-  protected void initMaxLevels() {
-    String mlStr = args.get(MAX_LEVELS);
-    if (mlStr != null) {
-      maxLevels = Integer.valueOf(mlStr);
-      return;
-    }
+	protected void initMaxLevels() {
+		String mlStr = args.get(MAX_LEVELS);
+		if (mlStr != null) {
+			maxLevels = Integer.valueOf(mlStr);
+			return;
+		}
 
-    double degrees;
-    String maxDetailDistStr = args.get(MAX_DIST_ERR);
-    if (maxDetailDistStr == null) {
-      if (!ctx.isGeo()) {
-        return;//let default to max
-      }
-      degrees = DistanceUtils.dist2Degrees(DEFAULT_GEO_MAX_DETAIL_KM, DistanceUtils.EARTH_MEAN_RADIUS_KM);
-    } else {
-      degrees = Double.parseDouble(maxDetailDistStr);
-    }
-    maxLevels = getLevelForDistance(degrees);
-  }
+		double degrees;
+		String maxDetailDistStr = args.get(MAX_DIST_ERR);
+		if (maxDetailDistStr == null) {
+			if (!ctx.isGeo()) {
+				return;//let default to max
+			}
+			degrees = DistanceUtils.dist2Degrees(DEFAULT_GEO_MAX_DETAIL_KM, DistanceUtils.EARTH_MEAN_RADIUS_KM);
+		} else {
+			degrees = Double.parseDouble(maxDetailDistStr);
+		}
+		maxLevels = getLevelForDistance(degrees);
+	}
 
-  /** Calls {@link SpatialPrefixTree#getLevelForDistance(double)}. */
-  protected abstract int getLevelForDistance(double degrees);
+	/**
+	 * Calls {@link SpatialPrefixTree#getLevelForDistance(double)}.
+	 */
+	protected abstract int getLevelForDistance(double degrees);
 
-  protected abstract SpatialPrefixTree newSPT();
+	protected abstract SpatialPrefixTree newSPT();
 
 }

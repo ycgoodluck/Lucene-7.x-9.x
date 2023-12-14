@@ -31,24 +31,24 @@ import org.apache.lucene.search.Query;
  */
 public class BoostQueryNodeBuilder implements StandardQueryBuilder {
 
-  public BoostQueryNodeBuilder() {
-    // empty constructor
-  }
+	public BoostQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public Query build(QueryNode queryNode) throws QueryNodeException {
-    BoostQueryNode boostNode = (BoostQueryNode) queryNode;
-    QueryNode child = boostNode.getChild();
+	@Override
+	public Query build(QueryNode queryNode) throws QueryNodeException {
+		BoostQueryNode boostNode = (BoostQueryNode) queryNode;
+		QueryNode child = boostNode.getChild();
 
-    if (child == null) {
-      return null;
-    }
+		if (child == null) {
+			return null;
+		}
 
-    Query query = (Query) child
-        .getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+		Query query = (Query) child
+			.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
 
-    return new BoostQuery(query, boostNode.getValue());
+		return new BoostQuery(query, boostNode.getValue());
 
-  }
+	}
 
 }

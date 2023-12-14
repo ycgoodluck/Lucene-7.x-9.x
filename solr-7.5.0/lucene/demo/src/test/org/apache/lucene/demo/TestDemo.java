@@ -26,30 +26,30 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestDemo extends LuceneTestCase {
 
-  private void testOneSearch(Path indexPath, String query, int expectedHitCount) throws Exception {
-    PrintStream outSave = System.out;
-    try {
-      ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-      PrintStream fakeSystemOut = new PrintStream(bytes, false, Charset.defaultCharset().name());
-      System.setOut(fakeSystemOut);
-      SearchFiles.main(new String[] {"-query", query, "-index", indexPath.toString()});
-      fakeSystemOut.flush();
-      String output = bytes.toString(Charset.defaultCharset().name()); // intentionally use default encoding
-      assertTrue("output=" + output, output.contains(expectedHitCount + " total matching documents"));
-    } finally {
-      System.setOut(outSave);
-    }
-  }
+	private void testOneSearch(Path indexPath, String query, int expectedHitCount) throws Exception {
+		PrintStream outSave = System.out;
+		try {
+			ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+			PrintStream fakeSystemOut = new PrintStream(bytes, false, Charset.defaultCharset().name());
+			System.setOut(fakeSystemOut);
+			SearchFiles.main(new String[]{"-query", query, "-index", indexPath.toString()});
+			fakeSystemOut.flush();
+			String output = bytes.toString(Charset.defaultCharset().name()); // intentionally use default encoding
+			assertTrue("output=" + output, output.contains(expectedHitCount + " total matching documents"));
+		} finally {
+			System.setOut(outSave);
+		}
+	}
 
-  public void testIndexSearch() throws Exception {
-    Path dir = getDataPath("test-files/docs");
-    Path indexDir = createTempDir("ContribDemoTest");
-    IndexFiles.main(new String[] { "-create", "-docs", dir.toString(), "-index", indexDir.toString()});
-    testOneSearch(indexDir, "apache", 3);
-    testOneSearch(indexDir, "patent", 8);
-    testOneSearch(indexDir, "lucene", 0);
-    testOneSearch(indexDir, "gnu", 6);
-    testOneSearch(indexDir, "derivative", 8);
-    testOneSearch(indexDir, "license", 13);
-  }
+	public void testIndexSearch() throws Exception {
+		Path dir = getDataPath("test-files/docs");
+		Path indexDir = createTempDir("ContribDemoTest");
+		IndexFiles.main(new String[]{"-create", "-docs", dir.toString(), "-index", indexDir.toString()});
+		testOneSearch(indexDir, "apache", 3);
+		testOneSearch(indexDir, "patent", 8);
+		testOneSearch(indexDir, "lucene", 0);
+		testOneSearch(indexDir, "gnu", 6);
+		testOneSearch(indexDir, "derivative", 8);
+		testOneSearch(indexDir, "license", 13);
+	}
 }

@@ -35,7 +35,7 @@ import org.apache.lucene.search.similarities.Normalization.NoNormalization;
  * {@code BasicModel}, {@code AfterEffect} and {@code Normalization},
  * respectively. The names of these classes were chosen to match the names of
  * their counterparts in the Terrier IR engine.</p>
- * <p>To construct a DFRSimilarity, you must specify the implementations for 
+ * <p>To construct a DFRSimilarity, you must specify the implementations for
  * all three components of DFR:
  * <ol>
  *    <li>{@link BasicModel}: Basic model of information content:
@@ -72,100 +72,108 @@ import org.apache.lucene.search.similarities.Normalization.NoNormalization;
  * approximation of the Binomial) and D (Divergence approximation of the
  * Binomial) are not implemented because their formula couldn't be written in
  * a way that makes scores non-decreasing with the normalized term frequency.
+ *
+ * @lucene.experimental
  * @see BasicModel
  * @see AfterEffect
  * @see Normalization
- * @lucene.experimental
  */
 public class DFRSimilarity extends SimilarityBase {
-  /** The basic model for information content. */
-  protected final BasicModel basicModel;
-  /** The first normalization of the information content. */
-  protected final AfterEffect afterEffect;
-  /** The term frequency normalization. */
-  protected final Normalization normalization;
-  
-  /**
-   * Creates DFRSimilarity from the three components.
-   * <p>
-   * Note that <code>null</code> values are not allowed:
-   * if you want no normalization, instead pass
-   * {@link NoNormalization}.
-   * @param basicModel Basic model of information content
-   * @param afterEffect First normalization of information gain
-   * @param normalization Second (length) normalization
-   */
-  public DFRSimilarity(BasicModel basicModel,
-                       AfterEffect afterEffect,
-                       Normalization normalization) {
-    if (basicModel == null || afterEffect == null || normalization == null) {
-      throw new NullPointerException("null parameters not allowed.");
-    }
-    this.basicModel = basicModel;
-    this.afterEffect = afterEffect;
-    this.normalization = normalization;
-  }
+	/**
+	 * The basic model for information content.
+	 */
+	protected final BasicModel basicModel;
+	/**
+	 * The first normalization of the information content.
+	 */
+	protected final AfterEffect afterEffect;
+	/**
+	 * The term frequency normalization.
+	 */
+	protected final Normalization normalization;
 
-  @Override
-  protected double score(BasicStats stats, double freq, double docLen) {
-    double tfn = normalization.tfn(stats, freq, docLen);
-    double aeTimes1pTfn = afterEffect.scoreTimes1pTfn(stats);
-    return stats.getBoost() * basicModel.score(stats, tfn, aeTimes1pTfn);
-  }
+	/**
+	 * Creates DFRSimilarity from the three components.
+	 * <p>
+	 * Note that <code>null</code> values are not allowed:
+	 * if you want no normalization, instead pass
+	 * {@link NoNormalization}.
+	 *
+	 * @param basicModel    Basic model of information content
+	 * @param afterEffect   First normalization of information gain
+	 * @param normalization Second (length) normalization
+	 */
+	public DFRSimilarity(BasicModel basicModel,
+											 AfterEffect afterEffect,
+											 Normalization normalization) {
+		if (basicModel == null || afterEffect == null || normalization == null) {
+			throw new NullPointerException("null parameters not allowed.");
+		}
+		this.basicModel = basicModel;
+		this.afterEffect = afterEffect;
+		this.normalization = normalization;
+	}
 
-  @Override
-  protected void explain(List<Explanation> subs,
-      BasicStats stats, double freq, double docLen) {
-    if (stats.getBoost() != 1.0d) {
-      subs.add(Explanation.match( (float)stats.getBoost(), "boost, query boost"));
-    }
-    
-    Explanation normExpl = normalization.explain(stats, freq, docLen);
-    double tfn = normalization.tfn(stats, freq, docLen);
-    double aeTimes1pTfn = afterEffect.scoreTimes1pTfn(stats);
-    subs.add(normExpl);
-    subs.add(basicModel.explain(stats, tfn, aeTimes1pTfn));
-    subs.add(afterEffect.explain(stats, tfn));
-  }
+	@Override
+	protected double score(BasicStats stats, double freq, double docLen) {
+		double tfn = normalization.tfn(stats, freq, docLen);
+		double aeTimes1pTfn = afterEffect.scoreTimes1pTfn(stats);
+		return stats.getBoost() * basicModel.score(stats, tfn, aeTimes1pTfn);
+	}
 
-  @Override
-  protected Explanation explain(
-      BasicStats stats, Explanation freq, double docLen) {
-    List<Explanation> subs = new ArrayList<>();
-    explain(subs, stats, freq.getValue().doubleValue(), docLen);
+	@Override
+	protected void explain(List<Explanation> subs,
+												 BasicStats stats, double freq, double docLen) {
+		if (stats.getBoost() != 1.0d) {
+			subs.add(Explanation.match((float) stats.getBoost(), "boost, query boost"));
+		}
 
-    return Explanation.match(
-        (float) score(stats, freq.getValue().doubleValue(), docLen),
-        "score(" + getClass().getSimpleName() + ", freq=" +
-            freq.getValue() +"), computed as boost * " +
-            "basicModel.score(stats, tfn) * afterEffect.score(stats, tfn) from:",
-        subs);
-  }
+		Explanation normExpl = normalization.explain(stats, freq, docLen);
+		double tfn = normalization.tfn(stats, freq, docLen);
+		double aeTimes1pTfn = afterEffect.scoreTimes1pTfn(stats);
+		subs.add(normExpl);
+		subs.add(basicModel.explain(stats, tfn, aeTimes1pTfn));
+		subs.add(afterEffect.explain(stats, tfn));
+	}
 
-  @Override
-  public String toString() {
-    return "DFR " + basicModel.toString() + afterEffect.toString()
-                  + normalization.toString();
-  }
-  
-  /**
-   * Returns the basic model of information content
-   */
-  public BasicModel getBasicModel() {
-    return basicModel;
-  }
-  
-  /**
-   * Returns the first normalization
-   */
-  public AfterEffect getAfterEffect() {
-    return afterEffect;
-  }
-  
-  /**
-   * Returns the second normalization
-   */
-  public Normalization getNormalization() {
-    return normalization;
-  }
+	@Override
+	protected Explanation explain(
+		BasicStats stats, Explanation freq, double docLen) {
+		List<Explanation> subs = new ArrayList<>();
+		explain(subs, stats, freq.getValue().doubleValue(), docLen);
+
+		return Explanation.match(
+			(float) score(stats, freq.getValue().doubleValue(), docLen),
+			"score(" + getClass().getSimpleName() + ", freq=" +
+				freq.getValue() + "), computed as boost * " +
+				"basicModel.score(stats, tfn) * afterEffect.score(stats, tfn) from:",
+			subs);
+	}
+
+	@Override
+	public String toString() {
+		return "DFR " + basicModel.toString() + afterEffect.toString()
+			+ normalization.toString();
+	}
+
+	/**
+	 * Returns the basic model of information content
+	 */
+	public BasicModel getBasicModel() {
+		return basicModel;
+	}
+
+	/**
+	 * Returns the first normalization
+	 */
+	public AfterEffect getAfterEffect() {
+		return afterEffect;
+	}
+
+	/**
+	 * Returns the second normalization
+	 */
+	public Normalization getNormalization() {
+		return normalization;
+	}
 }

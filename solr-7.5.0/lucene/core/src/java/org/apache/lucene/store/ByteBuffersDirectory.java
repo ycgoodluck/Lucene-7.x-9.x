@@ -48,227 +48,228 @@ import org.apache.lucene.util.BitUtil;
  * @lucene.experimental
  */
 public final class ByteBuffersDirectory extends BaseDirectory {
-  public static final BiFunction<String, ByteBuffersDataOutput, IndexInput> OUTPUT_AS_MANY_BUFFERS = 
-      (fileName, output) -> {
-        ByteBuffersDataInput dataInput = output.toDataInput();
-        String inputName = String.format(Locale.ROOT, "%s (file=%s, buffers=%s)",
-            ByteBuffersIndexInput.class.getSimpleName(),
-            fileName,
-            dataInput.toString());
-        return new ByteBuffersIndexInput(dataInput, inputName);
-      };
+	public static final BiFunction<String, ByteBuffersDataOutput, IndexInput> OUTPUT_AS_MANY_BUFFERS =
+		(fileName, output) -> {
+			ByteBuffersDataInput dataInput = output.toDataInput();
+			String inputName = String.format(Locale.ROOT, "%s (file=%s, buffers=%s)",
+				ByteBuffersIndexInput.class.getSimpleName(),
+				fileName,
+				dataInput.toString());
+			return new ByteBuffersIndexInput(dataInput, inputName);
+		};
 
-  public static final BiFunction<String, ByteBuffersDataOutput, IndexInput> OUTPUT_AS_ONE_BUFFER = 
-      (fileName, output) -> {
-        ByteBuffersDataInput dataInput = new ByteBuffersDataInput(Arrays.asList(ByteBuffer.wrap(output.toArrayCopy())));
-        String inputName = String.format(Locale.ROOT, "%s (file=%s, buffers=%s)",
-            ByteBuffersIndexInput.class.getSimpleName(),
-            fileName,
-            dataInput.toString());
-        return new ByteBuffersIndexInput(dataInput, inputName);
-      };
+	public static final BiFunction<String, ByteBuffersDataOutput, IndexInput> OUTPUT_AS_ONE_BUFFER =
+		(fileName, output) -> {
+			ByteBuffersDataInput dataInput = new ByteBuffersDataInput(Arrays.asList(ByteBuffer.wrap(output.toArrayCopy())));
+			String inputName = String.format(Locale.ROOT, "%s (file=%s, buffers=%s)",
+				ByteBuffersIndexInput.class.getSimpleName(),
+				fileName,
+				dataInput.toString());
+			return new ByteBuffersIndexInput(dataInput, inputName);
+		};
 
-  public static final BiFunction<String, ByteBuffersDataOutput, IndexInput> OUTPUT_AS_BYTE_ARRAY = 
-      (fileName, output) -> {
-        byte[] array = output.toArrayCopy();
-        String inputName = String.format(Locale.ROOT, "%s (file=%s, length=%s)",
-            ByteArrayIndexInput.class.getSimpleName(),
-            fileName,
-            array.length);
-        return new ByteArrayIndexInput(inputName, array, 0, array.length);
-      };
+	public static final BiFunction<String, ByteBuffersDataOutput, IndexInput> OUTPUT_AS_BYTE_ARRAY =
+		(fileName, output) -> {
+			byte[] array = output.toArrayCopy();
+			String inputName = String.format(Locale.ROOT, "%s (file=%s, length=%s)",
+				ByteArrayIndexInput.class.getSimpleName(),
+				fileName,
+				array.length);
+			return new ByteArrayIndexInput(inputName, array, 0, array.length);
+		};
 
-  public static final BiFunction<String, ByteBuffersDataOutput, IndexInput> OUTPUT_AS_MANY_BUFFERS_LUCENE = 
-      (fileName, output) -> {
-        List<ByteBuffer> bufferList = output.toBufferList();
-        int chunkSizePower;
-        bufferList.add(ByteBuffer.allocate(0));
-        int blockSize = ByteBuffersDataInput.determineBlockPage(bufferList);
-        if (blockSize == 0) {
-          chunkSizePower = 30;
-        } else {
-          chunkSizePower = Integer.numberOfTrailingZeros(BitUtil.nextHighestPowerOfTwo(blockSize));
-        }
+	public static final BiFunction<String, ByteBuffersDataOutput, IndexInput> OUTPUT_AS_MANY_BUFFERS_LUCENE =
+		(fileName, output) -> {
+			List<ByteBuffer> bufferList = output.toBufferList();
+			int chunkSizePower;
+			bufferList.add(ByteBuffer.allocate(0));
+			int blockSize = ByteBuffersDataInput.determineBlockPage(bufferList);
+			if (blockSize == 0) {
+				chunkSizePower = 30;
+			} else {
+				chunkSizePower = Integer.numberOfTrailingZeros(BitUtil.nextHighestPowerOfTwo(blockSize));
+			}
 
-        String inputName = String.format(Locale.ROOT, "%s (file=%s)",
-            ByteBuffersDirectory.class.getSimpleName(),
-            fileName);
+			String inputName = String.format(Locale.ROOT, "%s (file=%s)",
+				ByteBuffersDirectory.class.getSimpleName(),
+				fileName);
 
-        ByteBufferGuard guard = new ByteBufferGuard("none", (String resourceDescription, ByteBuffer b) -> {});
-        return ByteBufferIndexInput.newInstance(inputName, 
-            bufferList.toArray(new ByteBuffer [bufferList.size()]), 
-            output.size(), chunkSizePower, guard);
-      };
+			ByteBufferGuard guard = new ByteBufferGuard("none", (String resourceDescription, ByteBuffer b) -> {
+			});
+			return ByteBufferIndexInput.newInstance(inputName,
+				bufferList.toArray(new ByteBuffer[bufferList.size()]),
+				output.size(), chunkSizePower, guard);
+		};
 
-  private final Function<String, String> tempFileName = new Function<String, String>() {
-    private final AtomicLong counter = new AtomicLong();
+	private final Function<String, String> tempFileName = new Function<String, String>() {
+		private final AtomicLong counter = new AtomicLong();
 
-    @Override
-    public String apply(String suffix) {
-      return suffix + "_" + Long.toString(counter.getAndIncrement(), Character.MAX_RADIX);
-    }
-  };
+		@Override
+		public String apply(String suffix) {
+			return suffix + "_" + Long.toString(counter.getAndIncrement(), Character.MAX_RADIX);
+		}
+	};
 
-  private final ConcurrentHashMap<String, FileEntry> files = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, FileEntry> files = new ConcurrentHashMap<>();
 
-  /**
-   * Conversion between a buffered index output and the corresponding index input
-   * for a given file.   
-   */
-  private final BiFunction<String, ByteBuffersDataOutput, IndexInput> outputToInput;
+	/**
+	 * Conversion between a buffered index output and the corresponding index input
+	 * for a given file.
+	 */
+	private final BiFunction<String, ByteBuffersDataOutput, IndexInput> outputToInput;
 
-  /**
-   * A supplier of {@link ByteBuffersDataOutput} instances used to buffer up 
-   * the content of written files.
-   */
-  private final Supplier<ByteBuffersDataOutput> bbOutputSupplier;
+	/**
+	 * A supplier of {@link ByteBuffersDataOutput} instances used to buffer up
+	 * the content of written files.
+	 */
+	private final Supplier<ByteBuffersDataOutput> bbOutputSupplier;
 
-  public ByteBuffersDirectory() {
-    this(new SingleInstanceLockFactory());
-  }
-  
-  public ByteBuffersDirectory(LockFactory lockFactory) {
-    this(lockFactory, ByteBuffersDataOutput::new, OUTPUT_AS_MANY_BUFFERS);
-  }
+	public ByteBuffersDirectory() {
+		this(new SingleInstanceLockFactory());
+	}
 
-  public ByteBuffersDirectory(LockFactory factory, 
-      Supplier<ByteBuffersDataOutput> bbOutputSupplier,
-      BiFunction<String, ByteBuffersDataOutput, IndexInput> outputToInput) {
-    super(factory);
-    this.outputToInput = Objects.requireNonNull(outputToInput);
-    this.bbOutputSupplier = Objects.requireNonNull(bbOutputSupplier);
-  }
+	public ByteBuffersDirectory(LockFactory lockFactory) {
+		this(lockFactory, ByteBuffersDataOutput::new, OUTPUT_AS_MANY_BUFFERS);
+	}
 
-  @Override
-  public String[] listAll() throws IOException {
-    ensureOpen();
-    return files.keySet().stream().sorted().toArray(String[]::new);
-  }
+	public ByteBuffersDirectory(LockFactory factory,
+															Supplier<ByteBuffersDataOutput> bbOutputSupplier,
+															BiFunction<String, ByteBuffersDataOutput, IndexInput> outputToInput) {
+		super(factory);
+		this.outputToInput = Objects.requireNonNull(outputToInput);
+		this.bbOutputSupplier = Objects.requireNonNull(bbOutputSupplier);
+	}
 
-  @Override
-  public void deleteFile(String name) throws IOException {
-    ensureOpen();
-    FileEntry removed = files.remove(name);
-    if (removed == null) {
-      throw new NoSuchFileException(name);
-    }
-  }
+	@Override
+	public String[] listAll() throws IOException {
+		ensureOpen();
+		return files.keySet().stream().sorted().toArray(String[]::new);
+	}
 
-  @Override
-  public long fileLength(String name) throws IOException {
-    ensureOpen();
-    FileEntry file = files.get(name);
-    if (file == null) {
-      throw new NoSuchFileException(name);
-    }
-    return file.length();
-  }
+	@Override
+	public void deleteFile(String name) throws IOException {
+		ensureOpen();
+		FileEntry removed = files.remove(name);
+		if (removed == null) {
+			throw new NoSuchFileException(name);
+		}
+	}
 
-  @Override
-  public IndexOutput createOutput(String name, IOContext context) throws IOException {
-    ensureOpen();
-    FileEntry e = new FileEntry(name); 
-    if (files.putIfAbsent(name, e) != null) {
-      throw new FileAlreadyExistsException("File already exists: " + name);
-    }
-    return e.createOutput(outputToInput);
-  }
+	@Override
+	public long fileLength(String name) throws IOException {
+		ensureOpen();
+		FileEntry file = files.get(name);
+		if (file == null) {
+			throw new NoSuchFileException(name);
+		}
+		return file.length();
+	}
 
-  @Override
-  public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) throws IOException {
-    ensureOpen();
-    while (true) {
-      String name = IndexFileNames.segmentFileName(prefix, tempFileName.apply(suffix), "tmp");
-      FileEntry e = new FileEntry(name); 
-      if (files.putIfAbsent(name, e) == null) {
-        return e.createOutput(outputToInput);
-      }
-    }
-  }
+	@Override
+	public IndexOutput createOutput(String name, IOContext context) throws IOException {
+		ensureOpen();
+		FileEntry e = new FileEntry(name);
+		if (files.putIfAbsent(name, e) != null) {
+			throw new FileAlreadyExistsException("File already exists: " + name);
+		}
+		return e.createOutput(outputToInput);
+	}
 
-  @Override
-  public void rename(String source, String dest) throws IOException {
-    ensureOpen();
+	@Override
+	public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) throws IOException {
+		ensureOpen();
+		while (true) {
+			String name = IndexFileNames.segmentFileName(prefix, tempFileName.apply(suffix), "tmp");
+			FileEntry e = new FileEntry(name);
+			if (files.putIfAbsent(name, e) == null) {
+				return e.createOutput(outputToInput);
+			}
+		}
+	}
 
-    FileEntry file = files.get(source);
-    if (file == null) {
-      throw new NoSuchFileException(source);
-    }
-    if (files.putIfAbsent(dest, file) != null) {
-      throw new FileAlreadyExistsException(dest);
-    }
-    if (!files.remove(source, file)) {
-      throw new IllegalStateException("File was unexpectedly replaced: " + source);
-    }
-    files.remove(source);
-  }
+	@Override
+	public void rename(String source, String dest) throws IOException {
+		ensureOpen();
 
-  @Override
-  public void sync(Collection<String> names) throws IOException {
-    ensureOpen();
-  }
+		FileEntry file = files.get(source);
+		if (file == null) {
+			throw new NoSuchFileException(source);
+		}
+		if (files.putIfAbsent(dest, file) != null) {
+			throw new FileAlreadyExistsException(dest);
+		}
+		if (!files.remove(source, file)) {
+			throw new IllegalStateException("File was unexpectedly replaced: " + source);
+		}
+		files.remove(source);
+	}
 
-  @Override
-  public void syncMetaData() throws IOException {
-    ensureOpen();
-  }
+	@Override
+	public void sync(Collection<String> names) throws IOException {
+		ensureOpen();
+	}
 
-  @Override
-  public IndexInput openInput(String name, IOContext context) throws IOException {
-    ensureOpen();
-    FileEntry e = files.get(name);
-    if (e == null) {
-      throw new NoSuchFileException(name);
-    } else {
-      return e.openInput();
-    }
-  }
+	@Override
+	public void syncMetaData() throws IOException {
+		ensureOpen();
+	}
 
-  @Override
-  public void close() throws IOException {
-    isOpen = false;
-    files.clear();
-  }
+	@Override
+	public IndexInput openInput(String name, IOContext context) throws IOException {
+		ensureOpen();
+		FileEntry e = files.get(name);
+		if (e == null) {
+			throw new NoSuchFileException(name);
+		} else {
+			return e.openInput();
+		}
+	}
 
-  private final class FileEntry {
-    private final String fileName;
+	@Override
+	public void close() throws IOException {
+		isOpen = false;
+		files.clear();
+	}
 
-    private volatile IndexInput content;
-    private volatile long cachedLength;
+	private final class FileEntry {
+		private final String fileName;
 
-    public FileEntry(String name) {
-      this.fileName = name;
-    }
+		private volatile IndexInput content;
+		private volatile long cachedLength;
 
-    public long length() {
-      // We return 0 length until the IndexOutput is closed and flushed.
-      return cachedLength;
-    }
+		public FileEntry(String name) {
+			this.fileName = name;
+		}
 
-    public IndexInput openInput() throws IOException {
-      IndexInput local = this.content;
-      if (local == null) {
-        throw new AccessDeniedException("Can't open a file still open for writing: " + fileName);
-      }
+		public long length() {
+			// We return 0 length until the IndexOutput is closed and flushed.
+			return cachedLength;
+		}
 
-      return local.clone();
-    }
+		public IndexInput openInput() throws IOException {
+			IndexInput local = this.content;
+			if (local == null) {
+				throw new AccessDeniedException("Can't open a file still open for writing: " + fileName);
+			}
 
-    final IndexOutput createOutput(BiFunction<String, ByteBuffersDataOutput, IndexInput> outputToInput) throws IOException {
-      if (content != null) {
-        throw new IOException("Can only write to a file once: " + fileName);
-      }
+			return local.clone();
+		}
 
-      String clazzName = ByteBuffersDirectory.class.getSimpleName();
-      String outputName = String.format(Locale.ROOT, "%s output (file=%s)", clazzName, fileName);
+		final IndexOutput createOutput(BiFunction<String, ByteBuffersDataOutput, IndexInput> outputToInput) throws IOException {
+			if (content != null) {
+				throw new IOException("Can only write to a file once: " + fileName);
+			}
 
-      return new ByteBuffersIndexOutput(
-          bbOutputSupplier.get(), outputName, fileName,
-          new CRC32(),
-          (output) -> {
-            content = outputToInput.apply(fileName, output);
-            cachedLength = output.size();
-          });
-    }
-  }
+			String clazzName = ByteBuffersDirectory.class.getSimpleName();
+			String outputName = String.format(Locale.ROOT, "%s output (file=%s)", clazzName, fileName);
+
+			return new ByteBuffersIndexOutput(
+				bbOutputSupplier.get(), outputName, fileName,
+				new CRC32(),
+				(output) -> {
+					content = outputToInput.apply(fileName, output);
+					cachedLength = output.size();
+				});
+		}
+	}
 }

@@ -27,62 +27,62 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestFlex extends LuceneTestCase {
 
-  // Test non-flex API emulated on flex index
-  public void testNonFlex() throws Exception {
-    Directory d = newDirectory();
+	// Test non-flex API emulated on flex index
+	public void testNonFlex() throws Exception {
+		Directory d = newDirectory();
 
-    final int DOC_COUNT = 177;
+		final int DOC_COUNT = 177;
 
-    IndexWriter w = new IndexWriter(
-        d,
-        new IndexWriterConfig(new MockAnalyzer(random())).
-            setMaxBufferedDocs(7).setMergePolicy(newLogMergePolicy())
-    );
+		IndexWriter w = new IndexWriter(
+			d,
+			new IndexWriterConfig(new MockAnalyzer(random())).
+				setMaxBufferedDocs(7).setMergePolicy(newLogMergePolicy())
+		);
 
-    for(int iter=0;iter<2;iter++) {
-      if (iter == 0) {
-        Document doc = new Document();
-        doc.add(newTextField("field1", "this is field1", Field.Store.NO));
-        doc.add(newTextField("field2", "this is field2", Field.Store.NO));
-        doc.add(newTextField("field3", "aaa", Field.Store.NO));
-        doc.add(newTextField("field4", "bbb", Field.Store.NO));
-        for(int i=0;i<DOC_COUNT;i++) {
-          w.addDocument(doc);
-        }
-      } else {
-        w.forceMerge(1);
-      }
+		for (int iter = 0; iter < 2; iter++) {
+			if (iter == 0) {
+				Document doc = new Document();
+				doc.add(newTextField("field1", "this is field1", Field.Store.NO));
+				doc.add(newTextField("field2", "this is field2", Field.Store.NO));
+				doc.add(newTextField("field3", "aaa", Field.Store.NO));
+				doc.add(newTextField("field4", "bbb", Field.Store.NO));
+				for (int i = 0; i < DOC_COUNT; i++) {
+					w.addDocument(doc);
+				}
+			} else {
+				w.forceMerge(1);
+			}
 
-      IndexReader r = w.getReader();
-      
-      TermsEnum terms = MultiTerms.getTerms(r, "field3").iterator();
-      assertEquals(TermsEnum.SeekStatus.END, terms.seekCeil(new BytesRef("abc")));
-      r.close();
-    }
+			IndexReader r = w.getReader();
 
-    w.close();
-    d.close();
-  }
+			TermsEnum terms = MultiTerms.getTerms(r, "field3").iterator();
+			assertEquals(TermsEnum.SeekStatus.END, terms.seekCeil(new BytesRef("abc")));
+			r.close();
+		}
 
-  public void testTermOrd() throws Exception {
-    Directory d = newDirectory();
-    IndexWriter w = new IndexWriter(d, newIndexWriterConfig(new MockAnalyzer(random()))
-                                         .setCodec(TestUtil.alwaysPostingsFormat(TestUtil.getDefaultPostingsFormat())));
-    Document doc = new Document();
-    doc.add(newTextField("f", "a b c", Field.Store.NO));
-    w.addDocument(doc);
-    w.forceMerge(1);
-    DirectoryReader r = w.getReader();
-    TermsEnum terms = getOnlyLeafReader(r).terms("f").iterator();
-    assertTrue(terms.next() != null);
-    try {
-      assertEquals(0, terms.ord());
-    } catch (UnsupportedOperationException uoe) {
-      // ok -- codec is not required to support this op
-    }
-    r.close();
-    w.close();
-    d.close();
-  }
+		w.close();
+		d.close();
+	}
+
+	public void testTermOrd() throws Exception {
+		Directory d = newDirectory();
+		IndexWriter w = new IndexWriter(d, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setCodec(TestUtil.alwaysPostingsFormat(TestUtil.getDefaultPostingsFormat())));
+		Document doc = new Document();
+		doc.add(newTextField("f", "a b c", Field.Store.NO));
+		w.addDocument(doc);
+		w.forceMerge(1);
+		DirectoryReader r = w.getReader();
+		TermsEnum terms = getOnlyLeafReader(r).terms("f").iterator();
+		assertTrue(terms.next() != null);
+		try {
+			assertEquals(0, terms.ord());
+		} catch (UnsupportedOperationException uoe) {
+			// ok -- codec is not required to support this op
+		}
+		r.close();
+		w.close();
+		d.close();
+	}
 }
 

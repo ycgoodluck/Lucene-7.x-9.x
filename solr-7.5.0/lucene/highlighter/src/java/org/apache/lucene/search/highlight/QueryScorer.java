@@ -38,254 +38,254 @@ import org.apache.lucene.search.spans.SpanQuery;
  * generating the 'hit' on the document.
  */
 public class QueryScorer implements Scorer {
-  private float totalScore;
-  private Set<String> foundTerms;
-  private Map<String,WeightedSpanTerm> fieldWeightedSpanTerms;
-  private float maxTermWeight;
-  private int position = -1;
-  private String defaultField;
-  private CharTermAttribute termAtt;
-  private PositionIncrementAttribute posIncAtt;
-  private boolean expandMultiTermQuery = true;
-  private Query query;
-  private String field;
-  private IndexReader reader;
-  private boolean skipInitExtractor;
-  private boolean wrapToCaching = true;
-  private int maxCharsToAnalyze;
-  private boolean usePayloads = false;
+	private float totalScore;
+	private Set<String> foundTerms;
+	private Map<String, WeightedSpanTerm> fieldWeightedSpanTerms;
+	private float maxTermWeight;
+	private int position = -1;
+	private String defaultField;
+	private CharTermAttribute termAtt;
+	private PositionIncrementAttribute posIncAtt;
+	private boolean expandMultiTermQuery = true;
+	private Query query;
+	private String field;
+	private IndexReader reader;
+	private boolean skipInitExtractor;
+	private boolean wrapToCaching = true;
+	private int maxCharsToAnalyze;
+	private boolean usePayloads = false;
 
-  /**
-   * @param query Query to use for highlighting
-   */
-  public QueryScorer(Query query) {
-    init(query, null, null, true);
-  }
+	/**
+	 * @param query Query to use for highlighting
+	 */
+	public QueryScorer(Query query) {
+		init(query, null, null, true);
+	}
 
-  /**
-   * @param query Query to use for highlighting
-   * @param field Field to highlight - pass null to ignore fields
-   */
-  public QueryScorer(Query query, String field) {
-    init(query, field, null, true);
-  }
+	/**
+	 * @param query Query to use for highlighting
+	 * @param field Field to highlight - pass null to ignore fields
+	 */
+	public QueryScorer(Query query, String field) {
+		init(query, field, null, true);
+	}
 
-  /**
-   * @param query Query to use for highlighting
-   * @param field Field to highlight - pass null to ignore fields
-   * @param reader {@link IndexReader} to use for quasi tf/idf scoring
-   */
-  public QueryScorer(Query query, IndexReader reader, String field) {
-    init(query, field, reader, true);
-  }
+	/**
+	 * @param query  Query to use for highlighting
+	 * @param field  Field to highlight - pass null to ignore fields
+	 * @param reader {@link IndexReader} to use for quasi tf/idf scoring
+	 */
+	public QueryScorer(Query query, IndexReader reader, String field) {
+		init(query, field, reader, true);
+	}
 
 
-  /**
-   * @param query to use for highlighting
-   * @param reader {@link IndexReader} to use for quasi tf/idf scoring
-   * @param field to highlight - pass null to ignore fields
-   */
-  public QueryScorer(Query query, IndexReader reader, String field, String defaultField) {
-    this.defaultField = defaultField;
-    init(query, field, reader, true);
-  }
+	/**
+	 * @param query  to use for highlighting
+	 * @param reader {@link IndexReader} to use for quasi tf/idf scoring
+	 * @param field  to highlight - pass null to ignore fields
+	 */
+	public QueryScorer(Query query, IndexReader reader, String field, String defaultField) {
+		this.defaultField = defaultField;
+		init(query, field, reader, true);
+	}
 
-  /**
-   * @param defaultField - The default field for queries with the field name unspecified
-   */
-  public QueryScorer(Query query, String field, String defaultField) {
-    this.defaultField = defaultField;
-    init(query, field, null, true);
-  }
+	/**
+	 * @param defaultField - The default field for queries with the field name unspecified
+	 */
+	public QueryScorer(Query query, String field, String defaultField) {
+		this.defaultField = defaultField;
+		init(query, field, null, true);
+	}
 
-  /**
-   * @param weightedTerms an array of pre-created {@link WeightedSpanTerm}s
-   */
-  public QueryScorer(WeightedSpanTerm[] weightedTerms) {
-    this.fieldWeightedSpanTerms = new HashMap<>(weightedTerms.length);
+	/**
+	 * @param weightedTerms an array of pre-created {@link WeightedSpanTerm}s
+	 */
+	public QueryScorer(WeightedSpanTerm[] weightedTerms) {
+		this.fieldWeightedSpanTerms = new HashMap<>(weightedTerms.length);
 
-    for (int i = 0; i < weightedTerms.length; i++) {
-      WeightedSpanTerm existingTerm = fieldWeightedSpanTerms.get(weightedTerms[i].term);
+		for (int i = 0; i < weightedTerms.length; i++) {
+			WeightedSpanTerm existingTerm = fieldWeightedSpanTerms.get(weightedTerms[i].term);
 
-      if ((existingTerm == null) ||
-            (existingTerm.weight < weightedTerms[i].weight)) {
-        // if a term is defined more than once, always use the highest
-        // scoring weight
-        fieldWeightedSpanTerms.put(weightedTerms[i].term, weightedTerms[i]);
-        maxTermWeight = Math.max(maxTermWeight, weightedTerms[i].getWeight());
-      }
-    }
-    skipInitExtractor = true;
-  }
+			if ((existingTerm == null) ||
+				(existingTerm.weight < weightedTerms[i].weight)) {
+				// if a term is defined more than once, always use the highest
+				// scoring weight
+				fieldWeightedSpanTerms.put(weightedTerms[i].term, weightedTerms[i]);
+				maxTermWeight = Math.max(maxTermWeight, weightedTerms[i].getWeight());
+			}
+		}
+		skipInitExtractor = true;
+	}
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lucene.search.highlight.Scorer#getFragmentScore()
-   */
-  @Override
-  public float getFragmentScore() {
-    return totalScore;
-  }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.apache.lucene.search.highlight.Scorer#getFragmentScore()
+	 */
+	@Override
+	public float getFragmentScore() {
+		return totalScore;
+	}
 
-  /**
-   *
-   * @return The highest weighted term (useful for passing to
-   *         GradientFormatter to set top end of coloring scale).
-   */
-  public float getMaxTermWeight() {
-    return maxTermWeight;
-  }
+	/**
+	 * @return The highest weighted term (useful for passing to
+	 * GradientFormatter to set top end of coloring scale).
+	 */
+	public float getMaxTermWeight() {
+		return maxTermWeight;
+	}
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lucene.search.highlight.Scorer#getTokenScore(org.apache.lucene.analysis.Token,
-   *      int)
-   */
-  @Override
-  public float getTokenScore() {
-    position += posIncAtt.getPositionIncrement();
-    String termText = termAtt.toString();
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.apache.lucene.search.highlight.Scorer#getTokenScore(org.apache.lucene.analysis.Token,
+	 *      int)
+	 */
+	@Override
+	public float getTokenScore() {
+		position += posIncAtt.getPositionIncrement();
+		String termText = termAtt.toString();
 
-    WeightedSpanTerm weightedSpanTerm;
+		WeightedSpanTerm weightedSpanTerm;
 
-    if ((weightedSpanTerm = fieldWeightedSpanTerms.get(
-              termText)) == null) {
-      return 0;
-    }
+		if ((weightedSpanTerm = fieldWeightedSpanTerms.get(
+			termText)) == null) {
+			return 0;
+		}
 
-    if (weightedSpanTerm.positionSensitive &&
-          !weightedSpanTerm.checkPosition(position)) {
-      return 0;
-    }
+		if (weightedSpanTerm.positionSensitive &&
+			!weightedSpanTerm.checkPosition(position)) {
+			return 0;
+		}
 
-    float score = weightedSpanTerm.getWeight();
+		float score = weightedSpanTerm.getWeight();
 
-    // found a query term - is it unique in this doc?
-    if (!foundTerms.contains(termText)) {
-      totalScore += score;
-      foundTerms.add(termText);
-    }
+		// found a query term - is it unique in this doc?
+		if (!foundTerms.contains(termText)) {
+			totalScore += score;
+			foundTerms.add(termText);
+		}
 
-    return score;
-  }
+		return score;
+	}
 
-  /* (non-Javadoc)
-   * @see org.apache.lucene.search.highlight.Scorer#init(org.apache.lucene.analysis.TokenStream)
-   */
-  @Override
-  public TokenStream init(TokenStream tokenStream) throws IOException {
-    position = -1;
-    termAtt = tokenStream.addAttribute(CharTermAttribute.class);
-    posIncAtt = tokenStream.addAttribute(PositionIncrementAttribute.class);
-    if(!skipInitExtractor) {
-      if(fieldWeightedSpanTerms != null) {
-        fieldWeightedSpanTerms.clear();
-      }
-      return initExtractor(tokenStream);
-    }
-    return null;
-  }
-  
-  /**
-   * Retrieve the {@link WeightedSpanTerm} for the specified token. Useful for passing
-   * Span information to a {@link Fragmenter}.
-   *
-   * @param token to get {@link WeightedSpanTerm} for
-   * @return WeightedSpanTerm for token
-   */
-  public WeightedSpanTerm getWeightedSpanTerm(String token) {
-    return fieldWeightedSpanTerms.get(token);
-  }
+	/* (non-Javadoc)
+	 * @see org.apache.lucene.search.highlight.Scorer#init(org.apache.lucene.analysis.TokenStream)
+	 */
+	@Override
+	public TokenStream init(TokenStream tokenStream) throws IOException {
+		position = -1;
+		termAtt = tokenStream.addAttribute(CharTermAttribute.class);
+		posIncAtt = tokenStream.addAttribute(PositionIncrementAttribute.class);
+		if (!skipInitExtractor) {
+			if (fieldWeightedSpanTerms != null) {
+				fieldWeightedSpanTerms.clear();
+			}
+			return initExtractor(tokenStream);
+		}
+		return null;
+	}
 
-  /**
-   */
-  private void init(Query query, String field, IndexReader reader, boolean expandMultiTermQuery) {
-    this.reader = reader;
-    this.expandMultiTermQuery = expandMultiTermQuery;
-    this.query = query;
-    this.field = field;
-  }
-  
-  private TokenStream initExtractor(TokenStream tokenStream) throws IOException {
-    WeightedSpanTermExtractor qse = newTermExtractor(defaultField);
-    qse.setMaxDocCharsToAnalyze(maxCharsToAnalyze);
-    qse.setExpandMultiTermQuery(expandMultiTermQuery);
-    qse.setWrapIfNotCachingTokenFilter(wrapToCaching);
-    qse.setUsePayloads(usePayloads);
-    if (reader == null) {
-      this.fieldWeightedSpanTerms = qse.getWeightedSpanTerms(query, 1f,
-          tokenStream, field);
-    } else {
-      this.fieldWeightedSpanTerms = qse.getWeightedSpanTermsWithScores(query, 1f,
-          tokenStream, field, reader);
-    }
-    if(qse.isCachedTokenStream()) {
-      return qse.getTokenStream();
-    }
-    
-    return null;
-  }
-  
-  protected WeightedSpanTermExtractor newTermExtractor(String defaultField) {
-    return defaultField == null ? new WeightedSpanTermExtractor()
-    : new WeightedSpanTermExtractor(defaultField);
-  }
+	/**
+	 * Retrieve the {@link WeightedSpanTerm} for the specified token. Useful for passing
+	 * Span information to a {@link Fragmenter}.
+	 *
+	 * @param token to get {@link WeightedSpanTerm} for
+	 * @return WeightedSpanTerm for token
+	 */
+	public WeightedSpanTerm getWeightedSpanTerm(String token) {
+		return fieldWeightedSpanTerms.get(token);
+	}
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lucene.search.highlight.Scorer#startFragment(org.apache.lucene.search.highlight.TextFragment)
-   */
-  @Override
-  public void startFragment(TextFragment newFragment) {
-    foundTerms = new HashSet<>();
-    totalScore = 0;
-  }
-  
-  /**
-   * @return true if multi-term queries should be expanded
-   */
-  public boolean isExpandMultiTermQuery() {
-    return expandMultiTermQuery;
-  }
+	/**
+	 *
+	 */
+	private void init(Query query, String field, IndexReader reader, boolean expandMultiTermQuery) {
+		this.reader = reader;
+		this.expandMultiTermQuery = expandMultiTermQuery;
+		this.query = query;
+		this.field = field;
+	}
 
-  /**
-   * Controls whether or not multi-term queries are expanded
-   * against a {@link MemoryIndex} {@link IndexReader}.
-   * 
-   * @param expandMultiTermQuery true if multi-term queries should be expanded
-   */
-  public void setExpandMultiTermQuery(boolean expandMultiTermQuery) {
-    this.expandMultiTermQuery = expandMultiTermQuery;
-  }
+	private TokenStream initExtractor(TokenStream tokenStream) throws IOException {
+		WeightedSpanTermExtractor qse = newTermExtractor(defaultField);
+		qse.setMaxDocCharsToAnalyze(maxCharsToAnalyze);
+		qse.setExpandMultiTermQuery(expandMultiTermQuery);
+		qse.setWrapIfNotCachingTokenFilter(wrapToCaching);
+		qse.setUsePayloads(usePayloads);
+		if (reader == null) {
+			this.fieldWeightedSpanTerms = qse.getWeightedSpanTerms(query, 1f,
+				tokenStream, field);
+		} else {
+			this.fieldWeightedSpanTerms = qse.getWeightedSpanTermsWithScores(query, 1f,
+				tokenStream, field, reader);
+		}
+		if (qse.isCachedTokenStream()) {
+			return qse.getTokenStream();
+		}
 
-  /**
-   * Whether or not we should capture payloads in {@link MemoryIndex} at each position so that queries can access them.
-   * This does not apply to term vector based TokenStreams, which support payloads only when the term vector has them.
-   */
-  public boolean isUsePayloads() {
-    return usePayloads;
-  }
+		return null;
+	}
 
-  public void setUsePayloads(boolean usePayloads) {
-    this.usePayloads = usePayloads;
-  }
+	protected WeightedSpanTermExtractor newTermExtractor(String defaultField) {
+		return defaultField == null ? new WeightedSpanTermExtractor()
+			: new WeightedSpanTermExtractor(defaultField);
+	}
 
-  /**
-   * By default, {@link TokenStream}s that are not of the type
-   * {@link CachingTokenFilter} are wrapped in a {@link CachingTokenFilter} to
-   * ensure an efficient reset - if you are already using a different caching
-   * {@link TokenStream} impl and you don't want it to be wrapped, set this to
-   * false. Note that term-vector based tokenstreams are detected and won't be
-   * wrapped either.
-   */
-  public void setWrapIfNotCachingTokenFilter(boolean wrap) {
-    this.wrapToCaching = wrap;
-  }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.apache.lucene.search.highlight.Scorer#startFragment(org.apache.lucene.search.highlight.TextFragment)
+	 */
+	@Override
+	public void startFragment(TextFragment newFragment) {
+		foundTerms = new HashSet<>();
+		totalScore = 0;
+	}
 
-  public void setMaxDocCharsToAnalyze(int maxDocCharsToAnalyze) {
-    this.maxCharsToAnalyze = maxDocCharsToAnalyze;
-  }
+	/**
+	 * @return true if multi-term queries should be expanded
+	 */
+	public boolean isExpandMultiTermQuery() {
+		return expandMultiTermQuery;
+	}
+
+	/**
+	 * Controls whether or not multi-term queries are expanded
+	 * against a {@link MemoryIndex} {@link IndexReader}.
+	 *
+	 * @param expandMultiTermQuery true if multi-term queries should be expanded
+	 */
+	public void setExpandMultiTermQuery(boolean expandMultiTermQuery) {
+		this.expandMultiTermQuery = expandMultiTermQuery;
+	}
+
+	/**
+	 * Whether or not we should capture payloads in {@link MemoryIndex} at each position so that queries can access them.
+	 * This does not apply to term vector based TokenStreams, which support payloads only when the term vector has them.
+	 */
+	public boolean isUsePayloads() {
+		return usePayloads;
+	}
+
+	public void setUsePayloads(boolean usePayloads) {
+		this.usePayloads = usePayloads;
+	}
+
+	/**
+	 * By default, {@link TokenStream}s that are not of the type
+	 * {@link CachingTokenFilter} are wrapped in a {@link CachingTokenFilter} to
+	 * ensure an efficient reset - if you are already using a different caching
+	 * {@link TokenStream} impl and you don't want it to be wrapped, set this to
+	 * false. Note that term-vector based tokenstreams are detected and won't be
+	 * wrapped either.
+	 */
+	public void setWrapIfNotCachingTokenFilter(boolean wrap) {
+		this.wrapToCaching = wrap;
+	}
+
+	public void setMaxDocCharsToAnalyze(int maxDocCharsToAnalyze) {
+		this.maxCharsToAnalyze = maxDocCharsToAnalyze;
+	}
 }

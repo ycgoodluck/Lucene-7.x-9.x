@@ -39,42 +39,45 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;
  * </pre>
+ *
  * @since 3.6.0
  */
 public class JapanesePartOfSpeechStopFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
-  private final String stopTagFiles;
-  private Set<String> stopTags;
+	private final String stopTagFiles;
+	private Set<String> stopTags;
 
-  /** Creates a new JapanesePartOfSpeechStopFilterFactory */
-  public JapanesePartOfSpeechStopFilterFactory(Map<String,String> args) {
-    super(args);
-    stopTagFiles = get(args, "tags");
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    stopTags = null;
-    CharArraySet cas = getWordSet(loader, stopTagFiles, false);
-    if (cas != null) {
-      stopTags = new HashSet<>();
-      for (Object element : cas) {
-        char chars[] = (char[]) element;
-        stopTags.add(new String(chars));
-      }
-    }
-  }
+	/**
+	 * Creates a new JapanesePartOfSpeechStopFilterFactory
+	 */
+	public JapanesePartOfSpeechStopFilterFactory(Map<String, String> args) {
+		super(args);
+		stopTagFiles = get(args, "tags");
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream stream) {
-    // if stoptags is null, it means the file is empty
-    if (stopTags != null) {
-      final TokenStream filter = new JapanesePartOfSpeechStopFilter(stream, stopTags);
-      return filter;
-    } else {
-      return stream;
-    }
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		stopTags = null;
+		CharArraySet cas = getWordSet(loader, stopTagFiles, false);
+		if (cas != null) {
+			stopTags = new HashSet<>();
+			for (Object element : cas) {
+				char chars[] = (char[]) element;
+				stopTags.add(new String(chars));
+			}
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream stream) {
+		// if stoptags is null, it means the file is empty
+		if (stopTags != null) {
+			final TokenStream filter = new JapanesePartOfSpeechStopFilter(stream, stopTags);
+			return filter;
+		} else {
+			return stream;
+		}
+	}
 }

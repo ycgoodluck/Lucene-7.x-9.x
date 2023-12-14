@@ -40,13 +40,13 @@ import org.apache.lucene.util.IntsRef;
  * before or while merging the indexes.
  * <p>
  * For re-mapping the ordinals during index merge, do the following:
- * 
+ *
  * <pre class="prettyprint">
  * // merge the old taxonomy with the new one.
  * OrdinalMap map = new MemoryOrdinalMap();
  * DirectoryTaxonomyWriter.addTaxonomy(srcTaxoDir, map);
  * int[] ordmap = map.getMap();
- * 
+ *
  * // Add the index and re-map ordinals on the go
  * DirectoryReader reader = DirectoryReader.open(oldDir);
  * IndexWriterConfig conf = new IndexWriterConfig(VER, ANALYZER);
@@ -59,113 +59,114 @@ import org.apache.lucene.util.IntsRef;
  * writer.addIndexes(new MultiReader(wrappedLeaves));
  * writer.commit();
  * </pre>
- * 
+ *
  * @lucene.experimental
  */
 public class OrdinalMappingLeafReader extends FilterLeafReader {
-  
-  // silly way, but we need to use dedupAndEncode and it's protected on FacetsConfig.
-  private static class InnerFacetsConfig extends FacetsConfig {
-    
-    InnerFacetsConfig() {}
-    
-    @Override
-    public BytesRef dedupAndEncode(IntsRef ordinals) {
-      return super.dedupAndEncode(ordinals);
-    }
-    
-  }
-  
-  private class OrdinalMappingBinaryDocValues extends FilterBinaryDocValues {
-    
-    private final IntsRef ordinals = new IntsRef(32);
-    private final OrdinalsSegmentReader ordsReader;
-    
-    OrdinalMappingBinaryDocValues(OrdinalsSegmentReader ordsReader, BinaryDocValues in) throws IOException {
-      super(in);
-      this.ordsReader = ordsReader;
-    }
-    
-    @SuppressWarnings("synthetic-access")
-    @Override
-    public BytesRef binaryValue() {
-      try {
-        // NOTE: this isn't quite koscher, because in general
-        // multiple threads can call BinaryDV.get which would
-        // then conflict on the single ordinals instance, but
-        // because this impl is only used for merging, we know
-        // only 1 thread calls us:
-        ordsReader.get(docID(), ordinals);
-        
-        // map the ordinals
-        for (int i = 0; i < ordinals.length; i++) {
-          ordinals.ints[i] = ordinalMap[ordinals.ints[i]];
-        }
-        
-        return encode(ordinals);
-      } catch (IOException e) {
-        throw new RuntimeException("error reading category ordinals for doc " + docID(), e);
-      }
-    }
-  }
-  
-  private final int[] ordinalMap;
-  private final InnerFacetsConfig facetsConfig;
-  private final Set<String> facetFields;
-  
-  /**
-   * Wraps an LeafReader, mapping ordinals according to the ordinalMap, using
-   * the provided {@link FacetsConfig} which was used to build the wrapped
-   * reader.
-   */
-  public OrdinalMappingLeafReader(LeafReader in, int[] ordinalMap, FacetsConfig srcConfig) {
-    super(in);
-    this.ordinalMap = ordinalMap;
-    facetsConfig = new InnerFacetsConfig();
-    facetFields = new HashSet<>();
-    for (DimConfig dc : srcConfig.getDimConfigs().values()) {
-      facetFields.add(dc.indexFieldName);
-    }
-    // always add the default indexFieldName. This is because FacetsConfig does
-    // not explicitly record dimensions that were indexed under the default
-    // DimConfig, unless they have a custome DimConfig.
-    facetFields.add(FacetsConfig.DEFAULT_DIM_CONFIG.indexFieldName);
-  }
-  
-  /**
-   * Expert: encodes category ordinals into a BytesRef. Override in case you use
-   * custom encoding, other than the default done by FacetsConfig.
-   */
-  protected BytesRef encode(IntsRef ordinals) {
-    return facetsConfig.dedupAndEncode(ordinals);
-  }
-  
-  /**
-   * Expert: override in case you used custom encoding for the categories under
-   * this field.
-   */
-  protected OrdinalsReader getOrdinalsReader(String field) {
-    return new DocValuesOrdinalsReader(field);
-  }
-  
-  @Override
-  public BinaryDocValues getBinaryDocValues(String field) throws IOException {
-    if (facetFields.contains(field)) {
-      final OrdinalsReader ordsReader = getOrdinalsReader(field);
-      return new OrdinalMappingBinaryDocValues(ordsReader.getReader(in.getContext()), in.getBinaryDocValues(field));
-    } else {
-      return in.getBinaryDocValues(field);
-    }
-  }
 
-  @Override
-  public CacheHelper getCoreCacheHelper() {
-    return null;
-  }
+	// silly way, but we need to use dedupAndEncode and it's protected on FacetsConfig.
+	private static class InnerFacetsConfig extends FacetsConfig {
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    return null;
-  }
-  
+		InnerFacetsConfig() {
+		}
+
+		@Override
+		public BytesRef dedupAndEncode(IntsRef ordinals) {
+			return super.dedupAndEncode(ordinals);
+		}
+
+	}
+
+	private class OrdinalMappingBinaryDocValues extends FilterBinaryDocValues {
+
+		private final IntsRef ordinals = new IntsRef(32);
+		private final OrdinalsSegmentReader ordsReader;
+
+		OrdinalMappingBinaryDocValues(OrdinalsSegmentReader ordsReader, BinaryDocValues in) throws IOException {
+			super(in);
+			this.ordsReader = ordsReader;
+		}
+
+		@SuppressWarnings("synthetic-access")
+		@Override
+		public BytesRef binaryValue() {
+			try {
+				// NOTE: this isn't quite koscher, because in general
+				// multiple threads can call BinaryDV.get which would
+				// then conflict on the single ordinals instance, but
+				// because this impl is only used for merging, we know
+				// only 1 thread calls us:
+				ordsReader.get(docID(), ordinals);
+
+				// map the ordinals
+				for (int i = 0; i < ordinals.length; i++) {
+					ordinals.ints[i] = ordinalMap[ordinals.ints[i]];
+				}
+
+				return encode(ordinals);
+			} catch (IOException e) {
+				throw new RuntimeException("error reading category ordinals for doc " + docID(), e);
+			}
+		}
+	}
+
+	private final int[] ordinalMap;
+	private final InnerFacetsConfig facetsConfig;
+	private final Set<String> facetFields;
+
+	/**
+	 * Wraps an LeafReader, mapping ordinals according to the ordinalMap, using
+	 * the provided {@link FacetsConfig} which was used to build the wrapped
+	 * reader.
+	 */
+	public OrdinalMappingLeafReader(LeafReader in, int[] ordinalMap, FacetsConfig srcConfig) {
+		super(in);
+		this.ordinalMap = ordinalMap;
+		facetsConfig = new InnerFacetsConfig();
+		facetFields = new HashSet<>();
+		for (DimConfig dc : srcConfig.getDimConfigs().values()) {
+			facetFields.add(dc.indexFieldName);
+		}
+		// always add the default indexFieldName. This is because FacetsConfig does
+		// not explicitly record dimensions that were indexed under the default
+		// DimConfig, unless they have a custome DimConfig.
+		facetFields.add(FacetsConfig.DEFAULT_DIM_CONFIG.indexFieldName);
+	}
+
+	/**
+	 * Expert: encodes category ordinals into a BytesRef. Override in case you use
+	 * custom encoding, other than the default done by FacetsConfig.
+	 */
+	protected BytesRef encode(IntsRef ordinals) {
+		return facetsConfig.dedupAndEncode(ordinals);
+	}
+
+	/**
+	 * Expert: override in case you used custom encoding for the categories under
+	 * this field.
+	 */
+	protected OrdinalsReader getOrdinalsReader(String field) {
+		return new DocValuesOrdinalsReader(field);
+	}
+
+	@Override
+	public BinaryDocValues getBinaryDocValues(String field) throws IOException {
+		if (facetFields.contains(field)) {
+			final OrdinalsReader ordsReader = getOrdinalsReader(field);
+			return new OrdinalMappingBinaryDocValues(ordsReader.getReader(in.getContext()), in.getBinaryDocValues(field));
+		} else {
+			return in.getBinaryDocValues(field);
+		}
+	}
+
+	@Override
+	public CacheHelper getCoreCacheHelper() {
+		return null;
+	}
+
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		return null;
+	}
+
 }

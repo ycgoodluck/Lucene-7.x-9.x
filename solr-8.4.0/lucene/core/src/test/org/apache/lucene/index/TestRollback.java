@@ -25,34 +25,34 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestRollback extends LuceneTestCase {
 
-  // LUCENE-2536
-  public void testRollbackIntegrityWithBufferFlush() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter rw = new RandomIndexWriter(random(), dir);
-    for (int i = 0; i < 5; i++) {
-      Document doc = new Document();
-      doc.add(newStringField("pk", Integer.toString(i), Field.Store.YES));
-      rw.addDocument(doc);
-    }
-    rw.close();
+	// LUCENE-2536
+	public void testRollbackIntegrityWithBufferFlush() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter rw = new RandomIndexWriter(random(), dir);
+		for (int i = 0; i < 5; i++) {
+			Document doc = new Document();
+			doc.add(newStringField("pk", Integer.toString(i), Field.Store.YES));
+			rw.addDocument(doc);
+		}
+		rw.close();
 
-    // If buffer size is small enough to cause a flush, errors ensue...
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
-                                           .setMaxBufferedDocs(2)
-                                           .setOpenMode(IndexWriterConfig.OpenMode.APPEND));
+		// If buffer size is small enough to cause a flush, errors ensue...
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig(new MockAnalyzer(random()))
+			.setMaxBufferedDocs(2)
+			.setOpenMode(IndexWriterConfig.OpenMode.APPEND));
 
-    for (int i = 0; i < 3; i++) {
-      Document doc = new Document();
-      String value = Integer.toString(i);
-      doc.add(newStringField("pk", value, Field.Store.YES));
-      doc.add(newStringField("text", "foo", Field.Store.YES));
-      w.updateDocument(new Term("pk", value), doc);
-    }
-    w.rollback();
+		for (int i = 0; i < 3; i++) {
+			Document doc = new Document();
+			String value = Integer.toString(i);
+			doc.add(newStringField("pk", value, Field.Store.YES));
+			doc.add(newStringField("text", "foo", Field.Store.YES));
+			w.updateDocument(new Term("pk", value), doc);
+		}
+		w.rollback();
 
-    IndexReader r = DirectoryReader.open(dir);
-    assertEquals("index should contain same number of docs post rollback", 5, r.numDocs());
-    r.close();
-    dir.close();
-  }
+		IndexReader r = DirectoryReader.open(dir);
+		assertEquals("index should contain same number of docs post rollback", 5, r.numDocs());
+		r.close();
+		dir.close();
+	}
 }

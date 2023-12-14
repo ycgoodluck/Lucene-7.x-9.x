@@ -25,36 +25,39 @@ import java.util.List;
  * @lucene.experimental
  */
 public class GeoPathFactory {
-  private GeoPathFactory() {
-  }
+	private GeoPathFactory() {
+	}
 
-  /**
-   * Create a GeoPath of the right kind given the specified information.
-   * @param planetModel is the planet model.
-   * @param maxCutoffAngle is the width of the path, measured as an angle.
-   * @param pathPoints are the points in the path.
-   * @return a GeoPath corresponding to what was specified.
-   */
-  public static GeoPath makeGeoPath(final PlanetModel planetModel, final double maxCutoffAngle, final GeoPoint[] pathPoints) {
-    if (maxCutoffAngle < Vector.MINIMUM_ANGULAR_RESOLUTION) {
-      return new GeoDegeneratePath(planetModel, filterPoints(pathPoints));
-    }
-    return new GeoStandardPath(planetModel, maxCutoffAngle, filterPoints(pathPoints));
-  }
+	/**
+	 * Create a GeoPath of the right kind given the specified information.
+	 *
+	 * @param planetModel    is the planet model.
+	 * @param maxCutoffAngle is the width of the path, measured as an angle.
+	 * @param pathPoints     are the points in the path.
+	 * @return a GeoPath corresponding to what was specified.
+	 */
+	public static GeoPath makeGeoPath(final PlanetModel planetModel, final double maxCutoffAngle, final GeoPoint[] pathPoints) {
+		if (maxCutoffAngle < Vector.MINIMUM_ANGULAR_RESOLUTION) {
+			return new GeoDegeneratePath(planetModel, filterPoints(pathPoints));
+		}
+		return new GeoStandardPath(planetModel, maxCutoffAngle, filterPoints(pathPoints));
+	}
 
-  /** Filter duplicate points.
-   * @param pathPoints with the arras of points.
-   * @return the filtered array.
-   */
-  private static GeoPoint[] filterPoints(final GeoPoint[] pathPoints) {
-    final List<GeoPoint> noIdenticalPoints = new ArrayList<>(pathPoints.length);
-    for (int i = 0; i < pathPoints.length - 1; i++) {
-      if (!pathPoints[i].isNumericallyIdentical(pathPoints[i + 1])) {
-        noIdenticalPoints.add(pathPoints[i]);
-      }
-    }
-    noIdenticalPoints.add(pathPoints[pathPoints.length - 1]);
-    return noIdenticalPoints.toArray(new GeoPoint[noIdenticalPoints.size()]);
-  }
+	/**
+	 * Filter duplicate points.
+	 *
+	 * @param pathPoints with the arras of points.
+	 * @return the filtered array.
+	 */
+	private static GeoPoint[] filterPoints(final GeoPoint[] pathPoints) {
+		final List<GeoPoint> noIdenticalPoints = new ArrayList<>(pathPoints.length);
+		for (int i = 0; i < pathPoints.length - 1; i++) {
+			if (!pathPoints[i].isNumericallyIdentical(pathPoints[i + 1])) {
+				noIdenticalPoints.add(pathPoints[i]);
+			}
+		}
+		noIdenticalPoints.add(pathPoints[pathPoints.length - 1]);
+		return noIdenticalPoints.toArray(new GeoPoint[noIdenticalPoints.size()]);
+	}
 
 }

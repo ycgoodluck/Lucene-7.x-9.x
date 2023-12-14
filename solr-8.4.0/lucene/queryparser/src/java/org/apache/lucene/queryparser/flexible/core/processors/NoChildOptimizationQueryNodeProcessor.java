@@ -33,54 +33,54 @@ import org.apache.lucene.queryparser.flexible.core.nodes.*;
  * </p>
  */
 public class NoChildOptimizationQueryNodeProcessor extends
-    QueryNodeProcessorImpl {
+	QueryNodeProcessorImpl {
 
-  public NoChildOptimizationQueryNodeProcessor() {
-    // empty constructor
-  }
+	public NoChildOptimizationQueryNodeProcessor() {
+		// empty constructor
+	}
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-    if (node instanceof BooleanQueryNode || node instanceof BoostQueryNode
-        || node instanceof TokenizedPhraseQueryNode
-        || node instanceof ModifierQueryNode) {
+		if (node instanceof BooleanQueryNode || node instanceof BoostQueryNode
+			|| node instanceof TokenizedPhraseQueryNode
+			|| node instanceof ModifierQueryNode) {
 
-      List<QueryNode> children = node.getChildren();
+			List<QueryNode> children = node.getChildren();
 
-      if (children != null && children.size() > 0) {
+			if (children != null && children.size() > 0) {
 
-        for (QueryNode child : children) {
+				for (QueryNode child : children) {
 
-          if (!(child instanceof DeletedQueryNode)) {
-            return node;
-          }
+					if (!(child instanceof DeletedQueryNode)) {
+						return node;
+					}
 
-        }
+				}
 
-      }
+			}
 
-      return new MatchNoDocsQueryNode();
+			return new MatchNoDocsQueryNode();
 
-    }
+		}
 
-    return node;
+		return node;
 
-  }
+	}
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
 
-    return node;
+		return node;
 
-  }
+	}
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
-      throws QueryNodeException {
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children)
+		throws QueryNodeException {
 
-    return children;
+		return children;
 
-  }
+	}
 
 }

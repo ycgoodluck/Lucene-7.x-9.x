@@ -23,117 +23,135 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/** Expert: Describes the score computation for document and query. */
+/**
+ * Expert: Describes the score computation for document and query.
+ */
 public final class Explanation {
 
-  /**
-   * Create a new explanation for a match.
-   * @param value       the contribution to the score of the document
-   * @param description how {@code value} was computed
-   * @param details     sub explanations that contributed to this explanation
-   */
-  public static Explanation match(float value, String description, Collection<Explanation> details) {
-    return new Explanation(true, value, description, details);
-  }
+	/**
+	 * Create a new explanation for a match.
+	 *
+	 * @param value       the contribution to the score of the document
+	 * @param description how {@code value} was computed
+	 * @param details     sub explanations that contributed to this explanation
+	 */
+	public static Explanation match(float value, String description, Collection<Explanation> details) {
+		return new Explanation(true, value, description, details);
+	}
 
-  /**
-   * Create a new explanation for a match.
-   * @param value       the contribution to the score of the document
-   * @param description how {@code value} was computed
-   * @param details     sub explanations that contributed to this explanation
-   */
-  public static Explanation match(float value, String description, Explanation... details) {
-    return new Explanation(true, value, description, Arrays.asList(details));
-  }
+	/**
+	 * Create a new explanation for a match.
+	 *
+	 * @param value       the contribution to the score of the document
+	 * @param description how {@code value} was computed
+	 * @param details     sub explanations that contributed to this explanation
+	 */
+	public static Explanation match(float value, String description, Explanation... details) {
+		return new Explanation(true, value, description, Arrays.asList(details));
+	}
 
-  /**
-   * Create a new explanation for a document which does not match.
-   */
-  public static Explanation noMatch(String description, Collection<Explanation> details) {
-    return new Explanation(false, 0f, description, details);
-  }
+	/**
+	 * Create a new explanation for a document which does not match.
+	 */
+	public static Explanation noMatch(String description, Collection<Explanation> details) {
+		return new Explanation(false, 0f, description, details);
+	}
 
-  /**
-   * Create a new explanation for a document which does not match.
-   */
-  public static Explanation noMatch(String description, Explanation... details) {
-    return new Explanation(false, 0f, description, Arrays.asList(details));
-  }
+	/**
+	 * Create a new explanation for a document which does not match.
+	 */
+	public static Explanation noMatch(String description, Explanation... details) {
+		return new Explanation(false, 0f, description, Arrays.asList(details));
+	}
 
-  private final boolean match;                          // whether the document matched
-  private final float value;                            // the value of this node
-  private final String description;                     // what it represents
-  private final List<Explanation> details;              // sub-explanations
+	private final boolean match;                          // whether the document matched
+	private final float value;                            // the value of this node
+	private final String description;                     // what it represents
+	private final List<Explanation> details;              // sub-explanations
 
-  /** Create a new explanation  */
-  private Explanation(boolean match, float value, String description, Collection<Explanation> details) {
-    this.match = match;
-    this.value = value;
-    this.description = Objects.requireNonNull(description);
-    this.details = Collections.unmodifiableList(new ArrayList<>(details));
-    for (Explanation detail : details) {
-      Objects.requireNonNull(detail);
-    }
-  }
+	/**
+	 * Create a new explanation
+	 */
+	private Explanation(boolean match, float value, String description, Collection<Explanation> details) {
+		this.match = match;
+		this.value = value;
+		this.description = Objects.requireNonNull(description);
+		this.details = Collections.unmodifiableList(new ArrayList<>(details));
+		for (Explanation detail : details) {
+			Objects.requireNonNull(detail);
+		}
+	}
 
-  /**
-   * Indicates whether or not this Explanation models a match.
-   */
-  public boolean isMatch() {
-    return match;
-  }
-  
-  /** The value assigned to this explanation node. */
-  public float getValue() { return value; }
+	/**
+	 * Indicates whether or not this Explanation models a match.
+	 */
+	public boolean isMatch() {
+		return match;
+	}
 
-  /** A description of this explanation node. */
-  public String getDescription() { return description; }
+	/**
+	 * The value assigned to this explanation node.
+	 */
+	public float getValue() {
+		return value;
+	}
 
-  private String getSummary() {
-    return getValue() + " = " + getDescription();
-  }
-  
-  /** The sub-nodes of this explanation node. */
-  public Explanation[] getDetails() {
-    return details.toArray(new Explanation[0]);
-  }
+	/**
+	 * A description of this explanation node.
+	 */
+	public String getDescription() {
+		return description;
+	}
 
-  /** Render an explanation as text. */
-  @Override
-  public String toString() {
-    return toString(0);
-  }
+	private String getSummary() {
+		return getValue() + " = " + getDescription();
+	}
 
-  private String toString(int depth) {
-    StringBuilder buffer = new StringBuilder();
-    for (int i = 0; i < depth; i++) {
-      buffer.append("  ");
-    }
-    buffer.append(getSummary());
-    buffer.append("\n");
+	/**
+	 * The sub-nodes of this explanation node.
+	 */
+	public Explanation[] getDetails() {
+		return details.toArray(new Explanation[0]);
+	}
 
-    Explanation[] details = getDetails();
-    for (int i = 0 ; i < details.length; i++) {
-      buffer.append(details[i].toString(depth+1));
-    }
+	/**
+	 * Render an explanation as text.
+	 */
+	@Override
+	public String toString() {
+		return toString(0);
+	}
 
-    return buffer.toString();
-  }
+	private String toString(int depth) {
+		StringBuilder buffer = new StringBuilder();
+		for (int i = 0; i < depth; i++) {
+			buffer.append("  ");
+		}
+		buffer.append(getSummary());
+		buffer.append("\n");
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Explanation that = (Explanation) o;
-    return match == that.match &&
-        Float.compare(that.value, value) == 0 &&
-        Objects.equals(description, that.description) &&
-        Objects.equals(details, that.details);
-  }
+		Explanation[] details = getDetails();
+		for (int i = 0; i < details.length; i++) {
+			buffer.append(details[i].toString(depth + 1));
+		}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(match, value, description, details);
-  }
+		return buffer.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Explanation that = (Explanation) o;
+		return match == that.match &&
+			Float.compare(that.value, value) == 0 &&
+			Objects.equals(description, that.description) &&
+			Objects.equals(details, that.details);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(match, value, description, details);
+	}
 
 }

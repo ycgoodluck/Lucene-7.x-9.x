@@ -33,37 +33,37 @@ import java.io.IOException;
  */
 public final class KeywordRepeatFilter extends TokenFilter {
 
-  private final KeywordAttribute keywordAttribute = addAttribute(KeywordAttribute.class);
-  private final PositionIncrementAttribute posIncAttr = addAttribute(PositionIncrementAttribute.class);
-  private State state;
+	private final KeywordAttribute keywordAttribute = addAttribute(KeywordAttribute.class);
+	private final PositionIncrementAttribute posIncAttr = addAttribute(PositionIncrementAttribute.class);
+	private State state;
 
-  /**
-   * Construct a token stream filtering the given input.
-   */
-  public KeywordRepeatFilter(TokenStream input) {
-    super(input);
-  }
+	/**
+	 * Construct a token stream filtering the given input.
+	 */
+	public KeywordRepeatFilter(TokenStream input) {
+		super(input);
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (state != null) {
-      restoreState(state);
-      posIncAttr.setPositionIncrement(0);
-      keywordAttribute.setKeyword(false);
-      state = null;
-      return true;
-    }
-    if (input.incrementToken()) {
-      state = captureState();
-      keywordAttribute.setKeyword(true);
-      return true;
-    }
-    return false;
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (state != null) {
+			restoreState(state);
+			posIncAttr.setPositionIncrement(0);
+			keywordAttribute.setKeyword(false);
+			state = null;
+			return true;
+		}
+		if (input.incrementToken()) {
+			state = captureState();
+			keywordAttribute.setKeyword(true);
+			return true;
+		}
+		return false;
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    state = null;
-  }
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		state = null;
+	}
 }

@@ -26,27 +26,27 @@ import com.carrotsearch.randomizedtesting.annotations.Repeat;
  * Test reproduce message is right with {@link Repeat} annotation.
  */
 public class TestReproduceMessageWithRepeated extends WithNestedTests {
-  public static class Nested extends AbstractNestedTest {
-    @Test
-    @Repeat(iterations = 10)
-    public void testMe() {
-      throw new RuntimeException("bad");
-    }
-  }
+	public static class Nested extends AbstractNestedTest {
+		@Test
+		@Repeat(iterations = 10)
+		public void testMe() {
+			throw new RuntimeException("bad");
+		}
+	}
 
-  public TestReproduceMessageWithRepeated() {
-    super(true);
-  }
+	public TestReproduceMessageWithRepeated() {
+		super(true);
+	}
 
-  @Test
-  public void testRepeatedMessage() throws Exception { 
-    String syserr = runAndReturnSyserr();
-    Assert.assertTrue(syserr.contains(" -Dtests.method=testMe "));
-  }
+	@Test
+	public void testRepeatedMessage() throws Exception {
+		String syserr = runAndReturnSyserr();
+		Assert.assertTrue(syserr.contains(" -Dtests.method=testMe "));
+	}
 
-  private String runAndReturnSyserr() {
-    JUnitCore.runClasses(Nested.class);
-    String err = getSysErr();
-    return err;
-  }
+	private String runAndReturnSyserr() {
+		JUnitCore.runClasses(Nested.class);
+		String err = getSysErr();
+		return err;
+	}
 }

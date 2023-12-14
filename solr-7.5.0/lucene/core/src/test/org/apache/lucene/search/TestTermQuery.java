@@ -40,155 +40,160 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestTermQuery extends LuceneTestCase {
 
-  public void testEquals() throws IOException {
-    QueryUtils.checkEqual(
-        new TermQuery(new Term("foo", "bar")),
-        new TermQuery(new Term("foo", "bar")));
-    QueryUtils.checkUnequal(
-        new TermQuery(new Term("foo", "bar")),
-        new TermQuery(new Term("foo", "baz")));
-    QueryUtils.checkEqual(
-        new TermQuery(new Term("foo", "bar")),
-        new TermQuery(new Term("foo", "bar"), TermContext.build(new MultiReader().getContext(), new Term("foo", "bar"))));
-  }
+	public void testEquals() throws IOException {
+		QueryUtils.checkEqual(
+			new TermQuery(new Term("foo", "bar")),
+			new TermQuery(new Term("foo", "bar")));
+		QueryUtils.checkUnequal(
+			new TermQuery(new Term("foo", "bar")),
+			new TermQuery(new Term("foo", "baz")));
+		QueryUtils.checkEqual(
+			new TermQuery(new Term("foo", "bar")),
+			new TermQuery(new Term("foo", "bar"), TermContext.build(new MultiReader().getContext(), new Term("foo", "bar"))));
+	}
 
-  public void testCreateWeightDoesNotSeekIfScoresAreNotNeeded() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir, newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE));
-    // segment that contains the term
-    Document doc = new Document();
-    doc.add(new StringField("foo", "bar", Store.NO));
-    w.addDocument(doc);
-    w.getReader().close();
-    // segment that does not contain the term
-    doc = new Document();
-    doc.add(new StringField("foo", "baz", Store.NO));
-    w.addDocument(doc);
-    w.getReader().close();
-    // segment that does not contain the field
-    w.addDocument(new Document());
+	public void testCreateWeightDoesNotSeekIfScoresAreNotNeeded() throws IOException {
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir, newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE));
+		// segment that contains the term
+		Document doc = new Document();
+		doc.add(new StringField("foo", "bar", Store.NO));
+		w.addDocument(doc);
+		w.getReader().close();
+		// segment that does not contain the term
+		doc = new Document();
+		doc.add(new StringField("foo", "baz", Store.NO));
+		w.addDocument(doc);
+		w.getReader().close();
+		// segment that does not contain the field
+		w.addDocument(new Document());
 
-    DirectoryReader reader = w.getReader();
-    FilterDirectoryReader noSeekReader = new NoSeekDirectoryReader(reader);
-    IndexSearcher noSeekSearcher = new IndexSearcher(noSeekReader);
-    Query query = new TermQuery(new Term("foo", "bar"));
-    AssertionError e = expectThrows(AssertionError.class,
-        () -> noSeekSearcher.createWeight(noSeekSearcher.rewrite(query), true, 1));
-    assertEquals("no seek", e.getMessage());
+		DirectoryReader reader = w.getReader();
+		FilterDirectoryReader noSeekReader = new NoSeekDirectoryReader(reader);
+		IndexSearcher noSeekSearcher = new IndexSearcher(noSeekReader);
+		Query query = new TermQuery(new Term("foo", "bar"));
+		AssertionError e = expectThrows(AssertionError.class,
+			() -> noSeekSearcher.createWeight(noSeekSearcher.rewrite(query), true, 1));
+		assertEquals("no seek", e.getMessage());
 
-    noSeekSearcher.createWeight(noSeekSearcher.rewrite(query), false, 1); // no exception
-    IndexSearcher searcher = new IndexSearcher(reader);
-    // use a collector rather than searcher.count() which would just read the
-    // doc freq instead of creating a scorer
-    TotalHitCountCollector collector = new TotalHitCountCollector();
-    searcher.search(query, collector);
-    assertEquals(1, collector.getTotalHits());
-    TermQuery queryWithContext = new TermQuery(new Term("foo", "bar"),
-        TermContext.build(reader.getContext(), new Term("foo", "bar")));
-    collector = new TotalHitCountCollector();
-    searcher.search(queryWithContext, collector);
-    assertEquals(1, collector.getTotalHits());
+		noSeekSearcher.createWeight(noSeekSearcher.rewrite(query), false, 1); // no exception
+		IndexSearcher searcher = new IndexSearcher(reader);
+		// use a collector rather than searcher.count() which would just read the
+		// doc freq instead of creating a scorer
+		TotalHitCountCollector collector = new TotalHitCountCollector();
+		searcher.search(query, collector);
+		assertEquals(1, collector.getTotalHits());
+		TermQuery queryWithContext = new TermQuery(new Term("foo", "bar"),
+			TermContext.build(reader.getContext(), new Term("foo", "bar")));
+		collector = new TotalHitCountCollector();
+		searcher.search(queryWithContext, collector);
+		assertEquals(1, collector.getTotalHits());
 
-    IOUtils.close(reader, w, dir);
-  }
+		IOUtils.close(reader, w, dir);
+	}
 
-  public void testGetTermContext() throws Exception {
+	public void testGetTermContext() throws Exception {
 
-    // no term states:
-    assertNull(new TermQuery(new Term("foo", "bar")).getTermContext());
+		// no term states:
+		assertNull(new TermQuery(new Term("foo", "bar")).getTermContext());
 
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir, newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE));
-    // segment that contains the term
-    Document doc = new Document();
-    doc.add(new StringField("foo", "bar", Store.NO));
-    w.addDocument(doc);
-    w.getReader().close();
-    // segment that does not contain the term
-    doc = new Document();
-    doc.add(new StringField("foo", "baz", Store.NO));
-    w.addDocument(doc);
-    w.getReader().close();
-    // segment that does not contain the field
-    w.addDocument(new Document());
+		Directory dir = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir, newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE));
+		// segment that contains the term
+		Document doc = new Document();
+		doc.add(new StringField("foo", "bar", Store.NO));
+		w.addDocument(doc);
+		w.getReader().close();
+		// segment that does not contain the term
+		doc = new Document();
+		doc.add(new StringField("foo", "baz", Store.NO));
+		w.addDocument(doc);
+		w.getReader().close();
+		// segment that does not contain the field
+		w.addDocument(new Document());
 
-    DirectoryReader reader = w.getReader();
-    FilterDirectoryReader noSeekReader = new NoSeekDirectoryReader(reader);
-    IndexSearcher noSeekSearcher = new IndexSearcher(noSeekReader);
-    Query query = new TermQuery(new Term("foo", "bar"));
-    TermQuery queryWithContext = new TermQuery(new Term("foo", "bar"),
-        TermContext.build(reader.getContext(), new Term("foo", "bar")));
-    assertNotNull(queryWithContext.getTermContext());
-    IOUtils.close(reader, w, dir);
-  }
+		DirectoryReader reader = w.getReader();
+		FilterDirectoryReader noSeekReader = new NoSeekDirectoryReader(reader);
+		IndexSearcher noSeekSearcher = new IndexSearcher(noSeekReader);
+		Query query = new TermQuery(new Term("foo", "bar"));
+		TermQuery queryWithContext = new TermQuery(new Term("foo", "bar"),
+			TermContext.build(reader.getContext(), new Term("foo", "bar")));
+		assertNotNull(queryWithContext.getTermContext());
+		IOUtils.close(reader, w, dir);
+	}
 
-  private static class NoSeekDirectoryReader extends FilterDirectoryReader {
+	private static class NoSeekDirectoryReader extends FilterDirectoryReader {
 
-    public NoSeekDirectoryReader(DirectoryReader in) throws IOException {
-      super(in, new SubReaderWrapper() {
-        @Override
-        public LeafReader wrap(LeafReader reader) {
-          return new NoSeekLeafReader(reader);
-        }
-      });
-    }
+		public NoSeekDirectoryReader(DirectoryReader in) throws IOException {
+			super(in, new SubReaderWrapper() {
+				@Override
+				public LeafReader wrap(LeafReader reader) {
+					return new NoSeekLeafReader(reader);
+				}
+			});
+		}
 
-    @Override
-    protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
-      return new NoSeekDirectoryReader(in);
-    }
+		@Override
+		protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
+			return new NoSeekDirectoryReader(in);
+		}
 
-    @Override
-    public CacheHelper getReaderCacheHelper() {
-      return in.getReaderCacheHelper();
-    }
-    
-  }
+		@Override
+		public CacheHelper getReaderCacheHelper() {
+			return in.getReaderCacheHelper();
+		}
 
-  private static class NoSeekLeafReader extends FilterLeafReader {
+	}
 
-    public NoSeekLeafReader(LeafReader in) {
-      super(in);
-    }
+	private static class NoSeekLeafReader extends FilterLeafReader {
 
-    @Override
-    public Terms terms(String field) throws IOException {
-      Terms terms = super.terms(field);
-      return terms==null ? null : new FilterTerms(terms) {
-        @Override
-        public TermsEnum iterator() throws IOException {
-          return new FilterTermsEnum(super.iterator()) {
-            @Override
-            public SeekStatus seekCeil(BytesRef text) throws IOException {
-              throw new AssertionError("no seek");
-            }
-            @Override
-            public void seekExact(BytesRef term, TermState state) throws IOException {
-              throw new AssertionError("no seek");
-            }
-            @Override
-            public boolean seekExact(BytesRef text) throws IOException {
-              throw new AssertionError("no seek");
-            }
-            @Override
-            public void seekExact(long ord) throws IOException {
-              throw new AssertionError("no seek");
-            }
-          };
-        }
-      };
-    }
+		public NoSeekLeafReader(LeafReader in) {
+			super(in);
+		}
 
-    @Override
-    public CacheHelper getCoreCacheHelper() {
-      return in.getCoreCacheHelper();
-    }
+		@Override
+		public Terms terms(String field) throws IOException {
+			Terms terms = super.terms(field);
+			return terms == null ? null : new FilterTerms(terms) {
+				@Override
+				public TermsEnum iterator() throws IOException {
+					return new FilterTermsEnum(super.iterator()) {
+						@Override
+						public SeekStatus seekCeil(BytesRef text) throws IOException {
+							throw new AssertionError("no seek");
+						}
 
-    @Override
-    public CacheHelper getReaderCacheHelper() {
-      return in.getReaderCacheHelper();
-    }
+						@Override
+						public void seekExact(BytesRef term, TermState state) throws IOException {
+							throw new AssertionError("no seek");
+						}
 
-  };
+						@Override
+						public boolean seekExact(BytesRef text) throws IOException {
+							throw new AssertionError("no seek");
+						}
+
+						@Override
+						public void seekExact(long ord) throws IOException {
+							throw new AssertionError("no seek");
+						}
+					};
+				}
+			};
+		}
+
+		@Override
+		public CacheHelper getCoreCacheHelper() {
+			return in.getCoreCacheHelper();
+		}
+
+		@Override
+		public CacheHelper getReaderCacheHelper() {
+			return in.getReaderCacheHelper();
+		}
+
+	}
+
+	;
 
 }

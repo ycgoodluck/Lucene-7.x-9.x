@@ -27,40 +27,41 @@ import com.ibm.icu.text.RuleBasedNumberFormat;
  * Creates documents whose content is a <code>long</code> number starting from
  * <code>{@link Long#MIN_VALUE} + 10</code>.
  */
-public class LongToEnglishContentSource extends ContentSource{
-  private long counter = 0;
+public class LongToEnglishContentSource extends ContentSource {
+	private long counter = 0;
 
-  @Override
-  public void close() throws IOException {
-  }
+	@Override
+	public void close() throws IOException {
+	}
 
-  // TODO: we could take param to specify locale...
-  private final RuleBasedNumberFormat rnbf = new RuleBasedNumberFormat(Locale.ROOT,
-                                                                       RuleBasedNumberFormat.SPELLOUT);
-  @Override
-  public synchronized DocData getNextDocData(DocData docData) throws NoMoreDataException, IOException {
-    docData.clear();
-    // store the current counter to avoid synchronization later on
-    long curCounter;
-    synchronized (this) {
-      curCounter = counter;
-      if (counter == Long.MAX_VALUE){
-        counter = Long.MIN_VALUE;//loop around
-      } else {
-        ++counter;
-      }
-    }    
+	// TODO: we could take param to specify locale...
+	private final RuleBasedNumberFormat rnbf = new RuleBasedNumberFormat(Locale.ROOT,
+		RuleBasedNumberFormat.SPELLOUT);
 
-    docData.setBody(rnbf.format(curCounter));
-    docData.setName("doc_" + String.valueOf(curCounter));
-    docData.setTitle("title_" + String.valueOf(curCounter));
-    docData.setDate(new Date());
-    return docData;
-  }
+	@Override
+	public synchronized DocData getNextDocData(DocData docData) throws NoMoreDataException, IOException {
+		docData.clear();
+		// store the current counter to avoid synchronization later on
+		long curCounter;
+		synchronized (this) {
+			curCounter = counter;
+			if (counter == Long.MAX_VALUE) {
+				counter = Long.MIN_VALUE;//loop around
+			} else {
+				++counter;
+			}
+		}
 
-  @Override
-  public void resetInputs() throws IOException {
-    counter = Long.MIN_VALUE + 10;
-  }
-  
+		docData.setBody(rnbf.format(curCounter));
+		docData.setName("doc_" + String.valueOf(curCounter));
+		docData.setTitle("title_" + String.valueOf(curCounter));
+		docData.setDate(new Date());
+		return docData;
+	}
+
+	@Override
+	public void resetInputs() throws IOException {
+		counter = Long.MIN_VALUE + 10;
+	}
+
 }

@@ -30,80 +30,80 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;
 
 public class PersistenceTest extends LuceneTestCase {
-  public final String[] keys = new String[] {
-      "one", 
-      "two", 
-      "three", 
-      "four",
-      "oneness", 
-      "onerous", 
-      "onesimus", 
-      "twofold", 
-      "twonk", 
-      "thrive",
-      "through", 
-      "threat", 
-      "foundation", 
-      "fourier", 
-      "fourty"};
+	public final String[] keys = new String[]{
+		"one",
+		"two",
+		"three",
+		"four",
+		"oneness",
+		"onerous",
+		"onesimus",
+		"twofold",
+		"twonk",
+		"thrive",
+		"through",
+		"threat",
+		"foundation",
+		"fourier",
+		"fourty"};
 
-  public void testTSTPersistence() throws Exception {
-    runTest(TSTLookup.class, true);
-  }
-  
-  public void testJaspellPersistence() throws Exception {
-    runTest(JaspellLookup.class, true);
-  }
+	public void testTSTPersistence() throws Exception {
+		runTest(TSTLookup.class, true);
+	}
 
-  public void testFSTPersistence() throws Exception {
-    runTest(FSTCompletionLookup.class, false);
-  }
+	public void testJaspellPersistence() throws Exception {
+		runTest(JaspellLookup.class, true);
+	}
 
-  private Directory getDirectory() {     
-    return newDirectory();
-  }
+	public void testFSTPersistence() throws Exception {
+		runTest(FSTCompletionLookup.class, false);
+	}
 
-  private void runTest(Class<? extends Lookup> lookupClass, boolean supportsExactWeights) throws Exception {
+	private Directory getDirectory() {
+		return newDirectory();
+	}
 
-    // Add all input keys.
-    Lookup lookup;
-    Directory tempDir = getDirectory();
-    if (lookupClass == TSTLookup.class) {
-      lookup = new TSTLookup(tempDir, "suggest");
-    } else if (lookupClass == FSTCompletionLookup.class) {
-      lookup = new FSTCompletionLookup(tempDir, "suggest");
-    } else {
-      lookup = lookupClass.newInstance();
-    }
-    Input[] keys = new Input[this.keys.length];
-    for (int i = 0; i < keys.length; i++)
-      keys[i] = new Input(this.keys[i], i);
-    lookup.build(new InputArrayIterator(keys));
+	private void runTest(Class<? extends Lookup> lookupClass, boolean supportsExactWeights) throws Exception {
 
-    // Store the suggester.
-    Path storeDir = createTempDir(LuceneTestCase.getTestClass().getSimpleName());
-    lookup.store(Files.newOutputStream(storeDir.resolve("lookup.dat")));
+		// Add all input keys.
+		Lookup lookup;
+		Directory tempDir = getDirectory();
+		if (lookupClass == TSTLookup.class) {
+			lookup = new TSTLookup(tempDir, "suggest");
+		} else if (lookupClass == FSTCompletionLookup.class) {
+			lookup = new FSTCompletionLookup(tempDir, "suggest");
+		} else {
+			lookup = lookupClass.newInstance();
+		}
+		Input[] keys = new Input[this.keys.length];
+		for (int i = 0; i < keys.length; i++)
+			keys[i] = new Input(this.keys[i], i);
+		lookup.build(new InputArrayIterator(keys));
 
-    // Re-read it from disk.
-    lookup = lookupClass.newInstance();
-    lookup.load(Files.newInputStream(storeDir.resolve("lookup.dat")));
+		// Store the suggester.
+		Path storeDir = createTempDir(LuceneTestCase.getTestClass().getSimpleName());
+		lookup.store(Files.newOutputStream(storeDir.resolve("lookup.dat")));
 
-    // Assert validity.
-    Random random = random();
-    long previous = Long.MIN_VALUE;
-    for (Input k : keys) {
-      List<LookupResult> list = lookup.lookup(TestUtil.bytesToCharSequence(k.term, random), false, 1);
-      assertEquals(1, list.size());
-      LookupResult lookupResult = list.get(0);
-      assertNotNull(k.term.utf8ToString(), lookupResult.key);
+		// Re-read it from disk.
+		lookup = lookupClass.newInstance();
+		lookup.load(Files.newInputStream(storeDir.resolve("lookup.dat")));
 
-      if (supportsExactWeights) { 
-        assertEquals(k.term.utf8ToString(), k.v, lookupResult.value);
-      } else {
-        assertTrue(lookupResult.value + ">=" + previous, lookupResult.value >= previous);
-        previous = lookupResult.value;
-      }
-    }
-    tempDir.close();
-  }
+		// Assert validity.
+		Random random = random();
+		long previous = Long.MIN_VALUE;
+		for (Input k : keys) {
+			List<LookupResult> list = lookup.lookup(TestUtil.bytesToCharSequence(k.term, random), false, 1);
+			assertEquals(1, list.size());
+			LookupResult lookupResult = list.get(0);
+			assertNotNull(k.term.utf8ToString(), lookupResult.key);
+
+			if (supportsExactWeights) {
+				assertEquals(k.term.utf8ToString(), k.v, lookupResult.value);
+			} else {
+				assertTrue(lookupResult.value + ">=" + previous, lookupResult.value >= previous);
+				previous = lookupResult.value;
+			}
+		}
+		tempDir.close();
+	}
 }

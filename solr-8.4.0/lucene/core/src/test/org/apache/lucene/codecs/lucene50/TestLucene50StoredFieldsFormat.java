@@ -22,8 +22,8 @@ import org.apache.lucene.index.BaseStoredFieldsFormatTestCase;
 import org.apache.lucene.util.TestUtil;
 
 public class TestLucene50StoredFieldsFormat extends BaseStoredFieldsFormatTestCase {
-  @Override
-  protected Codec getCodec() {
-    return TestUtil.getDefaultCodec();
-  }
+	@Override
+	protected Codec getCodec() {
+		return TestUtil.getDefaultCodec();
+	}
 }

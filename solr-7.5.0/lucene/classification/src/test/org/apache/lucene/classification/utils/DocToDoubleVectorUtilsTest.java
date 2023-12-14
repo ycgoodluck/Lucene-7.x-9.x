@@ -38,66 +38,66 @@ import org.junit.Test;
  */
 public class DocToDoubleVectorUtilsTest extends LuceneTestCase {
 
-  private IndexReader index;
-  private Directory dir;
+	private IndexReader index;
+	private Directory dir;
 
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    dir = newDirectory();
-    RandomIndexWriter indexWriter = new RandomIndexWriter(random(), dir);
+	@Override
+	@Before
+	public void setUp() throws Exception {
+		super.setUp();
+		dir = newDirectory();
+		RandomIndexWriter indexWriter = new RandomIndexWriter(random(), dir);
 
-    FieldType ft = new FieldType(TextField.TYPE_STORED);
-    ft.setStoreTermVectors(true);
-    ft.setStoreTermVectorOffsets(true);
-    ft.setStoreTermVectorPositions(true);
+		FieldType ft = new FieldType(TextField.TYPE_STORED);
+		ft.setStoreTermVectors(true);
+		ft.setStoreTermVectorOffsets(true);
+		ft.setStoreTermVectorPositions(true);
 
-    Document doc;
-    for (int i = 0; i < 10; i++) {
-      doc = new Document();
-      doc.add(new Field("id", Integer.toString(i), ft));
-      doc.add(new Field("text", random().nextInt(10) + " " + random().nextInt(10) + " " + random().nextInt(10), ft));
-      indexWriter.addDocument(doc);
-    }
+		Document doc;
+		for (int i = 0; i < 10; i++) {
+			doc = new Document();
+			doc.add(new Field("id", Integer.toString(i), ft));
+			doc.add(new Field("text", random().nextInt(10) + " " + random().nextInt(10) + " " + random().nextInt(10), ft));
+			indexWriter.addDocument(doc);
+		}
 
-    indexWriter.commit();
+		indexWriter.commit();
 
-    index = indexWriter.getReader();
+		index = indexWriter.getReader();
 
-    indexWriter.close();
-  }
+		indexWriter.close();
+	}
 
-  @Override
-  @After
-  public void tearDown() throws Exception {
-    index.close();
-    dir.close();
-    super.tearDown();
-  }
+	@Override
+	@After
+	public void tearDown() throws Exception {
+		index.close();
+		dir.close();
+		super.tearDown();
+	}
 
-  @Test
-  public void testDenseFreqDoubleArrayConversion() throws Exception {
-    IndexSearcher indexSearcher = new IndexSearcher(index);
-    for (ScoreDoc scoreDoc : indexSearcher.search(new MatchAllDocsQuery(), Integer.MAX_VALUE).scoreDocs) {
-      Terms docTerms = index.getTermVector(scoreDoc.doc, "text");
-      Double[] vector = DocToDoubleVectorUtils.toDenseLocalFreqDoubleArray(docTerms);
-      assertNotNull(vector);
-      assertTrue(vector.length > 0);
-    }
-  }
+	@Test
+	public void testDenseFreqDoubleArrayConversion() throws Exception {
+		IndexSearcher indexSearcher = new IndexSearcher(index);
+		for (ScoreDoc scoreDoc : indexSearcher.search(new MatchAllDocsQuery(), Integer.MAX_VALUE).scoreDocs) {
+			Terms docTerms = index.getTermVector(scoreDoc.doc, "text");
+			Double[] vector = DocToDoubleVectorUtils.toDenseLocalFreqDoubleArray(docTerms);
+			assertNotNull(vector);
+			assertTrue(vector.length > 0);
+		}
+	}
 
-  @Test
-  public void testSparseFreqDoubleArrayConversion() throws Exception {
-    Terms fieldTerms = MultiFields.getTerms(index, "text");
-    if (fieldTerms != null && fieldTerms.size() != -1) {
-      IndexSearcher indexSearcher = new IndexSearcher(index);
-      for (ScoreDoc scoreDoc : indexSearcher.search(new MatchAllDocsQuery(), Integer.MAX_VALUE).scoreDocs) {
-        Terms docTerms = index.getTermVector(scoreDoc.doc, "text");
-        Double[] vector = DocToDoubleVectorUtils.toSparseLocalFreqDoubleArray(docTerms, fieldTerms);
-        assertNotNull(vector);
-        assertTrue(vector.length > 0);
-      }
-    }
-  }
+	@Test
+	public void testSparseFreqDoubleArrayConversion() throws Exception {
+		Terms fieldTerms = MultiFields.getTerms(index, "text");
+		if (fieldTerms != null && fieldTerms.size() != -1) {
+			IndexSearcher indexSearcher = new IndexSearcher(index);
+			for (ScoreDoc scoreDoc : indexSearcher.search(new MatchAllDocsQuery(), Integer.MAX_VALUE).scoreDocs) {
+				Terms docTerms = index.getTermVector(scoreDoc.doc, "text");
+				Double[] vector = DocToDoubleVectorUtils.toSparseLocalFreqDoubleArray(docTerms, fieldTerms);
+				assertNotNull(vector);
+				assertTrue(vector.length > 0);
+			}
+		}
+	}
 }

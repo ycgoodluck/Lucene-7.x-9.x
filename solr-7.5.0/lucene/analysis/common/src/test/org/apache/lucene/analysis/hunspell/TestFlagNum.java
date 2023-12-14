@@ -20,14 +20,14 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestFlagNum extends StemmerTestBase {
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("flagnum.aff", "flagnum.dic");
-  }
-  
-  public void testNumFlags() {
-    assertStemsTo("foo", "foo");
-    assertStemsTo("foos", "foo");
-    assertStemsTo("fooss");
-  }
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("flagnum.aff", "flagnum.dic");
+	}
+
+	public void testNumFlags() {
+		assertStemsTo("foo", "foo");
+		assertStemsTo("foos", "foo");
+		assertStemsTo("fooss");
+	}
 }

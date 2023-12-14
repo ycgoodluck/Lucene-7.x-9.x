@@ -18,44 +18,58 @@ package org.apache.lucene.search.grouping;
 
 import org.apache.lucene.search.ScoreDoc;
 
-/** Represents one group in the results.
- * 
- * @lucene.experimental */
+/**
+ * Represents one group in the results.
+ *
+ * @lucene.experimental
+ */
 public class GroupDocs<T> {
-  /** The groupField value for all docs in this group; this
-   *  may be null if hits did not have the groupField. */
-  public final T groupValue;
+	/**
+	 * The groupField value for all docs in this group; this
+	 * may be null if hits did not have the groupField.
+	 */
+	public final T groupValue;
 
-  /** Max score in this group */
-  public final float maxScore;
+	/**
+	 * Max score in this group
+	 */
+	public final float maxScore;
 
-  /** Overall aggregated score of this group (currently only
-   *  set by join queries). */
-  public final float score;
+	/**
+	 * Overall aggregated score of this group (currently only
+	 * set by join queries).
+	 */
+	public final float score;
 
-  /** Hits; this may be {@link
-   * org.apache.lucene.search.FieldDoc} instances if the
-   * withinGroupSort sorted by fields. */
-  public final ScoreDoc[] scoreDocs;
+	/**
+	 * Hits; this may be {@link
+	 * org.apache.lucene.search.FieldDoc} instances if the
+	 * withinGroupSort sorted by fields.
+	 */
+	public final ScoreDoc[] scoreDocs;
 
-  /** Total hits within this group */
-  public final long totalHits;
+	/**
+	 * Total hits within this group
+	 */
+	public final long totalHits;
 
-  /** Matches the groupSort passed to {@link
-   *  FirstPassGroupingCollector}. */
-  public final Object[] groupSortValues;
+	/**
+	 * Matches the groupSort passed to {@link
+	 * FirstPassGroupingCollector}.
+	 */
+	public final Object[] groupSortValues;
 
-  public GroupDocs(float score,
-                   float maxScore,
-                   long totalHits,
-                   ScoreDoc[] scoreDocs,
-                   T groupValue,
-                   Object[] groupSortValues) {
-    this.score = score;
-    this.maxScore = maxScore;
-    this.totalHits = totalHits;
-    this.scoreDocs = scoreDocs;
-    this.groupValue = groupValue;
-    this.groupSortValues = groupSortValues;
-  }
+	public GroupDocs(float score,
+									 float maxScore,
+									 long totalHits,
+									 ScoreDoc[] scoreDocs,
+									 T groupValue,
+									 Object[] groupSortValues) {
+		this.score = score;
+		this.maxScore = maxScore;
+		this.totalHits = totalHits;
+		this.scoreDocs = scoreDocs;
+		this.groupValue = groupValue;
+		this.groupSortValues = groupSortValues;
+	}
 }

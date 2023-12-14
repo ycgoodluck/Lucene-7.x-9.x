@@ -35,76 +35,77 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestQueryBitSetProducer extends LuceneTestCase {
 
-  public void testSimple() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriterConfig iwc = newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE);
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir, iwc);
-    w.addDocument(new Document());
-    DirectoryReader reader = w.getReader();
+	public void testSimple() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriterConfig iwc = newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE);
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir, iwc);
+		w.addDocument(new Document());
+		DirectoryReader reader = w.getReader();
 
-    QueryBitSetProducer producer = new QueryBitSetProducer(new MatchNoDocsQuery());
-    assertNull(producer.getBitSet(reader.leaves().get(0)));
-    assertEquals(1, producer.cache.size());
+		QueryBitSetProducer producer = new QueryBitSetProducer(new MatchNoDocsQuery());
+		assertNull(producer.getBitSet(reader.leaves().get(0)));
+		assertEquals(1, producer.cache.size());
 
-    producer = new QueryBitSetProducer(new MatchAllDocsQuery());
-    BitSet bitSet = producer.getBitSet(reader.leaves().get(0));
-    assertEquals(1, bitSet.length());
-    assertEquals(true, bitSet.get(0));
-    assertEquals(1, producer.cache.size());
+		producer = new QueryBitSetProducer(new MatchAllDocsQuery());
+		BitSet bitSet = producer.getBitSet(reader.leaves().get(0));
+		assertEquals(1, bitSet.length());
+		assertEquals(true, bitSet.get(0));
+		assertEquals(1, producer.cache.size());
 
-    IOUtils.close(reader, w, dir);
-  }
+		IOUtils.close(reader, w, dir);
+	}
 
-  public void testReaderNotSuitedForCaching() throws IOException{
-    Directory dir = newDirectory();
-    IndexWriterConfig iwc = newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE);
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir, iwc);
-    w.addDocument(new Document());
-    DirectoryReader reader = new DummyDirectoryReader(w.getReader());
+	public void testReaderNotSuitedForCaching() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriterConfig iwc = newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE);
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir, iwc);
+		w.addDocument(new Document());
+		DirectoryReader reader = new DummyDirectoryReader(w.getReader());
 
-    QueryBitSetProducer producer = new QueryBitSetProducer(new MatchNoDocsQuery());
-    assertNull(producer.getBitSet(reader.leaves().get(0)));
-    assertEquals(0, producer.cache.size());
+		QueryBitSetProducer producer = new QueryBitSetProducer(new MatchNoDocsQuery());
+		assertNull(producer.getBitSet(reader.leaves().get(0)));
+		assertEquals(0, producer.cache.size());
 
-    producer = new QueryBitSetProducer(new MatchAllDocsQuery());
-    BitSet bitSet = producer.getBitSet(reader.leaves().get(0));
-    assertEquals(1, bitSet.length());
-    assertEquals(true, bitSet.get(0));
-    assertEquals(0, producer.cache.size());
+		producer = new QueryBitSetProducer(new MatchAllDocsQuery());
+		BitSet bitSet = producer.getBitSet(reader.leaves().get(0));
+		assertEquals(1, bitSet.length());
+		assertEquals(true, bitSet.get(0));
+		assertEquals(0, producer.cache.size());
 
-    IOUtils.close(reader, w, dir);
-  }
+		IOUtils.close(reader, w, dir);
+	}
 
-  // a reader whose sole purpose is to not be cacheable
-  private static class DummyDirectoryReader extends FilterDirectoryReader {
+	// a reader whose sole purpose is to not be cacheable
+	private static class DummyDirectoryReader extends FilterDirectoryReader {
 
-    public DummyDirectoryReader(DirectoryReader in) throws IOException {
-      super(in, new SubReaderWrapper() {
-        @Override
-        public LeafReader wrap(LeafReader reader) {
-          return new FilterLeafReader(reader) {
+		public DummyDirectoryReader(DirectoryReader in) throws IOException {
+			super(in, new SubReaderWrapper() {
+				@Override
+				public LeafReader wrap(LeafReader reader) {
+					return new FilterLeafReader(reader) {
 
-            @Override
-            public CacheHelper getCoreCacheHelper() {
-              return null;
-            }
+						@Override
+						public CacheHelper getCoreCacheHelper() {
+							return null;
+						}
 
-            @Override
-            public CacheHelper getReaderCacheHelper() {
-              return null;
-            }};
-        }
-      });
-    }
+						@Override
+						public CacheHelper getReaderCacheHelper() {
+							return null;
+						}
+					};
+				}
+			});
+		}
 
-    @Override
-    protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
-      return new DummyDirectoryReader(in);
-    }
+		@Override
+		protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
+			return new DummyDirectoryReader(in);
+		}
 
-    @Override
-    public CacheHelper getReaderCacheHelper() {
-      return null;
-    }
-  }
+		@Override
+		public CacheHelper getReaderCacheHelper() {
+			return null;
+		}
+	}
 }

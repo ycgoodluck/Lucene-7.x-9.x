@@ -26,10 +26,10 @@ import org.apache.lucene.util.BitSet;
  */
 public interface BitSetProducer {
 
-  /**
-   * Produce a {@link BitSet} matching the expected documents on the given
-   * segment. This may return {@code null} if no documents match.
-   */
-  BitSet getBitSet(LeafReaderContext context) throws IOException;
+	/**
+	 * Produce a {@link BitSet} matching the expected documents on the given
+	 * segment. This may return {@code null} if no documents match.
+	 */
+	BitSet getBitSet(LeafReaderContext context) throws IOException;
 
 }

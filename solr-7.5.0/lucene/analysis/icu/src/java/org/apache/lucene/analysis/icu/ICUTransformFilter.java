@@ -55,137 +55,139 @@ import com.ibm.icu.text.UnicodeSet;
  * Guide</a>.
  */
 public final class ICUTransformFilter extends TokenFilter {
-  // Transliterator to transform the text
-  private final Transliterator transform;
+	// Transliterator to transform the text
+	private final Transliterator transform;
 
-  // Reusable position object
-  private final Transliterator.Position position = new Transliterator.Position();
+	// Reusable position object
+	private final Transliterator.Position position = new Transliterator.Position();
 
-  // term attribute, will be updated with transformed text.
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	// term attribute, will be updated with transformed text.
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
 
-  // Wraps a termAttribute around the replaceable interface.
-  private final ReplaceableTermAttribute replaceableAttribute = new ReplaceableTermAttribute();
+	// Wraps a termAttribute around the replaceable interface.
+	private final ReplaceableTermAttribute replaceableAttribute = new ReplaceableTermAttribute();
 
-  /**
-   * Create a new ICUTransformFilter that transforms text on the given stream.
-   * 
-   * @param input {@link TokenStream} to filter.
-   * @param transform Transliterator to transform the text.
-   */
-  public ICUTransformFilter(TokenStream input, Transliterator transform) {
-    super(input);
-    this.transform = transform;
+	/**
+	 * Create a new ICUTransformFilter that transforms text on the given stream.
+	 *
+	 * @param input     {@link TokenStream} to filter.
+	 * @param transform Transliterator to transform the text.
+	 */
+	public ICUTransformFilter(TokenStream input, Transliterator transform) {
+		super(input);
+		this.transform = transform;
 
-    /* 
-     * This is cheating, but speeds things up a lot.
-     * If we wanted to use pkg-private APIs we could probably do better.
-     */
-    if (transform.getFilter() == null && transform instanceof com.ibm.icu.text.RuleBasedTransliterator) {
-      final UnicodeSet sourceSet = transform.getSourceSet();
-      if (sourceSet != null && !sourceSet.isEmpty())
-        transform.setFilter(sourceSet);
-    }
-  }
+		/*
+		 * This is cheating, but speeds things up a lot.
+		 * If we wanted to use pkg-private APIs we could probably do better.
+		 */
+		if (transform.getFilter() == null && transform instanceof com.ibm.icu.text.RuleBasedTransliterator) {
+			final UnicodeSet sourceSet = transform.getSourceSet();
+			if (sourceSet != null && !sourceSet.isEmpty())
+				transform.setFilter(sourceSet);
+		}
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    /*
-     * Wrap around replaceable. clear the positions, and transliterate.
-     */
-    if (input.incrementToken()) {
-      replaceableAttribute.setText(termAtt);
-      
-      final int length = termAtt.length(); 
-      position.start = 0;
-      position.limit = length;
-      position.contextStart = 0;
-      position.contextLimit = length;
+	@Override
+	public boolean incrementToken() throws IOException {
+		/*
+		 * Wrap around replaceable. clear the positions, and transliterate.
+		 */
+		if (input.incrementToken()) {
+			replaceableAttribute.setText(termAtt);
 
-      transform.filteredTransliterate(replaceableAttribute, position, false);
-      return true;
-    } else {
-      return false;
-    }
-  }
-  
-  /**
-   * Wrap a {@link CharTermAttribute} with the Replaceable API.
-   */
-  static final class ReplaceableTermAttribute implements Replaceable {
-    private char buffer[];
-    private int length;
-    private CharTermAttribute token;
+			final int length = termAtt.length();
+			position.start = 0;
+			position.limit = length;
+			position.contextStart = 0;
+			position.contextLimit = length;
 
-    void setText(final CharTermAttribute token) {
-      this.token = token;
-      this.buffer = token.buffer();
-      this.length = token.length();
-    }
+			transform.filteredTransliterate(replaceableAttribute, position, false);
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    @Override
-    public int char32At(int pos) {
-      return UTF16.charAt(buffer, 0, length, pos);
-    }
+	/**
+	 * Wrap a {@link CharTermAttribute} with the Replaceable API.
+	 */
+	static final class ReplaceableTermAttribute implements Replaceable {
+		private char buffer[];
+		private int length;
+		private CharTermAttribute token;
 
-    @Override
-    public char charAt(int pos) {
-      return buffer[pos];
-    }
+		void setText(final CharTermAttribute token) {
+			this.token = token;
+			this.buffer = token.buffer();
+			this.length = token.length();
+		}
 
-    @Override
-    public void copy(int start, int limit, int dest) {
-      char text[] = new char[limit - start];
-      getChars(start, limit, text, 0);
-      replace(dest, dest, text, 0, limit - start);
-    }
+		@Override
+		public int char32At(int pos) {
+			return UTF16.charAt(buffer, 0, length, pos);
+		}
 
-    @Override
-    public void getChars(int srcStart, int srcLimit, char[] dst, int dstStart) {
-      System.arraycopy(buffer, srcStart, dst, dstStart, srcLimit - srcStart);
-    }
+		@Override
+		public char charAt(int pos) {
+			return buffer[pos];
+		}
 
-    @Override
-    public boolean hasMetaData() {
-      return false;
-    }
+		@Override
+		public void copy(int start, int limit, int dest) {
+			char text[] = new char[limit - start];
+			getChars(start, limit, text, 0);
+			replace(dest, dest, text, 0, limit - start);
+		}
 
-    @Override
-    public int length() {
-      return length;
-    }
+		@Override
+		public void getChars(int srcStart, int srcLimit, char[] dst, int dstStart) {
+			System.arraycopy(buffer, srcStart, dst, dstStart, srcLimit - srcStart);
+		}
 
-    @Override
-    public void replace(int start, int limit, String text) {
-      final int charsLen = text.length();
-      final int newLength = shiftForReplace(start, limit, charsLen);
-      // insert the replacement text
-      text.getChars(0, charsLen, buffer, start);
-      token.setLength(length = newLength);
-    }
+		@Override
+		public boolean hasMetaData() {
+			return false;
+		}
 
-    @Override
-    public void replace(int start, int limit, char[] text, int charsStart,
-        int charsLen) {
-      // shift text if necessary for the replacement
-      final int newLength = shiftForReplace(start, limit, charsLen);
-      // insert the replacement text
-      System.arraycopy(text, charsStart, buffer, start, charsLen);
-      token.setLength(length = newLength);
-    }
+		@Override
+		public int length() {
+			return length;
+		}
 
-    /** shift text (if necessary) for a replacement operation */
-    private int shiftForReplace(int start, int limit, int charsLen) {
-      final int replacementLength = limit - start;
-      final int newLength = length - replacementLength + charsLen;
-      // resize if necessary
-      if (newLength > length)
-        buffer = token.resizeBuffer(newLength);
-      // if the substring being replaced is longer or shorter than the
-      // replacement, need to shift things around
-      if (replacementLength != charsLen && limit < length)
-        System.arraycopy(buffer, limit, buffer, start + charsLen, length - limit);
-      return newLength;
-    }
-  }
+		@Override
+		public void replace(int start, int limit, String text) {
+			final int charsLen = text.length();
+			final int newLength = shiftForReplace(start, limit, charsLen);
+			// insert the replacement text
+			text.getChars(0, charsLen, buffer, start);
+			token.setLength(length = newLength);
+		}
+
+		@Override
+		public void replace(int start, int limit, char[] text, int charsStart,
+												int charsLen) {
+			// shift text if necessary for the replacement
+			final int newLength = shiftForReplace(start, limit, charsLen);
+			// insert the replacement text
+			System.arraycopy(text, charsStart, buffer, start, charsLen);
+			token.setLength(length = newLength);
+		}
+
+		/**
+		 * shift text (if necessary) for a replacement operation
+		 */
+		private int shiftForReplace(int start, int limit, int charsLen) {
+			final int replacementLength = limit - start;
+			final int newLength = length - replacementLength + charsLen;
+			// resize if necessary
+			if (newLength > length)
+				buffer = token.resizeBuffer(newLength);
+			// if the substring being replaced is longer or shorter than the
+			// replacement, need to shift things around
+			if (replacementLength != charsLen && limit < length)
+				System.arraycopy(buffer, limit, buffer, start + charsLen, length - limit);
+			return newLength;
+		}
+	}
 }

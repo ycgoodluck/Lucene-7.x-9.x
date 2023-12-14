@@ -22,35 +22,37 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-/** Fake resource loader for tests: works if you want to fake reading a single file */
+/**
+ * Fake resource loader for tests: works if you want to fake reading a single file
+ */
 public class StringMockResourceLoader implements ResourceLoader {
-  String text;
+	String text;
 
-  public StringMockResourceLoader(String text) {
-    this.text = text;
-  }
-  
-  @Override
-  public <T> Class<? extends T> findClass(String cname, Class<T> expectedType) {
-    try {
-      return Class.forName(cname).asSubclass(expectedType);
-    } catch (Exception e) {
-      throw new RuntimeException("Cannot load class: " + cname, e);
-    }
-  }
+	public StringMockResourceLoader(String text) {
+		this.text = text;
+	}
 
-  @Override
-  public <T> T newInstance(String cname, Class<T> expectedType) {
-    Class<? extends T> clazz = findClass(cname, expectedType);
-    try {
-      return clazz.newInstance();
-    } catch (Exception e) {
-      throw new RuntimeException("Cannot create instance: " + cname, e);
-    }
-  }
+	@Override
+	public <T> Class<? extends T> findClass(String cname, Class<T> expectedType) {
+		try {
+			return Class.forName(cname).asSubclass(expectedType);
+		} catch (Exception e) {
+			throw new RuntimeException("Cannot load class: " + cname, e);
+		}
+	}
 
-  @Override
-  public InputStream openResource(String resource) throws IOException {
-    return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
-  }
+	@Override
+	public <T> T newInstance(String cname, Class<T> expectedType) {
+		Class<? extends T> clazz = findClass(cname, expectedType);
+		try {
+			return clazz.newInstance();
+		} catch (Exception e) {
+			throw new RuntimeException("Cannot create instance: " + cname, e);
+		}
+	}
+
+	@Override
+	public InputStream openResource(String resource) throws IOException {
+		return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+	}
 }

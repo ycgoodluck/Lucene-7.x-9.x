@@ -34,96 +34,97 @@ import org.apache.lucene.util.automaton.CompiledAutomaton;
  * @lucene.internal
  */
 final class TermVectorFilteredLeafReader extends FilterLeafReader {
-  // NOTE: super ("in") is baseLeafReader
+	// NOTE: super ("in") is baseLeafReader
 
-  private final Terms filterTerms;
-  private final String fieldFilter;
+	private final Terms filterTerms;
+	private final String fieldFilter;
 
-  /**
-   * <p>Construct a FilterLeafReader based on the specified base reader.
-   * <p>Note that base reader is closed if this FilterLeafReader is closed.</p>
-   * @param baseLeafReader full/original reader.
-   * @param filterTerms set of terms to filter by -- probably from a TermVector or MemoryIndex.
-   * @param fieldFilter the field to do this on
-   */
-  TermVectorFilteredLeafReader(LeafReader baseLeafReader, Terms filterTerms, String fieldFilter) {
-    super(baseLeafReader);
-    this.filterTerms = filterTerms;
-    this.fieldFilter = fieldFilter;
-  }
+	/**
+	 * <p>Construct a FilterLeafReader based on the specified base reader.
+	 * <p>Note that base reader is closed if this FilterLeafReader is closed.</p>
+	 *
+	 * @param baseLeafReader full/original reader.
+	 * @param filterTerms    set of terms to filter by -- probably from a TermVector or MemoryIndex.
+	 * @param fieldFilter    the field to do this on
+	 */
+	TermVectorFilteredLeafReader(LeafReader baseLeafReader, Terms filterTerms, String fieldFilter) {
+		super(baseLeafReader);
+		this.filterTerms = filterTerms;
+		this.fieldFilter = fieldFilter;
+	}
 
-  @Override
-  public Terms terms(String field) throws IOException {
-    if (!field.equals(fieldFilter)) {
-      return super.terms(field); // proceed like normal for fields we're not interested in
-    }
-    Terms terms = in.terms(field);
-    return terms==null ? null : new TermsFilteredTerms(terms, filterTerms);
-  }
+	@Override
+	public Terms terms(String field) throws IOException {
+		if (!field.equals(fieldFilter)) {
+			return super.terms(field); // proceed like normal for fields we're not interested in
+		}
+		Terms terms = in.terms(field);
+		return terms == null ? null : new TermsFilteredTerms(terms, filterTerms);
+	}
 
-  private static final class TermsFilteredTerms extends FilterLeafReader.FilterTerms {
-    // NOTE: super ("in") is the baseTerms
+	private static final class TermsFilteredTerms extends FilterLeafReader.FilterTerms {
+		// NOTE: super ("in") is the baseTerms
 
-    private final Terms filterTerms;
+		private final Terms filterTerms;
 
-    TermsFilteredTerms(Terms baseTerms, Terms filterTerms) {
-      super(baseTerms);
-      this.filterTerms = filterTerms;
-    }
+		TermsFilteredTerms(Terms baseTerms, Terms filterTerms) {
+			super(baseTerms);
+			this.filterTerms = filterTerms;
+		}
 
-    //TODO delegate size() ?
+		//TODO delegate size() ?
 
-    //TODO delegate getMin, getMax to filterTerms
+		//TODO delegate getMin, getMax to filterTerms
 
-    @Override
-    public TermsEnum iterator() throws IOException {
-      return new TermVectorFilteredTermsEnum(in.iterator(), filterTerms.iterator());
-    }
+		@Override
+		public TermsEnum iterator() throws IOException {
+			return new TermVectorFilteredTermsEnum(in.iterator(), filterTerms.iterator());
+		}
 
-    @Override
-    public TermsEnum intersect(CompiledAutomaton compiled, BytesRef startTerm) throws IOException {
-      return new TermVectorFilteredTermsEnum(in.iterator(), filterTerms.intersect(compiled, startTerm));
-    }
-  }
+		@Override
+		public TermsEnum intersect(CompiledAutomaton compiled, BytesRef startTerm) throws IOException {
+			return new TermVectorFilteredTermsEnum(in.iterator(), filterTerms.intersect(compiled, startTerm));
+		}
+	}
 
-  private static final class TermVectorFilteredTermsEnum extends FilterLeafReader.FilterTermsEnum {
-    // NOTE: super ("in") is the filteredTermsEnum. This is different than wrappers above because we
-    //    navigate the terms using the filter.
+	private static final class TermVectorFilteredTermsEnum extends FilterLeafReader.FilterTermsEnum {
+		// NOTE: super ("in") is the filteredTermsEnum. This is different than wrappers above because we
+		//    navigate the terms using the filter.
 
-    //TODO: track the last term state from the term state method and do some potential optimizations
-    private final TermsEnum baseTermsEnum;
+		//TODO: track the last term state from the term state method and do some potential optimizations
+		private final TermsEnum baseTermsEnum;
 
-    TermVectorFilteredTermsEnum(TermsEnum baseTermsEnum, TermsEnum filteredTermsEnum) {
-      super(filteredTermsEnum); // note this is reversed from constructors above
-      this.baseTermsEnum = baseTermsEnum;
-    }
+		TermVectorFilteredTermsEnum(TermsEnum baseTermsEnum, TermsEnum filteredTermsEnum) {
+			super(filteredTermsEnum); // note this is reversed from constructors above
+			this.baseTermsEnum = baseTermsEnum;
+		}
 
-    //TODO delegate docFreq & ttf (moveToCurrentTerm() then call on full?
+		//TODO delegate docFreq & ttf (moveToCurrentTerm() then call on full?
 
-    @Override
-    public PostingsEnum postings(PostingsEnum reuse, int flags) throws IOException {
-      moveToCurrentTerm();
-      return baseTermsEnum.postings(reuse, flags);
-    }
+		@Override
+		public PostingsEnum postings(PostingsEnum reuse, int flags) throws IOException {
+			moveToCurrentTerm();
+			return baseTermsEnum.postings(reuse, flags);
+		}
 
-    void moveToCurrentTerm() throws IOException {
-      BytesRef currentTerm = in.term(); // from filteredTermsEnum
-      boolean termInBothTermsEnum = baseTermsEnum.seekExact(currentTerm);
+		void moveToCurrentTerm() throws IOException {
+			BytesRef currentTerm = in.term(); // from filteredTermsEnum
+			boolean termInBothTermsEnum = baseTermsEnum.seekExact(currentTerm);
 
-      if (!termInBothTermsEnum) {
-        throw new IllegalStateException("Term vector term '" + currentTerm.utf8ToString() + "' does not appear in full index.");
-      }
-    }
+			if (!termInBothTermsEnum) {
+				throw new IllegalStateException("Term vector term '" + currentTerm.utf8ToString() + "' does not appear in full index.");
+			}
+		}
 
-  }
+	}
 
-  @Override
-  public CacheHelper getCoreCacheHelper() {
-    return null;
-  }
+	@Override
+	public CacheHelper getCoreCacheHelper() {
+		return null;
+	}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    return null;
-  }
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		return null;
+	}
 }

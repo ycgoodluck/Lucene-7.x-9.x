@@ -23,8 +23,8 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.el.GreekStemFilter;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
- * Factory for {@link GreekStemFilter}. 
+/**
+ * Factory for {@link GreekStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_gstem" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -33,20 +33,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.GreekStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class GreekStemFilterFactory extends TokenFilterFactory {
 
-  /** Creates a new GreekStemFilterFactory */
-  public GreekStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new GreekStemFilter(input);
-  }
+	/**
+	 * Creates a new GreekStemFilterFactory
+	 */
+	public GreekStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new GreekStemFilter(input);
+	}
 }

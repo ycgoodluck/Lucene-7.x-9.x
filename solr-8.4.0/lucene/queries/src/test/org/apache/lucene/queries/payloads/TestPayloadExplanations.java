@@ -29,44 +29,46 @@ import org.apache.lucene.search.spans.SpanTermQuery;
  */
 public class TestPayloadExplanations extends BaseExplanationTestCase {
 
-  private static PayloadFunction functions[] = new PayloadFunction[] {
-      new AveragePayloadFunction(),
-      new MinPayloadFunction(),
-      new MaxPayloadFunction(),
-  };
+	private static PayloadFunction functions[] = new PayloadFunction[]{
+		new AveragePayloadFunction(),
+		new MinPayloadFunction(),
+		new MaxPayloadFunction(),
+	};
 
-  /** macro for payloadscorequery */
-  private SpanQuery pt(String s, PayloadFunction fn) {
-    return new PayloadScoreQuery(new SpanTermQuery(new Term(FIELD,s)), fn, PayloadDecoder.FLOAT_DECODER, random().nextBoolean());
-  }
-  
-  /* simple PayloadTermQueries */
-  
-  public void testPT1() throws Exception {
-    for (PayloadFunction fn : functions) {
-      qtest(pt("w1", fn), new int[] {0,1,2,3});
-    }
-  }
+	/**
+	 * macro for payloadscorequery
+	 */
+	private SpanQuery pt(String s, PayloadFunction fn) {
+		return new PayloadScoreQuery(new SpanTermQuery(new Term(FIELD, s)), fn, PayloadDecoder.FLOAT_DECODER, random().nextBoolean());
+	}
 
-  public void testPT2() throws Exception {
-    for (PayloadFunction fn : functions) {
-      SpanQuery q = pt("w1", fn);
-      qtest(new SpanBoostQuery(q, 1000), new int[] {0,1,2,3});
-    }
-  }
+	/* simple PayloadTermQueries */
 
-  public void testPT4() throws Exception {
-    for (PayloadFunction fn : functions) {
-      qtest(pt("xx", fn), new int[] {2,3});
-    }
-  }
+	public void testPT1() throws Exception {
+		for (PayloadFunction fn : functions) {
+			qtest(pt("w1", fn), new int[]{0, 1, 2, 3});
+		}
+	}
 
-  public void testPT5() throws Exception {
-    for (PayloadFunction fn : functions) {
-      SpanQuery q = pt("xx", fn);
-      qtest(new SpanBoostQuery(q, 1000), new int[] {2,3});
-    }
-  }
+	public void testPT2() throws Exception {
+		for (PayloadFunction fn : functions) {
+			SpanQuery q = pt("w1", fn);
+			qtest(new SpanBoostQuery(q, 1000), new int[]{0, 1, 2, 3});
+		}
+	}
+
+	public void testPT4() throws Exception {
+		for (PayloadFunction fn : functions) {
+			qtest(pt("xx", fn), new int[]{2, 3});
+		}
+	}
+
+	public void testPT5() throws Exception {
+		for (PayloadFunction fn : functions) {
+			SpanQuery q = pt("xx", fn);
+			qtest(new SpanBoostQuery(q, 1000), new int[]{2, 3});
+		}
+	}
 
   /*
     protected static final String[] docFields = {
@@ -77,35 +79,35 @@ public class TestPayloadExplanations extends BaseExplanationTestCase {
   };
    */
 
-  public void testAllFunctions(SpanQuery query, int[] expected) throws Exception {
-    for (PayloadFunction fn : functions) {
-      qtest(new PayloadScoreQuery(query, fn, PayloadDecoder.FLOAT_DECODER, random().nextBoolean()), expected);
-    }
-  }
+	public void testAllFunctions(SpanQuery query, int[] expected) throws Exception {
+		for (PayloadFunction fn : functions) {
+			qtest(new PayloadScoreQuery(query, fn, PayloadDecoder.FLOAT_DECODER, random().nextBoolean()), expected);
+		}
+	}
 
-  public void testSimpleTerm() throws Exception {
-    SpanTermQuery q = new SpanTermQuery(new Term(FIELD, "w2"));
-    testAllFunctions(q, new int[]{ 0, 1, 2, 3});
-  }
+	public void testSimpleTerm() throws Exception {
+		SpanTermQuery q = new SpanTermQuery(new Term(FIELD, "w2"));
+		testAllFunctions(q, new int[]{0, 1, 2, 3});
+	}
 
-  public void testOrTerm() throws Exception {
-    SpanOrQuery q = new SpanOrQuery(
-        new SpanTermQuery(new Term(FIELD, "xx")), new SpanTermQuery(new Term(FIELD, "yy"))
-    );
-    testAllFunctions(q, new int[]{ 2, 3 });
-  }
+	public void testOrTerm() throws Exception {
+		SpanOrQuery q = new SpanOrQuery(
+			new SpanTermQuery(new Term(FIELD, "xx")), new SpanTermQuery(new Term(FIELD, "yy"))
+		);
+		testAllFunctions(q, new int[]{2, 3});
+	}
 
-  public void testOrderedNearQuery() throws Exception {
-    SpanNearQuery q = new SpanNearQuery(new SpanQuery[]{
-            new SpanTermQuery(new Term(FIELD, "w3")), new SpanTermQuery(new Term(FIELD, "w2"))
-        }, 1, true);
-    testAllFunctions(q, new int[]{ 1, 3 });
-  }
+	public void testOrderedNearQuery() throws Exception {
+		SpanNearQuery q = new SpanNearQuery(new SpanQuery[]{
+			new SpanTermQuery(new Term(FIELD, "w3")), new SpanTermQuery(new Term(FIELD, "w2"))
+		}, 1, true);
+		testAllFunctions(q, new int[]{1, 3});
+	}
 
-  public void testUnorderedNearQuery() throws Exception {
-    SpanNearQuery q = new SpanNearQuery(new SpanQuery[]{
-        new SpanTermQuery(new Term(FIELD, "w2")), new SpanTermQuery(new Term(FIELD, "w3"))
-    }, 1, false);
-    testAllFunctions(q, new int[]{ 0, 1, 2, 3 });
-  }
+	public void testUnorderedNearQuery() throws Exception {
+		SpanNearQuery q = new SpanNearQuery(new SpanQuery[]{
+			new SpanTermQuery(new Term(FIELD, "w2")), new SpanTermQuery(new Term(FIELD, "w3"))
+		}, 1, false);
+		testAllFunctions(q, new int[]{0, 1, 2, 3});
+	}
 }

@@ -35,47 +35,47 @@ import org.apache.lucene.search.BooleanQuery.TooManyClauses;
  */
 public class AnyQueryNodeBuilder implements StandardQueryBuilder {
 
-  public AnyQueryNodeBuilder() {
-    // empty constructor
-  }
+	public AnyQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public BooleanQuery build(QueryNode queryNode) throws QueryNodeException {
-    AnyQueryNode andNode = (AnyQueryNode) queryNode;
+	@Override
+	public BooleanQuery build(QueryNode queryNode) throws QueryNodeException {
+		AnyQueryNode andNode = (AnyQueryNode) queryNode;
 
-    BooleanQuery.Builder bQuery = new BooleanQuery.Builder();
-    List<QueryNode> children = andNode.getChildren();
+		BooleanQuery.Builder bQuery = new BooleanQuery.Builder();
+		List<QueryNode> children = andNode.getChildren();
 
-    if (children != null) {
+		if (children != null) {
 
-      for (QueryNode child : children) {
-        Object obj = child.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+			for (QueryNode child : children) {
+				Object obj = child.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
 
-        if (obj != null) {
-          Query query = (Query) obj;
+				if (obj != null) {
+					Query query = (Query) obj;
 
-          try {
-            bQuery.add(query, BooleanClause.Occur.SHOULD);
-          } catch (TooManyClauses ex) {
+					try {
+						bQuery.add(query, BooleanClause.Occur.SHOULD);
+					} catch (TooManyClauses ex) {
 
-            throw new QueryNodeException(new MessageImpl(
-            /*
-             * IQQQ.Q0028E_TOO_MANY_BOOLEAN_CLAUSES,
-             * BooleanQuery.getMaxClauseCount()
-             */QueryParserMessages.EMPTY_MESSAGE), ex);
+						throw new QueryNodeException(new MessageImpl(
+							/*
+							 * IQQQ.Q0028E_TOO_MANY_BOOLEAN_CLAUSES,
+							 * BooleanQuery.getMaxClauseCount()
+							 */QueryParserMessages.EMPTY_MESSAGE), ex);
 
-          }
+					}
 
-        }
+				}
 
-      }
+			}
 
-    }
+		}
 
-    bQuery.setMinimumNumberShouldMatch(andNode.getMinimumMatchingElements());
+		bQuery.setMinimumNumberShouldMatch(andNode.getMinimumMatchingElements());
 
-    return bQuery.build();
+		return bQuery.build();
 
-  }
+	}
 
 }

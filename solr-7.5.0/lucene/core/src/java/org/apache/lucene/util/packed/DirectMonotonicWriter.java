@@ -17,131 +17,138 @@
 package org.apache.lucene.util.packed;
 
 
-
 import java.io.IOException;
 
 import org.apache.lucene.store.IndexOutput;
 
 // 单调递增的整数序列
+
 /**
  * Write monotonically-increasing sequences of integers. This writer splits
  * data into blocks and then for each block, computes the average slope, the
  * minimum value and only encode the delta from the expected value using a
  * {@link DirectWriter}.
- * 
+ *
+ * @lucene.internal
  * @see DirectMonotonicReader
- * @lucene.internal 
  */
 public final class DirectMonotonicWriter {
 
-  public static final int MIN_BLOCK_SHIFT = 2;
-  public static final int MAX_BLOCK_SHIFT = 22;
+	public static final int MIN_BLOCK_SHIFT = 2;
+	public static final int MAX_BLOCK_SHIFT = 22;
 
-  final IndexOutput meta;
-  final IndexOutput data;
-  final long numValues;
-  final long baseDataPointer;
-  final long[] buffer;
-  int bufferSize;
-  long count;
-  boolean finished;
+	final IndexOutput meta;
+	final IndexOutput data;
+	final long numValues;
+	final long baseDataPointer;
+	final long[] buffer;
+	int bufferSize;
+	long count;
+	boolean finished;
 
-  DirectMonotonicWriter(IndexOutput metaOut, IndexOutput dataOut, long numValues, int blockShift) {
-    this.meta = metaOut;
-    this.data = dataOut;
-    this.numValues = numValues;
-    if (blockShift < 2 || blockShift > 30) {
-      throw new IllegalArgumentException("blockShift must be in [3-30], got " + blockShift);
-    }
-    final int blockSize = 1 << blockShift;
-    this.buffer = new long[blockSize];
-    this.bufferSize = 0;
-    this.baseDataPointer = dataOut.getFilePointer();
-  }
+	DirectMonotonicWriter(IndexOutput metaOut, IndexOutput dataOut, long numValues, int blockShift) {
+		this.meta = metaOut;
+		this.data = dataOut;
+		this.numValues = numValues;
+		if (blockShift < 2 || blockShift > 30) {
+			throw new IllegalArgumentException("blockShift must be in [3-30], got " + blockShift);
+		}
+		final int blockSize = 1 << blockShift;
+		this.buffer = new long[blockSize];
+		this.bufferSize = 0;
+		this.baseDataPointer = dataOut.getFilePointer();
+	}
 
-  private void flush() throws IOException {
-    assert bufferSize != 0;
+	private void flush() throws IOException {
+		assert bufferSize != 0;
 
-    // 求出buffer数组中的最大值跟最小值，他们的差值除以元素个数来求得一个平均值
-    final float avgInc = (float) ((double) (buffer[bufferSize-1] - buffer[0]) / Math.max(1, bufferSize - 1));
-    // 趋势分解操作, 平缓数据
-    for (int i = 0; i < bufferSize; ++i) {
-      final long expected = (long) (avgInc * (long) i);
-      buffer[i] -= expected;
-    }
+		// 求出buffer数组中的最大值跟最小值，他们的差值除以元素个数来求得一个平均值
+		final float avgInc = (float) ((double) (buffer[bufferSize - 1] - buffer[0]) / Math.max(1, bufferSize - 1));
+		// 趋势分解操作, 平缓数据
+		for (int i = 0; i < bufferSize; ++i) {
+			final long expected = (long) (avgInc * (long) i);
+			buffer[i] -= expected;
+		}
 
-    long min = buffer[0];
-    // 取出buffer[]数组中的最小值
-    for (int i = 1; i < bufferSize; ++i) {
-      min = Math.min(buffer[i], min);
-    }
+		long min = buffer[0];
+		// 取出buffer[]数组中的最小值
+		for (int i = 1; i < bufferSize; ++i) {
+			min = Math.min(buffer[i], min);
+		}
 
-    long maxDelta = 0;
-    for (int i = 0; i < bufferSize; ++i) {
-      buffer[i] -= min;
-      // use | will change nothing when it comes to computing required bits
-      // but has the benefit of working fine with negative values too
-      // (in case of overflow)
-      // 计算bitPerValue时实际上只要关注maxDelta的二进制值的最高位，maxDelta具体的值是不用关心的
-      maxDelta |= buffer[i];
-    }
+		long maxDelta = 0;
+		for (int i = 0; i < bufferSize; ++i) {
+			buffer[i] -= min;
+			// use | will change nothing when it comes to computing required bits
+			// but has the benefit of working fine with negative values too
+			// (in case of overflow)
+			// 计算bitPerValue时实际上只要关注maxDelta的二进制值的最高位，maxDelta具体的值是不用关心的
+			maxDelta |= buffer[i];
+		}
 
-    // 记录min值，读取阶段用于解码数据
-    meta.writeLong(min);
-    // 记录浮点数到meta中，用floatToIntBits进行转化
-    // 记录avgInc，读取阶段用于解码数据
-    meta.writeInt(Float.floatToIntBits(avgInc));
-    meta.writeLong(data.getFilePointer() - baseDataPointer);
-    if (maxDelta == 0) {
-      meta.writeByte((byte) 0);
-    } else {
-      final int bitsRequired = DirectWriter.unsignedBitsRequired(maxDelta);
-      DirectWriter writer = DirectWriter.getInstance(data, bufferSize, bitsRequired);
-      for (int i = 0; i < bufferSize; ++i) {
-        writer.add(buffer[i]);
-      }
-      writer.finish();
-      meta.writeByte((byte) bitsRequired);
-    }
-    bufferSize = 0;
-  }
+		// 记录min值，读取阶段用于解码数据
+		meta.writeLong(min);
+		// 记录浮点数到meta中，用floatToIntBits进行转化
+		// 记录avgInc，读取阶段用于解码数据
+		meta.writeInt(Float.floatToIntBits(avgInc));
+		meta.writeLong(data.getFilePointer() - baseDataPointer);
+		if (maxDelta == 0) {
+			meta.writeByte((byte) 0);
+		} else {
+			final int bitsRequired = DirectWriter.unsignedBitsRequired(maxDelta);
+			DirectWriter writer = DirectWriter.getInstance(data, bufferSize, bitsRequired);
+			for (int i = 0; i < bufferSize; ++i) {
+				writer.add(buffer[i]);
+			}
+			writer.finish();
+			meta.writeByte((byte) bitsRequired);
+		}
+		bufferSize = 0;
+	}
 
-  long previous = Long.MIN_VALUE;
+	long previous = Long.MIN_VALUE;
 
-  /** Write a new value. Note that data might not make it to storage until
-   * {@link #finish()} is called.
-   *  @throws IllegalArgumentException if values don't come in order */
-  public void add(long v) throws IOException {
-    if (v < previous) {
-      throw new IllegalArgumentException("Values do not come in order: " + previous + ", " + v);
-    }
-    if (bufferSize == buffer.length) {
-      flush();
-    }
-    buffer[bufferSize++] = v;
-    previous = v;
-    count++;
-  }
+	/**
+	 * Write a new value. Note that data might not make it to storage until
+	 * {@link #finish()} is called.
+	 *
+	 * @throws IllegalArgumentException if values don't come in order
+	 */
+	public void add(long v) throws IOException {
+		if (v < previous) {
+			throw new IllegalArgumentException("Values do not come in order: " + previous + ", " + v);
+		}
+		if (bufferSize == buffer.length) {
+			flush();
+		}
+		buffer[bufferSize++] = v;
+		previous = v;
+		count++;
+	}
 
-  /** This must be called exactly once after all values have been {@link #add(long) added}. */
-  public void finish() throws IOException {
-    if (count != numValues) {
-      throw new IllegalStateException("Wrong number of values added, expected: " + numValues + ", got: " + count);
-    }
-    if (finished) {
-      throw new IllegalStateException("#finish has been called already");
-    }
-    if (bufferSize > 0) {
-      flush();
-    }
-    finished = true;
-  }
+	/**
+	 * This must be called exactly once after all values have been {@link #add(long) added}.
+	 */
+	public void finish() throws IOException {
+		if (count != numValues) {
+			throw new IllegalStateException("Wrong number of values added, expected: " + numValues + ", got: " + count);
+		}
+		if (finished) {
+			throw new IllegalStateException("#finish has been called already");
+		}
+		if (bufferSize > 0) {
+			flush();
+		}
+		finished = true;
+	}
 
-  /** Returns an instance suitable for encoding {@code numValues} into monotonic
-   *  blocks of 2<sup>{@code blockShift}</sup> values. Metadata will be written
-   *  to {@code metaOut} and actual data to {@code dataOut}. */
-  public static DirectMonotonicWriter getInstance(IndexOutput metaOut, IndexOutput dataOut, long numValues, int blockShift) {
-    return new DirectMonotonicWriter(metaOut, dataOut, numValues, blockShift);
-  }
+	/**
+	 * Returns an instance suitable for encoding {@code numValues} into monotonic
+	 * blocks of 2<sup>{@code blockShift}</sup> values. Metadata will be written
+	 * to {@code metaOut} and actual data to {@code dataOut}.
+	 */
+	public static DirectMonotonicWriter getInstance(IndexOutput metaOut, IndexOutput dataOut, long numValues, int blockShift) {
+		return new DirectMonotonicWriter(metaOut, dataOut, numValues, blockShift);
+	}
 
 }

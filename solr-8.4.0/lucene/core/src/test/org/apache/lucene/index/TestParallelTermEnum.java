@@ -29,70 +29,70 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;
 
 public class TestParallelTermEnum extends LuceneTestCase {
-  private LeafReader ir1;
-  private LeafReader ir2;
-  private Directory rd1;
-  private Directory rd2;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    Document doc;
-    rd1 = newDirectory();
-    IndexWriter iw1 = new IndexWriter(rd1, newIndexWriterConfig(new MockAnalyzer(random())));
+	private LeafReader ir1;
+	private LeafReader ir2;
+	private Directory rd1;
+	private Directory rd2;
 
-    doc = new Document();
-    doc.add(newTextField("field1", "the quick brown fox jumps", Field.Store.YES));
-    doc.add(newTextField("field2", "the quick brown fox jumps", Field.Store.YES));
-    iw1.addDocument(doc);
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		Document doc;
+		rd1 = newDirectory();
+		IndexWriter iw1 = new IndexWriter(rd1, newIndexWriterConfig(new MockAnalyzer(random())));
 
-    iw1.close();
-    rd2 = newDirectory();
-    IndexWriter iw2 = new IndexWriter(rd2, newIndexWriterConfig(new MockAnalyzer(random())));
+		doc = new Document();
+		doc.add(newTextField("field1", "the quick brown fox jumps", Field.Store.YES));
+		doc.add(newTextField("field2", "the quick brown fox jumps", Field.Store.YES));
+		iw1.addDocument(doc);
 
-    doc = new Document();
-    doc.add(newTextField("field1", "the fox jumps over the lazy dog", Field.Store.YES));
-    doc.add(newTextField("field3", "the fox jumps over the lazy dog", Field.Store.YES));
-    iw2.addDocument(doc);
+		iw1.close();
+		rd2 = newDirectory();
+		IndexWriter iw2 = new IndexWriter(rd2, newIndexWriterConfig(new MockAnalyzer(random())));
 
-    iw2.close();
+		doc = new Document();
+		doc.add(newTextField("field1", "the fox jumps over the lazy dog", Field.Store.YES));
+		doc.add(newTextField("field3", "the fox jumps over the lazy dog", Field.Store.YES));
+		iw2.addDocument(doc);
 
-    this.ir1 = getOnlyLeafReader(DirectoryReader.open(rd1));
-    this.ir2 = getOnlyLeafReader(DirectoryReader.open(rd2));
-  }
+		iw2.close();
 
-  @Override
-  public void tearDown() throws Exception {
-    ir1.close();
-    ir2.close();
-    rd1.close();
-    rd2.close();
-    super.tearDown();
-  }
-  
-  private void checkTerms(Terms terms, String... termsList) throws IOException {
-    assertNotNull(terms);
-    final TermsEnum te = terms.iterator();
-    
-    for (String t : termsList) {
-      BytesRef b = te.next();
-      assertNotNull(b);
-      assertEquals(t, b.utf8ToString());
-      PostingsEnum td = TestUtil.docs(random(), te, null, PostingsEnum.NONE);
-      assertTrue(td.nextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-      assertEquals(0, td.docID());
-      assertEquals(td.nextDoc(), DocIdSetIterator.NO_MORE_DOCS);
-    }
-    assertNull(te.next());
-  }
+		this.ir1 = getOnlyLeafReader(DirectoryReader.open(rd1));
+		this.ir2 = getOnlyLeafReader(DirectoryReader.open(rd2));
+	}
 
-  public void test1() throws IOException {
-    ParallelLeafReader pr = new ParallelLeafReader(ir1, ir2);
+	@Override
+	public void tearDown() throws Exception {
+		ir1.close();
+		ir2.close();
+		rd1.close();
+		rd2.close();
+		super.tearDown();
+	}
 
-    assertEquals(3, pr.getFieldInfos().size());
+	private void checkTerms(Terms terms, String... termsList) throws IOException {
+		assertNotNull(terms);
+		final TermsEnum te = terms.iterator();
 
-    checkTerms(pr.terms("field1"), "brown", "fox", "jumps", "quick", "the");
-    checkTerms(pr.terms("field2"), "brown", "fox", "jumps", "quick", "the");
-    checkTerms(pr.terms("field3"), "dog", "fox", "jumps", "lazy", "over", "the");
-  }
+		for (String t : termsList) {
+			BytesRef b = te.next();
+			assertNotNull(b);
+			assertEquals(t, b.utf8ToString());
+			PostingsEnum td = TestUtil.docs(random(), te, null, PostingsEnum.NONE);
+			assertTrue(td.nextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			assertEquals(0, td.docID());
+			assertEquals(td.nextDoc(), DocIdSetIterator.NO_MORE_DOCS);
+		}
+		assertNull(te.next());
+	}
+
+	public void test1() throws IOException {
+		ParallelLeafReader pr = new ParallelLeafReader(ir1, ir2);
+
+		assertEquals(3, pr.getFieldInfos().size());
+
+		checkTerms(pr.terms("field1"), "brown", "fox", "jumps", "quick", "the");
+		checkTerms(pr.terms("field2"), "brown", "fox", "jumps", "quick", "the");
+		checkTerms(pr.terms("field3"), "dog", "fox", "jumps", "lazy", "over", "the");
+	}
 }

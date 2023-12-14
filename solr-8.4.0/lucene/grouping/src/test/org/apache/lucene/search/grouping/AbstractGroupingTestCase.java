@@ -25,15 +25,15 @@ import org.apache.lucene.util.TestUtil;
 // TODO (MvG) : The grouping tests contain a lot of code duplication. Try to move the common code to this class..
 public abstract class AbstractGroupingTestCase extends LuceneTestCase {
 
-  protected String generateRandomNonEmptyString() {
-    String randomValue;
-    do {
-      // B/c of DV based impl we can't see the difference between an empty string and a null value.
-      // For that reason we don't generate empty string
-      // groups.
-      randomValue = TestUtil.randomRealisticUnicodeString(random());
-      //randomValue = _TestUtil.randomSimpleString(random());
-    } while ("".equals(randomValue));
-    return randomValue;
-  }
+	protected String generateRandomNonEmptyString() {
+		String randomValue;
+		do {
+			// B/c of DV based impl we can't see the difference between an empty string and a null value.
+			// For that reason we don't generate empty string
+			// groups.
+			randomValue = TestUtil.randomRealisticUnicodeString(random());
+			//randomValue = _TestUtil.randomSimpleString(random());
+		} while ("".equals(randomValue));
+		return randomValue;
+	}
 }

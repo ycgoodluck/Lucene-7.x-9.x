@@ -24,25 +24,25 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class ReplicationServlet extends HttpServlet {
-  
-  private final ReplicationService service;
-  private boolean respondWithError = false;
-  
-  public ReplicationServlet(ReplicationService service) {
-    this.service = service;
-  }
-  
-  @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    if (respondWithError) {
-      resp.sendError(500, "Fake error");
-    } else {
-      service.perform(req, resp);
-    }
-  }
 
-  public void setRespondWithError(boolean respondWithError) {
-    this.respondWithError = respondWithError;
-  }
-  
+	private final ReplicationService service;
+	private boolean respondWithError = false;
+
+	public ReplicationServlet(ReplicationService service) {
+		this.service = service;
+	}
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		if (respondWithError) {
+			resp.sendError(500, "Fake error");
+		} else {
+			service.perform(req, resp);
+		}
+	}
+
+	public void setRespondWithError(boolean respondWithError) {
+		this.respondWithError = respondWithError;
+	}
+
 }

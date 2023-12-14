@@ -20,18 +20,18 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestOnlyInCompound extends StemmerTestBase {
-  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("onlyincompound.aff", "onlyincompound.dic");
-  }
-  
-  public void testPossibilities() {
-    assertStemsTo("drink",     "drink");
-    assertStemsTo("drinks",    "drink");
-    assertStemsTo("drinked");
-    assertStemsTo("predrink");
-    assertStemsTo("predrinked");
-    assertStemsTo("walk");
-  }
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("onlyincompound.aff", "onlyincompound.dic");
+	}
+
+	public void testPossibilities() {
+		assertStemsTo("drink", "drink");
+		assertStemsTo("drinks", "drink");
+		assertStemsTo("drinked");
+		assertStemsTo("predrink");
+		assertStemsTo("predrinked");
+		assertStemsTo("walk");
+	}
 }

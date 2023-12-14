@@ -23,13 +23,11 @@ import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
  * A parser needs to implement {@link SyntaxParser} interface
  */
 public interface SyntaxParser {
-  /**
-   * @param query
-   *          - query data to be parsed
-   * @param field
-   *          - default field name
-   * @return QueryNode tree
-   */
-  public QueryNode parse(CharSequence query, CharSequence field)
-      throws QueryNodeParseException;
+	/**
+	 * @param query - query data to be parsed
+	 * @param field - default field name
+	 * @return QueryNode tree
+	 */
+	public QueryNode parse(CharSequence query, CharSequence field)
+		throws QueryNodeParseException;
 }

@@ -22,87 +22,88 @@ import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.FileStoreAttributeView;
 import java.util.Objects;
 
-/**  
- * A {@code FilterFileStore} contains another 
- * {@code FileStore}, which it uses as its basic 
- * source of data, possibly transforming the data along the 
- * way or providing additional functionality. 
+/**
+ * A {@code FilterFileStore} contains another
+ * {@code FileStore}, which it uses as its basic
+ * source of data, possibly transforming the data along the
+ * way or providing additional functionality.
  */
 public abstract class FilterFileStore extends FileStore {
-  
-  /** 
-   * The underlying {@code FileStore} instance. 
-   */
-  protected final FileStore delegate;
-  
-  /**
-   * URI scheme used for this instance.
-   */
-  protected final String scheme;
-  
-  /**
-   * Construct a {@code FilterFileStore} based on 
-   * the specified base store.
-   * @param delegate specified base store.
-   * @param scheme URI scheme identifying this instance.
-   */
-  public FilterFileStore(FileStore delegate, String scheme) {
-    this.delegate = Objects.requireNonNull(delegate);
-    this.scheme = Objects.requireNonNull(scheme);
-  }
 
-  @Override
-  public String name() {
-    return delegate.name();
-  }
+	/**
+	 * The underlying {@code FileStore} instance.
+	 */
+	protected final FileStore delegate;
 
-  @Override
-  public String type() {
-    return delegate.type();
-  }
+	/**
+	 * URI scheme used for this instance.
+	 */
+	protected final String scheme;
 
-  @Override
-  public String toString() {
-    return delegate.toString();
-  }
+	/**
+	 * Construct a {@code FilterFileStore} based on
+	 * the specified base store.
+	 *
+	 * @param delegate specified base store.
+	 * @param scheme   URI scheme identifying this instance.
+	 */
+	public FilterFileStore(FileStore delegate, String scheme) {
+		this.delegate = Objects.requireNonNull(delegate);
+		this.scheme = Objects.requireNonNull(scheme);
+	}
 
-  @Override
-  public boolean isReadOnly() {
-    return delegate.isReadOnly();
-  }
+	@Override
+	public String name() {
+		return delegate.name();
+	}
 
-  @Override
-  public long getTotalSpace() throws IOException {
-    return delegate.getTotalSpace();
-  }
+	@Override
+	public String type() {
+		return delegate.type();
+	}
 
-  @Override
-  public long getUsableSpace() throws IOException {
-    return delegate.getUsableSpace();
-  }
+	@Override
+	public String toString() {
+		return delegate.toString();
+	}
 
-  @Override
-  public long getUnallocatedSpace() throws IOException {
-    return delegate.getUnallocatedSpace();
-  }
+	@Override
+	public boolean isReadOnly() {
+		return delegate.isReadOnly();
+	}
 
-  @Override
-  public boolean supportsFileAttributeView(Class<? extends FileAttributeView> type) {
-    return delegate.supportsFileAttributeView(type);
-  }
+	@Override
+	public long getTotalSpace() throws IOException {
+		return delegate.getTotalSpace();
+	}
 
-  @Override
-  public boolean supportsFileAttributeView(String name) {
-    return delegate.supportsFileAttributeView(name);
-  }
+	@Override
+	public long getUsableSpace() throws IOException {
+		return delegate.getUsableSpace();
+	}
 
-  @Override
-  public <V extends FileStoreAttributeView> V getFileStoreAttributeView(Class<V> type) {
-    return delegate.getFileStoreAttributeView(type);
-  }
+	@Override
+	public long getUnallocatedSpace() throws IOException {
+		return delegate.getUnallocatedSpace();
+	}
 
-  @Override
-  public Object getAttribute(String attribute) throws IOException {
-    return delegate.getAttribute(attribute);
-  }
+	@Override
+	public boolean supportsFileAttributeView(Class<? extends FileAttributeView> type) {
+		return delegate.supportsFileAttributeView(type);
+	}
+
+	@Override
+	public boolean supportsFileAttributeView(String name) {
+		return delegate.supportsFileAttributeView(name);
+	}
+
+	@Override
+	public <V extends FileStoreAttributeView> V getFileStoreAttributeView(Class<V> type) {
+		return delegate.getFileStoreAttributeView(type);
+	}
+
+	@Override
+	public Object getAttribute(String attribute) throws IOException {
+		return delegate.getAttribute(attribute);
+	}
 }

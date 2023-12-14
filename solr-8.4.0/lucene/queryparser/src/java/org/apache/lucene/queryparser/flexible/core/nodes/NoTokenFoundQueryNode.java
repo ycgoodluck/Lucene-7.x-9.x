@@ -24,26 +24,26 @@ import org.apache.lucene.queryparser.flexible.core.parser.EscapeQuerySyntax;
  */
 public class NoTokenFoundQueryNode extends DeletedQueryNode {
 
-  public NoTokenFoundQueryNode() {
-    super();
-  }
+	public NoTokenFoundQueryNode() {
+		super();
+	}
 
-  @Override
-  public CharSequence toQueryString(EscapeQuerySyntax escaper) {
-    return "[NTF]";
-  }
+	@Override
+	public CharSequence toQueryString(EscapeQuerySyntax escaper) {
+		return "[NTF]";
+	}
 
-  @Override
-  public String toString() {
-    return "<notokenfound/>";
-  }
+	@Override
+	public String toString() {
+		return "<notokenfound/>";
+	}
 
-  @Override
-  public QueryNode cloneTree() throws CloneNotSupportedException {
-    NoTokenFoundQueryNode clone = (NoTokenFoundQueryNode) super.cloneTree();
+	@Override
+	public QueryNode cloneTree() throws CloneNotSupportedException {
+		NoTokenFoundQueryNode clone = (NoTokenFoundQueryNode) super.cloneTree();
 
-    // nothing to do here
+		// nothing to do here
 
-    return clone;
-  }
+		return clone;
+	}
 }

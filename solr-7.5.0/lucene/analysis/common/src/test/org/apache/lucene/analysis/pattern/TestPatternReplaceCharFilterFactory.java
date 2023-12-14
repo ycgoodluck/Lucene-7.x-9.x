@@ -27,54 +27,56 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure this factory is working
  */
 public class TestPatternReplaceCharFilterFactory extends BaseTokenStreamFactoryTestCase {
-  
-  //           1111
-  // 01234567890123
-  // this is test.
-  public void testNothingChange() throws Exception {
-    Reader reader = new StringReader("this is test.");
-    reader = charFilterFactory("PatternReplace",
-        "pattern", "(aa)\\s+(bb)\\s+(cc)",
-        "replacement", "$1$2$3").create(reader);
-    TokenStream ts = whitespaceMockTokenizer(reader);
-    assertTokenStreamContents(ts,
-        new String[] { "this", "is", "test." },
-        new int[] { 0, 5, 8 },
-        new int[] { 4, 7, 13 });
-  }
-  
-  // 012345678
-  // aa bb cc
-  public void testReplaceByEmpty() throws Exception {
-    Reader reader = new StringReader("aa bb cc");
-    reader = charFilterFactory("PatternReplace",
-        "pattern", "(aa)\\s+(bb)\\s+(cc)").create(reader);
-    TokenStream ts = whitespaceMockTokenizer(reader);
-    assertTokenStreamContents(ts, new String[] {});
-  }
-  
-  // 012345678
-  // aa bb cc
-  // aa#bb#cc
-  public void test1block1matchSameLength() throws Exception {
-    Reader reader = new StringReader("aa bb cc");
-    reader = charFilterFactory("PatternReplace",
-        "pattern", "(aa)\\s+(bb)\\s+(cc)",
-        "replacement", "$1#$2#$3").create(reader);
-    TokenStream ts = whitespaceMockTokenizer(reader);
-    assertTokenStreamContents(ts,
-        new String[] { "aa#bb#cc" },
-        new int[] { 0 },
-        new int[] { 8 });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      charFilterFactory("PatternReplace",
-          "pattern", "something",
-          "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+
+	//           1111
+	// 01234567890123
+	// this is test.
+	public void testNothingChange() throws Exception {
+		Reader reader = new StringReader("this is test.");
+		reader = charFilterFactory("PatternReplace",
+			"pattern", "(aa)\\s+(bb)\\s+(cc)",
+			"replacement", "$1$2$3").create(reader);
+		TokenStream ts = whitespaceMockTokenizer(reader);
+		assertTokenStreamContents(ts,
+			new String[]{"this", "is", "test."},
+			new int[]{0, 5, 8},
+			new int[]{4, 7, 13});
+	}
+
+	// 012345678
+	// aa bb cc
+	public void testReplaceByEmpty() throws Exception {
+		Reader reader = new StringReader("aa bb cc");
+		reader = charFilterFactory("PatternReplace",
+			"pattern", "(aa)\\s+(bb)\\s+(cc)").create(reader);
+		TokenStream ts = whitespaceMockTokenizer(reader);
+		assertTokenStreamContents(ts, new String[]{});
+	}
+
+	// 012345678
+	// aa bb cc
+	// aa#bb#cc
+	public void test1block1matchSameLength() throws Exception {
+		Reader reader = new StringReader("aa bb cc");
+		reader = charFilterFactory("PatternReplace",
+			"pattern", "(aa)\\s+(bb)\\s+(cc)",
+			"replacement", "$1#$2#$3").create(reader);
+		TokenStream ts = whitespaceMockTokenizer(reader);
+		assertTokenStreamContents(ts,
+			new String[]{"aa#bb#cc"},
+			new int[]{0},
+			new int[]{8});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			charFilterFactory("PatternReplace",
+				"pattern", "something",
+				"bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

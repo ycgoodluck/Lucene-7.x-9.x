@@ -22,8 +22,8 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
- * Factory for {@link HungarianLightStemFilter}. 
+/**
+ * Factory for {@link HungarianLightStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_hulgtstem" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -32,24 +32,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.HungarianLightStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.1.0
  */
 public class HungarianLightStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "hungarianLightStem";
-  
-  /** Creates a new HungarianLightStemFilterFactory */
-  public HungarianLightStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new HungarianLightStemFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "hungarianLightStem";
+
+	/**
+	 * Creates a new HungarianLightStemFilterFactory
+	 */
+	public HungarianLightStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new HungarianLightStemFilter(input);
+	}
 }

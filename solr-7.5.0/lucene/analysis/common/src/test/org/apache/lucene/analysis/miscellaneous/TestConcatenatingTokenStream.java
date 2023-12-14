@@ -29,54 +29,54 @@ import org.apache.lucene.util.AttributeFactory;
 
 public class TestConcatenatingTokenStream extends BaseTokenStreamTestCase {
 
-  public void testBasic() throws IOException {
+	public void testBasic() throws IOException {
 
-    AttributeFactory factory = newAttributeFactory();
+		AttributeFactory factory = newAttributeFactory();
 
-    final MockTokenizer first = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
-    first.setReader(new StringReader("first words "));
-    final MockTokenizer second = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
-    second.setReader(new StringReader("second words"));
-    final MockTokenizer third = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
-    third.setReader(new StringReader(" third words"));
+		final MockTokenizer first = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
+		first.setReader(new StringReader("first words "));
+		final MockTokenizer second = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
+		second.setReader(new StringReader("second words"));
+		final MockTokenizer third = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
+		third.setReader(new StringReader(" third words"));
 
-    TokenStream ts = new ConcatenatingTokenStream(first, second, new EmptyTokenStream(), third);
-    assertTokenStreamContents(ts,
-        new String[] { "first", "words", "second", "words", "third", "words" },
-        new int[]{ 0, 6, 12, 19, 25, 31 },
-        new int[]{ 5, 11, 18, 24, 30, 36 });
+		TokenStream ts = new ConcatenatingTokenStream(first, second, new EmptyTokenStream(), third);
+		assertTokenStreamContents(ts,
+			new String[]{"first", "words", "second", "words", "third", "words"},
+			new int[]{0, 6, 12, 19, 25, 31},
+			new int[]{5, 11, 18, 24, 30, 36});
 
-  }
+	}
 
-  public void testInconsistentAttributes() throws IOException {
+	public void testInconsistentAttributes() throws IOException {
 
-    AttributeFactory factory = newAttributeFactory();
+		AttributeFactory factory = newAttributeFactory();
 
-    final MockTokenizer first = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
-    first.setReader(new StringReader("first words "));
-    first.addAttribute(PayloadAttribute.class);
-    final MockTokenizer second = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
-    second.setReader(new StringReader("second words"));
-    second.addAttribute(FlagsAttribute.class);
+		final MockTokenizer first = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
+		first.setReader(new StringReader("first words "));
+		first.addAttribute(PayloadAttribute.class);
+		final MockTokenizer second = new MockTokenizer(factory, MockTokenizer.WHITESPACE, false);
+		second.setReader(new StringReader("second words"));
+		second.addAttribute(FlagsAttribute.class);
 
-    TokenStream ts = new ConcatenatingTokenStream(first, second);
-    assertTrue(ts.hasAttribute(FlagsAttribute.class));
-    assertTrue(ts.hasAttribute(PayloadAttribute.class));
+		TokenStream ts = new ConcatenatingTokenStream(first, second);
+		assertTrue(ts.hasAttribute(FlagsAttribute.class));
+		assertTrue(ts.hasAttribute(PayloadAttribute.class));
 
-    assertTokenStreamContents(ts,
-        new String[] { "first", "words", "second", "words" },
-        new int[]{ 0, 6, 12, 19, },
-        new int[]{ 5, 11, 18, 24, });
+		assertTokenStreamContents(ts,
+			new String[]{"first", "words", "second", "words"},
+			new int[]{0, 6, 12, 19,},
+			new int[]{5, 11, 18, 24,});
 
-  }
+	}
 
-  public void testInconsistentAttributeFactories() throws IOException {
+	public void testInconsistentAttributeFactories() throws IOException {
 
-    final MockTokenizer first = new MockTokenizer(AttributeFactory.DEFAULT_ATTRIBUTE_FACTORY, MockTokenizer.WHITESPACE, true);
-    final MockTokenizer second = new MockTokenizer(TokenStream.DEFAULT_TOKEN_ATTRIBUTE_FACTORY, MockTokenizer.WHITESPACE, true);
+		final MockTokenizer first = new MockTokenizer(AttributeFactory.DEFAULT_ATTRIBUTE_FACTORY, MockTokenizer.WHITESPACE, true);
+		final MockTokenizer second = new MockTokenizer(TokenStream.DEFAULT_TOKEN_ATTRIBUTE_FACTORY, MockTokenizer.WHITESPACE, true);
 
-    expectThrows(IllegalArgumentException.class, () -> new ConcatenatingTokenStream(first, second));
+		expectThrows(IllegalArgumentException.class, () -> new ConcatenatingTokenStream(first, second));
 
-  }
+	}
 
 }

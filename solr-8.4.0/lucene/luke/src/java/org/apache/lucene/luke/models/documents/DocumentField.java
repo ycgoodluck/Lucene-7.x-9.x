@@ -34,136 +34,136 @@ import org.apache.lucene.util.BytesRef;
  */
 public final class DocumentField {
 
-  // field name
-  private String name;
+	// field name
+	private String name;
 
-  // index options
-  private IndexOptions idxOptions;
-  private boolean hasTermVectors;
-  private boolean hasPayloads;
-  private boolean hasNorms;
-  private long norm;
+	// index options
+	private IndexOptions idxOptions;
+	private boolean hasTermVectors;
+	private boolean hasPayloads;
+	private boolean hasNorms;
+	private long norm;
 
-  // stored value
-  private boolean isStored;
-  private String stringValue;
-  private BytesRef binaryValue;
-  private Number numericValue;
+	// stored value
+	private boolean isStored;
+	private String stringValue;
+	private BytesRef binaryValue;
+	private Number numericValue;
 
-  // doc values
-  private DocValuesType dvType;
+	// doc values
+	private DocValuesType dvType;
 
-  // point values
-  private int pointDimensionCount;
-  private int pointNumBytes;
+	// point values
+	private int pointDimensionCount;
+	private int pointNumBytes;
 
-  static DocumentField of(FieldInfo finfo, IndexReader reader, int docId)
-      throws IOException {
-    return of(finfo, null, reader, docId);
-  }
+	static DocumentField of(FieldInfo finfo, IndexReader reader, int docId)
+		throws IOException {
+		return of(finfo, null, reader, docId);
+	}
 
-  static DocumentField of(FieldInfo finfo, IndexableField field, IndexReader reader, int docId)
-      throws IOException {
+	static DocumentField of(FieldInfo finfo, IndexableField field, IndexReader reader, int docId)
+		throws IOException {
 
-    Objects.requireNonNull(finfo);
-    Objects.requireNonNull(reader);
+		Objects.requireNonNull(finfo);
+		Objects.requireNonNull(reader);
 
-    DocumentField dfield = new DocumentField();
+		DocumentField dfield = new DocumentField();
 
-    dfield.name = finfo.name;
-    dfield.idxOptions = finfo.getIndexOptions();
-    dfield.hasTermVectors = finfo.hasVectors();
-    dfield.hasPayloads = finfo.hasPayloads();
-    dfield.hasNorms = finfo.hasNorms();
+		dfield.name = finfo.name;
+		dfield.idxOptions = finfo.getIndexOptions();
+		dfield.hasTermVectors = finfo.hasVectors();
+		dfield.hasPayloads = finfo.hasPayloads();
+		dfield.hasNorms = finfo.hasNorms();
 
-    if (finfo.hasNorms()) {
-      NumericDocValues norms = MultiDocValues.getNormValues(reader, finfo.name);
-      if (norms.advanceExact(docId)) {
-        dfield.norm = norms.longValue();
-      }
-    }
+		if (finfo.hasNorms()) {
+			NumericDocValues norms = MultiDocValues.getNormValues(reader, finfo.name);
+			if (norms.advanceExact(docId)) {
+				dfield.norm = norms.longValue();
+			}
+		}
 
-    dfield.dvType = finfo.getDocValuesType();
+		dfield.dvType = finfo.getDocValuesType();
 
-    dfield.pointDimensionCount = finfo.getPointDataDimensionCount();
-    dfield.pointNumBytes = finfo.getPointNumBytes();
+		dfield.pointDimensionCount = finfo.getPointDataDimensionCount();
+		dfield.pointNumBytes = finfo.getPointNumBytes();
 
-    if (field != null) {
-      dfield.isStored = field.fieldType().stored();
-      dfield.stringValue = field.stringValue();
-      if (field.binaryValue() != null) {
-        dfield.binaryValue = BytesRef.deepCopyOf(field.binaryValue());
-      }
-      dfield.numericValue = field.numericValue();
-    }
+		if (field != null) {
+			dfield.isStored = field.fieldType().stored();
+			dfield.stringValue = field.stringValue();
+			if (field.binaryValue() != null) {
+				dfield.binaryValue = BytesRef.deepCopyOf(field.binaryValue());
+			}
+			dfield.numericValue = field.numericValue();
+		}
 
-    return dfield;
-  }
+		return dfield;
+	}
 
-  public String getName() {
-    return name;
-  }
+	public String getName() {
+		return name;
+	}
 
-  public IndexOptions getIdxOptions() {
-    return idxOptions;
-  }
+	public IndexOptions getIdxOptions() {
+		return idxOptions;
+	}
 
-  public boolean hasTermVectors() {
-    return hasTermVectors;
-  }
+	public boolean hasTermVectors() {
+		return hasTermVectors;
+	}
 
-  public boolean hasPayloads() {
-    return hasPayloads;
-  }
+	public boolean hasPayloads() {
+		return hasPayloads;
+	}
 
-  public boolean hasNorms() {
-    return hasNorms;
-  }
+	public boolean hasNorms() {
+		return hasNorms;
+	}
 
-  public long getNorm() {
-    return norm;
-  }
+	public long getNorm() {
+		return norm;
+	}
 
-  public boolean isStored() {
-    return isStored;
-  }
+	public boolean isStored() {
+		return isStored;
+	}
 
-  public String getStringValue() {
-    return stringValue;
-  }
+	public String getStringValue() {
+		return stringValue;
+	}
 
-  public BytesRef getBinaryValue() {
-    return binaryValue;
-  }
+	public BytesRef getBinaryValue() {
+		return binaryValue;
+	}
 
-  public Number getNumericValue() {
-    return numericValue;
-  }
+	public Number getNumericValue() {
+		return numericValue;
+	}
 
-  public DocValuesType getDvType() {
-    return dvType;
-  }
+	public DocValuesType getDvType() {
+		return dvType;
+	}
 
-  public int getPointDimensionCount() {
-    return pointDimensionCount;
-  }
+	public int getPointDimensionCount() {
+		return pointDimensionCount;
+	}
 
-  public int getPointNumBytes() {
-    return pointNumBytes;
-  }
+	public int getPointNumBytes() {
+		return pointNumBytes;
+	}
 
-  @Override
-  public String toString() {
-    return "DocumentField{" +
-        "name='" + name + '\'' +
-        ", idxOptions=" + idxOptions +
-        ", hasTermVectors=" + hasTermVectors +
-        ", isStored=" + isStored +
-        ", dvType=" + dvType +
-        ", pointDimensionCount=" + pointDimensionCount +
-        '}';
-  }
+	@Override
+	public String toString() {
+		return "DocumentField{" +
+			"name='" + name + '\'' +
+			", idxOptions=" + idxOptions +
+			", hasTermVectors=" + hasTermVectors +
+			", isStored=" + isStored +
+			", dvType=" + dvType +
+			", pointDimensionCount=" + pointDimensionCount +
+			'}';
+	}
 
-  private DocumentField() {
-  }
+	private DocumentField() {
+	}
 }

@@ -23,57 +23,60 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Objects;
 
-/**  
- * A {@code FilterDirectoryStream} contains another 
- * {@code DirectoryStream}, which it uses as its basic 
- * source of data, possibly transforming the data along the 
- * way or providing additional functionality. 
+/**
+ * A {@code FilterDirectoryStream} contains another
+ * {@code DirectoryStream}, which it uses as its basic
+ * source of data, possibly transforming the data along the
+ * way or providing additional functionality.
  */
 public class FilterDirectoryStream implements DirectoryStream<Path> {
-  
-  /** 
-   * The underlying {@code DirectoryStream} instance. 
-   */
-  protected final DirectoryStream<Path> delegate;
-  
-  /**
-   * The underlying {@code FileSystem} instance.
-   */
-  protected final FileSystem fileSystem;
 
-  /**
-   * Construct a {@code FilterDirectoryStream} based on 
-   * the specified base stream.
-   * <p>
-   * Note that base stream is closed if this stream is closed.
-   * @param delegate specified base stream.
-   */
-  public FilterDirectoryStream(DirectoryStream<Path> delegate, FileSystem fileSystem) {
-    this.delegate = Objects.requireNonNull(delegate);
-    this.fileSystem = Objects.requireNonNull(fileSystem);
-  }
+	/**
+	 * The underlying {@code DirectoryStream} instance.
+	 */
+	protected final DirectoryStream<Path> delegate;
 
-  @Override
-  public void close() throws IOException {
-    delegate.close();
-  }
+	/**
+	 * The underlying {@code FileSystem} instance.
+	 */
+	protected final FileSystem fileSystem;
 
-  @Override
-  public Iterator<Path> iterator() {
-    final Iterator<Path> delegateIterator = delegate.iterator();
-    return new Iterator<Path>() {
-      @Override
-      public boolean hasNext() {
-        return delegateIterator.hasNext();
-      }
-      @Override
-      public Path next() {
-        return new FilterPath(delegateIterator.next(), fileSystem);
-      }
-      @Override
-      public void remove() {
-        delegateIterator.remove();
-      }
-    };
-  }
+	/**
+	 * Construct a {@code FilterDirectoryStream} based on
+	 * the specified base stream.
+	 * <p>
+	 * Note that base stream is closed if this stream is closed.
+	 *
+	 * @param delegate specified base stream.
+	 */
+	public FilterDirectoryStream(DirectoryStream<Path> delegate, FileSystem fileSystem) {
+		this.delegate = Objects.requireNonNull(delegate);
+		this.fileSystem = Objects.requireNonNull(fileSystem);
+	}
+
+	@Override
+	public void close() throws IOException {
+		delegate.close();
+	}
+
+	@Override
+	public Iterator<Path> iterator() {
+		final Iterator<Path> delegateIterator = delegate.iterator();
+		return new Iterator<Path>() {
+			@Override
+			public boolean hasNext() {
+				return delegateIterator.hasNext();
+			}
+
+			@Override
+			public Path next() {
+				return new FilterPath(delegateIterator.next(), fileSystem);
+			}
+
+			@Override
+			public void remove() {
+				delegateIterator.remove();
+			}
+		};
+	}
 }

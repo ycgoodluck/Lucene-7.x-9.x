@@ -32,53 +32,53 @@ import org.apache.lucene.search.RegexpQuery;
 
 public class TestRegexpQueryHandler extends BaseTokenStreamTestCase {
 
-  public void testTermStreamWrapping() throws IOException {
+	public void testTermStreamWrapping() throws IOException {
 
-    CustomQueryHandler handler
-        = new RegexpQueryHandler("FOO", 10, "__wibble__", Collections.singleton("field1"));
+		CustomQueryHandler handler
+			= new RegexpQueryHandler("FOO", 10, "__wibble__", Collections.singleton("field1"));
 
-    try (Analyzer input = new WhitespaceAnalyzer()) {
+		try (Analyzer input = new WhitespaceAnalyzer()) {
 
-      // field1 is in the excluded set, so nothing should happen
-      assertTokenStreamContents(handler.wrapTermStream("field1", input.tokenStream("field1", "hello world")),
-          new String[]{ "hello", "world" });
+			// field1 is in the excluded set, so nothing should happen
+			assertTokenStreamContents(handler.wrapTermStream("field1", input.tokenStream("field1", "hello world")),
+				new String[]{"hello", "world"});
 
-      // field2 is not excluded
-      assertTokenStreamContents(handler.wrapTermStream("field2", input.tokenStream("field2", "harm alarm asdasasdasdasd")),
-          new String[]{
-              "harm", "harmFOO", "harFOO", "haFOO", "hFOO", "armFOO", "arFOO", "aFOO", "rmFOO", "rFOO", "mFOO", "FOO",
-              "alarm", "alarmFOO", "alarFOO", "alaFOO", "alFOO", "larmFOO", "larFOO", "laFOO", "lFOO",
-              "asdasasdasdasd", "__wibble__"
-          });
-    }
-  }
+			// field2 is not excluded
+			assertTokenStreamContents(handler.wrapTermStream("field2", input.tokenStream("field2", "harm alarm asdasasdasdasd")),
+				new String[]{
+					"harm", "harmFOO", "harFOO", "haFOO", "hFOO", "armFOO", "arFOO", "aFOO", "rmFOO", "rFOO", "mFOO", "FOO",
+					"alarm", "alarmFOO", "alarFOO", "alaFOO", "alFOO", "larmFOO", "larFOO", "laFOO", "lFOO",
+					"asdasasdasdasd", "__wibble__"
+				});
+		}
+	}
 
-  private Set<Term> collectTerms(Query q) {
-    QueryAnalyzer builder = new QueryAnalyzer(Collections.singletonList(
-        new RegexpQueryHandler("XX", 30, "WILDCARD", null)));
-    QueryTree tree = builder.buildTree(q, TermWeightor.DEFAULT);
-    Set<Term> terms = new HashSet<>();
-    tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
-    return terms;
-  }
+	private Set<Term> collectTerms(Query q) {
+		QueryAnalyzer builder = new QueryAnalyzer(Collections.singletonList(
+			new RegexpQueryHandler("XX", 30, "WILDCARD", null)));
+		QueryTree tree = builder.buildTree(q, TermWeightor.DEFAULT);
+		Set<Term> terms = new HashSet<>();
+		tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
+		return terms;
+	}
 
-  public void testRegexpExtractor() {
+	public void testRegexpExtractor() {
 
-    Set<Term> expected = new HashSet<>(Arrays.asList(
-        new Term("field", "califragilisticXX"),
-        new Term("field", "WILDCARD")));
-    assertEquals(expected, collectTerms(new RegexpQuery(new Term("field", "super.*califragilistic"))));
+		Set<Term> expected = new HashSet<>(Arrays.asList(
+			new Term("field", "califragilisticXX"),
+			new Term("field", "WILDCARD")));
+		assertEquals(expected, collectTerms(new RegexpQuery(new Term("field", "super.*califragilistic"))));
 
-    expected = new HashSet<>(Arrays.asList(
-        new Term("field", "hellXX"),
-        new Term("field", "WILDCARD")));
-    assertEquals(expected, collectTerms(new RegexpQuery(new Term("field", "hell."))));
+		expected = new HashSet<>(Arrays.asList(
+			new Term("field", "hellXX"),
+			new Term("field", "WILDCARD")));
+		assertEquals(expected, collectTerms(new RegexpQuery(new Term("field", "hell."))));
 
-    expected = new HashSet<>(Arrays.asList(
-        new Term("field", "heXX"),
-        new Term("field", "WILDCARD")));
-    assertEquals(expected, collectTerms(new RegexpQuery(new Term("field", "hel?o"))));
+		expected = new HashSet<>(Arrays.asList(
+			new Term("field", "heXX"),
+			new Term("field", "WILDCARD")));
+		assertEquals(expected, collectTerms(new RegexpQuery(new Term("field", "hel?o"))));
 
-  }
+	}
 
 }

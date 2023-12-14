@@ -25,8 +25,8 @@ import java.nio.file.Path;
 // See: https://issues.apache.org/jira/browse/SOLR-12028 Tests cannot remove files on Windows machines occasionally
 public class TestRAFDirectory extends BaseDirectoryTestCase {
 
-  @Override
-  protected Directory getDirectory(Path path) throws IOException {
-    return new RAFDirectory(path);
-  }
+	@Override
+	protected Directory getDirectory(Path path) throws IOException {
+		return new RAFDirectory(path);
+	}
 }

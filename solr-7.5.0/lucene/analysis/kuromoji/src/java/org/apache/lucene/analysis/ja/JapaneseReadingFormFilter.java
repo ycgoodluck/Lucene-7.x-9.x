@@ -32,44 +32,44 @@ import java.io.IOException;
  */
 
 public final class JapaneseReadingFormFilter extends TokenFilter {
-  private final CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
-  private final ReadingAttribute readingAttr = addAttribute(ReadingAttribute.class);
+	private final CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
+	private final ReadingAttribute readingAttr = addAttribute(ReadingAttribute.class);
 
-  private StringBuilder buffer = new StringBuilder();
-  private boolean useRomaji;
+	private StringBuilder buffer = new StringBuilder();
+	private boolean useRomaji;
 
-  public JapaneseReadingFormFilter(TokenStream input, boolean useRomaji) {
-    super(input);
-    this.useRomaji = useRomaji;
-  }
+	public JapaneseReadingFormFilter(TokenStream input, boolean useRomaji) {
+		super(input);
+		this.useRomaji = useRomaji;
+	}
 
-  public JapaneseReadingFormFilter(TokenStream input) {
-    this(input, false);
-  }
+	public JapaneseReadingFormFilter(TokenStream input) {
+		this(input, false);
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      String reading = readingAttr.getReading();
-      
-      if (useRomaji) {
-        if (reading == null) {
-          // if it's an OOV term, just try the term text
-          buffer.setLength(0);
-          ToStringUtil.getRomanization(buffer, termAttr);
-          termAttr.setEmpty().append(buffer);
-        } else {
-          ToStringUtil.getRomanization(termAttr.setEmpty(), reading);
-        }
-      } else {
-        // just replace the term text with the reading, if it exists
-        if (reading != null) {
-          termAttr.setEmpty().append(reading);
-        }
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			String reading = readingAttr.getReading();
+
+			if (useRomaji) {
+				if (reading == null) {
+					// if it's an OOV term, just try the term text
+					buffer.setLength(0);
+					ToStringUtil.getRomanization(buffer, termAttr);
+					termAttr.setEmpty().append(buffer);
+				} else {
+					ToStringUtil.getRomanization(termAttr.setEmpty(), reading);
+				}
+			} else {
+				// just replace the term text with the reading, if it exists
+				if (reading != null) {
+					termAttr.setEmpty().append(reading);
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

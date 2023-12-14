@@ -26,137 +26,147 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.lucene.index.MergePolicy.OneMergeProgress;
 import org.apache.lucene.index.MergePolicy.OneMergeProgress.PauseReason;
 
-/** This is the {@link RateLimiter} that {@link IndexWriter} assigns to each running merge, to 
- *  give {@link MergeScheduler}s ionice like control.
+/**
+ * This is the {@link RateLimiter} that {@link IndexWriter} assigns to each running merge, to
+ * give {@link MergeScheduler}s ionice like control.
  *
- *  @lucene.internal */
+ * @lucene.internal
+ */
 
 public class MergeRateLimiter extends RateLimiter {
 
-  private final static int MIN_PAUSE_CHECK_MSEC = 25;
-  
-  private final static long MIN_PAUSE_NS = TimeUnit.MILLISECONDS.toNanos(2);
-  private final static long MAX_PAUSE_NS = TimeUnit.MILLISECONDS.toNanos(250);
+	private final static int MIN_PAUSE_CHECK_MSEC = 25;
 
-  private volatile double mbPerSec;
-  private volatile long minPauseCheckBytes;
+	private final static long MIN_PAUSE_NS = TimeUnit.MILLISECONDS.toNanos(2);
+	private final static long MAX_PAUSE_NS = TimeUnit.MILLISECONDS.toNanos(250);
 
-  private long lastNS;
+	private volatile double mbPerSec;
+	private volatile long minPauseCheckBytes;
 
-  private AtomicLong totalBytesWritten = new AtomicLong();
+	private long lastNS;
 
-  private final OneMergeProgress mergeProgress;
+	private AtomicLong totalBytesWritten = new AtomicLong();
 
-  /** Sole constructor. */
-  public MergeRateLimiter(OneMergeProgress mergeProgress) {
-    // Initially no IO limit; use setter here so minPauseCheckBytes is set:
-    this.mergeProgress = mergeProgress;
-    setMBPerSec(Double.POSITIVE_INFINITY);
-  }
+	private final OneMergeProgress mergeProgress;
 
-  @Override
-  public void setMBPerSec(double mbPerSec) {
-    // Synchronized to make updates to mbPerSec and minPauseCheckBytes atomic. 
-    synchronized (this) {
-      // 0.0 is allowed: it means the merge is paused
-      if (mbPerSec < 0.0) {
-        throw new IllegalArgumentException("mbPerSec must be positive; got: " + mbPerSec);
-      }
-      this.mbPerSec = mbPerSec;
-  
-      // NOTE: Double.POSITIVE_INFINITY casts to Long.MAX_VALUE
-      this.minPauseCheckBytes = Math.min(1024*1024, (long) ((MIN_PAUSE_CHECK_MSEC / 1000.0) * mbPerSec * 1024 * 1024));
-      assert minPauseCheckBytes >= 0;
-    }
+	/**
+	 * Sole constructor.
+	 */
+	public MergeRateLimiter(OneMergeProgress mergeProgress) {
+		// Initially no IO limit; use setter here so minPauseCheckBytes is set:
+		this.mergeProgress = mergeProgress;
+		setMBPerSec(Double.POSITIVE_INFINITY);
+	}
 
-    mergeProgress.wakeup();
-  }
+	@Override
+	public void setMBPerSec(double mbPerSec) {
+		// Synchronized to make updates to mbPerSec and minPauseCheckBytes atomic.
+		synchronized (this) {
+			// 0.0 is allowed: it means the merge is paused
+			if (mbPerSec < 0.0) {
+				throw new IllegalArgumentException("mbPerSec must be positive; got: " + mbPerSec);
+			}
+			this.mbPerSec = mbPerSec;
 
-  @Override
-  public double getMBPerSec() {
-    return mbPerSec;
-  }
+			// NOTE: Double.POSITIVE_INFINITY casts to Long.MAX_VALUE
+			this.minPauseCheckBytes = Math.min(1024 * 1024, (long) ((MIN_PAUSE_CHECK_MSEC / 1000.0) * mbPerSec * 1024 * 1024));
+			assert minPauseCheckBytes >= 0;
+		}
 
-  /** Returns total bytes written by this merge. */
-  public long getTotalBytesWritten() {
-    return totalBytesWritten.get();
-  }
+		mergeProgress.wakeup();
+	}
 
-  @Override
-  public long pause(long bytes) throws MergePolicy.MergeAbortedException {
-    totalBytesWritten.addAndGet(bytes);
+	@Override
+	public double getMBPerSec() {
+		return mbPerSec;
+	}
 
-    // While loop because we may wake up and check again when our rate limit
-    // is changed while we were pausing:
-    long paused = 0;
-    long delta;
-    while ((delta = maybePause(bytes, System.nanoTime())) >= 0) {
-      // Keep waiting.
-      paused += delta;
-    }
+	/**
+	 * Returns total bytes written by this merge.
+	 */
+	public long getTotalBytesWritten() {
+		return totalBytesWritten.get();
+	}
 
-    return paused;
-  }
+	@Override
+	public long pause(long bytes) throws MergePolicy.MergeAbortedException {
+		totalBytesWritten.addAndGet(bytes);
 
-  /** Total NS merge was stopped. */
-  public long getTotalStoppedNS() {
-    return mergeProgress.getPauseTimes().get(PauseReason.STOPPED);
-  } 
+		// While loop because we may wake up and check again when our rate limit
+		// is changed while we were pausing:
+		long paused = 0;
+		long delta;
+		while ((delta = maybePause(bytes, System.nanoTime())) >= 0) {
+			// Keep waiting.
+			paused += delta;
+		}
 
-  /** Total NS merge was paused to rate limit IO. */
-  public long getTotalPausedNS() {
-    return mergeProgress.getPauseTimes().get(PauseReason.PAUSED);
-  } 
+		return paused;
+	}
 
-  /** 
-   * Returns the number of nanoseconds spent in a paused state or <code>-1</code>
-   * if no pause was applied. If the thread needs pausing, this method delegates 
-   * to the linked {@link OneMergeProgress}. 
-   */
-  private long maybePause(long bytes, long curNS) throws MergePolicy.MergeAbortedException {
-    // Now is a good time to abort the merge:
-    if (mergeProgress.isAborted()) {
-      throw new MergePolicy.MergeAbortedException("Merge aborted.");
-    }
+	/**
+	 * Total NS merge was stopped.
+	 */
+	public long getTotalStoppedNS() {
+		return mergeProgress.getPauseTimes().get(PauseReason.STOPPED);
+	}
 
-    double rate = mbPerSec; // read from volatile rate once.
-    double secondsToPause = (bytes/1024./1024.) / rate;
+	/**
+	 * Total NS merge was paused to rate limit IO.
+	 */
+	public long getTotalPausedNS() {
+		return mergeProgress.getPauseTimes().get(PauseReason.PAUSED);
+	}
 
-    // Time we should sleep until; this is purely instantaneous
-    // rate (just adds seconds onto the last time we had paused to);
-    // maybe we should also offer decayed recent history one?
-    long targetNS = lastNS + (long) (1000000000 * secondsToPause);
+	/**
+	 * Returns the number of nanoseconds spent in a paused state or <code>-1</code>
+	 * if no pause was applied. If the thread needs pausing, this method delegates
+	 * to the linked {@link OneMergeProgress}.
+	 */
+	private long maybePause(long bytes, long curNS) throws MergePolicy.MergeAbortedException {
+		// Now is a good time to abort the merge:
+		if (mergeProgress.isAborted()) {
+			throw new MergePolicy.MergeAbortedException("Merge aborted.");
+		}
 
-    long curPauseNS = targetNS - curNS;
+		double rate = mbPerSec; // read from volatile rate once.
+		double secondsToPause = (bytes / 1024. / 1024.) / rate;
 
-    // We don't bother with thread pausing if the pause is smaller than 2 msec.
-    if (curPauseNS <= MIN_PAUSE_NS) {
-      // Set to curNS, not targetNS, to enforce the instant rate, not
-      // the "averaged over all history" rate:
-      lastNS = curNS;
-      return -1;
-    }
+		// Time we should sleep until; this is purely instantaneous
+		// rate (just adds seconds onto the last time we had paused to);
+		// maybe we should also offer decayed recent history one?
+		long targetNS = lastNS + (long) (1000000000 * secondsToPause);
 
-    // Defensive: don't sleep for too long; the loop above will call us again if
-    // we should keep sleeping and the rate may be adjusted in between.
-    if (curPauseNS > MAX_PAUSE_NS) {
-      curPauseNS = MAX_PAUSE_NS;
-    }
+		long curPauseNS = targetNS - curNS;
 
-    long start = System.nanoTime();
-    try {
-      mergeProgress.pauseNanos(
-          curPauseNS, 
-          rate == 0.0 ? PauseReason.STOPPED : PauseReason.PAUSED,
-          () -> rate == mbPerSec);
-    } catch (InterruptedException ie) {
-      throw new ThreadInterruptedException(ie);
-    }
-    return System.nanoTime() - start;
-  }
+		// We don't bother with thread pausing if the pause is smaller than 2 msec.
+		if (curPauseNS <= MIN_PAUSE_NS) {
+			// Set to curNS, not targetNS, to enforce the instant rate, not
+			// the "averaged over all history" rate:
+			lastNS = curNS;
+			return -1;
+		}
 
-  @Override
-  public long getMinPauseCheckBytes() {
-    return minPauseCheckBytes;
-  }
+		// Defensive: don't sleep for too long; the loop above will call us again if
+		// we should keep sleeping and the rate may be adjusted in between.
+		if (curPauseNS > MAX_PAUSE_NS) {
+			curPauseNS = MAX_PAUSE_NS;
+		}
+
+		long start = System.nanoTime();
+		try {
+			mergeProgress.pauseNanos(
+				curPauseNS,
+				rate == 0.0 ? PauseReason.STOPPED : PauseReason.PAUSED,
+				() -> rate == mbPerSec);
+		} catch (InterruptedException ie) {
+			throw new ThreadInterruptedException(ie);
+		}
+		return System.nanoTime() - start;
+	}
+
+	@Override
+	public long getMinPauseCheckBytes() {
+		return minPauseCheckBytes;
+	}
 }

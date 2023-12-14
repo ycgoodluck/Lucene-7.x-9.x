@@ -42,14 +42,14 @@ import org.apache.lucene.util.packed.PackedInts;
  * <p>This {@link StoredFieldsFormat} compresses blocks of documents in
  * order to improve the compression ratio compared to document-level
  * compression. It uses the <a href="http://code.google.com/p/lz4/">LZ4</a>
- * compression algorithm by default in 16KB blocks, which is fast to compress 
- * and very fast to decompress data. Although the default compression method 
- * that is used ({@link Mode#BEST_SPEED BEST_SPEED}) focuses more on speed than on 
+ * compression algorithm by default in 16KB blocks, which is fast to compress
+ * and very fast to decompress data. Although the default compression method
+ * that is used ({@link Mode#BEST_SPEED BEST_SPEED}) focuses more on speed than on
  * compression ratio, it should provide interesting compression ratios
  * for redundant inputs (such as log files, HTML or plain text). For higher
- * compression, you can choose ({@link Mode#BEST_COMPRESSION BEST_COMPRESSION}), which uses 
- * the <a href="http://en.wikipedia.org/wiki/DEFLATE">DEFLATE</a> algorithm with 60KB blocks 
- * for a better ratio at the expense of slower performance. 
+ * compression, you can choose ({@link Mode#BEST_COMPRESSION BEST_COMPRESSION}), which uses
+ * the <a href="http://en.wikipedia.org/wiki/DEFLATE">DEFLATE</a> algorithm with 60KB blocks
+ * for a better ratio at the expense of slower performance.
  * These two options can be configured like this:
  * <pre class="prettyprint">
  *   // the default: for high performance
@@ -136,60 +136,74 @@ import org.apache.lucene.util.packed.PackedInts;
  * <p><b>Known limitations</b>
  * <p>This {@link StoredFieldsFormat} does not support individual documents
  * larger than (<tt>2<sup>31</sup> - 2<sup>14</sup></tt>) bytes.
+ *
  * @lucene.experimental
  */
 public final class Lucene50StoredFieldsFormat extends StoredFieldsFormat {
-  
-  /** Configuration option for stored fields. */
-  public static enum Mode {
-    /** Trade compression ratio for retrieval speed. */
-    BEST_SPEED,
-    /** Trade retrieval speed for compression ratio. */
-    BEST_COMPRESSION
-  }
-  
-  /** Attribute key for compression mode. */
-  public static final String MODE_KEY = Lucene50StoredFieldsFormat.class.getSimpleName() + ".mode";
-  
-  final Mode mode;
-  
-  /** Stored fields format with default options */
-  public Lucene50StoredFieldsFormat() {
-    this(Mode.BEST_SPEED);
-  }
-  
-  /** Stored fields format with specified mode */
-  public Lucene50StoredFieldsFormat(Mode mode) {
-    this.mode = Objects.requireNonNull(mode);
-  }
 
-  @Override
-  public StoredFieldsReader fieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context) throws IOException {
-    String value = si.getAttribute(MODE_KEY);
-    if (value == null) {
-      throw new IllegalStateException("missing value for " + MODE_KEY + " for segment: " + si.name);
-    }
-    Mode mode = Mode.valueOf(value);
-    return impl(mode).fieldsReader(directory, si, fn, context);
-  }
+	/**
+	 * Configuration option for stored fields.
+	 */
+	public static enum Mode {
+		/**
+		 * Trade compression ratio for retrieval speed.
+		 */
+		BEST_SPEED,
+		/**
+		 * Trade retrieval speed for compression ratio.
+		 */
+		BEST_COMPRESSION
+	}
 
-  @Override
-  public StoredFieldsWriter fieldsWriter(Directory directory, SegmentInfo si, IOContext context) throws IOException {
-    String previous = si.putAttribute(MODE_KEY, mode.name());
-    if (previous != null && previous.equals(mode.name()) == false) {
-      throw new IllegalStateException("found existing value for " + MODE_KEY + " for segment: " + si.name +
-                                      "old=" + previous + ", new=" + mode.name());
-    }
-    return impl(mode).fieldsWriter(directory, si, context);
-  }
-  
-  StoredFieldsFormat impl(Mode mode) {
-    switch (mode) {
-      case BEST_SPEED: 
-        return new CompressingStoredFieldsFormat("Lucene50StoredFieldsFast", CompressionMode.FAST, 1 << 14, 128, 1024);
-      case BEST_COMPRESSION: 
-        return new CompressingStoredFieldsFormat("Lucene50StoredFieldsHigh", CompressionMode.HIGH_COMPRESSION, 61440, 512, 1024);
-      default: throw new AssertionError();
-    }
-  }
+	/**
+	 * Attribute key for compression mode.
+	 */
+	public static final String MODE_KEY = Lucene50StoredFieldsFormat.class.getSimpleName() + ".mode";
+
+	final Mode mode;
+
+	/**
+	 * Stored fields format with default options
+	 */
+	public Lucene50StoredFieldsFormat() {
+		this(Mode.BEST_SPEED);
+	}
+
+	/**
+	 * Stored fields format with specified mode
+	 */
+	public Lucene50StoredFieldsFormat(Mode mode) {
+		this.mode = Objects.requireNonNull(mode);
+	}
+
+	@Override
+	public StoredFieldsReader fieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context) throws IOException {
+		String value = si.getAttribute(MODE_KEY);
+		if (value == null) {
+			throw new IllegalStateException("missing value for " + MODE_KEY + " for segment: " + si.name);
+		}
+		Mode mode = Mode.valueOf(value);
+		return impl(mode).fieldsReader(directory, si, fn, context);
+	}
+
+	@Override
+	public StoredFieldsWriter fieldsWriter(Directory directory, SegmentInfo si, IOContext context) throws IOException {
+		String previous = si.putAttribute(MODE_KEY, mode.name());
+		if (previous != null && previous.equals(mode.name()) == false) {
+			throw new IllegalStateException("found existing value for " + MODE_KEY + " for segment: " + si.name +
+				"old=" + previous + ", new=" + mode.name());
+		}
+		return impl(mode).fieldsWriter(directory, si, context);
+	}
+
+	StoredFieldsFormat impl(Mode mode) {
+		switch (mode) {
+			case BEST_SPEED:
+				return new CompressingStoredFieldsFormat("Lucene50StoredFieldsFast", CompressionMode.FAST, 1 << 14, 128, 1024);
+			case BEST_COMPRESSION:
+				return new CompressingStoredFieldsFormat("Lucene50StoredFieldsHigh", CompressionMode.HIGH_COMPRESSION, 61440, 512, 1024);
+			default:
+				throw new AssertionError();
+		}
+	}
 }

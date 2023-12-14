@@ -20,25 +20,25 @@ import java.util.Random;
 
 public class TestLMJelinekMercerSimilarity extends BaseSimilarityTestCase {
 
-  @Override
-  protected final Similarity getSimilarity(Random random) {
-    // smoothing parameter lambda: (0..1]
-    final float lambda;
-    switch (random.nextInt(3)) {
-      case 0:
-        // tiny value
-        lambda = Float.MIN_VALUE;
-        break;
-      case 1:
-        // maximum value
-        lambda = 1;
-        break;
-      default:
-        // random value
-        lambda = random.nextFloat();
-        break;
-    }
-    return new LMJelinekMercerSimilarity(lambda);
-  }
+	@Override
+	protected final Similarity getSimilarity(Random random) {
+		// smoothing parameter lambda: (0..1]
+		final float lambda;
+		switch (random.nextInt(3)) {
+			case 0:
+				// tiny value
+				lambda = Float.MIN_VALUE;
+				break;
+			case 1:
+				// maximum value
+				lambda = 1;
+				break;
+			default:
+				// random value
+				lambda = random.nextFloat();
+				break;
+		}
+		return new LMJelinekMercerSimilarity(lambda);
+	}
 
 }

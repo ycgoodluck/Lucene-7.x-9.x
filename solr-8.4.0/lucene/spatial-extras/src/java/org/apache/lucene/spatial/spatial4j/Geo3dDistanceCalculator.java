@@ -34,79 +34,78 @@ import org.locationtech.spatial4j.shape.Rectangle;
  */
 public class Geo3dDistanceCalculator implements DistanceCalculator {
 
-  protected final PlanetModel planetModel;
+	protected final PlanetModel planetModel;
 
-  public Geo3dDistanceCalculator(PlanetModel planetModel) {
-    this.planetModel = planetModel;
-  }
+	public Geo3dDistanceCalculator(PlanetModel planetModel) {
+		this.planetModel = planetModel;
+	}
 
-  @Override
-  public double distance(Point from, Point to) {
-    if (from instanceof Geo3dPointShape && to instanceof Geo3dPointShape) {
-      GeoPointShape pointShape1 = ((Geo3dPointShape) from).shape;
-      GeoPointShape pointShape2 = ((Geo3dPointShape) to).shape;
-      return planetModel.surfaceDistance(pointShape1.getCenter(), pointShape2.getCenter()) * DistanceUtils.RADIANS_TO_DEGREES;
-    }
-    return distance(from, to.getX(), to.getY());
-  }
+	@Override
+	public double distance(Point from, Point to) {
+		if (from instanceof Geo3dPointShape && to instanceof Geo3dPointShape) {
+			GeoPointShape pointShape1 = ((Geo3dPointShape) from).shape;
+			GeoPointShape pointShape2 = ((Geo3dPointShape) to).shape;
+			return planetModel.surfaceDistance(pointShape1.getCenter(), pointShape2.getCenter()) * DistanceUtils.RADIANS_TO_DEGREES;
+		}
+		return distance(from, to.getX(), to.getY());
+	}
 
-  @Override
-  public double distance(Point from, double toX, double toY) {
-    GeoPoint fromGeoPoint;
-    if (from instanceof Geo3dPointShape) {
-      fromGeoPoint = (((Geo3dPointShape) from).shape).getCenter();
-    } else {
-      fromGeoPoint = new GeoPoint(planetModel,
-          from.getY() * DistanceUtils.DEGREES_TO_RADIANS,
-          from.getX() * DistanceUtils.DEGREES_TO_RADIANS);
-    }
-    GeoPoint toGeoPoint = new GeoPoint(planetModel,
-        toY * DistanceUtils.DEGREES_TO_RADIANS,
-        toX * DistanceUtils.DEGREES_TO_RADIANS);
-    return planetModel.surfaceDistance(fromGeoPoint, toGeoPoint) * DistanceUtils.RADIANS_TO_DEGREES;
-  }
+	@Override
+	public double distance(Point from, double toX, double toY) {
+		GeoPoint fromGeoPoint;
+		if (from instanceof Geo3dPointShape) {
+			fromGeoPoint = (((Geo3dPointShape) from).shape).getCenter();
+		} else {
+			fromGeoPoint = new GeoPoint(planetModel,
+				from.getY() * DistanceUtils.DEGREES_TO_RADIANS,
+				from.getX() * DistanceUtils.DEGREES_TO_RADIANS);
+		}
+		GeoPoint toGeoPoint = new GeoPoint(planetModel,
+			toY * DistanceUtils.DEGREES_TO_RADIANS,
+			toX * DistanceUtils.DEGREES_TO_RADIANS);
+		return planetModel.surfaceDistance(fromGeoPoint, toGeoPoint) * DistanceUtils.RADIANS_TO_DEGREES;
+	}
 
-  @Override
-  public boolean within(Point from, double toX, double toY, double distance) {
-    return (distance < distance(from, toX, toY));
-  }
+	@Override
+	public boolean within(Point from, double toX, double toY, double distance) {
+		return (distance < distance(from, toX, toY));
+	}
 
-  @Override
-  public Point pointOnBearing(Point from, double distDEG, double bearingDEG, SpatialContext ctx, Point reuse) {
-    Geo3dPointShape geoFrom = (Geo3dPointShape) from;
-    GeoPoint point = (GeoPoint) geoFrom.shape;
-    double dist = DistanceUtils.DEGREES_TO_RADIANS * distDEG;
-    double bearing = DistanceUtils.DEGREES_TO_RADIANS * bearingDEG;
-    GeoPoint newPoint = planetModel.surfacePointOnBearing(point, dist, bearing);
-    double newLat = newPoint.getLatitude() * DistanceUtils.RADIANS_TO_DEGREES;
-    double newLon = newPoint.getLongitude() * DistanceUtils.RADIANS_TO_DEGREES;
-    if (reuse != null) {
-      reuse.reset(newLon, newLat);
-      return reuse;
-    }
-    else {
-      return ctx.getShapeFactory().pointXY(newLon, newLat);
-    }
-  }
+	@Override
+	public Point pointOnBearing(Point from, double distDEG, double bearingDEG, SpatialContext ctx, Point reuse) {
+		Geo3dPointShape geoFrom = (Geo3dPointShape) from;
+		GeoPoint point = (GeoPoint) geoFrom.shape;
+		double dist = DistanceUtils.DEGREES_TO_RADIANS * distDEG;
+		double bearing = DistanceUtils.DEGREES_TO_RADIANS * bearingDEG;
+		GeoPoint newPoint = planetModel.surfacePointOnBearing(point, dist, bearing);
+		double newLat = newPoint.getLatitude() * DistanceUtils.RADIANS_TO_DEGREES;
+		double newLon = newPoint.getLongitude() * DistanceUtils.RADIANS_TO_DEGREES;
+		if (reuse != null) {
+			reuse.reset(newLon, newLat);
+			return reuse;
+		} else {
+			return ctx.getShapeFactory().pointXY(newLon, newLat);
+		}
+	}
 
-  @Override
-  public Rectangle calcBoxByDistFromPt(Point from, double distDEG, SpatialContext ctx, Rectangle reuse) {
-    Circle circle = ctx.getShapeFactory().circle(from, distDEG);
-    return circle.getBoundingBox();
-  }
+	@Override
+	public Rectangle calcBoxByDistFromPt(Point from, double distDEG, SpatialContext ctx, Rectangle reuse) {
+		Circle circle = ctx.getShapeFactory().circle(from, distDEG);
+		return circle.getBoundingBox();
+	}
 
-  @Override
-  public double calcBoxByDistFromPt_yHorizAxisDEG(Point from, double distDEG, SpatialContext ctx) {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public double calcBoxByDistFromPt_yHorizAxisDEG(Point from, double distDEG, SpatialContext ctx) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public double area(Rectangle rect) {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public double area(Rectangle rect) {
+		throw new UnsupportedOperationException();
+	}
 
-  @Override
-  public double area(Circle circle) {
-    throw new UnsupportedOperationException();
-  }
+	@Override
+	public double area(Circle circle) {
+		throw new UnsupportedOperationException();
+	}
 }

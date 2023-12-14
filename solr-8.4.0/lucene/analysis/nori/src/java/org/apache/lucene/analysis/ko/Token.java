@@ -22,104 +22,104 @@ import org.apache.lucene.analysis.ko.dict.Dictionary.Morpheme;
  * Analyzed token with morphological data.
  */
 public abstract class Token {
-  private final char[] surfaceForm;
-  private final int offset;
-  private final int length;
+	private final char[] surfaceForm;
+	private final int offset;
+	private final int length;
 
-  private final int startOffset;
-  private final int endOffset;
-  private int posIncr = 1;
-  private int posLen = 1;
+	private final int startOffset;
+	private final int endOffset;
+	private int posIncr = 1;
+	private int posLen = 1;
 
-  public Token(char[] surfaceForm, int offset, int length, int startOffset, int endOffset) {
-    this.surfaceForm = surfaceForm;
-    this.offset = offset;
-    this.length = length;
+	public Token(char[] surfaceForm, int offset, int length, int startOffset, int endOffset) {
+		this.surfaceForm = surfaceForm;
+		this.offset = offset;
+		this.length = length;
 
-    this.startOffset = startOffset;
-    this.endOffset = endOffset;
-  }
+		this.startOffset = startOffset;
+		this.endOffset = endOffset;
+	}
 
-  /**
-   * @return surfaceForm
-   */
-  public char[] getSurfaceForm() {
-    return surfaceForm;
-  }
+	/**
+	 * @return surfaceForm
+	 */
+	public char[] getSurfaceForm() {
+		return surfaceForm;
+	}
 
-  /**
-   * @return offset into surfaceForm
-   */
-  public int getOffset() {
-    return offset;
-  }
+	/**
+	 * @return offset into surfaceForm
+	 */
+	public int getOffset() {
+		return offset;
+	}
 
-  /**
-   * @return length of surfaceForm
-   */
-  public int getLength() {
-    return length;
-  }
+	/**
+	 * @return length of surfaceForm
+	 */
+	public int getLength() {
+		return length;
+	}
 
-  /**
-   * @return surfaceForm as a String
-   */
-  public String getSurfaceFormString() {
-    return new String(surfaceForm, offset, length);
-  }
+	/**
+	 * @return surfaceForm as a String
+	 */
+	public String getSurfaceFormString() {
+		return new String(surfaceForm, offset, length);
+	}
 
-  /**
-   * Get the {@link POS.Type} of the token.
-   */
-  public abstract POS.Type getPOSType();
+	/**
+	 * Get the {@link POS.Type} of the token.
+	 */
+	public abstract POS.Type getPOSType();
 
-  /**
-   * Get the left part of speech of the token.
-   */
-  public abstract POS.Tag getLeftPOS();
+	/**
+	 * Get the left part of speech of the token.
+	 */
+	public abstract POS.Tag getLeftPOS();
 
-  /**
-   * Get the right part of speech of the token.
-   */
-  public abstract POS.Tag getRightPOS();
+	/**
+	 * Get the right part of speech of the token.
+	 */
+	public abstract POS.Tag getRightPOS();
 
-  /**
-   * Get the reading of the token.
-   */
-  public abstract String getReading();
+	/**
+	 * Get the reading of the token.
+	 */
+	public abstract String getReading();
 
-  /**
-   * Get the {@link Morpheme} decomposition of the token.
-   */
-  public abstract Morpheme[] getMorphemes();
+	/**
+	 * Get the {@link Morpheme} decomposition of the token.
+	 */
+	public abstract Morpheme[] getMorphemes();
 
-  /**
-   * Get the start offset of the term in the analyzed text.
-   */
-  public int getStartOffset() {
-    return startOffset;
-  }
+	/**
+	 * Get the start offset of the term in the analyzed text.
+	 */
+	public int getStartOffset() {
+		return startOffset;
+	}
 
-  /**
-   * Get the end offset of the term in the analyzed text.
-   */
-  public int getEndOffset() {
-    return endOffset;
-  }
+	/**
+	 * Get the end offset of the term in the analyzed text.
+	 */
+	public int getEndOffset() {
+		return endOffset;
+	}
 
-  public void setPositionIncrement(int posIncr) {
-    this.posIncr = posIncr;
-  }
+	public void setPositionIncrement(int posIncr) {
+		this.posIncr = posIncr;
+	}
 
-  public int getPositionIncrement() {
-    return posIncr;
-  }
+	public int getPositionIncrement() {
+		return posIncr;
+	}
 
-  public void setPositionLength(int posLen) {
-    this.posLen = posLen;
-  }
+	public void setPositionLength(int posLen) {
+		this.posLen = posLen;
+	}
 
-  public int getPositionLength() {
-    return posLen;
-  }
+	public int getPositionLength() {
+		return posLen;
+	}
 }

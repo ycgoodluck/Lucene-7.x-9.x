@@ -23,5 +23,5 @@ import org.apache.lucene.queries.function.ValueSource;
  * apply boolean logic to their values
  */
 public abstract class BoolFunction extends ValueSource {
-  // TODO: placeholder to return type, among other common future functionality
+	// TODO: placeholder to return type, among other common future functionality
 }

@@ -34,86 +34,86 @@ import java.nio.file.Paths;
 import java.util.Random;
 
 public class TestBooleanQuery {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private final Analyzer analyzer = new WhitespaceAnalyzer();
-    private final IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private final Analyzer analyzer = new WhitespaceAnalyzer();
+	private final IndexWriterConfig conf = new IndexWriterConfig(analyzer);
 
-    public void doSearch() throws Exception {
-        SortField field = new SortedSetSortField("name", false);
-        field.setMissingValue(SortField.STRING_LAST);
-        Sort indexSearch = new Sort(field);
-        conf.setUseCompoundFile(false);
+	public void doSearch() throws Exception {
+		SortField field = new SortedSetSortField("name", false);
+		field.setMissingValue(SortField.STRING_LAST);
+		Sort indexSearch = new Sort(field);
+		conf.setUseCompoundFile(false);
 //        conf.setIndexSort(indexSearch);
-        conf.setIndexDeletionPolicy(NoDeletionPolicy.INSTANCE);
-        IndexWriter indexWriter = new IndexWriter(directory, conf);
-        Random random = new Random();
-        Document doc;
-        String aaa = null;
-        String bbb = null;
+		conf.setIndexDeletionPolicy(NoDeletionPolicy.INSTANCE);
+		IndexWriter indexWriter = new IndexWriter(directory, conf);
+		Random random = new Random();
+		Document doc;
+		String aaa = null;
+		String bbb = null;
 
-        // 文档0
-        doc = new Document();
-        doc.add(new StringField("name", "a", Field.Store.YES));
-        doc.add(new StringField("name", "z", Field.Store.YES));
-        doc.add(new NumericDocValuesField("num", 2));
-        indexWriter.addDocument(doc);
+		// 文档0
+		doc = new Document();
+		doc.add(new StringField("name", "a", Field.Store.YES));
+		doc.add(new StringField("name", "z", Field.Store.YES));
+		doc.add(new NumericDocValuesField("num", 2));
+		indexWriter.addDocument(doc);
 
-        // 文档1
-        doc = new Document();
-        doc.add(new StringField("name", "b", Field.Store.YES));
-        doc.add(new StringField("name", "z", Field.Store.YES));
-        doc.add(new NumericDocValuesField("num", 1));
-        indexWriter.addDocument(doc);
+		// 文档1
+		doc = new Document();
+		doc.add(new StringField("name", "b", Field.Store.YES));
+		doc.add(new StringField("name", "z", Field.Store.YES));
+		doc.add(new NumericDocValuesField("num", 1));
+		indexWriter.addDocument(doc);
 
-        // 文档2
-        doc = new Document();
-        doc.add(new StringField("name", "c", Field.Store.YES));
-        doc.add(new StringField("name", "z", Field.Store.YES));
-        doc.add(new NumericDocValuesField("num", 3));
-        indexWriter.addDocument(doc);
+		// 文档2
+		doc = new Document();
+		doc.add(new StringField("name", "c", Field.Store.YES));
+		doc.add(new StringField("name", "z", Field.Store.YES));
+		doc.add(new NumericDocValuesField("num", 3));
+		indexWriter.addDocument(doc);
 
-        // 文档3
-        doc = new Document();
-        doc.add(new StringField("name", "f", Field.Store.YES));
-        doc.add(new StringField("name", "z", Field.Store.YES));
-        indexWriter.addDocument(doc);
+		// 文档3
+		doc = new Document();
+		doc.add(new StringField("name", "f", Field.Store.YES));
+		doc.add(new StringField("name", "z", Field.Store.YES));
+		indexWriter.addDocument(doc);
 
-        indexWriter.commit();
+		indexWriter.commit();
 
-        DirectoryReader reader = DirectoryReader.open(indexWriter);
-        IndexSearcher searcher = new IndexSearcher(reader);
+		DirectoryReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
 
 //        Query query = new TermQuery(new Term("name", new BytesRef("z")));
-        Query query = new MatchAllDocsQuery();
-        // 返回Top5的结果
-        int resultTopN = 1000;
+		Query query = new MatchAllDocsQuery();
+		// 返回Top5的结果
+		int resultTopN = 1000;
 
 
-        Sort sort = new Sort(new SortedNumericSortField("num", SortField.Type.INT));
+		Sort sort = new Sort(new SortedNumericSortField("num", SortField.Type.INT));
 
-        ScoreDoc[] scoreDocs = searcher.search(query, resultTopN, sort).scoreDocs;
+		ScoreDoc[] scoreDocs = searcher.search(query, resultTopN, sort).scoreDocs;
 //        ScoreDoc[] scoreDocs = searcher.search(query, resultTopN).scoreDocs;
 
-        System.out.println("Total Result Number: "+scoreDocs.length+"");
-        for (int i = 0; i < scoreDocs.length; i++) {
-            ScoreDoc scoreDoc = scoreDocs[i];
-            // 输出满足查询条件的 文档号
-            System.out.println(""+i+"：doc id: "+scoreDoc.doc+": 文档"+reader.document(scoreDoc.doc).get("name")+"");
-        }
-    }
+		System.out.println("Total Result Number: " + scoreDocs.length + "");
+		for (int i = 0; i < scoreDocs.length; i++) {
+			ScoreDoc scoreDoc = scoreDocs[i];
+			// 输出满足查询条件的 文档号
+			System.out.println("" + i + "：doc id: " + scoreDoc.doc + ": 文档" + reader.document(scoreDoc.doc).get("name") + "");
+		}
+	}
 
-    public static void main(String[] args) throws Exception{
-        TestBooleanQuery test = new TestBooleanQuery();
-        test.doSearch();
-    }
+	public static void main(String[] args) throws Exception {
+		TestBooleanQuery test = new TestBooleanQuery();
+		test.doSearch();
+	}
 }

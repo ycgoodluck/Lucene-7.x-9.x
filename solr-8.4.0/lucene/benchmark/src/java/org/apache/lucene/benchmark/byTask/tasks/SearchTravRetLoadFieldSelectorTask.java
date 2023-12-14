@@ -34,52 +34,52 @@ import org.apache.lucene.index.IndexReader;
  * Otherwise a reader is opened at start and closed at the end.
  *
  * <p>Takes optional param: comma separated list of Fields to load.</p>
- * 
- * <p>Other side effects: counts additional 1 (record) for each traversed hit, 
+ *
+ * <p>Other side effects: counts additional 1 (record) for each traversed hit,
  * and 1 more for each retrieved (non null) document.</p>
  */
 public class SearchTravRetLoadFieldSelectorTask extends SearchTravTask {
 
-  protected Set<String> fieldsToLoad;
+	protected Set<String> fieldsToLoad;
 
-  public SearchTravRetLoadFieldSelectorTask(PerfRunData runData) {
-    super(runData);
-    
-  }
+	public SearchTravRetLoadFieldSelectorTask(PerfRunData runData) {
+		super(runData);
 
-  @Override
-  public boolean withRetrieve() {
-    return true;
-  }
+	}
 
-
-  @Override
-  protected Document retrieveDoc(IndexReader ir, int id) throws IOException {
-    if (fieldsToLoad == null) {
-      return ir.document(id);
-    } else {
-      DocumentStoredFieldVisitor visitor = new DocumentStoredFieldVisitor(fieldsToLoad);
-      ir.document(id, visitor);
-      return visitor.getDocument();
-    }
-  }
-
-  @Override
-  public void setParams(String params) {
-    this.params = params; // cannot just call super.setParams(), b/c its params differ.
-    fieldsToLoad = new HashSet<>();
-    for (StringTokenizer tokenizer = new StringTokenizer(params, ","); tokenizer.hasMoreTokens();) {
-      String s = tokenizer.nextToken();
-      fieldsToLoad.add(s);
-    }
-  }
+	@Override
+	public boolean withRetrieve() {
+		return true;
+	}
 
 
-  /* (non-Javadoc)
-  * @see org.apache.lucene.benchmark.byTask.tasks.PerfTask#supportsParams()
-  */
-  @Override
-  public boolean supportsParams() {
-    return true;
-  }
+	@Override
+	protected Document retrieveDoc(IndexReader ir, int id) throws IOException {
+		if (fieldsToLoad == null) {
+			return ir.document(id);
+		} else {
+			DocumentStoredFieldVisitor visitor = new DocumentStoredFieldVisitor(fieldsToLoad);
+			ir.document(id, visitor);
+			return visitor.getDocument();
+		}
+	}
+
+	@Override
+	public void setParams(String params) {
+		this.params = params; // cannot just call super.setParams(), b/c its params differ.
+		fieldsToLoad = new HashSet<>();
+		for (StringTokenizer tokenizer = new StringTokenizer(params, ","); tokenizer.hasMoreTokens(); ) {
+			String s = tokenizer.nextToken();
+			fieldsToLoad.add(s);
+		}
+	}
+
+
+	/* (non-Javadoc)
+	 * @see org.apache.lucene.benchmark.byTask.tasks.PerfTask#supportsParams()
+	 */
+	@Override
+	public boolean supportsParams() {
+		return true;
+	}
 }

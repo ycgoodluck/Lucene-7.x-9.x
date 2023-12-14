@@ -21,13 +21,13 @@ import java.util.BitSet;
 
 public class TestFixedBitDocIdSet extends BaseDocIdSetTestCase<BitDocIdSet> {
 
-  @Override
-  public BitDocIdSet copyOf(BitSet bs, int length) throws IOException {
-    final FixedBitSet set = new FixedBitSet(length);
-    for (int doc = bs.nextSetBit(0); doc != -1; doc = bs.nextSetBit(doc + 1)) {
-      set.set(doc);
-    }
-    return new BitDocIdSet(set);
-  }
-  
+	@Override
+	public BitDocIdSet copyOf(BitSet bs, int length) throws IOException {
+		final FixedBitSet set = new FixedBitSet(length);
+		for (int doc = bs.nextSetBit(0); doc != -1; doc = bs.nextSetBit(doc + 1)) {
+			set.set(doc);
+		}
+		return new BitDocIdSet(set);
+	}
+
 }

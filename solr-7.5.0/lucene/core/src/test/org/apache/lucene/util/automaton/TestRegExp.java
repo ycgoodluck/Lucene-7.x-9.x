@@ -21,66 +21,66 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestRegExp extends LuceneTestCase {
 
-  /**
-   * Simple smoke test for regular expression.
-   */
-  public void testSmoke() {
-    RegExp r = new RegExp("a(b+|c+)d");
-    Automaton a = r.toAutomaton();
-    assertTrue(a.isDeterministic());
-    CharacterRunAutomaton run = new CharacterRunAutomaton(a);
-    assertTrue(run.run("abbbbbd"));
-    assertTrue(run.run("acd"));
-    assertFalse(run.run("ad"));
-  }
+	/**
+	 * Simple smoke test for regular expression.
+	 */
+	public void testSmoke() {
+		RegExp r = new RegExp("a(b+|c+)d");
+		Automaton a = r.toAutomaton();
+		assertTrue(a.isDeterministic());
+		CharacterRunAutomaton run = new CharacterRunAutomaton(a);
+		assertTrue(run.run("abbbbbd"));
+		assertTrue(run.run("acd"));
+		assertFalse(run.run("ad"));
+	}
 
-  /**
-   * Compiles a regular expression that is prohibitively expensive to
-   * determinize and expexts to catch an exception for it.
-   */
-  public void testDeterminizeTooManyStates() {
-    // LUCENE-6046
-    String source = "[ac]*a[ac]{50,200}";
-    TooComplexToDeterminizeException expected = expectThrows(TooComplexToDeterminizeException.class, () -> {
-      new RegExp(source).toAutomaton();
-    });
-    assertTrue(expected.getMessage().contains(source));
-  }
+	/**
+	 * Compiles a regular expression that is prohibitively expensive to
+	 * determinize and expexts to catch an exception for it.
+	 */
+	public void testDeterminizeTooManyStates() {
+		// LUCENE-6046
+		String source = "[ac]*a[ac]{50,200}";
+		TooComplexToDeterminizeException expected = expectThrows(TooComplexToDeterminizeException.class, () -> {
+			new RegExp(source).toAutomaton();
+		});
+		assertTrue(expected.getMessage().contains(source));
+	}
 
-  public void testSerializeTooManyStatesToRepeat() throws Exception {
-    String source = "a{50001}";
-    TooComplexToDeterminizeException expected = expectThrows(TooComplexToDeterminizeException.class, () -> {
-      new RegExp(source).toAutomaton(50000);
-    });
-    assertTrue(expected.getMessage().contains(source));
-  }
+	public void testSerializeTooManyStatesToRepeat() throws Exception {
+		String source = "a{50001}";
+		TooComplexToDeterminizeException expected = expectThrows(TooComplexToDeterminizeException.class, () -> {
+			new RegExp(source).toAutomaton(50000);
+		});
+		assertTrue(expected.getMessage().contains(source));
+	}
 
-  // LUCENE-6713
-  public void testSerializeTooManyStatesToDeterminizeExc() throws Exception {
-    // LUCENE-6046
-    String source = "[ac]*a[ac]{50,200}";
-    TooComplexToDeterminizeException expected = expectThrows(TooComplexToDeterminizeException.class, () -> {
-      new RegExp(source).toAutomaton();
-    });
-    assertTrue(expected.getMessage().contains(source));
-  }
+	// LUCENE-6713
+	public void testSerializeTooManyStatesToDeterminizeExc() throws Exception {
+		// LUCENE-6046
+		String source = "[ac]*a[ac]{50,200}";
+		TooComplexToDeterminizeException expected = expectThrows(TooComplexToDeterminizeException.class, () -> {
+			new RegExp(source).toAutomaton();
+		});
+		assertTrue(expected.getMessage().contains(source));
+	}
 
-  // LUCENE-6046
-  public void testRepeatWithEmptyString() throws Exception {
-    Automaton a = new RegExp("[^y]*{1,2}").toAutomaton(1000);
-    // paranoia:
-    assertTrue(a.toString().length() > 0);
-  }
+	// LUCENE-6046
+	public void testRepeatWithEmptyString() throws Exception {
+		Automaton a = new RegExp("[^y]*{1,2}").toAutomaton(1000);
+		// paranoia:
+		assertTrue(a.toString().length() > 0);
+	}
 
-  public void testRepeatWithEmptyLanguage() throws Exception {
-    Automaton a = new RegExp("#*").toAutomaton(1000);
-    // paranoia:
-    assertTrue(a.toString().length() > 0);
-    a = new RegExp("#+").toAutomaton(1000);
-    assertTrue(a.toString().length() > 0);
-    a = new RegExp("#{2,10}").toAutomaton(1000);
-    assertTrue(a.toString().length() > 0);
-    a = new RegExp("#?").toAutomaton(1000);
-    assertTrue(a.toString().length() > 0);
-  }
+	public void testRepeatWithEmptyLanguage() throws Exception {
+		Automaton a = new RegExp("#*").toAutomaton(1000);
+		// paranoia:
+		assertTrue(a.toString().length() > 0);
+		a = new RegExp("#+").toAutomaton(1000);
+		assertTrue(a.toString().length() > 0);
+		a = new RegExp("#{2,10}").toAutomaton(1000);
+		assertTrue(a.toString().length() > 0);
+		a = new RegExp("#?").toAutomaton(1000);
+		assertTrue(a.toString().length() > 0);
+	}
 }

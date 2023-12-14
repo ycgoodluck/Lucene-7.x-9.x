@@ -27,37 +27,41 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
 
 public class TestCodepointCountFilterFactory extends BaseTokenStreamFactoryTestCase {
 
-  public void testPositionIncrements() throws Exception {
-    Reader reader = new StringReader("foo foobar super-duper-trooper");
-    TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("CodepointCount",
-        "min", "4",
-        "max", "10").create(stream);
-    assertTokenStreamContents(stream, new String[] { "foobar" }, new int[] { 2 });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("CodepointCount", 
-          "min", "4", 
-          "max", "5", 
-          "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testPositionIncrements() throws Exception {
+		Reader reader = new StringReader("foo foobar super-duper-trooper");
+		TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+		((Tokenizer) stream).setReader(reader);
+		stream = tokenFilterFactory("CodepointCount",
+			"min", "4",
+			"max", "10").create(stream);
+		assertTokenStreamContents(stream, new String[]{"foobar"}, new int[]{2});
+	}
 
-  /** Test that invalid arguments result in exception */
-  public void testInvalidArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      Reader reader = new StringReader("foo foobar super-duper-trooper");
-      TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-      ((Tokenizer)stream).setReader(reader);
-      tokenFilterFactory("CodepointCount",
-          CodepointCountFilterFactory.MIN_KEY, "5",
-          CodepointCountFilterFactory.MAX_KEY, "4").create(stream);
-    });
-    assertTrue(expected.getMessage().contains("maximum length must not be greater than minimum length"));
-  }
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("CodepointCount",
+				"min", "4",
+				"max", "5",
+				"bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
+
+	/**
+	 * Test that invalid arguments result in exception
+	 */
+	public void testInvalidArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			Reader reader = new StringReader("foo foobar super-duper-trooper");
+			TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+			((Tokenizer) stream).setReader(reader);
+			tokenFilterFactory("CodepointCount",
+				CodepointCountFilterFactory.MIN_KEY, "5",
+				CodepointCountFilterFactory.MAX_KEY, "4").create(stream);
+		});
+		assertTrue(expected.getMessage().contains("maximum length must not be greater than minimum length"));
+	}
 }

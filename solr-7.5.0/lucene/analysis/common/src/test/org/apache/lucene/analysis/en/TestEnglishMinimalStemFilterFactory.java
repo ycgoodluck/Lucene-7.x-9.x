@@ -27,18 +27,20 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the English minimal stem factory is working.
  */
 public class TestEnglishMinimalStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("bricks");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("EnglishMinimalStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "brick" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("EnglishMinimalStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("bricks");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("EnglishMinimalStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"brick"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("EnglishMinimalStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

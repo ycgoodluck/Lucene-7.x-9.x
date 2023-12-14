@@ -35,69 +35,69 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestExtractors extends LuceneTestCase {
 
-  private static final QueryAnalyzer treeBuilder = new QueryAnalyzer();
+	private static final QueryAnalyzer treeBuilder = new QueryAnalyzer();
 
-  private Set<Term> collectTerms(Query query) {
-    Set<Term> terms = new HashSet<>();
-    QueryTree tree = treeBuilder.buildTree(query, TermWeightor.DEFAULT);
-    tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
-    return terms;
-  }
+	private Set<Term> collectTerms(Query query) {
+		Set<Term> terms = new HashSet<>();
+		QueryTree tree = treeBuilder.buildTree(query, TermWeightor.DEFAULT);
+		tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
+		return terms;
+	}
 
-  public void testConstantScoreQueryExtractor() {
+	public void testConstantScoreQueryExtractor() {
 
-    BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("f", "q1")), BooleanClause.Occur.MUST);
-    bq.add(new TermQuery(new Term("f", "q2")), BooleanClause.Occur.SHOULD);
+		BooleanQuery.Builder bq = new BooleanQuery.Builder();
+		bq.add(new TermQuery(new Term("f", "q1")), BooleanClause.Occur.MUST);
+		bq.add(new TermQuery(new Term("f", "q2")), BooleanClause.Occur.SHOULD);
 
-    Query csqWithQuery = new ConstantScoreQuery(bq.build());
-    Set<Term> expected = Collections.singleton(new Term("f", "q1"));
-    assertEquals(expected, collectTerms(csqWithQuery));
+		Query csqWithQuery = new ConstantScoreQuery(bq.build());
+		Set<Term> expected = Collections.singleton(new Term("f", "q1"));
+		assertEquals(expected, collectTerms(csqWithQuery));
 
-  }
+	}
 
-  public void testPhraseQueryExtractor() {
+	public void testPhraseQueryExtractor() {
 
-    PhraseQuery.Builder pq = new PhraseQuery.Builder();
-    pq.add(new Term("f", "hello"));
-    pq.add(new Term("f", "encyclopedia"));
+		PhraseQuery.Builder pq = new PhraseQuery.Builder();
+		pq.add(new Term("f", "hello"));
+		pq.add(new Term("f", "encyclopedia"));
 
-    Set<Term> expected = Collections.singleton(new Term("f", "encyclopedia"));
-    assertEquals(expected, collectTerms(pq.build()));
+		Set<Term> expected = Collections.singleton(new Term("f", "encyclopedia"));
+		assertEquals(expected, collectTerms(pq.build()));
 
-  }
+	}
 
-  public void testBoostQueryExtractor() {
+	public void testBoostQueryExtractor() {
 
-    BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("f", "q1")), BooleanClause.Occur.MUST);
-    bq.add(new TermQuery(new Term("f", "q2")), BooleanClause.Occur.SHOULD);
+		BooleanQuery.Builder bq = new BooleanQuery.Builder();
+		bq.add(new TermQuery(new Term("f", "q1")), BooleanClause.Occur.MUST);
+		bq.add(new TermQuery(new Term("f", "q2")), BooleanClause.Occur.SHOULD);
 
-    Query boostQuery = new BoostQuery(bq.build(), 0.5f);
-    Set<Term> expected = Collections.singleton(new Term("f", "q1"));
-    assertEquals(expected, collectTerms(boostQuery));
-  }
+		Query boostQuery = new BoostQuery(bq.build(), 0.5f);
+		Set<Term> expected = Collections.singleton(new Term("f", "q1"));
+		assertEquals(expected, collectTerms(boostQuery));
+	}
 
-  public void testDisjunctionMaxExtractor() {
+	public void testDisjunctionMaxExtractor() {
 
-    Query query = new DisjunctionMaxQuery(
-        Arrays.asList(new TermQuery(new Term("f", "t1")), new TermQuery(new Term("f", "t2"))), 0.1f
-    );
-    Set<Term> expected = new HashSet<>(Arrays.asList(
-        new Term("f", "t1"),
-        new Term("f", "t2")
-    ));
-    assertEquals(expected, collectTerms(query));
-  }
+		Query query = new DisjunctionMaxQuery(
+			Arrays.asList(new TermQuery(new Term("f", "t1")), new TermQuery(new Term("f", "t2"))), 0.1f
+		);
+		Set<Term> expected = new HashSet<>(Arrays.asList(
+			new Term("f", "t1"),
+			new Term("f", "t2")
+		));
+		assertEquals(expected, collectTerms(query));
+	}
 
-  public void testBooleanExtractsFilter() {
-    Query q = new BooleanQuery.Builder()
-        .add(new TermQuery(new Term("f", "must")), BooleanClause.Occur.MUST)
-        .add(new TermQuery(new Term("f", "filter")), BooleanClause.Occur.FILTER)
-        .build();
-    Set<Term> expected = Collections.singleton(new Term("f", "filter")); // it's longer, so it wins
-    assertEquals(expected, collectTerms(q));
-  }
+	public void testBooleanExtractsFilter() {
+		Query q = new BooleanQuery.Builder()
+			.add(new TermQuery(new Term("f", "must")), BooleanClause.Occur.MUST)
+			.add(new TermQuery(new Term("f", "filter")), BooleanClause.Occur.FILTER)
+			.build();
+		Set<Term> expected = Collections.singleton(new Term("f", "filter")); // it's longer, so it wins
+		assertEquals(expected, collectTerms(q));
+	}
 
 
 }

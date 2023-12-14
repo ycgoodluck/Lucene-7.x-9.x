@@ -26,36 +26,33 @@ import java.util.List;
  * for the other subqueries that generate the document.
  */
 final class DisjunctionMaxScorer extends DisjunctionScorer {
-  /* Multiplier applied to non-maximum-scoring subqueries for a document as they are summed into the result. */
-  private final float tieBreakerMultiplier;
+	/* Multiplier applied to non-maximum-scoring subqueries for a document as they are summed into the result. */
+	private final float tieBreakerMultiplier;
 
-  /**
-   * Creates a new instance of DisjunctionMaxScorer
-   * 
-   * @param weight
-   *          The Weight to be used.
-   * @param tieBreakerMultiplier
-   *          Multiplier applied to non-maximum-scoring subqueries for a
-   *          document as they are summed into the result.
-   * @param subScorers
-   *          The sub scorers this Scorer should iterate on
-   */
-  DisjunctionMaxScorer(Weight weight, float tieBreakerMultiplier, List<Scorer> subScorers, boolean needsScores) {
-    super(weight, subScorers, needsScores);
-    this.tieBreakerMultiplier = tieBreakerMultiplier;
-  }
+	/**
+	 * Creates a new instance of DisjunctionMaxScorer
+	 *
+	 * @param weight               The Weight to be used.
+	 * @param tieBreakerMultiplier Multiplier applied to non-maximum-scoring subqueries for a
+	 *                             document as they are summed into the result.
+	 * @param subScorers           The sub scorers this Scorer should iterate on
+	 */
+	DisjunctionMaxScorer(Weight weight, float tieBreakerMultiplier, List<Scorer> subScorers, boolean needsScores) {
+		super(weight, subScorers, needsScores);
+		this.tieBreakerMultiplier = tieBreakerMultiplier;
+	}
 
-  @Override
-  protected float score(DisiWrapper topList) throws IOException {
-    float scoreSum = 0;
-    float scoreMax = Float.NEGATIVE_INFINITY;
-    for (DisiWrapper w = topList; w != null; w = w.next) {
-      final float subScore = w.scorer.score();
-      scoreSum += subScore;
-      if (subScore > scoreMax) {
-        scoreMax = subScore;
-      }
-    }
-    return scoreMax + (scoreSum - scoreMax) * tieBreakerMultiplier; 
-  }
+	@Override
+	protected float score(DisiWrapper topList) throws IOException {
+		float scoreSum = 0;
+		float scoreMax = Float.NEGATIVE_INFINITY;
+		for (DisiWrapper w = topList; w != null; w = w.next) {
+			final float subScore = w.scorer.score();
+			scoreSum += subScore;
+			if (subScore > scoreMax) {
+				scoreMax = subScore;
+			}
+		}
+		return scoreMax + (scoreSum - scoreMax) * tieBreakerMultiplier;
+	}
 }

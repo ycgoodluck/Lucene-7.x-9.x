@@ -39,76 +39,77 @@ import java.util.List;
 
 public class SpatialPrefixTreeTest extends SpatialTestCase {
 
-  //TODO plug in others and test them
-  private SpatialContext ctx;
-  private SpatialPrefixTree trie;
+	//TODO plug in others and test them
+	private SpatialContext ctx;
+	private SpatialPrefixTree trie;
 
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    ctx = SpatialContext.GEO;
-  }
+	@Override
+	@Before
+	public void setUp() throws Exception {
+		super.setUp();
+		ctx = SpatialContext.GEO;
+	}
 
-  @Test
-  public void testCellTraverse() {
-    trie = new GeohashPrefixTree(ctx,4);
+	@Test
+	public void testCellTraverse() {
+		trie = new GeohashPrefixTree(ctx, 4);
 
-    Cell prevC = null;
-    Cell c = trie.getWorldCell();
-    assertEquals(0, c.getLevel());
-    assertEquals(ctx.getWorldBounds(), c.getShape());
-    while (c.getLevel() < trie.getMaxLevels()) {
-      prevC = c;
-      List<Cell> subCells = new ArrayList<>();
-      CellIterator subCellsIter = c.getNextLevelCells(null);
-      while (subCellsIter.hasNext()) {
-        subCells.add(subCellsIter.next());
-      }
-      c = subCells.get(random().nextInt(subCells.size()-1));
+		Cell prevC = null;
+		Cell c = trie.getWorldCell();
+		assertEquals(0, c.getLevel());
+		assertEquals(ctx.getWorldBounds(), c.getShape());
+		while (c.getLevel() < trie.getMaxLevels()) {
+			prevC = c;
+			List<Cell> subCells = new ArrayList<>();
+			CellIterator subCellsIter = c.getNextLevelCells(null);
+			while (subCellsIter.hasNext()) {
+				subCells.add(subCellsIter.next());
+			}
+			c = subCells.get(random().nextInt(subCells.size() - 1));
 
-      assertEquals(prevC.getLevel()+1,c.getLevel());
-      Rectangle prevNShape = (Rectangle) prevC.getShape();
-      Shape s = c.getShape();
-      Rectangle sbox = s.getBoundingBox();
-      assertTrue(prevNShape.getWidth() > sbox.getWidth());
-      assertTrue(prevNShape.getHeight() > sbox.getHeight());
-    }
-  }
-  /**
-   * A PrefixTree pruning optimization gone bad, applicable when optimize=true.
-   * See <a href="https://issues.apache.org/jira/browse/LUCENE-4770">LUCENE-4770</a>.
-   */
-  @Test
-  public void testBadPrefixTreePrune() throws Exception {
+			assertEquals(prevC.getLevel() + 1, c.getLevel());
+			Rectangle prevNShape = (Rectangle) prevC.getShape();
+			Shape s = c.getShape();
+			Rectangle sbox = s.getBoundingBox();
+			assertTrue(prevNShape.getWidth() > sbox.getWidth());
+			assertTrue(prevNShape.getHeight() > sbox.getHeight());
+		}
+	}
 
-    trie = new QuadPrefixTree(ctx, 12);
-    TermQueryPrefixTreeStrategy strategy = new TermQueryPrefixTreeStrategy(trie, "geo");
-    Document doc = new Document();
-    doc.add(new TextField("id", "1", Store.YES));
+	/**
+	 * A PrefixTree pruning optimization gone bad, applicable when optimize=true.
+	 * See <a href="https://issues.apache.org/jira/browse/LUCENE-4770">LUCENE-4770</a>.
+	 */
+	@Test
+	public void testBadPrefixTreePrune() throws Exception {
 
-    Shape area = ctx.makeRectangle(-122.82, -122.78, 48.54, 48.56);
+		trie = new QuadPrefixTree(ctx, 12);
+		TermQueryPrefixTreeStrategy strategy = new TermQueryPrefixTreeStrategy(trie, "geo");
+		Document doc = new Document();
+		doc.add(new TextField("id", "1", Store.YES));
 
-    Field[] fields = strategy.createIndexableFields(area, 0.025);
-    for (Field field : fields) {
-      doc.add(field);
-    }
-    addDocument(doc);
+		Shape area = ctx.makeRectangle(-122.82, -122.78, 48.54, 48.56);
 
-    Point upperleft = ctx.makePoint(-122.88, 48.54);
-    Point lowerright = ctx.makePoint(-122.82, 48.62);
+		Field[] fields = strategy.createIndexableFields(area, 0.025);
+		for (Field field : fields) {
+			doc.add(field);
+		}
+		addDocument(doc);
 
-    Query query = strategy.makeQuery(new SpatialArgs(SpatialOperation.Intersects, ctx.makeRectangle(upperleft, lowerright)));
+		Point upperleft = ctx.makePoint(-122.88, 48.54);
+		Point lowerright = ctx.makePoint(-122.82, 48.62);
 
-    commit();
+		Query query = strategy.makeQuery(new SpatialArgs(SpatialOperation.Intersects, ctx.makeRectangle(upperleft, lowerright)));
 
-    TopDocs search = indexSearcher.search(query, 10);
-    ScoreDoc[] scoreDocs = search.scoreDocs;
-    for (ScoreDoc scoreDoc : scoreDocs) {
-      System.out.println(indexSearcher.doc(scoreDoc.doc));
-    }
+		commit();
 
-    assertEquals(1, search.totalHits);
-  }
+		TopDocs search = indexSearcher.search(query, 10);
+		ScoreDoc[] scoreDocs = search.scoreDocs;
+		for (ScoreDoc scoreDoc : scoreDocs) {
+			System.out.println(indexSearcher.doc(scoreDoc.doc));
+		}
+
+		assertEquals(1, search.totalHits);
+	}
 
 }

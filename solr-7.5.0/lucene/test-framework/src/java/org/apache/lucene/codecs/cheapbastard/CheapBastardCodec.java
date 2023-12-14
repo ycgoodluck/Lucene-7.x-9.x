@@ -20,20 +20,22 @@ import org.apache.lucene.codecs.FilterCodec;
 import org.apache.lucene.codecs.PostingsFormat;
 import org.apache.lucene.util.TestUtil;
 
-/** Codec that tries to use as little ram as possible because he spent all his money on beer */
-// TODO: better name :) 
+/**
+ * Codec that tries to use as little ram as possible because he spent all his money on beer
+ */
+// TODO: better name :)
 // but if we named it "LowMemory" in codecs/ package, it would be irresistible like optimize()!
 public class CheapBastardCodec extends FilterCodec {
-  
-  // TODO: would be better to have no terms index at all and bsearch a terms dict
-  private final PostingsFormat postings = TestUtil.getDefaultPostingsFormat(100, 200);
 
-  public CheapBastardCodec() {
-    super("CheapBastard", TestUtil.getDefaultCodec());
-  }
-  
-  @Override
-  public PostingsFormat postingsFormat() {
-    return postings;
-  }
+	// TODO: would be better to have no terms index at all and bsearch a terms dict
+	private final PostingsFormat postings = TestUtil.getDefaultPostingsFormat(100, 200);
+
+	public CheapBastardCodec() {
+		super("CheapBastard", TestUtil.getDefaultCodec());
+	}
+
+	@Override
+	public PostingsFormat postingsFormat() {
+		return postings;
+	}
 }

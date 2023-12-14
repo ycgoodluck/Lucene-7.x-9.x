@@ -24,17 +24,17 @@ import org.apache.lucene.document.Field;
 
 public class TestSimpleMatcher extends MonitorTestBase {
 
-  public void testSimpleMatcher() throws IOException {
+	public void testSimpleMatcher() throws IOException {
 
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(
-          new MonitorQuery("1", parse("test")),
-          new MonitorQuery("2", parse("wibble")));
-      Document doc = new Document();
-      doc.add(newTextField(FIELD, "test", Field.Store.NO));
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(
+				new MonitorQuery("1", parse("test")),
+				new MonitorQuery("2", parse("wibble")));
+			Document doc = new Document();
+			doc.add(newTextField(FIELD, "test", Field.Store.NO));
 
-      MatchingQueries<QueryMatch> matches = monitor.match(doc, QueryMatch.SIMPLE_MATCHER);
-      assertNotNull(matches.matches("1"));
-    }
-  }
+			MatchingQueries<QueryMatch> matches = monitor.match(doc, QueryMatch.SIMPLE_MATCHER);
+			assertNotNull(matches.matches("1"));
+		}
+	}
 }

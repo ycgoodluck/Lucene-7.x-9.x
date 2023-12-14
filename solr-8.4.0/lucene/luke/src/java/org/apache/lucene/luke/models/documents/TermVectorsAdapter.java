@@ -35,37 +35,37 @@ import org.apache.lucene.luke.util.LoggerFactory;
  */
 final class TermVectorsAdapter {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private IndexReader reader;
+	private IndexReader reader;
 
-  TermVectorsAdapter(IndexReader reader) {
-    this.reader = Objects.requireNonNull(reader);
-  }
+	TermVectorsAdapter(IndexReader reader) {
+		this.reader = Objects.requireNonNull(reader);
+	}
 
-  /**
-   * Returns the term vectors for the specified field in the specified document.
-   * If no term vector is available for the field, empty list is returned.
-   *
-   * @param docid - document id
-   * @param field - field name
-   * @return list of term vector elements
-   * @throws IOException - if there is a low level IO error.
-   */
-  List<TermVectorEntry> getTermVector(int docid, String field) throws IOException {
-    Terms termVector = reader.getTermVector(docid, field);
-    if (termVector == null) {
-      // no term vector available
-      log.warn("No term vector indexed for doc: #{} and field: {}", docid, field);
-      return Collections.emptyList();
-    }
+	/**
+	 * Returns the term vectors for the specified field in the specified document.
+	 * If no term vector is available for the field, empty list is returned.
+	 *
+	 * @param docid - document id
+	 * @param field - field name
+	 * @return list of term vector elements
+	 * @throws IOException - if there is a low level IO error.
+	 */
+	List<TermVectorEntry> getTermVector(int docid, String field) throws IOException {
+		Terms termVector = reader.getTermVector(docid, field);
+		if (termVector == null) {
+			// no term vector available
+			log.warn("No term vector indexed for doc: #{} and field: {}", docid, field);
+			return Collections.emptyList();
+		}
 
-    List<TermVectorEntry> res = new ArrayList<>();
-    TermsEnum te = termVector.iterator();
-    while (te.next() != null) {
-      res.add(TermVectorEntry.of(te));
-    }
-    return res;
-  }
+		List<TermVectorEntry> res = new ArrayList<>();
+		TermsEnum te = termVector.iterator();
+		while (te.next() != null) {
+			res.add(TermVectorEntry.of(te));
+		}
+		return res;
+	}
 
 }

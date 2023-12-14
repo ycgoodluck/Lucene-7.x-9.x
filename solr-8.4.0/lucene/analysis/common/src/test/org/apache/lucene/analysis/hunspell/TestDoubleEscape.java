@@ -20,12 +20,12 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestDoubleEscape extends StemmerTestBase {
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("double-escaped.aff", "double-escaped.dic");
-  }
-  
-  public void testStemming() {
-    assertStemsTo("adubo", "adubar");
-  }
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("double-escaped.aff", "double-escaped.dic");
+	}
+
+	public void testStemming() {
+		assertStemsTo("adubo", "adubar");
+	}
 }

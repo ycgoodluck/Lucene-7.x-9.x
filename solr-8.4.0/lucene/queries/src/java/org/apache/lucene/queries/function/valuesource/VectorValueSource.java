@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.lucene.queries.function.valuesource;
+
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.queries.function.FunctionValues;
 import org.apache.lucene.queries.function.ValueSource;
@@ -31,189 +32,196 @@ import java.util.Map;
  */
 //Not crazy about the name, but...
 public class VectorValueSource extends MultiValueSource {
-  protected final List<ValueSource> sources;
+	protected final List<ValueSource> sources;
 
 
-  public VectorValueSource(List<ValueSource> sources) {
-    this.sources = sources;
-  }
+	public VectorValueSource(List<ValueSource> sources) {
+		this.sources = sources;
+	}
 
-  public List<ValueSource> getSources() {
-    return sources;
-  }
+	public List<ValueSource> getSources() {
+		return sources;
+	}
 
-  @Override
-  public int dimension() {
-    return sources.size();
-  }
+	@Override
+	public int dimension() {
+		return sources.size();
+	}
 
-  public String name() {
-    return "vector";
-  }
+	public String name() {
+		return "vector";
+	}
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    int size = sources.size();
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+		int size = sources.size();
 
-    // special-case x,y and lat,lon since it's so common
-    if (size==2) {
-      final FunctionValues x = sources.get(0).getValues(context, readerContext);
-      final FunctionValues y = sources.get(1).getValues(context, readerContext);
-      return new FunctionValues() {
-        @Override
-        public void byteVal(int doc, byte[] vals) throws IOException {
-          vals[0] = x.byteVal(doc);
-          vals[1] = y.byteVal(doc);
-        }
-        @Override
-        public void shortVal(int doc, short[] vals) throws IOException {
-          vals[0] = x.shortVal(doc);
-          vals[1] = y.shortVal(doc);
-        }
-        @Override
-        public void intVal(int doc, int[] vals) throws IOException {
-          vals[0] = x.intVal(doc);
-          vals[1] = y.intVal(doc);
-        }
-        @Override
-        public void longVal(int doc, long[] vals) throws IOException {
-          vals[0] = x.longVal(doc);
-          vals[1] = y.longVal(doc);
-        }
-        @Override
-        public void floatVal(int doc, float[] vals) throws IOException {
-          vals[0] = x.floatVal(doc);
-          vals[1] = y.floatVal(doc);
-        }
-        @Override
-        public void doubleVal(int doc, double[] vals) throws IOException {
-          vals[0] = x.doubleVal(doc);
-          vals[1] = y.doubleVal(doc);
-        }
-        @Override
-        public void strVal(int doc, String[] vals) throws IOException {
-          vals[0] = x.strVal(doc);
-          vals[1] = y.strVal(doc);
-        }
-        @Override
-        public String toString(int doc) throws IOException {
-          return name() + "(" + x.toString(doc) + "," + y.toString(doc) + ")";
-        }
-      };
-    }
+		// special-case x,y and lat,lon since it's so common
+		if (size == 2) {
+			final FunctionValues x = sources.get(0).getValues(context, readerContext);
+			final FunctionValues y = sources.get(1).getValues(context, readerContext);
+			return new FunctionValues() {
+				@Override
+				public void byteVal(int doc, byte[] vals) throws IOException {
+					vals[0] = x.byteVal(doc);
+					vals[1] = y.byteVal(doc);
+				}
 
+				@Override
+				public void shortVal(int doc, short[] vals) throws IOException {
+					vals[0] = x.shortVal(doc);
+					vals[1] = y.shortVal(doc);
+				}
 
-    final FunctionValues[] valsArr = new FunctionValues[size];
-    for (int i = 0; i < size; i++) {
-      valsArr[i] = sources.get(i).getValues(context, readerContext);
-    }
+				@Override
+				public void intVal(int doc, int[] vals) throws IOException {
+					vals[0] = x.intVal(doc);
+					vals[1] = y.intVal(doc);
+				}
 
-    return new FunctionValues() {
-      @Override
-      public void byteVal(int doc, byte[] vals) throws IOException {
-        for (int i = 0; i < valsArr.length; i++) {
-          vals[i] = valsArr[i].byteVal(doc);
-        }
-      }
+				@Override
+				public void longVal(int doc, long[] vals) throws IOException {
+					vals[0] = x.longVal(doc);
+					vals[1] = y.longVal(doc);
+				}
 
-      @Override
-      public void shortVal(int doc, short[] vals) throws IOException {
-        for (int i = 0; i < valsArr.length; i++) {
-          vals[i] = valsArr[i].shortVal(doc);
-        }
-      }
+				@Override
+				public void floatVal(int doc, float[] vals) throws IOException {
+					vals[0] = x.floatVal(doc);
+					vals[1] = y.floatVal(doc);
+				}
 
-      @Override
-      public void floatVal(int doc, float[] vals) throws IOException {
-        for (int i = 0; i < valsArr.length; i++) {
-          vals[i] = valsArr[i].floatVal(doc);
-        }
-      }
+				@Override
+				public void doubleVal(int doc, double[] vals) throws IOException {
+					vals[0] = x.doubleVal(doc);
+					vals[1] = y.doubleVal(doc);
+				}
 
-      @Override
-      public void intVal(int doc, int[] vals) throws IOException {
-        for (int i = 0; i < valsArr.length; i++) {
-          vals[i] = valsArr[i].intVal(doc);
-        }
-      }
+				@Override
+				public void strVal(int doc, String[] vals) throws IOException {
+					vals[0] = x.strVal(doc);
+					vals[1] = y.strVal(doc);
+				}
 
-      @Override
-      public void longVal(int doc, long[] vals) throws IOException {
-        for (int i = 0; i < valsArr.length; i++) {
-          vals[i] = valsArr[i].longVal(doc);
-        }
-      }
-
-      @Override
-      public void doubleVal(int doc, double[] vals) throws IOException {
-        for (int i = 0; i < valsArr.length; i++) {
-          vals[i] = valsArr[i].doubleVal(doc);
-        }
-      }
-
-      @Override
-      public void strVal(int doc, String[] vals) throws IOException {
-        for (int i = 0; i < valsArr.length; i++) {
-          vals[i] = valsArr[i].strVal(doc);
-        }
-      }
-
-      @Override
-      public String toString(int doc) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        sb.append(name()).append('(');
-        boolean firstTime = true;
-        for (FunctionValues vals : valsArr) {
-          if (firstTime) {
-            firstTime = false;
-          } else {
-            sb.append(',');
-          }
-          sb.append(vals.toString(doc));
-        }
-        sb.append(')');
-        return sb.toString();
-      }
-    };
-  }
-
-  @Override
-  public void createWeight(Map context, IndexSearcher searcher) throws IOException {
-    for (ValueSource source : sources)
-      source.createWeight(context, searcher);
-  }
+				@Override
+				public String toString(int doc) throws IOException {
+					return name() + "(" + x.toString(doc) + "," + y.toString(doc) + ")";
+				}
+			};
+		}
 
 
-  @Override
-  public String description() {
-    StringBuilder sb = new StringBuilder();
-    sb.append(name()).append('(');
-    boolean firstTime = true;
-    for (ValueSource source : sources) {
-      if (firstTime) {
-        firstTime = false;
-      } else {
-        sb.append(',');
-      }
-      sb.append(source);
-    }
-    sb.append(")");
-    return sb.toString();
-  }
+		final FunctionValues[] valsArr = new FunctionValues[size];
+		for (int i = 0; i < size; i++) {
+			valsArr[i] = sources.get(i).getValues(context, readerContext);
+		}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof VectorValueSource)) return false;
+		return new FunctionValues() {
+			@Override
+			public void byteVal(int doc, byte[] vals) throws IOException {
+				for (int i = 0; i < valsArr.length; i++) {
+					vals[i] = valsArr[i].byteVal(doc);
+				}
+			}
 
-    VectorValueSource that = (VectorValueSource) o;
+			@Override
+			public void shortVal(int doc, short[] vals) throws IOException {
+				for (int i = 0; i < valsArr.length; i++) {
+					vals[i] = valsArr[i].shortVal(doc);
+				}
+			}
 
-    return sources.equals(that.sources);
+			@Override
+			public void floatVal(int doc, float[] vals) throws IOException {
+				for (int i = 0; i < valsArr.length; i++) {
+					vals[i] = valsArr[i].floatVal(doc);
+				}
+			}
 
-  }
+			@Override
+			public void intVal(int doc, int[] vals) throws IOException {
+				for (int i = 0; i < valsArr.length; i++) {
+					vals[i] = valsArr[i].intVal(doc);
+				}
+			}
 
-  @Override
-  public int hashCode() {
-    return sources.hashCode();
-  }
+			@Override
+			public void longVal(int doc, long[] vals) throws IOException {
+				for (int i = 0; i < valsArr.length; i++) {
+					vals[i] = valsArr[i].longVal(doc);
+				}
+			}
+
+			@Override
+			public void doubleVal(int doc, double[] vals) throws IOException {
+				for (int i = 0; i < valsArr.length; i++) {
+					vals[i] = valsArr[i].doubleVal(doc);
+				}
+			}
+
+			@Override
+			public void strVal(int doc, String[] vals) throws IOException {
+				for (int i = 0; i < valsArr.length; i++) {
+					vals[i] = valsArr[i].strVal(doc);
+				}
+			}
+
+			@Override
+			public String toString(int doc) throws IOException {
+				StringBuilder sb = new StringBuilder();
+				sb.append(name()).append('(');
+				boolean firstTime = true;
+				for (FunctionValues vals : valsArr) {
+					if (firstTime) {
+						firstTime = false;
+					} else {
+						sb.append(',');
+					}
+					sb.append(vals.toString(doc));
+				}
+				sb.append(')');
+				return sb.toString();
+			}
+		};
+	}
+
+	@Override
+	public void createWeight(Map context, IndexSearcher searcher) throws IOException {
+		for (ValueSource source : sources)
+			source.createWeight(context, searcher);
+	}
+
+
+	@Override
+	public String description() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(name()).append('(');
+		boolean firstTime = true;
+		for (ValueSource source : sources) {
+			if (firstTime) {
+				firstTime = false;
+			} else {
+				sb.append(',');
+			}
+			sb.append(source);
+		}
+		sb.append(")");
+		return sb.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof VectorValueSource)) return false;
+
+		VectorValueSource that = (VectorValueSource) o;
+
+		return sources.equals(that.sources);
+
+	}
+
+	@Override
+	public int hashCode() {
+		return sources.hashCode();
+	}
 }

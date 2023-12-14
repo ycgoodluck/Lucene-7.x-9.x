@@ -25,57 +25,57 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestCharFilter extends LuceneTestCase {
 
-  public void testCharFilter1() throws Exception {
-    CharFilter cs = new CharFilter1(new StringReader(""));
-    assertEquals("corrected offset is invalid", 1, cs.correctOffset(0));
-  }
+	public void testCharFilter1() throws Exception {
+		CharFilter cs = new CharFilter1(new StringReader(""));
+		assertEquals("corrected offset is invalid", 1, cs.correctOffset(0));
+	}
 
-  public void testCharFilter2() throws Exception {
-    CharFilter cs = new CharFilter2(new StringReader(""));
-    assertEquals("corrected offset is invalid", 2, cs.correctOffset(0));
-  }
+	public void testCharFilter2() throws Exception {
+		CharFilter cs = new CharFilter2(new StringReader(""));
+		assertEquals("corrected offset is invalid", 2, cs.correctOffset(0));
+	}
 
-  public void testCharFilter12() throws Exception {
-    CharFilter cs = new CharFilter2(new CharFilter1(new StringReader("")));
-    assertEquals( "corrected offset is invalid", 3, cs.correctOffset(0));
-  }
+	public void testCharFilter12() throws Exception {
+		CharFilter cs = new CharFilter2(new CharFilter1(new StringReader("")));
+		assertEquals("corrected offset is invalid", 3, cs.correctOffset(0));
+	}
 
-  public void testCharFilter11() throws Exception {
-    CharFilter cs = new CharFilter1(new CharFilter1(new StringReader("")));
-    assertEquals( "corrected offset is invalid", 2, cs.correctOffset(0));
-  }
+	public void testCharFilter11() throws Exception {
+		CharFilter cs = new CharFilter1(new CharFilter1(new StringReader("")));
+		assertEquals("corrected offset is invalid", 2, cs.correctOffset(0));
+	}
 
-  static class CharFilter1 extends CharFilter {
+	static class CharFilter1 extends CharFilter {
 
-    protected CharFilter1(Reader in) {
-      super(in);
-    }
+		protected CharFilter1(Reader in) {
+			super(in);
+		}
 
-    @Override
-    public int read(char[] cbuf, int off, int len) throws IOException {
-      return input.read(cbuf, off, len);
-    }
+		@Override
+		public int read(char[] cbuf, int off, int len) throws IOException {
+			return input.read(cbuf, off, len);
+		}
 
-    @Override
-    protected int correct(int currentOff) {
-      return currentOff + 1;
-    }
-  }
+		@Override
+		protected int correct(int currentOff) {
+			return currentOff + 1;
+		}
+	}
 
-  static class CharFilter2 extends CharFilter {
+	static class CharFilter2 extends CharFilter {
 
-    protected CharFilter2(Reader in) {
-      super(in);
-    }
-    
-    @Override
-    public int read(char[] cbuf, int off, int len) throws IOException {
-      return input.read(cbuf, off, len);
-    }
+		protected CharFilter2(Reader in) {
+			super(in);
+		}
 
-    @Override
-    protected int correct(int currentOff) {
-      return currentOff + 2;
-    }
-  }
+		@Override
+		public int read(char[] cbuf, int off, int len) throws IOException {
+			return input.read(cbuf, off, len);
+		}
+
+		@Override
+		protected int correct(int currentOff) {
+			return currentOff + 2;
+		}
+	}
 }

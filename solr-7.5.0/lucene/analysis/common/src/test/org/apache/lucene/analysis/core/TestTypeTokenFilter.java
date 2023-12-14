@@ -33,68 +33,68 @@ import org.apache.lucene.util.English;
 
 public class TestTypeTokenFilter extends BaseTokenStreamTestCase {
 
-  public void testTypeFilter() throws IOException {
-    StringReader reader = new StringReader("121 is palindrome, while 123 is not");
-    Set<String> stopTypes = asSet("<NUM>");
-    final StandardTokenizer input = new StandardTokenizer(newAttributeFactory());
-    input.setReader(reader);
-    TokenStream stream = new TypeTokenFilter(input, stopTypes);
-    assertTokenStreamContents(stream, new String[]{"is", "palindrome", "while", "is", "not"});
-  }
+	public void testTypeFilter() throws IOException {
+		StringReader reader = new StringReader("121 is palindrome, while 123 is not");
+		Set<String> stopTypes = asSet("<NUM>");
+		final StandardTokenizer input = new StandardTokenizer(newAttributeFactory());
+		input.setReader(reader);
+		TokenStream stream = new TypeTokenFilter(input, stopTypes);
+		assertTokenStreamContents(stream, new String[]{"is", "palindrome", "while", "is", "not"});
+	}
 
-  /**
-   * Test Position increments applied by TypeTokenFilter with and without enabling this option.
-   */
-  public void testStopPositons() throws IOException {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 10; i < 20; i++) {
-      if (i % 3 != 0) {
-        sb.append(i).append(" ");
-      } else {
-        String w = English.intToEnglish(i).trim();
-        sb.append(w).append(" ");
-      }
-    }
-    log(sb.toString());
-    String stopTypes[] = new String[]{"<NUM>"};
-    Set<String> stopSet = asSet(stopTypes);
+	/**
+	 * Test Position increments applied by TypeTokenFilter with and without enabling this option.
+	 */
+	public void testStopPositons() throws IOException {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 10; i < 20; i++) {
+			if (i % 3 != 0) {
+				sb.append(i).append(" ");
+			} else {
+				String w = English.intToEnglish(i).trim();
+				sb.append(w).append(" ");
+			}
+		}
+		log(sb.toString());
+		String stopTypes[] = new String[]{"<NUM>"};
+		Set<String> stopSet = asSet(stopTypes);
 
-    // with increments
-    StringReader reader = new StringReader(sb.toString());
-    final StandardTokenizer input = new StandardTokenizer();
-    input.setReader(reader);
-    TypeTokenFilter typeTokenFilter = new TypeTokenFilter(input, stopSet);
-    testPositons(typeTokenFilter);
+		// with increments
+		StringReader reader = new StringReader(sb.toString());
+		final StandardTokenizer input = new StandardTokenizer();
+		input.setReader(reader);
+		TypeTokenFilter typeTokenFilter = new TypeTokenFilter(input, stopSet);
+		testPositons(typeTokenFilter);
 
-  }
+	}
 
-  private void testPositons(TypeTokenFilter stpf) throws IOException {
-    TypeAttribute typeAtt = stpf.getAttribute(TypeAttribute.class);
-    CharTermAttribute termAttribute = stpf.getAttribute(CharTermAttribute.class);
-    PositionIncrementAttribute posIncrAtt = stpf.getAttribute(PositionIncrementAttribute.class);
-    stpf.reset();
-    while (stpf.incrementToken()) {
-      log("Token: " + termAttribute.toString() + ": " + typeAtt.type() + " - " + posIncrAtt.getPositionIncrement());
-      assertEquals("if position increment is enabled the positionIncrementAttribute value should be 3, otherwise 1",
-          posIncrAtt.getPositionIncrement(), 3);
-    }
-    stpf.end();
-    stpf.close();
-  }
+	private void testPositons(TypeTokenFilter stpf) throws IOException {
+		TypeAttribute typeAtt = stpf.getAttribute(TypeAttribute.class);
+		CharTermAttribute termAttribute = stpf.getAttribute(CharTermAttribute.class);
+		PositionIncrementAttribute posIncrAtt = stpf.getAttribute(PositionIncrementAttribute.class);
+		stpf.reset();
+		while (stpf.incrementToken()) {
+			log("Token: " + termAttribute.toString() + ": " + typeAtt.type() + " - " + posIncrAtt.getPositionIncrement());
+			assertEquals("if position increment is enabled the positionIncrementAttribute value should be 3, otherwise 1",
+				posIncrAtt.getPositionIncrement(), 3);
+		}
+		stpf.end();
+		stpf.close();
+	}
 
-  public void testTypeFilterWhitelist() throws IOException {
-    StringReader reader = new StringReader("121 is palindrome, while 123 is not");
-    Set<String> stopTypes = Collections.singleton("<NUM>");
-    final StandardTokenizer input = new StandardTokenizer(newAttributeFactory());
-    input.setReader(reader);
-    TokenStream stream = new TypeTokenFilter(input, stopTypes, true);
-    assertTokenStreamContents(stream, new String[]{"121", "123"});
-  }
+	public void testTypeFilterWhitelist() throws IOException {
+		StringReader reader = new StringReader("121 is palindrome, while 123 is not");
+		Set<String> stopTypes = Collections.singleton("<NUM>");
+		final StandardTokenizer input = new StandardTokenizer(newAttributeFactory());
+		input.setReader(reader);
+		TokenStream stream = new TypeTokenFilter(input, stopTypes, true);
+		assertTokenStreamContents(stream, new String[]{"121", "123"});
+	}
 
-  // print debug info depending on VERBOSE
-  private static void log(String s) {
-    if (VERBOSE) {
-      System.out.println(s);
-    }
-  }
+	// print debug info depending on VERBOSE
+	private static void log(String s) {
+		if (VERBOSE) {
+			System.out.println(s);
+		}
+	}
 }

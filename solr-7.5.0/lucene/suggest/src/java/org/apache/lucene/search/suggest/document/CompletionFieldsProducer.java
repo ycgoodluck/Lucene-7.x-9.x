@@ -57,121 +57,120 @@ import static org.apache.lucene.search.suggest.document.CompletionPostingsFormat
  * NOTE: Only the footer is validated for Completion dictionary (.lkp) and not the checksum due
  * to random access pattern and checksum validation being too costly at instantiation
  * </p>
- *
  */
 final class CompletionFieldsProducer extends FieldsProducer {
 
-  private FieldsProducer delegateFieldsProducer;
-  private Map<String, CompletionsTermsReader> readers;
-  private IndexInput dictIn;
+	private FieldsProducer delegateFieldsProducer;
+	private Map<String, CompletionsTermsReader> readers;
+	private IndexInput dictIn;
 
-  // copy ctr for merge instance
-  private CompletionFieldsProducer(FieldsProducer delegateFieldsProducer, Map<String, CompletionsTermsReader> readers) {
-    this.delegateFieldsProducer = delegateFieldsProducer;
-    this.readers = readers;
-  }
+	// copy ctr for merge instance
+	private CompletionFieldsProducer(FieldsProducer delegateFieldsProducer, Map<String, CompletionsTermsReader> readers) {
+		this.delegateFieldsProducer = delegateFieldsProducer;
+		this.readers = readers;
+	}
 
-  CompletionFieldsProducer(SegmentReadState state) throws IOException {
-    String indexFile = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, INDEX_EXTENSION);
-    delegateFieldsProducer = null;
-    boolean success = false;
+	CompletionFieldsProducer(SegmentReadState state) throws IOException {
+		String indexFile = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, INDEX_EXTENSION);
+		delegateFieldsProducer = null;
+		boolean success = false;
 
-    try (ChecksumIndexInput index = state.directory.openChecksumInput(indexFile, state.context)) {
-      // open up dict file containing all fsts
-      String dictFile = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, DICT_EXTENSION);
-      dictIn = state.directory.openInput(dictFile, state.context);
-      CodecUtil.checkIndexHeader(dictIn, CODEC_NAME, COMPLETION_CODEC_VERSION, COMPLETION_VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
-      // just validate the footer for the dictIn
-      CodecUtil.retrieveChecksum(dictIn);
+		try (ChecksumIndexInput index = state.directory.openChecksumInput(indexFile, state.context)) {
+			// open up dict file containing all fsts
+			String dictFile = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, DICT_EXTENSION);
+			dictIn = state.directory.openInput(dictFile, state.context);
+			CodecUtil.checkIndexHeader(dictIn, CODEC_NAME, COMPLETION_CODEC_VERSION, COMPLETION_VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
+			// just validate the footer for the dictIn
+			CodecUtil.retrieveChecksum(dictIn);
 
-      // open up index file (fieldNumber, offset)
-      CodecUtil.checkIndexHeader(index, CODEC_NAME, COMPLETION_CODEC_VERSION, COMPLETION_VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
-      // load delegate PF
-      PostingsFormat delegatePostingsFormat = PostingsFormat.forName(index.readString());
-      delegateFieldsProducer = delegatePostingsFormat.fieldsProducer(state);
+			// open up index file (fieldNumber, offset)
+			CodecUtil.checkIndexHeader(index, CODEC_NAME, COMPLETION_CODEC_VERSION, COMPLETION_VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
+			// load delegate PF
+			PostingsFormat delegatePostingsFormat = PostingsFormat.forName(index.readString());
+			delegateFieldsProducer = delegatePostingsFormat.fieldsProducer(state);
 
-      // read suggest field numbers and their offsets in the terms file from index
-      int numFields = index.readVInt();
-      readers = new HashMap<>(numFields);
-      for (int i = 0; i < numFields; i++) {
-        int fieldNumber = index.readVInt();
-        long offset = index.readVLong();
-        long minWeight = index.readVLong();
-        long maxWeight = index.readVLong();
-        byte type = index.readByte();
-        FieldInfo fieldInfo = state.fieldInfos.fieldInfo(fieldNumber);
-        // we don't load the FST yet
-        readers.put(fieldInfo.name, new CompletionsTermsReader(dictIn, offset, minWeight, maxWeight, type));
-      }
-      CodecUtil.checkFooter(index);
-      success = true;
-    } finally {
-      if (success == false) {
-        IOUtils.closeWhileHandlingException(delegateFieldsProducer, dictIn);
-      }
-    }
-  }
+			// read suggest field numbers and their offsets in the terms file from index
+			int numFields = index.readVInt();
+			readers = new HashMap<>(numFields);
+			for (int i = 0; i < numFields; i++) {
+				int fieldNumber = index.readVInt();
+				long offset = index.readVLong();
+				long minWeight = index.readVLong();
+				long maxWeight = index.readVLong();
+				byte type = index.readByte();
+				FieldInfo fieldInfo = state.fieldInfos.fieldInfo(fieldNumber);
+				// we don't load the FST yet
+				readers.put(fieldInfo.name, new CompletionsTermsReader(dictIn, offset, minWeight, maxWeight, type));
+			}
+			CodecUtil.checkFooter(index);
+			success = true;
+		} finally {
+			if (success == false) {
+				IOUtils.closeWhileHandlingException(delegateFieldsProducer, dictIn);
+			}
+		}
+	}
 
-  @Override
-  public void close() throws IOException {
-    boolean success = false;
-    try {
-      delegateFieldsProducer.close();
-      IOUtils.close(dictIn);
-      success = true;
-    } finally {
-      if (success == false) {
-        IOUtils.closeWhileHandlingException(delegateFieldsProducer, dictIn);
-      }
-    }
-  }
+	@Override
+	public void close() throws IOException {
+		boolean success = false;
+		try {
+			delegateFieldsProducer.close();
+			IOUtils.close(dictIn);
+			success = true;
+		} finally {
+			if (success == false) {
+				IOUtils.closeWhileHandlingException(delegateFieldsProducer, dictIn);
+			}
+		}
+	}
 
-  @Override
-  public void checkIntegrity() throws IOException {
-    delegateFieldsProducer.checkIntegrity();
-    // TODO: checkIntegrity should checksum the dictionary and index
-  }
+	@Override
+	public void checkIntegrity() throws IOException {
+		delegateFieldsProducer.checkIntegrity();
+		// TODO: checkIntegrity should checksum the dictionary and index
+	}
 
-  @Override
-  public FieldsProducer getMergeInstance() throws IOException {
-    return new CompletionFieldsProducer(delegateFieldsProducer, readers);
-  }
+	@Override
+	public FieldsProducer getMergeInstance() throws IOException {
+		return new CompletionFieldsProducer(delegateFieldsProducer, readers);
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    long ramBytesUsed = delegateFieldsProducer.ramBytesUsed();
-    for (CompletionsTermsReader reader : readers.values()) {
-      ramBytesUsed += reader.ramBytesUsed();
-    }
-    return ramBytesUsed;
-  }
+	@Override
+	public long ramBytesUsed() {
+		long ramBytesUsed = delegateFieldsProducer.ramBytesUsed();
+		for (CompletionsTermsReader reader : readers.values()) {
+			ramBytesUsed += reader.ramBytesUsed();
+		}
+		return ramBytesUsed;
+	}
 
-  @Override
-  public Collection<Accountable> getChildResources() {
-    List<Accountable> accountableList = new ArrayList<>();
-    for (Map.Entry<String, CompletionsTermsReader> readerEntry : readers.entrySet()) {
-      accountableList.add(Accountables.namedAccountable(readerEntry.getKey(), readerEntry.getValue()));
-    }
-    return Collections.unmodifiableCollection(accountableList);
-  }
+	@Override
+	public Collection<Accountable> getChildResources() {
+		List<Accountable> accountableList = new ArrayList<>();
+		for (Map.Entry<String, CompletionsTermsReader> readerEntry : readers.entrySet()) {
+			accountableList.add(Accountables.namedAccountable(readerEntry.getKey(), readerEntry.getValue()));
+		}
+		return Collections.unmodifiableCollection(accountableList);
+	}
 
-  @Override
-  public Iterator<String> iterator() {
-    return readers.keySet().iterator();
-  }
+	@Override
+	public Iterator<String> iterator() {
+		return readers.keySet().iterator();
+	}
 
-  @Override
-  public Terms terms(String field) throws IOException {
-    Terms terms = delegateFieldsProducer.terms(field) ;
-    if (terms == null) {
-      return null;
-    }
-    return new CompletionTerms(terms, readers.get(field));
-  }
+	@Override
+	public Terms terms(String field) throws IOException {
+		Terms terms = delegateFieldsProducer.terms(field);
+		if (terms == null) {
+			return null;
+		}
+		return new CompletionTerms(terms, readers.get(field));
+	}
 
-  @Override
-  public int size() {
-    return readers.size();
-  }
+	@Override
+	public int size() {
+		return readers.size();
+	}
 
 }

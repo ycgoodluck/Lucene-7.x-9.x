@@ -29,9 +29,9 @@ import org.apache.lucene.util.fst.*;
 
 /**
  * Finite state automata based implementation of "autocomplete" functionality.
- * 
+ *
  * <h2>Implementation details</h2>
- * 
+ *
  * <p>
  * The construction step in {@link #finalize()} works as follows:
  * <ul>
@@ -46,9 +46,9 @@ import org.apache.lucene.util.fst.*;
  * root node has arcs labeled with all possible weights. We cache all these
  * arcs, highest-weight first.</li>
  * </ul>
- * 
+ *
  * <p>
- * At runtime, in {@link FSTCompletion#lookup(CharSequence, int)}, 
+ * At runtime, in {@link FSTCompletion#lookup(CharSequence, int)},
  * the automaton is utilized as follows:
  * <ul>
  * <li>For each possible term weight encoded in the automaton (cached arcs from
@@ -67,190 +67,184 @@ import org.apache.lucene.util.fst.*;
  * insufficient, we proceed to the next (smaller) weight leaving the root node
  * and repeat the same algorithm again.</li>
  * </ul>
- * 
+ *
  * <h2>Runtime behavior and performance characteristic</h2>
- * 
+ * <p>
  * The algorithm described above is optimized for finding suggestions to short
  * prefixes in a top-weights-first order. This is probably the most common use
  * case: it allows presenting suggestions early and sorts them by the global
  * frequency (and then alphabetically).
- * 
+ *
  * <p>
  * If there is an exact match in the automaton, it is returned first on the
  * results list (even with by-weight sorting).
- * 
+ *
  * <p>
  * Note that the maximum lookup time for <b>any prefix</b> is the time of
  * descending to the subtree, plus traversal of the subtree up to the number of
  * requested suggestions (because they are already presorted by weight on the
  * root level and alphabetically at any node level).
- * 
+ *
  * <p>
  * To order alphabetically only (no ordering by priorities), use identical term
  * weights for all terms. Alphabetical suggestions are returned even if
  * non-constant weights are used, but the algorithm for doing this is
  * suboptimal.
- * 
+ *
  * <p>
  * "alphabetically" in any of the documentation above indicates UTF-8
  * representation order, nothing else.
- * 
+ *
  * <p>
  * <b>NOTE</b>: the FST file format is experimental and subject to suddenly
  * change, requiring you to rebuild the FST suggest index.
- * 
- * @see FSTCompletion
+ *
  * @lucene.experimental
+ * @see FSTCompletion
  */
 public class FSTCompletionBuilder {
-  /** 
-   * Default number of buckets.
-   */
-  public static final int DEFAULT_BUCKETS = 10;
+	/**
+	 * Default number of buckets.
+	 */
+	public static final int DEFAULT_BUCKETS = 10;
 
-  /**
-   * The number of separate buckets for weights (discretization). The more
-   * buckets, the more fine-grained term weights (priorities) can be assigned.
-   * The speed of lookup will not decrease for prefixes which have
-   * highly-weighted completions (because these are filled-in first), but will
-   * decrease significantly for low-weighted terms (but these should be
-   * infrequent, so it is all right).
-   * 
-   * <p>
-   * The number of buckets must be within [1, 255] range.
-   */
-  private final int buckets;
+	/**
+	 * The number of separate buckets for weights (discretization). The more
+	 * buckets, the more fine-grained term weights (priorities) can be assigned.
+	 * The speed of lookup will not decrease for prefixes which have
+	 * highly-weighted completions (because these are filled-in first), but will
+	 * decrease significantly for low-weighted terms (but these should be
+	 * infrequent, so it is all right).
+	 *
+	 * <p>
+	 * The number of buckets must be within [1, 255] range.
+	 */
+	private final int buckets;
 
-  /**
-   * Finite state automaton encoding all the lookup terms. See class notes for
-   * details.
-   */
-  FST<Object> automaton;
+	/**
+	 * Finite state automaton encoding all the lookup terms. See class notes for
+	 * details.
+	 */
+	FST<Object> automaton;
 
-  /**
-   * FST construction require re-sorting the input. This is the class that
-   * collects all the input entries, their weights and then provides sorted
-   * order.
-   */
-  private final BytesRefSorter sorter;
-  
-  /**
-   * Scratch buffer for {@link #add(BytesRef, int)}.
-   */
-  private final BytesRefBuilder scratch = new BytesRefBuilder();
+	/**
+	 * FST construction require re-sorting the input. This is the class that
+	 * collects all the input entries, their weights and then provides sorted
+	 * order.
+	 */
+	private final BytesRefSorter sorter;
 
-  /**
-   * Max tail sharing length.
-   */
-  private final int shareMaxTailLength;
+	/**
+	 * Scratch buffer for {@link #add(BytesRef, int)}.
+	 */
+	private final BytesRefBuilder scratch = new BytesRefBuilder();
 
-  /**
-   * Creates an {@link FSTCompletion} with default options: 10 buckets, exact match
-   * promoted to first position and {@link InMemorySorter} with a comparator obtained from
-   * {@link Comparator#naturalOrder()}.
-   */
-  public FSTCompletionBuilder() {
-    this(DEFAULT_BUCKETS, new InMemorySorter(Comparator.naturalOrder()), Integer.MAX_VALUE);
-  }
+	/**
+	 * Max tail sharing length.
+	 */
+	private final int shareMaxTailLength;
 
-  /**
-   * Creates an FSTCompletion with the specified options.
-   * @param buckets
-   *          The number of buckets for weight discretization. Buckets are used
-   *          in {@link #add(BytesRef, int)} and must be smaller than the number
-   *          given here.
-   *          
-   * @param sorter
-   *          {@link BytesRefSorter} used for re-sorting input for the automaton.
-   *          For large inputs, use on-disk sorting implementations. The sorter
-   *          is closed automatically in {@link #build()} if it implements
-   *          {@link Closeable}.
-   *          
-   * @param shareMaxTailLength
-   *          Max shared suffix sharing length.
-   *          
-   *          See the description of this parameter in {@link Builder}'s constructor.
-   *          In general, for very large inputs you'll want to construct a non-minimal
-   *          automaton which will be larger, but the construction will take far less ram.
-   *          For minimal automata, set it to {@link Integer#MAX_VALUE}.
-   */
-  public FSTCompletionBuilder(int buckets, BytesRefSorter sorter, int shareMaxTailLength) {
-    if (buckets < 1 || buckets > 255) {
-      throw new IllegalArgumentException("Buckets must be >= 1 and <= 255: "
-          + buckets);
-    }
-    
-    if (sorter == null) throw new IllegalArgumentException(
-        "BytesRefSorter must not be null.");
-    
-    this.sorter = sorter;
-    this.buckets = buckets;
-    this.shareMaxTailLength = shareMaxTailLength;
-  }
+	/**
+	 * Creates an {@link FSTCompletion} with default options: 10 buckets, exact match
+	 * promoted to first position and {@link InMemorySorter} with a comparator obtained from
+	 * {@link Comparator#naturalOrder()}.
+	 */
+	public FSTCompletionBuilder() {
+		this(DEFAULT_BUCKETS, new InMemorySorter(Comparator.naturalOrder()), Integer.MAX_VALUE);
+	}
 
-  /**
-   * Appends a single suggestion and its weight to the internal buffers.
-   * 
-   * @param utf8
-   *          The suggestion (utf8 representation) to be added. The content is
-   *          copied and the object can be reused.
-   * @param bucket
-   *          The bucket to place this suggestion in. Must be non-negative and
-   *          smaller than the number of buckets passed in the constructor.
-   *          Higher numbers indicate suggestions that should be presented
-   *          before suggestions placed in smaller buckets.
-   */
-  public void add(BytesRef utf8, int bucket) throws IOException {
-    if (bucket < 0 || bucket >= buckets) {
-      throw new IllegalArgumentException(
-          "Bucket outside of the allowed range [0, " + buckets + "): " + bucket);
-    }
-    
-    scratch.grow(utf8.length + 10);
-    scratch.clear();
-    scratch.append((byte) bucket);
-    scratch.append(utf8);
-    sorter.add(scratch.get());
-  }
+	/**
+	 * Creates an FSTCompletion with the specified options.
+	 *
+	 * @param buckets            The number of buckets for weight discretization. Buckets are used
+	 *                           in {@link #add(BytesRef, int)} and must be smaller than the number
+	 *                           given here.
+	 * @param sorter             {@link BytesRefSorter} used for re-sorting input for the automaton.
+	 *                           For large inputs, use on-disk sorting implementations. The sorter
+	 *                           is closed automatically in {@link #build()} if it implements
+	 *                           {@link Closeable}.
+	 * @param shareMaxTailLength Max shared suffix sharing length.
+	 *                           <p>
+	 *                           See the description of this parameter in {@link Builder}'s constructor.
+	 *                           In general, for very large inputs you'll want to construct a non-minimal
+	 *                           automaton which will be larger, but the construction will take far less ram.
+	 *                           For minimal automata, set it to {@link Integer#MAX_VALUE}.
+	 */
+	public FSTCompletionBuilder(int buckets, BytesRefSorter sorter, int shareMaxTailLength) {
+		if (buckets < 1 || buckets > 255) {
+			throw new IllegalArgumentException("Buckets must be >= 1 and <= 255: "
+				+ buckets);
+		}
 
-  /**
-   * Builds the final automaton from a list of added entries. This method may
-   * take a longer while as it needs to build the automaton.
-   */
-  public FSTCompletion build() throws IOException {
-    this.automaton = buildAutomaton(sorter);
+		if (sorter == null) throw new IllegalArgumentException(
+			"BytesRefSorter must not be null.");
 
-    if (sorter instanceof Closeable) {
-      ((Closeable) sorter).close();
-    }
+		this.sorter = sorter;
+		this.buckets = buckets;
+		this.shareMaxTailLength = shareMaxTailLength;
+	}
 
-    return new FSTCompletion(automaton);
-  }
+	/**
+	 * Appends a single suggestion and its weight to the internal buffers.
+	 *
+	 * @param utf8   The suggestion (utf8 representation) to be added. The content is
+	 *               copied and the object can be reused.
+	 * @param bucket The bucket to place this suggestion in. Must be non-negative and
+	 *               smaller than the number of buckets passed in the constructor.
+	 *               Higher numbers indicate suggestions that should be presented
+	 *               before suggestions placed in smaller buckets.
+	 */
+	public void add(BytesRef utf8, int bucket) throws IOException {
+		if (bucket < 0 || bucket >= buckets) {
+			throw new IllegalArgumentException(
+				"Bucket outside of the allowed range [0, " + buckets + "): " + bucket);
+		}
 
-  /**
-   * Builds the final automaton from a list of entries.
-   */
-  private FST<Object> buildAutomaton(BytesRefSorter sorter) throws IOException {
-    // Build the automaton.
-    final Outputs<Object> outputs = NoOutputs.getSingleton();
-    final Object empty = outputs.getNoOutput();
-    final Builder<Object> builder = new Builder<>(
-        FST.INPUT_TYPE.BYTE1, 0, 0, true, true, 
-        shareMaxTailLength, outputs, true, 15);
-    
-    BytesRefBuilder scratch = new BytesRefBuilder();
-    BytesRef entry;
-    final IntsRefBuilder scratchIntsRef = new IntsRefBuilder();
-    int count = 0;
-    BytesRefIterator iter = sorter.iterator();
-    while((entry = iter.next()) != null) {
-      count++;
-      if (scratch.get().compareTo(entry) != 0) {
-        builder.add(Util.toIntsRef(entry, scratchIntsRef), empty);
-        scratch.copyBytes(entry);
-      }
-    }
-    
-    return count == 0 ? null : builder.finish();
-  }
+		scratch.grow(utf8.length + 10);
+		scratch.clear();
+		scratch.append((byte) bucket);
+		scratch.append(utf8);
+		sorter.add(scratch.get());
+	}
+
+	/**
+	 * Builds the final automaton from a list of added entries. This method may
+	 * take a longer while as it needs to build the automaton.
+	 */
+	public FSTCompletion build() throws IOException {
+		this.automaton = buildAutomaton(sorter);
+
+		if (sorter instanceof Closeable) {
+			((Closeable) sorter).close();
+		}
+
+		return new FSTCompletion(automaton);
+	}
+
+	/**
+	 * Builds the final automaton from a list of entries.
+	 */
+	private FST<Object> buildAutomaton(BytesRefSorter sorter) throws IOException {
+		// Build the automaton.
+		final Outputs<Object> outputs = NoOutputs.getSingleton();
+		final Object empty = outputs.getNoOutput();
+		final Builder<Object> builder = new Builder<>(
+			FST.INPUT_TYPE.BYTE1, 0, 0, true, true,
+			shareMaxTailLength, outputs, true, 15);
+
+		BytesRefBuilder scratch = new BytesRefBuilder();
+		BytesRef entry;
+		final IntsRefBuilder scratchIntsRef = new IntsRefBuilder();
+		int count = 0;
+		BytesRefIterator iter = sorter.iterator();
+		while ((entry = iter.next()) != null) {
+			count++;
+			if (scratch.get().compareTo(entry) != 0) {
+				builder.add(Util.toIntsRef(entry, scratchIntsRef), empty);
+				scratch.copyBytes(entry);
+			}
+		}
+
+		return count == 0 ? null : builder.finish();
+	}
 }

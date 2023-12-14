@@ -31,122 +31,124 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.TwoPhaseIterator;
 import org.apache.lucene.search.Weight;
 
-/** Distance query for {@link LatLonDocValuesField}. */
+/**
+ * Distance query for {@link LatLonDocValuesField}.
+ */
 final class LatLonDocValuesBoxQuery extends Query {
 
-  private final String field;
-  private final int minLatitude, maxLatitude, minLongitude, maxLongitude;
-  private final boolean crossesDateline;
+	private final String field;
+	private final int minLatitude, maxLatitude, minLongitude, maxLongitude;
+	private final boolean crossesDateline;
 
-  LatLonDocValuesBoxQuery(String field, double minLatitude, double maxLatitude, double minLongitude, double maxLongitude) {
-    GeoUtils.checkLatitude(minLatitude);
-    GeoUtils.checkLatitude(maxLatitude);
-    GeoUtils.checkLongitude(minLongitude);
-    GeoUtils.checkLongitude(maxLongitude);
-    if (field == null) {
-      throw new IllegalArgumentException("field must not be null");
-    }
-    this.field = field;
-    this.crossesDateline = minLongitude > maxLongitude; // make sure to compute this before rounding
-    this.minLatitude = GeoEncodingUtils.encodeLatitudeCeil(minLatitude);
-    this.maxLatitude = GeoEncodingUtils.encodeLatitude(maxLatitude);
-    this.minLongitude = GeoEncodingUtils.encodeLongitudeCeil(minLongitude);
-    this.maxLongitude = GeoEncodingUtils.encodeLongitude(maxLongitude);
-  }
+	LatLonDocValuesBoxQuery(String field, double minLatitude, double maxLatitude, double minLongitude, double maxLongitude) {
+		GeoUtils.checkLatitude(minLatitude);
+		GeoUtils.checkLatitude(maxLatitude);
+		GeoUtils.checkLongitude(minLongitude);
+		GeoUtils.checkLongitude(maxLongitude);
+		if (field == null) {
+			throw new IllegalArgumentException("field must not be null");
+		}
+		this.field = field;
+		this.crossesDateline = minLongitude > maxLongitude; // make sure to compute this before rounding
+		this.minLatitude = GeoEncodingUtils.encodeLatitudeCeil(minLatitude);
+		this.maxLatitude = GeoEncodingUtils.encodeLatitude(maxLatitude);
+		this.minLongitude = GeoEncodingUtils.encodeLongitudeCeil(minLongitude);
+		this.maxLongitude = GeoEncodingUtils.encodeLongitude(maxLongitude);
+	}
 
-  @Override
-  public String toString(String field) {
-    StringBuilder sb = new StringBuilder();
-    if (!this.field.equals(field)) {
-      sb.append(this.field);
-      sb.append(':');
-    }
-    sb.append("box(minLat=").append(GeoEncodingUtils.decodeLatitude(minLatitude));
-    sb.append(", maxLat=").append(GeoEncodingUtils.decodeLatitude(maxLatitude));
-    sb.append(", minLon=").append(GeoEncodingUtils.decodeLongitude(minLongitude));
-    sb.append(", maxLon=").append(GeoEncodingUtils.decodeLongitude(maxLongitude));
-    return sb.append(")").toString();
-  }
+	@Override
+	public String toString(String field) {
+		StringBuilder sb = new StringBuilder();
+		if (!this.field.equals(field)) {
+			sb.append(this.field);
+			sb.append(':');
+		}
+		sb.append("box(minLat=").append(GeoEncodingUtils.decodeLatitude(minLatitude));
+		sb.append(", maxLat=").append(GeoEncodingUtils.decodeLatitude(maxLatitude));
+		sb.append(", minLon=").append(GeoEncodingUtils.decodeLongitude(minLongitude));
+		sb.append(", maxLon=").append(GeoEncodingUtils.decodeLongitude(maxLongitude));
+		return sb.append(")").toString();
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (sameClassAs(obj) == false) {
-      return false;
-    }
-    LatLonDocValuesBoxQuery other = (LatLonDocValuesBoxQuery) obj;
-    return field.equals(other.field) &&
-        crossesDateline == other.crossesDateline &&
-        minLatitude == other.minLatitude &&
-        maxLatitude == other.maxLatitude &&
-        minLongitude == other.minLongitude &&
-        maxLongitude == other.maxLongitude;
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (sameClassAs(obj) == false) {
+			return false;
+		}
+		LatLonDocValuesBoxQuery other = (LatLonDocValuesBoxQuery) obj;
+		return field.equals(other.field) &&
+			crossesDateline == other.crossesDateline &&
+			minLatitude == other.minLatitude &&
+			maxLatitude == other.maxLatitude &&
+			minLongitude == other.minLongitude &&
+			maxLongitude == other.maxLongitude;
+	}
 
-  @Override
-  public int hashCode() {
-    int h = classHash();
-    h = 31 * h + field.hashCode();
-    h = 31 * h + Boolean.hashCode(crossesDateline);
-    h = 31 * h + Integer.hashCode(minLatitude);
-    h = 31 * h + Integer.hashCode(maxLatitude);
-    h = 31 * h + Integer.hashCode(minLongitude);
-    h = 31 * h + Integer.hashCode(maxLongitude);
-    return h;
-  }
+	@Override
+	public int hashCode() {
+		int h = classHash();
+		h = 31 * h + field.hashCode();
+		h = 31 * h + Boolean.hashCode(crossesDateline);
+		h = 31 * h + Integer.hashCode(minLatitude);
+		h = 31 * h + Integer.hashCode(maxLatitude);
+		h = 31 * h + Integer.hashCode(minLongitude);
+		h = 31 * h + Integer.hashCode(maxLongitude);
+		return h;
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-    return new ConstantScoreWeight(this, boost) {
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        final SortedNumericDocValues values = context.reader().getSortedNumericDocValues(field);
-        if (values == null) {
-          return null;
-        }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+		return new ConstantScoreWeight(this, boost) {
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				final SortedNumericDocValues values = context.reader().getSortedNumericDocValues(field);
+				if (values == null) {
+					return null;
+				}
 
-        final TwoPhaseIterator iterator = new TwoPhaseIterator(values) {
-          @Override
-          public boolean matches() throws IOException {
-            for (int i = 0, count = values.docValueCount(); i < count; ++i) {
-              final long value = values.nextValue();
-              final int lat = (int) (value >>> 32);
-              if (lat < minLatitude || lat > maxLatitude) {
-                // not within latitude range
-                continue;
-              }
+				final TwoPhaseIterator iterator = new TwoPhaseIterator(values) {
+					@Override
+					public boolean matches() throws IOException {
+						for (int i = 0, count = values.docValueCount(); i < count; ++i) {
+							final long value = values.nextValue();
+							final int lat = (int) (value >>> 32);
+							if (lat < minLatitude || lat > maxLatitude) {
+								// not within latitude range
+								continue;
+							}
 
-              final int lon = (int) (value & 0xFFFFFFFF);
-              if (crossesDateline) {
-                if (lon > maxLongitude && lon < minLongitude) {
-                  // not within longitude range
-                  continue;
-                }
-              } else {
-                if (lon < minLongitude || lon > maxLongitude) {
-                  // not within longitude range
-                  continue;
-                }
-              }
+							final int lon = (int) (value & 0xFFFFFFFF);
+							if (crossesDateline) {
+								if (lon > maxLongitude && lon < minLongitude) {
+									// not within longitude range
+									continue;
+								}
+							} else {
+								if (lon < minLongitude || lon > maxLongitude) {
+									// not within longitude range
+									continue;
+								}
+							}
 
-              return true;
-            }
-            return false;
-          }
+							return true;
+						}
+						return false;
+					}
 
-          @Override
-          public float matchCost() {
-            return 5; // 5 comparisons
-          }
-        };
-        return new ConstantScoreScorer(this, boost, iterator);
-      }
+					@Override
+					public float matchCost() {
+						return 5; // 5 comparisons
+					}
+				};
+				return new ConstantScoreScorer(this, boost, iterator);
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return DocValues.isCacheable(ctx, field);
-      }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return DocValues.isCacheable(ctx, field);
+			}
 
-    };
-  }
+		};
+	}
 
 }

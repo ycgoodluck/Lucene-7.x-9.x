@@ -16,7 +16,7 @@
  */
 
 /**
- * Analyzer for Chinese, Japanese, and Korean, which indexes bigrams. 
+ * Analyzer for Chinese, Japanese, and Korean, which indexes bigrams.
  * This analyzer generates bigram terms, which are overlapping groups of two adjacent Han, Hiragana, Katakana, or Hangul characters.
  * <p>
  * Three analyzers are provided for Chinese, each of which treats Chinese text in a different way.
@@ -25,7 +25,7 @@
  *  <li>CJKAnalyzer (in this package): Index bigrams (overlapping groups of two adjacent Chinese characters) as tokens.
  *  <li>SmartChineseAnalyzer (in the analyzers/smartcn package): Index words (attempt to segment Chinese text into words) as tokens.
  * </ul>
- * 
+ * <p>
  * Example phrase： "我是中国人"
  * <ol>
  *  <li>ChineseAnalyzer: 我－是－中－国－人</li>

@@ -37,221 +37,226 @@ import org.apache.lucene.util.mutable.MutableValueFloat;
  * <code>QueryValueSource</code> returns the relevance score of the query
  */
 public class QueryValueSource extends ValueSource {
-  final Query q;
-  final float defVal;
+	final Query q;
+	final float defVal;
 
-  public QueryValueSource(Query q, float defVal) {
-    this.q = q;
-    this.defVal = defVal;
-  }
+	public QueryValueSource(Query q, float defVal) {
+		this.q = q;
+		this.defVal = defVal;
+	}
 
-  public Query getQuery() { return q; }
-  public float getDefaultValue() { return defVal; }
+	public Query getQuery() {
+		return q;
+	}
 
-  @Override
-  public String description() {
-    return "query(" + q + ",def=" + defVal + ")";
-  }
+	public float getDefaultValue() {
+		return defVal;
+	}
 
-  @Override
-  public FunctionValues getValues(Map fcontext, LeafReaderContext readerContext) throws IOException {
-    return new QueryDocValues(this, readerContext, fcontext);
-  }
+	@Override
+	public String description() {
+		return "query(" + q + ",def=" + defVal + ")";
+	}
 
-  @Override
-  public int hashCode() {
-    return q.hashCode() * 29;
-  }
+	@Override
+	public FunctionValues getValues(Map fcontext, LeafReaderContext readerContext) throws IOException {
+		return new QueryDocValues(this, readerContext, fcontext);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (QueryValueSource.class != o.getClass()) return false;
-    QueryValueSource other = (QueryValueSource)o;
-    return this.q.equals(other.q) && this.defVal==other.defVal;
-  }
+	@Override
+	public int hashCode() {
+		return q.hashCode() * 29;
+	}
 
-  @Override
-  public void createWeight(Map context, IndexSearcher searcher) throws IOException {
-    Query rewritten = searcher.rewrite(q);
-    Weight w = searcher.createWeight(rewritten, ScoreMode.COMPLETE, 1);
-    context.put(this, w);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (QueryValueSource.class != o.getClass()) return false;
+		QueryValueSource other = (QueryValueSource) o;
+		return this.q.equals(other.q) && this.defVal == other.defVal;
+	}
+
+	@Override
+	public void createWeight(Map context, IndexSearcher searcher) throws IOException {
+		Query rewritten = searcher.rewrite(q);
+		Weight w = searcher.createWeight(rewritten, ScoreMode.COMPLETE, 1);
+		context.put(this, w);
+	}
 }
 
 
 class QueryDocValues extends FloatDocValues {
-  final LeafReaderContext readerContext;
-  final Weight weight;
-  final float defVal;
-  final Map fcontext;
-  final Query q;
+	final LeafReaderContext readerContext;
+	final Weight weight;
+	final float defVal;
+	final Map fcontext;
+	final Query q;
 
-  Scorer scorer;
-  DocIdSetIterator it;
-  int scorerDoc; // the document the scorer is on
-  boolean noMatches=false;
+	Scorer scorer;
+	DocIdSetIterator it;
+	int scorerDoc; // the document the scorer is on
+	boolean noMatches = false;
 
-  // the last document requested... start off with high value
-  // to trigger a scorer reset on first access.
-  int lastDocRequested=Integer.MAX_VALUE;
-  
+	// the last document requested... start off with high value
+	// to trigger a scorer reset on first access.
+	int lastDocRequested = Integer.MAX_VALUE;
 
-  public QueryDocValues(QueryValueSource vs, LeafReaderContext readerContext, Map fcontext) throws IOException {
-    super(vs);
 
-    this.readerContext = readerContext;
-    this.defVal = vs.defVal;
-    this.q = vs.q;
-    this.fcontext = fcontext;
+	public QueryDocValues(QueryValueSource vs, LeafReaderContext readerContext, Map fcontext) throws IOException {
+		super(vs);
 
-    Weight w = fcontext==null ? null : (Weight)fcontext.get(vs);
-    if (w == null) {
-      IndexSearcher weightSearcher;
-      if(fcontext == null) {
-        weightSearcher = new IndexSearcher(ReaderUtil.getTopLevelContext(readerContext));
-      } else {
-        weightSearcher = (IndexSearcher)fcontext.get("searcher");
-        if (weightSearcher == null) {
-          weightSearcher = new IndexSearcher(ReaderUtil.getTopLevelContext(readerContext));
-        }
-      }
-      vs.createWeight(fcontext, weightSearcher);
-      w = (Weight)fcontext.get(vs);
-    }
-    weight = w;
-  }
+		this.readerContext = readerContext;
+		this.defVal = vs.defVal;
+		this.q = vs.q;
+		this.fcontext = fcontext;
 
-  @Override
-  public float floatVal(int doc) {
-    try {
-      if (doc < lastDocRequested) {
-        if (noMatches) return defVal;
-        scorer = weight.scorer(readerContext);
-        if (scorer==null) {
-          noMatches = true;
-          return defVal;
-        }
-        it = scorer.iterator();
-        scorerDoc = -1;
-      }
-      lastDocRequested = doc;
+		Weight w = fcontext == null ? null : (Weight) fcontext.get(vs);
+		if (w == null) {
+			IndexSearcher weightSearcher;
+			if (fcontext == null) {
+				weightSearcher = new IndexSearcher(ReaderUtil.getTopLevelContext(readerContext));
+			} else {
+				weightSearcher = (IndexSearcher) fcontext.get("searcher");
+				if (weightSearcher == null) {
+					weightSearcher = new IndexSearcher(ReaderUtil.getTopLevelContext(readerContext));
+				}
+			}
+			vs.createWeight(fcontext, weightSearcher);
+			w = (Weight) fcontext.get(vs);
+		}
+		weight = w;
+	}
 
-      if (scorerDoc < doc) {
-        scorerDoc = it.advance(doc);
-      }
+	@Override
+	public float floatVal(int doc) {
+		try {
+			if (doc < lastDocRequested) {
+				if (noMatches) return defVal;
+				scorer = weight.scorer(readerContext);
+				if (scorer == null) {
+					noMatches = true;
+					return defVal;
+				}
+				it = scorer.iterator();
+				scorerDoc = -1;
+			}
+			lastDocRequested = doc;
 
-      if (scorerDoc > doc) {
-        // query doesn't match this document... either because we hit the
-        // end, or because the next doc is after this doc.
-        return defVal;
-      }
+			if (scorerDoc < doc) {
+				scorerDoc = it.advance(doc);
+			}
 
-      // a match!
-      return scorer.score();
-    } catch (IOException e) {
-      throw new RuntimeException("caught exception in QueryDocVals("+q+") doc="+doc, e);
-    }
-  }
+			if (scorerDoc > doc) {
+				// query doesn't match this document... either because we hit the
+				// end, or because the next doc is after this doc.
+				return defVal;
+			}
 
-  @Override
-  public boolean exists(int doc) {
-    try {
-      if (doc < lastDocRequested) {
-        if (noMatches) return false;
-        scorer = weight.scorer(readerContext);
-        scorerDoc = -1;
-        if (scorer==null) {
-          noMatches = true;
-          return false;
-        }
-        it = scorer.iterator();
-      }
-      lastDocRequested = doc;
+			// a match!
+			return scorer.score();
+		} catch (IOException e) {
+			throw new RuntimeException("caught exception in QueryDocVals(" + q + ") doc=" + doc, e);
+		}
+	}
 
-      if (scorerDoc < doc) {
-        scorerDoc = it.advance(doc);
-      }
+	@Override
+	public boolean exists(int doc) {
+		try {
+			if (doc < lastDocRequested) {
+				if (noMatches) return false;
+				scorer = weight.scorer(readerContext);
+				scorerDoc = -1;
+				if (scorer == null) {
+					noMatches = true;
+					return false;
+				}
+				it = scorer.iterator();
+			}
+			lastDocRequested = doc;
 
-      if (scorerDoc > doc) {
-        // query doesn't match this document... either because we hit the
-        // end, or because the next doc is after this doc.
-        return false;
-      }
+			if (scorerDoc < doc) {
+				scorerDoc = it.advance(doc);
+			}
 
-      // a match!
-      return true;
-    } catch (IOException e) {
-      throw new RuntimeException("caught exception in QueryDocVals("+q+") doc="+doc, e);
-    }
-  }
+			if (scorerDoc > doc) {
+				// query doesn't match this document... either because we hit the
+				// end, or because the next doc is after this doc.
+				return false;
+			}
 
-   @Override
-  public Object objectVal(int doc) {
-     try {
-       return exists(doc) ? scorer.score() : null;
-     } catch (IOException e) {
-       throw new RuntimeException("caught exception in QueryDocVals("+q+") doc="+doc, e);
-     }
-   }
+			// a match!
+			return true;
+		} catch (IOException e) {
+			throw new RuntimeException("caught exception in QueryDocVals(" + q + ") doc=" + doc, e);
+		}
+	}
 
-  @Override
-  public ValueFiller getValueFiller() {
-    //
-    // TODO: if we want to support more than one value-filler or a value-filler in conjunction with
-    // the FunctionValues, then members like "scorer" should be per ValueFiller instance.
-    // Or we can say that the user should just instantiate multiple FunctionValues.
-    //
-    return new ValueFiller() {
-      private final MutableValueFloat mval = new MutableValueFloat();
+	@Override
+	public Object objectVal(int doc) {
+		try {
+			return exists(doc) ? scorer.score() : null;
+		} catch (IOException e) {
+			throw new RuntimeException("caught exception in QueryDocVals(" + q + ") doc=" + doc, e);
+		}
+	}
 
-      @Override
-      public MutableValue getValue() {
-        return mval;
-      }
+	@Override
+	public ValueFiller getValueFiller() {
+		//
+		// TODO: if we want to support more than one value-filler or a value-filler in conjunction with
+		// the FunctionValues, then members like "scorer" should be per ValueFiller instance.
+		// Or we can say that the user should just instantiate multiple FunctionValues.
+		//
+		return new ValueFiller() {
+			private final MutableValueFloat mval = new MutableValueFloat();
 
-      @Override
-      public void fillValue(int doc) {
-        try {
-          if (noMatches) {
-            mval.value = defVal;
-            mval.exists = false;
-            return;
-          }
-          scorer = weight.scorer(readerContext);
-          scorerDoc = -1;
-          if (scorer==null) {
-            noMatches = true;
-            mval.value = defVal;
-            mval.exists = false;
-            return;
-          }
-          it = scorer.iterator();
-          lastDocRequested = doc;
+			@Override
+			public MutableValue getValue() {
+				return mval;
+			}
 
-          if (scorerDoc < doc) {
-            scorerDoc = it.advance(doc);
-          }
+			@Override
+			public void fillValue(int doc) {
+				try {
+					if (noMatches) {
+						mval.value = defVal;
+						mval.exists = false;
+						return;
+					}
+					scorer = weight.scorer(readerContext);
+					scorerDoc = -1;
+					if (scorer == null) {
+						noMatches = true;
+						mval.value = defVal;
+						mval.exists = false;
+						return;
+					}
+					it = scorer.iterator();
+					lastDocRequested = doc;
 
-          if (scorerDoc > doc) {
-            // query doesn't match this document... either because we hit the
-            // end, or because the next doc is after this doc.
-            mval.value = defVal;
-            mval.exists = false;
-            return;
-          }
+					if (scorerDoc < doc) {
+						scorerDoc = it.advance(doc);
+					}
 
-          // a match!
-          mval.value = scorer.score();
-          mval.exists = true;
-        } catch (IOException e) {
-          throw new RuntimeException("caught exception in QueryDocVals("+q+") doc="+doc, e);
-        }
-      }
-    };
-  }
+					if (scorerDoc > doc) {
+						// query doesn't match this document... either because we hit the
+						// end, or because the next doc is after this doc.
+						mval.value = defVal;
+						mval.exists = false;
+						return;
+					}
 
-  @Override
-  public String toString(int doc) {
-    return "query(" + q + ",def=" + defVal + ")=" + floatVal(doc);
-  }
+					// a match!
+					mval.value = scorer.score();
+					mval.exists = true;
+				} catch (IOException e) {
+					throw new RuntimeException("caught exception in QueryDocVals(" + q + ") doc=" + doc, e);
+				}
+			}
+		};
+	}
+
+	@Override
+	public String toString(int doc) {
+		return "query(" + q + ",def=" + defVal + ")=" + floatVal(doc);
+	}
 }

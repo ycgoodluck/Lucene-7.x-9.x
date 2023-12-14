@@ -19,9 +19,10 @@ package org.apache.lucene.analysis.payloads;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
+
 import java.util.Map;
 
-/** 
+/**
  * Factory for {@link NumericPayloadTokenFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_numpayload" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -31,30 +32,34 @@ import java.util.Map;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class NumericPayloadTokenFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "numericPayload";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "numericPayload";
 
-  private final float payload;
-  private final String typeMatch;
-  
-  /** Creates a new NumericPayloadTokenFilterFactory */
-  public NumericPayloadTokenFilterFactory(Map<String, String> args) {
-    super(args);
-    payload = requireFloat(args, "payload");
-    typeMatch = require(args, "typeMatch");
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private final float payload;
+	private final String typeMatch;
 
-  @Override
-  public NumericPayloadTokenFilter create(TokenStream input) {
-    return new NumericPayloadTokenFilter(input,payload,typeMatch);
-  }
+	/**
+	 * Creates a new NumericPayloadTokenFilterFactory
+	 */
+	public NumericPayloadTokenFilterFactory(Map<String, String> args) {
+		super(args);
+		payload = requireFloat(args, "payload");
+		typeMatch = require(args, "typeMatch");
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public NumericPayloadTokenFilter create(TokenStream input) {
+		return new NumericPayloadTokenFilter(input, payload, typeMatch);
+	}
 }
 

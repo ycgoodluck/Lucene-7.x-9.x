@@ -20,8 +20,10 @@ package org.apache.lucene.luke.app.desktop.components.fragments.search;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.luke.app.desktop.components.ComponentOperatorRegistry;
 
-/** Operator for the Analyzer tab */
+/**
+ * Operator for the Analyzer tab
+ */
 public interface AnalyzerTabOperator extends ComponentOperatorRegistry.ComponentOperator {
-  void setAnalyzer(Analyzer analyzer);
+	void setAnalyzer(Analyzer analyzer);
 }
 

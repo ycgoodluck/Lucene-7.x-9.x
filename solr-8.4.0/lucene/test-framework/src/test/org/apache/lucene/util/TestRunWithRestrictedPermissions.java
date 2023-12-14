@@ -23,32 +23,32 @@ import java.security.AllPermission;
 
 public class TestRunWithRestrictedPermissions extends LuceneTestCase {
 
-  public void testDefaultsPass() throws Exception {
-    runWithRestrictedPermissions(this::doSomeForbiddenStuff, new AllPermission());
-  }
+	public void testDefaultsPass() throws Exception {
+		runWithRestrictedPermissions(this::doSomeForbiddenStuff, new AllPermission());
+	}
 
-  public void testNormallyAllowedStuff() throws Exception {
-    expectThrows(SecurityException.class, () -> runWithRestrictedPermissions(this::doSomeForbiddenStuff));
-  }
+	public void testNormallyAllowedStuff() throws Exception {
+		expectThrows(SecurityException.class, () -> runWithRestrictedPermissions(this::doSomeForbiddenStuff));
+	}
 
-  public void testCompletelyForbidden1() throws Exception {
-    expectThrows(SecurityException.class, () -> runWithRestrictedPermissions(this::doSomeCompletelyForbiddenStuff));
-  }
+	public void testCompletelyForbidden1() throws Exception {
+		expectThrows(SecurityException.class, () -> runWithRestrictedPermissions(this::doSomeCompletelyForbiddenStuff));
+	}
 
-  public void testCompletelyForbidden2() throws Exception {
-    expectThrows(SecurityException.class, () ->
-        runWithRestrictedPermissions(this::doSomeCompletelyForbiddenStuff, new AllPermission()));
-  }
+	public void testCompletelyForbidden2() throws Exception {
+		expectThrows(SecurityException.class, () ->
+			runWithRestrictedPermissions(this::doSomeCompletelyForbiddenStuff, new AllPermission()));
+	}
 
-  private Void doSomeForbiddenStuff() throws IOException {
-    createTempDir("cannot_create_temp_folder");
-    return null; // Void
-  }
-  
-  // something like this should not never pass!!
-  private Void doSomeCompletelyForbiddenStuff() throws IOException {
-    Files.createFile(Paths.get("denied"));
-    return null; // Void
-  }
-  
+	private Void doSomeForbiddenStuff() throws IOException {
+		createTempDir("cannot_create_temp_folder");
+		return null; // Void
+	}
+
+	// something like this should not never pass!!
+	private Void doSomeCompletelyForbiddenStuff() throws IOException {
+		Files.createFile(Paths.get("denied"));
+		return null; // Void
+	}
+
 }

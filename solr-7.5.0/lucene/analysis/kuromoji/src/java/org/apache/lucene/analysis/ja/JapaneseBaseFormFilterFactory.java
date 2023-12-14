@@ -33,20 +33,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;
  * </pre>
+ *
  * @since 3.6.0
  */
 public class JapaneseBaseFormFilterFactory extends TokenFilterFactory {
 
-  /** Creates a new JapaneseBaseFormFilterFactory */
-  public JapaneseBaseFormFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new JapaneseBaseFormFilter(input);
-  }
+	/**
+	 * Creates a new JapaneseBaseFormFilterFactory
+	 */
+	public JapaneseBaseFormFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new JapaneseBaseFormFilter(input);
+	}
 }

@@ -20,33 +20,33 @@
  * <h2>Index-time joins</h2>
  *
  * <p>The index-time joining support joins while searching, where joined
- *   documents are indexed as a single document block using
- *   {@link org.apache.lucene.index.IndexWriter#addDocuments IndexWriter.addDocuments()}.  
- *   This is useful for any normalized content (XML documents or database tables).  In database terms, all rows for all
- *   joined tables matching a single row of the primary table must be
- *   indexed as a single document block, with the parent document
- *   being last in the group.</p>
- * 
+ * documents are indexed as a single document block using
+ * {@link org.apache.lucene.index.IndexWriter#addDocuments IndexWriter.addDocuments()}.
+ * This is useful for any normalized content (XML documents or database tables).  In database terms, all rows for all
+ * joined tables matching a single row of the primary table must be
+ * indexed as a single document block, with the parent document
+ * being last in the group.</p>
+ *
  * <p>When you index in this way, the documents in your index are divided
- *   into parent documents (the last document of each block) and child
- *   documents (all others).  You provide a {@link org.apache.lucene.search.join.BitSetProducer} that identifies the
- *   parent documents, as Lucene does not currently record any information
- *   about doc blocks.</p>
- * 
+ * into parent documents (the last document of each block) and child
+ * documents (all others).  You provide a {@link org.apache.lucene.search.join.BitSetProducer} that identifies the
+ * parent documents, as Lucene does not currently record any information
+ * about doc blocks.</p>
+ *
  * <p>At search time, use {@link
- *   org.apache.lucene.search.join.ToParentBlockJoinQuery} to remap/join
- *   matches from any child {@link org.apache.lucene.search.Query} (ie, a
- *   query that matches only child documents) up to the parent document
- *   space.  The
- *   resulting query can then be used as a clause in any query that
- *   matches parent.</p>
- * 
+ * org.apache.lucene.search.join.ToParentBlockJoinQuery} to remap/join
+ * matches from any child {@link org.apache.lucene.search.Query} (ie, a
+ * query that matches only child documents) up to the parent document
+ * space.  The
+ * resulting query can then be used as a clause in any query that
+ * matches parent.</p>
+ *
  * <p>If you care about what child documents matched for each parent document,
- *    then use the {@link org.apache.lucene.search.join.ParentChildrenBlockJoinQuery} query to
- *    per matched parent document retrieve the child documents that caused to match the
- *    parent document in first place. This query should be used after your main query
- *    has been executed. For each hit execute the the
- *    {@link org.apache.lucene.search.join.ParentChildrenBlockJoinQuery} query </p>
+ * then use the {@link org.apache.lucene.search.join.ParentChildrenBlockJoinQuery} query to
+ * per matched parent document retrieve the child documents that caused to match the
+ * parent document in first place. This query should be used after your main query
+ * has been executed. For each hit execute the the
+ * {@link org.apache.lucene.search.join.ParentChildrenBlockJoinQuery} query </p>
  * <pre class="prettyprint">
  *   TopDocs results = searcher.search(mainQuery, 10);
  *   for (int i = 0; i &lt; results.scoreDocs.length; i++) {
@@ -61,16 +61,16 @@
  * </pre>
  *
  * <p>To map/join in the opposite direction, use {@link
- *   org.apache.lucene.search.join.ToChildBlockJoinQuery}.  This wraps
- *   any query matching parent documents, creating the joined query
- *   matching only child documents.
- * 
+ * org.apache.lucene.search.join.ToChildBlockJoinQuery}.  This wraps
+ * any query matching parent documents, creating the joined query
+ * matching only child documents.
+ *
  * <h2>Query-time joins</h2>
- * 
+ *
  * <p>
- *   The query time joining is index term based and implemented as two pass search. The first pass collects all the terms from a fromField
- *   that match the fromQuery. The second pass returns all documents that have matching terms in a toField to the terms
- *   collected in the first pass.
+ * The query time joining is index term based and implemented as two pass search. The first pass collects all the terms from a fromField
+ * that match the fromQuery. The second pass returns all documents that have matching terms in a toField to the terms
+ * collected in the first pass.
  * </p>
  * <p>Query time joining has the following input:</p>
  * <ul>
@@ -95,7 +95,7 @@
  *   String toField = "to"; // Name of the to field
  *   ScoreMode scoreMode = ScoreMode.Max; // Defines how the scores are translated into the other side of the join.
  *   Query fromQuery = new TermQuery(new Term("content", searchTerm)); // Query executed to collect from values to join to the to values
- * 
+ *
  *   Query joinQuery = JoinUtil.createJoinQuery(fromField, multipleValuesPerDocument, toField, fromQuery, fromSearcher, scoreMode);
  *   TopDocs topDocs = toSearcher.search(joinQuery, 10); // Note: toSearcher can be the same as the fromSearcher
  *   // Render topDocs...

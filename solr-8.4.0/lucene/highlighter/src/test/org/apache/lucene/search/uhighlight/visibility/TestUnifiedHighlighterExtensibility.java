@@ -54,210 +54,212 @@ import org.junit.Test;
  */
 public class TestUnifiedHighlighterExtensibility extends LuceneTestCase {
 
-  /**
-   * This test is for maintaining the extensibility of the FieldOffsetStrategy
-   * for customizations out of package.
-   */
-  @Test
-  public void testFieldOffsetStrategyExtensibility() {
-    final UnifiedHighlighter.OffsetSource offsetSource = UnifiedHighlighter.OffsetSource.NONE_NEEDED;
-    FieldOffsetStrategy strategy = new FieldOffsetStrategy(new UHComponents("field",
-        (s) -> false,
-        new MatchAllDocsQuery(), new BytesRef[0],
-        PhraseHelper.NONE,
-        new LabelledCharArrayMatcher[0], false, Collections.emptySet())) {
-      @Override
-      public UnifiedHighlighter.OffsetSource getOffsetSource() {
-        return offsetSource;
-      }
+	/**
+	 * This test is for maintaining the extensibility of the FieldOffsetStrategy
+	 * for customizations out of package.
+	 */
+	@Test
+	public void testFieldOffsetStrategyExtensibility() {
+		final UnifiedHighlighter.OffsetSource offsetSource = UnifiedHighlighter.OffsetSource.NONE_NEEDED;
+		FieldOffsetStrategy strategy = new FieldOffsetStrategy(new UHComponents("field",
+			(s) -> false,
+			new MatchAllDocsQuery(), new BytesRef[0],
+			PhraseHelper.NONE,
+			new LabelledCharArrayMatcher[0], false, Collections.emptySet())) {
+			@Override
+			public UnifiedHighlighter.OffsetSource getOffsetSource() {
+				return offsetSource;
+			}
 
-      @Override
-      public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
-        return OffsetsEnum.EMPTY;
-      }
+			@Override
+			public OffsetsEnum getOffsetsEnum(LeafReader reader, int docId, String content) throws IOException {
+				return OffsetsEnum.EMPTY;
+			}
 
-      @Override
-      protected OffsetsEnum createOffsetsEnumFromReader(LeafReader leafReader, int doc) throws IOException {
-        return super.createOffsetsEnumFromReader(leafReader, doc);
-      }
+			@Override
+			protected OffsetsEnum createOffsetsEnumFromReader(LeafReader leafReader, int doc) throws IOException {
+				return super.createOffsetsEnumFromReader(leafReader, doc);
+			}
 
-    };
-    assertEquals(offsetSource, strategy.getOffsetSource());
-  }
+		};
+		assertEquals(offsetSource, strategy.getOffsetSource());
+	}
 
-  /**
-   * This test is for maintaining the extensibility of the UnifiedHighlighter
-   * for customizations out of package.
-   */
-  @Test
-  public void testUnifiedHighlighterExtensibility() {
-    final int maxLength = 1000;
-    UnifiedHighlighter uh = new UnifiedHighlighter(null, new MockAnalyzer(random())){
+	/**
+	 * This test is for maintaining the extensibility of the UnifiedHighlighter
+	 * for customizations out of package.
+	 */
+	@Test
+	public void testUnifiedHighlighterExtensibility() {
+		final int maxLength = 1000;
+		UnifiedHighlighter uh = new UnifiedHighlighter(null, new MockAnalyzer(random())) {
 
-      @Override
-      protected Map<String, Object[]> highlightFieldsAsObjects(String[] fieldsIn, Query query, int[] docIdsIn, int[] maxPassagesIn) throws IOException {
-        return super.highlightFieldsAsObjects(fieldsIn, query, docIdsIn, maxPassagesIn);
-      }
+			@Override
+			protected Map<String, Object[]> highlightFieldsAsObjects(String[] fieldsIn, Query query, int[] docIdsIn, int[] maxPassagesIn) throws IOException {
+				return super.highlightFieldsAsObjects(fieldsIn, query, docIdsIn, maxPassagesIn);
+			}
 
-      @Override
-      protected OffsetSource getOffsetSource(String field) {
-        return super.getOffsetSource(field);
-      }
+			@Override
+			protected OffsetSource getOffsetSource(String field) {
+				return super.getOffsetSource(field);
+			}
 
-      @Override
-      protected BreakIterator getBreakIterator(String field) {
-        return super.getBreakIterator(field);
-      }
+			@Override
+			protected BreakIterator getBreakIterator(String field) {
+				return super.getBreakIterator(field);
+			}
 
-      @Override
-      protected PassageScorer getScorer(String field) {
-        return super.getScorer(field);
-      }
+			@Override
+			protected PassageScorer getScorer(String field) {
+				return super.getScorer(field);
+			}
 
-      @Override
-      protected PassageFormatter getFormatter(String field) {
-        return super.getFormatter(field);
-      }
+			@Override
+			protected PassageFormatter getFormatter(String field) {
+				return super.getFormatter(field);
+			}
 
-      @Override
-      public Analyzer getIndexAnalyzer() {
-        return super.getIndexAnalyzer();
-      }
+			@Override
+			public Analyzer getIndexAnalyzer() {
+				return super.getIndexAnalyzer();
+			}
 
-      @Override
-      public IndexSearcher getIndexSearcher() {
-        return super.getIndexSearcher();
-      }
+			@Override
+			public IndexSearcher getIndexSearcher() {
+				return super.getIndexSearcher();
+			}
 
-      @Override
-      protected int getMaxNoHighlightPassages(String field) {
-        return super.getMaxNoHighlightPassages(field);
-      }
+			@Override
+			protected int getMaxNoHighlightPassages(String field) {
+				return super.getMaxNoHighlightPassages(field);
+			}
 
-      @Override
-      protected Boolean requiresRewrite(SpanQuery spanQuery) {
-        return super.requiresRewrite(spanQuery);
-      }
+			@Override
+			protected Boolean requiresRewrite(SpanQuery spanQuery) {
+				return super.requiresRewrite(spanQuery);
+			}
 
-      @Override
-      protected LimitedStoredFieldVisitor newLimitedStoredFieldsVisitor(String[] fields) {
-        return super.newLimitedStoredFieldsVisitor(fields);
-      }
+			@Override
+			protected LimitedStoredFieldVisitor newLimitedStoredFieldsVisitor(String[] fields) {
+				return super.newLimitedStoredFieldsVisitor(fields);
+			}
 
-      @Override
-      protected List<CharSequence[]> loadFieldValues(String[] fields, DocIdSetIterator docIter, int cacheCharsThreshold) throws IOException {
-        return super.loadFieldValues(fields, docIter, cacheCharsThreshold);
-      }
+			@Override
+			protected List<CharSequence[]> loadFieldValues(String[] fields, DocIdSetIterator docIter, int cacheCharsThreshold) throws IOException {
+				return super.loadFieldValues(fields, docIter, cacheCharsThreshold);
+			}
 
-      @Override
-      protected FieldHighlighter getFieldHighlighter(String field, Query query, Set<Term> allTerms, int maxPassages) {
-        // THIS IS A COPY of the superclass impl; but use CustomFieldHighlighter
-        UHComponents components = getHighlightComponents(field, query, allTerms);
-        OffsetSource offsetSource = getOptimizedOffsetSource(components);
+			@Override
+			protected FieldHighlighter getFieldHighlighter(String field, Query query, Set<Term> allTerms, int maxPassages) {
+				// THIS IS A COPY of the superclass impl; but use CustomFieldHighlighter
+				UHComponents components = getHighlightComponents(field, query, allTerms);
+				OffsetSource offsetSource = getOptimizedOffsetSource(components);
 
-        // test all is accessible
-        components.getField();
-        components.getFieldMatcher();
-        components.getQuery();
-        components.getTerms();
-        components.getPhraseHelper();
-        components.getAutomata();
-        components.hasUnrecognizedQueryPart();
-        components.getHighlightFlags();
+				// test all is accessible
+				components.getField();
+				components.getFieldMatcher();
+				components.getQuery();
+				components.getTerms();
+				components.getPhraseHelper();
+				components.getAutomata();
+				components.hasUnrecognizedQueryPart();
+				components.getHighlightFlags();
 
-        return new CustomFieldHighlighter(field,
-            getOffsetStrategy(offsetSource, components),
-            new SplittingBreakIterator(getBreakIterator(field), UnifiedHighlighter.MULTIVAL_SEP_CHAR),
-            getScorer(field),
-            maxPassages,
-            getMaxNoHighlightPassages(field),
-            getFormatter(field));
-      }
+				return new CustomFieldHighlighter(field,
+					getOffsetStrategy(offsetSource, components),
+					new SplittingBreakIterator(getBreakIterator(field), UnifiedHighlighter.MULTIVAL_SEP_CHAR),
+					getScorer(field),
+					maxPassages,
+					getMaxNoHighlightPassages(field),
+					getFormatter(field));
+			}
 
-      @Override
-      protected UHComponents getHighlightComponents(String field, Query query, Set<Term> allTerms) {
-        Predicate<String> fieldMatcher = getFieldMatcher(field);
-        BytesRef[] terms = filterExtractedTerms(fieldMatcher, allTerms);
-        Set<HighlightFlag> highlightFlags = getFlags(field);
-        PhraseHelper phraseHelper = getPhraseHelper(field, query, highlightFlags);
-        LabelledCharArrayMatcher[] automata = getAutomata(field, query, highlightFlags);
-        boolean queryHasUnrecognizedPart = false;
-        return new UHComponents(field, fieldMatcher, query, terms, phraseHelper, automata, queryHasUnrecognizedPart, highlightFlags);
-      }
+			@Override
+			protected UHComponents getHighlightComponents(String field, Query query, Set<Term> allTerms) {
+				Predicate<String> fieldMatcher = getFieldMatcher(field);
+				BytesRef[] terms = filterExtractedTerms(fieldMatcher, allTerms);
+				Set<HighlightFlag> highlightFlags = getFlags(field);
+				PhraseHelper phraseHelper = getPhraseHelper(field, query, highlightFlags);
+				LabelledCharArrayMatcher[] automata = getAutomata(field, query, highlightFlags);
+				boolean queryHasUnrecognizedPart = false;
+				return new UHComponents(field, fieldMatcher, query, terms, phraseHelper, automata, queryHasUnrecognizedPart, highlightFlags);
+			}
 
-      @Override
-      protected FieldOffsetStrategy getOffsetStrategy(OffsetSource offsetSource, UHComponents components) {
-        return super.getOffsetStrategy(offsetSource, components);
-      }
+			@Override
+			protected FieldOffsetStrategy getOffsetStrategy(OffsetSource offsetSource, UHComponents components) {
+				return super.getOffsetStrategy(offsetSource, components);
+			}
 
-      @Override
-      public int getMaxLength() {
-        return maxLength;
-      }
-    };
-    assertEquals(uh.getMaxLength(), maxLength);
-  }
+			@Override
+			public int getMaxLength() {
+				return maxLength;
+			}
+		};
+		assertEquals(uh.getMaxLength(), maxLength);
+	}
 
-  @Test
-  public void testPassageFormatterExtensibility() {
-    final Object formattedResponse = new Object();
-    PassageFormatter formatter = new PassageFormatter() {
-      @Override
-      public Object format(Passage[] passages, String content) {
-        return formattedResponse;
-      }
-    };
-    assertEquals(formattedResponse, formatter.format(new Passage[0], ""));
-  }
+	@Test
+	public void testPassageFormatterExtensibility() {
+		final Object formattedResponse = new Object();
+		PassageFormatter formatter = new PassageFormatter() {
+			@Override
+			public Object format(Passage[] passages, String content) {
+				return formattedResponse;
+			}
+		};
+		assertEquals(formattedResponse, formatter.format(new Passage[0], ""));
+	}
 
-  @Test
-  public void testFieldHiglighterExtensibility() {
-    final String fieldName = "fieldName";
-    FieldHighlighter fieldHighlighter = new FieldHighlighter(fieldName, null, null, null, 1, 1, null) {
-      @Override
-      protected Passage[] highlightOffsetsEnums(OffsetsEnum offsetsEnums) throws IOException {
-        return super.highlightOffsetsEnums(offsetsEnums);
-      }
-    };
+	@Test
+	public void testFieldHiglighterExtensibility() {
+		final String fieldName = "fieldName";
+		FieldHighlighter fieldHighlighter = new FieldHighlighter(fieldName, null, null, null, 1, 1, null) {
+			@Override
+			protected Passage[] highlightOffsetsEnums(OffsetsEnum offsetsEnums) throws IOException {
+				return super.highlightOffsetsEnums(offsetsEnums);
+			}
+		};
 
-    assertEquals(fieldHighlighter.getField(), fieldName);
-  }
+		assertEquals(fieldHighlighter.getField(), fieldName);
+	}
 
-  /** Tests maintaining extensibility/visibility of {@link org.apache.lucene.search.uhighlight.FieldHighlighter} out of package. */
-  private static class CustomFieldHighlighter extends FieldHighlighter {
-    CustomFieldHighlighter(String field, FieldOffsetStrategy fieldOffsetStrategy, BreakIterator breakIterator, PassageScorer passageScorer, int maxPassages, int maxNoHighlightPassages, PassageFormatter passageFormatter) {
-      super(field, fieldOffsetStrategy, breakIterator, passageScorer, maxPassages, maxNoHighlightPassages, passageFormatter);
-    }
+	/**
+	 * Tests maintaining extensibility/visibility of {@link org.apache.lucene.search.uhighlight.FieldHighlighter} out of package.
+	 */
+	private static class CustomFieldHighlighter extends FieldHighlighter {
+		CustomFieldHighlighter(String field, FieldOffsetStrategy fieldOffsetStrategy, BreakIterator breakIterator, PassageScorer passageScorer, int maxPassages, int maxNoHighlightPassages, PassageFormatter passageFormatter) {
+			super(field, fieldOffsetStrategy, breakIterator, passageScorer, maxPassages, maxNoHighlightPassages, passageFormatter);
+		}
 
-    @Override
-    public Object highlightFieldForDoc(LeafReader reader, int docId, String content) throws IOException {
-      return super.highlightFieldForDoc(reader, docId, content);
-    }
+		@Override
+		public Object highlightFieldForDoc(LeafReader reader, int docId, String content) throws IOException {
+			return super.highlightFieldForDoc(reader, docId, content);
+		}
 
-    @Override
-    protected Passage[] highlightOffsetsEnums(OffsetsEnum offsetsEnums) throws IOException {
-      // TEST OffsetsEnums & Passage visibility
+		@Override
+		protected Passage[] highlightOffsetsEnums(OffsetsEnum offsetsEnums) throws IOException {
+			// TEST OffsetsEnums & Passage visibility
 
-      // this code never runs; just for compilation
-      Passage p;
-      try (OffsetsEnum oe = new OffsetsEnum.OfPostings(null, null)) {
-        oe.getTerm();
-        oe.nextPosition();
-        oe.startOffset();
-        oe.endOffset();
-        oe.freq();
-      }
+			// this code never runs; just for compilation
+			Passage p;
+			try (OffsetsEnum oe = new OffsetsEnum.OfPostings(null, null)) {
+				oe.getTerm();
+				oe.nextPosition();
+				oe.startOffset();
+				oe.endOffset();
+				oe.freq();
+			}
 
-      p = new Passage();
-      p.setStartOffset(0);
-      p.setEndOffset(9);
-      p.addMatch(1, 2, new BytesRef(), 1);
-      p.reset();
-      p.setScore(1);
-      //... getters are all exposed; custom PassageFormatter impls uses them
+			p = new Passage();
+			p.setStartOffset(0);
+			p.setEndOffset(9);
+			p.addMatch(1, 2, new BytesRef(), 1);
+			p.reset();
+			p.setScore(1);
+			//... getters are all exposed; custom PassageFormatter impls uses them
 
-      return super.highlightOffsetsEnums(offsetsEnums);
-    }
-  }
+			return super.highlightOffsetsEnums(offsetsEnums);
+		}
+	}
 
 }

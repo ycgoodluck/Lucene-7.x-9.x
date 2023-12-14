@@ -25,7 +25,7 @@
  * and call the Builder for each node in the tree.
  * Builder normally convert QueryNode Object into a Lucene Query Object,
  * and normally it's a one-to-one mapping class.
- *
+ * <p>
  * But other builders implementations can by written to convert QueryNode objects to other non lucene objects.
  */
 package org.apache.lucene.queryparser.flexible.core.builders;

@@ -27,7 +27,9 @@ import org.apache.lucene.util.Attribute;
  * and will be null.
  */
 public interface InflectionAttribute extends Attribute {
-  public String getInflectionType();
-  public String getInflectionForm();
-  public void setToken(Token token);
+	public String getInflectionType();
+
+	public String getInflectionForm();
+
+	public void setToken(Token token);
 }

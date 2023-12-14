@@ -33,78 +33,80 @@ import org.apache.lucene.index.NoMergeScheduler;
 import org.apache.lucene.util.Version;
 
 
-/** Tests the functionality of {@link CreateIndexTask}. */
+/**
+ * Tests the functionality of {@link CreateIndexTask}.
+ */
 public class CreateIndexTaskTest extends BenchmarkTestCase {
 
-  private PerfRunData createPerfRunData(String infoStreamValue) throws Exception {
-    Properties props = new Properties();
-    props.setProperty("writer.version", Version.LATEST.toString());
-    props.setProperty("print.props", "false"); // don't print anything
-    props.setProperty("directory", "RAMDirectory");
-    if (infoStreamValue != null) {
-      props.setProperty("writer.info.stream", infoStreamValue);
-    }
-    Config config = new Config(props);
-    return new PerfRunData(config);
-  }
+	private PerfRunData createPerfRunData(String infoStreamValue) throws Exception {
+		Properties props = new Properties();
+		props.setProperty("writer.version", Version.LATEST.toString());
+		props.setProperty("print.props", "false"); // don't print anything
+		props.setProperty("directory", "RAMDirectory");
+		if (infoStreamValue != null) {
+			props.setProperty("writer.info.stream", infoStreamValue);
+		}
+		Config config = new Config(props);
+		return new PerfRunData(config);
+	}
 
-  public void testInfoStream_SystemOutErr() throws Exception {
- 
-    PrintStream curOut = System.out;
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(baos, false, Charset.defaultCharset().name()));
-    try {
-      PerfRunData runData = createPerfRunData("SystemOut");
-      CreateIndexTask cit = new CreateIndexTask(runData);
-      cit.doLogic();
-      new CloseIndexTask(runData).doLogic();
-      assertTrue(baos.size() > 0);
-    } finally {
-      System.setOut(curOut);
-    }
-    
-    PrintStream curErr = System.err;
-    baos.reset();
-    System.setErr(new PrintStream(baos, false, Charset.defaultCharset().name()));
-    try {
-      PerfRunData runData = createPerfRunData("SystemErr");
-      CreateIndexTask cit = new CreateIndexTask(runData);
-      cit.doLogic();
-      new CloseIndexTask(runData).doLogic();
-      assertTrue(baos.size() > 0);
-    } finally {
-      System.setErr(curErr);
-    }
+	public void testInfoStream_SystemOutErr() throws Exception {
 
-  }
+		PrintStream curOut = System.out;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		System.setOut(new PrintStream(baos, false, Charset.defaultCharset().name()));
+		try {
+			PerfRunData runData = createPerfRunData("SystemOut");
+			CreateIndexTask cit = new CreateIndexTask(runData);
+			cit.doLogic();
+			new CloseIndexTask(runData).doLogic();
+			assertTrue(baos.size() > 0);
+		} finally {
+			System.setOut(curOut);
+		}
 
-  public void testInfoStream_File() throws Exception {
-    
-    Path outFile = getWorkDir().resolve("infoStreamTest");
-    PerfRunData runData = createPerfRunData(outFile.toAbsolutePath().toString());
-    new CreateIndexTask(runData).doLogic();
-    new CloseIndexTask(runData).doLogic();
-    assertTrue(Files.size(outFile) > 0);
-  }
+		PrintStream curErr = System.err;
+		baos.reset();
+		System.setErr(new PrintStream(baos, false, Charset.defaultCharset().name()));
+		try {
+			PerfRunData runData = createPerfRunData("SystemErr");
+			CreateIndexTask cit = new CreateIndexTask(runData);
+			cit.doLogic();
+			new CloseIndexTask(runData).doLogic();
+			assertTrue(baos.size() > 0);
+		} finally {
+			System.setErr(curErr);
+		}
 
-  public void testNoMergePolicy() throws Exception {
-    PerfRunData runData = createPerfRunData(null);
-    runData.getConfig().set("merge.policy", NoMergePolicy.class.getName());
-    new CreateIndexTask(runData).doLogic();
-    new CloseIndexTask(runData).doLogic();
-  }
-  
-  public void testNoMergeScheduler() throws Exception {
-    PerfRunData runData = createPerfRunData(null);
-    runData.getConfig().set("merge.scheduler", NoMergeScheduler.class.getName());
-    new CreateIndexTask(runData).doLogic();
-    new CloseIndexTask(runData).doLogic();
-  }
+	}
 
-  public void testNoDeletionPolicy() throws Exception {
-    PerfRunData runData = createPerfRunData(null);
-    runData.getConfig().set("deletion.policy", NoDeletionPolicy.class.getName());
-    new CreateIndexTask(runData).doLogic();
-    new CloseIndexTask(runData).doLogic();
-  }
+	public void testInfoStream_File() throws Exception {
+
+		Path outFile = getWorkDir().resolve("infoStreamTest");
+		PerfRunData runData = createPerfRunData(outFile.toAbsolutePath().toString());
+		new CreateIndexTask(runData).doLogic();
+		new CloseIndexTask(runData).doLogic();
+		assertTrue(Files.size(outFile) > 0);
+	}
+
+	public void testNoMergePolicy() throws Exception {
+		PerfRunData runData = createPerfRunData(null);
+		runData.getConfig().set("merge.policy", NoMergePolicy.class.getName());
+		new CreateIndexTask(runData).doLogic();
+		new CloseIndexTask(runData).doLogic();
+	}
+
+	public void testNoMergeScheduler() throws Exception {
+		PerfRunData runData = createPerfRunData(null);
+		runData.getConfig().set("merge.scheduler", NoMergeScheduler.class.getName());
+		new CreateIndexTask(runData).doLogic();
+		new CloseIndexTask(runData).doLogic();
+	}
+
+	public void testNoDeletionPolicy() throws Exception {
+		PerfRunData runData = createPerfRunData(null);
+		runData.getConfig().set("deletion.policy", NoDeletionPolicy.class.getName());
+		new CreateIndexTask(runData).doLogic();
+		new CloseIndexTask(runData).doLogic();
+	}
 }

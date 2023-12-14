@@ -29,19 +29,21 @@ import org.apache.lucene.util.BytesRef;
  * NOTE: because the payload will be stored at each position, it's usually
  * best to use the minimum number of bytes necessary. Some codec implementations
  * may optimize payload storage when all payloads have the same length.
- * 
+ *
  * @see org.apache.lucene.index.PostingsEnum
  */
 public interface PayloadAttribute extends Attribute {
-  /**
-   * Returns this Token's payload.
-   * @see #setPayload(BytesRef)
-   */ 
-  public BytesRef getPayload();
+	/**
+	 * Returns this Token's payload.
+	 *
+	 * @see #setPayload(BytesRef)
+	 */
+	public BytesRef getPayload();
 
-  /** 
-   * Sets this Token's payload.
-   * @see #getPayload()
-   */
-  public void setPayload(BytesRef payload);
+	/**
+	 * Sets this Token's payload.
+	 *
+	 * @see #getPayload()
+	 */
+	public void setPayload(BytesRef payload);
 }

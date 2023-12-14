@@ -27,186 +27,186 @@ import org.apache.lucene.index.RandomIndexWriter;
 
 // See: https://issues.apache.org/jira/browse/SOLR-12028 Tests cannot remove files on Windows machines occasionally
 public class TestMockDirectoryWrapper extends BaseDirectoryTestCase {
-  
-  @Override
-  protected Directory getDirectory(Path path) throws IOException {
-    final MockDirectoryWrapper dir;
-    if (random().nextBoolean()) {
-      dir = newMockDirectory();
-    } else {
-      dir = newMockFSDirectory(path);
-    }
-    return dir;
-  }
-  
-  // we wrap the directory in slow stuff, so only run nightly
-  @Override
-  @Nightly
-  public void testThreadSafetyInListAll() throws Exception {
-    super.testThreadSafetyInListAll();
-  }
 
-  public void testDiskFull() throws IOException {
-    // test writeBytes
-    MockDirectoryWrapper dir = newMockDirectory();
-    dir.setMaxSizeInBytes(3);
-    final byte[] bytes = new byte[] { 1, 2};
-    IndexOutput out = dir.createOutput("foo", IOContext.DEFAULT);
-    out.writeBytes(bytes, bytes.length); // first write should succeed
-    // close() to ensure the written bytes are not buffered and counted
-    // against the directory size
-    out.close();
-    out = dir.createOutput("bar", IOContext.DEFAULT);
-    try {
-      out.writeBytes(bytes, bytes.length);
-      fail("should have failed on disk full");
-    } catch (IOException e) {
-      // expected
-    }
-    out.close();
-    dir.close();
-    
-    // test copyBytes
-    dir = newMockDirectory();
-    dir.setMaxSizeInBytes(3);
-    out = dir.createOutput("foo", IOContext.DEFAULT);
-    out.copyBytes(new ByteArrayDataInput(bytes), bytes.length); // first copy should succeed
-    // close() to ensure the written bytes are not buffered and counted
-    // against the directory size
-    out.close();
-    out = dir.createOutput("bar", IOContext.DEFAULT);
-    try {
-      out.copyBytes(new ByteArrayDataInput(bytes), bytes.length);
-      fail("should have failed on disk full");
-    } catch (IOException e) {
-      // expected
-    }
-    out.close();
-    dir.close();
-  }
-  
-  public void testMDWinsideOfMDW() throws Exception {
-    // add MDW inside another MDW
-    Directory dir = new MockDirectoryWrapper(random(), newMockDirectory());
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
-    for (int i = 0; i < 20; i++) {
-      iw.addDocument(new Document());
-    }
-    iw.commit();
-    iw.close();
-    dir.close();
-  }
+	@Override
+	protected Directory getDirectory(Path path) throws IOException {
+		final MockDirectoryWrapper dir;
+		if (random().nextBoolean()) {
+			dir = newMockDirectory();
+		} else {
+			dir = newMockFSDirectory(path);
+		}
+		return dir;
+	}
 
-  // just shields the wrapped directory from being closed
-  private static class PreventCloseDirectoryWrapper extends FilterDirectory {
-    public PreventCloseDirectoryWrapper(Directory in) {
-      super(in);
-    }
+	// we wrap the directory in slow stuff, so only run nightly
+	@Override
+	@Nightly
+	public void testThreadSafetyInListAll() throws Exception {
+		super.testThreadSafetyInListAll();
+	}
 
-    @Override
-    public void close() {
-    }
-  }
+	public void testDiskFull() throws IOException {
+		// test writeBytes
+		MockDirectoryWrapper dir = newMockDirectory();
+		dir.setMaxSizeInBytes(3);
+		final byte[] bytes = new byte[]{1, 2};
+		IndexOutput out = dir.createOutput("foo", IOContext.DEFAULT);
+		out.writeBytes(bytes, bytes.length); // first write should succeed
+		// close() to ensure the written bytes are not buffered and counted
+		// against the directory size
+		out.close();
+		out = dir.createOutput("bar", IOContext.DEFAULT);
+		try {
+			out.writeBytes(bytes, bytes.length);
+			fail("should have failed on disk full");
+		} catch (IOException e) {
+			// expected
+		}
+		out.close();
+		dir.close();
 
-  public void testCorruptOnCloseIsWorkingFSDir() throws Exception {
-    Path path = createTempDir();
-    try(Directory dir = newFSDirectory(path)) {
-      testCorruptOnCloseIsWorking(dir);
-    }
-  }
+		// test copyBytes
+		dir = newMockDirectory();
+		dir.setMaxSizeInBytes(3);
+		out = dir.createOutput("foo", IOContext.DEFAULT);
+		out.copyBytes(new ByteArrayDataInput(bytes), bytes.length); // first copy should succeed
+		// close() to ensure the written bytes are not buffered and counted
+		// against the directory size
+		out.close();
+		out = dir.createOutput("bar", IOContext.DEFAULT);
+		try {
+			out.copyBytes(new ByteArrayDataInput(bytes), bytes.length);
+			fail("should have failed on disk full");
+		} catch (IOException e) {
+			// expected
+		}
+		out.close();
+		dir.close();
+	}
 
-  public void testCorruptOnCloseIsWorkingRAMDir() throws Exception {
-    try(Directory dir = new RAMDirectory()) {
-      testCorruptOnCloseIsWorking(dir);
-    }
-  }
-    
-  private void testCorruptOnCloseIsWorking(Directory dir) throws Exception {
+	public void testMDWinsideOfMDW() throws Exception {
+		// add MDW inside another MDW
+		Directory dir = new MockDirectoryWrapper(random(), newMockDirectory());
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
+		for (int i = 0; i < 20; i++) {
+			iw.addDocument(new Document());
+		}
+		iw.commit();
+		iw.close();
+		dir.close();
+	}
 
-    dir = new PreventCloseDirectoryWrapper(dir);
+	// just shields the wrapped directory from being closed
+	private static class PreventCloseDirectoryWrapper extends FilterDirectory {
+		public PreventCloseDirectoryWrapper(Directory in) {
+			super(in);
+		}
 
-    try (MockDirectoryWrapper wrapped = new MockDirectoryWrapper(random(), dir)) {
+		@Override
+		public void close() {
+		}
+	}
 
-      // otherwise MDW sometimes randomly leaves the file intact and we'll see false test failures:
-      wrapped.alwaysCorrupt = true;
+	public void testCorruptOnCloseIsWorkingFSDir() throws Exception {
+		Path path = createTempDir();
+		try (Directory dir = newFSDirectory(path)) {
+			testCorruptOnCloseIsWorking(dir);
+		}
+	}
 
-      // MDW will only try to corrupt things if it sees an index:
-      RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
-      iw.addDocument(new Document());
-      iw.close();
-      
-      // not sync'd!
-      try (IndexOutput out = wrapped.createOutput("foo", IOContext.DEFAULT)) {
-        for(int i=0;i<100;i++) {
-          out.writeInt(i);
-        }
-      }
+	public void testCorruptOnCloseIsWorkingRAMDir() throws Exception {
+		try (Directory dir = new RAMDirectory()) {
+			testCorruptOnCloseIsWorking(dir);
+		}
+	}
 
-      // MDW.close now corrupts our unsync'd file (foo):
-    }
+	private void testCorruptOnCloseIsWorking(Directory dir) throws Exception {
 
-    boolean changed = false;
-    IndexInput in = null;
-    try {
-      in = dir.openInput("foo", IOContext.DEFAULT);
-    } catch (NoSuchFileException | FileNotFoundException fnfe) {
-      // ok
-      changed = true;
-    }
-    if (in != null) {
-      for(int i=0;i<100;i++) {
-        int x;
-        try {
-          x = in.readInt();
-        } catch (EOFException eofe) {
-          changed = true;
-          break;
-        }
-        if (x != i) {
-          changed = true;
-          break;
-        }
-      }
+		dir = new PreventCloseDirectoryWrapper(dir);
 
-      in.close();
-    }
+		try (MockDirectoryWrapper wrapped = new MockDirectoryWrapper(random(), dir)) {
 
-    assertTrue("MockDirectoryWrapper on dir=" + dir + " failed to corrupt an unsync'd file", changed);
-  }
+			// otherwise MDW sometimes randomly leaves the file intact and we'll see false test failures:
+			wrapped.alwaysCorrupt = true;
 
-  public void testAbuseClosedIndexInput() throws Exception {
-    MockDirectoryWrapper dir = newMockDirectory();
-    IndexOutput out = dir.createOutput("foo", IOContext.DEFAULT);
-    out.writeByte((byte) 42);
-    out.close();
-    final IndexInput in = dir.openInput("foo", IOContext.DEFAULT);
-    in.close();
-    expectThrows(RuntimeException.class, in::readByte);
-    dir.close();
-  }
+			// MDW will only try to corrupt things if it sees an index:
+			RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
+			iw.addDocument(new Document());
+			iw.close();
 
-  public void testAbuseCloneAfterParentClosed() throws Exception {
-    MockDirectoryWrapper dir = newMockDirectory();
-    IndexOutput out = dir.createOutput("foo", IOContext.DEFAULT);
-    out.writeByte((byte) 42);
-    out.close();
-    IndexInput in = dir.openInput("foo", IOContext.DEFAULT);
-    final IndexInput clone = in.clone();
-    in.close();
-    expectThrows(RuntimeException.class, clone::readByte);
-    dir.close();
-  }
+			// not sync'd!
+			try (IndexOutput out = wrapped.createOutput("foo", IOContext.DEFAULT)) {
+				for (int i = 0; i < 100; i++) {
+					out.writeInt(i);
+				}
+			}
 
-  public void testAbuseCloneOfCloneAfterParentClosed() throws Exception {
-    MockDirectoryWrapper dir = newMockDirectory();
-    IndexOutput out = dir.createOutput("foo", IOContext.DEFAULT);
-    out.writeByte((byte) 42);
-    out.close();
-    IndexInput in = dir.openInput("foo", IOContext.DEFAULT);
-    IndexInput clone1 = in.clone();
-    IndexInput clone2 = clone1.clone();
-    in.close();
-    expectThrows(RuntimeException.class, clone2::readByte);
-    dir.close();
-  }
+			// MDW.close now corrupts our unsync'd file (foo):
+		}
+
+		boolean changed = false;
+		IndexInput in = null;
+		try {
+			in = dir.openInput("foo", IOContext.DEFAULT);
+		} catch (NoSuchFileException | FileNotFoundException fnfe) {
+			// ok
+			changed = true;
+		}
+		if (in != null) {
+			for (int i = 0; i < 100; i++) {
+				int x;
+				try {
+					x = in.readInt();
+				} catch (EOFException eofe) {
+					changed = true;
+					break;
+				}
+				if (x != i) {
+					changed = true;
+					break;
+				}
+			}
+
+			in.close();
+		}
+
+		assertTrue("MockDirectoryWrapper on dir=" + dir + " failed to corrupt an unsync'd file", changed);
+	}
+
+	public void testAbuseClosedIndexInput() throws Exception {
+		MockDirectoryWrapper dir = newMockDirectory();
+		IndexOutput out = dir.createOutput("foo", IOContext.DEFAULT);
+		out.writeByte((byte) 42);
+		out.close();
+		final IndexInput in = dir.openInput("foo", IOContext.DEFAULT);
+		in.close();
+		expectThrows(RuntimeException.class, in::readByte);
+		dir.close();
+	}
+
+	public void testAbuseCloneAfterParentClosed() throws Exception {
+		MockDirectoryWrapper dir = newMockDirectory();
+		IndexOutput out = dir.createOutput("foo", IOContext.DEFAULT);
+		out.writeByte((byte) 42);
+		out.close();
+		IndexInput in = dir.openInput("foo", IOContext.DEFAULT);
+		final IndexInput clone = in.clone();
+		in.close();
+		expectThrows(RuntimeException.class, clone::readByte);
+		dir.close();
+	}
+
+	public void testAbuseCloneOfCloneAfterParentClosed() throws Exception {
+		MockDirectoryWrapper dir = newMockDirectory();
+		IndexOutput out = dir.createOutput("foo", IOContext.DEFAULT);
+		out.writeByte((byte) 42);
+		out.close();
+		IndexInput in = dir.openInput("foo", IOContext.DEFAULT);
+		IndexInput clone1 = in.clone();
+		IndexInput clone2 = clone1.clone();
+		in.close();
+		expectThrows(RuntimeException.class, clone2::readByte);
+		dir.close();
+	}
 }

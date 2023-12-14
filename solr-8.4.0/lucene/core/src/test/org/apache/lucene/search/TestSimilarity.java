@@ -30,127 +30,152 @@ import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 
-/** Similarity unit test.
- *
- *
+/**
+ * Similarity unit test.
  */
 public class TestSimilarity extends LuceneTestCase {
-  
-  public static class SimpleSimilarity extends ClassicSimilarity {
-    @Override public float lengthNorm(int length) { return 1; }
-    @Override public float tf(float freq) { return freq; }
-    @Override public float idf(long docFreq, long docCount) { return 1.0f; }
-    @Override public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics[] stats) {
-      return Explanation.match(1.0f, "Inexplicable"); 
-    }
-  }
 
-  public void testSimilarity() throws Exception {
-    Directory store = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(random(), store, 
-        newIndexWriterConfig(new MockAnalyzer(random()))
-        .setSimilarity(new SimpleSimilarity()));
-    
-    Document d1 = new Document();
-    d1.add(newTextField("field", "a c", Field.Store.YES));
+	public static class SimpleSimilarity extends ClassicSimilarity {
+		@Override
+		public float lengthNorm(int length) {
+			return 1;
+		}
 
-    Document d2 = new Document();
-    d2.add(newTextField("field", "a c b", Field.Store.YES));
-    
-    writer.addDocument(d1);
-    writer.addDocument(d2);
-    IndexReader reader = writer.getReader();
-    writer.close();
+		@Override
+		public float tf(float freq) {
+			return freq;
+		}
 
-    IndexSearcher searcher = newSearcher(reader);
-    searcher.setSimilarity(new SimpleSimilarity());
+		@Override
+		public float idf(long docFreq, long docCount) {
+			return 1.0f;
+		}
 
-    Term a = new Term("field", "a");
-    Term b = new Term("field", "b");
-    Term c = new Term("field", "c");
+		@Override
+		public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics[] stats) {
+			return Explanation.match(1.0f, "Inexplicable");
+		}
+	}
 
-    searcher.search(new TermQuery(b), new SimpleCollector() {
-         private Scorable scorer;
-         @Override
-        public void setScorer(Scorable scorer) {
-           this.scorer = scorer; 
-         }
-         @Override
-        public final void collect(int doc) throws IOException {
-           assertEquals(1.0f, scorer.score(), 0);
-         }
-         @Override
-         public ScoreMode scoreMode() {
-           return ScoreMode.COMPLETE;
-         }
-       });
+	public void testSimilarity() throws Exception {
+		Directory store = newDirectory();
+		RandomIndexWriter writer = new RandomIndexWriter(random(), store,
+			newIndexWriterConfig(new MockAnalyzer(random()))
+				.setSimilarity(new SimpleSimilarity()));
 
-    BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(a), BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(b), BooleanClause.Occur.SHOULD);
-    //System.out.println(bq.toString("field"));
-    searcher.search(bq.build(), new SimpleCollector() {
-         private int base = 0;
-         private Scorable scorer;
-         @Override
-        public void setScorer(Scorable scorer) {
-           this.scorer = scorer; 
-         }
-         @Override
-        public final void collect(int doc) throws IOException {
-           //System.out.println("Doc=" + doc + " score=" + score);
-           assertEquals((float)doc+base+1, scorer.score(), 0);
-         }
-         @Override
-         protected void doSetNextReader(LeafReaderContext context) throws IOException {
-           base = context.docBase;
-         }
-         @Override
-         public ScoreMode scoreMode() {
-           return ScoreMode.COMPLETE;
-         }
-       });
+		Document d1 = new Document();
+		d1.add(newTextField("field", "a c", Field.Store.YES));
 
-    PhraseQuery pq = new PhraseQuery(a.field(), a.bytes(), c.bytes());
-    //System.out.println(pq.toString("field"));
-    searcher.search(pq,
-       new SimpleCollector() {
-         private Scorable scorer;
-         @Override
-         public void setScorer(Scorable scorer) {
-          this.scorer = scorer; 
-         }
-         @Override
-         public final void collect(int doc) throws IOException {
-           //System.out.println("Doc=" + doc + " score=" + score);
-           assertEquals(1.0f, scorer.score(), 0);
-         }
-         @Override
-         public ScoreMode scoreMode() {
-           return ScoreMode.COMPLETE;
-         }
-       });
+		Document d2 = new Document();
+		d2.add(newTextField("field", "a c b", Field.Store.YES));
 
-    pq = new PhraseQuery(2, a.field(), a.bytes(), b.bytes());
-    //System.out.println(pq.toString("field"));
-    searcher.search(pq, new SimpleCollector() {
-      private Scorable scorer;
-      @Override
-      public void setScorer(Scorable scorer) {
-        this.scorer = scorer; 
-      }
-      @Override
-      public final void collect(int doc) throws IOException {
-        //System.out.println("Doc=" + doc + " score=" + score);
-        assertEquals(0.5f, scorer.score(), 0);
-      }
-      @Override
-      public ScoreMode scoreMode() {
-        return ScoreMode.COMPLETE;
-      }
-    });
+		writer.addDocument(d1);
+		writer.addDocument(d2);
+		IndexReader reader = writer.getReader();
+		writer.close();
 
-    reader.close();
-    store.close();
-  }
+		IndexSearcher searcher = newSearcher(reader);
+		searcher.setSimilarity(new SimpleSimilarity());
+
+		Term a = new Term("field", "a");
+		Term b = new Term("field", "b");
+		Term c = new Term("field", "c");
+
+		searcher.search(new TermQuery(b), new SimpleCollector() {
+			private Scorable scorer;
+
+			@Override
+			public void setScorer(Scorable scorer) {
+				this.scorer = scorer;
+			}
+
+			@Override
+			public final void collect(int doc) throws IOException {
+				assertEquals(1.0f, scorer.score(), 0);
+			}
+
+			@Override
+			public ScoreMode scoreMode() {
+				return ScoreMode.COMPLETE;
+			}
+		});
+
+		BooleanQuery.Builder bq = new BooleanQuery.Builder();
+		bq.add(new TermQuery(a), BooleanClause.Occur.SHOULD);
+		bq.add(new TermQuery(b), BooleanClause.Occur.SHOULD);
+		//System.out.println(bq.toString("field"));
+		searcher.search(bq.build(), new SimpleCollector() {
+			private int base = 0;
+			private Scorable scorer;
+
+			@Override
+			public void setScorer(Scorable scorer) {
+				this.scorer = scorer;
+			}
+
+			@Override
+			public final void collect(int doc) throws IOException {
+				//System.out.println("Doc=" + doc + " score=" + score);
+				assertEquals((float) doc + base + 1, scorer.score(), 0);
+			}
+
+			@Override
+			protected void doSetNextReader(LeafReaderContext context) throws IOException {
+				base = context.docBase;
+			}
+
+			@Override
+			public ScoreMode scoreMode() {
+				return ScoreMode.COMPLETE;
+			}
+		});
+
+		PhraseQuery pq = new PhraseQuery(a.field(), a.bytes(), c.bytes());
+		//System.out.println(pq.toString("field"));
+		searcher.search(pq,
+			new SimpleCollector() {
+				private Scorable scorer;
+
+				@Override
+				public void setScorer(Scorable scorer) {
+					this.scorer = scorer;
+				}
+
+				@Override
+				public final void collect(int doc) throws IOException {
+					//System.out.println("Doc=" + doc + " score=" + score);
+					assertEquals(1.0f, scorer.score(), 0);
+				}
+
+				@Override
+				public ScoreMode scoreMode() {
+					return ScoreMode.COMPLETE;
+				}
+			});
+
+		pq = new PhraseQuery(2, a.field(), a.bytes(), b.bytes());
+		//System.out.println(pq.toString("field"));
+		searcher.search(pq, new SimpleCollector() {
+			private Scorable scorer;
+
+			@Override
+			public void setScorer(Scorable scorer) {
+				this.scorer = scorer;
+			}
+
+			@Override
+			public final void collect(int doc) throws IOException {
+				//System.out.println("Doc=" + doc + " score=" + score);
+				assertEquals(0.5f, scorer.score(), 0);
+			}
+
+			@Override
+			public ScoreMode scoreMode() {
+				return ScoreMode.COMPLETE;
+			}
+		});
+
+		reader.close();
+		store.close();
+	}
 }

@@ -29,171 +29,172 @@ import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
 
 class CrankyPointsFormat extends PointsFormat {
-  PointsFormat delegate;
-  Random random;
-  
-  CrankyPointsFormat(PointsFormat delegate, Random random) {
-    this.delegate = delegate;
-    this.random = random;
-  }
+	PointsFormat delegate;
+	Random random;
 
-  @Override
-  public PointsWriter fieldsWriter(SegmentWriteState state) throws IOException {
-    return new CrankyPointsWriter(delegate.fieldsWriter(state), random);
-  }
+	CrankyPointsFormat(PointsFormat delegate, Random random) {
+		this.delegate = delegate;
+		this.random = random;
+	}
 
-  @Override
-  public PointsReader fieldsReader(SegmentReadState state) throws IOException {
-    return new CrankyPointsReader(delegate.fieldsReader(state), random);
-  }
+	@Override
+	public PointsWriter fieldsWriter(SegmentWriteState state) throws IOException {
+		return new CrankyPointsWriter(delegate.fieldsWriter(state), random);
+	}
 
-  static class CrankyPointsWriter extends PointsWriter {
-    final PointsWriter delegate;
-    final Random random;
+	@Override
+	public PointsReader fieldsReader(SegmentReadState state) throws IOException {
+		return new CrankyPointsReader(delegate.fieldsReader(state), random);
+	}
 
-    public CrankyPointsWriter(PointsWriter delegate, Random random) {
-      this.delegate = delegate;
-      this.random = random;
-    }
+	static class CrankyPointsWriter extends PointsWriter {
+		final PointsWriter delegate;
+		final Random random;
 
-    @Override
-    public void writeField(FieldInfo fieldInfo, PointsReader values) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException");
-      }  
-      delegate.writeField(fieldInfo, values);
-    }
+		public CrankyPointsWriter(PointsWriter delegate, Random random) {
+			this.delegate = delegate;
+			this.random = random;
+		}
 
-    @Override
-    public void finish() throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException");
-      }  
-      delegate.finish();
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException");
-      }  
-    }
+		@Override
+		public void writeField(FieldInfo fieldInfo, PointsReader values) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException");
+			}
+			delegate.writeField(fieldInfo, values);
+		}
 
-    @Override
-    public void merge(MergeState mergeState) throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException");
-      }  
-      delegate.merge(mergeState);
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException");
-      }  
-    }
+		@Override
+		public void finish() throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException");
+			}
+			delegate.finish();
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException");
+			}
+		}
 
-    @Override
-    public void close() throws IOException {
-      delegate.close();
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException");
-      }  
-    }
-  }
+		@Override
+		public void merge(MergeState mergeState) throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException");
+			}
+			delegate.merge(mergeState);
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException");
+			}
+		}
 
-  static class CrankyPointsReader extends PointsReader {
-    final PointsReader delegate;
-    final Random random;
-    public CrankyPointsReader(PointsReader delegate, Random random) {
-      this.delegate = delegate;
-      this.random = random;
-    }
+		@Override
+		public void close() throws IOException {
+			delegate.close();
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException");
+			}
+		}
+	}
 
-    @Override
-    public void checkIntegrity() throws IOException {
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException");
-      }
-      delegate.checkIntegrity();
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException");
-      }  
-    }
+	static class CrankyPointsReader extends PointsReader {
+		final PointsReader delegate;
+		final Random random;
 
-    @Override
-    public PointValues getValues(String fieldName) throws IOException {
-      final PointValues delegate = this.delegate.getValues(fieldName);
-      if (delegate == null) {
-        return null;
-      }
-      return new PointValues() {
+		public CrankyPointsReader(PointsReader delegate, Random random) {
+			this.delegate = delegate;
+			this.random = random;
+		}
 
-        @Override
-        public void intersect(IntersectVisitor visitor) throws IOException {
-          if (random.nextInt(100) == 0) {
-            throw new IOException("Fake IOException");
-          }
-          delegate.intersect(visitor);
-          if (random.nextInt(100) == 0) {
-            throw new IOException("Fake IOException");
-          }  
-        }
+		@Override
+		public void checkIntegrity() throws IOException {
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException");
+			}
+			delegate.checkIntegrity();
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException");
+			}
+		}
 
-        @Override
-        public long estimatePointCount(IntersectVisitor visitor) {
-          return delegate.estimatePointCount(visitor);
-        }
+		@Override
+		public PointValues getValues(String fieldName) throws IOException {
+			final PointValues delegate = this.delegate.getValues(fieldName);
+			if (delegate == null) {
+				return null;
+			}
+			return new PointValues() {
 
-        @Override
-        public byte[] getMinPackedValue() throws IOException {
-          if (random.nextInt(100) == 0) {
-            throw new IOException("Fake IOException");
-          }
-          return delegate.getMinPackedValue();
-        }
+				@Override
+				public void intersect(IntersectVisitor visitor) throws IOException {
+					if (random.nextInt(100) == 0) {
+						throw new IOException("Fake IOException");
+					}
+					delegate.intersect(visitor);
+					if (random.nextInt(100) == 0) {
+						throw new IOException("Fake IOException");
+					}
+				}
 
-        @Override
-        public byte[] getMaxPackedValue() throws IOException {
-          if (random.nextInt(100) == 0) {
-            throw new IOException("Fake IOException");
-          }
-          return delegate.getMaxPackedValue();
-        }
+				@Override
+				public long estimatePointCount(IntersectVisitor visitor) {
+					return delegate.estimatePointCount(visitor);
+				}
 
-        @Override
-        public int getNumDimensions() throws IOException {
-          if (random.nextInt(100) == 0) {
-            throw new IOException("Fake IOException");
-          }
-          return delegate.getNumDimensions();
-        }
+				@Override
+				public byte[] getMinPackedValue() throws IOException {
+					if (random.nextInt(100) == 0) {
+						throw new IOException("Fake IOException");
+					}
+					return delegate.getMinPackedValue();
+				}
 
-        @Override
-        public int getBytesPerDimension() throws IOException {
-          if (random.nextInt(100) == 0) {
-            throw new IOException("Fake IOException");
-          }
-          return delegate.getBytesPerDimension();
-        }
+				@Override
+				public byte[] getMaxPackedValue() throws IOException {
+					if (random.nextInt(100) == 0) {
+						throw new IOException("Fake IOException");
+					}
+					return delegate.getMaxPackedValue();
+				}
 
-        @Override
-        public long size() {
-          return delegate.size();
-        }
+				@Override
+				public int getNumDimensions() throws IOException {
+					if (random.nextInt(100) == 0) {
+						throw new IOException("Fake IOException");
+					}
+					return delegate.getNumDimensions();
+				}
 
-        @Override
-        public int getDocCount() {
-          return delegate.getDocCount();
-        }
+				@Override
+				public int getBytesPerDimension() throws IOException {
+					if (random.nextInt(100) == 0) {
+						throw new IOException("Fake IOException");
+					}
+					return delegate.getBytesPerDimension();
+				}
 
-      };
-    }
+				@Override
+				public long size() {
+					return delegate.size();
+				}
 
-    @Override
-    public void close() throws IOException {
-      delegate.close();
-      if (random.nextInt(100) == 0) {
-        throw new IOException("Fake IOException");
-      }  
-    }
+				@Override
+				public int getDocCount() {
+					return delegate.getDocCount();
+				}
 
-    @Override
-    public long ramBytesUsed() {
-      return delegate.ramBytesUsed();
-    }
-  }
+			};
+		}
+
+		@Override
+		public void close() throws IOException {
+			delegate.close();
+			if (random.nextInt(100) == 0) {
+				throw new IOException("Fake IOException");
+			}
+		}
+
+		@Override
+		public long ramBytesUsed() {
+			return delegate.ramBytesUsed();
+		}
+	}
 }

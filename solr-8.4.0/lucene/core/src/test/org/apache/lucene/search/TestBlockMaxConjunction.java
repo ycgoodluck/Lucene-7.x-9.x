@@ -32,72 +32,72 @@ import org.apache.lucene.util.TestUtil;
 
 public class TestBlockMaxConjunction extends LuceneTestCase {
 
-  private Query maybeWrap(Query query) {
-    if (random().nextBoolean()) {
-      query = new BlockScoreQueryWrapper(query, TestUtil.nextInt(random(), 2, 8));
-      query = new AssertingQuery(random(), query);
-    }
-    return query;
-  }
+	private Query maybeWrap(Query query) {
+		if (random().nextBoolean()) {
+			query = new BlockScoreQueryWrapper(query, TestUtil.nextInt(random(), 2, 8));
+			query = new AssertingQuery(random(), query);
+		}
+		return query;
+	}
 
-  private Query maybeWrapTwoPhase(Query query) {
-    if (random().nextBoolean()) {
-      query = new RandomApproximationQuery(query, random());
-      query = new AssertingQuery(random(), query);
-    }
-    return query;
-  }
+	private Query maybeWrapTwoPhase(Query query) {
+		if (random().nextBoolean()) {
+			query = new RandomApproximationQuery(query, random());
+			query = new AssertingQuery(random(), query);
+		}
+		return query;
+	}
 
-  public void testRandom() throws IOException {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
-    int numDocs = atLeast(1000);
-    for (int i = 0; i < numDocs; ++i) {
-      Document doc = new Document();
-      int numValues = random().nextInt(1 << random().nextInt(5));
-      int start = random().nextInt(10);
-      for (int j = 0; j < numValues; ++j) {
-        doc.add(new StringField("foo", Integer.toString(start + j), Store.NO));
-      }
-      w.addDocument(doc);
-    }
-    IndexReader reader = DirectoryReader.open(w);
-    w.close();
-    IndexSearcher searcher = newSearcher(reader);
+	public void testRandom() throws IOException {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig());
+		int numDocs = atLeast(1000);
+		for (int i = 0; i < numDocs; ++i) {
+			Document doc = new Document();
+			int numValues = random().nextInt(1 << random().nextInt(5));
+			int start = random().nextInt(10);
+			for (int j = 0; j < numValues; ++j) {
+				doc.add(new StringField("foo", Integer.toString(start + j), Store.NO));
+			}
+			w.addDocument(doc);
+		}
+		IndexReader reader = DirectoryReader.open(w);
+		w.close();
+		IndexSearcher searcher = newSearcher(reader);
 
-    for (int iter = 0; iter < 100; ++iter) {
-      int start = random().nextInt(10);
-      int numClauses = random().nextInt(1 << random().nextInt(5));
-      BooleanQuery.Builder builder = new BooleanQuery.Builder();
-      for (int i = 0; i < numClauses; ++i) {
-        builder.add(maybeWrap(new TermQuery(new Term("foo", Integer.toString(start + i)))), Occur.MUST);
-      }
-      Query query = builder.build();
+		for (int iter = 0; iter < 100; ++iter) {
+			int start = random().nextInt(10);
+			int numClauses = random().nextInt(1 << random().nextInt(5));
+			BooleanQuery.Builder builder = new BooleanQuery.Builder();
+			for (int i = 0; i < numClauses; ++i) {
+				builder.add(maybeWrap(new TermQuery(new Term("foo", Integer.toString(start + i)))), Occur.MUST);
+			}
+			Query query = builder.build();
 
-      CheckHits.checkTopScores(random(), query, searcher);
+			CheckHits.checkTopScores(random(), query, searcher);
 
-      int filterTerm = random().nextInt(30);
-      Query filteredQuery = new BooleanQuery.Builder()
-          .add(query, Occur.MUST)
-          .add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
-          .build();
+			int filterTerm = random().nextInt(30);
+			Query filteredQuery = new BooleanQuery.Builder()
+				.add(query, Occur.MUST)
+				.add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
+				.build();
 
-      CheckHits.checkTopScores(random(), filteredQuery, searcher);
+			CheckHits.checkTopScores(random(), filteredQuery, searcher);
 
-      builder = new BooleanQuery.Builder();
-      for (int i = 0; i < numClauses; ++i) {
-        builder.add(maybeWrapTwoPhase(new TermQuery(new Term("foo", Integer.toString(start + i)))), Occur.MUST);
-      }
+			builder = new BooleanQuery.Builder();
+			for (int i = 0; i < numClauses; ++i) {
+				builder.add(maybeWrapTwoPhase(new TermQuery(new Term("foo", Integer.toString(start + i)))), Occur.MUST);
+			}
 
-      Query twoPhaseQuery = new BooleanQuery.Builder()
-          .add(query, Occur.MUST)
-          .add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
-          .build();
+			Query twoPhaseQuery = new BooleanQuery.Builder()
+				.add(query, Occur.MUST)
+				.add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
+				.build();
 
-      CheckHits.checkTopScores(random(), twoPhaseQuery, searcher);
-    }
-    reader.close();
-    dir.close();
-  }
+			CheckHits.checkTopScores(random(), twoPhaseQuery, searcher);
+		}
+		reader.close();
+		dir.close();
+	}
 
 }

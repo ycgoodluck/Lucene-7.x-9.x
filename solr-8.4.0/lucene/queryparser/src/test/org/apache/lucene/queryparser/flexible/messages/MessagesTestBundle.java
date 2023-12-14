@@ -18,22 +18,22 @@ package org.apache.lucene.queryparser.flexible.messages;
 
 public class MessagesTestBundle extends NLS {
 
-  private static final String BUNDLE_NAME = MessagesTestBundle.class.getName();
+	private static final String BUNDLE_NAME = MessagesTestBundle.class.getName();
 
-  private MessagesTestBundle() {
-    // should never be instantiated
-  }
+	private MessagesTestBundle() {
+		// should never be instantiated
+	}
 
-  static {
-    // register all string ids with NLS class and initialize static string
-    // values
-    NLS.initializeMessages(BUNDLE_NAME, MessagesTestBundle.class);
-  }
+	static {
+		// register all string ids with NLS class and initialize static string
+		// values
+		NLS.initializeMessages(BUNDLE_NAME, MessagesTestBundle.class);
+	}
 
-  // static string must match the strings in the property files.
-  public static String Q0001E_INVALID_SYNTAX;
-  public static String Q0004E_INVALID_SYNTAX_ESCAPE_UNICODE_TRUNCATION;
+	// static string must match the strings in the property files.
+	public static String Q0001E_INVALID_SYNTAX;
+	public static String Q0004E_INVALID_SYNTAX_ESCAPE_UNICODE_TRUNCATION;
 
-  // this message is missing from the properties file
-  public static String Q0005E_MESSAGE_NOT_IN_BUNDLE;
+	// this message is missing from the properties file
+	public static String Q0005E_MESSAGE_NOT_IN_BUNDLE;
 }

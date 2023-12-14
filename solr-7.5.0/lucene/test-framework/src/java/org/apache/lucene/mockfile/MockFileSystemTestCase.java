@@ -28,102 +28,112 @@ import org.apache.lucene.util.Constants;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.LuceneTestCase.SuppressFileSystems;
 
-/** 
+/**
  * Base class for testing mockfilesystems. This tests things
  * that really need to work: Path equals()/hashcode(), directory listing
  * glob and filtering, URI conversion, etc.
  */
 @SuppressFileSystems("*") // we suppress random filesystems and do tests explicitly.
 public abstract class MockFileSystemTestCase extends LuceneTestCase {
-  
-  /** wraps Path with custom behavior */
-  protected abstract Path wrap(Path path);
 
-  /** Test that Path.hashcode/equals are sane */
-  public void testHashCodeEquals() throws IOException {
-    Path dir = wrap(createTempDir());
+	/**
+	 * wraps Path with custom behavior
+	 */
+	protected abstract Path wrap(Path path);
 
-    Path f1 = dir.resolve("file1");
-    Path f1Again = dir.resolve("file1");
-    Path f2 = dir.resolve("file2");
-    
-    assertEquals(f1, f1);
-    assertFalse(f1.equals(null));
-    assertEquals(f1, f1Again);
-    assertEquals(f1.hashCode(), f1Again.hashCode());
-    assertFalse(f1.equals(f2));
-    dir.getFileSystem().close();
-  }
-  
-  /** Test that URIs are not corrumpted */
-  public void testURI() throws IOException {
-    implTestURI("file1"); // plain ASCII
-  }
+	/**
+	 * Test that Path.hashcode/equals are sane
+	 */
+	public void testHashCodeEquals() throws IOException {
+		Path dir = wrap(createTempDir());
 
-  public void testURIumlaute() throws IOException {
-    implTestURI("äÄöÖüÜß"); // Umlaute and s-zet
-  }
+		Path f1 = dir.resolve("file1");
+		Path f1Again = dir.resolve("file1");
+		Path f2 = dir.resolve("file2");
 
-  public void testURIchinese() throws IOException {
-    implTestURI("中国"); // chinese
-  }
+		assertEquals(f1, f1);
+		assertFalse(f1.equals(null));
+		assertEquals(f1, f1Again);
+		assertEquals(f1.hashCode(), f1Again.hashCode());
+		assertFalse(f1.equals(f2));
+		dir.getFileSystem().close();
+	}
 
-  private void implTestURI(String fileName) throws IOException {
-    assumeFalse("broken on J9: see https://issues.apache.org/jira/browse/LUCENE-6517", Constants.JAVA_VENDOR.startsWith("IBM"));
-    Path dir = wrap(createTempDir());
+	/**
+	 * Test that URIs are not corrumpted
+	 */
+	public void testURI() throws IOException {
+		implTestURI("file1"); // plain ASCII
+	}
 
-    try {
-      dir.resolve(fileName);
-    } catch (InvalidPathException ipe) {
-      assumeNoException("couldn't resolve '"+fileName+"'", ipe);
-    }
+	public void testURIumlaute() throws IOException {
+		implTestURI("äÄöÖüÜß"); // Umlaute and s-zet
+	}
 
-    Path f1 = dir.resolve(fileName);
-    URI uri = f1.toUri();
-    Path f2 = dir.getFileSystem().provider().getPath(uri);
-    assertEquals(f1, f2);
+	public void testURIchinese() throws IOException {
+		implTestURI("中国"); // chinese
+	}
 
-    dir.getFileSystem().close();
-  }
-  
-  /** Tests that newDirectoryStream with a filter works correctly */
-  public void testDirectoryStreamFiltered() throws IOException {
-    Path dir = wrap(createTempDir());
+	private void implTestURI(String fileName) throws IOException {
+		assumeFalse("broken on J9: see https://issues.apache.org/jira/browse/LUCENE-6517", Constants.JAVA_VENDOR.startsWith("IBM"));
+		Path dir = wrap(createTempDir());
 
-    OutputStream file = Files.newOutputStream(dir.resolve("file1"));
-    file.write(5);
-    file.close();
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
-      int count = 0;
-      for (Path path : stream) {
-        assertTrue(path instanceof FilterPath);
-        if (!path.getFileName().toString().startsWith("extra")) {
-          count++;
-        }
-      }
-      assertEquals(1, count);
-    }
-    dir.getFileSystem().close();
-  }
+		try {
+			dir.resolve(fileName);
+		} catch (InvalidPathException ipe) {
+			assumeNoException("couldn't resolve '" + fileName + "'", ipe);
+		}
 
-  /** Tests that newDirectoryStream with globbing works correctly */
-  public void testDirectoryStreamGlobFiltered() throws IOException {
-    Path dir = wrap(createTempDir());
+		Path f1 = dir.resolve(fileName);
+		URI uri = f1.toUri();
+		Path f2 = dir.getFileSystem().provider().getPath(uri);
+		assertEquals(f1, f2);
 
-    OutputStream file = Files.newOutputStream(dir.resolve("foo"));
-    file.write(5);
-    file.close();
-    file = Files.newOutputStream(dir.resolve("bar"));
-    file.write(5);
-    file.close();
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "f*")) {
-      int count = 0;
-      for (Path path : stream) {
-        assertTrue(path instanceof FilterPath);
-        ++count;
-      }
-      assertEquals(1, count);
-    }
-    dir.getFileSystem().close();
-  }
+		dir.getFileSystem().close();
+	}
+
+	/**
+	 * Tests that newDirectoryStream with a filter works correctly
+	 */
+	public void testDirectoryStreamFiltered() throws IOException {
+		Path dir = wrap(createTempDir());
+
+		OutputStream file = Files.newOutputStream(dir.resolve("file1"));
+		file.write(5);
+		file.close();
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+			int count = 0;
+			for (Path path : stream) {
+				assertTrue(path instanceof FilterPath);
+				if (!path.getFileName().toString().startsWith("extra")) {
+					count++;
+				}
+			}
+			assertEquals(1, count);
+		}
+		dir.getFileSystem().close();
+	}
+
+	/**
+	 * Tests that newDirectoryStream with globbing works correctly
+	 */
+	public void testDirectoryStreamGlobFiltered() throws IOException {
+		Path dir = wrap(createTempDir());
+
+		OutputStream file = Files.newOutputStream(dir.resolve("foo"));
+		file.write(5);
+		file.close();
+		file = Files.newOutputStream(dir.resolve("bar"));
+		file.write(5);
+		file.close();
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "f*")) {
+			int count = 0;
+			for (Path path : stream) {
+				assertTrue(path instanceof FilterPath);
+				++count;
+			}
+			assertEquals(1, count);
+		}
+		dir.getFileSystem().close();
+	}
 }

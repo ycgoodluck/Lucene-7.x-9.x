@@ -19,17 +19,16 @@ package org.apache.lucene.queryparser.flexible.core.nodes;
 /**
  * A {@link MatchNoDocsQueryNode} indicates that a query node tree or subtree
  * will not match any documents if executed in the index.
- * 
  */
 public class MatchNoDocsQueryNode extends DeletedQueryNode {
 
-  public MatchNoDocsQueryNode() {
-    // empty constructor
-  }
+	public MatchNoDocsQueryNode() {
+		// empty constructor
+	}
 
-  @Override
-  public String toString() {
-    return "<matchNoDocsQueryNode/>";
-  }
+	@Override
+	public String toString() {
+		return "<matchNoDocsQueryNode/>";
+	}
 
 }

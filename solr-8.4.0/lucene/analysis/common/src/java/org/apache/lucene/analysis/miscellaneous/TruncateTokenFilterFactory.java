@@ -36,29 +36,32 @@ import java.util.Map;
  *     &lt;filter class="solr.RemoveDuplicatesTokenFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 4.8.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 4.8.0
  */
 public class TruncateTokenFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "truncate";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "truncate";
 
-  public static final String PREFIX_LENGTH_KEY = "prefixLength";
-  private final byte prefixLength;
+	public static final String PREFIX_LENGTH_KEY = "prefixLength";
+	private final byte prefixLength;
 
-  public TruncateTokenFilterFactory(Map<String, String> args) {
-    super(args);
-    prefixLength = Byte.parseByte(get(args, PREFIX_LENGTH_KEY, "5"));
-    if (prefixLength < 1)
-      throw new IllegalArgumentException(PREFIX_LENGTH_KEY + " parameter must be a positive number: " + prefixLength);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameter(s): " + args);
-    }
-  }
+	public TruncateTokenFilterFactory(Map<String, String> args) {
+		super(args);
+		prefixLength = Byte.parseByte(get(args, PREFIX_LENGTH_KEY, "5"));
+		if (prefixLength < 1)
+			throw new IllegalArgumentException(PREFIX_LENGTH_KEY + " parameter must be a positive number: " + prefixLength);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameter(s): " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new TruncateTokenFilter(input, prefixLength);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new TruncateTokenFilter(input, prefixLength);
+	}
 }

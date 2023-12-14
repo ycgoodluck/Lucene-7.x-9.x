@@ -21,19 +21,21 @@ package org.apache.lucene.search.vectorhighlight;
  */
 public interface BoundaryScanner {
 
-  /**
-   * Scan backward to find end offset.
-   * @param buffer scanned object
-   * @param start start offset to begin
-   * @return the found start offset
-   */
-  public int findStartOffset( StringBuilder buffer, int start );
+	/**
+	 * Scan backward to find end offset.
+	 *
+	 * @param buffer scanned object
+	 * @param start  start offset to begin
+	 * @return the found start offset
+	 */
+	public int findStartOffset(StringBuilder buffer, int start);
 
-  /**
-   * Scan forward to find start offset.
-   * @param buffer scanned object
-   * @param start start offset to begin
-   * @return the found end offset
-   */
-  public int findEndOffset( StringBuilder buffer, int start );
+	/**
+	 * Scan forward to find start offset.
+	 *
+	 * @param buffer scanned object
+	 * @param start  start offset to begin
+	 * @return the found end offset
+	 */
+	public int findEndOffset(StringBuilder buffer, int start);
 }

@@ -23,45 +23,45 @@ import java.util.Collections;
 
 public class TestTrackingDirectoryWrapper extends BaseDirectoryTestCase {
 
-  @Override
-  protected Directory getDirectory(Path path) throws IOException {
-    return new TrackingDirectoryWrapper(new RAMDirectory());
-  }
-  
-  public void testTrackEmpty() throws IOException {
-    TrackingDirectoryWrapper dir = new TrackingDirectoryWrapper(new RAMDirectory());
-    assertEquals(Collections.emptySet(), dir.getCreatedFiles());
-  }
+	@Override
+	protected Directory getDirectory(Path path) throws IOException {
+		return new TrackingDirectoryWrapper(new RAMDirectory());
+	}
 
-  public void testTrackCreate() throws IOException {
-    TrackingDirectoryWrapper dir = new TrackingDirectoryWrapper(new RAMDirectory());
-    dir.createOutput("foo", newIOContext(random())).close();
-    assertEquals(asSet("foo"), dir.getCreatedFiles());
-  }
-  
-  public void testTrackDelete() throws IOException {
-    TrackingDirectoryWrapper dir = new TrackingDirectoryWrapper(new RAMDirectory());
-    dir.createOutput("foo", newIOContext(random())).close();
-    assertEquals(asSet("foo"), dir.getCreatedFiles());
-    dir.deleteFile("foo");
-    assertEquals(Collections.emptySet(), dir.getCreatedFiles());
-  }
-  
-  public void testTrackRename() throws IOException {
-    TrackingDirectoryWrapper dir = new TrackingDirectoryWrapper(new RAMDirectory());
-    dir.createOutput("foo", newIOContext(random())).close();
-    assertEquals(asSet("foo"), dir.getCreatedFiles());
-    dir.rename("foo", "bar");
-    assertEquals(asSet("bar"), dir.getCreatedFiles());
-  }
-  
-  public void testTrackCopyFrom() throws IOException {
-    TrackingDirectoryWrapper source = new TrackingDirectoryWrapper(new RAMDirectory());
-    TrackingDirectoryWrapper dest = new TrackingDirectoryWrapper(new RAMDirectory());
-    source.createOutput("foo", newIOContext(random())).close();
-    assertEquals(asSet("foo"), source.getCreatedFiles());
-    dest.copyFrom(source, "foo", "bar", newIOContext(random()));
-    assertEquals(asSet("bar"), dest.getCreatedFiles());
-    assertEquals(asSet("foo"), source.getCreatedFiles());
-  }
+	public void testTrackEmpty() throws IOException {
+		TrackingDirectoryWrapper dir = new TrackingDirectoryWrapper(new RAMDirectory());
+		assertEquals(Collections.emptySet(), dir.getCreatedFiles());
+	}
+
+	public void testTrackCreate() throws IOException {
+		TrackingDirectoryWrapper dir = new TrackingDirectoryWrapper(new RAMDirectory());
+		dir.createOutput("foo", newIOContext(random())).close();
+		assertEquals(asSet("foo"), dir.getCreatedFiles());
+	}
+
+	public void testTrackDelete() throws IOException {
+		TrackingDirectoryWrapper dir = new TrackingDirectoryWrapper(new RAMDirectory());
+		dir.createOutput("foo", newIOContext(random())).close();
+		assertEquals(asSet("foo"), dir.getCreatedFiles());
+		dir.deleteFile("foo");
+		assertEquals(Collections.emptySet(), dir.getCreatedFiles());
+	}
+
+	public void testTrackRename() throws IOException {
+		TrackingDirectoryWrapper dir = new TrackingDirectoryWrapper(new RAMDirectory());
+		dir.createOutput("foo", newIOContext(random())).close();
+		assertEquals(asSet("foo"), dir.getCreatedFiles());
+		dir.rename("foo", "bar");
+		assertEquals(asSet("bar"), dir.getCreatedFiles());
+	}
+
+	public void testTrackCopyFrom() throws IOException {
+		TrackingDirectoryWrapper source = new TrackingDirectoryWrapper(new RAMDirectory());
+		TrackingDirectoryWrapper dest = new TrackingDirectoryWrapper(new RAMDirectory());
+		source.createOutput("foo", newIOContext(random())).close();
+		assertEquals(asSet("foo"), source.getCreatedFiles());
+		dest.copyFrom(source, "foo", "bar", newIOContext(random()));
+		assertEquals(asSet("bar"), dest.getCreatedFiles());
+		assertEquals(asSet("foo"), source.getCreatedFiles());
+	}
 }

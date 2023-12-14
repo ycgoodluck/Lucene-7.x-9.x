@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-/** 
+
+/**
  * A simple query parser for human-entered queries.
  */
 package org.apache.lucene.queryparser.simple;

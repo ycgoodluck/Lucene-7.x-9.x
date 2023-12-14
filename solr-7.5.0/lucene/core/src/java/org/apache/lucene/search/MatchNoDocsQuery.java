@@ -29,54 +29,58 @@ import org.apache.lucene.index.Term;
 
 public class MatchNoDocsQuery extends Query {
 
-  private final String reason;
+	private final String reason;
 
-  /** Default constructor */
-  public MatchNoDocsQuery() {
-    this("");
-  }
+	/**
+	 * Default constructor
+	 */
+	public MatchNoDocsQuery() {
+		this("");
+	}
 
-  /** Provides a reason explaining why this query was used */
-  public MatchNoDocsQuery(String reason) {
-    this.reason = reason;
-  }
-  
-  @Override
-  public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-    return new Weight(this) {
-      @Override
-      public void extractTerms(Set<Term> terms) {
-      }
+	/**
+	 * Provides a reason explaining why this query was used
+	 */
+	public MatchNoDocsQuery(String reason) {
+		this.reason = reason;
+	}
 
-      @Override
-      public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-        return Explanation.noMatch(reason);
-      }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+		return new Weight(this) {
+			@Override
+			public void extractTerms(Set<Term> terms) {
+			}
 
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        return null;
-      }
+			@Override
+			public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+				return Explanation.noMatch(reason);
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return true;
-      }
-    };
-  }
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				return null;
+			}
 
-  @Override
-  public String toString(String field) {
-    return "MatchNoDocsQuery(\"" + reason + "\")";
-  }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return true;
+			}
+		};
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    return sameClassAs(o);
-  }
+	@Override
+	public String toString(String field) {
+		return "MatchNoDocsQuery(\"" + reason + "\")";
+	}
 
-  @Override
-  public int hashCode() {
-    return classHash();
-  }
+	@Override
+	public boolean equals(Object o) {
+		return sameClassAs(o);
+	}
+
+	@Override
+	public int hashCode() {
+		return classHash();
+	}
 }

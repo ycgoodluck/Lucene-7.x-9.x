@@ -41,127 +41,127 @@ import org.apache.lucene.util.RamUsageEstimator;
  */
 public class BlockHeader implements Accountable {
 
-  private static final long RAM_USAGE = RamUsageEstimator.shallowSizeOfInstance(BlockHeader.class);
+	private static final long RAM_USAGE = RamUsageEstimator.shallowSizeOfInstance(BlockHeader.class);
 
-  protected int linesCount;
+	protected int linesCount;
 
-  protected long baseDocsFP;
-  protected long basePositionsFP;
-  protected long basePayloadsFP;
+	protected long baseDocsFP;
+	protected long basePositionsFP;
+	protected long basePayloadsFP;
 
-  protected int termStatesBaseOffset;
-  protected int middleLineIndex;
-  protected int middleLineOffset;
+	protected int termStatesBaseOffset;
+	protected int middleLineIndex;
+	protected int middleLineOffset;
 
-  /**
-   * @param linesCount           Number of lines in the block.
-   * @param baseDocsFP           File pointer to the docs of the first term with docs in the block.
-   * @param basePositionsFP      File pointer to the positions of the first term with positions in the block.
-   * @param basePayloadsFP       File pointer to the payloads of the first term with payloads in the block.
-   * @param termStatesBaseOffset Offset to the details region of the block (the term states), relative to the block start.
-   * @param middleLineOffset     Offset to the middle term of the block, relative to the block start.
-   */
-  protected BlockHeader(int linesCount, long baseDocsFP, long basePositionsFP, long basePayloadsFP,
-                        int termStatesBaseOffset, int middleLineOffset) {
-    reset(linesCount, baseDocsFP, basePositionsFP, basePayloadsFP, termStatesBaseOffset, middleLineOffset);
-  }
+	/**
+	 * @param linesCount           Number of lines in the block.
+	 * @param baseDocsFP           File pointer to the docs of the first term with docs in the block.
+	 * @param basePositionsFP      File pointer to the positions of the first term with positions in the block.
+	 * @param basePayloadsFP       File pointer to the payloads of the first term with payloads in the block.
+	 * @param termStatesBaseOffset Offset to the details region of the block (the term states), relative to the block start.
+	 * @param middleLineOffset     Offset to the middle term of the block, relative to the block start.
+	 */
+	protected BlockHeader(int linesCount, long baseDocsFP, long basePositionsFP, long basePayloadsFP,
+												int termStatesBaseOffset, int middleLineOffset) {
+		reset(linesCount, baseDocsFP, basePositionsFP, basePayloadsFP, termStatesBaseOffset, middleLineOffset);
+	}
 
-  /**
-   * Empty constructor. {@link #reset} must be called before writing.
-   */
-  protected BlockHeader() {
-  }
+	/**
+	 * Empty constructor. {@link #reset} must be called before writing.
+	 */
+	protected BlockHeader() {
+	}
 
-  protected BlockHeader reset(int linesCount, long baseDocsFP, long basePositionsFP,
-                              long basePayloadsFP, int termStatesBaseOffset, int middleTermOffset) {
-    this.baseDocsFP = baseDocsFP;
-    this.basePositionsFP = basePositionsFP;
-    this.basePayloadsFP = basePayloadsFP;
-    this.linesCount = linesCount;
-    this.middleLineIndex = linesCount >> 1;
-    this.termStatesBaseOffset = termStatesBaseOffset;
-    this.middleLineOffset = middleTermOffset;
-    return this;
-  }
+	protected BlockHeader reset(int linesCount, long baseDocsFP, long basePositionsFP,
+															long basePayloadsFP, int termStatesBaseOffset, int middleTermOffset) {
+		this.baseDocsFP = baseDocsFP;
+		this.basePositionsFP = basePositionsFP;
+		this.basePayloadsFP = basePayloadsFP;
+		this.linesCount = linesCount;
+		this.middleLineIndex = linesCount >> 1;
+		this.termStatesBaseOffset = termStatesBaseOffset;
+		this.middleLineOffset = middleTermOffset;
+		return this;
+	}
 
-  /**
-   * @return The number of lines in the block.
-   */
-  public int getLinesCount() {
-    return linesCount;
-  }
+	/**
+	 * @return The number of lines in the block.
+	 */
+	public int getLinesCount() {
+		return linesCount;
+	}
 
-  /**
-   * @return The index of the middle line of the block.
-   */
-  public int getMiddleLineIndex() {
-    return middleLineIndex;
-  }
+	/**
+	 * @return The index of the middle line of the block.
+	 */
+	public int getMiddleLineIndex() {
+		return middleLineIndex;
+	}
 
-  /**
-   * @return The offset to the middle line of the block, relative to the block start.
-   */
-  public int getMiddleLineOffset() {
-    return middleLineOffset;
-  }
+	/**
+	 * @return The offset to the middle line of the block, relative to the block start.
+	 */
+	public int getMiddleLineOffset() {
+		return middleLineOffset;
+	}
 
-  /**
-   * @return The offset to the details region of the block (the term states), relative to the block start.
-   */
-  public int getTermStatesBaseOffset() {
-    return termStatesBaseOffset;
-  }
+	/**
+	 * @return The offset to the details region of the block (the term states), relative to the block start.
+	 */
+	public int getTermStatesBaseOffset() {
+		return termStatesBaseOffset;
+	}
 
-  /**
-   * @return The file pointer to the docs of the first term with docs in the block.
-   */
-  public long getBaseDocsFP() {
-    return baseDocsFP;
-  }
+	/**
+	 * @return The file pointer to the docs of the first term with docs in the block.
+	 */
+	public long getBaseDocsFP() {
+		return baseDocsFP;
+	}
 
-  /**
-   * @return The file pointer to the positions of the first term with positions in the block.
-   */
-  public long getBasePositionsFP() {
-    return basePositionsFP;
-  }
+	/**
+	 * @return The file pointer to the positions of the first term with positions in the block.
+	 */
+	public long getBasePositionsFP() {
+		return basePositionsFP;
+	}
 
-  /**
-   * @return The file pointer to the payloads of the first term with payloads in the block.
-   */
-  public long getBasePayloadsFP() {
-    return basePayloadsFP;
-  }
+	/**
+	 * @return The file pointer to the payloads of the first term with payloads in the block.
+	 */
+	public long getBasePayloadsFP() {
+		return basePayloadsFP;
+	}
 
-  public void write(DataOutput output) throws IOException {
-    assert linesCount > 0 : "block header does not seem to be initialized";
-    output.writeVInt(linesCount);
+	public void write(DataOutput output) throws IOException {
+		assert linesCount > 0 : "block header does not seem to be initialized";
+		output.writeVInt(linesCount);
 
-    output.writeVLong(baseDocsFP);
-    output.writeVLong(basePositionsFP);
-    output.writeVLong(basePayloadsFP);
+		output.writeVLong(baseDocsFP);
+		output.writeVLong(basePositionsFP);
+		output.writeVLong(basePayloadsFP);
 
-    output.writeVInt(termStatesBaseOffset);
-    output.writeVInt(middleLineOffset);
-  }
+		output.writeVInt(termStatesBaseOffset);
+		output.writeVInt(middleLineOffset);
+	}
 
-  public static BlockHeader read(DataInput input, BlockHeader reuse) throws IOException {
-    int linesCount = input.readVInt();
-    assert linesCount > 0 && linesCount <= UniformSplitTermsWriter.MAX_NUM_BLOCK_LINES : "linesCount=" + linesCount;
+	public static BlockHeader read(DataInput input, BlockHeader reuse) throws IOException {
+		int linesCount = input.readVInt();
+		assert linesCount > 0 && linesCount <= UniformSplitTermsWriter.MAX_NUM_BLOCK_LINES : "linesCount=" + linesCount;
 
-    long baseDocsFP = input.readVLong();
-    long basePositionsFP = input.readVLong();
-    long basePayloadsFP = input.readVLong();
+		long baseDocsFP = input.readVLong();
+		long basePositionsFP = input.readVLong();
+		long basePayloadsFP = input.readVLong();
 
-    int termStatesBaseOffset = input.readVInt();
-    int middleTermOffset = input.readVInt();
+		int termStatesBaseOffset = input.readVInt();
+		int middleTermOffset = input.readVInt();
 
-    BlockHeader blockHeader = reuse == null ? new BlockHeader() : reuse;
-    return blockHeader.reset(linesCount, baseDocsFP, basePositionsFP, basePayloadsFP, termStatesBaseOffset, middleTermOffset);
-  }
+		BlockHeader blockHeader = reuse == null ? new BlockHeader() : reuse;
+		return blockHeader.reset(linesCount, baseDocsFP, basePositionsFP, basePayloadsFP, termStatesBaseOffset, middleTermOffset);
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return RAM_USAGE;
-  }
+	@Override
+	public long ramBytesUsed() {
+		return RAM_USAGE;
+	}
 }

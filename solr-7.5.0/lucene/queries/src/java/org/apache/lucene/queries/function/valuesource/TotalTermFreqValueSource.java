@@ -28,69 +28,70 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * <code>TotalTermFreqValueSource</code> returns the total term freq 
+ * <code>TotalTermFreqValueSource</code> returns the total term freq
  * (sum of term freqs across all documents).
- * Returns -1 if frequencies were omitted for the field, or if 
+ * Returns -1 if frequencies were omitted for the field, or if
  * the codec doesn't support this statistic.
+ *
  * @lucene.internal
  */
 public class TotalTermFreqValueSource extends ValueSource {
-  protected final String field;
-  protected final String indexedField;
-  protected final String val;
-  protected final BytesRef indexedBytes;
+	protected final String field;
+	protected final String indexedField;
+	protected final String val;
+	protected final BytesRef indexedBytes;
 
-  public TotalTermFreqValueSource(String field, String val, String indexedField, BytesRef indexedBytes) {
-    this.field = field;
-    this.val = val;
-    this.indexedField = indexedField;
-    this.indexedBytes = indexedBytes;
-  }
+	public TotalTermFreqValueSource(String field, String val, String indexedField, BytesRef indexedBytes) {
+		this.field = field;
+		this.val = val;
+		this.indexedField = indexedField;
+		this.indexedBytes = indexedBytes;
+	}
 
-  public String name() {
-    return "totaltermfreq";
-  }
+	public String name() {
+		return "totaltermfreq";
+	}
 
-  @Override
-  public String description() {
-    return name() + '(' + field + ',' + val + ')';
-  }
+	@Override
+	public String description() {
+		return name() + '(' + field + ',' + val + ')';
+	}
 
-  @Override
-  public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-    return (FunctionValues)context.get(this);
-  }
+	@Override
+	public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
+		return (FunctionValues) context.get(this);
+	}
 
-  @Override
-  public void createWeight(Map context, IndexSearcher searcher) throws IOException {
-    long totalTermFreq = 0;
-    for (LeafReaderContext readerContext : searcher.getTopReaderContext().leaves()) {
-      long val = readerContext.reader().totalTermFreq(new Term(indexedField, indexedBytes));
-      if (val == -1) {
-        totalTermFreq = -1;
-        break;
-      } else {
-        totalTermFreq += val;
-      }
-    }
-    final long ttf = totalTermFreq;
-    context.put(this, new LongDocValues(this) {
-      @Override
-      public long longVal(int doc) {
-        return ttf;
-      }
-    });
-  }
+	@Override
+	public void createWeight(Map context, IndexSearcher searcher) throws IOException {
+		long totalTermFreq = 0;
+		for (LeafReaderContext readerContext : searcher.getTopReaderContext().leaves()) {
+			long val = readerContext.reader().totalTermFreq(new Term(indexedField, indexedBytes));
+			if (val == -1) {
+				totalTermFreq = -1;
+				break;
+			} else {
+				totalTermFreq += val;
+			}
+		}
+		final long ttf = totalTermFreq;
+		context.put(this, new LongDocValues(this) {
+			@Override
+			public long longVal(int doc) {
+				return ttf;
+			}
+		});
+	}
 
-  @Override
-  public int hashCode() {
-    return getClass().hashCode() + indexedField.hashCode()*29 + indexedBytes.hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return getClass().hashCode() + indexedField.hashCode() * 29 + indexedBytes.hashCode();
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this.getClass() != o.getClass()) return false;
-    TotalTermFreqValueSource other = (TotalTermFreqValueSource)o;
-    return this.indexedField.equals(other.indexedField) && this.indexedBytes.equals(other.indexedBytes);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this.getClass() != o.getClass()) return false;
+		TotalTermFreqValueSource other = (TotalTermFreqValueSource) o;
+		return this.indexedField.equals(other.indexedField) && this.indexedBytes.equals(other.indexedBytes);
+	}
 }

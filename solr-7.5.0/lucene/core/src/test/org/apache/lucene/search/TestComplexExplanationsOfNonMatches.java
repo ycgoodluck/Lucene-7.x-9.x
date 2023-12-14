@@ -17,22 +17,20 @@
 package org.apache.lucene.search;
 
 
-
-
 /**
  * subclass of TestSimpleExplanations that verifies non matches.
  */
 public class TestComplexExplanationsOfNonMatches
-  extends TestComplexExplanations {
+	extends TestComplexExplanations {
 
-  /**
-   * Overrides superclass to ignore matches and focus on non-matches
-   *
-   * @see CheckHits#checkNoMatchExplanations
-   */
-  @Override
-  public void qtest(Query q, int[] expDocNrs) throws Exception {
-    CheckHits.checkNoMatchExplanations(q, FIELD, searcher, expDocNrs);
-  }
-    
+	/**
+	 * Overrides superclass to ignore matches and focus on non-matches
+	 *
+	 * @see CheckHits#checkNoMatchExplanations
+	 */
+	@Override
+	public void qtest(Query q, int[] expDocNrs) throws Exception {
+		CheckHits.checkNoMatchExplanations(q, FIELD, searcher, expDocNrs);
+	}
+
 }

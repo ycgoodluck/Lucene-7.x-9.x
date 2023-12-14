@@ -35,86 +35,86 @@ import com.carrotsearch.randomizedtesting.generators.RandomNumbers;
 /**
  * This test creates an index with one segment that is a little larger than 4GB.
  */
-@SuppressCodecs({ "SimpleText", "Compressing" })
+@SuppressCodecs({"SimpleText", "Compressing"})
 @TimeoutSuite(millis = 4 * TimeUnits.HOUR)
 public class Test4GBStoredFields extends LuceneTestCase {
 
-  @Nightly
-  public void test() throws Exception {
-    assumeWorkingMMapOnWindows();
-    
-    MockDirectoryWrapper dir = new MockDirectoryWrapper(random(), new MMapDirectory(createTempDir("4GBStoredFields")));
-    dir.setThrottling(MockDirectoryWrapper.Throttling.NEVER);
+	@Nightly
+	public void test() throws Exception {
+		assumeWorkingMMapOnWindows();
 
-    IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()));
-    iwc.setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH);
-    iwc.setRAMBufferSizeMB(256.0);
-    iwc.setMergeScheduler(new ConcurrentMergeScheduler());
-    iwc.setMergePolicy(newLogMergePolicy(false, 10));
-    iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+		MockDirectoryWrapper dir = new MockDirectoryWrapper(random(), new MMapDirectory(createTempDir("4GBStoredFields")));
+		dir.setThrottling(MockDirectoryWrapper.Throttling.NEVER);
 
-    // TODO: we disable "Compressing" since it likes to pick very extreme values which will be too slow for this test.
-    // maybe we should factor out crazy cases to ExtremeCompressing? then annotations can handle this stuff...
-    if (random().nextBoolean()) {
-      iwc.setCodec(CompressingCodec.reasonableInstance(random()));
-    }
+		IndexWriterConfig iwc = new IndexWriterConfig(new MockAnalyzer(random()));
+		iwc.setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH);
+		iwc.setRAMBufferSizeMB(256.0);
+		iwc.setMergeScheduler(new ConcurrentMergeScheduler());
+		iwc.setMergePolicy(newLogMergePolicy(false, 10));
+		iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
 
-    IndexWriter w = new IndexWriter(dir, iwc);
+		// TODO: we disable "Compressing" since it likes to pick very extreme values which will be too slow for this test.
+		// maybe we should factor out crazy cases to ExtremeCompressing? then annotations can handle this stuff...
+		if (random().nextBoolean()) {
+			iwc.setCodec(CompressingCodec.reasonableInstance(random()));
+		}
 
-    MergePolicy mp = w.getConfig().getMergePolicy();
-    if (mp instanceof LogByteSizeMergePolicy) {
-     // 1 petabyte:
-     ((LogByteSizeMergePolicy) mp).setMaxMergeMB(1024*1024*1024);
-    }
+		IndexWriter w = new IndexWriter(dir, iwc);
 
-    final Document doc = new Document();
-    final FieldType ft = new FieldType();
-    ft.setStored(true);
-    ft.freeze();
-    final int valueLength = RandomNumbers.randomIntBetween(random(), 1 << 13, 1 << 20);
-    final byte[] value = new byte[valueLength];
-    for (int i = 0; i < valueLength; ++i) {
-      // random so that even compressing codecs can't compress it
-      value[i] = (byte) random().nextInt(256);
-    }
-    final Field f = new Field("fld", value, ft);
-    doc.add(f);
+		MergePolicy mp = w.getConfig().getMergePolicy();
+		if (mp instanceof LogByteSizeMergePolicy) {
+			// 1 petabyte:
+			((LogByteSizeMergePolicy) mp).setMaxMergeMB(1024 * 1024 * 1024);
+		}
 
-    final int numDocs = (int) ((1L << 32) / valueLength + 100);
-    for (int i = 0; i < numDocs; ++i) {
-      w.addDocument(doc);
-      if (VERBOSE && i % (numDocs / 10) == 0) {
-        System.out.println(i + " of " + numDocs + "...");
-      }
-    }
-    w.forceMerge(1);
-    w.close();
-    if (VERBOSE) {
-      boolean found = false;
-      for (String file : dir.listAll()) {
-        if (file.endsWith(".fdt")) {
-          final long fileLength = dir.fileLength(file);
-          if (fileLength >= 1L << 32) {
-            found = true;
-          }
-          System.out.println("File length of " + file + " : " + fileLength);
-        }
-      }
-      if (!found) {
-        System.out.println("No .fdt file larger than 4GB, test bug?");
-      }
-    }
+		final Document doc = new Document();
+		final FieldType ft = new FieldType();
+		ft.setStored(true);
+		ft.freeze();
+		final int valueLength = RandomNumbers.randomIntBetween(random(), 1 << 13, 1 << 20);
+		final byte[] value = new byte[valueLength];
+		for (int i = 0; i < valueLength; ++i) {
+			// random so that even compressing codecs can't compress it
+			value[i] = (byte) random().nextInt(256);
+		}
+		final Field f = new Field("fld", value, ft);
+		doc.add(f);
 
-    DirectoryReader rd = DirectoryReader.open(dir);
-    Document sd = rd.document(numDocs - 1);
-    assertNotNull(sd);
-    assertEquals(1, sd.getFields().size());
-    BytesRef valueRef = sd.getBinaryValue("fld");
-    assertNotNull(valueRef);
-    assertEquals(new BytesRef(value), valueRef);
-    rd.close();
+		final int numDocs = (int) ((1L << 32) / valueLength + 100);
+		for (int i = 0; i < numDocs; ++i) {
+			w.addDocument(doc);
+			if (VERBOSE && i % (numDocs / 10) == 0) {
+				System.out.println(i + " of " + numDocs + "...");
+			}
+		}
+		w.forceMerge(1);
+		w.close();
+		if (VERBOSE) {
+			boolean found = false;
+			for (String file : dir.listAll()) {
+				if (file.endsWith(".fdt")) {
+					final long fileLength = dir.fileLength(file);
+					if (fileLength >= 1L << 32) {
+						found = true;
+					}
+					System.out.println("File length of " + file + " : " + fileLength);
+				}
+			}
+			if (!found) {
+				System.out.println("No .fdt file larger than 4GB, test bug?");
+			}
+		}
 
-    dir.close();
-  }
+		DirectoryReader rd = DirectoryReader.open(dir);
+		Document sd = rd.document(numDocs - 1);
+		assertNotNull(sd);
+		assertEquals(1, sd.getFields().size());
+		BytesRef valueRef = sd.getBinaryValue("fld");
+		assertNotNull(valueRef);
+		assertEquals(new BytesRef(value), valueRef);
+		rd.close();
+
+		dir.close();
+	}
 
 }

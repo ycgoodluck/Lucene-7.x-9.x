@@ -94,153 +94,154 @@ import org.apache.lucene.util.RamUsageEstimator;
  * @lucene.experimental
  */
 public class DocValuesTermsQuery extends Query implements Accountable {
-  private static final long BASE_RAM_BYTES = RamUsageEstimator.shallowSizeOfInstance(DocValuesTermsQuery.class);
+	private static final long BASE_RAM_BYTES = RamUsageEstimator.shallowSizeOfInstance(DocValuesTermsQuery.class);
 
-  private final String field;
-  private final PrefixCodedTerms termData;
-  private final int termDataHashCode; // cached hashcode of termData
+	private final String field;
+	private final PrefixCodedTerms termData;
+	private final int termDataHashCode; // cached hashcode of termData
 
-  public DocValuesTermsQuery(String field, Collection<BytesRef> terms) {
-    this.field = Objects.requireNonNull(field);
-    Objects.requireNonNull(terms, "Collection of terms must not be null");
-    BytesRef[] sortedTerms = terms.toArray(new BytesRef[terms.size()]);
-    ArrayUtil.timSort(sortedTerms);
-    PrefixCodedTerms.Builder builder = new PrefixCodedTerms.Builder();
-    BytesRef previous = null;
-    for (BytesRef term : sortedTerms) {
-      if (term.equals(previous) == false) {
-        builder.add(field, term);
-      }
-      previous = term;
-    }
-    termData = builder.finish();
-    termDataHashCode = termData.hashCode();
-  }
+	public DocValuesTermsQuery(String field, Collection<BytesRef> terms) {
+		this.field = Objects.requireNonNull(field);
+		Objects.requireNonNull(terms, "Collection of terms must not be null");
+		BytesRef[] sortedTerms = terms.toArray(new BytesRef[terms.size()]);
+		ArrayUtil.timSort(sortedTerms);
+		PrefixCodedTerms.Builder builder = new PrefixCodedTerms.Builder();
+		BytesRef previous = null;
+		for (BytesRef term : sortedTerms) {
+			if (term.equals(previous) == false) {
+				builder.add(field, term);
+			}
+			previous = term;
+		}
+		termData = builder.finish();
+		termDataHashCode = termData.hashCode();
+	}
 
-  public DocValuesTermsQuery(String field, BytesRef... terms) {
-    this(field, Arrays.asList(terms));
-  }
+	public DocValuesTermsQuery(String field, BytesRef... terms) {
+		this(field, Arrays.asList(terms));
+	}
 
-  public DocValuesTermsQuery(String field, String... terms) {
-    this(field, new AbstractList<BytesRef>() {
-      @Override
-      public BytesRef get(int index) {
-        return new BytesRef(terms[index]);
-      }
-      @Override
-      public int size() {
-        return terms.length;
-      }
-    });
-  }
+	public DocValuesTermsQuery(String field, String... terms) {
+		this(field, new AbstractList<BytesRef>() {
+			@Override
+			public BytesRef get(int index) {
+				return new BytesRef(terms[index]);
+			}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
+			@Override
+			public int size() {
+				return terms.length;
+			}
+		});
+	}
 
-  private boolean equalsTo(DocValuesTermsQuery other) {
-    // termData might be heavy to compare so check the hash code first
-    return termDataHashCode == other.termDataHashCode && 
-           termData.equals(other.termData);
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
 
-  @Override
-  public int hashCode() {
-    return 31 * classHash() + termDataHashCode;
-  }
+	private boolean equalsTo(DocValuesTermsQuery other) {
+		// termData might be heavy to compare so check the hash code first
+		return termDataHashCode == other.termDataHashCode &&
+			termData.equals(other.termData);
+	}
 
-  @Override
-  public String toString(String defaultField) {
-    StringBuilder builder = new StringBuilder();
-    boolean first = true;
-    TermIterator iterator = termData.iterator();
-    for (BytesRef term = iterator.next(); term != null; term = iterator.next()) {
-      if (!first) {
-        builder.append(' ');
-      }
-      first = false;
-      builder.append(new Term(iterator.field(), term).toString());
-    }
+	@Override
+	public int hashCode() {
+		return 31 * classHash() + termDataHashCode;
+	}
 
-    return builder.toString();
-  }
+	@Override
+	public String toString(String defaultField) {
+		StringBuilder builder = new StringBuilder();
+		boolean first = true;
+		TermIterator iterator = termData.iterator();
+		for (BytesRef term = iterator.next(); term != null; term = iterator.next()) {
+			if (!first) {
+				builder.append(' ');
+			}
+			first = false;
+			builder.append(new Term(iterator.field(), term).toString());
+		}
 
-  /**
-   * @return the name of the field searched by this query.
-   */
-  public String getField() {
-    return field;
-  }
+		return builder.toString();
+	}
 
-  /**
-   * @return the terms looked up by this query, prefix-encoded.
-   */
-  public PrefixCodedTerms getTerms() {
-    return termData;
-  }
+	/**
+	 * @return the name of the field searched by this query.
+	 */
+	public String getField() {
+		return field;
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return BASE_RAM_BYTES +
-        RamUsageEstimator.sizeOfObject(field) +
-        RamUsageEstimator.sizeOfObject(termData);
-  }
+	/**
+	 * @return the terms looked up by this query, prefix-encoded.
+	 */
+	public PrefixCodedTerms getTerms() {
+		return termData;
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    if (visitor.acceptField(field)) {
-      visitor.visitLeaf(this);
-    }
-  }
+	@Override
+	public long ramBytesUsed() {
+		return BASE_RAM_BYTES +
+			RamUsageEstimator.sizeOfObject(field) +
+			RamUsageEstimator.sizeOfObject(termData);
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    return new ConstantScoreWeight(this, boost) {
+	@Override
+	public void visit(QueryVisitor visitor) {
+		if (visitor.acceptField(field)) {
+			visitor.visitLeaf(this);
+		}
+	}
 
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        final SortedSetDocValues values = DocValues.getSortedSet(context.reader(), field);
-        final LongBitSet bits = new LongBitSet(values.getValueCount());
-        boolean matchesAtLeastOneTerm = false;
-        TermIterator iterator = termData.iterator();
-        for (BytesRef term = iterator.next(); term != null; term = iterator.next()) {
-          final long ord = values.lookupTerm(term);
-          if (ord >= 0) {
-            matchesAtLeastOneTerm = true;
-            bits.set(ord);
-          }
-        }
-        if (matchesAtLeastOneTerm == false) {
-          return null;
-        }
-        return new ConstantScoreScorer(this, score(), scoreMode, new TwoPhaseIterator(values) {
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		return new ConstantScoreWeight(this, boost) {
 
-          @Override
-          public boolean matches() throws IOException {
-            for (long ord = values.nextOrd(); ord != SortedSetDocValues.NO_MORE_ORDS; ord = values.nextOrd()) {
-              if (bits.get(ord)) {
-                return true;
-              }
-            }
-            return false;
-          }
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				final SortedSetDocValues values = DocValues.getSortedSet(context.reader(), field);
+				final LongBitSet bits = new LongBitSet(values.getValueCount());
+				boolean matchesAtLeastOneTerm = false;
+				TermIterator iterator = termData.iterator();
+				for (BytesRef term = iterator.next(); term != null; term = iterator.next()) {
+					final long ord = values.lookupTerm(term);
+					if (ord >= 0) {
+						matchesAtLeastOneTerm = true;
+						bits.set(ord);
+					}
+				}
+				if (matchesAtLeastOneTerm == false) {
+					return null;
+				}
+				return new ConstantScoreScorer(this, score(), scoreMode, new TwoPhaseIterator(values) {
 
-          @Override
-          public float matchCost() {
-            return 3; // lookup in a bitset
-          }
+					@Override
+					public boolean matches() throws IOException {
+						for (long ord = values.nextOrd(); ord != SortedSetDocValues.NO_MORE_ORDS; ord = values.nextOrd()) {
+							if (bits.get(ord)) {
+								return true;
+							}
+						}
+						return false;
+					}
 
-        });
-      }
+					@Override
+					public float matchCost() {
+						return 3; // lookup in a bitset
+					}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return DocValues.isCacheable(ctx, field);
-      }
+				});
+			}
 
-    };
-  }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return DocValues.isCacheable(ctx, field);
+			}
+
+		};
+	}
 
 }

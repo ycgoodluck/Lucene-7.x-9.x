@@ -24,23 +24,25 @@ package org.apache.lucene.benchmark.byTask.feeds;
  */
 public class GeonamesLineParser extends LineDocSource.LineParser {
 
-  /** This header will be ignored; the geonames format is fixed and doesn't have a header line. */
-  public GeonamesLineParser(String[] header) {
-    super(header);
-  }
+	/**
+	 * This header will be ignored; the geonames format is fixed and doesn't have a header line.
+	 */
+	public GeonamesLineParser(String[] header) {
+		super(header);
+	}
 
-  @Override
-  public void parseLine(DocData docData, String line) {
-    String[] parts = line.split("\\t", 7);//no more than first 6 fields needed
+	@Override
+	public void parseLine(DocData docData, String line) {
+		String[] parts = line.split("\\t", 7);//no more than first 6 fields needed
 
-    //    Sample data line:
-    // 3578267, Morne du Vitet, Morne du Vitet, 17.88333, -62.8, ...
-    // ID, Name, Alternate name (unused), Lat, Lon, ...
+		//    Sample data line:
+		// 3578267, Morne du Vitet, Morne du Vitet, 17.88333, -62.8, ...
+		// ID, Name, Alternate name (unused), Lat, Lon, ...
 
-    docData.setID(Integer.parseInt(parts[0]));//note: overwrites ID assigned by LineDocSource
-    docData.setName(parts[1]);
-    String latitude = parts[4];
-    String longitude = parts[5];
-    docData.setBody("POINT("+longitude+" "+latitude+")");//WKT is x y order
-  }
+		docData.setID(Integer.parseInt(parts[0]));//note: overwrites ID assigned by LineDocSource
+		docData.setName(parts[1]);
+		String latitude = parts[4];
+		String longitude = parts[5];
+		docData.setBody("POINT(" + longitude + " " + latitude + ")");//WKT is x y order
+	}
 }

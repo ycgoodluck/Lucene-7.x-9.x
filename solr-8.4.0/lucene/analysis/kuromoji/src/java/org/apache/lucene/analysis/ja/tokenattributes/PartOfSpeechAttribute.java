@@ -24,6 +24,7 @@ import org.apache.lucene.util.Attribute;
  * Attribute for {@link Token#getPartOfSpeech()}.
  */
 public interface PartOfSpeechAttribute extends Attribute {
-  public String getPartOfSpeech();
-  public void setToken(Token token);
+	public String getPartOfSpeech();
+
+	public void setToken(Token token);
 }

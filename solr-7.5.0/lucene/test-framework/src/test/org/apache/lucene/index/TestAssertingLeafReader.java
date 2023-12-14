@@ -23,42 +23,42 @@ import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestAssertingLeafReader extends LuceneTestCase {
-  public void testAssertBits() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter w = new IndexWriter(dir, newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE));
-    // Not deleted:
-    w.addDocument(new Document());
+	public void testAssertBits() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter w = new IndexWriter(dir, newIndexWriterConfig().setMergePolicy(NoMergePolicy.INSTANCE));
+		// Not deleted:
+		w.addDocument(new Document());
 
-    // Does get deleted:
-    Document doc = new Document();
-    doc.add(newStringField("id", "0", Field.Store.NO));
-    w.addDocument(doc);
-    w.commit();
+		// Does get deleted:
+		Document doc = new Document();
+		doc.add(newStringField("id", "0", Field.Store.NO));
+		w.addDocument(doc);
+		w.commit();
 
-    w.deleteDocuments(new Term("id", "0"));
-    w.close();
+		w.deleteDocuments(new Term("id", "0"));
+		w.close();
 
-    // Now we have index with 1 segment with 2 docs one of which is marked deleted
+		// Now we have index with 1 segment with 2 docs one of which is marked deleted
 
-    IndexReader r = DirectoryReader.open(dir);
-    assertEquals(1, r.leaves().size());
-    assertEquals(2, r.maxDoc());
-    assertEquals(1, r.numDocs());
+		IndexReader r = DirectoryReader.open(dir);
+		assertEquals(1, r.leaves().size());
+		assertEquals(2, r.maxDoc());
+		assertEquals(1, r.numDocs());
 
-    r = new AssertingDirectoryReader((DirectoryReader) r);
-    final IndexReader r2 = r;
+		r = new AssertingDirectoryReader((DirectoryReader) r);
+		final IndexReader r2 = r;
 
-    Thread thread = new Thread() {
-      @Override
-      public void run() {
-        for(LeafReaderContext context : r2.leaves()) {
-          context.reader().getLiveDocs().get(0);
-        }
-      }
-    };
-    thread.start();
-    thread.join();
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				for (LeafReaderContext context : r2.leaves()) {
+					context.reader().getLiveDocs().get(0);
+				}
+			}
+		};
+		thread.start();
+		thread.join();
 
-    IOUtils.close(r, dir);
-  }
+		IOUtils.close(r, dir);
+	}
 }

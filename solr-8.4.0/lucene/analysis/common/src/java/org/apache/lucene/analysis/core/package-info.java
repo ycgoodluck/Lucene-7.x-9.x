@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/** 
+/**
  * Basic, general-purpose analysis components.
  */
 package org.apache.lucene.analysis.core;

@@ -44,7 +44,7 @@ import org.apache.lucene.queryparser.flexible.standard.nodes.TermRangeQueryNode;
  * {@link ConfigurationKeys#POINTS_CONFIG} is found, it considers that
  * {@link TermRangeQueryNode} to be a numeric range query and convert it to
  * {@link PointRangeQueryNode}.
- * 
+ *
  * @see ConfigurationKeys#POINTS_CONFIG
  * @see TermRangeQueryNode
  * @see PointsConfig
@@ -52,97 +52,97 @@ import org.apache.lucene.queryparser.flexible.standard.nodes.TermRangeQueryNode;
  */
 public class PointRangeQueryNodeProcessor extends QueryNodeProcessorImpl {
 
-  /**
-   * Constructs an empty {@link PointRangeQueryNodeProcessor} object.
-   */
-  public PointRangeQueryNodeProcessor() {
-    // empty constructor
-  }
+	/**
+	 * Constructs an empty {@link PointRangeQueryNodeProcessor} object.
+	 */
+	public PointRangeQueryNodeProcessor() {
+		// empty constructor
+	}
 
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
 
-    if (node instanceof TermRangeQueryNode) {
-      QueryConfigHandler config = getQueryConfigHandler();
+		if (node instanceof TermRangeQueryNode) {
+			QueryConfigHandler config = getQueryConfigHandler();
 
-      if (config != null) {
-        TermRangeQueryNode termRangeNode = (TermRangeQueryNode) node;
-        FieldConfig fieldConfig = config.getFieldConfig(StringUtils.toString(termRangeNode.getField()));
+			if (config != null) {
+				TermRangeQueryNode termRangeNode = (TermRangeQueryNode) node;
+				FieldConfig fieldConfig = config.getFieldConfig(StringUtils.toString(termRangeNode.getField()));
 
-        if (fieldConfig != null) {
-          PointsConfig numericConfig = fieldConfig.get(ConfigurationKeys.POINTS_CONFIG);
+				if (fieldConfig != null) {
+					PointsConfig numericConfig = fieldConfig.get(ConfigurationKeys.POINTS_CONFIG);
 
-          if (numericConfig != null) {
-            FieldQueryNode lower = termRangeNode.getLowerBound();
-            FieldQueryNode upper = termRangeNode.getUpperBound();
+					if (numericConfig != null) {
+						FieldQueryNode lower = termRangeNode.getLowerBound();
+						FieldQueryNode upper = termRangeNode.getUpperBound();
 
-            String lowerText = lower.getTextAsString();
-            String upperText = upper.getTextAsString();
-            NumberFormat numberFormat = numericConfig.getNumberFormat();
-            Number lowerNumber = null, upperNumber = null;
+						String lowerText = lower.getTextAsString();
+						String upperText = upper.getTextAsString();
+						NumberFormat numberFormat = numericConfig.getNumberFormat();
+						Number lowerNumber = null, upperNumber = null;
 
-            if (lowerText.length() > 0) {
+						if (lowerText.length() > 0) {
 
-              try {
-                lowerNumber = numberFormat.parse(lowerText);
+							try {
+								lowerNumber = numberFormat.parse(lowerText);
 
-              } catch (ParseException e) {
-                throw new QueryNodeParseException(new MessageImpl(
-                    QueryParserMessages.COULD_NOT_PARSE_NUMBER, lower
-                    .getTextAsString(), numberFormat.getClass()
-                    .getCanonicalName()), e);
-              }
+							} catch (ParseException e) {
+								throw new QueryNodeParseException(new MessageImpl(
+									QueryParserMessages.COULD_NOT_PARSE_NUMBER, lower
+									.getTextAsString(), numberFormat.getClass()
+									.getCanonicalName()), e);
+							}
 
-            }
+						}
 
-            if (upperText.length() > 0) {
+						if (upperText.length() > 0) {
 
-              try {
-                upperNumber = numberFormat.parse(upperText);
+							try {
+								upperNumber = numberFormat.parse(upperText);
 
-              } catch (ParseException e) {
-                throw new QueryNodeParseException(new MessageImpl(
-                    QueryParserMessages.COULD_NOT_PARSE_NUMBER, upper
-                    .getTextAsString(), numberFormat.getClass()
-                    .getCanonicalName()), e);
-              }
-            }
+							} catch (ParseException e) {
+								throw new QueryNodeParseException(new MessageImpl(
+									QueryParserMessages.COULD_NOT_PARSE_NUMBER, upper
+									.getTextAsString(), numberFormat.getClass()
+									.getCanonicalName()), e);
+							}
+						}
 
-            if (Integer.class.equals(numericConfig.getType())) {
-              if (upperNumber != null) upperNumber = upperNumber.intValue();
-              if (lowerNumber != null) lowerNumber = lowerNumber.intValue();
-            } else if (Long.class.equals(numericConfig.getType())) {
-              if (upperNumber != null) upperNumber = upperNumber.longValue();
-              if (lowerNumber != null) lowerNumber = lowerNumber.longValue();
-            } else if (Double.class.equals(numericConfig.getType())) {
-              if (upperNumber != null) upperNumber = upperNumber.doubleValue();
-              if (lowerNumber != null) lowerNumber = lowerNumber.doubleValue();
-            } else if (Float.class.equals(numericConfig.getType())) {
-              if (upperNumber != null) upperNumber = upperNumber.floatValue();
-              if (lowerNumber != null) lowerNumber = lowerNumber.floatValue();
-            }
+						if (Integer.class.equals(numericConfig.getType())) {
+							if (upperNumber != null) upperNumber = upperNumber.intValue();
+							if (lowerNumber != null) lowerNumber = lowerNumber.intValue();
+						} else if (Long.class.equals(numericConfig.getType())) {
+							if (upperNumber != null) upperNumber = upperNumber.longValue();
+							if (lowerNumber != null) lowerNumber = lowerNumber.longValue();
+						} else if (Double.class.equals(numericConfig.getType())) {
+							if (upperNumber != null) upperNumber = upperNumber.doubleValue();
+							if (lowerNumber != null) lowerNumber = lowerNumber.doubleValue();
+						} else if (Float.class.equals(numericConfig.getType())) {
+							if (upperNumber != null) upperNumber = upperNumber.floatValue();
+							if (lowerNumber != null) lowerNumber = lowerNumber.floatValue();
+						}
 
-            PointQueryNode lowerNode = new PointQueryNode(termRangeNode.getField(), lowerNumber, numberFormat);
-            PointQueryNode upperNode = new PointQueryNode(termRangeNode.getField(), upperNumber, numberFormat);
+						PointQueryNode lowerNode = new PointQueryNode(termRangeNode.getField(), lowerNumber, numberFormat);
+						PointQueryNode upperNode = new PointQueryNode(termRangeNode.getField(), upperNumber, numberFormat);
 
-            boolean lowerInclusive = termRangeNode.isLowerInclusive();
-            boolean upperInclusive = termRangeNode.isUpperInclusive();
+						boolean lowerInclusive = termRangeNode.isLowerInclusive();
+						boolean upperInclusive = termRangeNode.isUpperInclusive();
 
-            return new PointRangeQueryNode(lowerNode, upperNode, lowerInclusive, upperInclusive, numericConfig);
-          }
-        }  
-      }
-    }
-    return node;
-  }
+						return new PointRangeQueryNode(lowerNode, upperNode, lowerInclusive, upperInclusive, numericConfig);
+					}
+				}
+			}
+		}
+		return node;
+	}
 
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
-    return node;
-  }
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+		return node;
+	}
 
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children) throws QueryNodeException {
-    return children;
-  }
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children) throws QueryNodeException {
+		return children;
+	}
 }

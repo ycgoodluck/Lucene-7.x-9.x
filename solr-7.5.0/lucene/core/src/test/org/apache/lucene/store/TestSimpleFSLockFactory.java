@@ -22,36 +22,40 @@ import java.nio.file.Path;
 
 import org.apache.lucene.util.IOUtils;
 
-/** Simple tests for SimpleFSLockFactory */
+/**
+ * Simple tests for SimpleFSLockFactory
+ */
 public class TestSimpleFSLockFactory extends BaseLockFactoryTestCase {
 
-  @Override
-  protected Directory getDirectory(Path path) throws IOException {
-    return newFSDirectory(path, SimpleFSLockFactory.INSTANCE);
-  }
-  
-  /** delete the lockfile and test ensureValid fails */
-  public void testDeleteLockFile() throws IOException {
-    Directory dir = getDirectory(createTempDir());
-    try {
-      Lock lock = dir.obtainLock("test.lock");
-      lock.ensureValid();
-    
-      try {
-        dir.deleteFile("test.lock");
-      } catch (Exception e) {
-        // we can't delete a file for some reason, just clean up and assume the test.
-        IOUtils.closeWhileHandlingException(lock);
-        assumeNoException("test requires the ability to delete a locked file", e);
-      }
-    
-      expectThrows(IOException.class, () -> {
-        lock.ensureValid();
-      });
-      IOUtils.closeWhileHandlingException(lock);
-    } finally {
-      // Do this in finally clause in case the assumeNoException is false:
-      dir.close();
-    }
-  }
+	@Override
+	protected Directory getDirectory(Path path) throws IOException {
+		return newFSDirectory(path, SimpleFSLockFactory.INSTANCE);
+	}
+
+	/**
+	 * delete the lockfile and test ensureValid fails
+	 */
+	public void testDeleteLockFile() throws IOException {
+		Directory dir = getDirectory(createTempDir());
+		try {
+			Lock lock = dir.obtainLock("test.lock");
+			lock.ensureValid();
+
+			try {
+				dir.deleteFile("test.lock");
+			} catch (Exception e) {
+				// we can't delete a file for some reason, just clean up and assume the test.
+				IOUtils.closeWhileHandlingException(lock);
+				assumeNoException("test requires the ability to delete a locked file", e);
+			}
+
+			expectThrows(IOException.class, () -> {
+				lock.ensureValid();
+			});
+			IOUtils.closeWhileHandlingException(lock);
+		} finally {
+			// Do this in finally clause in case the assumeNoException is false:
+			dir.close();
+		}
+	}
 }

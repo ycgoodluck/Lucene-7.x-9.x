@@ -20,26 +20,30 @@ import org.apache.lucene.util.LuceneTestCase;
 
 import static org.apache.lucene.geo.GeoTestUtil.nextBoxNotCrossingDateline;
 
-/** Test case for the Polygon {@link Tessellator} class */
+/**
+ * Test case for the Polygon {@link Tessellator} class
+ */
 public class TestTessellator extends LuceneTestCase {
 
-  /** test line intersection */
-  public void testLinesIntersect() {
-    Rectangle rect = nextBoxNotCrossingDateline();
-    // simple case; test intersecting diagonals
-    // note: we don't quantize because the tessellator operates on non quantized vertices
-    assertTrue(Tessellator.linesIntersect(rect.minLon, rect.minLat, rect.maxLon, rect.maxLat, rect.maxLon, rect.minLat, rect.minLon, rect.maxLat));
-    // test closest encoded value
-    assertFalse(Tessellator.linesIntersect(rect.minLon, rect.maxLat, rect.maxLon, rect.maxLat, rect.minLon - 1d, rect.minLat, rect.minLon - 1, rect.maxLat));
-  }
+	/**
+	 * test line intersection
+	 */
+	public void testLinesIntersect() {
+		Rectangle rect = nextBoxNotCrossingDateline();
+		// simple case; test intersecting diagonals
+		// note: we don't quantize because the tessellator operates on non quantized vertices
+		assertTrue(Tessellator.linesIntersect(rect.minLon, rect.minLat, rect.maxLon, rect.maxLat, rect.maxLon, rect.minLat, rect.minLon, rect.maxLat));
+		// test closest encoded value
+		assertFalse(Tessellator.linesIntersect(rect.minLon, rect.maxLat, rect.maxLon, rect.maxLat, rect.minLon - 1d, rect.minLat, rect.minLon - 1, rect.maxLat));
+	}
 
-  public void testSimpleTessellation() throws Exception {
-    Polygon poly = GeoTestUtil.createRegularPolygon(0.0, 0.0, 1000000, 1000000);
-    Polygon inner = new Polygon(new double[] {-1.0, -1.0, 0.5, 1.0, 1.0, 0.5, -1.0},
-        new double[]{1.0, -1.0, -0.5, -1.0, 1.0, 0.5, 1.0});
-    Polygon inner2 = new Polygon(new double[] {-1.0, -1.0, 0.5, 1.0, 1.0, 0.5, -1.0},
-        new double[]{-2.0, -4.0, -3.5, -4.0, -2.0, -2.5, -2.0});
-    poly = new Polygon(poly.getPolyLats(), poly.getPolyLons(), inner, inner2);
-    assertTrue(Tessellator.tessellate(poly).size() > 0);
-  }
+	public void testSimpleTessellation() throws Exception {
+		Polygon poly = GeoTestUtil.createRegularPolygon(0.0, 0.0, 1000000, 1000000);
+		Polygon inner = new Polygon(new double[]{-1.0, -1.0, 0.5, 1.0, 1.0, 0.5, -1.0},
+			new double[]{1.0, -1.0, -0.5, -1.0, 1.0, 0.5, 1.0});
+		Polygon inner2 = new Polygon(new double[]{-1.0, -1.0, 0.5, 1.0, 1.0, 0.5, -1.0},
+			new double[]{-2.0, -4.0, -3.5, -4.0, -2.0, -2.5, -2.0});
+		poly = new Polygon(poly.getPolyLats(), poly.getPolyLons(), inner, inner2);
+		assertTrue(Tessellator.tessellate(poly).size() > 0);
+	}
 }

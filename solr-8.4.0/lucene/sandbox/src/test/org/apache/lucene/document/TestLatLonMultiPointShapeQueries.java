@@ -22,97 +22,100 @@ import java.util.List;
 import org.apache.lucene.document.ShapeField.QueryRelation;
 import org.apache.lucene.geo.Component2D;
 
-/** random bounding box, line, and polygon query tests for random indexed arrays of {@code latitude, longitude} points */
+/**
+ * random bounding box, line, and polygon query tests for random indexed arrays of {@code latitude, longitude} points
+ */
 public class TestLatLonMultiPointShapeQueries extends BaseLatLonShapeTestCase {
 
-  @Override
-  protected ShapeType getShapeType() {
-    return ShapeType.POINT;
-  }
+	@Override
+	protected ShapeType getShapeType() {
+		return ShapeType.POINT;
+	}
 
-  @Override
-  protected Point[] nextShape() {
-    int n = random().nextInt(4) + 1;
-    Point[] points = new Point[n];
-    for (int i =0; i < n; i++) {
-      points[i] = (Point)ShapeType.POINT.nextShape();
-    }
-    return points;
-  }
+	@Override
+	protected Point[] nextShape() {
+		int n = random().nextInt(4) + 1;
+		Point[] points = new Point[n];
+		for (int i = 0; i < n; i++) {
+			points[i] = (Point) ShapeType.POINT.nextShape();
+		}
+		return points;
+	}
 
-  @Override
-  protected Field[] createIndexableFields(String name, Object o) {
-    Point[] points = (Point[]) o;
-    List<Field> allFields = new ArrayList<>();
-    for (Point point : points) {
-      Field[] fields = LatLonShape.createIndexableFields(name, point.lat, point.lon);
-      for (Field field : fields) {
-        allFields.add(field);
-      }
-    }
-    return allFields.toArray(new Field[allFields.size()]);
-  }
+	@Override
+	protected Field[] createIndexableFields(String name, Object o) {
+		Point[] points = (Point[]) o;
+		List<Field> allFields = new ArrayList<>();
+		for (Point point : points) {
+			Field[] fields = LatLonShape.createIndexableFields(name, point.lat, point.lon);
+			for (Field field : fields) {
+				allFields.add(field);
+			}
+		}
+		return allFields.toArray(new Field[allFields.size()]);
+	}
 
-  @Override
-  public Validator getValidator() {
-    return new MultiPointValidator(ENCODER);
-  }
+	@Override
+	public Validator getValidator() {
+		return new MultiPointValidator(ENCODER);
+	}
 
-  protected class MultiPointValidator extends Validator {
-    TestLatLonPointShapeQueries.PointValidator POINTVALIDATOR;
-    MultiPointValidator(Encoder encoder) {
-      super(encoder);
-      POINTVALIDATOR = new TestLatLonPointShapeQueries.PointValidator(encoder);
-    }
+	protected class MultiPointValidator extends Validator {
+		TestLatLonPointShapeQueries.PointValidator POINTVALIDATOR;
 
-    @Override
-    public Validator setRelation(QueryRelation relation) {
-      super.setRelation(relation);
-      POINTVALIDATOR.queryRelation = relation;
-      return this;
-    }
+		MultiPointValidator(Encoder encoder) {
+			super(encoder);
+			POINTVALIDATOR = new TestLatLonPointShapeQueries.PointValidator(encoder);
+		}
 
-    @Override
-    public boolean testBBoxQuery(double minLat, double maxLat, double minLon, double maxLon, Object shape) {
-      Point[] points = (Point[]) shape;
-      for (Point p : points) {
-        boolean b = POINTVALIDATOR.testBBoxQuery(minLat, maxLat, minLon, maxLon, p);
-        if (b == true && queryRelation == QueryRelation.INTERSECTS) {
-          return true;
-        } else if (b == true && queryRelation == QueryRelation.CONTAINS) {
-          return true;
-        } else if (b == false && queryRelation == QueryRelation.DISJOINT) {
-          return false;
-        } else if (b == false && queryRelation == QueryRelation.WITHIN) {
-          return false;
-        }
-      }
-      return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
-    }
+		@Override
+		public Validator setRelation(QueryRelation relation) {
+			super.setRelation(relation);
+			POINTVALIDATOR.queryRelation = relation;
+			return this;
+		}
 
-    @Override
-    public boolean testComponentQuery(Component2D query, Object shape) {
-      Point[] points = (Point[]) shape;
-      for (Point p : points) {
-        boolean b = POINTVALIDATOR.testComponentQuery(query, p);
-        if (b == true && queryRelation == QueryRelation.INTERSECTS) {
-          return true;
-        } else if (b == true && queryRelation == QueryRelation.CONTAINS) {
-          return true;
-        } else if (b == false && queryRelation == QueryRelation.DISJOINT) {
-          return false;
-        } else if (b == false && queryRelation == QueryRelation.WITHIN) {
-          return false;
-        }
-      }
-      return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
-    }
-  }
+		@Override
+		public boolean testBBoxQuery(double minLat, double maxLat, double minLon, double maxLon, Object shape) {
+			Point[] points = (Point[]) shape;
+			for (Point p : points) {
+				boolean b = POINTVALIDATOR.testBBoxQuery(minLat, maxLat, minLon, maxLon, p);
+				if (b == true && queryRelation == QueryRelation.INTERSECTS) {
+					return true;
+				} else if (b == true && queryRelation == QueryRelation.CONTAINS) {
+					return true;
+				} else if (b == false && queryRelation == QueryRelation.DISJOINT) {
+					return false;
+				} else if (b == false && queryRelation == QueryRelation.WITHIN) {
+					return false;
+				}
+			}
+			return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
+		}
 
-  @Slow
-  @Nightly
-  @Override
-  public void testRandomBig() throws Exception {
-    doTestRandom(10000);
-  }
+		@Override
+		public boolean testComponentQuery(Component2D query, Object shape) {
+			Point[] points = (Point[]) shape;
+			for (Point p : points) {
+				boolean b = POINTVALIDATOR.testComponentQuery(query, p);
+				if (b == true && queryRelation == QueryRelation.INTERSECTS) {
+					return true;
+				} else if (b == true && queryRelation == QueryRelation.CONTAINS) {
+					return true;
+				} else if (b == false && queryRelation == QueryRelation.DISJOINT) {
+					return false;
+				} else if (b == false && queryRelation == QueryRelation.WITHIN) {
+					return false;
+				}
+			}
+			return queryRelation != QueryRelation.INTERSECTS && queryRelation != QueryRelation.CONTAINS;
+		}
+	}
+
+	@Slow
+	@Nightly
+	@Override
+	public void testRandomBig() throws Exception {
+		doTestRandom(10000);
+	}
 }

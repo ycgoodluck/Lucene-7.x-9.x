@@ -21,47 +21,47 @@ import java.io.IOException;
 
 public class DictionaryBuilder {
 
-  private DictionaryBuilder() {
-  }
-  
-  public static void build(String inputDirname, String outputDirname, String encoding, boolean normalizeEntry) throws IOException {
-    System.out.println("building tokeninfo dict...");
-    TokenInfoDictionaryBuilder tokenInfoBuilder = new TokenInfoDictionaryBuilder(encoding, normalizeEntry);
-    TokenInfoDictionaryWriter tokenInfoDictionary = tokenInfoBuilder.build(inputDirname);
-    tokenInfoDictionary.write(outputDirname);
-    tokenInfoDictionary = null;
-    tokenInfoBuilder = null;
-    System.out.println("done");
-    
-    System.out.print("building unknown word dict...");
-    UnknownDictionaryBuilder unkBuilder = new UnknownDictionaryBuilder(encoding);
-    UnknownDictionaryWriter unkDictionary = unkBuilder.build(inputDirname);
-    unkDictionary.write(outputDirname);
-    unkDictionary = null;
-    unkBuilder = null;
-    System.out.println("done");
-    
-    System.out.print("building connection costs...");
-    ConnectionCostsWriter connectionCosts
-      = ConnectionCostsBuilder.build(inputDirname + File.separator + "matrix.def");
-    connectionCosts.write(outputDirname);
-    System.out.println("done");
-  }
-  
-  public static void main(String[] args) throws IOException {
-    String inputDirname = args[0];
-    String outputDirname = args[1];
-    String inputEncoding = args[2];
-    boolean normalizeEntries = Boolean.parseBoolean(args[3]);
-    
-    System.out.println("dictionary builder");
-    System.out.println("");
-    System.out.println("input directory: " + inputDirname);
-    System.out.println("output directory: " + outputDirname);
-    System.out.println("input encoding: " + inputEncoding);
-    System.out.println("normalize entries: " + normalizeEntries);
-    System.out.println("");
-    DictionaryBuilder.build(inputDirname, outputDirname, inputEncoding, normalizeEntries);
-  }
-  
+	private DictionaryBuilder() {
+	}
+
+	public static void build(String inputDirname, String outputDirname, String encoding, boolean normalizeEntry) throws IOException {
+		System.out.println("building tokeninfo dict...");
+		TokenInfoDictionaryBuilder tokenInfoBuilder = new TokenInfoDictionaryBuilder(encoding, normalizeEntry);
+		TokenInfoDictionaryWriter tokenInfoDictionary = tokenInfoBuilder.build(inputDirname);
+		tokenInfoDictionary.write(outputDirname);
+		tokenInfoDictionary = null;
+		tokenInfoBuilder = null;
+		System.out.println("done");
+
+		System.out.print("building unknown word dict...");
+		UnknownDictionaryBuilder unkBuilder = new UnknownDictionaryBuilder(encoding);
+		UnknownDictionaryWriter unkDictionary = unkBuilder.build(inputDirname);
+		unkDictionary.write(outputDirname);
+		unkDictionary = null;
+		unkBuilder = null;
+		System.out.println("done");
+
+		System.out.print("building connection costs...");
+		ConnectionCostsWriter connectionCosts
+			= ConnectionCostsBuilder.build(inputDirname + File.separator + "matrix.def");
+		connectionCosts.write(outputDirname);
+		System.out.println("done");
+	}
+
+	public static void main(String[] args) throws IOException {
+		String inputDirname = args[0];
+		String outputDirname = args[1];
+		String inputEncoding = args[2];
+		boolean normalizeEntries = Boolean.parseBoolean(args[3]);
+
+		System.out.println("dictionary builder");
+		System.out.println("");
+		System.out.println("input directory: " + inputDirname);
+		System.out.println("output directory: " + outputDirname);
+		System.out.println("input encoding: " + inputEncoding);
+		System.out.println("normalize entries: " + normalizeEntries);
+		System.out.println("");
+		DictionaryBuilder.build(inputDirname, outputDirname, inputEncoding, normalizeEntries);
+	}
+
 }

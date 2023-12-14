@@ -32,51 +32,52 @@ import org.apache.lucene.luke.models.util.IndexUtils;
  */
 final class TermCounts {
 
-  private final Map<String, Long> termCountMap;
+	private final Map<String, Long> termCountMap;
 
-  TermCounts(IndexReader reader) throws IOException {
-    Objects.requireNonNull(reader);
-    termCountMap = IndexUtils.countTerms(reader, IndexUtils.getFieldNames(reader));
-  }
+	TermCounts(IndexReader reader) throws IOException {
+		Objects.requireNonNull(reader);
+		termCountMap = IndexUtils.countTerms(reader, IndexUtils.getFieldNames(reader));
+	}
 
-  /**
-   * Returns the total number of terms in this index.
-   */
-  long numTerms() {
-    return termCountMap.values().stream().mapToLong(Long::longValue).sum();
-  }
+	/**
+	 * Returns the total number of terms in this index.
+	 */
+	long numTerms() {
+		return termCountMap.values().stream().mapToLong(Long::longValue).sum();
+	}
 
-  /**
-   * Returns all fields with the number of terms for each field sorted by {@link TermCountsOrder}
-   * @param order - sort order
-   */
-  Map<String, Long> sortedTermCounts(TermCountsOrder order){
-    Objects.requireNonNull(order);
+	/**
+	 * Returns all fields with the number of terms for each field sorted by {@link TermCountsOrder}
+	 *
+	 * @param order - sort order
+	 */
+	Map<String, Long> sortedTermCounts(TermCountsOrder order) {
+		Objects.requireNonNull(order);
 
-    Comparator<Map.Entry<String, Long>> comparator;
-    switch (order) {
-      case NAME_ASC:
-        comparator = Map.Entry.comparingByKey();
-        break;
-      case NAME_DESC:
-        comparator = Map.Entry.<String, Long>comparingByKey().reversed();
-        break;
-      case COUNT_ASC:
-        comparator = Map.Entry.comparingByValue();
-        break;
-      case COUNT_DESC:
-        comparator = Map.Entry.<String, Long>comparingByValue().reversed();
-        break;
-      default:
-        comparator = Map.Entry.comparingByKey();
-    }
-    return sortedTermCounts(comparator);
-  }
+		Comparator<Map.Entry<String, Long>> comparator;
+		switch (order) {
+			case NAME_ASC:
+				comparator = Map.Entry.comparingByKey();
+				break;
+			case NAME_DESC:
+				comparator = Map.Entry.<String, Long>comparingByKey().reversed();
+				break;
+			case COUNT_ASC:
+				comparator = Map.Entry.comparingByValue();
+				break;
+			case COUNT_DESC:
+				comparator = Map.Entry.<String, Long>comparingByValue().reversed();
+				break;
+			default:
+				comparator = Map.Entry.comparingByKey();
+		}
+		return sortedTermCounts(comparator);
+	}
 
-  private Map<String, Long> sortedTermCounts(Comparator<Map.Entry<String, Long>> comparator) {
-    return termCountMap.entrySet().stream()
-        .sorted(comparator)
-        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new));
-  }
+	private Map<String, Long> sortedTermCounts(Comparator<Map.Entry<String, Long>> comparator) {
+		return termCountMap.entrySet().stream()
+			.sorted(comparator)
+			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new));
+	}
 
 }

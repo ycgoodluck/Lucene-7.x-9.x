@@ -39,164 +39,164 @@ import org.apache.lucene.util.BytesRef;
 
 abstract class SortedSetDocValuesRangeQuery extends Query {
 
-  private final String field;
-  private final BytesRef lowerValue;
-  private final BytesRef upperValue;
-  private final boolean lowerInclusive;
-  private final boolean upperInclusive;
+	private final String field;
+	private final BytesRef lowerValue;
+	private final BytesRef upperValue;
+	private final boolean lowerInclusive;
+	private final boolean upperInclusive;
 
-  SortedSetDocValuesRangeQuery(String field,
-      BytesRef lowerValue, BytesRef upperValue,
-      boolean lowerInclusive, boolean upperInclusive) {
-    this.field = Objects.requireNonNull(field);
-    this.lowerValue = lowerValue;
-    this.upperValue = upperValue;
-    this.lowerInclusive = lowerInclusive && lowerValue != null;
-    this.upperInclusive = upperInclusive && upperValue != null;
-  }
+	SortedSetDocValuesRangeQuery(String field,
+															 BytesRef lowerValue, BytesRef upperValue,
+															 boolean lowerInclusive, boolean upperInclusive) {
+		this.field = Objects.requireNonNull(field);
+		this.lowerValue = lowerValue;
+		this.upperValue = upperValue;
+		this.lowerInclusive = lowerInclusive && lowerValue != null;
+		this.upperInclusive = upperInclusive && upperValue != null;
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (sameClassAs(obj) == false) {
-      return false;
-    }
-    SortedSetDocValuesRangeQuery that = (SortedSetDocValuesRangeQuery) obj;
-    return Objects.equals(field, that.field)
-        && Objects.equals(lowerValue, that.lowerValue)
-        && Objects.equals(upperValue, that.upperValue)
-        && lowerInclusive == that.lowerInclusive
-        && upperInclusive == that.upperInclusive;
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (sameClassAs(obj) == false) {
+			return false;
+		}
+		SortedSetDocValuesRangeQuery that = (SortedSetDocValuesRangeQuery) obj;
+		return Objects.equals(field, that.field)
+			&& Objects.equals(lowerValue, that.lowerValue)
+			&& Objects.equals(upperValue, that.upperValue)
+			&& lowerInclusive == that.lowerInclusive
+			&& upperInclusive == that.upperInclusive;
+	}
 
-  @Override
-  public int hashCode() {
-    int h = classHash();
-    h = 31 * h + field.hashCode();
-    h = 31 * h + Objects.hashCode(lowerValue);
-    h = 31 * h + Objects.hashCode(upperValue);
-    h = 31 * h + Boolean.hashCode(lowerInclusive);
-    h = 31 * h + Boolean.hashCode(upperInclusive);
-    return h;
-  }
+	@Override
+	public int hashCode() {
+		int h = classHash();
+		h = 31 * h + field.hashCode();
+		h = 31 * h + Objects.hashCode(lowerValue);
+		h = 31 * h + Objects.hashCode(upperValue);
+		h = 31 * h + Boolean.hashCode(lowerInclusive);
+		h = 31 * h + Boolean.hashCode(upperInclusive);
+		return h;
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    if (visitor.acceptField(field)) {
-      visitor.visitLeaf(this);
-    }
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		if (visitor.acceptField(field)) {
+			visitor.visitLeaf(this);
+		}
+	}
 
-  @Override
-  public String toString(String field) {
-    StringBuilder b = new StringBuilder();
-    if (this.field.equals(field) == false) {
-      b.append(this.field).append(":");
-    }
-    return b
-        .append(lowerInclusive ? "[" : "{")
-        .append(lowerValue == null ? "*" : lowerValue)
-        .append(" TO ")
-        .append(upperValue == null ? "*" : upperValue)
-        .append(upperInclusive ? "]" : "}")
-        .toString();
-  }
+	@Override
+	public String toString(String field) {
+		StringBuilder b = new StringBuilder();
+		if (this.field.equals(field) == false) {
+			b.append(this.field).append(":");
+		}
+		return b
+			.append(lowerInclusive ? "[" : "{")
+			.append(lowerValue == null ? "*" : lowerValue)
+			.append(" TO ")
+			.append(upperValue == null ? "*" : upperValue)
+			.append(upperInclusive ? "]" : "}")
+			.toString();
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    if (lowerValue == null && upperValue == null) {
-      return new DocValuesFieldExistsQuery(field);
-    }
-    return super.rewrite(reader);
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		if (lowerValue == null && upperValue == null) {
+			return new DocValuesFieldExistsQuery(field);
+		}
+		return super.rewrite(reader);
+	}
 
-  abstract SortedSetDocValues getValues(LeafReader reader, String field) throws IOException;
+	abstract SortedSetDocValues getValues(LeafReader reader, String field) throws IOException;
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    return new ConstantScoreWeight(this, boost) {
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        SortedSetDocValues values = getValues(context.reader(), field);
-        if (values == null) {
-          return null;
-        }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		return new ConstantScoreWeight(this, boost) {
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				SortedSetDocValues values = getValues(context.reader(), field);
+				if (values == null) {
+					return null;
+				}
 
-        final long minOrd;
-        if (lowerValue == null) {
-          minOrd = 0;
-        } else {
-          final long ord = values.lookupTerm(lowerValue);
-          if (ord < 0) {
-            minOrd = -1 - ord;
-          } else if (lowerInclusive) {
-            minOrd = ord;
-          } else {
-            minOrd = ord + 1;
-          }
-        }
+				final long minOrd;
+				if (lowerValue == null) {
+					minOrd = 0;
+				} else {
+					final long ord = values.lookupTerm(lowerValue);
+					if (ord < 0) {
+						minOrd = -1 - ord;
+					} else if (lowerInclusive) {
+						minOrd = ord;
+					} else {
+						minOrd = ord + 1;
+					}
+				}
 
-        final long maxOrd;
-        if (upperValue == null) {
-          maxOrd = values.getValueCount() - 1;
-        } else {
-          final long ord = values.lookupTerm(upperValue);
-          if (ord < 0) {
-            maxOrd = -2 - ord;
-          } else if (upperInclusive) {
-            maxOrd = ord;
-          } else {
-            maxOrd = ord - 1;
-          }
-        }
+				final long maxOrd;
+				if (upperValue == null) {
+					maxOrd = values.getValueCount() - 1;
+				} else {
+					final long ord = values.lookupTerm(upperValue);
+					if (ord < 0) {
+						maxOrd = -2 - ord;
+					} else if (upperInclusive) {
+						maxOrd = ord;
+					} else {
+						maxOrd = ord - 1;
+					}
+				}
 
-        if (minOrd > maxOrd) {
-          return null;
-        }
+				if (minOrd > maxOrd) {
+					return null;
+				}
 
-        final SortedDocValues singleton = DocValues.unwrapSingleton(values);
-        final TwoPhaseIterator iterator;
-        if (singleton != null) {
-          iterator = new TwoPhaseIterator(singleton) {
-            @Override
-            public boolean matches() throws IOException {
-              final long ord = singleton.ordValue();
-              return ord >= minOrd && ord <= maxOrd;
-            }
+				final SortedDocValues singleton = DocValues.unwrapSingleton(values);
+				final TwoPhaseIterator iterator;
+				if (singleton != null) {
+					iterator = new TwoPhaseIterator(singleton) {
+						@Override
+						public boolean matches() throws IOException {
+							final long ord = singleton.ordValue();
+							return ord >= minOrd && ord <= maxOrd;
+						}
 
-            @Override
-            public float matchCost() {
-              return 2; // 2 comparisons
-            }
-          };
-        } else {
-          iterator = new TwoPhaseIterator(values) {
-            @Override
-            public boolean matches() throws IOException {
-              for (long ord = values.nextOrd(); ord != SortedSetDocValues.NO_MORE_ORDS; ord = values.nextOrd()) {
-                if (ord < minOrd) {
-                  continue;
-                }
-                // Values are sorted, so the first ord that is >= minOrd is our best candidate
-                return ord <= maxOrd;
-              }
-              return false; // all ords were < minOrd
-            }
+						@Override
+						public float matchCost() {
+							return 2; // 2 comparisons
+						}
+					};
+				} else {
+					iterator = new TwoPhaseIterator(values) {
+						@Override
+						public boolean matches() throws IOException {
+							for (long ord = values.nextOrd(); ord != SortedSetDocValues.NO_MORE_ORDS; ord = values.nextOrd()) {
+								if (ord < minOrd) {
+									continue;
+								}
+								// Values are sorted, so the first ord that is >= minOrd is our best candidate
+								return ord <= maxOrd;
+							}
+							return false; // all ords were < minOrd
+						}
 
-            @Override
-            public float matchCost() {
-              return 2; // 2 comparisons
-            }
-          };
-        }
-        return new ConstantScoreScorer(this, score(), scoreMode, iterator);
-      }
+						@Override
+						public float matchCost() {
+							return 2; // 2 comparisons
+						}
+					};
+				}
+				return new ConstantScoreScorer(this, score(), scoreMode, iterator);
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return DocValues.isCacheable(ctx, field);
-      }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return DocValues.isCacheable(ctx, field);
+			}
 
-    };
-  }
+		};
+	}
 
 }

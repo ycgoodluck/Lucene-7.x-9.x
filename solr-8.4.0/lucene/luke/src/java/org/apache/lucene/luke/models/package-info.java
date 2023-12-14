@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Models and internal APIs for Luke */
+/**
+ * Models and internal APIs for Luke
+ */
 package org.apache.lucene.luke.models;

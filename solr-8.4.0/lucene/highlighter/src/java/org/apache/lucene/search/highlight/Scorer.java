@@ -26,41 +26,40 @@ import org.apache.lucene.analysis.TokenStream;
  */
 public interface Scorer {
 
-  /**
-   * Called to init the Scorer with a {@link TokenStream}. You can grab references to
-   * the attributes you are interested in here and access them from {@link #getTokenScore()}.
-   * 
-   * @param tokenStream the {@link TokenStream} that will be scored.
-   * @return either a {@link TokenStream} that the Highlighter should continue using (eg
-   *         if you read the tokenSream in this method) or null to continue
-   *         using the same {@link TokenStream} that was passed in.
-   * @throws IOException If there is a low-level I/O error
-   */
-  public TokenStream init(TokenStream tokenStream) throws IOException;
+	/**
+	 * Called to init the Scorer with a {@link TokenStream}. You can grab references to
+	 * the attributes you are interested in here and access them from {@link #getTokenScore()}.
+	 *
+	 * @param tokenStream the {@link TokenStream} that will be scored.
+	 * @return either a {@link TokenStream} that the Highlighter should continue using (eg
+	 * if you read the tokenSream in this method) or null to continue
+	 * using the same {@link TokenStream} that was passed in.
+	 * @throws IOException If there is a low-level I/O error
+	 */
+	public TokenStream init(TokenStream tokenStream) throws IOException;
 
-  /**
-   * Called when a new fragment is started for consideration.
-   * 
-   * @param newFragment the fragment that will be scored next
-   */
-  public void startFragment(TextFragment newFragment);
+	/**
+	 * Called when a new fragment is started for consideration.
+	 *
+	 * @param newFragment the fragment that will be scored next
+	 */
+	public void startFragment(TextFragment newFragment);
 
-  /**
-   * Called for each token in the current fragment. The {@link Highlighter} will
-   * increment the {@link TokenStream} passed to init on every call.
-   * 
-   * @return a score which is passed to the {@link Highlighter} class to influence the
-   *         mark-up of the text (this return value is NOT used to score the
-   *         fragment)
-   */
-  public float getTokenScore();
+	/**
+	 * Called for each token in the current fragment. The {@link Highlighter} will
+	 * increment the {@link TokenStream} passed to init on every call.
+	 *
+	 * @return a score which is passed to the {@link Highlighter} class to influence the
+	 * mark-up of the text (this return value is NOT used to score the
+	 * fragment)
+	 */
+	public float getTokenScore();
 
-  /**
-   * Called when the {@link Highlighter} has no more tokens for the current fragment -
-   * the Scorer returns the weighting it has derived for the most recent
-   * fragment, typically based on the results of {@link #getTokenScore()}.
-   * 
-   */
-  public float getFragmentScore();
+	/**
+	 * Called when the {@link Highlighter} has no more tokens for the current fragment -
+	 * the Scorer returns the weighting it has derived for the most recent
+	 * fragment, typically based on the results of {@link #getTokenScore()}.
+	 */
+	public float getFragmentScore();
 
 }

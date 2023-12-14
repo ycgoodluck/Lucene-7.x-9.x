@@ -24,46 +24,58 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 
 public class TestBeforeAfterOverrides extends WithNestedTests {
-  public TestBeforeAfterOverrides() {
-    super(true);
-  }
+	public TestBeforeAfterOverrides() {
+		super(true);
+	}
 
-  public static class Before1 extends WithNestedTests.AbstractNestedTest {
-    @Before
-    public void before() {}
-    
-    public void testEmpty() {}
-  }
-  public static class Before2 extends Before1 {}
-  public static class Before3 extends Before2 {
-    @Override
-    @Before
-    public void before() {}
-  }
+	public static class Before1 extends WithNestedTests.AbstractNestedTest {
+		@Before
+		public void before() {
+		}
 
-  public static class After1 extends WithNestedTests.AbstractNestedTest {
-    @After
-    public void after() {}
-    
-    public void testEmpty() {}
-  }
-  public static class After2 extends Before1 {}
-  public static class After3 extends Before2 {
-    @After
-    public void after() {}
-  }
+		public void testEmpty() {
+		}
+	}
 
-  @Test
-  public void testBefore() {
-    Result result = JUnitCore.runClasses(Before3.class);
-    Assert.assertEquals(1, result.getFailureCount());
-    Assert.assertTrue(result.getFailures().get(0).getTrace().contains("There are overridden methods"));
-  }
-  
-  @Test
-  public void testAfter() {
-    Result result = JUnitCore.runClasses(Before3.class);
-    Assert.assertEquals(1, result.getFailureCount());
-    Assert.assertTrue(result.getFailures().get(0).getTrace().contains("There are overridden methods"));
-  }  
+	public static class Before2 extends Before1 {
+	}
+
+	public static class Before3 extends Before2 {
+		@Override
+		@Before
+		public void before() {
+		}
+	}
+
+	public static class After1 extends WithNestedTests.AbstractNestedTest {
+		@After
+		public void after() {
+		}
+
+		public void testEmpty() {
+		}
+	}
+
+	public static class After2 extends Before1 {
+	}
+
+	public static class After3 extends Before2 {
+		@After
+		public void after() {
+		}
+	}
+
+	@Test
+	public void testBefore() {
+		Result result = JUnitCore.runClasses(Before3.class);
+		Assert.assertEquals(1, result.getFailureCount());
+		Assert.assertTrue(result.getFailures().get(0).getTrace().contains("There are overridden methods"));
+	}
+
+	@Test
+	public void testAfter() {
+		Result result = JUnitCore.runClasses(Before3.class);
+		Assert.assertEquals(1, result.getFailureCount());
+		Assert.assertTrue(result.getFailures().get(0).getTrace().contains("There are overridden methods"));
+	}
 }

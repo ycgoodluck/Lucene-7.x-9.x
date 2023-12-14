@@ -21,21 +21,24 @@ import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import java.awt.Graphics;
 
-/** Tab utilities */
+/**
+ * Tab utilities
+ */
 public class TabUtils {
 
-  public static void forceTransparent(JTabbedPane tabbedPane) {
-    String lookAndFeelClassName = UIManager.getLookAndFeel().getClass().getName();
-    if (lookAndFeelClassName.contains("AquaLookAndFeel")) {
-      // may be running on mac OS. nothing to do.
-      return;
-    }
-    // https://coderanch.com/t/600541/java/JtabbedPane-transparency
-    tabbedPane.setUI(new javax.swing.plaf.metal.MetalTabbedPaneUI() {
-      protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
-      }
-    });
-  }
+	public static void forceTransparent(JTabbedPane tabbedPane) {
+		String lookAndFeelClassName = UIManager.getLookAndFeel().getClass().getName();
+		if (lookAndFeelClassName.contains("AquaLookAndFeel")) {
+			// may be running on mac OS. nothing to do.
+			return;
+		}
+		// https://coderanch.com/t/600541/java/JtabbedPane-transparency
+		tabbedPane.setUI(new javax.swing.plaf.metal.MetalTabbedPaneUI() {
+			protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
+			}
+		});
+	}
 
-  private TabUtils(){}
+	private TabUtils() {
+	}
 }

@@ -26,37 +26,37 @@ import java.nio.file.Path;
 
 class ConnectionCostsBuilder {
 
-  private ConnectionCostsBuilder() {
-  }
+	private ConnectionCostsBuilder() {
+	}
 
-  public static ConnectionCostsWriter build(Path path) throws IOException {
-    try (Reader reader = Files.newBufferedReader(path, StandardCharsets.US_ASCII);
-         LineNumberReader lineReader = new LineNumberReader(reader)) {
+	public static ConnectionCostsWriter build(Path path) throws IOException {
+		try (Reader reader = Files.newBufferedReader(path, StandardCharsets.US_ASCII);
+				 LineNumberReader lineReader = new LineNumberReader(reader)) {
 
-      String line = lineReader.readLine();
-      String[] dimensions = line.split("\\s+");
+			String line = lineReader.readLine();
+			String[] dimensions = line.split("\\s+");
 
-      assert dimensions.length == 2;
+			assert dimensions.length == 2;
 
-      int forwardSize = Integer.parseInt(dimensions[0]);
-      int backwardSize = Integer.parseInt(dimensions[1]);
+			int forwardSize = Integer.parseInt(dimensions[0]);
+			int backwardSize = Integer.parseInt(dimensions[1]);
 
-      assert forwardSize > 0 && backwardSize > 0;
+			assert forwardSize > 0 && backwardSize > 0;
 
-      ConnectionCostsWriter costs = new ConnectionCostsWriter(forwardSize, backwardSize);
+			ConnectionCostsWriter costs = new ConnectionCostsWriter(forwardSize, backwardSize);
 
-      while ((line = lineReader.readLine()) != null) {
-        String[] fields = line.split("\\s+");
+			while ((line = lineReader.readLine()) != null) {
+				String[] fields = line.split("\\s+");
 
-        assert fields.length == 3;
+				assert fields.length == 3;
 
-        int forwardId = Integer.parseInt(fields[0]);
-        int backwardId = Integer.parseInt(fields[1]);
-        int cost = Integer.parseInt(fields[2]);
+				int forwardId = Integer.parseInt(fields[0]);
+				int backwardId = Integer.parseInt(fields[1]);
+				int cost = Integer.parseInt(fields[2]);
 
-        costs.add(forwardId, backwardId, cost);
-      }
-      return costs;
-    }
-  }
+				costs.add(forwardId, backwardId, cost);
+			}
+			return costs;
+		}
+	}
 }

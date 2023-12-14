@@ -42,53 +42,56 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *             lemmatizerModel="filename"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 7.3.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 7.3.0
  */
 public class OpenNLPLemmatizerFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
 
-  /** SPI name */
-  public static final String NAME = "openNlpLemmatizer";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "openNlpLemmatizer";
 
-  public static final String DICTIONARY = "dictionary";
-  public static final String LEMMATIZER_MODEL = "lemmatizerModel";
+	public static final String DICTIONARY = "dictionary";
+	public static final String LEMMATIZER_MODEL = "lemmatizerModel";
 
-  private final String dictionaryFile;
-  private final String lemmatizerModelFile;
+	private final String dictionaryFile;
+	private final String lemmatizerModelFile;
 
-  public OpenNLPLemmatizerFilterFactory(Map<String,String> args) {
-    super(args);
-    dictionaryFile = get(args, DICTIONARY);
-    lemmatizerModelFile = get(args, LEMMATIZER_MODEL);
+	public OpenNLPLemmatizerFilterFactory(Map<String, String> args) {
+		super(args);
+		dictionaryFile = get(args, DICTIONARY);
+		lemmatizerModelFile = get(args, LEMMATIZER_MODEL);
 
-    if (dictionaryFile == null && lemmatizerModelFile == null) {
-      throw new IllegalArgumentException("Configuration Error: missing parameter: at least one of '"
-          + DICTIONARY + "' and '" + LEMMATIZER_MODEL + "' must be provided.");
-    }
+		if (dictionaryFile == null && lemmatizerModelFile == null) {
+			throw new IllegalArgumentException("Configuration Error: missing parameter: at least one of '"
+				+ DICTIONARY + "' and '" + LEMMATIZER_MODEL + "' must be provided.");
+		}
 
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public OpenNLPLemmatizerFilter create(TokenStream in) {
-    try {
-      NLPLemmatizerOp lemmatizerOp = OpenNLPOpsFactory.getLemmatizer(dictionaryFile, lemmatizerModelFile);
-      return new OpenNLPLemmatizerFilter(in, lemmatizerOp);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
+	@Override
+	public OpenNLPLemmatizerFilter create(TokenStream in) {
+		try {
+			NLPLemmatizerOp lemmatizerOp = OpenNLPOpsFactory.getLemmatizer(dictionaryFile, lemmatizerModelFile);
+			return new OpenNLPLemmatizerFilter(in, lemmatizerOp);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    // register models in cache with file/resource names
-    if (dictionaryFile != null) {
-      OpenNLPOpsFactory.getLemmatizerDictionary(dictionaryFile, loader);
-    }
-    if (lemmatizerModelFile != null) {
-      OpenNLPOpsFactory.getLemmatizerModel(lemmatizerModelFile, loader);
-    }
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		// register models in cache with file/resource names
+		if (dictionaryFile != null) {
+			OpenNLPOpsFactory.getLemmatizerDictionary(dictionaryFile, loader);
+		}
+		if (lemmatizerModelFile != null) {
+			OpenNLPOpsFactory.getLemmatizerModel(lemmatizerModelFile, loader);
+		}
+	}
 }

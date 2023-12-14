@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.bg.BulgarianStemFilter;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link BulgarianStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_bgstem" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -33,20 +33,23 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.BulgarianStemFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class BulgarianStemFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new BulgarianStemFilterFactory */
-  public BulgarianStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new BulgarianStemFilter(input);
-  }
+
+	/**
+	 * Creates a new BulgarianStemFilterFactory
+	 */
+	public BulgarianStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new BulgarianStemFilter(input);
+	}
 }

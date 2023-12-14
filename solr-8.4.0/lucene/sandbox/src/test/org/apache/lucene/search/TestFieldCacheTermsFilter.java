@@ -34,41 +34,41 @@ import java.util.List;
  * @see org.apache.lucene.search.DocValuesTermsQuery
  */
 public class TestFieldCacheTermsFilter extends LuceneTestCase {
-  public void testMissingTerms() throws Exception {
-    String fieldName = "field1";
-    Directory rd = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), rd);
-    for (int i = 0; i < 100; i++) {
-      Document doc = new Document();
-      int term = i * 10; //terms are units of 10;
-      doc.add(newStringField(fieldName, "" + term, Field.Store.YES));
-      doc.add(new SortedDocValuesField(fieldName, new BytesRef("" + term)));
-      w.addDocument(doc);
-    }
-    IndexReader reader = w.getReader();
-    w.close();
+	public void testMissingTerms() throws Exception {
+		String fieldName = "field1";
+		Directory rd = newDirectory();
+		RandomIndexWriter w = new RandomIndexWriter(random(), rd);
+		for (int i = 0; i < 100; i++) {
+			Document doc = new Document();
+			int term = i * 10; //terms are units of 10;
+			doc.add(newStringField(fieldName, "" + term, Field.Store.YES));
+			doc.add(new SortedDocValuesField(fieldName, new BytesRef("" + term)));
+			w.addDocument(doc);
+		}
+		IndexReader reader = w.getReader();
+		w.close();
 
-    IndexSearcher searcher = newSearcher(reader);
-    int numDocs = reader.numDocs();
-    ScoreDoc[] results;
+		IndexSearcher searcher = newSearcher(reader);
+		int numDocs = reader.numDocs();
+		ScoreDoc[] results;
 
-    List<String> terms = new ArrayList<>();
-    terms.add("5");
-    results = searcher.search(new DocValuesTermsQuery(fieldName,  terms.toArray(new String[0])), numDocs).scoreDocs;
-    assertEquals("Must match nothing", 0, results.length);
+		List<String> terms = new ArrayList<>();
+		terms.add("5");
+		results = searcher.search(new DocValuesTermsQuery(fieldName, terms.toArray(new String[0])), numDocs).scoreDocs;
+		assertEquals("Must match nothing", 0, results.length);
 
-    terms = new ArrayList<>();
-    terms.add("10");
-    results = searcher.search(new DocValuesTermsQuery(fieldName,  terms.toArray(new String[0])), numDocs).scoreDocs;
-    assertEquals("Must match 1", 1, results.length);
+		terms = new ArrayList<>();
+		terms.add("10");
+		results = searcher.search(new DocValuesTermsQuery(fieldName, terms.toArray(new String[0])), numDocs).scoreDocs;
+		assertEquals("Must match 1", 1, results.length);
 
-    terms = new ArrayList<>();
-    terms.add("10");
-    terms.add("20");
-    results = searcher.search(new DocValuesTermsQuery(fieldName,  terms.toArray(new String[0])), numDocs).scoreDocs;
-    assertEquals("Must match 2", 2, results.length);
+		terms = new ArrayList<>();
+		terms.add("10");
+		terms.add("20");
+		results = searcher.search(new DocValuesTermsQuery(fieldName, terms.toArray(new String[0])), numDocs).scoreDocs;
+		assertEquals("Must match 2", 2, results.length);
 
-    reader.close();
-    rd.close();
-  }
+		reader.close();
+		rd.close();
+	}
 }

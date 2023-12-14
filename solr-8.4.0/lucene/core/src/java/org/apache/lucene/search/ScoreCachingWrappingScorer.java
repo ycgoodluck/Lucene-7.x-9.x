@@ -34,38 +34,40 @@ import java.util.Collections;
  */
 public final class ScoreCachingWrappingScorer extends Scorable {
 
-  private int curDoc = -1;
-  private float curScore;
-  private final Scorable in;
+	private int curDoc = -1;
+	private float curScore;
+	private final Scorable in;
 
-  /** Creates a new instance by wrapping the given scorer. */
-  public ScoreCachingWrappingScorer(Scorable scorer) {
-    this.in = scorer;
-  }
+	/**
+	 * Creates a new instance by wrapping the given scorer.
+	 */
+	public ScoreCachingWrappingScorer(Scorable scorer) {
+		this.in = scorer;
+	}
 
-  @Override
-  public float score() throws IOException {
-    int doc = in.docID();
-    if (doc != curDoc) {
-      curScore = in.score();
-      curDoc = doc;
-    }
+	@Override
+	public float score() throws IOException {
+		int doc = in.docID();
+		if (doc != curDoc) {
+			curScore = in.score();
+			curDoc = doc;
+		}
 
-    return curScore;
-  }
+		return curScore;
+	}
 
-  @Override
-  public void setMinCompetitiveScore(float minScore) throws IOException {
-    in.setMinCompetitiveScore(minScore);
-  }
+	@Override
+	public void setMinCompetitiveScore(float minScore) throws IOException {
+		in.setMinCompetitiveScore(minScore);
+	}
 
-  @Override
-  public int docID() {
-    return in.docID();
-  }
+	@Override
+	public int docID() {
+		return in.docID();
+	}
 
-  @Override
-  public Collection<ChildScorable> getChildren() {
-    return Collections.singleton(new ChildScorable(in, "CACHED"));
-  }
+	@Override
+	public Collection<ChildScorable> getChildren() {
+		return Collections.singleton(new ChildScorable(in, "CACHED"));
+	}
 }

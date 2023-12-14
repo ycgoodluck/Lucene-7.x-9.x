@@ -16,7 +16,7 @@
  */
 
 /**
- * Support for testing/debugging with virtual filesystems 
+ * Support for testing/debugging with virtual filesystems
  * <p>
  * The primary classes are:
  * <ul>

@@ -36,47 +36,49 @@ import org.apache.lucene.search.SortRescorer;
  * Expression#getSortField}), except for the explain method
  * which gives more detail by showing the value of each
  * variable.
- * 
+ *
  * @lucene.experimental
  */
 
 class ExpressionRescorer extends SortRescorer {
 
-  private final Expression expression;
-  private final Bindings bindings;
+	private final Expression expression;
+	private final Bindings bindings;
 
-  /** Uses the provided {@link Expression} to assign second
-   *  pass scores. */
-  public ExpressionRescorer(Expression expression, Bindings bindings) {
-    super(new Sort(expression.getSortField(bindings, true)));
-    this.expression = expression;
-    this.bindings = bindings;
-  }
+	/**
+	 * Uses the provided {@link Expression} to assign second
+	 * pass scores.
+	 */
+	public ExpressionRescorer(Expression expression, Bindings bindings) {
+		super(new Sort(expression.getSortField(bindings, true)));
+		this.expression = expression;
+		this.bindings = bindings;
+	}
 
-  private static DoubleValues scores(int doc, float score) {
-    return new DoubleValues() {
-      @Override
-      public double doubleValue() throws IOException {
-        return score;
-      }
+	private static DoubleValues scores(int doc, float score) {
+		return new DoubleValues() {
+			@Override
+			public double doubleValue() throws IOException {
+				return score;
+			}
 
-      @Override
-      public boolean advanceExact(int target) throws IOException {
-        assert doc == target;
-        return true;
-      }
-    };
-  }
+			@Override
+			public boolean advanceExact(int target) throws IOException {
+				assert doc == target;
+				return true;
+			}
+		};
+	}
 
-  @Override
-  public Explanation explain(IndexSearcher searcher, Explanation firstPassExplanation, int docID) throws IOException {
-    Explanation superExpl = super.explain(searcher, firstPassExplanation, docID);
+	@Override
+	public Explanation explain(IndexSearcher searcher, Explanation firstPassExplanation, int docID) throws IOException {
+		Explanation superExpl = super.explain(searcher, firstPassExplanation, docID);
 
-    List<LeafReaderContext> leaves = searcher.getIndexReader().leaves();
-    int subReader = ReaderUtil.subIndex(docID, leaves);
-    LeafReaderContext readerContext = leaves.get(subReader);
-    int docIDInSegment = docID - readerContext.docBase;
+		List<LeafReaderContext> leaves = searcher.getIndexReader().leaves();
+		int subReader = ReaderUtil.subIndex(docID, leaves);
+		LeafReaderContext readerContext = leaves.get(subReader);
+		int docIDInSegment = docID - readerContext.docBase;
 
-    return expression.getDoubleValuesSource(bindings).explain(readerContext, docIDInSegment, superExpl);
-  }
+		return expression.getDoubleValuesSource(bindings).explain(readerContext, docIDInSegment, superExpl);
+	}
 }

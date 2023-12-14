@@ -34,270 +34,274 @@ import org.junit.runners.model.Statement;
  * Test reproduce message is right.
  */
 public class TestReproduceMessage extends WithNestedTests {
-  public static SorePoint where;
-  public static SoreType  type;
-  
-  public static class Nested extends AbstractNestedTest {
-    @BeforeClass
-    public static void beforeClass() {
-      if (isRunningNested()) {
-        triggerOn(SorePoint.BEFORE_CLASS);
-      }
-    }
+	public static SorePoint where;
+	public static SoreType type;
 
-    @Rule
-    public TestRule rule = new TestRule() {
-      @Override
-      public Statement apply(final Statement base, Description description) {
-        return new Statement() {
-          @Override
-          public void evaluate() throws Throwable {
-            triggerOn(SorePoint.RULE);
-            base.evaluate();
-          }
-        };
-      }
-    };
+	public static class Nested extends AbstractNestedTest {
+		@BeforeClass
+		public static void beforeClass() {
+			if (isRunningNested()) {
+				triggerOn(SorePoint.BEFORE_CLASS);
+			}
+		}
 
-    /** Class initializer block/ default constructor. */
-    public Nested() {
-      triggerOn(SorePoint.INITIALIZER);
-    }
+		@Rule
+		public TestRule rule = new TestRule() {
+			@Override
+			public Statement apply(final Statement base, Description description) {
+				return new Statement() {
+					@Override
+					public void evaluate() throws Throwable {
+						triggerOn(SorePoint.RULE);
+						base.evaluate();
+					}
+				};
+			}
+		};
 
-    @Before
-    public void before() {
-      triggerOn(SorePoint.BEFORE);
-    }    
+		/**
+		 * Class initializer block/ default constructor.
+		 */
+		public Nested() {
+			triggerOn(SorePoint.INITIALIZER);
+		}
 
-    @Test
-    public void test() {
-      triggerOn(SorePoint.TEST);
-    }
-    
-    @After
-    public void after() {
-      triggerOn(SorePoint.AFTER);
-    }    
+		@Before
+		public void before() {
+			triggerOn(SorePoint.BEFORE);
+		}
 
-    @AfterClass
-    public static void afterClass() {
-      if (isRunningNested()) {
-        triggerOn(SorePoint.AFTER_CLASS);
-      }
-    }    
+		@Test
+		public void test() {
+			triggerOn(SorePoint.TEST);
+		}
 
-    /** */
-    private static void triggerOn(SorePoint pt) {
-      if (pt == where) {
-        switch (type) {
-          case ASSUMPTION:
-            LuceneTestCase.assumeTrue(pt.toString(), false);
-            throw new RuntimeException("unreachable");
-          case ERROR:
-            throw new RuntimeException(pt.toString());
-          case FAILURE:
-            Assert.assertTrue(pt.toString(), false);
-            throw new RuntimeException("unreachable");
-        }
-      }
-    }
-  }
+		@After
+		public void after() {
+			triggerOn(SorePoint.AFTER);
+		}
 
-  /*
-   * ASSUMPTIONS.
-   */
-  
-  public TestReproduceMessage() {
-    super(true);
-  }
+		@AfterClass
+		public static void afterClass() {
+			if (isRunningNested()) {
+				triggerOn(SorePoint.AFTER_CLASS);
+			}
+		}
 
-  @Test
-  public void testAssumeBeforeClass() throws Exception { 
-    type = SoreType.ASSUMPTION; 
-    where = SorePoint.BEFORE_CLASS;
-    Assert.assertTrue(runAndReturnSyserr().isEmpty());
-  }
+		/**
+		 *
+		 */
+		private static void triggerOn(SorePoint pt) {
+			if (pt == where) {
+				switch (type) {
+					case ASSUMPTION:
+						LuceneTestCase.assumeTrue(pt.toString(), false);
+						throw new RuntimeException("unreachable");
+					case ERROR:
+						throw new RuntimeException(pt.toString());
+					case FAILURE:
+						Assert.assertTrue(pt.toString(), false);
+						throw new RuntimeException("unreachable");
+				}
+			}
+		}
+	}
 
-  @Test
-  public void testAssumeInitializer() throws Exception { 
-    type = SoreType.ASSUMPTION; 
-    where = SorePoint.INITIALIZER;
-    Assert.assertTrue(runAndReturnSyserr().isEmpty());
-  }
+	/*
+	 * ASSUMPTIONS.
+	 */
 
-  @Test
-  public void testAssumeRule() throws Exception { 
-    type = SoreType.ASSUMPTION; 
-    where = SorePoint.RULE;
-    Assert.assertEquals("", runAndReturnSyserr());
-  }
+	public TestReproduceMessage() {
+		super(true);
+	}
 
-  @Test
-  public void testAssumeBefore() throws Exception { 
-    type = SoreType.ASSUMPTION; 
-    where = SorePoint.BEFORE;
-    Assert.assertTrue(runAndReturnSyserr().isEmpty());
-  }
+	@Test
+	public void testAssumeBeforeClass() throws Exception {
+		type = SoreType.ASSUMPTION;
+		where = SorePoint.BEFORE_CLASS;
+		Assert.assertTrue(runAndReturnSyserr().isEmpty());
+	}
 
-  @Test
-  public void testAssumeTest() throws Exception { 
-    type = SoreType.ASSUMPTION; 
-    where = SorePoint.TEST;
-    Assert.assertTrue(runAndReturnSyserr().isEmpty());
-  }
+	@Test
+	public void testAssumeInitializer() throws Exception {
+		type = SoreType.ASSUMPTION;
+		where = SorePoint.INITIALIZER;
+		Assert.assertTrue(runAndReturnSyserr().isEmpty());
+	}
 
-  @Test
-  public void testAssumeAfter() throws Exception { 
-    type = SoreType.ASSUMPTION; 
-    where = SorePoint.AFTER;
-    Assert.assertTrue(runAndReturnSyserr().isEmpty());
-  }
+	@Test
+	public void testAssumeRule() throws Exception {
+		type = SoreType.ASSUMPTION;
+		where = SorePoint.RULE;
+		Assert.assertEquals("", runAndReturnSyserr());
+	}
 
-  @Test
-  public void testAssumeAfterClass() throws Exception { 
-    type = SoreType.ASSUMPTION; 
-    where = SorePoint.AFTER_CLASS;
-    Assert.assertTrue(runAndReturnSyserr().isEmpty());
-  }
+	@Test
+	public void testAssumeBefore() throws Exception {
+		type = SoreType.ASSUMPTION;
+		where = SorePoint.BEFORE;
+		Assert.assertTrue(runAndReturnSyserr().isEmpty());
+	}
 
-  /*
-   * FAILURES
-   */
-  
-  @Test
-  public void testFailureBeforeClass() throws Exception { 
-    type = SoreType.FAILURE; 
-    where = SorePoint.BEFORE_CLASS;
-    Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
-  }
+	@Test
+	public void testAssumeTest() throws Exception {
+		type = SoreType.ASSUMPTION;
+		where = SorePoint.TEST;
+		Assert.assertTrue(runAndReturnSyserr().isEmpty());
+	}
 
-  @Test
-  public void testFailureInitializer() throws Exception { 
-    type = SoreType.FAILURE; 
-    where = SorePoint.INITIALIZER;
-    Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
-  }
+	@Test
+	public void testAssumeAfter() throws Exception {
+		type = SoreType.ASSUMPTION;
+		where = SorePoint.AFTER;
+		Assert.assertTrue(runAndReturnSyserr().isEmpty());
+	}
 
-  @Test
-  public void testFailureRule() throws Exception { 
-    type = SoreType.FAILURE; 
-    where = SorePoint.RULE;
+	@Test
+	public void testAssumeAfterClass() throws Exception {
+		type = SoreType.ASSUMPTION;
+		where = SorePoint.AFTER_CLASS;
+		Assert.assertTrue(runAndReturnSyserr().isEmpty());
+	}
 
-    final String syserr = runAndReturnSyserr();
-    
-    Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
-  }
+	/*
+	 * FAILURES
+	 */
 
-  @Test
-  public void testFailureBefore() throws Exception { 
-    type = SoreType.FAILURE; 
-    where = SorePoint.BEFORE;
-    final String syserr = runAndReturnSyserr();
-    Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
-  }
+	@Test
+	public void testFailureBeforeClass() throws Exception {
+		type = SoreType.FAILURE;
+		where = SorePoint.BEFORE_CLASS;
+		Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
+	}
 
-  @Test
-  public void testFailureTest() throws Exception { 
-    type = SoreType.FAILURE; 
-    where = SorePoint.TEST;
-    final String syserr = runAndReturnSyserr();
-    Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
-  }
+	@Test
+	public void testFailureInitializer() throws Exception {
+		type = SoreType.FAILURE;
+		where = SorePoint.INITIALIZER;
+		Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
+	}
 
-  @Test
-  public void testFailureAfter() throws Exception { 
-    type = SoreType.FAILURE; 
-    where = SorePoint.AFTER;
-    final String syserr = runAndReturnSyserr();
-    Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
-  }
+	@Test
+	public void testFailureRule() throws Exception {
+		type = SoreType.FAILURE;
+		where = SorePoint.RULE;
 
-  @Test
-  public void testFailureAfterClass() throws Exception { 
-    type = SoreType.FAILURE; 
-    where = SorePoint.AFTER_CLASS;
-    Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
-  }
+		final String syserr = runAndReturnSyserr();
 
-  /*
-   * ERRORS
-   */
-  
-  @Test
-  public void testErrorBeforeClass() throws Exception { 
-    type = SoreType.ERROR; 
-    where = SorePoint.BEFORE_CLASS;
-    Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
-  }
+		Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
+	}
 
-  @Test
-  public void testErrorInitializer() throws Exception { 
-    type = SoreType.ERROR; 
-    where = SorePoint.INITIALIZER;
-    Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
-  }
+	@Test
+	public void testFailureBefore() throws Exception {
+		type = SoreType.FAILURE;
+		where = SorePoint.BEFORE;
+		final String syserr = runAndReturnSyserr();
+		Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
+	}
 
-  @Test
-  public void testErrorRule() throws Exception { 
-    type = SoreType.ERROR; 
-    where = SorePoint.RULE;
-    final String syserr = runAndReturnSyserr();
-    Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
-  }
+	@Test
+	public void testFailureTest() throws Exception {
+		type = SoreType.FAILURE;
+		where = SorePoint.TEST;
+		final String syserr = runAndReturnSyserr();
+		Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
+	}
 
-  @Test
-  public void testErrorBefore() throws Exception { 
-    type = SoreType.ERROR; 
-    where = SorePoint.BEFORE;
-    final String syserr = runAndReturnSyserr();
-    Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
-  }
+	@Test
+	public void testFailureAfter() throws Exception {
+		type = SoreType.FAILURE;
+		where = SorePoint.AFTER;
+		final String syserr = runAndReturnSyserr();
+		Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
+	}
 
-  @Test
-  public void testErrorTest() throws Exception { 
-    type = SoreType.ERROR; 
-    where = SorePoint.TEST;
-    final String syserr = runAndReturnSyserr();
-    Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
-  }
+	@Test
+	public void testFailureAfterClass() throws Exception {
+		type = SoreType.FAILURE;
+		where = SorePoint.AFTER_CLASS;
+		Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
+	}
 
-  @Test
-  public void testErrorAfter() throws Exception { 
-    type = SoreType.ERROR; 
-    where = SorePoint.AFTER;
-    final String syserr = runAndReturnSyserr();
-    Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
-    Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
-  }
+	/*
+	 * ERRORS
+	 */
 
-  @Test
-  public void testErrorAfterClass() throws Exception { 
-    type = SoreType.ERROR; 
-    where = SorePoint.AFTER_CLASS;
-    Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
-  }
+	@Test
+	public void testErrorBeforeClass() throws Exception {
+		type = SoreType.ERROR;
+		where = SorePoint.BEFORE_CLASS;
+		Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
+	}
 
-  private String runAndReturnSyserr() {
-    JUnitCore.runClasses(Nested.class);
+	@Test
+	public void testErrorInitializer() throws Exception {
+		type = SoreType.ERROR;
+		where = SorePoint.INITIALIZER;
+		Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
+	}
 
-    String err = getSysErr();
-    // super.prevSysErr.println("Type: " + type + ", point: " + where + " resulted in:\n" + err);
-    // super.prevSysErr.println("---");
-    return err;
-  }
+	@Test
+	public void testErrorRule() throws Exception {
+		type = SoreType.ERROR;
+		where = SorePoint.RULE;
+		final String syserr = runAndReturnSyserr();
+		Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
+	}
+
+	@Test
+	public void testErrorBefore() throws Exception {
+		type = SoreType.ERROR;
+		where = SorePoint.BEFORE;
+		final String syserr = runAndReturnSyserr();
+		Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
+	}
+
+	@Test
+	public void testErrorTest() throws Exception {
+		type = SoreType.ERROR;
+		where = SorePoint.TEST;
+		final String syserr = runAndReturnSyserr();
+		Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
+	}
+
+	@Test
+	public void testErrorAfter() throws Exception {
+		type = SoreType.ERROR;
+		where = SorePoint.AFTER;
+		final String syserr = runAndReturnSyserr();
+		Assert.assertTrue(syserr.contains("NOTE: reproduce with:"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtests.method=test"));
+		Assert.assertTrue(Arrays.asList(syserr.split("\\s")).contains("-Dtestcase=" + Nested.class.getSimpleName()));
+	}
+
+	@Test
+	public void testErrorAfterClass() throws Exception {
+		type = SoreType.ERROR;
+		where = SorePoint.AFTER_CLASS;
+		Assert.assertTrue(runAndReturnSyserr().contains("NOTE: reproduce with:"));
+	}
+
+	private String runAndReturnSyserr() {
+		JUnitCore.runClasses(Nested.class);
+
+		String err = getSysErr();
+		// super.prevSysErr.println("Type: " + type + ", point: " + where + " resulted in:\n" + err);
+		// super.prevSysErr.println("---");
+		return err;
+	}
 }

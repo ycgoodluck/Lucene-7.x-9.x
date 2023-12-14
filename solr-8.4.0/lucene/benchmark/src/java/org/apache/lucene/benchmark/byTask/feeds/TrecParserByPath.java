@@ -18,16 +18,17 @@ package org.apache.lucene.benchmark.byTask.feeds;
 
 
 import java.io.IOException;
+
 /**
- * Parser for trec docs which selects the parser to apply according 
+ * Parser for trec docs which selects the parser to apply according
  * to the source files path, defaulting to {@link TrecGov2Parser}.
  */
 public class TrecParserByPath extends TrecDocParser {
 
-  @Override
-  public DocData parse(DocData docData, String name, TrecContentSource trecSrc, 
-      StringBuilder docBuf, ParsePathType pathType) throws IOException {
-    return pathType2parser.get(pathType).parse(docData, name, trecSrc, docBuf, pathType);
-  }
+	@Override
+	public DocData parse(DocData docData, String name, TrecContentSource trecSrc,
+											 StringBuilder docBuf, ParsePathType pathType) throws IOException {
+		return pathType2parser.get(pathType).parse(docData, name, trecSrc, docBuf, pathType);
+	}
 
 }

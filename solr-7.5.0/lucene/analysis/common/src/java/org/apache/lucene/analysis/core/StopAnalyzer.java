@@ -30,63 +30,76 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.WordlistLoader;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 
-/** 
+/**
  * Filters {@link LetterTokenizer} with {@link LowerCaseFilter} and {@link StopFilter}.
  */
 public final class StopAnalyzer extends StopwordAnalyzerBase {
 
-  /** An unmodifiable set containing some common English words that are not usually useful
-    for searching.*/
-  @Deprecated
-  public static final CharArraySet ENGLISH_STOP_WORDS_SET = EnglishAnalyzer.ENGLISH_STOP_WORDS_SET;
+	/**
+	 * An unmodifiable set containing some common English words that are not usually useful
+	 * for searching.
+	 */
+	@Deprecated
+	public static final CharArraySet ENGLISH_STOP_WORDS_SET = EnglishAnalyzer.ENGLISH_STOP_WORDS_SET;
 
-  /** Builds an analyzer which removes words in
-   *  {@link #ENGLISH_STOP_WORDS_SET}.
-   * @deprecated Use a constructor with a specific stop word set
-   */
-  @Deprecated
-  public StopAnalyzer() {
-    this(ENGLISH_STOP_WORDS_SET);
-  }
+	/**
+	 * Builds an analyzer which removes words in
+	 * {@link #ENGLISH_STOP_WORDS_SET}.
+	 *
+	 * @deprecated Use a constructor with a specific stop word set
+	 */
+	@Deprecated
+	public StopAnalyzer() {
+		this(ENGLISH_STOP_WORDS_SET);
+	}
 
-  /** Builds an analyzer with the stop words from the given set.
-   * @param stopWords Set of stop words */
-  public StopAnalyzer(CharArraySet stopWords) {
-    super(stopWords);
-  }
+	/**
+	 * Builds an analyzer with the stop words from the given set.
+	 *
+	 * @param stopWords Set of stop words
+	 */
+	public StopAnalyzer(CharArraySet stopWords) {
+		super(stopWords);
+	}
 
-  /** Builds an analyzer with the stop words from the given path.
-   * @see WordlistLoader#getWordSet(Reader)
-   * @param stopwordsFile File to load stop words from */
-  public StopAnalyzer(Path stopwordsFile) throws IOException {
-    this(loadStopwordSet(stopwordsFile));
-  }
+	/**
+	 * Builds an analyzer with the stop words from the given path.
+	 *
+	 * @param stopwordsFile File to load stop words from
+	 * @see WordlistLoader#getWordSet(Reader)
+	 */
+	public StopAnalyzer(Path stopwordsFile) throws IOException {
+		this(loadStopwordSet(stopwordsFile));
+	}
 
-  /** Builds an analyzer with the stop words from the given reader.
-   * @see WordlistLoader#getWordSet(Reader)
-   * @param stopwords Reader to load stop words from */
-  public StopAnalyzer(Reader stopwords) throws IOException {
-    this(loadStopwordSet(stopwords));
-  }
+	/**
+	 * Builds an analyzer with the stop words from the given reader.
+	 *
+	 * @param stopwords Reader to load stop words from
+	 * @see WordlistLoader#getWordSet(Reader)
+	 */
+	public StopAnalyzer(Reader stopwords) throws IOException {
+		this(loadStopwordSet(stopwords));
+	}
 
-  /**
-   * Creates
-   * {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
-   * used to tokenize all the text in the provided {@link Reader}.
-   * 
-   * @return {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
-   *         built from a {@link LowerCaseTokenizer} filtered with
-   *         {@link StopFilter}
-   */
-  @Override
-  protected TokenStreamComponents createComponents(String fieldName) {
-    final Tokenizer source = new LowerCaseTokenizer();
-    return new TokenStreamComponents(source, new StopFilter(source, stopwords));
-  }
+	/**
+	 * Creates
+	 * {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
+	 * used to tokenize all the text in the provided {@link Reader}.
+	 *
+	 * @return {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
+	 * built from a {@link LowerCaseTokenizer} filtered with
+	 * {@link StopFilter}
+	 */
+	@Override
+	protected TokenStreamComponents createComponents(String fieldName) {
+		final Tokenizer source = new LowerCaseTokenizer();
+		return new TokenStreamComponents(source, new StopFilter(source, stopwords));
+	}
 
-  @Override
-  protected TokenStream normalize(String fieldName, TokenStream in) {
-    return new LowerCaseFilter(in);
-  }
+	@Override
+	protected TokenStream normalize(String fieldName, TokenStream in) {
+		return new LowerCaseFilter(in);
+	}
 }
 

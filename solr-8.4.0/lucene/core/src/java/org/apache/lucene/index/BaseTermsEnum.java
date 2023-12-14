@@ -30,46 +30,48 @@ import org.apache.lucene.util.BytesRef;
  *   <li>{@link #seekExact(BytesRef)}</li>
  *   <li>{@link #seekExact(BytesRef, TermState)}</li>
  * </ul>
- *
+ * <p>
  * In some cases, the default implementation may be slow and consume huge memory, so subclass SHOULD have its own
  * implementation if possible.
  */
 public abstract class BaseTermsEnum extends TermsEnum {
 
-  private AttributeSource atts = null;
-  
-  /** Sole constructor. (For invocation by subclass
-   *  constructors, typically implicit.) */
-  protected BaseTermsEnum() {
-    super();
-  }
+	private AttributeSource atts = null;
 
-  @Override
-  public TermState termState() throws IOException {
-    return new TermState() {
-      @Override
-      public void copyFrom(TermState other) {
-        throw new UnsupportedOperationException();
-      }
-    };
-  }
+	/**
+	 * Sole constructor. (For invocation by subclass
+	 * constructors, typically implicit.)
+	 */
+	protected BaseTermsEnum() {
+		super();
+	}
 
-  @Override
-  public boolean seekExact(BytesRef text) throws IOException {
-    return seekCeil(text) == SeekStatus.FOUND;
-  }
+	@Override
+	public TermState termState() throws IOException {
+		return new TermState() {
+			@Override
+			public void copyFrom(TermState other) {
+				throw new UnsupportedOperationException();
+			}
+		};
+	}
 
-  @Override
-  public void seekExact(BytesRef term, TermState state) throws IOException {
-    if (!seekExact(term)) {
-      throw new IllegalArgumentException("term=" + term + " does not exist");
-    }
-  }
+	@Override
+	public boolean seekExact(BytesRef text) throws IOException {
+		return seekCeil(text) == SeekStatus.FOUND;
+	}
 
-  public AttributeSource attributes() {
-    if (atts == null) {
-      atts = new AttributeSource();
-    }
-    return atts;
-  }
+	@Override
+	public void seekExact(BytesRef term, TermState state) throws IOException {
+		if (!seekExact(term)) {
+			throw new IllegalArgumentException("term=" + term + " does not exist");
+		}
+	}
+
+	public AttributeSource attributes() {
+		if (atts == null) {
+			atts = new AttributeSource();
+		}
+		return atts;
+	}
 }

@@ -25,98 +25,98 @@ import org.apache.lucene.search.similarities.Similarity;
 
 public class TestLegacyBM25Similarity extends BaseSimilarityTestCase {
 
-  public void testIllegalK1() {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new LegacyBM25Similarity(Float.POSITIVE_INFINITY, 0.75f);
-    });
-    assertTrue(expected.getMessage().contains("illegal k1 value"));
+	public void testIllegalK1() {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new LegacyBM25Similarity(Float.POSITIVE_INFINITY, 0.75f);
+		});
+		assertTrue(expected.getMessage().contains("illegal k1 value"));
 
-    expected = expectThrows(IllegalArgumentException.class, () -> {
-      new LegacyBM25Similarity(-1, 0.75f);
-    });
-    assertTrue(expected.getMessage().contains("illegal k1 value"));
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			new LegacyBM25Similarity(-1, 0.75f);
+		});
+		assertTrue(expected.getMessage().contains("illegal k1 value"));
 
-    expected = expectThrows(IllegalArgumentException.class, () -> {
-      new LegacyBM25Similarity(Float.NaN, 0.75f);
-    });
-    assertTrue(expected.getMessage().contains("illegal k1 value"));
-  }
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			new LegacyBM25Similarity(Float.NaN, 0.75f);
+		});
+		assertTrue(expected.getMessage().contains("illegal k1 value"));
+	}
 
-  public void testIllegalB() {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new LegacyBM25Similarity(1.2f, 2f);
-    });
-    assertTrue(expected.getMessage().contains("illegal b value"));
+	public void testIllegalB() {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new LegacyBM25Similarity(1.2f, 2f);
+		});
+		assertTrue(expected.getMessage().contains("illegal b value"));
 
-    expected = expectThrows(IllegalArgumentException.class, () -> {
-      new LegacyBM25Similarity(1.2f, -1f);
-    });
-    assertTrue(expected.getMessage().contains("illegal b value"));
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			new LegacyBM25Similarity(1.2f, -1f);
+		});
+		assertTrue(expected.getMessage().contains("illegal b value"));
 
-    expected = expectThrows(IllegalArgumentException.class, () -> {
-      new LegacyBM25Similarity(1.2f, Float.POSITIVE_INFINITY);
-    });
-    assertTrue(expected.getMessage().contains("illegal b value"));
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			new LegacyBM25Similarity(1.2f, Float.POSITIVE_INFINITY);
+		});
+		assertTrue(expected.getMessage().contains("illegal b value"));
 
-    expected = expectThrows(IllegalArgumentException.class, () -> {
-      new LegacyBM25Similarity(1.2f, Float.NaN);
-    });
-    assertTrue(expected.getMessage().contains("illegal b value"));
-  }
+		expected = expectThrows(IllegalArgumentException.class, () -> {
+			new LegacyBM25Similarity(1.2f, Float.NaN);
+		});
+		assertTrue(expected.getMessage().contains("illegal b value"));
+	}
 
-  public void testDefaults() {
-    LegacyBM25Similarity legacyBM25Similarity = new LegacyBM25Similarity();
-    BM25Similarity bm25Similarity = new BM25Similarity();
-    assertEquals(bm25Similarity.getB(), legacyBM25Similarity.getB(), 0f);
-    assertEquals(bm25Similarity.getK1(), legacyBM25Similarity.getK1(), 0f);
-  }
+	public void testDefaults() {
+		LegacyBM25Similarity legacyBM25Similarity = new LegacyBM25Similarity();
+		BM25Similarity bm25Similarity = new BM25Similarity();
+		assertEquals(bm25Similarity.getB(), legacyBM25Similarity.getB(), 0f);
+		assertEquals(bm25Similarity.getK1(), legacyBM25Similarity.getK1(), 0f);
+	}
 
-  public void testToString() {
-    LegacyBM25Similarity legacyBM25Similarity = new LegacyBM25Similarity();
-    BM25Similarity bm25Similarity = new BM25Similarity();
-    assertEquals(bm25Similarity.toString(), legacyBM25Similarity.toString());
-  }
+	public void testToString() {
+		LegacyBM25Similarity legacyBM25Similarity = new LegacyBM25Similarity();
+		BM25Similarity bm25Similarity = new BM25Similarity();
+		assertEquals(bm25Similarity.toString(), legacyBM25Similarity.toString());
+	}
 
-  @Override
-  protected Similarity getSimilarity(Random random) {
-    return new LegacyBM25Similarity(randomK1(random), randomB(random));
-  }
+	@Override
+	protected Similarity getSimilarity(Random random) {
+		return new LegacyBM25Similarity(randomK1(random), randomB(random));
+	}
 
-  private static float randomK1(Random random) {
-    // term frequency normalization parameter k1
-    switch (random.nextInt(4)) {
-      case 0:
-        // minimum value
-        return 0;
-      case 1:
-        // tiny value
-        return Float.MIN_VALUE;
-      case 2:
-        // maximum value
-        // upper bounds on individual term's score is 43.262806 * (k1 + 1) * boost
-        // we just limit the test to "reasonable" k1 values but don't enforce this anywhere.
-        return Integer.MAX_VALUE;
-      default:
-        // random value
-        return Integer.MAX_VALUE * random.nextFloat();
-    }
-  }
+	private static float randomK1(Random random) {
+		// term frequency normalization parameter k1
+		switch (random.nextInt(4)) {
+			case 0:
+				// minimum value
+				return 0;
+			case 1:
+				// tiny value
+				return Float.MIN_VALUE;
+			case 2:
+				// maximum value
+				// upper bounds on individual term's score is 43.262806 * (k1 + 1) * boost
+				// we just limit the test to "reasonable" k1 values but don't enforce this anywhere.
+				return Integer.MAX_VALUE;
+			default:
+				// random value
+				return Integer.MAX_VALUE * random.nextFloat();
+		}
+	}
 
-  private static float randomB(Random random) {
-    // length normalization parameter b [0 .. 1]
-    switch (random.nextInt(4)) {
-      case 0:
-        // minimum value
-        return 0;
-      case 1:
-        // tiny value
-        return Float.MIN_VALUE;
-      case 2:
-        // maximum value
-        return 1;
-      default:
-        // random value
-        return random.nextFloat();
-    }
-  }
+	private static float randomB(Random random) {
+		// length normalization parameter b [0 .. 1]
+		switch (random.nextInt(4)) {
+			case 0:
+				// minimum value
+				return 0;
+			case 1:
+				// tiny value
+				return Float.MIN_VALUE;
+			case 2:
+				// maximum value
+				return 1;
+			default:
+				// random value
+				return random.nextFloat();
+		}
+	}
 }

@@ -24,8 +24,8 @@ import java.util.Map;
 import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.util.Version;
 
-/** 
- * Base class for testing tokenstream factories. 
+/**
+ * Base class for testing tokenstream factories.
  * <p>
  * Example usage:
  * <pre class="prettyprint">
@@ -42,103 +42,103 @@ import org.apache.lucene.util.Version;
 // this also means we currently cannot use this in other analysis modules :(
 // TODO: maybe after we improve the abstract factory/SPI apis, they can sit in core and resolve this.
 public abstract class BaseTokenStreamFactoryTestCase extends BaseTokenStreamTestCase {
-  
-  private AbstractAnalysisFactory analysisFactory(Class<? extends AbstractAnalysisFactory> clazz, Version matchVersion, ResourceLoader loader, String... keysAndValues) throws Exception {
-    if (keysAndValues.length % 2 == 1) {
-      throw new IllegalArgumentException("invalid keysAndValues map");
-    }
-    Map<String,String> args = new HashMap<>();
-    for (int i = 0; i < keysAndValues.length; i += 2) {
-      String previous = args.put(keysAndValues[i], keysAndValues[i+1]);
-      assertNull("duplicate values for key: " + keysAndValues[i], previous);
-    }
-    if (matchVersion != null) {
-      String previous = args.put("luceneMatchVersion", matchVersion.toString());
-      assertNull("duplicate values for key: luceneMatchVersion", previous);
-    }
-    AbstractAnalysisFactory factory = null;
-    try {
-      factory = clazz.getConstructor(Map.class).newInstance(args);
-    } catch (InvocationTargetException e) {
-      // to simplify tests that check for illegal parameters
-      if (e.getCause() instanceof IllegalArgumentException) {
-        throw (IllegalArgumentException) e.getCause();
-      } else {
-        throw e;
-      }
-    }
-    if (factory instanceof ResourceLoaderAware) {
-      ((ResourceLoaderAware) factory).inform(loader);
-    }
-    return factory;
-  }
 
-  /** 
-   * Returns a fully initialized TokenizerFactory with the specified name and key-value arguments.
-   * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
-   * be on the test classpath.
-   */
-  protected TokenizerFactory tokenizerFactory(String name, String... keysAndValues) throws Exception {
-    return tokenizerFactory(name, Version.LATEST, keysAndValues);
-  }
+	private AbstractAnalysisFactory analysisFactory(Class<? extends AbstractAnalysisFactory> clazz, Version matchVersion, ResourceLoader loader, String... keysAndValues) throws Exception {
+		if (keysAndValues.length % 2 == 1) {
+			throw new IllegalArgumentException("invalid keysAndValues map");
+		}
+		Map<String, String> args = new HashMap<>();
+		for (int i = 0; i < keysAndValues.length; i += 2) {
+			String previous = args.put(keysAndValues[i], keysAndValues[i + 1]);
+			assertNull("duplicate values for key: " + keysAndValues[i], previous);
+		}
+		if (matchVersion != null) {
+			String previous = args.put("luceneMatchVersion", matchVersion.toString());
+			assertNull("duplicate values for key: luceneMatchVersion", previous);
+		}
+		AbstractAnalysisFactory factory = null;
+		try {
+			factory = clazz.getConstructor(Map.class).newInstance(args);
+		} catch (InvocationTargetException e) {
+			// to simplify tests that check for illegal parameters
+			if (e.getCause() instanceof IllegalArgumentException) {
+				throw (IllegalArgumentException) e.getCause();
+			} else {
+				throw e;
+			}
+		}
+		if (factory instanceof ResourceLoaderAware) {
+			((ResourceLoaderAware) factory).inform(loader);
+		}
+		return factory;
+	}
 
-  /** 
-   * Returns a fully initialized TokenizerFactory with the specified name and key-value arguments.
-   * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
-   * be on the test classpath.
-   */
-  protected TokenizerFactory tokenizerFactory(String name, Version version, String... keysAndValues) throws Exception {
-    return tokenizerFactory(name, version, new ClasspathResourceLoader(getClass()), keysAndValues);
-  }
-  
-  /** 
-   * Returns a fully initialized TokenizerFactory with the specified name, version, resource loader, 
-   * and key-value arguments.
-   */
-  protected TokenizerFactory tokenizerFactory(String name, Version matchVersion, ResourceLoader loader, String... keysAndValues) throws Exception {
-    return (TokenizerFactory) analysisFactory(TokenizerFactory.lookupClass(name), matchVersion, loader, keysAndValues);
-  }
+	/**
+	 * Returns a fully initialized TokenizerFactory with the specified name and key-value arguments.
+	 * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
+	 * be on the test classpath.
+	 */
+	protected TokenizerFactory tokenizerFactory(String name, String... keysAndValues) throws Exception {
+		return tokenizerFactory(name, Version.LATEST, keysAndValues);
+	}
 
-  /** 
-   * Returns a fully initialized TokenFilterFactory with the specified name and key-value arguments.
-   * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
-   * be on the test classpath.
-   */
-  protected TokenFilterFactory tokenFilterFactory(String name, Version version, String... keysAndValues) throws Exception {
-    return tokenFilterFactory(name, version, new ClasspathResourceLoader(getClass()), keysAndValues);
-  }
+	/**
+	 * Returns a fully initialized TokenizerFactory with the specified name and key-value arguments.
+	 * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
+	 * be on the test classpath.
+	 */
+	protected TokenizerFactory tokenizerFactory(String name, Version version, String... keysAndValues) throws Exception {
+		return tokenizerFactory(name, version, new ClasspathResourceLoader(getClass()), keysAndValues);
+	}
 
-  /** 
-   * Returns a fully initialized TokenFilterFactory with the specified name and key-value arguments.
-   * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
-   * be on the test classpath.
-   */
-  protected TokenFilterFactory tokenFilterFactory(String name, String... keysAndValues) throws Exception {
-    return tokenFilterFactory(name, Version.LATEST, keysAndValues);
-  }
-  
-  /** 
-   * Returns a fully initialized TokenFilterFactory with the specified name, version, resource loader, 
-   * and key-value arguments.
-   */
-  protected TokenFilterFactory tokenFilterFactory(String name, Version matchVersion, ResourceLoader loader, String... keysAndValues) throws Exception {
-    return (TokenFilterFactory) analysisFactory(TokenFilterFactory.lookupClass(name), matchVersion, loader, keysAndValues);
-  }
-  
-  /** 
-   * Returns a fully initialized CharFilterFactory with the specified name and key-value arguments.
-   * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
-   * be on the test classpath.
-   */
-  protected CharFilterFactory charFilterFactory(String name, String... keysAndValues) throws Exception {
-    return charFilterFactory(name, Version.LATEST, new ClasspathResourceLoader(getClass()), keysAndValues);
-  }
-  
-  /** 
-   * Returns a fully initialized CharFilterFactory with the specified name, version, resource loader, 
-   * and key-value arguments.
-   */
-  protected CharFilterFactory charFilterFactory(String name, Version matchVersion, ResourceLoader loader, String... keysAndValues) throws Exception {
-    return (CharFilterFactory) analysisFactory(CharFilterFactory.lookupClass(name), matchVersion, loader, keysAndValues);
-  }
+	/**
+	 * Returns a fully initialized TokenizerFactory with the specified name, version, resource loader,
+	 * and key-value arguments.
+	 */
+	protected TokenizerFactory tokenizerFactory(String name, Version matchVersion, ResourceLoader loader, String... keysAndValues) throws Exception {
+		return (TokenizerFactory) analysisFactory(TokenizerFactory.lookupClass(name), matchVersion, loader, keysAndValues);
+	}
+
+	/**
+	 * Returns a fully initialized TokenFilterFactory with the specified name and key-value arguments.
+	 * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
+	 * be on the test classpath.
+	 */
+	protected TokenFilterFactory tokenFilterFactory(String name, Version version, String... keysAndValues) throws Exception {
+		return tokenFilterFactory(name, version, new ClasspathResourceLoader(getClass()), keysAndValues);
+	}
+
+	/**
+	 * Returns a fully initialized TokenFilterFactory with the specified name and key-value arguments.
+	 * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
+	 * be on the test classpath.
+	 */
+	protected TokenFilterFactory tokenFilterFactory(String name, String... keysAndValues) throws Exception {
+		return tokenFilterFactory(name, Version.LATEST, keysAndValues);
+	}
+
+	/**
+	 * Returns a fully initialized TokenFilterFactory with the specified name, version, resource loader,
+	 * and key-value arguments.
+	 */
+	protected TokenFilterFactory tokenFilterFactory(String name, Version matchVersion, ResourceLoader loader, String... keysAndValues) throws Exception {
+		return (TokenFilterFactory) analysisFactory(TokenFilterFactory.lookupClass(name), matchVersion, loader, keysAndValues);
+	}
+
+	/**
+	 * Returns a fully initialized CharFilterFactory with the specified name and key-value arguments.
+	 * {@link ClasspathResourceLoader} is used for loading resources, so any required ones should
+	 * be on the test classpath.
+	 */
+	protected CharFilterFactory charFilterFactory(String name, String... keysAndValues) throws Exception {
+		return charFilterFactory(name, Version.LATEST, new ClasspathResourceLoader(getClass()), keysAndValues);
+	}
+
+	/**
+	 * Returns a fully initialized CharFilterFactory with the specified name, version, resource loader,
+	 * and key-value arguments.
+	 */
+	protected CharFilterFactory charFilterFactory(String name, Version matchVersion, ResourceLoader loader, String... keysAndValues) throws Exception {
+		return (CharFilterFactory) analysisFactory(CharFilterFactory.lookupClass(name), matchVersion, loader, keysAndValues);
+	}
 }

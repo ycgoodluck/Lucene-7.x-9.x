@@ -18,78 +18,80 @@ package org.apache.lucene.util.bkd;
 
 import java.util.List;
 
-/** Utility class to read buffered points from in-heap arrays.
+/**
+ * Utility class to read buffered points from in-heap arrays.
  *
- * @lucene.internal */
+ * @lucene.internal
+ */
 public final class HeapPointReader extends PointReader {
-  private int curRead;
-  final List<byte[]> blocks;
-  final int valuesPerBlock;
-  final int packedBytesLength;
-  final long[] ordsLong;
-  final int[] ords;
-  final int[] docIDs;
-  final int end;
-  final byte[] scratch;
-  final boolean singleValuePerDoc;
+	private int curRead;
+	final List<byte[]> blocks;
+	final int valuesPerBlock;
+	final int packedBytesLength;
+	final long[] ordsLong;
+	final int[] ords;
+	final int[] docIDs;
+	final int end;
+	final byte[] scratch;
+	final boolean singleValuePerDoc;
 
-  public HeapPointReader(List<byte[]> blocks, int valuesPerBlock, int packedBytesLength, int[] ords, long[] ordsLong, int[] docIDs, int start, int end, boolean singleValuePerDoc) {
-    this.blocks = blocks;
-    this.valuesPerBlock = valuesPerBlock;
-    this.singleValuePerDoc = singleValuePerDoc;
-    this.ords = ords;
-    this.ordsLong = ordsLong;
-    this.docIDs = docIDs;
-    curRead = start-1;
-    this.end = end;
-    this.packedBytesLength = packedBytesLength;
-    scratch = new byte[packedBytesLength];
-  }
+	public HeapPointReader(List<byte[]> blocks, int valuesPerBlock, int packedBytesLength, int[] ords, long[] ordsLong, int[] docIDs, int start, int end, boolean singleValuePerDoc) {
+		this.blocks = blocks;
+		this.valuesPerBlock = valuesPerBlock;
+		this.singleValuePerDoc = singleValuePerDoc;
+		this.ords = ords;
+		this.ordsLong = ordsLong;
+		this.docIDs = docIDs;
+		curRead = start - 1;
+		this.end = end;
+		this.packedBytesLength = packedBytesLength;
+		scratch = new byte[packedBytesLength];
+	}
 
-  void writePackedValue(int index, byte[] bytes) {
-    int block = index / valuesPerBlock;
-    int blockIndex = index % valuesPerBlock;
-    while (blocks.size() <= block) {
-      blocks.add(new byte[valuesPerBlock*packedBytesLength]);
-    }
-    System.arraycopy(bytes, 0, blocks.get(blockIndex), blockIndex * packedBytesLength, packedBytesLength);
-  }
+	void writePackedValue(int index, byte[] bytes) {
+		int block = index / valuesPerBlock;
+		int blockIndex = index % valuesPerBlock;
+		while (blocks.size() <= block) {
+			blocks.add(new byte[valuesPerBlock * packedBytesLength]);
+		}
+		System.arraycopy(bytes, 0, blocks.get(blockIndex), blockIndex * packedBytesLength, packedBytesLength);
+	}
 
-  void readPackedValue(int index, byte[] bytes) {
-    int block = index / valuesPerBlock;
-    int blockIndex = index % valuesPerBlock;
-    System.arraycopy(blocks.get(block), blockIndex * packedBytesLength, bytes, 0, packedBytesLength);
-  }
+	void readPackedValue(int index, byte[] bytes) {
+		int block = index / valuesPerBlock;
+		int blockIndex = index % valuesPerBlock;
+		System.arraycopy(blocks.get(block), blockIndex * packedBytesLength, bytes, 0, packedBytesLength);
+	}
 
-  @Override
-  public boolean next() {
-    curRead++;
-    return curRead < end;
-  }
+	@Override
+	public boolean next() {
+		curRead++;
+		return curRead < end;
+	}
 
-  @Override
-  public byte[] packedValue() {
-    readPackedValue(curRead, scratch);
-    return scratch;
-  }
+	@Override
+	public byte[] packedValue() {
+		readPackedValue(curRead, scratch);
+		return scratch;
+	}
 
-  @Override
-  public int docID() {
-    return docIDs[curRead];
-  }
+	@Override
+	public int docID() {
+		return docIDs[curRead];
+	}
 
-  @Override
-  public long ord() {
-    if (singleValuePerDoc) {
-      return docIDs[curRead];
-    } else if (ordsLong != null) {
-      return ordsLong[curRead];
-    } else {
-      return ords[curRead];
-    }
-  }
+	@Override
+	public long ord() {
+		if (singleValuePerDoc) {
+			return docIDs[curRead];
+		} else if (ordsLong != null) {
+			return ordsLong[curRead];
+		} else {
+			return ords[curRead];
+		}
+	}
 
-  @Override
-  public void close() {
-  }
+	@Override
+	public void close() {
+	}
 }

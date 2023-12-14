@@ -20,7 +20,9 @@ package org.apache.lucene.luke.app.desktop.components.fragments.search;
 import org.apache.lucene.luke.app.desktop.components.ComponentOperatorRegistry;
 import org.apache.lucene.luke.models.search.SimilarityConfig;
 
-/** Operator for the Similarity tab */
+/**
+ * Operator for the Similarity tab
+ */
 public interface SimilarityTabOperator extends ComponentOperatorRegistry.ComponentOperator {
-  SimilarityConfig getConfig();
+	SimilarityConfig getConfig();
 }

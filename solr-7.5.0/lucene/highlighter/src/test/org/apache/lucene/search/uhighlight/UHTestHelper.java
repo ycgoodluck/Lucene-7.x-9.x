@@ -28,42 +28,42 @@ import org.apache.lucene.index.IndexOptions;
  */
 class UHTestHelper {
 
-  static final FieldType postingsType = new FieldType(TextField.TYPE_STORED);
-  static final FieldType tvType = new FieldType(TextField.TYPE_STORED);
-  static final FieldType postingsWithTvType = new FieldType(TextField.TYPE_STORED);
-  static final FieldType reanalysisType = TextField.TYPE_STORED;
+	static final FieldType postingsType = new FieldType(TextField.TYPE_STORED);
+	static final FieldType tvType = new FieldType(TextField.TYPE_STORED);
+	static final FieldType postingsWithTvType = new FieldType(TextField.TYPE_STORED);
+	static final FieldType reanalysisType = TextField.TYPE_STORED;
 
-  static {
-    postingsType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
-    postingsType.freeze();
+	static {
+		postingsType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+		postingsType.freeze();
 
-    tvType.setStoreTermVectors(true);
-    tvType.setStoreTermVectorPositions(true);
-    tvType.setStoreTermVectorOffsets(true);
-    tvType.freeze();
+		tvType.setStoreTermVectors(true);
+		tvType.setStoreTermVectorPositions(true);
+		tvType.setStoreTermVectorOffsets(true);
+		tvType.freeze();
 
-    postingsWithTvType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
-    postingsWithTvType.setStoreTermVectors(true);
-    postingsWithTvType.freeze();
+		postingsWithTvType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+		postingsWithTvType.setStoreTermVectors(true);
+		postingsWithTvType.freeze();
 
 
-    //re-analysis type needs no further changes.
-  }
+		//re-analysis type needs no further changes.
+	}
 
-  public static FieldType randomFieldType(Random random, FieldType... typePossibilities) {
-    if (typePossibilities == null || typePossibilities.length == 0) {
-      typePossibilities = new FieldType[]{postingsType, tvType, postingsWithTvType, reanalysisType};
-    }
-    return typePossibilities[random.nextInt(typePossibilities.length)];
-  }
+	public static FieldType randomFieldType(Random random, FieldType... typePossibilities) {
+		if (typePossibilities == null || typePossibilities.length == 0) {
+			typePossibilities = new FieldType[]{postingsType, tvType, postingsWithTvType, reanalysisType};
+		}
+		return typePossibilities[random.nextInt(typePossibilities.length)];
+	}
 
-  /**
-   * for {@link com.carrotsearch.randomizedtesting.annotations.ParametersFactory}
-   */
-  // https://github.com/carrotsearch/randomizedtesting/blob/master/examples/maven/src/main/java/com/carrotsearch/examples/randomizedrunner/Test007ParameterizedTests.java
-  static Iterable<Object[]> parametersFactoryList() {
-    return Arrays.asList(new Object[][]{
-        {postingsType}, {tvType}, {postingsWithTvType}, {reanalysisType}
-    });
-  }
+	/**
+	 * for {@link com.carrotsearch.randomizedtesting.annotations.ParametersFactory}
+	 */
+	// https://github.com/carrotsearch/randomizedtesting/blob/master/examples/maven/src/main/java/com/carrotsearch/examples/randomizedrunner/Test007ParameterizedTests.java
+	static Iterable<Object[]> parametersFactoryList() {
+		return Arrays.asList(new Object[][]{
+			{postingsType}, {tvType}, {postingsWithTvType}, {reanalysisType}
+		});
+	}
 }

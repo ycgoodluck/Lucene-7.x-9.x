@@ -33,60 +33,62 @@ import org.apache.lucene.index.LeafReaderContext;
  */
 public final class NormsFieldExistsQuery extends Query {
 
-  private final String field;
+	private final String field;
 
-  /** Create a query that will match that have a value for the given
-   *  {@code field}. */
-  public NormsFieldExistsQuery(String field) {
-    this.field = Objects.requireNonNull(field);
-  }
+	/**
+	 * Create a query that will match that have a value for the given
+	 * {@code field}.
+	 */
+	public NormsFieldExistsQuery(String field) {
+		this.field = Objects.requireNonNull(field);
+	}
 
-  public String getField() {
-    return field;
-  }
+	public String getField() {
+		return field;
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           field.equals(((NormsFieldExistsQuery) other).field);
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			field.equals(((NormsFieldExistsQuery) other).field);
+	}
 
-  @Override
-  public int hashCode() {
-    return 31 * classHash() + field.hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return 31 * classHash() + field.hashCode();
+	}
 
-  @Override
-  public String toString(String field) {
-    return "NormsFieldExistsQuery [field=" + this.field + "]";
-  }
+	@Override
+	public String toString(String field) {
+		return "NormsFieldExistsQuery [field=" + this.field + "]";
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    if (visitor.acceptField(field)) {
-      visitor.visitLeaf(this);
-    }
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		if (visitor.acceptField(field)) {
+			visitor.visitLeaf(this);
+		}
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    return new ConstantScoreWeight(this, boost) {
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        FieldInfos fieldInfos = context.reader().getFieldInfos();
-        FieldInfo fieldInfo = fieldInfos.fieldInfo(field);
-        if (fieldInfo == null || fieldInfo.hasNorms() == false) {
-          return null;
-        }
-        LeafReader reader = context.reader();
-        DocIdSetIterator iterator = reader.getNormValues(field);
-        return new ConstantScoreScorer(this, score(), scoreMode, iterator);
-      }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		return new ConstantScoreWeight(this, boost) {
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				FieldInfos fieldInfos = context.reader().getFieldInfos();
+				FieldInfo fieldInfo = fieldInfos.fieldInfo(field);
+				if (fieldInfo == null || fieldInfo.hasNorms() == false) {
+					return null;
+				}
+				LeafReader reader = context.reader();
+				DocIdSetIterator iterator = reader.getNormValues(field);
+				return new ConstantScoreScorer(this, score(), scoreMode, iterator);
+			}
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return true;
-      }
-    };
-  }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return true;
+			}
+		};
+	}
 }

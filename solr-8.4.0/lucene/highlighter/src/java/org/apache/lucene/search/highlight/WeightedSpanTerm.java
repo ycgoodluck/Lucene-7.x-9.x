@@ -26,60 +26,59 @@ import java.util.List;
  * Lightweight class to hold term, weight, and positions used for scoring this
  * term.
  */
-public class WeightedSpanTerm extends WeightedTerm{
-  boolean positionSensitive;
-  private List<PositionSpan> positionSpans = new ArrayList<>();
+public class WeightedSpanTerm extends WeightedTerm {
+	boolean positionSensitive;
+	private List<PositionSpan> positionSpans = new ArrayList<>();
 
-  public WeightedSpanTerm(float weight, String term) {
-    super(weight, term);
-    this.positionSpans = new ArrayList<>();
-  }
+	public WeightedSpanTerm(float weight, String term) {
+		super(weight, term);
+		this.positionSpans = new ArrayList<>();
+	}
 
-  public WeightedSpanTerm(float weight, String term, boolean positionSensitive) {
-    super(weight, term);
-    this.positionSensitive = positionSensitive;
-  }
+	public WeightedSpanTerm(float weight, String term, boolean positionSensitive) {
+		super(weight, term);
+		this.positionSensitive = positionSensitive;
+	}
 
-  /**
-   * Checks to see if this term is valid at <code>position</code>.
-   *
-   * @param position
-   *            to check against valid term positions
-   * @return true iff this term is a hit at this position
-   */
-  public boolean checkPosition(int position) {
-    // There would probably be a slight speed improvement if PositionSpans
-    // where kept in some sort of priority queue - that way this method
-    // could
-    // bail early without checking each PositionSpan.
-    Iterator<PositionSpan> positionSpanIt = positionSpans.iterator();
+	/**
+	 * Checks to see if this term is valid at <code>position</code>.
+	 *
+	 * @param position to check against valid term positions
+	 * @return true iff this term is a hit at this position
+	 */
+	public boolean checkPosition(int position) {
+		// There would probably be a slight speed improvement if PositionSpans
+		// where kept in some sort of priority queue - that way this method
+		// could
+		// bail early without checking each PositionSpan.
+		Iterator<PositionSpan> positionSpanIt = positionSpans.iterator();
 
-    while (positionSpanIt.hasNext()) {
-      PositionSpan posSpan = positionSpanIt.next();
+		while (positionSpanIt.hasNext()) {
+			PositionSpan posSpan = positionSpanIt.next();
 
-      if (((position >= posSpan.start) && (position <= posSpan.end))) {
-        return true;
-      }
-    }
+			if (((position >= posSpan.start) && (position <= posSpan.end))) {
+				return true;
+			}
+		}
 
-    return false;
-  }
+		return false;
+	}
 
-  public void addPositionSpans(List<PositionSpan> positionSpans) {
-    this.positionSpans.addAll(positionSpans);
-  }
+	public void addPositionSpans(List<PositionSpan> positionSpans) {
+		this.positionSpans.addAll(positionSpans);
+	}
 
-  public boolean isPositionSensitive() {
-    return positionSensitive;
-  }
+	public boolean isPositionSensitive() {
+		return positionSensitive;
+	}
 
-  public void setPositionSensitive(boolean positionSensitive) {
-    this.positionSensitive = positionSensitive;
-  }
+	public void setPositionSensitive(boolean positionSensitive) {
+		this.positionSensitive = positionSensitive;
+	}
 
-  public List<PositionSpan> getPositionSpans() {
-    return positionSpans;
-  }
+	public List<PositionSpan> getPositionSpans() {
+		return positionSpans;
+	}
 
 }
 

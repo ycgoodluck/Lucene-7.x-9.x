@@ -18,9 +18,9 @@ package org.apache.lucene.search.similarities;
 
 public class TestAxiomaticF1LOG extends AxiomaticTestCase {
 
-  @Override
-  protected final Similarity getAxiomaticModel(float s, int queryLen, float k) {
-    return new AxiomaticF1LOG(s);
-  }
+	@Override
+	protected final Similarity getAxiomaticModel(float s, int queryLen, float k) {
+		return new AxiomaticF1LOG(s);
+	}
 
 }

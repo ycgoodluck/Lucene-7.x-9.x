@@ -25,7 +25,7 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 import static org.apache.lucene.analysis.no.NorwegianLightStemmer.BOKMAAL;
 import static org.apache.lucene.analysis.no.NorwegianLightStemmer.NYNORSK;
 
-/** 
+/**
  * Factory for {@link NorwegianLightStemFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_svlgtstem" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -35,36 +35,41 @@ import static org.apache.lucene.analysis.no.NorwegianLightStemmer.NYNORSK;
  *     &lt;filter class="solr.NorwegianLightStemFilterFactory" variant="nb"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.6.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.6.0
  */
 public class NorwegianLightStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "norwegianLightStem";
-  
-  private final int flags;
-  
-  /** Creates a new NorwegianLightStemFilterFactory */
-  public NorwegianLightStemFilterFactory(Map<String,String> args) {
-    super(args);
-    String variant = get(args, "variant");
-    if (variant == null || "nb".equals(variant)) {
-      flags = BOKMAAL;
-    } else if ("nn".equals(variant)) {
-      flags = NYNORSK;
-    } else if ("no".equals(variant)) {
-      flags = BOKMAAL | NYNORSK;
-    } else {
-      throw new IllegalArgumentException("invalid variant: " + variant);
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new NorwegianLightStemFilter(input, flags);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "norwegianLightStem";
+
+	private final int flags;
+
+	/**
+	 * Creates a new NorwegianLightStemFilterFactory
+	 */
+	public NorwegianLightStemFilterFactory(Map<String, String> args) {
+		super(args);
+		String variant = get(args, "variant");
+		if (variant == null || "nb".equals(variant)) {
+			flags = BOKMAAL;
+		} else if ("nn".equals(variant)) {
+			flags = NYNORSK;
+		} else if ("no".equals(variant)) {
+			flags = BOKMAAL | NYNORSK;
+		} else {
+			throw new IllegalArgumentException("invalid variant: " + variant);
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new NorwegianLightStemFilter(input, flags);
+	}
 }

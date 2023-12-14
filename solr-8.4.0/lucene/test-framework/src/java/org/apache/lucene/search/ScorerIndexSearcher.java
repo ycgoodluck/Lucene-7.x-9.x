@@ -29,38 +29,44 @@ import org.apache.lucene.util.Bits;
  */
 public class ScorerIndexSearcher extends IndexSearcher {
 
-  /** Creates a searcher searching the provided index. Search on individual
-   *  segments will be run in the provided {@link Executor}.
-   * @see IndexSearcher#IndexSearcher(IndexReader, Executor) */
-  public ScorerIndexSearcher(IndexReader r, Executor executor) {
-    super(r, executor);
-  }
+	/**
+	 * Creates a searcher searching the provided index. Search on individual
+	 * segments will be run in the provided {@link Executor}.
+	 *
+	 * @see IndexSearcher#IndexSearcher(IndexReader, Executor)
+	 */
+	public ScorerIndexSearcher(IndexReader r, Executor executor) {
+		super(r, executor);
+	}
 
-  /** Creates a searcher searching the provided index.
-   * @see IndexSearcher#IndexSearcher(IndexReader) */
-  public ScorerIndexSearcher(IndexReader r) {
-    super(r);
-  }
+	/**
+	 * Creates a searcher searching the provided index.
+	 *
+	 * @see IndexSearcher#IndexSearcher(IndexReader)
+	 */
+	public ScorerIndexSearcher(IndexReader r) {
+		super(r);
+	}
 
-  @Override
-  protected void search(List<LeafReaderContext> leaves, Weight weight, Collector collector) throws IOException {
-    for (LeafReaderContext ctx : leaves) { // search each subreader
-      // we force the use of Scorer (not BulkScorer) to make sure
-      // that the scorer passed to LeafCollector.setScorer supports
-      // Scorer.getChildren
-      Scorer scorer = weight.scorer(ctx);
-      if (scorer != null) {
-        final DocIdSetIterator iterator = scorer.iterator();
-        final LeafCollector leafCollector = collector.getLeafCollector(ctx);
-        leafCollector.setScorer(scorer);
-        final Bits liveDocs = ctx.reader().getLiveDocs();
-        for (int doc = iterator.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = iterator.nextDoc()) {
-          if (liveDocs == null || liveDocs.get(doc)) {
-            leafCollector.collect(doc);
-          }
-        }
-      }
-    }
-  }
+	@Override
+	protected void search(List<LeafReaderContext> leaves, Weight weight, Collector collector) throws IOException {
+		for (LeafReaderContext ctx : leaves) { // search each subreader
+			// we force the use of Scorer (not BulkScorer) to make sure
+			// that the scorer passed to LeafCollector.setScorer supports
+			// Scorer.getChildren
+			Scorer scorer = weight.scorer(ctx);
+			if (scorer != null) {
+				final DocIdSetIterator iterator = scorer.iterator();
+				final LeafCollector leafCollector = collector.getLeafCollector(ctx);
+				leafCollector.setScorer(scorer);
+				final Bits liveDocs = ctx.reader().getLiveDocs();
+				for (int doc = iterator.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = iterator.nextDoc()) {
+					if (liveDocs == null || liveDocs.get(doc)) {
+						leafCollector.collect(doc);
+					}
+				}
+			}
+		}
+	}
 
 }

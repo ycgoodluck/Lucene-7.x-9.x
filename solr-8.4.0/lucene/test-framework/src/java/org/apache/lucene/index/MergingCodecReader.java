@@ -26,50 +26,52 @@ import org.apache.lucene.util.CloseableThreadLocal;
  */
 public class MergingCodecReader extends FilterCodecReader {
 
-  private final CloseableThreadLocal<StoredFieldsReader> fieldsReader = new CloseableThreadLocal<StoredFieldsReader>() {
-    @Override
-    protected StoredFieldsReader initialValue() {
-      return in.getFieldsReader().getMergeInstance();
-    }
-  };
-  private final CloseableThreadLocal<NormsProducer> normsReader = new CloseableThreadLocal<NormsProducer>() {
-    @Override
-    protected NormsProducer initialValue() {
-      NormsProducer norms = in.getNormsReader();
-      if (norms == null) {
-        return null;
-      } else {
-        return norms.getMergeInstance();
-      }
-    }
-  };
-  // TODO: other formats too
+	private final CloseableThreadLocal<StoredFieldsReader> fieldsReader = new CloseableThreadLocal<StoredFieldsReader>() {
+		@Override
+		protected StoredFieldsReader initialValue() {
+			return in.getFieldsReader().getMergeInstance();
+		}
+	};
+	private final CloseableThreadLocal<NormsProducer> normsReader = new CloseableThreadLocal<NormsProducer>() {
+		@Override
+		protected NormsProducer initialValue() {
+			NormsProducer norms = in.getNormsReader();
+			if (norms == null) {
+				return null;
+			} else {
+				return norms.getMergeInstance();
+			}
+		}
+	};
+	// TODO: other formats too
 
-  /** Wrap the given instance. */
-  public MergingCodecReader(CodecReader in) {
-    super(in);
-  }
+	/**
+	 * Wrap the given instance.
+	 */
+	public MergingCodecReader(CodecReader in) {
+		super(in);
+	}
 
-  @Override
-  public StoredFieldsReader getFieldsReader() {
-    return fieldsReader.get();
-  }
+	@Override
+	public StoredFieldsReader getFieldsReader() {
+		return fieldsReader.get();
+	}
 
-  @Override
-  public NormsProducer getNormsReader() {
-    return normsReader.get();
-  }
+	@Override
+	public NormsProducer getNormsReader() {
+		return normsReader.get();
+	}
 
-  @Override
-  public CacheHelper getCoreCacheHelper() {
-    // same content, we can delegate
-    return in.getCoreCacheHelper();
-  }
+	@Override
+	public CacheHelper getCoreCacheHelper() {
+		// same content, we can delegate
+		return in.getCoreCacheHelper();
+	}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    // same content, we can delegate
-    return in.getReaderCacheHelper();
-  }
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		// same content, we can delegate
+		return in.getReaderCacheHelper();
+	}
 
 }

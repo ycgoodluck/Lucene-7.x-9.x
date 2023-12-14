@@ -33,25 +33,28 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.SoraniNormalizationFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 4.7.0
  */
 public class SoraniNormalizationFilterFactory extends TokenFilterFactory implements MultiTermAwareComponent {
 
-  /** Creates a new SoraniNormalizationFilterFactory */
-  public SoraniNormalizationFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new SoraniNormalizationFilterFactory
+	 */
+	public SoraniNormalizationFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public SoraniNormalizationFilter create(TokenStream input) {
-    return new SoraniNormalizationFilter(input);
-  }
+	@Override
+	public SoraniNormalizationFilter create(TokenStream input) {
+		return new SoraniNormalizationFilter(input);
+	}
 
-  @Override
-  public AbstractAnalysisFactory getMultiTermComponent() {
-    return this;
-  }
+	@Override
+	public AbstractAnalysisFactory getMultiTermComponent() {
+		return this;
+	}
 }

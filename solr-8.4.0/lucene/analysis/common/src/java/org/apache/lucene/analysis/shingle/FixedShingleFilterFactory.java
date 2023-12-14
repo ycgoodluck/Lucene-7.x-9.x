@@ -24,7 +24,7 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
  * Factory for {@link FixedShingleFilter}
- *
+ * <p>
  * Parameters are:
  * <ul>
  *   <li>shingleSize - how many tokens should be combined into each shingle (default: 2)
@@ -32,27 +32,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   <li>fillerToken - what should be added in place of stop words (default: _ )
  * </ul>
  *
- * @since 7.4.0
  * @lucene.spi {@value #NAME}
+ * @since 7.4.0
  */
 public class FixedShingleFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "fixedShingle";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "fixedShingle";
 
-  private final int shingleSize;
-  private final String tokenSeparator;
-  private final String fillerToken;
+	private final int shingleSize;
+	private final String tokenSeparator;
+	private final String fillerToken;
 
-  public FixedShingleFilterFactory(Map<String, String> args) {
-    super(args);
-    this.shingleSize = getInt(args, "shingleSize", 2);
-    this.tokenSeparator = get(args, "tokenSeparator", " ");
-    this.fillerToken = get(args, "fillerToken", "_");
-  }
+	public FixedShingleFilterFactory(Map<String, String> args) {
+		super(args);
+		this.shingleSize = getInt(args, "shingleSize", 2);
+		this.tokenSeparator = get(args, "tokenSeparator", " ");
+		this.fillerToken = get(args, "fillerToken", "_");
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new FixedShingleFilter(input, shingleSize, tokenSeparator, fillerToken);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new FixedShingleFilter(input, shingleSize, tokenSeparator, fillerToken);
+	}
 }

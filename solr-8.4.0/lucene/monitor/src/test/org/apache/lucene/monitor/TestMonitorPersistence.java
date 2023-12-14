@@ -27,46 +27,46 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 
 public class TestMonitorPersistence extends MonitorTestBase {
 
-  private Path indexDirectory = createTempDir();
+	private Path indexDirectory = createTempDir();
 
-  public void testCacheIsRepopulated() throws IOException {
+	public void testCacheIsRepopulated() throws IOException {
 
-    Document doc = new Document();
-    doc.add(newTextField(FIELD, "test", Field.Store.NO));
-    MonitorConfiguration config = new MonitorConfiguration()
-        .setIndexPath(indexDirectory, MonitorQuerySerializer.fromParser(MonitorTestBase::parse));
+		Document doc = new Document();
+		doc.add(newTextField(FIELD, "test", Field.Store.NO));
+		MonitorConfiguration config = new MonitorConfiguration()
+			.setIndexPath(indexDirectory, MonitorQuerySerializer.fromParser(MonitorTestBase::parse));
 
-    try (Monitor monitor = new Monitor(ANALYZER, config)) {
-      monitor.register(
-          mq("1", "test"),
-          mq("2", "test"),
-          mq("3", "test", "language", "en"),
-          mq("4", "test", "wibble", "quack"));
+		try (Monitor monitor = new Monitor(ANALYZER, config)) {
+			monitor.register(
+				mq("1", "test"),
+				mq("2", "test"),
+				mq("3", "test", "language", "en"),
+				mq("4", "test", "wibble", "quack"));
 
-      assertEquals(4, monitor.match(doc, QueryMatch.SIMPLE_MATCHER).getMatchCount());
+			assertEquals(4, monitor.match(doc, QueryMatch.SIMPLE_MATCHER).getMatchCount());
 
-      IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
-          () -> monitor.register(new MonitorQuery("5", new MatchAllDocsQuery(), null, Collections.emptyMap())));
-      assertEquals("Cannot add a MonitorQuery with a null string representation to a non-ephemeral Monitor", e.getMessage());
-    }
+			IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
+				() -> monitor.register(new MonitorQuery("5", new MatchAllDocsQuery(), null, Collections.emptyMap())));
+			assertEquals("Cannot add a MonitorQuery with a null string representation to a non-ephemeral Monitor", e.getMessage());
+		}
 
-    try (Monitor monitor2 = new Monitor(ANALYZER, config)) {
-      assertEquals(4, monitor2.getQueryCount());
-      assertEquals(4, monitor2.match(doc, QueryMatch.SIMPLE_MATCHER).getMatchCount());
+		try (Monitor monitor2 = new Monitor(ANALYZER, config)) {
+			assertEquals(4, monitor2.getQueryCount());
+			assertEquals(4, monitor2.match(doc, QueryMatch.SIMPLE_MATCHER).getMatchCount());
 
-      MonitorQuery mq = monitor2.getQuery("4");
-      assertEquals("quack", mq.getMetadata().get("wibble"));
-    }
+			MonitorQuery mq = monitor2.getQuery("4");
+			assertEquals("quack", mq.getMetadata().get("wibble"));
+		}
 
-  }
+	}
 
-  public void testEphemeralMonitorDoesNotStoreQueries() throws IOException {
+	public void testEphemeralMonitorDoesNotStoreQueries() throws IOException {
 
-    try (Monitor monitor2 = new Monitor(ANALYZER)) {
-      IllegalStateException e = expectThrows(IllegalStateException.class, () -> monitor2.getQuery("query"));
-      assertEquals("Cannot get queries from an index with no MonitorQuerySerializer", e.getMessage());
-    }
+		try (Monitor monitor2 = new Monitor(ANALYZER)) {
+			IllegalStateException e = expectThrows(IllegalStateException.class, () -> monitor2.getQuery("query"));
+			assertEquals("Cannot get queries from an index with no MonitorQuerySerializer", e.getMessage());
+		}
 
-  }
+	}
 
 }

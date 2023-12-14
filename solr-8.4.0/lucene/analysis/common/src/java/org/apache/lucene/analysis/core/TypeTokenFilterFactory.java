@@ -38,47 +38,52 @@ import java.util.Set;
  *                   useWhitelist="false"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.6.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.6.0
  */
 public class TypeTokenFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
 
-  /** SPI name */
-  public static final String NAME = "type";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "type";
 
-  private final boolean useWhitelist;
-  private final String stopTypesFiles;
-  private Set<String> stopTypes;
-  
-  /** Creates a new TypeTokenFilterFactory */
-  public TypeTokenFilterFactory(Map<String,String> args) {
-    super(args);
-    stopTypesFiles = require(args, "types");
-    useWhitelist = getBoolean(args, "useWhitelist", false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    List<String> files = splitFileNames(stopTypesFiles);
-    if (files.size() > 0) {
-      stopTypes = new HashSet<>();
-      for (String file : files) {
-        List<String> typesLines = getLines(loader, file.trim());
-        stopTypes.addAll(typesLines);
-      }
-    }
-  }
+	private final boolean useWhitelist;
+	private final String stopTypesFiles;
+	private Set<String> stopTypes;
 
-  public Set<String> getStopTypes() {
-    return stopTypes;
-  }
+	/**
+	 * Creates a new TypeTokenFilterFactory
+	 */
+	public TypeTokenFilterFactory(Map<String, String> args) {
+		super(args);
+		stopTypesFiles = require(args, "types");
+		useWhitelist = getBoolean(args, "useWhitelist", false);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    final TokenStream filter = new TypeTokenFilter(input, stopTypes, useWhitelist);
-    return filter;
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		List<String> files = splitFileNames(stopTypesFiles);
+		if (files.size() > 0) {
+			stopTypes = new HashSet<>();
+			for (String file : files) {
+				List<String> typesLines = getLines(loader, file.trim());
+				stopTypes.addAll(typesLines);
+			}
+		}
+	}
+
+	public Set<String> getStopTypes() {
+		return stopTypes;
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		final TokenStream filter = new TypeTokenFilter(input, stopTypes, useWhitelist);
+		return filter;
+	}
 }

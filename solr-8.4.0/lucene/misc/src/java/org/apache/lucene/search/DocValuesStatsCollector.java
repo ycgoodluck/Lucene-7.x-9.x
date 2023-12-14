@@ -20,45 +20,53 @@ import java.io.IOException;
 
 import org.apache.lucene.index.LeafReaderContext;
 
-/** A {@link Collector} which computes statistics for a DocValues field. */
+/**
+ * A {@link Collector} which computes statistics for a DocValues field.
+ */
 public class DocValuesStatsCollector implements Collector {
 
-  private final DocValuesStats<?> stats;
+	private final DocValuesStats<?> stats;
 
-  /** Creates a collector to compute statistics for a DocValues field using the given {@code stats}. */
-  public DocValuesStatsCollector(DocValuesStats<?> stats) {
-    this.stats = stats;
-  }
+	/**
+	 * Creates a collector to compute statistics for a DocValues field using the given {@code stats}.
+	 */
+	public DocValuesStatsCollector(DocValuesStats<?> stats) {
+		this.stats = stats;
+	}
 
-  @Override
-  public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
-    boolean shouldProcess = stats.init(context);
-    if (!shouldProcess) {
-      // Stats cannot be computed for this segment, therefore consider all matching documents as a 'miss'. 
-      return new LeafCollector() {
-        @Override public void setScorer(Scorable scorer) throws IOException {}
+	@Override
+	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
+		boolean shouldProcess = stats.init(context);
+		if (!shouldProcess) {
+			// Stats cannot be computed for this segment, therefore consider all matching documents as a 'miss'.
+			return new LeafCollector() {
+				@Override
+				public void setScorer(Scorable scorer) throws IOException {
+				}
 
-        @Override
-        public void collect(int doc) throws IOException {
-          // All matching documents in this reader are missing a value
-          stats.addMissing();
-        }
-      };
-    }
+				@Override
+				public void collect(int doc) throws IOException {
+					// All matching documents in this reader are missing a value
+					stats.addMissing();
+				}
+			};
+		}
 
-    return new LeafCollector() {
-      @Override public void setScorer(Scorable scorer) throws IOException {}
+		return new LeafCollector() {
+			@Override
+			public void setScorer(Scorable scorer) throws IOException {
+			}
 
-      @Override
-      public void collect(int doc) throws IOException {
-        stats.accumulate(doc);
-      }
-    };
-  }
+			@Override
+			public void collect(int doc) throws IOException {
+				stats.accumulate(doc);
+			}
+		};
+	}
 
-  @Override
-  public ScoreMode scoreMode() {
-    return ScoreMode.COMPLETE_NO_SCORES;
-  }
+	@Override
+	public ScoreMode scoreMode() {
+		return ScoreMode.COMPLETE_NO_SCORES;
+	}
 
 }

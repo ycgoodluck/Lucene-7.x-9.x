@@ -33,39 +33,39 @@ import com.carrotsearch.randomizedtesting.RandomizedTest;
 
 // LUCENE-4456: Test that we fail if there are unreferenced files
 public class TestFailIfUnreferencedFiles extends WithNestedTests {
-  public TestFailIfUnreferencedFiles() {
-    super(true);
-  }
-  
-  public static class Nested1 extends WithNestedTests.AbstractNestedTest {
-    public void testDummy() throws Exception {
-      MockDirectoryWrapper dir = newMockDirectory();
-      dir.setAssertNoUnrefencedFilesOnClose(true);
-      IndexWriter iw = new IndexWriter(dir, new IndexWriterConfig(null));
-      iw.addDocument(new Document());
-      iw.close();
-      IndexOutput output = dir.createOutput("_hello.world", IOContext.DEFAULT);
-      output.writeString("i am unreferenced!");
-      output.close();
-      dir.sync(Collections.singleton("_hello.world"));
-      dir.close();
-    }
-  }
+	public TestFailIfUnreferencedFiles() {
+		super(true);
+	}
 
-  @Test
-  public void testFailIfUnreferencedFiles() {
-    Result r = JUnitCore.runClasses(Nested1.class);
-    RandomizedTest.assumeTrue("Ignoring nested test, very likely zombie threads present.", 
-        r.getIgnoreCount() == 0);
+	public static class Nested1 extends WithNestedTests.AbstractNestedTest {
+		public void testDummy() throws Exception {
+			MockDirectoryWrapper dir = newMockDirectory();
+			dir.setAssertNoUnrefencedFilesOnClose(true);
+			IndexWriter iw = new IndexWriter(dir, new IndexWriterConfig(null));
+			iw.addDocument(new Document());
+			iw.close();
+			IndexOutput output = dir.createOutput("_hello.world", IOContext.DEFAULT);
+			output.writeString("i am unreferenced!");
+			output.close();
+			dir.sync(Collections.singleton("_hello.world"));
+			dir.close();
+		}
+	}
 
-    // We are suppressing output anyway so dump the failures.
-    for (Failure f : r.getFailures()) {
-      System.out.println(f.getTrace());
-    }
+	@Test
+	public void testFailIfUnreferencedFiles() {
+		Result r = JUnitCore.runClasses(Nested1.class);
+		RandomizedTest.assumeTrue("Ignoring nested test, very likely zombie threads present.",
+			r.getIgnoreCount() == 0);
 
-    Assert.assertEquals("Expected exactly one failure.", 
-        1, r.getFailureCount());
-    Assert.assertTrue("Expected unreferenced files assertion.", 
-        r.getFailures().get(0).getTrace().contains("unreferenced files:"));
-  }
+		// We are suppressing output anyway so dump the failures.
+		for (Failure f : r.getFailures()) {
+			System.out.println(f.getTrace());
+		}
+
+		Assert.assertEquals("Expected exactly one failure.",
+			1, r.getFailureCount());
+		Assert.assertTrue("Expected unreferenced files assertion.",
+			r.getFailures().get(0).getTrace().contains("unreferenced files:"));
+	}
 }

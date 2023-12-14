@@ -27,74 +27,78 @@ import org.apache.lucene.util.BytesRef;
 
 // TODO: can we take a BytesRef token instead?
 
-/** Produces a single String token from the provided value, with the provided payload. */
+/**
+ * Produces a single String token from the provided value, with the provided payload.
+ */
 class StringAndPayloadField extends Field {
 
-  public static final FieldType TYPE = new FieldType();
+	public static final FieldType TYPE = new FieldType();
 
-  static {
-    TYPE.setOmitNorms(true);
-    TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
-    TYPE.setTokenized(true);
-    TYPE.freeze();
-  }
+	static {
+		TYPE.setOmitNorms(true);
+		TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+		TYPE.setTokenized(true);
+		TYPE.freeze();
+	}
 
-  private final BytesRef payload;
+	private final BytesRef payload;
 
-  public StringAndPayloadField(String name, String value, BytesRef payload) {
-    super(name, value, TYPE);
-    this.payload = payload;
-  }
+	public StringAndPayloadField(String name, String value, BytesRef payload) {
+		super(name, value, TYPE);
+		this.payload = payload;
+	}
 
-  @Override
-  public TokenStream tokenStream(Analyzer analyzer, TokenStream reuse) {
-    SingleTokenWithPayloadTokenStream ts;
-    if (reuse instanceof SingleTokenWithPayloadTokenStream) {
-      ts = (SingleTokenWithPayloadTokenStream) reuse;
-    } else {
-      ts = new SingleTokenWithPayloadTokenStream();
-    }
-    ts.setValue((String) fieldsData, payload);
-    return ts;
-  }
+	@Override
+	public TokenStream tokenStream(Analyzer analyzer, TokenStream reuse) {
+		SingleTokenWithPayloadTokenStream ts;
+		if (reuse instanceof SingleTokenWithPayloadTokenStream) {
+			ts = (SingleTokenWithPayloadTokenStream) reuse;
+		} else {
+			ts = new SingleTokenWithPayloadTokenStream();
+		}
+		ts.setValue((String) fieldsData, payload);
+		return ts;
+	}
 
-  static final class SingleTokenWithPayloadTokenStream extends TokenStream {
+	static final class SingleTokenWithPayloadTokenStream extends TokenStream {
 
-    private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
-    private final PayloadAttribute payloadAttribute = addAttribute(PayloadAttribute.class);
-    private boolean used = false;
-    private String value = null;
-    private BytesRef payload;
-    
-    /** Sets the string value. */
-    void setValue(String value, BytesRef payload) {
-      this.value = value;
-      this.payload = payload;
-    }
+		private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
+		private final PayloadAttribute payloadAttribute = addAttribute(PayloadAttribute.class);
+		private boolean used = false;
+		private String value = null;
+		private BytesRef payload;
 
-    @Override
-    public boolean incrementToken() {
-      if (used) {
-        return false;
-      }
-      clearAttributes();
-      termAttribute.append(value);
-      payloadAttribute.setPayload(payload);
-      used = true;
-      return true;
-    }
+		/**
+		 * Sets the string value.
+		 */
+		void setValue(String value, BytesRef payload) {
+			this.value = value;
+			this.payload = payload;
+		}
 
-    @Override
-    public void reset() {
-      used = false;
-    }
+		@Override
+		public boolean incrementToken() {
+			if (used) {
+				return false;
+			}
+			clearAttributes();
+			termAttribute.append(value);
+			payloadAttribute.setPayload(payload);
+			used = true;
+			return true;
+		}
 
-    @Override
-    public void close() {
-      value = null;
-      payload = null;
-    }
-  }
+		@Override
+		public void reset() {
+			used = false;
+		}
+
+		@Override
+		public void close() {
+			value = null;
+			payload = null;
+		}
+	}
 }
 
 

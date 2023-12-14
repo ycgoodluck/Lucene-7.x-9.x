@@ -26,41 +26,45 @@ import org.apache.lucene.util.BytesRef;
  */
 public abstract class FilterBinaryDocValues extends BinaryDocValues {
 
-  /** Wrapped values */
-  protected final BinaryDocValues in;
-  
-  /** Sole constructor */
-  protected FilterBinaryDocValues(BinaryDocValues in) {
-    this.in = in;
-  }
+	/**
+	 * Wrapped values
+	 */
+	protected final BinaryDocValues in;
 
-  @Override
-  public int docID() {
-    return in.docID();
-  }
-  
-  @Override
-  public int nextDoc() throws IOException {
-    return in.nextDoc();
-  }
+	/**
+	 * Sole constructor
+	 */
+	protected FilterBinaryDocValues(BinaryDocValues in) {
+		this.in = in;
+	}
 
-  @Override
-  public int advance(int target) throws IOException {
-    return in.advance(target);
-  }
-  
-  @Override
-  public boolean advanceExact(int target) throws IOException {
-    return in.advanceExact(target);
-  }
-  
-  @Override
-  public long cost() {
-    return in.cost();
-  }
+	@Override
+	public int docID() {
+		return in.docID();
+	}
 
-  @Override
-  public BytesRef binaryValue() throws IOException {
-    return in.binaryValue();
-  }
+	@Override
+	public int nextDoc() throws IOException {
+		return in.nextDoc();
+	}
+
+	@Override
+	public int advance(int target) throws IOException {
+		return in.advance(target);
+	}
+
+	@Override
+	public boolean advanceExact(int target) throws IOException {
+		return in.advanceExact(target);
+	}
+
+	@Override
+	public long cost() {
+		return in.cost();
+	}
+
+	@Override
+	public BytesRef binaryValue() throws IOException {
+		return in.binaryValue();
+	}
 }

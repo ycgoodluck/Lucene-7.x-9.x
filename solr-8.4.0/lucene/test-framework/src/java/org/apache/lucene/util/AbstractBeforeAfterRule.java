@@ -33,31 +33,34 @@ import org.junit.runners.model.Statement;
  * {@link RuleChain} to guarantee the order of execution.
  */
 abstract class AbstractBeforeAfterRule implements TestRule {
-  @Override
-  public Statement apply(final Statement s, final Description d) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        final ArrayList<Throwable> errors = new ArrayList<>();
+	@Override
+	public Statement apply(final Statement s, final Description d) {
+		return new Statement() {
+			@Override
+			public void evaluate() throws Throwable {
+				final ArrayList<Throwable> errors = new ArrayList<>();
 
-        try {
-          before();
-          s.evaluate();
-        } catch (Throwable t) {
-          errors.add(t);
-        }
-        
-        try {
-          after();
-        } catch (Throwable t) {
-          errors.add(t);
-        }
+				try {
+					before();
+					s.evaluate();
+				} catch (Throwable t) {
+					errors.add(t);
+				}
 
-        MultipleFailureException.assertEmpty(errors);
-      }
-    };
-  }
+				try {
+					after();
+				} catch (Throwable t) {
+					errors.add(t);
+				}
 
-  protected void before() throws Exception {}
-  protected void after() throws Exception {}
+				MultipleFailureException.assertEmpty(errors);
+			}
+		};
+	}
+
+	protected void before() throws Exception {
+	}
+
+	protected void after() throws Exception {
+	}
 }

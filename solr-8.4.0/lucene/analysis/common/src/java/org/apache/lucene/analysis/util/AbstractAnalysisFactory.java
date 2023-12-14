@@ -59,321 +59,344 @@ import org.apache.lucene.util.Version;
  * </ol>
  */
 public abstract class AbstractAnalysisFactory {
-  public static final String LUCENE_MATCH_VERSION_PARAM = "luceneMatchVersion";
+	public static final String LUCENE_MATCH_VERSION_PARAM = "luceneMatchVersion";
 
-  /** The original args, before any processing */
-  private final Map<String,String> originalArgs;
+	/**
+	 * The original args, before any processing
+	 */
+	private final Map<String, String> originalArgs;
 
-  /** the luceneVersion arg */
-  protected final Version luceneMatchVersion;
-  /** whether the luceneMatchVersion arg is explicitly specified in the serialized schema */
-  private boolean isExplicitLuceneMatchVersion = false;
+	/**
+	 * the luceneVersion arg
+	 */
+	protected final Version luceneMatchVersion;
+	/**
+	 * whether the luceneMatchVersion arg is explicitly specified in the serialized schema
+	 */
+	private boolean isExplicitLuceneMatchVersion = false;
 
-  /**
-   * Initialize this factory via a set of key-value pairs.
-   */
-  protected AbstractAnalysisFactory(Map<String,String> args) {
-    originalArgs = Collections.unmodifiableMap(new HashMap<>(args));
-    String version = get(args, LUCENE_MATCH_VERSION_PARAM);
-    if (version == null) {
-      luceneMatchVersion = Version.LATEST;
-    } else {
-      try {
-        luceneMatchVersion = Version.parseLeniently(version);
-      } catch (ParseException pe) {
-        throw new IllegalArgumentException(pe);
-      }
-    }
-    args.remove(CLASS_NAME);  // consume the class arg
-  }
-  
-  public final Map<String,String> getOriginalArgs() {
-    return originalArgs;
-  }
+	/**
+	 * Initialize this factory via a set of key-value pairs.
+	 */
+	protected AbstractAnalysisFactory(Map<String, String> args) {
+		originalArgs = Collections.unmodifiableMap(new HashMap<>(args));
+		String version = get(args, LUCENE_MATCH_VERSION_PARAM);
+		if (version == null) {
+			luceneMatchVersion = Version.LATEST;
+		} else {
+			try {
+				luceneMatchVersion = Version.parseLeniently(version);
+			} catch (ParseException pe) {
+				throw new IllegalArgumentException(pe);
+			}
+		}
+		args.remove(CLASS_NAME);  // consume the class arg
+	}
 
-  public final Version getLuceneMatchVersion() {
-    return this.luceneMatchVersion;
-  }
-  
-  public String require(Map<String,String> args, String name) {
-    String s = args.remove(name);
-    if (s == null) {
-      throw new IllegalArgumentException("Configuration Error: missing parameter '" + name + "'");
-    }
-    return s;
-  }
-  public String require(Map<String,String> args, String name, Collection<String> allowedValues) {
-    return require(args, name, allowedValues, true);
-  }
-  public String require(Map<String,String> args, String name, Collection<String> allowedValues, boolean caseSensitive) {
-    String s = args.remove(name);
-    if (s == null) {
-      throw new IllegalArgumentException("Configuration Error: missing parameter '" + name + "'");
-    } else {
-      for (String allowedValue : allowedValues) {
-        if (caseSensitive) {
-          if (s.equals(allowedValue)) {
-            return s;
-          }
-        } else {
-          if (s.equalsIgnoreCase(allowedValue)) {
-            return s;
-          }
-        }
-      }
-      throw new IllegalArgumentException("Configuration Error: '" + name + "' value must be one of " + allowedValues);
-    }
-  }
-  public String get(Map<String,String> args, String name) {
-    return args.remove(name); // defaultVal = null
-  }
-  public String get(Map<String,String> args, String name, String defaultVal) {
-    String s = args.remove(name);
-    return s == null ? defaultVal : s;
-  }
-  public String get(Map<String,String> args, String name, Collection<String> allowedValues) {
-    return get(args, name, allowedValues, null); // defaultVal = null
-  }
-  public String get(Map<String,String> args, String name, Collection<String> allowedValues, String defaultVal) {
-    return get(args, name, allowedValues, defaultVal, true);
-  }
-  public String get(Map<String,String> args, String name, Collection<String> allowedValues, String defaultVal, boolean caseSensitive) {
-    String s = args.remove(name);
-    if (s == null) {
-      return defaultVal;
-    } else {
-      for (String allowedValue : allowedValues) {
-        if (caseSensitive) {
-          if (s.equals(allowedValue)) {
-            return s;
-          }
-        } else {
-          if (s.equalsIgnoreCase(allowedValue)) {
-            return s;
-          }
-        }
-      }
-      throw new IllegalArgumentException("Configuration Error: '" + name + "' value must be one of " + allowedValues);
-    }
-  }
+	public final Map<String, String> getOriginalArgs() {
+		return originalArgs;
+	}
 
-  protected final int requireInt(Map<String,String> args, String name) {
-    return Integer.parseInt(require(args, name));
-  }
-  protected final int getInt(Map<String,String> args, String name, int defaultVal) {
-    String s = args.remove(name);
-    return s == null ? defaultVal : Integer.parseInt(s);
-  }
+	public final Version getLuceneMatchVersion() {
+		return this.luceneMatchVersion;
+	}
 
-  protected final boolean requireBoolean(Map<String,String> args, String name) {
-    return Boolean.parseBoolean(require(args, name));
-  }
-  protected final boolean getBoolean(Map<String,String> args, String name, boolean defaultVal) {
-    String s = args.remove(name);
-    return s == null ? defaultVal : Boolean.parseBoolean(s);
-  }
+	public String require(Map<String, String> args, String name) {
+		String s = args.remove(name);
+		if (s == null) {
+			throw new IllegalArgumentException("Configuration Error: missing parameter '" + name + "'");
+		}
+		return s;
+	}
 
-  protected final float requireFloat(Map<String,String> args, String name) {
-    return Float.parseFloat(require(args, name));
-  }
-  protected final float getFloat(Map<String,String> args, String name, float defaultVal) {
-    String s = args.remove(name);
-    return s == null ? defaultVal : Float.parseFloat(s);
-  }
+	public String require(Map<String, String> args, String name, Collection<String> allowedValues) {
+		return require(args, name, allowedValues, true);
+	}
 
-  public char requireChar(Map<String,String> args, String name) {
-    return require(args, name).charAt(0);
-  }
-  public char getChar(Map<String,String> args, String name, char defaultValue) {
-    String s = args.remove(name);
-    if (s == null) {
-      return defaultValue;
-    } else { 
-      if (s.length() != 1) {
-        throw new IllegalArgumentException(name + " should be a char. \"" + s + "\" is invalid");
-      } else {
-        return s.charAt(0);
-      }
-    }
-  }
-  
-  private static final Pattern ITEM_PATTERN = Pattern.compile("[^,\\s]+");
+	public String require(Map<String, String> args, String name, Collection<String> allowedValues, boolean caseSensitive) {
+		String s = args.remove(name);
+		if (s == null) {
+			throw new IllegalArgumentException("Configuration Error: missing parameter '" + name + "'");
+		} else {
+			for (String allowedValue : allowedValues) {
+				if (caseSensitive) {
+					if (s.equals(allowedValue)) {
+						return s;
+					}
+				} else {
+					if (s.equalsIgnoreCase(allowedValue)) {
+						return s;
+					}
+				}
+			}
+			throw new IllegalArgumentException("Configuration Error: '" + name + "' value must be one of " + allowedValues);
+		}
+	}
 
-  /** Returns whitespace- and/or comma-separated set of values, or null if none are found */
-  public Set<String> getSet(Map<String,String> args, String name) {
-    String s = args.remove(name);
-    if (s == null) {
-     return null;
-    } else {
-      Set<String> set = null;
-      Matcher matcher = ITEM_PATTERN.matcher(s);
-      if (matcher.find()) {
-        set = new HashSet<>();
-        set.add(matcher.group(0));
-        while (matcher.find()) {
-          set.add(matcher.group(0));
-        }
-      }
-      return set;
-    }
-  }
+	public String get(Map<String, String> args, String name) {
+		return args.remove(name); // defaultVal = null
+	}
 
-  /**
-   * Compiles a pattern for the value of the specified argument key <code>name</code> 
-   */
-  protected final Pattern getPattern(Map<String,String> args, String name) {
-    try {
-      return Pattern.compile(require(args, name));
-    } catch (PatternSyntaxException e) {
-      throw new IllegalArgumentException
-        ("Configuration Error: '" + name + "' can not be parsed in " +
-         this.getClass().getSimpleName(), e);
-    }
-  }
+	public String get(Map<String, String> args, String name, String defaultVal) {
+		String s = args.remove(name);
+		return s == null ? defaultVal : s;
+	}
 
-  /**
-   * Returns as {@link CharArraySet} from wordFiles, which
-   * can be a comma-separated list of filenames
-   */
-  protected final CharArraySet getWordSet(ResourceLoader loader,
-      String wordFiles, boolean ignoreCase) throws IOException {
-    List<String> files = splitFileNames(wordFiles);
-    CharArraySet words = null;
-    if (files.size() > 0) {
-      // default stopwords list has 35 or so words, but maybe don't make it that
-      // big to start
-      words = new CharArraySet(files.size() * 10, ignoreCase);
-      for (String file : files) {
-        List<String> wlist = getLines(loader, file.trim());
-        words.addAll(StopFilter.makeStopSet(wlist, ignoreCase));
-      }
-    }
-    return words;
-  }
-  
-  /**
-   * Returns the resource's lines (with content treated as UTF-8)
-   */
-  protected final List<String> getLines(ResourceLoader loader, String resource) throws IOException {
-    return WordlistLoader.getLines(loader.openResource(resource), StandardCharsets.UTF_8);
-  }
+	public String get(Map<String, String> args, String name, Collection<String> allowedValues) {
+		return get(args, name, allowedValues, null); // defaultVal = null
+	}
 
-  /** same as {@link #getWordSet(ResourceLoader, String, boolean)},
-   * except the input is in snowball format. */
-  protected final CharArraySet getSnowballWordSet(ResourceLoader loader,
-      String wordFiles, boolean ignoreCase) throws IOException {
-    List<String> files = splitFileNames(wordFiles);
-    CharArraySet words = null;
-    if (files.size() > 0) {
-      // default stopwords list has 35 or so words, but maybe don't make it that
-      // big to start
-      words = new CharArraySet(files.size() * 10, ignoreCase);
-      for (String file : files) {
-        InputStream stream = null;
-        Reader reader = null;
-        try {
-          stream = loader.openResource(file.trim());
-          CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
-              .onMalformedInput(CodingErrorAction.REPORT)
-              .onUnmappableCharacter(CodingErrorAction.REPORT);
-          reader = new InputStreamReader(stream, decoder);
-          WordlistLoader.getSnowballWordSet(reader, words);
-        } finally {
-          IOUtils.closeWhileHandlingException(reader, stream);
-        }
-      }
-    }
-    return words;
-  }
+	public String get(Map<String, String> args, String name, Collection<String> allowedValues, String defaultVal) {
+		return get(args, name, allowedValues, defaultVal, true);
+	}
 
-  /**
-   * Splits file names separated by comma character.
-   * File names can contain comma characters escaped by backslash '\'
-   *
-   * @param fileNames the string containing file names
-   * @return a list of file names with the escaping backslashed removed
-   */
-  protected final List<String> splitFileNames(String fileNames) {
-    return splitAt(',', fileNames);
-  }
+	public String get(Map<String, String> args, String name, Collection<String> allowedValues, String defaultVal, boolean caseSensitive) {
+		String s = args.remove(name);
+		if (s == null) {
+			return defaultVal;
+		} else {
+			for (String allowedValue : allowedValues) {
+				if (caseSensitive) {
+					if (s.equals(allowedValue)) {
+						return s;
+					}
+				} else {
+					if (s.equalsIgnoreCase(allowedValue)) {
+						return s;
+					}
+				}
+			}
+			throw new IllegalArgumentException("Configuration Error: '" + name + "' value must be one of " + allowedValues);
+		}
+	}
 
-  /**
-   * Splits a list separated by zero or more given separator characters.
-   * List items can contain comma characters escaped by backslash '\'.
-   * Whitespace is NOT trimmed from the returned list items.
-   *
-   * @param list the string containing the split list items
-   * @return a list of items with the escaping backslashes removed
-   */
-  protected final List<String> splitAt(char separator, String list) {
-    if (list == null)
-      return Collections.emptyList();
+	protected final int requireInt(Map<String, String> args, String name) {
+		return Integer.parseInt(require(args, name));
+	}
 
-    List<String> result = new ArrayList<>();
-    for (String item : list.split("(?<!\\\\)[" + separator + "]")) {
-      result.add(item.replaceAll("\\\\(?=[" + separator + "])", ""));
-    }
+	protected final int getInt(Map<String, String> args, String name, int defaultVal) {
+		String s = args.remove(name);
+		return s == null ? defaultVal : Integer.parseInt(s);
+	}
 
-    return result;
-  }
+	protected final boolean requireBoolean(Map<String, String> args, String name) {
+		return Boolean.parseBoolean(require(args, name));
+	}
 
-  private static final String CLASS_NAME = "class";
-  
-  /**
-   * @return the string used to specify the concrete class name in a serialized representation: the class arg.  
-   *         If the concrete class name was not specified via a class arg, returns {@code getClass().getName()}.
-   */ 
-  public String getClassArg() {
-    if (null != originalArgs) {
-      String className = originalArgs.get(CLASS_NAME);
-      if (null != className) {
-        return className;
-      }
-    }
-    return getClass().getName();
-  }
+	protected final boolean getBoolean(Map<String, String> args, String name, boolean defaultVal) {
+		String s = args.remove(name);
+		return s == null ? defaultVal : Boolean.parseBoolean(s);
+	}
 
-  public boolean isExplicitLuceneMatchVersion() {
-    return isExplicitLuceneMatchVersion;
-  }
+	protected final float requireFloat(Map<String, String> args, String name) {
+		return Float.parseFloat(require(args, name));
+	}
 
-  public void setExplicitLuceneMatchVersion(boolean isExplicitLuceneMatchVersion) {
-    this.isExplicitLuceneMatchVersion = isExplicitLuceneMatchVersion;
-  }
+	protected final float getFloat(Map<String, String> args, String name, float defaultVal) {
+		String s = args.remove(name);
+		return s == null ? defaultVal : Float.parseFloat(s);
+	}
 
-  /**
-   * Looks up SPI name (static "NAME" field) with appropriate modifiers.
-   * Also it must be a String class and declared in the concrete class.
-   * @return the SPI name
-   * @throws NoSuchFieldException - if the "NAME" field is not defined.
-   * @throws IllegalAccessException - if the "NAME" field is inaccessible.
-   * @throws IllegalStateException - if the "NAME" field does not have appropriate modifiers or isn't a String field.
-   */
-  static String lookupSPIName(Class<? extends AbstractAnalysisFactory> service) throws NoSuchFieldException, IllegalAccessException, IllegalStateException {
-    final Field field = service.getField("NAME");
-    int modifier = field.getModifiers();
-    if (Modifier.isStatic(modifier) && Modifier.isFinal(modifier) &&
-        field.getType().equals(String.class) &&
-        Objects.equals(field.getDeclaringClass(), service)) {
-      return ((String) field.get(null));
-      }
-    throw new IllegalStateException("No SPI name defined.");
-  }
+	public char requireChar(Map<String, String> args, String name) {
+		return require(args, name).charAt(0);
+	}
 
-  /**
-   * Generate legacy SPI name derived from the class name.
-   * @return the SPI name
-   */
-  @Deprecated
-  static String generateLegacySPIName(Class<? extends AbstractAnalysisFactory> service, String[] suffixes) {
-    final String clazzName = service.getSimpleName();
-    String name = null;
-    for (String suffix : suffixes) {
-      if (clazzName.endsWith(suffix)) {
-        name = clazzName.substring(0, clazzName.length() - suffix.length()).toLowerCase(Locale.ROOT);
-        break;
-      }
-    }
-    return name;
-  }
+	public char getChar(Map<String, String> args, String name, char defaultValue) {
+		String s = args.remove(name);
+		if (s == null) {
+			return defaultValue;
+		} else {
+			if (s.length() != 1) {
+				throw new IllegalArgumentException(name + " should be a char. \"" + s + "\" is invalid");
+			} else {
+				return s.charAt(0);
+			}
+		}
+	}
+
+	private static final Pattern ITEM_PATTERN = Pattern.compile("[^,\\s]+");
+
+	/**
+	 * Returns whitespace- and/or comma-separated set of values, or null if none are found
+	 */
+	public Set<String> getSet(Map<String, String> args, String name) {
+		String s = args.remove(name);
+		if (s == null) {
+			return null;
+		} else {
+			Set<String> set = null;
+			Matcher matcher = ITEM_PATTERN.matcher(s);
+			if (matcher.find()) {
+				set = new HashSet<>();
+				set.add(matcher.group(0));
+				while (matcher.find()) {
+					set.add(matcher.group(0));
+				}
+			}
+			return set;
+		}
+	}
+
+	/**
+	 * Compiles a pattern for the value of the specified argument key <code>name</code>
+	 */
+	protected final Pattern getPattern(Map<String, String> args, String name) {
+		try {
+			return Pattern.compile(require(args, name));
+		} catch (PatternSyntaxException e) {
+			throw new IllegalArgumentException
+				("Configuration Error: '" + name + "' can not be parsed in " +
+					this.getClass().getSimpleName(), e);
+		}
+	}
+
+	/**
+	 * Returns as {@link CharArraySet} from wordFiles, which
+	 * can be a comma-separated list of filenames
+	 */
+	protected final CharArraySet getWordSet(ResourceLoader loader,
+																					String wordFiles, boolean ignoreCase) throws IOException {
+		List<String> files = splitFileNames(wordFiles);
+		CharArraySet words = null;
+		if (files.size() > 0) {
+			// default stopwords list has 35 or so words, but maybe don't make it that
+			// big to start
+			words = new CharArraySet(files.size() * 10, ignoreCase);
+			for (String file : files) {
+				List<String> wlist = getLines(loader, file.trim());
+				words.addAll(StopFilter.makeStopSet(wlist, ignoreCase));
+			}
+		}
+		return words;
+	}
+
+	/**
+	 * Returns the resource's lines (with content treated as UTF-8)
+	 */
+	protected final List<String> getLines(ResourceLoader loader, String resource) throws IOException {
+		return WordlistLoader.getLines(loader.openResource(resource), StandardCharsets.UTF_8);
+	}
+
+	/**
+	 * same as {@link #getWordSet(ResourceLoader, String, boolean)},
+	 * except the input is in snowball format.
+	 */
+	protected final CharArraySet getSnowballWordSet(ResourceLoader loader,
+																									String wordFiles, boolean ignoreCase) throws IOException {
+		List<String> files = splitFileNames(wordFiles);
+		CharArraySet words = null;
+		if (files.size() > 0) {
+			// default stopwords list has 35 or so words, but maybe don't make it that
+			// big to start
+			words = new CharArraySet(files.size() * 10, ignoreCase);
+			for (String file : files) {
+				InputStream stream = null;
+				Reader reader = null;
+				try {
+					stream = loader.openResource(file.trim());
+					CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+						.onMalformedInput(CodingErrorAction.REPORT)
+						.onUnmappableCharacter(CodingErrorAction.REPORT);
+					reader = new InputStreamReader(stream, decoder);
+					WordlistLoader.getSnowballWordSet(reader, words);
+				} finally {
+					IOUtils.closeWhileHandlingException(reader, stream);
+				}
+			}
+		}
+		return words;
+	}
+
+	/**
+	 * Splits file names separated by comma character.
+	 * File names can contain comma characters escaped by backslash '\'
+	 *
+	 * @param fileNames the string containing file names
+	 * @return a list of file names with the escaping backslashed removed
+	 */
+	protected final List<String> splitFileNames(String fileNames) {
+		return splitAt(',', fileNames);
+	}
+
+	/**
+	 * Splits a list separated by zero or more given separator characters.
+	 * List items can contain comma characters escaped by backslash '\'.
+	 * Whitespace is NOT trimmed from the returned list items.
+	 *
+	 * @param list the string containing the split list items
+	 * @return a list of items with the escaping backslashes removed
+	 */
+	protected final List<String> splitAt(char separator, String list) {
+		if (list == null)
+			return Collections.emptyList();
+
+		List<String> result = new ArrayList<>();
+		for (String item : list.split("(?<!\\\\)[" + separator + "]")) {
+			result.add(item.replaceAll("\\\\(?=[" + separator + "])", ""));
+		}
+
+		return result;
+	}
+
+	private static final String CLASS_NAME = "class";
+
+	/**
+	 * @return the string used to specify the concrete class name in a serialized representation: the class arg.
+	 * If the concrete class name was not specified via a class arg, returns {@code getClass().getName()}.
+	 */
+	public String getClassArg() {
+		if (null != originalArgs) {
+			String className = originalArgs.get(CLASS_NAME);
+			if (null != className) {
+				return className;
+			}
+		}
+		return getClass().getName();
+	}
+
+	public boolean isExplicitLuceneMatchVersion() {
+		return isExplicitLuceneMatchVersion;
+	}
+
+	public void setExplicitLuceneMatchVersion(boolean isExplicitLuceneMatchVersion) {
+		this.isExplicitLuceneMatchVersion = isExplicitLuceneMatchVersion;
+	}
+
+	/**
+	 * Looks up SPI name (static "NAME" field) with appropriate modifiers.
+	 * Also it must be a String class and declared in the concrete class.
+	 *
+	 * @return the SPI name
+	 * @throws NoSuchFieldException   - if the "NAME" field is not defined.
+	 * @throws IllegalAccessException - if the "NAME" field is inaccessible.
+	 * @throws IllegalStateException  - if the "NAME" field does not have appropriate modifiers or isn't a String field.
+	 */
+	static String lookupSPIName(Class<? extends AbstractAnalysisFactory> service) throws NoSuchFieldException, IllegalAccessException, IllegalStateException {
+		final Field field = service.getField("NAME");
+		int modifier = field.getModifiers();
+		if (Modifier.isStatic(modifier) && Modifier.isFinal(modifier) &&
+			field.getType().equals(String.class) &&
+			Objects.equals(field.getDeclaringClass(), service)) {
+			return ((String) field.get(null));
+		}
+		throw new IllegalStateException("No SPI name defined.");
+	}
+
+	/**
+	 * Generate legacy SPI name derived from the class name.
+	 *
+	 * @return the SPI name
+	 */
+	@Deprecated
+	static String generateLegacySPIName(Class<? extends AbstractAnalysisFactory> service, String[] suffixes) {
+		final String clazzName = service.getSimpleName();
+		String name = null;
+		for (String suffix : suffixes) {
+			if (clazzName.endsWith(suffix)) {
+				name = clazzName.substring(0, clazzName.length() - suffix.length()).toLowerCase(Locale.ROOT);
+				break;
+			}
+		}
+		return name;
+	}
 }

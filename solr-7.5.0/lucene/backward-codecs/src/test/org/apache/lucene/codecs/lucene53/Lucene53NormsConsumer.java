@@ -34,126 +34,126 @@ import static org.apache.lucene.codecs.lucene53.Lucene53NormsFormat.VERSION_CURR
 /**
  * Writer for {@link Lucene53NormsFormat}
  */
-class Lucene53NormsConsumer extends NormsConsumer { 
-  IndexOutput data, meta;
-  final int maxDoc;
+class Lucene53NormsConsumer extends NormsConsumer {
+	IndexOutput data, meta;
+	final int maxDoc;
 
-  Lucene53NormsConsumer(SegmentWriteState state, String dataCodec, String dataExtension, String metaCodec, String metaExtension) throws IOException {
-    boolean success = false;
-    try {
-      String dataName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, dataExtension);
-      data = state.directory.createOutput(dataName, state.context);
-      CodecUtil.writeIndexHeader(data, dataCodec, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
-      String metaName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, metaExtension);
-      meta = state.directory.createOutput(metaName, state.context);
-      CodecUtil.writeIndexHeader(meta, metaCodec, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
-      maxDoc = state.segmentInfo.maxDoc();
-      success = true;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(this);
-      }
-    }
-  }
+	Lucene53NormsConsumer(SegmentWriteState state, String dataCodec, String dataExtension, String metaCodec, String metaExtension) throws IOException {
+		boolean success = false;
+		try {
+			String dataName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, dataExtension);
+			data = state.directory.createOutput(dataName, state.context);
+			CodecUtil.writeIndexHeader(data, dataCodec, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
+			String metaName = IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, metaExtension);
+			meta = state.directory.createOutput(metaName, state.context);
+			CodecUtil.writeIndexHeader(meta, metaCodec, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
+			maxDoc = state.segmentInfo.maxDoc();
+			success = true;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(this);
+			}
+		}
+	}
 
-  @Override
-  public void addNormsField(FieldInfo field, NormsProducer normsProducer) throws IOException {
-    addNormsField(field, LegacyDocValuesIterables.normsIterable(field, normsProducer, maxDoc));
-  }
+	@Override
+	public void addNormsField(FieldInfo field, NormsProducer normsProducer) throws IOException {
+		addNormsField(field, LegacyDocValuesIterables.normsIterable(field, normsProducer, maxDoc));
+	}
 
-  private void addNormsField(FieldInfo field, Iterable<Number> values) throws IOException {
-    meta.writeVInt(field.number);
-    long minValue = Long.MAX_VALUE;
-    long maxValue = Long.MIN_VALUE;
-    int count = 0;
+	private void addNormsField(FieldInfo field, Iterable<Number> values) throws IOException {
+		meta.writeVInt(field.number);
+		long minValue = Long.MAX_VALUE;
+		long maxValue = Long.MIN_VALUE;
+		int count = 0;
 
-    for (Number nv : values) {
-      if (nv == null) {
-        throw new IllegalStateException("illegal norms data for field " + field.name + ", got null for value: " + count);
-      }
-      final long v = nv.longValue();
-      minValue = Math.min(minValue, v);
-      maxValue = Math.max(maxValue, v);
-      count++;
-    }
+		for (Number nv : values) {
+			if (nv == null) {
+				throw new IllegalStateException("illegal norms data for field " + field.name + ", got null for value: " + count);
+			}
+			final long v = nv.longValue();
+			minValue = Math.min(minValue, v);
+			maxValue = Math.max(maxValue, v);
+			count++;
+		}
 
-    if (count != maxDoc) {
-      throw new IllegalStateException("illegal norms data for field " + field.name + ", expected count=" + maxDoc + ", got=" + count);
-    }
+		if (count != maxDoc) {
+			throw new IllegalStateException("illegal norms data for field " + field.name + ", expected count=" + maxDoc + ", got=" + count);
+		}
 
-    if (minValue == maxValue) {
-      addConstant(minValue);
-    } else if (minValue >= Byte.MIN_VALUE && maxValue <= Byte.MAX_VALUE) {
-      addByte1(values);
-    } else if (minValue >= Short.MIN_VALUE && maxValue <= Short.MAX_VALUE) {
-      addByte2(values);
-    } else if (minValue >= Integer.MIN_VALUE && maxValue <= Integer.MAX_VALUE) {
-      addByte4(values);
-    } else {
-      addByte8(values);
-    }
-  }
+		if (minValue == maxValue) {
+			addConstant(minValue);
+		} else if (minValue >= Byte.MIN_VALUE && maxValue <= Byte.MAX_VALUE) {
+			addByte1(values);
+		} else if (minValue >= Short.MIN_VALUE && maxValue <= Short.MAX_VALUE) {
+			addByte2(values);
+		} else if (minValue >= Integer.MIN_VALUE && maxValue <= Integer.MAX_VALUE) {
+			addByte4(values);
+		} else {
+			addByte8(values);
+		}
+	}
 
-  private void addConstant(long constant) throws IOException {
-    meta.writeByte((byte) 0);
-    meta.writeLong(constant);
-  }
+	private void addConstant(long constant) throws IOException {
+		meta.writeByte((byte) 0);
+		meta.writeLong(constant);
+	}
 
-  private void addByte1(Iterable<Number> values) throws IOException {
-    meta.writeByte((byte) 1);
-    meta.writeLong(data.getFilePointer());
+	private void addByte1(Iterable<Number> values) throws IOException {
+		meta.writeByte((byte) 1);
+		meta.writeLong(data.getFilePointer());
 
-    for (Number value : values) {
-      data.writeByte(value.byteValue());
-    }
-  }
+		for (Number value : values) {
+			data.writeByte(value.byteValue());
+		}
+	}
 
-  private void addByte2(Iterable<Number> values) throws IOException {
-    meta.writeByte((byte) 2);
-    meta.writeLong(data.getFilePointer());
+	private void addByte2(Iterable<Number> values) throws IOException {
+		meta.writeByte((byte) 2);
+		meta.writeLong(data.getFilePointer());
 
-    for (Number value : values) {
-      data.writeShort(value.shortValue());
-    }
-  }
+		for (Number value : values) {
+			data.writeShort(value.shortValue());
+		}
+	}
 
-  private void addByte4(Iterable<Number> values) throws IOException {
-    meta.writeByte((byte) 4);
-    meta.writeLong(data.getFilePointer());
+	private void addByte4(Iterable<Number> values) throws IOException {
+		meta.writeByte((byte) 4);
+		meta.writeLong(data.getFilePointer());
 
-    for (Number value : values) {
-      data.writeInt(value.intValue());
-    }
-  }
+		for (Number value : values) {
+			data.writeInt(value.intValue());
+		}
+	}
 
-  private void addByte8(Iterable<Number> values) throws IOException {
-    meta.writeByte((byte) 8);
-    meta.writeLong(data.getFilePointer());
+	private void addByte8(Iterable<Number> values) throws IOException {
+		meta.writeByte((byte) 8);
+		meta.writeLong(data.getFilePointer());
 
-    for (Number value : values) {
-      data.writeLong(value.longValue());
-    }
-  }
+		for (Number value : values) {
+			data.writeLong(value.longValue());
+		}
+	}
 
-  @Override
-  public void close() throws IOException {
-    boolean success = false;
-    try {
-      if (meta != null) {
-        meta.writeVInt(-1); // write EOF marker
-        CodecUtil.writeFooter(meta); // write checksum
-      }
-      if (data != null) {
-        CodecUtil.writeFooter(data); // write checksum
-      }
-      success = true;
-    } finally {
-      if (success) {
-        IOUtils.close(data, meta);
-      } else {
-        IOUtils.closeWhileHandlingException(data, meta);
-      }
-      meta = data = null;
-    }
-  }
+	@Override
+	public void close() throws IOException {
+		boolean success = false;
+		try {
+			if (meta != null) {
+				meta.writeVInt(-1); // write EOF marker
+				CodecUtil.writeFooter(meta); // write checksum
+			}
+			if (data != null) {
+				CodecUtil.writeFooter(data); // write checksum
+			}
+			success = true;
+		} finally {
+			if (success) {
+				IOUtils.close(data, meta);
+			} else {
+				IOUtils.closeWhileHandlingException(data, meta);
+			}
+			meta = data = null;
+		}
+	}
 }

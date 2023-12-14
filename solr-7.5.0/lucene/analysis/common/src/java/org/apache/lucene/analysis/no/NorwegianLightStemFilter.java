@@ -35,38 +35,39 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
  * </p>
  */
 public final class NorwegianLightStemFilter extends TokenFilter {
-  private final NorwegianLightStemmer stemmer;
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
-  
-  /** 
-   * Calls {@link #NorwegianLightStemFilter(TokenStream, int) 
-   * NorwegianLightStemFilter(input, BOKMAAL)}
-   */
-  public NorwegianLightStemFilter(TokenStream input) {
-    this(input, NorwegianLightStemmer.BOKMAAL);
-  }
-  
-  /** 
-   * Creates a new NorwegianLightStemFilter
-   * @param flags set to {@link NorwegianLightStemmer#BOKMAAL}, 
-   *                     {@link NorwegianLightStemmer#NYNORSK}, or both.
-   */
-  public NorwegianLightStemFilter(TokenStream input, int flags) {
-    super(input);
-    stemmer = new NorwegianLightStemmer(flags);
-  }
-  
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if (!keywordAttr.isKeyword()) {
-        final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
-        termAtt.setLength(newlen);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	private final NorwegianLightStemmer stemmer;
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+
+	/**
+	 * Calls {@link #NorwegianLightStemFilter(TokenStream, int)
+	 * NorwegianLightStemFilter(input, BOKMAAL)}
+	 */
+	public NorwegianLightStemFilter(TokenStream input) {
+		this(input, NorwegianLightStemmer.BOKMAAL);
+	}
+
+	/**
+	 * Creates a new NorwegianLightStemFilter
+	 *
+	 * @param flags set to {@link NorwegianLightStemmer#BOKMAAL},
+	 *              {@link NorwegianLightStemmer#NYNORSK}, or both.
+	 */
+	public NorwegianLightStemFilter(TokenStream input, int flags) {
+		super(input);
+		stemmer = new NorwegianLightStemmer(flags);
+	}
+
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				final int newlen = stemmer.stem(termAtt.buffer(), termAtt.length());
+				termAtt.setLength(newlen);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

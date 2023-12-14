@@ -17,11 +17,13 @@
 
 package org.apache.lucene.luke.models.analysis;
 
-/** Factory of {@link Analysis} */
+/**
+ * Factory of {@link Analysis}
+ */
 public class AnalysisFactory {
 
-  public Analysis newInstance() {
-    return new AnalysisImpl();
-  }
+	public Analysis newInstance() {
+		return new AnalysisImpl();
+	}
 
 }

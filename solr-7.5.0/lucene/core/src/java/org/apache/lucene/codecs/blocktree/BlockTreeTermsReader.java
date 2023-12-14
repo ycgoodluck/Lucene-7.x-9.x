@@ -44,276 +44,291 @@ import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.fst.ByteSequenceOutputs;
 import org.apache.lucene.util.fst.Outputs;
 
-/** A block-based terms index and dictionary that assigns
- *  terms to variable length blocks according to how they
- *  share prefixes.  The terms index is a prefix trie
- *  whose leaves are term blocks.  The advantage of this
- *  approach is that seekExact is often able to
- *  determine a term cannot exist without doing any IO, and
- *  intersection with Automata is very fast.  Note that this
- *  terms dictionary has its own fixed terms index (ie, it
- *  does not support a pluggable terms index
- *  implementation).
+/**
+ * A block-based terms index and dictionary that assigns
+ * terms to variable length blocks according to how they
+ * share prefixes.  The terms index is a prefix trie
+ * whose leaves are term blocks.  The advantage of this
+ * approach is that seekExact is often able to
+ * determine a term cannot exist without doing any IO, and
+ * intersection with Automata is very fast.  Note that this
+ * terms dictionary has its own fixed terms index (ie, it
+ * does not support a pluggable terms index
+ * implementation).
  *
- *  <p><b>NOTE</b>: this terms dictionary supports
- *  min/maxItemsPerBlock during indexing to control how
- *  much memory the terms index uses.</p>
+ * <p><b>NOTE</b>: this terms dictionary supports
+ * min/maxItemsPerBlock during indexing to control how
+ * much memory the terms index uses.</p>
  *
- *  <p>If auto-prefix terms were indexed (see
- *  {@link BlockTreeTermsWriter}), then the {@link Terms#intersect}
- *  implementation here will make use of these terms only if the
- *  automaton has a binary sink state, i.e. an accept state
- *  which has a transition to itself accepting all byte values.
- *  For example, both {@link PrefixQuery} and {@link TermRangeQuery}
- *  pass such automata to {@link Terms#intersect}.</p>
+ * <p>If auto-prefix terms were indexed (see
+ * {@link BlockTreeTermsWriter}), then the {@link Terms#intersect}
+ * implementation here will make use of these terms only if the
+ * automaton has a binary sink state, i.e. an accept state
+ * which has a transition to itself accepting all byte values.
+ * For example, both {@link PrefixQuery} and {@link TermRangeQuery}
+ * pass such automata to {@link Terms#intersect}.</p>
  *
- *  <p>The data structure used by this implementation is very
- *  similar to a burst trie
- *  (http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.18.3499),
- *  but with added logic to break up too-large blocks of all
- *  terms sharing a given prefix into smaller ones.</p>
+ * <p>The data structure used by this implementation is very
+ * similar to a burst trie
+ * (http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.18.3499),
+ * but with added logic to break up too-large blocks of all
+ * terms sharing a given prefix into smaller ones.</p>
  *
- *  <p>Use {@link org.apache.lucene.index.CheckIndex} with the <code>-verbose</code>
- *  option to see summary statistics on the blocks in the
- *  dictionary.
- *
- *  See {@link BlockTreeTermsWriter}.
+ * <p>Use {@link org.apache.lucene.index.CheckIndex} with the <code>-verbose</code>
+ * option to see summary statistics on the blocks in the
+ * dictionary.
+ * <p>
+ * See {@link BlockTreeTermsWriter}.
  *
  * @lucene.experimental
  */
 
 public final class BlockTreeTermsReader extends FieldsProducer {
 
-  static final Outputs<BytesRef> FST_OUTPUTS = ByteSequenceOutputs.getSingleton();
-  
-  static final BytesRef NO_OUTPUT = FST_OUTPUTS.getNoOutput();
+	static final Outputs<BytesRef> FST_OUTPUTS = ByteSequenceOutputs.getSingleton();
 
-  static final int OUTPUT_FLAGS_NUM_BITS = 2;
-  static final int OUTPUT_FLAGS_MASK = 0x3;
-  static final int OUTPUT_FLAG_IS_FLOOR = 0x1;
-  static final int OUTPUT_FLAG_HAS_TERMS = 0x2;
+	static final BytesRef NO_OUTPUT = FST_OUTPUTS.getNoOutput();
 
-  /** Extension of terms file */
-  static final String TERMS_EXTENSION = "tim";
-  final static String TERMS_CODEC_NAME = "BlockTreeTermsDict";
+	static final int OUTPUT_FLAGS_NUM_BITS = 2;
+	static final int OUTPUT_FLAGS_MASK = 0x3;
+	static final int OUTPUT_FLAG_IS_FLOOR = 0x1;
+	static final int OUTPUT_FLAG_HAS_TERMS = 0x2;
 
-  /** Initial terms format. */
-  public static final int VERSION_START = 2;
+	/**
+	 * Extension of terms file
+	 */
+	static final String TERMS_EXTENSION = "tim";
+	final static String TERMS_CODEC_NAME = "BlockTreeTermsDict";
 
-  /** Auto-prefix terms have been superseded by points. */
-  public static final int VERSION_AUTO_PREFIX_TERMS_REMOVED = 3;
+	/**
+	 * Initial terms format.
+	 */
+	public static final int VERSION_START = 2;
 
-  /** Current terms format. */
-  public static final int VERSION_CURRENT = VERSION_AUTO_PREFIX_TERMS_REMOVED;
+	/**
+	 * Auto-prefix terms have been superseded by points.
+	 */
+	public static final int VERSION_AUTO_PREFIX_TERMS_REMOVED = 3;
 
-  /** Extension of terms index file */
-  static final String TERMS_INDEX_EXTENSION = "tip";
-  final static String TERMS_INDEX_CODEC_NAME = "BlockTreeTermsIndex";
+	/**
+	 * Current terms format.
+	 */
+	public static final int VERSION_CURRENT = VERSION_AUTO_PREFIX_TERMS_REMOVED;
 
-  // Open input to the main terms dict file (_X.tib)
-  final IndexInput termsIn;
+	/**
+	 * Extension of terms index file
+	 */
+	static final String TERMS_INDEX_EXTENSION = "tip";
+	final static String TERMS_INDEX_CODEC_NAME = "BlockTreeTermsIndex";
 
-  //private static final boolean DEBUG = BlockTreeTermsWriter.DEBUG;
+	// Open input to the main terms dict file (_X.tib)
+	final IndexInput termsIn;
 
-  // Reads the terms dict entries, to gather state to
-  // produce DocsEnum on demand
-  final PostingsReaderBase postingsReader;
+	//private static final boolean DEBUG = BlockTreeTermsWriter.DEBUG;
 
-  private final TreeMap<String,FieldReader> fields = new TreeMap<>();
+	// Reads the terms dict entries, to gather state to
+	// produce DocsEnum on demand
+	final PostingsReaderBase postingsReader;
 
-  final String segment;
-  
-  final int version;
+	private final TreeMap<String, FieldReader> fields = new TreeMap<>();
 
-  /** Sole constructor. */
-  public BlockTreeTermsReader(PostingsReaderBase postingsReader, SegmentReadState state) throws IOException {
-    boolean success = false;
-    IndexInput indexIn = null;
-    
-    this.postingsReader = postingsReader;
-    this.segment = state.segmentInfo.name;
-    
-    String termsName = IndexFileNames.segmentFileName(segment, state.segmentSuffix, TERMS_EXTENSION);
-    try {
-      termsIn = state.directory.openInput(termsName, state.context);
-      version = CodecUtil.checkIndexHeader(termsIn, TERMS_CODEC_NAME, VERSION_START, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
+	final String segment;
 
-      if (version < VERSION_AUTO_PREFIX_TERMS_REMOVED) {
-        // pre-6.2 index, records whether auto-prefix terms are enabled in the header
-        byte b = termsIn.readByte();
-        if (b != 0) {
-          throw new CorruptIndexException("Index header pretends the index has auto-prefix terms: " + b, termsIn);
-        }
-      }
+	final int version;
 
-      String indexName = IndexFileNames.segmentFileName(segment, state.segmentSuffix, TERMS_INDEX_EXTENSION);
-      indexIn = state.directory.openInput(indexName, state.context);
-      CodecUtil.checkIndexHeader(indexIn, TERMS_INDEX_CODEC_NAME, version, version, state.segmentInfo.getId(), state.segmentSuffix);
-      CodecUtil.checksumEntireFile(indexIn);
+	/**
+	 * Sole constructor.
+	 */
+	public BlockTreeTermsReader(PostingsReaderBase postingsReader, SegmentReadState state) throws IOException {
+		boolean success = false;
+		IndexInput indexIn = null;
 
-      // Have PostingsReader init itself
-      postingsReader.init(termsIn, state);
-      
-      // NOTE: data file is too costly to verify checksum against all the bytes on open,
-      // but for now we at least verify proper structure of the checksum footer: which looks
-      // for FOOTER_MAGIC + algorithmID. This is cheap and can detect some forms of corruption
-      // such as file truncation.
-      CodecUtil.retrieveChecksum(termsIn);
+		this.postingsReader = postingsReader;
+		this.segment = state.segmentInfo.name;
 
-      // Read per-field details
-      seekDir(termsIn);
-      seekDir(indexIn);
+		String termsName = IndexFileNames.segmentFileName(segment, state.segmentSuffix, TERMS_EXTENSION);
+		try {
+			termsIn = state.directory.openInput(termsName, state.context);
+			version = CodecUtil.checkIndexHeader(termsIn, TERMS_CODEC_NAME, VERSION_START, VERSION_CURRENT, state.segmentInfo.getId(), state.segmentSuffix);
 
-      final int numFields = termsIn.readVInt();
-      if (numFields < 0) {
-        throw new CorruptIndexException("invalid numFields: " + numFields, termsIn);
-      }
+			if (version < VERSION_AUTO_PREFIX_TERMS_REMOVED) {
+				// pre-6.2 index, records whether auto-prefix terms are enabled in the header
+				byte b = termsIn.readByte();
+				if (b != 0) {
+					throw new CorruptIndexException("Index header pretends the index has auto-prefix terms: " + b, termsIn);
+				}
+			}
 
-      for (int i = 0; i < numFields; ++i) {
-        final int field = termsIn.readVInt();
-        final long numTerms = termsIn.readVLong();
-        if (numTerms <= 0) {
-          throw new CorruptIndexException("Illegal numTerms for field number: " + field, termsIn);
-        }
-        final BytesRef rootCode = readBytesRef(termsIn);
-        final FieldInfo fieldInfo = state.fieldInfos.fieldInfo(field);
-        if (fieldInfo == null) {
-          throw new CorruptIndexException("invalid field number: " + field, termsIn);
-        }
-        final long sumTotalTermFreq = fieldInfo.getIndexOptions() == IndexOptions.DOCS ? -1 : termsIn.readVLong();
-        final long sumDocFreq = termsIn.readVLong();
-        final int docCount = termsIn.readVInt();
-        final int longsSize = termsIn.readVInt();
-        if (longsSize < 0) {
-          throw new CorruptIndexException("invalid longsSize for field: " + fieldInfo.name + ", longsSize=" + longsSize, termsIn);
-        }
-        BytesRef minTerm = readBytesRef(termsIn);
-        BytesRef maxTerm = readBytesRef(termsIn);
-        if (docCount < 0 || docCount > state.segmentInfo.maxDoc()) { // #docs with field must be <= #docs
-          throw new CorruptIndexException("invalid docCount: " + docCount + " maxDoc: " + state.segmentInfo.maxDoc(), termsIn);
-        }
-        if (sumDocFreq < docCount) {  // #postings must be >= #docs with field
-          throw new CorruptIndexException("invalid sumDocFreq: " + sumDocFreq + " docCount: " + docCount, termsIn);
-        }
-        if (sumTotalTermFreq != -1 && sumTotalTermFreq < sumDocFreq) { // #positions must be >= #postings
-          throw new CorruptIndexException("invalid sumTotalTermFreq: " + sumTotalTermFreq + " sumDocFreq: " + sumDocFreq, termsIn);
-        }
-        final long indexStartFP = indexIn.readVLong();
-        FieldReader previous = fields.put(fieldInfo.name,       
-                                          new FieldReader(this, fieldInfo, numTerms, rootCode, sumTotalTermFreq, sumDocFreq, docCount,
-                                                          indexStartFP, longsSize, indexIn, minTerm, maxTerm));
-        if (previous != null) {
-          throw new CorruptIndexException("duplicate field: " + fieldInfo.name, termsIn);
-        }
-      }
-      
-      indexIn.close();
-      success = true;
-    } finally {
-      if (!success) {
-        // this.close() will close in:
-        IOUtils.closeWhileHandlingException(indexIn, this);
-      }
-    }
-  }
+			String indexName = IndexFileNames.segmentFileName(segment, state.segmentSuffix, TERMS_INDEX_EXTENSION);
+			indexIn = state.directory.openInput(indexName, state.context);
+			CodecUtil.checkIndexHeader(indexIn, TERMS_INDEX_CODEC_NAME, version, version, state.segmentInfo.getId(), state.segmentSuffix);
+			CodecUtil.checksumEntireFile(indexIn);
 
-  private static BytesRef readBytesRef(IndexInput in) throws IOException {
-    int numBytes = in.readVInt();
-    if (numBytes < 0) {
-      throw new CorruptIndexException("invalid bytes length: " + numBytes, in);
-    }
-    
-    BytesRef bytes = new BytesRef();
-    bytes.length = numBytes;
-    bytes.bytes = new byte[numBytes];
-    in.readBytes(bytes.bytes, 0, numBytes);
+			// Have PostingsReader init itself
+			postingsReader.init(termsIn, state);
 
-    return bytes;
-  }
+			// NOTE: data file is too costly to verify checksum against all the bytes on open,
+			// but for now we at least verify proper structure of the checksum footer: which looks
+			// for FOOTER_MAGIC + algorithmID. This is cheap and can detect some forms of corruption
+			// such as file truncation.
+			CodecUtil.retrieveChecksum(termsIn);
 
-  /** Seek {@code input} to the directory offset. */
-  private static void seekDir(IndexInput input) throws IOException {
-    input.seek(input.length() - CodecUtil.footerLength() - 8);
-    long offset = input.readLong();
-    input.seek(offset);
-  }
+			// Read per-field details
+			seekDir(termsIn);
+			seekDir(indexIn);
 
-  // for debugging
-  // private static String toHex(int v) {
-  //   return "0x" + Integer.toHexString(v);
-  // }
+			final int numFields = termsIn.readVInt();
+			if (numFields < 0) {
+				throw new CorruptIndexException("invalid numFields: " + numFields, termsIn);
+			}
 
-  @Override
-  public void close() throws IOException {
-    try {
-      IOUtils.close(termsIn, postingsReader);
-    } finally { 
-      // Clear so refs to terms index is GCable even if
-      // app hangs onto us:
-      fields.clear();
-    }
-  }
+			for (int i = 0; i < numFields; ++i) {
+				final int field = termsIn.readVInt();
+				final long numTerms = termsIn.readVLong();
+				if (numTerms <= 0) {
+					throw new CorruptIndexException("Illegal numTerms for field number: " + field, termsIn);
+				}
+				final BytesRef rootCode = readBytesRef(termsIn);
+				final FieldInfo fieldInfo = state.fieldInfos.fieldInfo(field);
+				if (fieldInfo == null) {
+					throw new CorruptIndexException("invalid field number: " + field, termsIn);
+				}
+				final long sumTotalTermFreq = fieldInfo.getIndexOptions() == IndexOptions.DOCS ? -1 : termsIn.readVLong();
+				final long sumDocFreq = termsIn.readVLong();
+				final int docCount = termsIn.readVInt();
+				final int longsSize = termsIn.readVInt();
+				if (longsSize < 0) {
+					throw new CorruptIndexException("invalid longsSize for field: " + fieldInfo.name + ", longsSize=" + longsSize, termsIn);
+				}
+				BytesRef minTerm = readBytesRef(termsIn);
+				BytesRef maxTerm = readBytesRef(termsIn);
+				if (docCount < 0 || docCount > state.segmentInfo.maxDoc()) { // #docs with field must be <= #docs
+					throw new CorruptIndexException("invalid docCount: " + docCount + " maxDoc: " + state.segmentInfo.maxDoc(), termsIn);
+				}
+				if (sumDocFreq < docCount) {  // #postings must be >= #docs with field
+					throw new CorruptIndexException("invalid sumDocFreq: " + sumDocFreq + " docCount: " + docCount, termsIn);
+				}
+				if (sumTotalTermFreq != -1 && sumTotalTermFreq < sumDocFreq) { // #positions must be >= #postings
+					throw new CorruptIndexException("invalid sumTotalTermFreq: " + sumTotalTermFreq + " sumDocFreq: " + sumDocFreq, termsIn);
+				}
+				final long indexStartFP = indexIn.readVLong();
+				FieldReader previous = fields.put(fieldInfo.name,
+					new FieldReader(this, fieldInfo, numTerms, rootCode, sumTotalTermFreq, sumDocFreq, docCount,
+						indexStartFP, longsSize, indexIn, minTerm, maxTerm));
+				if (previous != null) {
+					throw new CorruptIndexException("duplicate field: " + fieldInfo.name, termsIn);
+				}
+			}
 
-  @Override
-  public Iterator<String> iterator() {
-    return Collections.unmodifiableSet(fields.keySet()).iterator();
-  }
+			indexIn.close();
+			success = true;
+		} finally {
+			if (!success) {
+				// this.close() will close in:
+				IOUtils.closeWhileHandlingException(indexIn, this);
+			}
+		}
+	}
 
-  @Override
-  public Terms terms(String field) throws IOException {
-    assert field != null;
-    return fields.get(field);
-  }
+	private static BytesRef readBytesRef(IndexInput in) throws IOException {
+		int numBytes = in.readVInt();
+		if (numBytes < 0) {
+			throw new CorruptIndexException("invalid bytes length: " + numBytes, in);
+		}
 
-  @Override
-  public int size() {
-    return fields.size();
-  }
+		BytesRef bytes = new BytesRef();
+		bytes.length = numBytes;
+		bytes.bytes = new byte[numBytes];
+		in.readBytes(bytes.bytes, 0, numBytes);
 
-  // for debugging
-  String brToString(BytesRef b) {
-    if (b == null) {
-      return "null";
-    } else {
-      try {
-        return b.utf8ToString() + " " + b;
-      } catch (Throwable t) {
-        // If BytesRef isn't actually UTF8, or it's eg a
-        // prefix of UTF8 that ends mid-unicode-char, we
-        // fallback to hex:
-        return b.toString();
-      }
-    }
-  }
+		return bytes;
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    long sizeInBytes = postingsReader.ramBytesUsed();
-    for(FieldReader reader : fields.values()) {
-      sizeInBytes += reader.ramBytesUsed();
-    }
-    return sizeInBytes;
-  }
+	/**
+	 * Seek {@code input} to the directory offset.
+	 */
+	private static void seekDir(IndexInput input) throws IOException {
+		input.seek(input.length() - CodecUtil.footerLength() - 8);
+		long offset = input.readLong();
+		input.seek(offset);
+	}
 
-  @Override
-  public Collection<Accountable> getChildResources() {
-    List<Accountable> resources = new ArrayList<>();
-    resources.addAll(Accountables.namedAccountables("field", fields));
-    resources.add(Accountables.namedAccountable("delegate", postingsReader));
-    return Collections.unmodifiableList(resources);
-  }
+	// for debugging
+	// private static String toHex(int v) {
+	//   return "0x" + Integer.toHexString(v);
+	// }
 
-  @Override
-  public void checkIntegrity() throws IOException { 
-    // term dictionary
-    CodecUtil.checksumEntireFile(termsIn);
-      
-    // postings
-    postingsReader.checkIntegrity();
-  }
+	@Override
+	public void close() throws IOException {
+		try {
+			IOUtils.close(termsIn, postingsReader);
+		} finally {
+			// Clear so refs to terms index is GCable even if
+			// app hangs onto us:
+			fields.clear();
+		}
+	}
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "(fields=" + fields.size() + ",delegate=" + postingsReader + ")";
-  }
+	@Override
+	public Iterator<String> iterator() {
+		return Collections.unmodifiableSet(fields.keySet()).iterator();
+	}
+
+	@Override
+	public Terms terms(String field) throws IOException {
+		assert field != null;
+		return fields.get(field);
+	}
+
+	@Override
+	public int size() {
+		return fields.size();
+	}
+
+	// for debugging
+	String brToString(BytesRef b) {
+		if (b == null) {
+			return "null";
+		} else {
+			try {
+				return b.utf8ToString() + " " + b;
+			} catch (Throwable t) {
+				// If BytesRef isn't actually UTF8, or it's eg a
+				// prefix of UTF8 that ends mid-unicode-char, we
+				// fallback to hex:
+				return b.toString();
+			}
+		}
+	}
+
+	@Override
+	public long ramBytesUsed() {
+		long sizeInBytes = postingsReader.ramBytesUsed();
+		for (FieldReader reader : fields.values()) {
+			sizeInBytes += reader.ramBytesUsed();
+		}
+		return sizeInBytes;
+	}
+
+	@Override
+	public Collection<Accountable> getChildResources() {
+		List<Accountable> resources = new ArrayList<>();
+		resources.addAll(Accountables.namedAccountables("field", fields));
+		resources.add(Accountables.namedAccountable("delegate", postingsReader));
+		return Collections.unmodifiableList(resources);
+	}
+
+	@Override
+	public void checkIntegrity() throws IOException {
+		// term dictionary
+		CodecUtil.checksumEntireFile(termsIn);
+
+		// postings
+		postingsReader.checkIntegrity();
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(fields=" + fields.size() + ",delegate=" + postingsReader + ")";
+	}
 }

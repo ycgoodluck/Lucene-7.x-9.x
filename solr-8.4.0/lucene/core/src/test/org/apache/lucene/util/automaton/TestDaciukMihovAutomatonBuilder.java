@@ -25,15 +25,15 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestDaciukMihovAutomatonBuilder extends LuceneTestCase {
 
-  public void testLargeTerms() {
-    byte[] b10k = new byte[10_000];
-    Arrays.fill(b10k, (byte) 'a');
-    IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
-        () -> DaciukMihovAutomatonBuilder.build(Collections.singleton(new BytesRef(b10k))));
-    assertTrue(e.getMessage().startsWith("This builder doesn't allow terms that are larger than 1,000 characters"));
+	public void testLargeTerms() {
+		byte[] b10k = new byte[10_000];
+		Arrays.fill(b10k, (byte) 'a');
+		IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
+			() -> DaciukMihovAutomatonBuilder.build(Collections.singleton(new BytesRef(b10k))));
+		assertTrue(e.getMessage().startsWith("This builder doesn't allow terms that are larger than 1,000 characters"));
 
-    byte[] b1k = ArrayUtil.copyOfSubArray(b10k, 0, 1000);
-    DaciukMihovAutomatonBuilder.build(Collections.singleton(new BytesRef(b1k))); // no exception
-  }
+		byte[] b1k = ArrayUtil.copyOfSubArray(b10k, 0, 1000);
+		DaciukMihovAutomatonBuilder.build(Collections.singleton(new BytesRef(b1k))); // no exception
+	}
 
 }

@@ -28,9 +28,9 @@ import java.util.Map;
  * fields require different analysis techniques.  Use the Map
  * argument in {@link #PerFieldAnalyzerWrapper(Analyzer, java.util.Map)}
  * to add non-default analyzers for fields.
- * 
+ *
  * <p>Example usage:
- * 
+ *
  * <pre class="prettyprint">
  * {@code
  * Map<String,Analyzer> analyzerPerField = new HashMap<>();
@@ -41,53 +41,53 @@ import java.util.Map;
  *   new PerFieldAnalyzerWrapper(new StandardAnalyzer(version), analyzerPerField);
  * }
  * </pre>
- * 
+ *
  * <p>In this example, StandardAnalyzer will be used for all fields except "firstname"
  * and "lastname", for which KeywordAnalyzer will be used.
- * 
+ *
  * <p>A PerFieldAnalyzerWrapper can be used like any other analyzer, for both indexing
  * and query parsing.
  *
  * @since 3.1
  */
 public final class PerFieldAnalyzerWrapper extends DelegatingAnalyzerWrapper {
-  private final Analyzer defaultAnalyzer;
-  private final Map<String, Analyzer> fieldAnalyzers;
+	private final Analyzer defaultAnalyzer;
+	private final Map<String, Analyzer> fieldAnalyzers;
 
-  /**
-   * Constructs with default analyzer.
-   *
-   * @param defaultAnalyzer Any fields not specifically
-   * defined to use a different analyzer will use the one provided here.
-   */
-  public PerFieldAnalyzerWrapper(Analyzer defaultAnalyzer) {
-    this(defaultAnalyzer, null);
-  }
-  
-  /**
-   * Constructs with default analyzer and a map of analyzers to use for 
-   * specific fields.
-   *
-   * @param defaultAnalyzer Any fields not specifically
-   * defined to use a different analyzer will use the one provided here.
-   * @param fieldAnalyzers a Map (String field name to the Analyzer) to be 
-   * used for those fields 
-   */
-  public PerFieldAnalyzerWrapper(Analyzer defaultAnalyzer,
-      Map<String, Analyzer> fieldAnalyzers) {
-    super(PER_FIELD_REUSE_STRATEGY);
-    this.defaultAnalyzer = defaultAnalyzer;
-    this.fieldAnalyzers = (fieldAnalyzers != null) ? fieldAnalyzers : Collections.<String, Analyzer>emptyMap();
-  }
+	/**
+	 * Constructs with default analyzer.
+	 *
+	 * @param defaultAnalyzer Any fields not specifically
+	 *                        defined to use a different analyzer will use the one provided here.
+	 */
+	public PerFieldAnalyzerWrapper(Analyzer defaultAnalyzer) {
+		this(defaultAnalyzer, null);
+	}
 
-  @Override
-  protected Analyzer getWrappedAnalyzer(String fieldName) {
-    Analyzer analyzer = fieldAnalyzers.get(fieldName);
-    return (analyzer != null) ? analyzer : defaultAnalyzer;
-  }
+	/**
+	 * Constructs with default analyzer and a map of analyzers to use for
+	 * specific fields.
+	 *
+	 * @param defaultAnalyzer Any fields not specifically
+	 *                        defined to use a different analyzer will use the one provided here.
+	 * @param fieldAnalyzers  a Map (String field name to the Analyzer) to be
+	 *                        used for those fields
+	 */
+	public PerFieldAnalyzerWrapper(Analyzer defaultAnalyzer,
+																 Map<String, Analyzer> fieldAnalyzers) {
+		super(PER_FIELD_REUSE_STRATEGY);
+		this.defaultAnalyzer = defaultAnalyzer;
+		this.fieldAnalyzers = (fieldAnalyzers != null) ? fieldAnalyzers : Collections.<String, Analyzer>emptyMap();
+	}
 
-  @Override
-  public String toString() {
-    return "PerFieldAnalyzerWrapper(" + fieldAnalyzers + ", default=" + defaultAnalyzer + ")";
-  }
+	@Override
+	protected Analyzer getWrappedAnalyzer(String fieldName) {
+		Analyzer analyzer = fieldAnalyzers.get(fieldName);
+		return (analyzer != null) ? analyzer : defaultAnalyzer;
+	}
+
+	@Override
+	public String toString() {
+		return "PerFieldAnalyzerWrapper(" + fieldAnalyzers + ", default=" + defaultAnalyzer + ")";
+	}
 }

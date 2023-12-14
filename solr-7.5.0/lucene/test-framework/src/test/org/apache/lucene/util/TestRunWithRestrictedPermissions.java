@@ -23,46 +23,46 @@ import java.security.AllPermission;
 
 public class TestRunWithRestrictedPermissions extends LuceneTestCase {
 
-  public void testDefaultsPass() throws Exception {
-    runWithRestrictedPermissions(this::doSomeForbiddenStuff, new AllPermission());
-  }
+	public void testDefaultsPass() throws Exception {
+		runWithRestrictedPermissions(this::doSomeForbiddenStuff, new AllPermission());
+	}
 
-  public void testNormallyAllowedStuff() throws Exception {
-    try {
-      runWithRestrictedPermissions(this::doSomeForbiddenStuff);
-      fail("this should not pass!");
-    } catch (SecurityException se) {
-      // pass
-    }
-  }
+	public void testNormallyAllowedStuff() throws Exception {
+		try {
+			runWithRestrictedPermissions(this::doSomeForbiddenStuff);
+			fail("this should not pass!");
+		} catch (SecurityException se) {
+			// pass
+		}
+	}
 
-  public void testCompletelyForbidden1() throws Exception {
-    try {
-      runWithRestrictedPermissions(this::doSomeCompletelyForbiddenStuff);
-      fail("this should not pass!");
-    } catch (SecurityException se) {
-      // pass
-    }
-  }
+	public void testCompletelyForbidden1() throws Exception {
+		try {
+			runWithRestrictedPermissions(this::doSomeCompletelyForbiddenStuff);
+			fail("this should not pass!");
+		} catch (SecurityException se) {
+			// pass
+		}
+	}
 
-  public void testCompletelyForbidden2() throws Exception {
-    try {
-      runWithRestrictedPermissions(this::doSomeCompletelyForbiddenStuff, new AllPermission());
-      fail("this should not pass (not even with AllPermission)");
-    } catch (SecurityException se) {
-      // pass
-    }
-  }
+	public void testCompletelyForbidden2() throws Exception {
+		try {
+			runWithRestrictedPermissions(this::doSomeCompletelyForbiddenStuff, new AllPermission());
+			fail("this should not pass (not even with AllPermission)");
+		} catch (SecurityException se) {
+			// pass
+		}
+	}
 
-  private Void doSomeForbiddenStuff() throws IOException {
-    createTempDir("cannot_create_temp_folder");
-    return null; // Void
-  }
-  
-  // something like this should not never pass!!
-  private Void doSomeCompletelyForbiddenStuff() throws IOException {
-    Files.createFile(Paths.get("denied"));
-    return null; // Void
-  }
-  
+	private Void doSomeForbiddenStuff() throws IOException {
+		createTempDir("cannot_create_temp_folder");
+		return null; // Void
+	}
+
+	// something like this should not never pass!!
+	private Void doSomeCompletelyForbiddenStuff() throws IOException {
+		Files.createFile(Paths.get("denied"));
+		return null; // Void
+	}
+
 }

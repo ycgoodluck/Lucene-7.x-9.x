@@ -26,118 +26,116 @@ import java.util.List;
  * nodes.
  */
 public class AnyQueryNode extends AndQueryNode {
-  private CharSequence field = null;
-  private int minimumMatchingmElements = 0;
+	private CharSequence field = null;
+	private int minimumMatchingmElements = 0;
 
-  /**
-   * @param clauses
-   *          - the query nodes to be or'ed
-   */
-  public AnyQueryNode(List<QueryNode> clauses, CharSequence field,
-      int minimumMatchingElements) {
-    super(clauses);
-    this.field = field;
-    this.minimumMatchingmElements = minimumMatchingElements;
+	/**
+	 * @param clauses - the query nodes to be or'ed
+	 */
+	public AnyQueryNode(List<QueryNode> clauses, CharSequence field,
+											int minimumMatchingElements) {
+		super(clauses);
+		this.field = field;
+		this.minimumMatchingmElements = minimumMatchingElements;
 
-    if (clauses != null) {
+		if (clauses != null) {
 
-      for (QueryNode clause : clauses) {
+			for (QueryNode clause : clauses) {
 
-        if (clause instanceof FieldQueryNode) {
+				if (clause instanceof FieldQueryNode) {
 
-          if (clause instanceof QueryNodeImpl) {
-            ((QueryNodeImpl) clause).toQueryStringIgnoreFields = true;
-          }
+					if (clause instanceof QueryNodeImpl) {
+						((QueryNodeImpl) clause).toQueryStringIgnoreFields = true;
+					}
 
-          if (clause instanceof FieldableNode) {
-            ((FieldableNode) clause).setField(field);
-          }
+					if (clause instanceof FieldableNode) {
+						((FieldableNode) clause).setField(field);
+					}
 
-        }
-      }
+				}
+			}
 
-    }
+		}
 
-  }
+	}
 
-  public int getMinimumMatchingElements() {
-    return this.minimumMatchingmElements;
-  }
+	public int getMinimumMatchingElements() {
+		return this.minimumMatchingmElements;
+	}
 
-  /**
-   * returns null if the field was not specified
-   * 
-   * @return the field
-   */
-  public CharSequence getField() {
-    return this.field;
-  }
+	/**
+	 * returns null if the field was not specified
+	 *
+	 * @return the field
+	 */
+	public CharSequence getField() {
+		return this.field;
+	}
 
-  /**
-   * returns - null if the field was not specified
-   * 
-   * @return the field as a String
-   */
-  public String getFieldAsString() {
-    if (this.field == null)
-      return null;
-    else
-      return this.field.toString();
-  }
+	/**
+	 * returns - null if the field was not specified
+	 *
+	 * @return the field as a String
+	 */
+	public String getFieldAsString() {
+		if (this.field == null)
+			return null;
+		else
+			return this.field.toString();
+	}
 
-  /**
-   * @param field
-   *          - the field to set
-   */
-  public void setField(CharSequence field) {
-    this.field = field;
-  }
+	/**
+	 * @param field - the field to set
+	 */
+	public void setField(CharSequence field) {
+		this.field = field;
+	}
 
-  @Override
-  public QueryNode cloneTree() throws CloneNotSupportedException {
-    AnyQueryNode clone = (AnyQueryNode) super.cloneTree();
+	@Override
+	public QueryNode cloneTree() throws CloneNotSupportedException {
+		AnyQueryNode clone = (AnyQueryNode) super.cloneTree();
 
-    clone.field = this.field;
-    clone.minimumMatchingmElements = this.minimumMatchingmElements;
+		clone.field = this.field;
+		clone.minimumMatchingmElements = this.minimumMatchingmElements;
 
-    return clone;
-  }
+		return clone;
+	}
 
-  @Override
-  public String toString() {
-    if (getChildren() == null || getChildren().size() == 0)
-      return "<any field='" + this.field + "'  matchelements="
-          + this.minimumMatchingmElements + "/>";
-    StringBuilder sb = new StringBuilder();
-    sb.append("<any field='").append(this.field).append("'  matchelements=").append(this.minimumMatchingmElements).append('>');
-    for (QueryNode clause : getChildren()) {
-      sb.append("\n");
-      sb.append(clause.toString());
-    }
-    sb.append("\n</any>");
-    return sb.toString();
-  }
+	@Override
+	public String toString() {
+		if (getChildren() == null || getChildren().size() == 0)
+			return "<any field='" + this.field + "'  matchelements="
+				+ this.minimumMatchingmElements + "/>";
+		StringBuilder sb = new StringBuilder();
+		sb.append("<any field='").append(this.field).append("'  matchelements=").append(this.minimumMatchingmElements).append('>');
+		for (QueryNode clause : getChildren()) {
+			sb.append("\n");
+			sb.append(clause.toString());
+		}
+		sb.append("\n</any>");
+		return sb.toString();
+	}
 
-  @Override
-  public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser) {
-    String anySTR = "ANY " + this.minimumMatchingmElements;
+	@Override
+	public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser) {
+		String anySTR = "ANY " + this.minimumMatchingmElements;
 
-    StringBuilder sb = new StringBuilder();
-    if (getChildren() == null || getChildren().size() == 0) {
-      // no childs case
-    } else {
-      String filler = "";
-      for (QueryNode clause : getChildren()) {
-        sb.append(filler).append(clause.toQueryString(escapeSyntaxParser));
-        filler = " ";
-      }
-    }
+		StringBuilder sb = new StringBuilder();
+		if (getChildren() == null || getChildren().size() == 0) {
+			// no childs case
+		} else {
+			String filler = "";
+			for (QueryNode clause : getChildren()) {
+				sb.append(filler).append(clause.toQueryString(escapeSyntaxParser));
+				filler = " ";
+			}
+		}
 
-    if (isDefaultField(this.field)) {
-      return "( " + sb.toString() + " ) " + anySTR;
-    } else {
-      return this.field + ":(( " + sb.toString() + " ) " + anySTR + ")";
-    }
-  }
+		if (isDefaultField(this.field)) {
+			return "( " + sb.toString() + " ) " + anySTR;
+		} else {
+			return this.field + ":(( " + sb.toString() + " ) " + anySTR + ")";
+		}
+	}
 
 }

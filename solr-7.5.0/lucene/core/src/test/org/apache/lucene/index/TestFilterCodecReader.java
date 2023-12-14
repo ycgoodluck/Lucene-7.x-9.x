@@ -26,42 +26,42 @@ import org.apache.lucene.util.LuceneTestCase;
 
 public class TestFilterCodecReader extends LuceneTestCase {
 
-  public void testDeclaredMethodsOverridden() throws Exception {
-    final Class<?> subClass = FilterCodecReader.class;
-    implTestDeclaredMethodsOverridden(subClass.getSuperclass(), subClass);
-  }
+	public void testDeclaredMethodsOverridden() throws Exception {
+		final Class<?> subClass = FilterCodecReader.class;
+		implTestDeclaredMethodsOverridden(subClass.getSuperclass(), subClass);
+	}
 
-  public void testGetDelegate() throws IOException {
-    try (Directory dir = newDirectory();
-         IndexWriter w = new IndexWriter(dir,newIndexWriterConfig())) {
-      w.addDocument(new Document());
-      try (DirectoryReader reader = w.getReader()) {
-        FilterCodecReader r = FilterCodecReader.wrapLiveDocs((CodecReader) reader.getSequentialSubReaders().get(0),
-            null, 1);
+	public void testGetDelegate() throws IOException {
+		try (Directory dir = newDirectory();
+				 IndexWriter w = new IndexWriter(dir, newIndexWriterConfig())) {
+			w.addDocument(new Document());
+			try (DirectoryReader reader = w.getReader()) {
+				FilterCodecReader r = FilterCodecReader.wrapLiveDocs((CodecReader) reader.getSequentialSubReaders().get(0),
+					null, 1);
 
-        assertSame(FilterCodecReader.unwrap(r), reader.getSequentialSubReaders().get(0));
-        assertSame(r.getDelegate(), reader.getSequentialSubReaders().get(0));
-      }
-    }
-  }
+				assertSame(FilterCodecReader.unwrap(r), reader.getSequentialSubReaders().get(0));
+				assertSame(r.getDelegate(), reader.getSequentialSubReaders().get(0));
+			}
+		}
+	}
 
-  private void implTestDeclaredMethodsOverridden(Class<?> superClass, Class<?> subClass) throws Exception {
-    for (final Method superClassMethod : superClass.getDeclaredMethods()) {
-      final int modifiers = superClassMethod.getModifiers();
-      if (Modifier.isPrivate(modifiers)) continue;
-      if (Modifier.isFinal(modifiers)) continue;
-      if (Modifier.isStatic(modifiers)) continue;
-      try {
-        final Method subClassMethod = subClass.getDeclaredMethod(
-            superClassMethod.getName(),
-            superClassMethod.getParameterTypes());
-        assertEquals("getReturnType() difference",
-            superClassMethod.getReturnType(),
-            subClassMethod.getReturnType());
-      } catch (NoSuchMethodException e) {
-        fail(subClass + " needs to override '" + superClassMethod + "'");
-      }
-    }
-  }
+	private void implTestDeclaredMethodsOverridden(Class<?> superClass, Class<?> subClass) throws Exception {
+		for (final Method superClassMethod : superClass.getDeclaredMethods()) {
+			final int modifiers = superClassMethod.getModifiers();
+			if (Modifier.isPrivate(modifiers)) continue;
+			if (Modifier.isFinal(modifiers)) continue;
+			if (Modifier.isStatic(modifiers)) continue;
+			try {
+				final Method subClassMethod = subClass.getDeclaredMethod(
+					superClassMethod.getName(),
+					superClassMethod.getParameterTypes());
+				assertEquals("getReturnType() difference",
+					superClassMethod.getReturnType(),
+					subClassMethod.getReturnType());
+			} catch (NoSuchMethodException e) {
+				fail(subClass + " needs to override '" + superClassMethod + "'");
+			}
+		}
+	}
 
 }

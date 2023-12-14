@@ -40,113 +40,113 @@ import org.apache.lucene.util.BytesRefHash;
 
 public class TestTermPresearcher extends PresearcherTestBase {
 
-  public void testFiltersOnTermQueries() throws IOException {
+	public void testFiltersOnTermQueries() throws IOException {
 
-    MonitorQuery query1
-        = new MonitorQuery("1", parse("furble"));
-    MonitorQuery query2
-        = new MonitorQuery("2", parse("document"));
-    MonitorQuery query3 = new MonitorQuery("3", parse("\"a document\""));  // will be selected but not match
+		MonitorQuery query1
+			= new MonitorQuery("1", parse("furble"));
+		MonitorQuery query2
+			= new MonitorQuery("2", parse("document"));
+		MonitorQuery query3 = new MonitorQuery("3", parse("\"a document\""));  // will be selected but not match
 
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(query1, query2, query3);
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(query1, query2, query3);
 
-      Map<String, Long> timings = new HashMap<>();
-      QueryTimeListener timeListener =
-          (queryId, timeInNanos) -> timings.compute(queryId, (q, t) -> t == null ? timeInNanos : t + timeInNanos);
-      MatchingQueries<QueryMatch> matches = monitor.match(buildDoc(TEXTFIELD, "this is a test document"),
-          QueryTimeListener.timingMatcher(QueryMatch.SIMPLE_MATCHER, timeListener));
-      assertEquals(1, matches.getMatchCount());
-      assertNotNull(matches.matches("2"));
-      assertEquals(2, matches.getQueriesRun());
-      assertEquals(2, timings.size());
-      assertTrue(timings.keySet().contains("2"));
-      assertTrue(timings.keySet().contains("3"));
-    }
-  }
+			Map<String, Long> timings = new HashMap<>();
+			QueryTimeListener timeListener =
+				(queryId, timeInNanos) -> timings.compute(queryId, (q, t) -> t == null ? timeInNanos : t + timeInNanos);
+			MatchingQueries<QueryMatch> matches = monitor.match(buildDoc(TEXTFIELD, "this is a test document"),
+				QueryTimeListener.timingMatcher(QueryMatch.SIMPLE_MATCHER, timeListener));
+			assertEquals(1, matches.getMatchCount());
+			assertNotNull(matches.matches("2"));
+			assertEquals(2, matches.getQueriesRun());
+			assertEquals(2, timings.size());
+			assertTrue(timings.keySet().contains("2"));
+			assertTrue(timings.keySet().contains("3"));
+		}
+	}
 
-  public void testIgnoresTermsOnNotQueries() throws IOException {
+	public void testIgnoresTermsOnNotQueries() throws IOException {
 
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", parse("document -test")));
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(new MonitorQuery("1", parse("document -test")));
 
-      MatchingQueries<QueryMatch> matches = monitor.match(buildDoc(TEXTFIELD, "this is a test document"), QueryMatch.SIMPLE_MATCHER);
-      assertEquals(0, matches.getMatchCount());
-      assertEquals(1, matches.getQueriesRun());
+			MatchingQueries<QueryMatch> matches = monitor.match(buildDoc(TEXTFIELD, "this is a test document"), QueryMatch.SIMPLE_MATCHER);
+			assertEquals(0, matches.getMatchCount());
+			assertEquals(1, matches.getQueriesRun());
 
-      matches = monitor.match(buildDoc(TEXTFIELD, "weeble sclup test"), QueryMatch.SIMPLE_MATCHER);
-      assertEquals(0, matches.getMatchCount());
-      assertEquals(0, matches.getQueriesRun());
-    }
+			matches = monitor.match(buildDoc(TEXTFIELD, "weeble sclup test"), QueryMatch.SIMPLE_MATCHER);
+			assertEquals(0, matches.getMatchCount());
+			assertEquals(0, matches.getQueriesRun());
+		}
 
-  }
+	}
 
-  public void testMatchesAnyQueries() throws IOException {
+	public void testMatchesAnyQueries() throws IOException {
 
-    try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", parse("/hell./")));
+		try (Monitor monitor = newMonitor()) {
+			monitor.register(new MonitorQuery("1", parse("/hell./")));
 
-      MatchingQueries<QueryMatch> matches = monitor.match(buildDoc(TEXTFIELD, "hello"), QueryMatch.SIMPLE_MATCHER);
-      assertEquals(1, matches.getMatchCount());
-      assertEquals(1, matches.getQueriesRun());
-    }
+			MatchingQueries<QueryMatch> matches = monitor.match(buildDoc(TEXTFIELD, "hello"), QueryMatch.SIMPLE_MATCHER);
+			assertEquals(1, matches.getMatchCount());
+			assertEquals(1, matches.getQueriesRun());
+		}
 
-  }
+	}
 
-  @Override
-  protected Presearcher createPresearcher() {
-    return new TermFilteredPresearcher();
-  }
+	@Override
+	protected Presearcher createPresearcher() {
+		return new TermFilteredPresearcher();
+	}
 
-  public void testAnyTermsAreCorrectlyAnalyzed() {
+	public void testAnyTermsAreCorrectlyAnalyzed() {
 
-    QueryAnalyzer analyzer = new QueryAnalyzer();
-    QueryTree qt = analyzer.buildTree(new MatchAllDocsQuery(), TermFilteredPresearcher.DEFAULT_WEIGHTOR);
+		QueryAnalyzer analyzer = new QueryAnalyzer();
+		QueryTree qt = analyzer.buildTree(new MatchAllDocsQuery(), TermFilteredPresearcher.DEFAULT_WEIGHTOR);
 
-    TermFilteredPresearcher presearcher = new TermFilteredPresearcher();
-    Map<String, BytesRefHash> extractedTerms = presearcher.collectTerms(qt);
-    assertEquals(1, extractedTerms.size());
+		TermFilteredPresearcher presearcher = new TermFilteredPresearcher();
+		Map<String, BytesRefHash> extractedTerms = presearcher.collectTerms(qt);
+		assertEquals(1, extractedTerms.size());
 
-  }
+	}
 
-  public void testQueryBuilder() throws IOException {
+	public void testQueryBuilder() throws IOException {
 
-    Presearcher presearcher = createPresearcher();
+		Presearcher presearcher = createPresearcher();
 
-    IndexWriterConfig iwc = new IndexWriterConfig(new KeywordAnalyzer());
-    Directory dir = new ByteBuffersDirectory();
-    IndexWriter writer = new IndexWriter(dir, iwc);
-    MonitorConfiguration config = new MonitorConfiguration(){
-      @Override
-      public IndexWriter buildIndexWriter() {
-        return writer;
-      }
-    };
+		IndexWriterConfig iwc = new IndexWriterConfig(new KeywordAnalyzer());
+		Directory dir = new ByteBuffersDirectory();
+		IndexWriter writer = new IndexWriter(dir, iwc);
+		MonitorConfiguration config = new MonitorConfiguration() {
+			@Override
+			public IndexWriter buildIndexWriter() {
+				return writer;
+			}
+		};
 
-    try (Monitor monitor = new Monitor(ANALYZER, presearcher, config)) {
+		try (Monitor monitor = new Monitor(ANALYZER, presearcher, config)) {
 
-      monitor.register(new MonitorQuery("1", parse("f:test")));
+			monitor.register(new MonitorQuery("1", parse("f:test")));
 
-      try (IndexReader reader = DirectoryReader.open(writer, false, false)) {
+			try (IndexReader reader = DirectoryReader.open(writer, false, false)) {
 
-        MemoryIndex mindex = new MemoryIndex();
-        mindex.addField("f", "this is a test document", WHITESPACE);
-        LeafReader docsReader = (LeafReader) mindex.createSearcher().getIndexReader();
+				MemoryIndex mindex = new MemoryIndex();
+				mindex.addField("f", "this is a test document", WHITESPACE);
+				LeafReader docsReader = (LeafReader) mindex.createSearcher().getIndexReader();
 
-        QueryIndex.QueryTermFilter termFilter = new QueryIndex.QueryTermFilter(reader);
+				QueryIndex.QueryTermFilter termFilter = new QueryIndex.QueryTermFilter(reader);
 
-        BooleanQuery q = (BooleanQuery) presearcher.buildQuery(docsReader, termFilter);
-        BooleanQuery expected = new BooleanQuery.Builder()
-            .add(should(new BooleanQuery.Builder()
-                .add(should(new TermInSetQuery("f", new BytesRef("test")))).build()))
-            .add(should(new TermQuery(new Term("__anytokenfield", "__ANYTOKEN__"))))
-            .build();
+				BooleanQuery q = (BooleanQuery) presearcher.buildQuery(docsReader, termFilter);
+				BooleanQuery expected = new BooleanQuery.Builder()
+					.add(should(new BooleanQuery.Builder()
+						.add(should(new TermInSetQuery("f", new BytesRef("test")))).build()))
+					.add(should(new TermQuery(new Term("__anytokenfield", "__ANYTOKEN__"))))
+					.build();
 
-        assertEquals(expected, q);
+				assertEquals(expected, q);
 
-      }
+			}
 
-    }
+		}
 
-  }
+	}
 }

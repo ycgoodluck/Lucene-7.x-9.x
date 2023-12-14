@@ -46,205 +46,225 @@ import org.apache.lucene.util.StringHelper;
  * plain text compound format.
  * <p>
  * <b>FOR RECREATIONAL USE ONLY</b>
+ *
  * @lucene.experimental
  */
 public class SimpleTextCompoundFormat extends CompoundFormat {
-  
-  /** Sole constructor. */
-  public SimpleTextCompoundFormat() {
-  }
 
-  @Override
-  public Directory getCompoundReader(Directory dir, SegmentInfo si, IOContext context) throws IOException {
-    String dataFile = IndexFileNames.segmentFileName(si.name, "", DATA_EXTENSION);
-    final IndexInput in = dir.openInput(dataFile, context);
-    
-    BytesRefBuilder scratch = new BytesRefBuilder();
+	/**
+	 * Sole constructor.
+	 */
+	public SimpleTextCompoundFormat() {
+	}
 
-    // first get to TOC:
-    DecimalFormat df = new DecimalFormat(OFFSETPATTERN, DecimalFormatSymbols.getInstance(Locale.ROOT));
-    long pos = in.length() - TABLEPOS.length - OFFSETPATTERN.length() - 1;
-    in.seek(pos);
-    SimpleTextUtil.readLine(in, scratch);
-    assert StringHelper.startsWith(scratch.get(), TABLEPOS);
-    long tablePos = -1; 
-    try {
-      tablePos = df.parse(stripPrefix(scratch, TABLEPOS)).longValue();
-    } catch (ParseException e) {
-      throw new CorruptIndexException("can't parse CFS trailer, got: " + scratch.get().utf8ToString(), in);
-    }
-    
-    // seek to TOC and read it
-    in.seek(tablePos);
-    SimpleTextUtil.readLine(in, scratch);
-    assert StringHelper.startsWith(scratch.get(), TABLE);
-    int numEntries = Integer.parseInt(stripPrefix(scratch, TABLE));
-    
-    final String fileNames[] = new String[numEntries];
-    final long startOffsets[] = new long[numEntries];
-    final long endOffsets[] = new long[numEntries];
-    
-    for (int i = 0; i < numEntries; i++) {
-      SimpleTextUtil.readLine(in, scratch);
-      assert StringHelper.startsWith(scratch.get(), TABLENAME);
-      fileNames[i] = si.name + IndexFileNames.stripSegmentName(stripPrefix(scratch, TABLENAME));
+	@Override
+	public Directory getCompoundReader(Directory dir, SegmentInfo si, IOContext context) throws IOException {
+		String dataFile = IndexFileNames.segmentFileName(si.name, "", DATA_EXTENSION);
+		final IndexInput in = dir.openInput(dataFile, context);
 
-      if (i > 0) {
-        // files must be unique and in sorted order
-        assert fileNames[i].compareTo(fileNames[i-1]) > 0;
-      }
+		BytesRefBuilder scratch = new BytesRefBuilder();
 
-      SimpleTextUtil.readLine(in, scratch);
-      assert StringHelper.startsWith(scratch.get(), TABLESTART);
-      startOffsets[i] = Long.parseLong(stripPrefix(scratch, TABLESTART));
+		// first get to TOC:
+		DecimalFormat df = new DecimalFormat(OFFSETPATTERN, DecimalFormatSymbols.getInstance(Locale.ROOT));
+		long pos = in.length() - TABLEPOS.length - OFFSETPATTERN.length() - 1;
+		in.seek(pos);
+		SimpleTextUtil.readLine(in, scratch);
+		assert StringHelper.startsWith(scratch.get(), TABLEPOS);
+		long tablePos = -1;
+		try {
+			tablePos = df.parse(stripPrefix(scratch, TABLEPOS)).longValue();
+		} catch (ParseException e) {
+			throw new CorruptIndexException("can't parse CFS trailer, got: " + scratch.get().utf8ToString(), in);
+		}
 
-      SimpleTextUtil.readLine(in, scratch);
-      assert StringHelper.startsWith(scratch.get(), TABLEEND);
-      endOffsets[i] = Long.parseLong(stripPrefix(scratch, TABLEEND));
-    }
+		// seek to TOC and read it
+		in.seek(tablePos);
+		SimpleTextUtil.readLine(in, scratch);
+		assert StringHelper.startsWith(scratch.get(), TABLE);
+		int numEntries = Integer.parseInt(stripPrefix(scratch, TABLE));
 
-    return new Directory() {
+		final String fileNames[] = new String[numEntries];
+		final long startOffsets[] = new long[numEntries];
+		final long endOffsets[] = new long[numEntries];
 
-      private int getIndex(String name) throws IOException {
-        int index = Arrays.binarySearch(fileNames, name);
-        if (index < 0) {
-          throw new FileNotFoundException("No sub-file found (fileName=" + name + " files: " + Arrays.toString(fileNames) + ")");
-        }
-        return index;
-      }
+		for (int i = 0; i < numEntries; i++) {
+			SimpleTextUtil.readLine(in, scratch);
+			assert StringHelper.startsWith(scratch.get(), TABLENAME);
+			fileNames[i] = si.name + IndexFileNames.stripSegmentName(stripPrefix(scratch, TABLENAME));
 
-      @Override
-      public String[] listAll() throws IOException {
-        ensureOpen();
-        return fileNames.clone();
-      }
+			if (i > 0) {
+				// files must be unique and in sorted order
+				assert fileNames[i].compareTo(fileNames[i - 1]) > 0;
+			}
 
-      @Override
-      public long fileLength(String name) throws IOException {
-        ensureOpen();
-        int index = getIndex(name);
-        return endOffsets[index] - startOffsets[index];
-      }
+			SimpleTextUtil.readLine(in, scratch);
+			assert StringHelper.startsWith(scratch.get(), TABLESTART);
+			startOffsets[i] = Long.parseLong(stripPrefix(scratch, TABLESTART));
 
-      @Override
-      public IndexInput openInput(String name, IOContext context) throws IOException {
-        ensureOpen();
-        int index = getIndex(name);
-        return in.slice(name, startOffsets[index], endOffsets[index] - startOffsets[index]);
-      }
+			SimpleTextUtil.readLine(in, scratch);
+			assert StringHelper.startsWith(scratch.get(), TABLEEND);
+			endOffsets[i] = Long.parseLong(stripPrefix(scratch, TABLEEND));
+		}
 
-      @Override
-      public void close() throws IOException {
-        in.close();
-      }
+		return new Directory() {
 
-      @Override
-      public Set<String> getPendingDeletions() throws IOException {
-        return Collections.emptySet();
-      }
+			private int getIndex(String name) throws IOException {
+				int index = Arrays.binarySearch(fileNames, name);
+				if (index < 0) {
+					throw new FileNotFoundException("No sub-file found (fileName=" + name + " files: " + Arrays.toString(fileNames) + ")");
+				}
+				return index;
+			}
 
-      // write methods: disabled
-      
-      @Override
-      public IndexOutput createOutput(String name, IOContext context) { throw new UnsupportedOperationException(); }
+			@Override
+			public String[] listAll() throws IOException {
+				ensureOpen();
+				return fileNames.clone();
+			}
 
-      @Override
-      public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) { throw new UnsupportedOperationException(); }
-      
-      @Override
-      public void sync(Collection<String> names) { throw new UnsupportedOperationException(); }
-      
-      @Override
-      public void deleteFile(String name) { throw new UnsupportedOperationException(); }
-      
-      @Override
-      public void rename(String source, String dest) { throw new UnsupportedOperationException(); }
+			@Override
+			public long fileLength(String name) throws IOException {
+				ensureOpen();
+				int index = getIndex(name);
+				return endOffsets[index] - startOffsets[index];
+			}
 
-      @Override
-      public void syncMetaData() { throw new UnsupportedOperationException(); }
-      
-      @Override
-      public Lock obtainLock(String name) { throw new UnsupportedOperationException(); }
-    };
-  }
+			@Override
+			public IndexInput openInput(String name, IOContext context) throws IOException {
+				ensureOpen();
+				int index = getIndex(name);
+				return in.slice(name, startOffsets[index], endOffsets[index] - startOffsets[index]);
+			}
 
-  @Override
-  public void write(Directory dir, SegmentInfo si, IOContext context) throws IOException {
-    String dataFile = IndexFileNames.segmentFileName(si.name, "", DATA_EXTENSION);
-    
-    int numFiles = si.files().size();
-    String names[] = si.files().toArray(new String[numFiles]);
-    Arrays.sort(names);
-    long startOffsets[] = new long[numFiles];
-    long endOffsets[] = new long[numFiles];
-    
-    BytesRefBuilder scratch = new BytesRefBuilder();
-    
-    try (IndexOutput out = dir.createOutput(dataFile, context)) { 
-      for (int i = 0; i < names.length; i++) {
-        // write header for file
-        SimpleTextUtil.write(out, HEADER);
-        SimpleTextUtil.write(out, names[i], scratch);
-        SimpleTextUtil.writeNewline(out);
-        
-        // write bytes for file
-        startOffsets[i] = out.getFilePointer();
-        try (IndexInput in = dir.openInput(names[i], IOContext.READONCE)) {
-          out.copyBytes(in, in.length());
-        }
-        endOffsets[i] = out.getFilePointer();
-      }
-      
-      long tocPos = out.getFilePointer();
-      
-      // write CFS table
-      SimpleTextUtil.write(out, TABLE);
-      SimpleTextUtil.write(out, Integer.toString(numFiles), scratch);
-      SimpleTextUtil.writeNewline(out);
-     
-      for (int i = 0; i < names.length; i++) {
-        SimpleTextUtil.write(out, TABLENAME);
-        SimpleTextUtil.write(out, names[i], scratch);
-        SimpleTextUtil.writeNewline(out);
-        
-        SimpleTextUtil.write(out, TABLESTART);
-        SimpleTextUtil.write(out, Long.toString(startOffsets[i]), scratch);
-        SimpleTextUtil.writeNewline(out);
+			@Override
+			public void close() throws IOException {
+				in.close();
+			}
 
-        SimpleTextUtil.write(out, TABLEEND);
-        SimpleTextUtil.write(out, Long.toString(endOffsets[i]), scratch);
-        SimpleTextUtil.writeNewline(out);
-      }
-      
-      DecimalFormat df = new DecimalFormat(OFFSETPATTERN, DecimalFormatSymbols.getInstance(Locale.ROOT));
-      SimpleTextUtil.write(out, TABLEPOS);
-      SimpleTextUtil.write(out, df.format(tocPos), scratch);
-      SimpleTextUtil.writeNewline(out);
-    }
-  }
-  
-  // helper method to strip strip away 'prefix' from 'scratch' and return as String
-  private String stripPrefix(BytesRefBuilder scratch, BytesRef prefix) {
-    return new String(scratch.bytes(), prefix.length, scratch.length() - prefix.length, StandardCharsets.UTF_8);
-  }
-  
-  /** Extension of compound file */
-  static final String DATA_EXTENSION = "scf";
-  
-  final static BytesRef HEADER  = new BytesRef("cfs entry for: ");
-  
-  final static BytesRef TABLE =      new BytesRef("table of contents, size: ");
-  final static BytesRef TABLENAME =  new BytesRef("  filename: ");
-  final static BytesRef TABLESTART = new BytesRef("    start: ");
-  final static BytesRef TABLEEND =   new BytesRef("    end: ");
-  
-  final static BytesRef TABLEPOS = new BytesRef("table of contents begins at offset: ");
-  
-  final static String OFFSETPATTERN;
-  static {
-    int numDigits = Long.toString(Long.MAX_VALUE).length();
-    char pattern[] = new char[numDigits];
-    Arrays.fill(pattern, '0');
-    OFFSETPATTERN = new String(pattern);
-  }
+			@Override
+			public Set<String> getPendingDeletions() throws IOException {
+				return Collections.emptySet();
+			}
+
+			// write methods: disabled
+
+			@Override
+			public IndexOutput createOutput(String name, IOContext context) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void sync(Collection<String> names) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void deleteFile(String name) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void rename(String source, String dest) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void syncMetaData() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public Lock obtainLock(String name) {
+				throw new UnsupportedOperationException();
+			}
+		};
+	}
+
+	@Override
+	public void write(Directory dir, SegmentInfo si, IOContext context) throws IOException {
+		String dataFile = IndexFileNames.segmentFileName(si.name, "", DATA_EXTENSION);
+
+		int numFiles = si.files().size();
+		String names[] = si.files().toArray(new String[numFiles]);
+		Arrays.sort(names);
+		long startOffsets[] = new long[numFiles];
+		long endOffsets[] = new long[numFiles];
+
+		BytesRefBuilder scratch = new BytesRefBuilder();
+
+		try (IndexOutput out = dir.createOutput(dataFile, context)) {
+			for (int i = 0; i < names.length; i++) {
+				// write header for file
+				SimpleTextUtil.write(out, HEADER);
+				SimpleTextUtil.write(out, names[i], scratch);
+				SimpleTextUtil.writeNewline(out);
+
+				// write bytes for file
+				startOffsets[i] = out.getFilePointer();
+				try (IndexInput in = dir.openInput(names[i], IOContext.READONCE)) {
+					out.copyBytes(in, in.length());
+				}
+				endOffsets[i] = out.getFilePointer();
+			}
+
+			long tocPos = out.getFilePointer();
+
+			// write CFS table
+			SimpleTextUtil.write(out, TABLE);
+			SimpleTextUtil.write(out, Integer.toString(numFiles), scratch);
+			SimpleTextUtil.writeNewline(out);
+
+			for (int i = 0; i < names.length; i++) {
+				SimpleTextUtil.write(out, TABLENAME);
+				SimpleTextUtil.write(out, names[i], scratch);
+				SimpleTextUtil.writeNewline(out);
+
+				SimpleTextUtil.write(out, TABLESTART);
+				SimpleTextUtil.write(out, Long.toString(startOffsets[i]), scratch);
+				SimpleTextUtil.writeNewline(out);
+
+				SimpleTextUtil.write(out, TABLEEND);
+				SimpleTextUtil.write(out, Long.toString(endOffsets[i]), scratch);
+				SimpleTextUtil.writeNewline(out);
+			}
+
+			DecimalFormat df = new DecimalFormat(OFFSETPATTERN, DecimalFormatSymbols.getInstance(Locale.ROOT));
+			SimpleTextUtil.write(out, TABLEPOS);
+			SimpleTextUtil.write(out, df.format(tocPos), scratch);
+			SimpleTextUtil.writeNewline(out);
+		}
+	}
+
+	// helper method to strip strip away 'prefix' from 'scratch' and return as String
+	private String stripPrefix(BytesRefBuilder scratch, BytesRef prefix) {
+		return new String(scratch.bytes(), prefix.length, scratch.length() - prefix.length, StandardCharsets.UTF_8);
+	}
+
+	/**
+	 * Extension of compound file
+	 */
+	static final String DATA_EXTENSION = "scf";
+
+	final static BytesRef HEADER = new BytesRef("cfs entry for: ");
+
+	final static BytesRef TABLE = new BytesRef("table of contents, size: ");
+	final static BytesRef TABLENAME = new BytesRef("  filename: ");
+	final static BytesRef TABLESTART = new BytesRef("    start: ");
+	final static BytesRef TABLEEND = new BytesRef("    end: ");
+
+	final static BytesRef TABLEPOS = new BytesRef("table of contents begins at offset: ");
+
+	final static String OFFSETPATTERN;
+
+	static {
+		int numDigits = Long.toString(Long.MAX_VALUE).length();
+		char pattern[] = new char[numDigits];
+		Arrays.fill(pattern, '0');
+		OFFSETPATTERN = new String(pattern);
+	}
 }

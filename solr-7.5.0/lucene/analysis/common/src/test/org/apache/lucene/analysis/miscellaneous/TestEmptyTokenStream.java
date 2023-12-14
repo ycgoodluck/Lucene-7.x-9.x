@@ -31,41 +31,41 @@ import org.apache.lucene.store.Directory;
 
 public class TestEmptyTokenStream extends BaseTokenStreamTestCase {
 
-  public void testConsume() throws IOException {
-    TokenStream ts = new EmptyTokenStream();
-    ts.reset();
-    assertFalse(ts.incrementToken());
-    ts.end();
-    ts.close();
-    // try again with reuse:
-    ts.reset();
-    assertFalse(ts.incrementToken());
-    ts.end();
-    ts.close();
-  }
-  
-  public void testConsume2() throws IOException {
-    BaseTokenStreamTestCase.assertTokenStreamContents(new EmptyTokenStream(), new String[0]);
-  }
+	public void testConsume() throws IOException {
+		TokenStream ts = new EmptyTokenStream();
+		ts.reset();
+		assertFalse(ts.incrementToken());
+		ts.end();
+		ts.close();
+		// try again with reuse:
+		ts.reset();
+		assertFalse(ts.incrementToken());
+		ts.end();
+		ts.close();
+	}
 
-  public void testIndexWriter_LUCENE4656() throws IOException {
-    Directory directory = newDirectory();
-    IndexWriter writer = new IndexWriter(directory, newIndexWriterConfig(null));
+	public void testConsume2() throws IOException {
+		BaseTokenStreamTestCase.assertTokenStreamContents(new EmptyTokenStream(), new String[0]);
+	}
 
-    TokenStream ts = new EmptyTokenStream();
-    assertFalse(ts.hasAttribute(TermToBytesRefAttribute.class));
+	public void testIndexWriter_LUCENE4656() throws IOException {
+		Directory directory = newDirectory();
+		IndexWriter writer = new IndexWriter(directory, newIndexWriterConfig(null));
 
-    Document doc = new Document();
-    doc.add(new StringField("id", "0", Field.Store.YES));
-    doc.add(new TextField("description", ts));
-    
-    // this should not fail because we have no TermToBytesRefAttribute
-    writer.addDocument(doc);
-    
-    assertEquals(1, writer.numDocs());
+		TokenStream ts = new EmptyTokenStream();
+		assertFalse(ts.hasAttribute(TermToBytesRefAttribute.class));
 
-    writer.close();
-    directory.close();
-  }
+		Document doc = new Document();
+		doc.add(new StringField("id", "0", Field.Store.YES));
+		doc.add(new TextField("description", ts));
+
+		// this should not fail because we have no TermToBytesRefAttribute
+		writer.addDocument(doc);
+
+		assertEquals(1, writer.numDocs());
+
+		writer.close();
+		directory.close();
+	}
 
 }

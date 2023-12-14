@@ -27,22 +27,22 @@ import org.apache.lucene.search.FuzzyQuery;
  */
 public class FuzzyQueryNodeBuilder implements StandardQueryBuilder {
 
-  public FuzzyQueryNodeBuilder() {
-    // empty constructor
-  }
+	public FuzzyQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public FuzzyQuery build(QueryNode queryNode) throws QueryNodeException {
-    FuzzyQueryNode fuzzyNode = (FuzzyQueryNode) queryNode;
-    String text = fuzzyNode.getTextAsString();
-    
-    int numEdits = FuzzyQuery.floatToEdits(fuzzyNode.getSimilarity(), 
-        text.codePointCount(0, text.length()));
-    
-    return new FuzzyQuery(new Term(fuzzyNode.getFieldAsString(), fuzzyNode
-        .getTextAsString()), numEdits, fuzzyNode
-        .getPrefixLength());
+	@Override
+	public FuzzyQuery build(QueryNode queryNode) throws QueryNodeException {
+		FuzzyQueryNode fuzzyNode = (FuzzyQueryNode) queryNode;
+		String text = fuzzyNode.getTextAsString();
 
-  }
+		int numEdits = FuzzyQuery.floatToEdits(fuzzyNode.getSimilarity(),
+			text.codePointCount(0, text.length()));
+
+		return new FuzzyQuery(new Term(fuzzyNode.getFieldAsString(), fuzzyNode
+			.getTextAsString()), numEdits, fuzzyNode
+			.getPrefixLength());
+
+	}
 
 }

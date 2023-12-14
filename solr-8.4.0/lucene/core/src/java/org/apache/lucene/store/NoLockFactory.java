@@ -28,31 +28,34 @@ import java.io.IOException;
 
 public final class NoLockFactory extends LockFactory {
 
-  /** The singleton */
-  public static final NoLockFactory INSTANCE = new NoLockFactory();
-  
-  // visible for AssertingLock!
-  static final NoLock SINGLETON_LOCK = new NoLock();
-  
-  private NoLockFactory() {}
+	/**
+	 * The singleton
+	 */
+	public static final NoLockFactory INSTANCE = new NoLockFactory();
 
-  @Override
-  public Lock obtainLock(Directory dir, String lockName) {
-    return SINGLETON_LOCK;
-  }
-  
-  private static class NoLock extends Lock {
-    @Override
-    public void close() {
-    }
+	// visible for AssertingLock!
+	static final NoLock SINGLETON_LOCK = new NoLock();
 
-    @Override
-    public void ensureValid() throws IOException {
-    }
+	private NoLockFactory() {
+	}
 
-    @Override
-    public String toString() {
-      return "NoLock";
-    }
-  }
+	@Override
+	public Lock obtainLock(Directory dir, String lockName) {
+		return SINGLETON_LOCK;
+	}
+
+	private static class NoLock extends Lock {
+		@Override
+		public void close() {
+		}
+
+		@Override
+		public void ensureValid() throws IOException {
+		}
+
+		@Override
+		public String toString() {
+			return "NoLock";
+		}
+	}
 }

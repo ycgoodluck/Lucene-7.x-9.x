@@ -23,74 +23,74 @@ import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.util.BytesRef;
 
 class BinaryRangeDocValues extends BinaryDocValues {
-  private final BinaryDocValues in;
-  private byte[] packedValue;
-  private final int numDims;
-  private final int numBytesPerDimension;
-  private int docID = -1;
+	private final BinaryDocValues in;
+	private byte[] packedValue;
+	private final int numDims;
+	private final int numBytesPerDimension;
+	private int docID = -1;
 
-  BinaryRangeDocValues(BinaryDocValues in, int numDims, int numBytesPerDimension) {
-    this.in = in;
-    this.numBytesPerDimension = numBytesPerDimension;
-    this.numDims = numDims;
-    this.packedValue = new byte[2 * numDims * numBytesPerDimension];
-  }
+	BinaryRangeDocValues(BinaryDocValues in, int numDims, int numBytesPerDimension) {
+		this.in = in;
+		this.numBytesPerDimension = numBytesPerDimension;
+		this.numDims = numDims;
+		this.packedValue = new byte[2 * numDims * numBytesPerDimension];
+	}
 
-  @Override
-  public int nextDoc() throws IOException {
-    docID = in.nextDoc();
+	@Override
+	public int nextDoc() throws IOException {
+		docID = in.nextDoc();
 
-    if (docID != NO_MORE_DOCS) {
-      decodeRanges();
-    }
+		if (docID != NO_MORE_DOCS) {
+			decodeRanges();
+		}
 
-    return docID;
-  }
+		return docID;
+	}
 
-  @Override
-  public int docID() {
-    return in.docID();
-  }
+	@Override
+	public int docID() {
+		return in.docID();
+	}
 
-  @Override
-  public long cost() {
-    return in.cost();
-  }
+	@Override
+	public long cost() {
+		return in.cost();
+	}
 
-  @Override
-  public int advance(int target) throws IOException {
-    int res = in.advance(target);
-    if (res != NO_MORE_DOCS) {
-      decodeRanges();
-    }
+	@Override
+	public int advance(int target) throws IOException {
+		int res = in.advance(target);
+		if (res != NO_MORE_DOCS) {
+			decodeRanges();
+		}
 
-    return res;
-  }
+		return res;
+	}
 
-  @Override
-  public boolean advanceExact(int target) throws IOException {
-    boolean res = in.advanceExact(target);
-    if (res) {
-      decodeRanges();
-    }
+	@Override
+	public boolean advanceExact(int target) throws IOException {
+		boolean res = in.advanceExact(target);
+		if (res) {
+			decodeRanges();
+		}
 
-    return res;
-  }
+		return res;
+	}
 
-  @Override
-  public BytesRef binaryValue() throws IOException {
-    return in.binaryValue();
-  }
+	@Override
+	public BytesRef binaryValue() throws IOException {
+		return in.binaryValue();
+	}
 
-  public byte[] getPackedValue() {
-    return packedValue;
-  }
+	public byte[] getPackedValue() {
+		return packedValue;
+	}
 
-  private void decodeRanges() throws IOException {
-    BytesRef bytesRef = in.binaryValue();
+	private void decodeRanges() throws IOException {
+		BytesRef bytesRef = in.binaryValue();
 
-    // We reuse the existing allocated memory for packed values since all docvalues in this iterator
-    // should be exactly same in indexed structure, hence the byte representations in length should be identical
-    System.arraycopy(bytesRef.bytes, bytesRef.offset, packedValue, 0, 2 * numDims * numBytesPerDimension);
-  }
+		// We reuse the existing allocated memory for packed values since all docvalues in this iterator
+		// should be exactly same in indexed structure, hence the byte representations in length should be identical
+		System.arraycopy(bytesRef.bytes, bytesRef.offset, packedValue, 0, 2 * numDims * numBytesPerDimension);
+	}
 }

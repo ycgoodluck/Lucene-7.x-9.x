@@ -36,85 +36,85 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestExpressionRescorer extends LuceneTestCase {
-  IndexSearcher searcher;
-  DirectoryReader reader;
-  Directory dir;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    dir = newDirectory();
-    RandomIndexWriter iw = new RandomIndexWriter(random(), dir, newIndexWriterConfig().setSimilarity(new ClassicSimilarity()));
-    
-    Document doc = new Document();
-    doc.add(newStringField("id", "1", Field.Store.YES));
-    doc.add(newTextField("body", "some contents and more contents", Field.Store.NO));
-    doc.add(new NumericDocValuesField("popularity", 5));
-    iw.addDocument(doc);
-    
-    doc = new Document();
-    doc.add(newStringField("id", "2", Field.Store.YES));
-    doc.add(newTextField("body", "another document with different contents", Field.Store.NO));
-    doc.add(new NumericDocValuesField("popularity", 20));
-    iw.addDocument(doc);
-    
-    doc = new Document();
-    doc.add(newStringField("id", "3", Field.Store.YES));
-    doc.add(newTextField("body", "crappy contents", Field.Store.NO));
-    doc.add(new NumericDocValuesField("popularity", 2));
-    iw.addDocument(doc);
-    
-    reader = iw.getReader();
-    searcher = new IndexSearcher(reader);
-    // TODO: fix this test to not be so flaky and use newSearcher
-    searcher.setSimilarity(new ClassicSimilarity());
-    iw.close();
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    reader.close();
-    dir.close();
-    super.tearDown();
-  }
-  
-  public void testBasic() throws Exception {
+	IndexSearcher searcher;
+	DirectoryReader reader;
+	Directory dir;
 
-    // create a sort field and sort by it (reverse order)
-    Query query = new TermQuery(new Term("body", "contents"));
-    IndexReader r = searcher.getIndexReader();
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		dir = newDirectory();
+		RandomIndexWriter iw = new RandomIndexWriter(random(), dir, newIndexWriterConfig().setSimilarity(new ClassicSimilarity()));
 
-    // Just first pass query
-    TopDocs hits = searcher.search(query, 10);
-    assertEquals(3, hits.totalHits);
-    assertEquals("3", r.document(hits.scoreDocs[0].doc).get("id"));
-    assertEquals("1", r.document(hits.scoreDocs[1].doc).get("id"));
-    assertEquals("2", r.document(hits.scoreDocs[2].doc).get("id"));
+		Document doc = new Document();
+		doc.add(newStringField("id", "1", Field.Store.YES));
+		doc.add(newTextField("body", "some contents and more contents", Field.Store.NO));
+		doc.add(new NumericDocValuesField("popularity", 5));
+		iw.addDocument(doc);
 
-    // Now, rescore:
+		doc = new Document();
+		doc.add(newStringField("id", "2", Field.Store.YES));
+		doc.add(newTextField("body", "another document with different contents", Field.Store.NO));
+		doc.add(new NumericDocValuesField("popularity", 20));
+		iw.addDocument(doc);
 
-    Expression e = JavascriptCompiler.compile("sqrt(_score) + ln(popularity)");
-    SimpleBindings bindings = new SimpleBindings();
-    bindings.add(new SortField("popularity", SortField.Type.INT));
-    bindings.add(new SortField("_score", SortField.Type.SCORE));
-    Rescorer rescorer = e.getRescorer(bindings);
+		doc = new Document();
+		doc.add(newStringField("id", "3", Field.Store.YES));
+		doc.add(newTextField("body", "crappy contents", Field.Store.NO));
+		doc.add(new NumericDocValuesField("popularity", 2));
+		iw.addDocument(doc);
 
-    hits = rescorer.rescore(searcher, hits, 10);
-    assertEquals(3, hits.totalHits);
-    assertEquals("2", r.document(hits.scoreDocs[0].doc).get("id"));
-    assertEquals("1", r.document(hits.scoreDocs[1].doc).get("id"));
-    assertEquals("3", r.document(hits.scoreDocs[2].doc).get("id"));
+		reader = iw.getReader();
+		searcher = new IndexSearcher(reader);
+		// TODO: fix this test to not be so flaky and use newSearcher
+		searcher.setSimilarity(new ClassicSimilarity());
+		iw.close();
+	}
 
-    String expl = rescorer.explain(searcher,
-                                   searcher.explain(query, hits.scoreDocs[0].doc),
-                                   hits.scoreDocs[0].doc).toString();
+	@Override
+	public void tearDown() throws Exception {
+		reader.close();
+		dir.close();
+		super.tearDown();
+	}
 
-    // Confirm the explanation breaks out the individual
-    // variables:
-    assertTrue(expl.contains("= double(popularity)"));
+	public void testBasic() throws Exception {
 
-    // Confirm the explanation includes first pass details:
-    assertTrue(expl.contains("= first pass score"));
-    assertTrue(expl.contains("body:contents in"));
-  }
+		// create a sort field and sort by it (reverse order)
+		Query query = new TermQuery(new Term("body", "contents"));
+		IndexReader r = searcher.getIndexReader();
+
+		// Just first pass query
+		TopDocs hits = searcher.search(query, 10);
+		assertEquals(3, hits.totalHits);
+		assertEquals("3", r.document(hits.scoreDocs[0].doc).get("id"));
+		assertEquals("1", r.document(hits.scoreDocs[1].doc).get("id"));
+		assertEquals("2", r.document(hits.scoreDocs[2].doc).get("id"));
+
+		// Now, rescore:
+
+		Expression e = JavascriptCompiler.compile("sqrt(_score) + ln(popularity)");
+		SimpleBindings bindings = new SimpleBindings();
+		bindings.add(new SortField("popularity", SortField.Type.INT));
+		bindings.add(new SortField("_score", SortField.Type.SCORE));
+		Rescorer rescorer = e.getRescorer(bindings);
+
+		hits = rescorer.rescore(searcher, hits, 10);
+		assertEquals(3, hits.totalHits);
+		assertEquals("2", r.document(hits.scoreDocs[0].doc).get("id"));
+		assertEquals("1", r.document(hits.scoreDocs[1].doc).get("id"));
+		assertEquals("3", r.document(hits.scoreDocs[2].doc).get("id"));
+
+		String expl = rescorer.explain(searcher,
+			searcher.explain(query, hits.scoreDocs[0].doc),
+			hits.scoreDocs[0].doc).toString();
+
+		// Confirm the explanation breaks out the individual
+		// variables:
+		assertTrue(expl.contains("= double(popularity)"));
+
+		// Confirm the explanation includes first pass details:
+		assertTrue(expl.contains("= first pass score"));
+		assertTrue(expl.contains("body:contents in"));
+	}
 }

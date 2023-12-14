@@ -19,11 +19,13 @@ package org.apache.lucene.luke.models.overview;
 
 import org.apache.lucene.index.IndexReader;
 
-/** Factory of {@link Overview} */
+/**
+ * Factory of {@link Overview}
+ */
 public class OverviewFactory {
 
-  public Overview newInstance(IndexReader reader, String indexPath) {
-    return new OverviewImpl(reader, indexPath);
-  }
+	public Overview newInstance(IndexReader reader, String indexPath) {
+		return new OverviewImpl(reader, indexPath);
+	}
 
 }

@@ -19,6 +19,7 @@ package org.apache.lucene.analysis.synonym;
 
 import java.io.Reader;
 import java.io.StringReader;
+
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.pattern.PatternTokenizerFactory;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
@@ -29,121 +30,135 @@ import org.apache.lucene.util.Version;
 
 public class TestSynonymFilterFactory extends BaseTokenStreamFactoryTestCase {
 
-  /** checks for synonyms of "GB" in synonyms.txt */
-  private void checkSolrSynonyms(TokenFilterFactory factory) throws Exception {
-    Reader reader = new StringReader("GB");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = factory.create(stream);
-    assertTrue(stream instanceof SynonymFilter);
-    assertTokenStreamContents(stream,
-        new String[] { "GB", "gib", "gigabyte", "gigabytes" },
-        new int[] { 1, 0, 0, 0 });
-  }
+	/**
+	 * checks for synonyms of "GB" in synonyms.txt
+	 */
+	private void checkSolrSynonyms(TokenFilterFactory factory) throws Exception {
+		Reader reader = new StringReader("GB");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = factory.create(stream);
+		assertTrue(stream instanceof SynonymFilter);
+		assertTokenStreamContents(stream,
+			new String[]{"GB", "gib", "gigabyte", "gigabytes"},
+			new int[]{1, 0, 0, 0});
+	}
 
-  /** checks for synonyms of "second" in synonyms-wordnet.txt */
-  private void checkWordnetSynonyms(TokenFilterFactory factory) throws Exception {
-    Reader reader = new StringReader("second");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = factory.create(stream);
-    assertTrue(stream instanceof SynonymFilter);
-    assertTokenStreamContents(stream,
-        new String[] { "second", "2nd", "two" },
-        new int[] { 1, 0, 0 });
-  }
+	/**
+	 * checks for synonyms of "second" in synonyms-wordnet.txt
+	 */
+	private void checkWordnetSynonyms(TokenFilterFactory factory) throws Exception {
+		Reader reader = new StringReader("second");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = factory.create(stream);
+		assertTrue(stream instanceof SynonymFilter);
+		assertTokenStreamContents(stream,
+			new String[]{"second", "2nd", "two"},
+			new int[]{1, 0, 0});
+	}
 
-  /** test that we can parse and use the solr syn file */
-  public void testSynonyms() throws Exception {
-    checkSolrSynonyms(tokenFilterFactory("Synonym", "synonyms", "synonyms.txt"));
-  }
-  
-  /** if the synonyms are completely empty, test that we still analyze correctly */
-  public void testEmptySynonyms() throws Exception {
-    Reader reader = new StringReader("GB");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("Synonym", Version.LATEST,
-        new StringMockResourceLoader(""), // empty file!
-        "synonyms", "synonyms.txt").create(stream);
-    assertTokenStreamContents(stream, new String[] { "GB" });
-  }
+	/**
+	 * test that we can parse and use the solr syn file
+	 */
+	public void testSynonyms() throws Exception {
+		checkSolrSynonyms(tokenFilterFactory("Synonym", "synonyms", "synonyms.txt"));
+	}
 
-  public void testFormat() throws Exception {
-    checkSolrSynonyms(tokenFilterFactory("Synonym", "synonyms", "synonyms.txt", "format", "solr"));
-    checkWordnetSynonyms(tokenFilterFactory("Synonym", "synonyms", "synonyms-wordnet.txt", "format", "wordnet"));
-    // explicit class should work the same as the "solr" alias
-    checkSolrSynonyms(tokenFilterFactory("Synonym", "synonyms", "synonyms.txt",
-        "format", SolrSynonymParser.class.getName()));
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("Synonym", 
-          "synonyms", "synonyms.txt", 
-          "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * if the synonyms are completely empty, test that we still analyze correctly
+	 */
+	public void testEmptySynonyms() throws Exception {
+		Reader reader = new StringReader("GB");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("Synonym", Version.LATEST,
+			new StringMockResourceLoader(""), // empty file!
+			"synonyms", "synonyms.txt").create(stream);
+		assertTokenStreamContents(stream, new String[]{"GB"});
+	}
 
-  /** Test that analyzer and tokenizerFactory is both specified */
-  public void testAnalyzer() throws Exception {
-    final String analyzer = CJKAnalyzer.class.getName();
-    final String tokenizerFactory = PatternTokenizerFactory.class.getName();
-    TokenFilterFactory factory = null;
+	public void testFormat() throws Exception {
+		checkSolrSynonyms(tokenFilterFactory("Synonym", "synonyms", "synonyms.txt", "format", "solr"));
+		checkWordnetSynonyms(tokenFilterFactory("Synonym", "synonyms", "synonyms-wordnet.txt", "format", "wordnet"));
+		// explicit class should work the same as the "solr" alias
+		checkSolrSynonyms(tokenFilterFactory("Synonym", "synonyms", "synonyms.txt",
+			"format", SolrSynonymParser.class.getName()));
+	}
 
-    factory = tokenFilterFactory("Synonym",
-        "synonyms", "synonyms2.txt",
-        "analyzer", analyzer);
-    assertNotNull(factory);
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("Synonym",
+				"synonyms", "synonyms.txt",
+				"bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("Synonym",
-          "synonyms", "synonyms.txt",
-          "analyzer", analyzer,
-          "tokenizerFactory", tokenizerFactory);
-    });
-    assertTrue(expected.getMessage().contains("Analyzer and TokenizerFactory can't be specified both"));
-  }
+	/**
+	 * Test that analyzer and tokenizerFactory is both specified
+	 */
+	public void testAnalyzer() throws Exception {
+		final String analyzer = CJKAnalyzer.class.getName();
+		final String tokenizerFactory = PatternTokenizerFactory.class.getName();
+		TokenFilterFactory factory = null;
 
-  static final String TOK_SYN_ARG_VAL = "argument";
-  static final String TOK_FOO_ARG_VAL = "foofoofoo";
+		factory = tokenFilterFactory("Synonym",
+			"synonyms", "synonyms2.txt",
+			"analyzer", analyzer);
+		assertNotNull(factory);
 
-  /** Test that we can parse TokenierFactory's arguments */
-  public void testTokenizerFactoryArguments() throws Exception {
-    final String clazz = PatternTokenizerFactory.class.getName();
-    TokenFilterFactory factory = null;
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("Synonym",
+				"synonyms", "synonyms.txt",
+				"analyzer", analyzer,
+				"tokenizerFactory", tokenizerFactory);
+		});
+		assertTrue(expected.getMessage().contains("Analyzer and TokenizerFactory can't be specified both"));
+	}
 
-    // simple arg form
-    factory = tokenFilterFactory("Synonym", 
-        "synonyms", "synonyms.txt", 
-        "tokenizerFactory", clazz,
-        "pattern", "(.*)",
-        "group", "0");
-    assertNotNull(factory);
-    // prefix
-    factory = tokenFilterFactory("Synonym", 
-        "synonyms", "synonyms.txt", 
-        "tokenizerFactory", clazz,
-        "tokenizerFactory.pattern", "(.*)",
-        "tokenizerFactory.group", "0");
-    assertNotNull(factory);
+	static final String TOK_SYN_ARG_VAL = "argument";
+	static final String TOK_FOO_ARG_VAL = "foofoofoo";
 
-    // sanity check that sub-PatternTokenizerFactory fails w/o pattern
-    expectThrows(Exception.class, () -> {
-      tokenFilterFactory("Synonym", 
-          "synonyms", "synonyms.txt", 
-          "tokenizerFactory", clazz);
-    });
+	/**
+	 * Test that we can parse TokenierFactory's arguments
+	 */
+	public void testTokenizerFactoryArguments() throws Exception {
+		final String clazz = PatternTokenizerFactory.class.getName();
+		TokenFilterFactory factory = null;
 
-    // sanity check that sub-PatternTokenizerFactory fails on unexpected
-    expectThrows(Exception.class, () -> {
-      tokenFilterFactory("Synonym", 
-          "synonyms", "synonyms.txt", 
-          "tokenizerFactory", clazz,
-          "tokenizerFactory.pattern", "(.*)",
-          "tokenizerFactory.bogusbogusbogus", "bogus",
-          "tokenizerFactory.group", "0");
-    });
-  }
+		// simple arg form
+		factory = tokenFilterFactory("Synonym",
+			"synonyms", "synonyms.txt",
+			"tokenizerFactory", clazz,
+			"pattern", "(.*)",
+			"group", "0");
+		assertNotNull(factory);
+		// prefix
+		factory = tokenFilterFactory("Synonym",
+			"synonyms", "synonyms.txt",
+			"tokenizerFactory", clazz,
+			"tokenizerFactory.pattern", "(.*)",
+			"tokenizerFactory.group", "0");
+		assertNotNull(factory);
+
+		// sanity check that sub-PatternTokenizerFactory fails w/o pattern
+		expectThrows(Exception.class, () -> {
+			tokenFilterFactory("Synonym",
+				"synonyms", "synonyms.txt",
+				"tokenizerFactory", clazz);
+		});
+
+		// sanity check that sub-PatternTokenizerFactory fails on unexpected
+		expectThrows(Exception.class, () -> {
+			tokenFilterFactory("Synonym",
+				"synonyms", "synonyms.txt",
+				"tokenizerFactory", clazz,
+				"tokenizerFactory.pattern", "(.*)",
+				"tokenizerFactory.bogusbogusbogus", "bogus",
+				"tokenizerFactory.group", "0");
+		});
+	}
 
 
 }

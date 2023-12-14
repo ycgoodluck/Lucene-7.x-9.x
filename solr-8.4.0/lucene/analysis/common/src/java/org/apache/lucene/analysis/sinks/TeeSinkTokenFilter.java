@@ -29,7 +29,7 @@ import org.apache.lucene.util.AttributeSource;
 /**
  * This TokenFilter provides the ability to set aside attribute states that have already been analyzed. This is useful
  * in situations where multiple fields share many common analysis steps and then go their separate ways.
- * 
+ *
  * <p>
  * It is also useful for doing things like entity extraction or proper noun analysis as part of the analysis workflow
  * and saving off those tokens for use in another field.
@@ -48,12 +48,12 @@ import org.apache.lucene.util.AttributeSource;
  * d.add(new TextField("f2", final2));
  * d.add(new TextField("f3", final3));
  * </pre>
- * 
+ *
  * <p>
  * In this example, {@code sink1} and {@code sink2} will both get tokens from {@code source1} after whitespace
  * tokenization, and will further do additional token filtering, e.g. detect entities and URLs.
  * </p>
- * 
+ *
  * <p>
  * <b>NOTE</b>: it is important, that tees are consumed before sinks, therefore you should add them to the document
  * before the sinks. In the above example, <i>f1</i> is added before the other fields, and so by the time they are
@@ -62,111 +62,119 @@ import org.apache.lucene.util.AttributeSource;
  */
 public final class TeeSinkTokenFilter extends TokenFilter {
 
-  private final States cachedStates = new States();
+	private final States cachedStates = new States();
 
-  public TeeSinkTokenFilter(TokenStream input) {
-    super(input);
-  }
+	public TeeSinkTokenFilter(TokenStream input) {
+		super(input);
+	}
 
-  /** Returns a new {@link SinkTokenStream} that receives all tokens consumed by this stream. */
-  public TokenStream newSinkTokenStream() {
-    return new SinkTokenStream(this.cloneAttributes(), cachedStates);
-  }
+	/**
+	 * Returns a new {@link SinkTokenStream} that receives all tokens consumed by this stream.
+	 */
+	public TokenStream newSinkTokenStream() {
+		return new SinkTokenStream(this.cloneAttributes(), cachedStates);
+	}
 
-  /**
-   * <code>TeeSinkTokenFilter</code> passes all tokens to the added sinks when itself is consumed. To be sure that all
-   * tokens from the input stream are passed to the sinks, you can call this methods. This instance is exhausted after
-   * this method returns, but all sinks are instant available.
-   */
-  public void consumeAllTokens() throws IOException {
-    while (incrementToken()) {}
-  }
+	/**
+	 * <code>TeeSinkTokenFilter</code> passes all tokens to the added sinks when itself is consumed. To be sure that all
+	 * tokens from the input stream are passed to the sinks, you can call this methods. This instance is exhausted after
+	 * this method returns, but all sinks are instant available.
+	 */
+	public void consumeAllTokens() throws IOException {
+		while (incrementToken()) {
+		}
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      cachedStates.add(captureState());
-      return true;
-    }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			cachedStates.add(captureState());
+			return true;
+		}
 
-    return false;
-  }
+		return false;
+	}
 
-  @Override
-  public final void end() throws IOException {
-    super.end();
-    cachedStates.setFinalState(captureState());
-  }
+	@Override
+	public final void end() throws IOException {
+		super.end();
+		cachedStates.setFinalState(captureState());
+	}
 
-  @Override
-  public void reset() throws IOException {
-    cachedStates.reset();
-    super.reset();
-  }
+	@Override
+	public void reset() throws IOException {
+		cachedStates.reset();
+		super.reset();
+	}
 
-  /** TokenStream output from a tee. */
-  public static final class SinkTokenStream extends TokenStream {
-    private final States cachedStates;
-    private Iterator<AttributeSource.State> it = null;
+	/**
+	 * TokenStream output from a tee.
+	 */
+	public static final class SinkTokenStream extends TokenStream {
+		private final States cachedStates;
+		private Iterator<AttributeSource.State> it = null;
 
-    private SinkTokenStream(AttributeSource source, States cachedStates) {
-      super(source);
-      this.cachedStates = cachedStates;
-    }
+		private SinkTokenStream(AttributeSource source, States cachedStates) {
+			super(source);
+			this.cachedStates = cachedStates;
+		}
 
-    @Override
-    public final boolean incrementToken() {
-      if (!it.hasNext()) {
-        return false;
-      }
+		@Override
+		public final boolean incrementToken() {
+			if (!it.hasNext()) {
+				return false;
+			}
 
-      AttributeSource.State state = it.next();
-      restoreState(state);
-      return true;
-    }
+			AttributeSource.State state = it.next();
+			restoreState(state);
+			return true;
+		}
 
-    @Override
-    public void end() throws IOException {
-      State finalState = cachedStates.getFinalState();
-      if (finalState != null) {
-        restoreState(finalState);
-      }
-    }
+		@Override
+		public void end() throws IOException {
+			State finalState = cachedStates.getFinalState();
+			if (finalState != null) {
+				restoreState(finalState);
+			}
+		}
 
-    @Override
-    public final void reset() {
-      it = cachedStates.getStates();
-    }
-  }
+		@Override
+		public final void reset() {
+			it = cachedStates.getStates();
+		}
+	}
 
-  /** A convenience wrapper for storing the cached states as well the final state of the stream. */
-  private static final class States {
+	/**
+	 * A convenience wrapper for storing the cached states as well the final state of the stream.
+	 */
+	private static final class States {
 
-    private final List<State> states = new ArrayList<>();
-    private State finalState;
+		private final List<State> states = new ArrayList<>();
+		private State finalState;
 
-    public States() {}
+		public States() {
+		}
 
-    void setFinalState(State finalState) {
-      this.finalState = finalState;
-    }
+		void setFinalState(State finalState) {
+			this.finalState = finalState;
+		}
 
-    State getFinalState() {
-      return finalState;
-    }
+		State getFinalState() {
+			return finalState;
+		}
 
-    void add(State state) {
-      states.add(state);
-    }
+		void add(State state) {
+			states.add(state);
+		}
 
-    Iterator<State> getStates() {
-      return states.iterator();
-    }
+		Iterator<State> getStates() {
+			return states.iterator();
+		}
 
-    void reset() {
-      finalState = null;
-      states.clear();
-    }
-  }
+		void reset() {
+			finalState = null;
+			states.clear();
+		}
+	}
 
 }

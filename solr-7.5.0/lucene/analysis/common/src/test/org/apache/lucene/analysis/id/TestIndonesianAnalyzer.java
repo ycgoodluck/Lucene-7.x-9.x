@@ -24,37 +24,45 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestIndonesianAnalyzer extends BaseTokenStreamTestCase {
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new IndonesianAnalyzer().close();
-  }
-  
-  /** test stopwords and stemming */
-  public void testBasics() throws IOException {
-    Analyzer a = new IndonesianAnalyzer();
-    // stemming
-    checkOneTerm(a, "peledakan", "ledak");
-    checkOneTerm(a, "pembunuhan", "bunuh");
-    // stopword
-    assertAnalyzesTo(a, "bahwa", new String[] {});
-    a.close();
-  }
-  
-  /** test use of exclusion set */
-  public void testExclude() throws IOException {
-    CharArraySet exclusionSet = new CharArraySet( asSet("peledakan"), false);
-    Analyzer a = new IndonesianAnalyzer( 
-        IndonesianAnalyzer.getDefaultStopSet(), exclusionSet);
-    checkOneTerm(a, "peledakan", "peledakan");
-    checkOneTerm(a, "pembunuhan", "bunuh");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer analyzer = new IndonesianAnalyzer();
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-    analyzer.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new IndonesianAnalyzer().close();
+	}
+
+	/**
+	 * test stopwords and stemming
+	 */
+	public void testBasics() throws IOException {
+		Analyzer a = new IndonesianAnalyzer();
+		// stemming
+		checkOneTerm(a, "peledakan", "ledak");
+		checkOneTerm(a, "pembunuhan", "bunuh");
+		// stopword
+		assertAnalyzesTo(a, "bahwa", new String[]{});
+		a.close();
+	}
+
+	/**
+	 * test use of exclusion set
+	 */
+	public void testExclude() throws IOException {
+		CharArraySet exclusionSet = new CharArraySet(asSet("peledakan"), false);
+		Analyzer a = new IndonesianAnalyzer(
+			IndonesianAnalyzer.getDefaultStopSet(), exclusionSet);
+		checkOneTerm(a, "peledakan", "peledakan");
+		checkOneTerm(a, "pembunuhan", "bunuh");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer analyzer = new IndonesianAnalyzer();
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+		analyzer.close();
+	}
 }

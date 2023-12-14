@@ -24,61 +24,60 @@ import java.nio.file.Paths;
 import java.util.Random;
 
 public class TestKNNQuery {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private Analyzer analyzer = new WhitespaceAnalyzer();
-    private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-    private IndexWriter indexWriter;
+	private Analyzer analyzer = new WhitespaceAnalyzer();
+	private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private IndexWriter indexWriter;
 
-    public void doSearch() throws Exception {
-        conf.setUseCompoundFile(false);
-        conf.setMergeScheduler(new SerialMergeScheduler());
-        indexWriter = new IndexWriter(directory, conf);
-        Document doc;
-        doc = new Document();
-        doc.add(new KnnVectorField("vector", new float[]{1.0f, 0.3f}));
-        indexWriter.addDocument(doc);
+	public void doSearch() throws Exception {
+		conf.setUseCompoundFile(false);
+		conf.setMergeScheduler(new SerialMergeScheduler());
+		indexWriter = new IndexWriter(directory, conf);
+		Document doc;
+		doc = new Document();
+		doc.add(new KnnVectorField("vector", new float[]{1.0f, 0.3f}));
+		indexWriter.addDocument(doc);
 
-        doc = new Document();
-        doc.add(new KnnVectorField("vector", new float[]{1.0f, 0.4f}));
-        indexWriter.addDocument(doc);
-
-
-        doc = new Document();
-        doc.add(new KnnVectorField("vector", new float[]{1.0f, 0.3f}));
-        indexWriter.addDocument(doc);
+		doc = new Document();
+		doc.add(new KnnVectorField("vector", new float[]{1.0f, 0.4f}));
+		indexWriter.addDocument(doc);
 
 
-        indexWriter.commit();
-
-        DirectoryReader reader = DirectoryReader.open(indexWriter);
-        IndexSearcher searcher = new IndexSearcher(reader);
-
-        float[] queryFloat = new float[]{1.0f, 0.2f};
-
-        KnnVectorQuery kvq = new KnnVectorQuery("vector", queryFloat, 10);
-
-        ScoreDoc[] docs = searcher.search(kvq, 1000).scoreDocs;
-        System.out.println("match: "+docs.length+"");
-        for (int i = 0; i < docs.length; i++) {
-            System.out.println(docs[i].doc);
-        }
+		doc = new Document();
+		doc.add(new KnnVectorField("vector", new float[]{1.0f, 0.3f}));
+		indexWriter.addDocument(doc);
 
 
+		indexWriter.commit();
+
+		DirectoryReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
+
+		float[] queryFloat = new float[]{1.0f, 0.2f};
+
+		KnnVectorQuery kvq = new KnnVectorQuery("vector", queryFloat, 10);
+
+		ScoreDoc[] docs = searcher.search(kvq, 1000).scoreDocs;
+		System.out.println("match: " + docs.length + "");
+		for (int i = 0; i < docs.length; i++) {
+			System.out.println(docs[i].doc);
+		}
 
 
-    }
-    public static void main(String[] args) throws Exception{
-        TestKNNQuery test = new TestKNNQuery();
-        test.doSearch();
-    }
+	}
+
+	public static void main(String[] args) throws Exception {
+		TestKNNQuery test = new TestKNNQuery();
+		test.doSearch();
+	}
 }

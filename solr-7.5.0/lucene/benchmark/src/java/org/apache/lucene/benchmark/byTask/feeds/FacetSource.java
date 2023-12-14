@@ -30,21 +30,21 @@ import org.apache.lucene.facet.FacetsConfig;
  */
 public abstract class FacetSource extends ContentItemsSource {
 
-  /**
-   * Fills the next facets content items in the given list. Implementations must
-   * account for multi-threading, as multiple threads can call this method
-   * simultaneously.
-   */
-  public abstract void getNextFacets(List<FacetField> facets) throws NoMoreDataException, IOException;
+	/**
+	 * Fills the next facets content items in the given list. Implementations must
+	 * account for multi-threading, as multiple threads can call this method
+	 * simultaneously.
+	 */
+	public abstract void getNextFacets(List<FacetField> facets) throws NoMoreDataException, IOException;
 
-  public abstract void configure(FacetsConfig config);
+	public abstract void configure(FacetsConfig config);
 
-  @Override
-  public void resetInputs() throws IOException {
-    printStatistics("facets");
-    // re-initiate since properties by round may have changed.
-    setConfig(getConfig());
-    super.resetInputs();
-  }
-  
+	@Override
+	public void resetInputs() throws IOException {
+		printStatistics("facets");
+		// re-initiate since properties by round may have changed.
+		setConfig(getConfig());
+		super.resetInputs();
+	}
+
 }

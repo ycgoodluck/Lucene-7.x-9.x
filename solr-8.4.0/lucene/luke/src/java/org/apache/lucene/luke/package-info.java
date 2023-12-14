@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Luke : Lucene toolbox project */
+/**
+ * Luke : Lucene toolbox project
+ */
 package org.apache.lucene.luke;

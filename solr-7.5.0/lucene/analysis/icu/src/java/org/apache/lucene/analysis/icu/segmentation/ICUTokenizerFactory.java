@@ -74,78 +74,80 @@ import com.ibm.icu.text.RuleBasedBreakIterator;
  * &lt;/fieldType&gt;</pre>
  */
 public class ICUTokenizerFactory extends TokenizerFactory implements ResourceLoaderAware {
-  static final String RULEFILES = "rulefiles";
-  private final Map<Integer,String> tailored;
-  private ICUTokenizerConfig config;
-  private final boolean cjkAsWords;
-  private final boolean myanmarAsWords;
-  
-  /** Creates a new ICUTokenizerFactory */
-  public ICUTokenizerFactory(Map<String,String> args) {
-    super(args);
-    tailored = new HashMap<>();
-    String rulefilesArg = get(args, RULEFILES);
-    if (rulefilesArg != null) {
-      List<String> scriptAndResourcePaths = splitFileNames(rulefilesArg);
-      for (String scriptAndResourcePath : scriptAndResourcePaths) {
-        int colonPos = scriptAndResourcePath.indexOf(":");
-        String scriptCode = scriptAndResourcePath.substring(0, colonPos).trim();
-        String resourcePath = scriptAndResourcePath.substring(colonPos+1).trim();
-        tailored.put(UCharacter.getPropertyValueEnum(UProperty.SCRIPT, scriptCode), resourcePath);
-      }
-    }
-    cjkAsWords = getBoolean(args, "cjkAsWords", true);
-    myanmarAsWords = getBoolean(args, "myanmarAsWords", true);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	static final String RULEFILES = "rulefiles";
+	private final Map<Integer, String> tailored;
+	private ICUTokenizerConfig config;
+	private final boolean cjkAsWords;
+	private final boolean myanmarAsWords;
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    assert tailored != null : "init must be called first!";
-    if (tailored.isEmpty()) {
-      config = new DefaultICUTokenizerConfig(cjkAsWords, myanmarAsWords);
-    } else {
-      final BreakIterator breakers[] = new BreakIterator[1 + UCharacter.getIntPropertyMaxValue(UProperty.SCRIPT)];
-      for (Map.Entry<Integer,String> entry : tailored.entrySet()) {
-        int code = entry.getKey();
-        String resourcePath = entry.getValue();
-        breakers[code] = parseRules(resourcePath, loader);
-      }
-      config = new DefaultICUTokenizerConfig(cjkAsWords, myanmarAsWords) {
-        
-        @Override
-        public RuleBasedBreakIterator getBreakIterator(int script) {
-          if (breakers[script] != null) {
-            return (RuleBasedBreakIterator) breakers[script].clone();
-          } else {
-            return super.getBreakIterator(script);
-          }
-        }
-        // TODO: we could also allow codes->types mapping
-      };
-    }
-  }
-  
-  private BreakIterator parseRules(String filename, ResourceLoader loader) throws IOException {
-    StringBuilder rules = new StringBuilder();
-    InputStream rulesStream = loader.openResource(filename);
-    BufferedReader reader = new BufferedReader
-        (IOUtils.getDecodingReader(rulesStream, StandardCharsets.UTF_8));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      if ( ! line.startsWith("#"))
-        rules.append(line);
-      rules.append('\n');
-    }
-    reader.close();
-    return new RuleBasedBreakIterator(rules.toString());
-  }
+	/**
+	 * Creates a new ICUTokenizerFactory
+	 */
+	public ICUTokenizerFactory(Map<String, String> args) {
+		super(args);
+		tailored = new HashMap<>();
+		String rulefilesArg = get(args, RULEFILES);
+		if (rulefilesArg != null) {
+			List<String> scriptAndResourcePaths = splitFileNames(rulefilesArg);
+			for (String scriptAndResourcePath : scriptAndResourcePaths) {
+				int colonPos = scriptAndResourcePath.indexOf(":");
+				String scriptCode = scriptAndResourcePath.substring(0, colonPos).trim();
+				String resourcePath = scriptAndResourcePath.substring(colonPos + 1).trim();
+				tailored.put(UCharacter.getPropertyValueEnum(UProperty.SCRIPT, scriptCode), resourcePath);
+			}
+		}
+		cjkAsWords = getBoolean(args, "cjkAsWords", true);
+		myanmarAsWords = getBoolean(args, "myanmarAsWords", true);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public ICUTokenizer create(AttributeFactory factory) {
-    assert config != null : "inform must be called first!";
-    return new ICUTokenizer(factory, config);
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		assert tailored != null : "init must be called first!";
+		if (tailored.isEmpty()) {
+			config = new DefaultICUTokenizerConfig(cjkAsWords, myanmarAsWords);
+		} else {
+			final BreakIterator breakers[] = new BreakIterator[1 + UCharacter.getIntPropertyMaxValue(UProperty.SCRIPT)];
+			for (Map.Entry<Integer, String> entry : tailored.entrySet()) {
+				int code = entry.getKey();
+				String resourcePath = entry.getValue();
+				breakers[code] = parseRules(resourcePath, loader);
+			}
+			config = new DefaultICUTokenizerConfig(cjkAsWords, myanmarAsWords) {
+
+				@Override
+				public RuleBasedBreakIterator getBreakIterator(int script) {
+					if (breakers[script] != null) {
+						return (RuleBasedBreakIterator) breakers[script].clone();
+					} else {
+						return super.getBreakIterator(script);
+					}
+				}
+				// TODO: we could also allow codes->types mapping
+			};
+		}
+	}
+
+	private BreakIterator parseRules(String filename, ResourceLoader loader) throws IOException {
+		StringBuilder rules = new StringBuilder();
+		InputStream rulesStream = loader.openResource(filename);
+		BufferedReader reader = new BufferedReader
+			(IOUtils.getDecodingReader(rulesStream, StandardCharsets.UTF_8));
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			if (!line.startsWith("#"))
+				rules.append(line);
+			rules.append('\n');
+		}
+		reader.close();
+		return new RuleBasedBreakIterator(rules.toString());
+	}
+
+	@Override
+	public ICUTokenizer create(AttributeFactory factory) {
+		assert config != null : "inform must be called first!";
+		return new ICUTokenizer(factory, config);
+	}
 }

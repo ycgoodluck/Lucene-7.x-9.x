@@ -34,68 +34,68 @@ import org.locationtech.spatial4j.shape.Shape;
  */
 class BBoxValueSource extends ShapeValuesSource {
 
-  private final BBoxStrategy strategy;
+	private final BBoxStrategy strategy;
 
-  public BBoxValueSource(BBoxStrategy strategy) {
-    this.strategy = strategy;
-  }
+	public BBoxValueSource(BBoxStrategy strategy) {
+		this.strategy = strategy;
+	}
 
-  @Override
-  public String toString() {
-    return "bboxShape(" + strategy.getFieldName() + ")";
-  }
+	@Override
+	public String toString() {
+		return "bboxShape(" + strategy.getFieldName() + ")";
+	}
 
-  @Override
-  public ShapeValues getValues(LeafReaderContext readerContext) throws IOException {
-    LeafReader reader = readerContext.reader();
-    final NumericDocValues minX = DocValues.getNumeric(reader, strategy.field_minX);
-    final NumericDocValues minY = DocValues.getNumeric(reader, strategy.field_minY);
-    final NumericDocValues maxX = DocValues.getNumeric(reader, strategy.field_maxX);
-    final NumericDocValues maxY = DocValues.getNumeric(reader, strategy.field_maxY);
+	@Override
+	public ShapeValues getValues(LeafReaderContext readerContext) throws IOException {
+		LeafReader reader = readerContext.reader();
+		final NumericDocValues minX = DocValues.getNumeric(reader, strategy.field_minX);
+		final NumericDocValues minY = DocValues.getNumeric(reader, strategy.field_minY);
+		final NumericDocValues maxX = DocValues.getNumeric(reader, strategy.field_maxX);
+		final NumericDocValues maxY = DocValues.getNumeric(reader, strategy.field_maxY);
 
-    //reused
-    final Rectangle rect = strategy.getSpatialContext().makeRectangle(0,0,0,0);
+		//reused
+		final Rectangle rect = strategy.getSpatialContext().makeRectangle(0, 0, 0, 0);
 
-    return new ShapeValues() {
+		return new ShapeValues() {
 
-      @Override
-      public boolean advanceExact(int doc) throws IOException {
-        return minX.advanceExact(doc) && minY.advanceExact(doc) && maxX.advanceExact(doc) && maxY.advanceExact(doc);
-      }
+			@Override
+			public boolean advanceExact(int doc) throws IOException {
+				return minX.advanceExact(doc) && minY.advanceExact(doc) && maxX.advanceExact(doc) && maxY.advanceExact(doc);
+			}
 
-      @Override
-      public Shape value() throws IOException {
-        double minXValue = Double.longBitsToDouble(minX.longValue());
-        double minYValue = Double.longBitsToDouble(minY.longValue());
-        double maxXValue = Double.longBitsToDouble(maxX.longValue());
-        double maxYValue = Double.longBitsToDouble(maxY.longValue());
-        rect.reset(minXValue, maxXValue, minYValue, maxYValue);
-        return rect;
-      }
+			@Override
+			public Shape value() throws IOException {
+				double minXValue = Double.longBitsToDouble(minX.longValue());
+				double minYValue = Double.longBitsToDouble(minY.longValue());
+				double maxXValue = Double.longBitsToDouble(maxX.longValue());
+				double maxYValue = Double.longBitsToDouble(maxY.longValue());
+				rect.reset(minXValue, maxXValue, minYValue, maxYValue);
+				return rect;
+			}
 
-    };
-  }
+		};
+	}
 
-  @Override
-  public boolean isCacheable(LeafReaderContext ctx) {
-    return DocValues.isCacheable(ctx,
-        strategy.field_minX, strategy.field_minY, strategy.field_maxX, strategy.field_maxY);
-  }
+	@Override
+	public boolean isCacheable(LeafReaderContext ctx) {
+		return DocValues.isCacheable(ctx,
+			strategy.field_minX, strategy.field_minY, strategy.field_maxX, strategy.field_maxY);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 
-    BBoxValueSource that = (BBoxValueSource) o;
+		BBoxValueSource that = (BBoxValueSource) o;
 
-    if (!strategy.equals(that.strategy)) return false;
+		if (!strategy.equals(that.strategy)) return false;
 
-    return true;
-  }
+		return true;
+	}
 
-  @Override
-  public int hashCode() {
-    return strategy.hashCode();
-  }
+	@Override
+	public int hashCode() {
+		return strategy.hashCode();
+	}
 }

@@ -33,31 +33,31 @@ import java.nio.file.Paths;
  */
 @SuppressForbidden(reason = "System.out required: command line tool")
 public class IndexMergeTool {
-  
-  public static void main(String[] args) throws IOException {
-    if (args.length < 3) {
-      System.err.println("Usage: IndexMergeTool <mergedIndex> <index1> <index2> [index3] ...");
-      System.exit(1);
-    }
 
-    // Try to use hardlinks to source segments, if possible.
-    Directory mergedIndex = new HardlinkCopyDirectoryWrapper(FSDirectory.open(Paths.get(args[0])));
+	public static void main(String[] args) throws IOException {
+		if (args.length < 3) {
+			System.err.println("Usage: IndexMergeTool <mergedIndex> <index1> <index2> [index3] ...");
+			System.exit(1);
+		}
 
-    IndexWriter writer = new IndexWriter(mergedIndex, 
-        new IndexWriterConfig(null).setOpenMode(OpenMode.CREATE));
+		// Try to use hardlinks to source segments, if possible.
+		Directory mergedIndex = new HardlinkCopyDirectoryWrapper(FSDirectory.open(Paths.get(args[0])));
 
-    Directory[] indexes = new Directory[args.length - 1];
-    for (int i = 1; i < args.length; i++) {
-      indexes[i  - 1] = FSDirectory.open(Paths.get(args[i]));
-    }
+		IndexWriter writer = new IndexWriter(mergedIndex,
+			new IndexWriterConfig(null).setOpenMode(OpenMode.CREATE));
 
-    System.out.println("Merging...");
-    writer.addIndexes(indexes);
+		Directory[] indexes = new Directory[args.length - 1];
+		for (int i = 1; i < args.length; i++) {
+			indexes[i - 1] = FSDirectory.open(Paths.get(args[i]));
+		}
 
-    System.out.println("Full merge...");
-    writer.forceMerge(1);
-    writer.close();
-    System.out.println("Done.");
-  }
-  
+		System.out.println("Merging...");
+		writer.addIndexes(indexes);
+
+		System.out.println("Full merge...");
+		writer.forceMerge(1);
+		writer.close();
+		System.out.println("Done.");
+	}
+
 }

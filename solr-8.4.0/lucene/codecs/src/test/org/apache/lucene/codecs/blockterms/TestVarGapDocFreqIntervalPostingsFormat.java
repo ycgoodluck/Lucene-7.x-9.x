@@ -25,10 +25,10 @@ import org.apache.lucene.util.TestUtil;
  * Basic tests of a PF using VariableGap terms dictionary (fixed interval)
  */
 public class TestVarGapDocFreqIntervalPostingsFormat extends BasePostingsFormatTestCase {
-  private final Codec codec = TestUtil.alwaysPostingsFormat(new LuceneVarGapFixedInterval(TestUtil.nextInt(random(), 1, 1000)));
+	private final Codec codec = TestUtil.alwaysPostingsFormat(new LuceneVarGapFixedInterval(TestUtil.nextInt(random(), 1, 1000)));
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

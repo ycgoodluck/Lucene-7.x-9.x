@@ -25,19 +25,18 @@ import java.io.IOException;
 
 public class TestKeywordRepeatFilter extends BaseTokenStreamTestCase {
 
-  public void testBasic() throws IOException {
-    TokenStream ts = new RemoveDuplicatesTokenFilter(new SnowballFilter(new KeywordRepeatFilter(
-        whitespaceMockTokenizer("the birds are flying")), "English"));
-    assertTokenStreamContents(ts, new String[] { "the", "birds", "bird", "are", "flying", "fli"}, new int[] {1,1,0,1,1,0});
-  }
+	public void testBasic() throws IOException {
+		TokenStream ts = new RemoveDuplicatesTokenFilter(new SnowballFilter(new KeywordRepeatFilter(
+			whitespaceMockTokenizer("the birds are flying")), "English"));
+		assertTokenStreamContents(ts, new String[]{"the", "birds", "bird", "are", "flying", "fli"}, new int[]{1, 1, 0, 1, 1, 0});
+	}
 
 
-  public void testComposition() throws IOException {
-    TokenStream ts = new RemoveDuplicatesTokenFilter(new SnowballFilter(new KeywordRepeatFilter(new KeywordRepeatFilter(
-        whitespaceMockTokenizer("the birds are flying"))), "English"));
-    assertTokenStreamContents(ts, new String[] { "the", "birds", "bird", "are", "flying", "fli"}, new int[] {1,1,0,1,1,0});
-  }
-
+	public void testComposition() throws IOException {
+		TokenStream ts = new RemoveDuplicatesTokenFilter(new SnowballFilter(new KeywordRepeatFilter(new KeywordRepeatFilter(
+			whitespaceMockTokenizer("the birds are flying"))), "English"));
+		assertTokenStreamContents(ts, new String[]{"the", "birds", "bird", "are", "flying", "fli"}, new int[]{1, 1, 0, 1, 1, 0});
+	}
 
 
 }

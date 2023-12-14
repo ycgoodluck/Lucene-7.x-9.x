@@ -29,25 +29,25 @@ import org.apache.lucene.search.RegexpQuery;
  */
 public class RegexpQueryNodeBuilder implements StandardQueryBuilder {
 
-  public RegexpQueryNodeBuilder() {
-    // empty constructor
-  }
+	public RegexpQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public RegexpQuery build(QueryNode queryNode) throws QueryNodeException {
-    RegexpQueryNode regexpNode = (RegexpQueryNode) queryNode;
+	@Override
+	public RegexpQuery build(QueryNode queryNode) throws QueryNodeException {
+		RegexpQueryNode regexpNode = (RegexpQueryNode) queryNode;
 
-    // TODO: make the maxStates configurable w/ a reasonable default (QueryParserBase uses 10000)
-    RegexpQuery q = new RegexpQuery(new Term(regexpNode.getFieldAsString(),
-        regexpNode.textToBytesRef()));
+		// TODO: make the maxStates configurable w/ a reasonable default (QueryParserBase uses 10000)
+		RegexpQuery q = new RegexpQuery(new Term(regexpNode.getFieldAsString(),
+			regexpNode.textToBytesRef()));
 
-    MultiTermQuery.RewriteMethod method = (MultiTermQuery.RewriteMethod) queryNode
-        .getTag(MultiTermRewriteMethodProcessor.TAG_ID);
-    if (method != null) {
-      q.setRewriteMethod(method);
-    }
+		MultiTermQuery.RewriteMethod method = (MultiTermQuery.RewriteMethod) queryNode
+			.getTag(MultiTermRewriteMethodProcessor.TAG_ID);
+		if (method != null) {
+			q.setRewriteMethod(method);
+		}
 
-    return q;
-  }
+		return q;
+	}
 
 }

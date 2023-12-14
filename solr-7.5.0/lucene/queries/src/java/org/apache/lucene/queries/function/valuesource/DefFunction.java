@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.lucene.queries.function.valuesource;
+
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.queries.function.FunctionValues;
 import org.apache.lucene.queries.function.ValueSource;
@@ -31,99 +32,99 @@ import java.util.Map;
  * value when the values for a field are unavailable.
  */
 public class DefFunction extends MultiFunction {
-  public DefFunction(List<ValueSource> sources) {
-    super(sources);
-  }
+	public DefFunction(List<ValueSource> sources) {
+		super(sources);
+	}
 
-  @Override
-  protected String name() {
-    return "def";
-  }
-
-
-  @Override
-  public FunctionValues getValues(Map fcontext, LeafReaderContext readerContext) throws IOException {
+	@Override
+	protected String name() {
+		return "def";
+	}
 
 
-    return new Values(valsArr(sources, fcontext, readerContext)) {
-      final int upto = valsArr.length - 1;
+	@Override
+	public FunctionValues getValues(Map fcontext, LeafReaderContext readerContext) throws IOException {
 
-      private FunctionValues get(int doc) throws IOException {
-        for (int i=0; i<upto; i++) {
-          FunctionValues vals = valsArr[i];
-          if (vals.exists(doc)) {
-            return vals;
-          }
-        }
-        return valsArr[upto];
-      }
 
-      @Override
-      public byte byteVal(int doc) throws IOException {
-        return get(doc).byteVal(doc);
-      }
+		return new Values(valsArr(sources, fcontext, readerContext)) {
+			final int upto = valsArr.length - 1;
 
-      @Override
-      public short shortVal(int doc) throws IOException {
-        return get(doc).shortVal(doc);
-      }
+			private FunctionValues get(int doc) throws IOException {
+				for (int i = 0; i < upto; i++) {
+					FunctionValues vals = valsArr[i];
+					if (vals.exists(doc)) {
+						return vals;
+					}
+				}
+				return valsArr[upto];
+			}
 
-      @Override
-      public float floatVal(int doc) throws IOException {
-        return get(doc).floatVal(doc);
-      }
+			@Override
+			public byte byteVal(int doc) throws IOException {
+				return get(doc).byteVal(doc);
+			}
 
-      @Override
-      public int intVal(int doc) throws IOException {
-        return get(doc).intVal(doc);
-      }
+			@Override
+			public short shortVal(int doc) throws IOException {
+				return get(doc).shortVal(doc);
+			}
 
-      @Override
-      public long longVal(int doc) throws IOException {
-        return get(doc).longVal(doc);
-      }
+			@Override
+			public float floatVal(int doc) throws IOException {
+				return get(doc).floatVal(doc);
+			}
 
-      @Override
-      public double doubleVal(int doc) throws IOException {
-        return get(doc).doubleVal(doc);
-      }
+			@Override
+			public int intVal(int doc) throws IOException {
+				return get(doc).intVal(doc);
+			}
 
-      @Override
-      public String strVal(int doc) throws IOException {
-        return get(doc).strVal(doc);
-      }
+			@Override
+			public long longVal(int doc) throws IOException {
+				return get(doc).longVal(doc);
+			}
 
-      @Override
-      public boolean boolVal(int doc) throws IOException {
-        return get(doc).boolVal(doc);
-      }
+			@Override
+			public double doubleVal(int doc) throws IOException {
+				return get(doc).doubleVal(doc);
+			}
 
-      @Override
-      public boolean bytesVal(int doc, BytesRefBuilder target) throws IOException {
-        return get(doc).bytesVal(doc, target);
-      }
+			@Override
+			public String strVal(int doc) throws IOException {
+				return get(doc).strVal(doc);
+			}
 
-      @Override
-      public Object objectVal(int doc) throws IOException {
-        return get(doc).objectVal(doc);
-      }
+			@Override
+			public boolean boolVal(int doc) throws IOException {
+				return get(doc).boolVal(doc);
+			}
 
-      @Override
-      public boolean exists(int doc) throws IOException {
-        // return true if any source is exists?
-        for (FunctionValues vals : valsArr) {
-          if (vals.exists(doc)) {
-            return true;
-          }
-        }
-        return false;
-      }
+			@Override
+			public boolean bytesVal(int doc, BytesRefBuilder target) throws IOException {
+				return get(doc).bytesVal(doc, target);
+			}
 
-      @Override
-      public ValueFiller getValueFiller() {
-        // TODO: need ValueSource.type() to determine correct type
-        return super.getValueFiller();
-      }
-    };
-  }
+			@Override
+			public Object objectVal(int doc) throws IOException {
+				return get(doc).objectVal(doc);
+			}
+
+			@Override
+			public boolean exists(int doc) throws IOException {
+				// return true if any source is exists?
+				for (FunctionValues vals : valsArr) {
+					if (vals.exists(doc)) {
+						return true;
+					}
+				}
+				return false;
+			}
+
+			@Override
+			public ValueFiller getValueFiller() {
+				// TODO: need ValueSource.type() to determine correct type
+				return super.getValueFiller();
+			}
+		};
+	}
 }

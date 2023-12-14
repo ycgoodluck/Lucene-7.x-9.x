@@ -20,15 +20,17 @@ package org.apache.lucene.luke.models.tools;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.store.Directory;
 
-/** Factory of {@link IndexTools} */
+/**
+ * Factory of {@link IndexTools}
+ */
 public class IndexToolsFactory {
 
-  public IndexTools newInstance(Directory dir) {
-    return new IndexToolsImpl(dir, false, false);
-  }
+	public IndexTools newInstance(Directory dir) {
+		return new IndexToolsImpl(dir, false, false);
+	}
 
-  public IndexTools newInstance(IndexReader reader, boolean useCompound, boolean keepAllCommits) {
-    return new IndexToolsImpl(reader, useCompound, keepAllCommits);
-  }
+	public IndexTools newInstance(IndexReader reader, boolean useCompound, boolean keepAllCommits) {
+		return new IndexToolsImpl(reader, useCompound, keepAllCommits);
+	}
 
 }

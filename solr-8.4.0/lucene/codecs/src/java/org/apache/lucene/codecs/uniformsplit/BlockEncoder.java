@@ -27,33 +27,34 @@ import org.apache.lucene.store.DataOutput;
  * <p>
  * For example, implementations may compress or encrypt.
  *
- * @see BlockDecoder
  * @lucene.experimental
+ * @see BlockDecoder
  */
 public interface BlockEncoder {
 
-  /**
-   * Encodes all the bytes of one block in a single operation. The encoding is per block.
-   * @param blockBytes The input block bytes to read.
-   * @param length The number of bytes to read from the input.
-   * @return The encoded block bytes.
-   * @throws IOException If an encoding error occurs.
-   */
-  WritableBytes encode(DataInput blockBytes, long length) throws IOException;
+	/**
+	 * Encodes all the bytes of one block in a single operation. The encoding is per block.
+	 *
+	 * @param blockBytes The input block bytes to read.
+	 * @param length     The number of bytes to read from the input.
+	 * @return The encoded block bytes.
+	 * @throws IOException If an encoding error occurs.
+	 */
+	WritableBytes encode(DataInput blockBytes, long length) throws IOException;
 
-  /**
-   * Writable byte buffer.
-   */
-  interface WritableBytes {
+	/**
+	 * Writable byte buffer.
+	 */
+	interface WritableBytes {
 
-    /**
-     * Gets the number of bytes.
-     */
-    long size();
+		/**
+		 * Gets the number of bytes.
+		 */
+		long size();
 
-    /**
-     * Writes the bytes to the provided {@link DataOutput}.
-     */
-    void writeTo(DataOutput dataOutput) throws IOException;
-  }
+		/**
+		 * Writes the bytes to the provided {@link DataOutput}.
+		 */
+		void writeTo(DataOutput dataOutput) throws IOException;
+	}
 }

@@ -30,7 +30,7 @@ import org.apache.lucene.queryparser.flexible.core.config.QueryConfigHandler;
  * {@link ConfigurationKeys#DATE_RESOLUTION} to the equivalent {@link FieldConfig} based
  * on a defined map: fieldName -&gt; {@link Resolution} stored in
  * {@link ConfigurationKeys#FIELD_DATE_RESOLUTION_MAP}.
- * 
+ *
  * @see ConfigurationKeys#DATE_RESOLUTION
  * @see ConfigurationKeys#FIELD_DATE_RESOLUTION_MAP
  * @see FieldConfig
@@ -38,30 +38,30 @@ import org.apache.lucene.queryparser.flexible.core.config.QueryConfigHandler;
  */
 public class FieldDateResolutionFCListener implements FieldConfigListener {
 
-  private QueryConfigHandler config = null;
+	private QueryConfigHandler config = null;
 
-  public FieldDateResolutionFCListener(QueryConfigHandler config) {
-    this.config = config;
-  }
+	public FieldDateResolutionFCListener(QueryConfigHandler config) {
+		this.config = config;
+	}
 
-  @Override
-  public void buildFieldConfig(FieldConfig fieldConfig) {
-    DateTools.Resolution dateRes = null;
-    Map<CharSequence, DateTools.Resolution> dateResMap = this.config.get(ConfigurationKeys.FIELD_DATE_RESOLUTION_MAP);
+	@Override
+	public void buildFieldConfig(FieldConfig fieldConfig) {
+		DateTools.Resolution dateRes = null;
+		Map<CharSequence, DateTools.Resolution> dateResMap = this.config.get(ConfigurationKeys.FIELD_DATE_RESOLUTION_MAP);
 
-    if (dateResMap != null) {
-      dateRes = dateResMap.get(
-          fieldConfig.getField());
-    }
+		if (dateResMap != null) {
+			dateRes = dateResMap.get(
+				fieldConfig.getField());
+		}
 
-    if (dateRes == null) {
-      dateRes = this.config.get(ConfigurationKeys.DATE_RESOLUTION);
-    }
+		if (dateRes == null) {
+			dateRes = this.config.get(ConfigurationKeys.DATE_RESOLUTION);
+		}
 
-    if (dateRes != null) {
-      fieldConfig.set(ConfigurationKeys.DATE_RESOLUTION, dateRes);
-    }
+		if (dateRes != null) {
+			fieldConfig.set(ConfigurationKeys.DATE_RESOLUTION, dateRes);
+		}
 
-  }
+	}
 
 }

@@ -30,41 +30,41 @@ import org.apache.lucene.util.BytesRefIterator;
  */
 class BytesRefIteratorTokenStream extends TokenStream {
 
-  public BytesRefIterator getBytesRefIterator() {
-    return bytesIter;
-  }
+	public BytesRefIterator getBytesRefIterator() {
+		return bytesIter;
+	}
 
-  public BytesRefIteratorTokenStream setBytesRefIterator(BytesRefIterator iter) {
-    this.bytesIter = iter;
-    return this;
-  }
+	public BytesRefIteratorTokenStream setBytesRefIterator(BytesRefIterator iter) {
+		this.bytesIter = iter;
+		return this;
+	}
 
-  @Override
-  public void reset() throws IOException {
-    if (bytesIter == null)
-      throw new IllegalStateException("call setBytesRefIterator() before usage");
-  }
+	@Override
+	public void reset() throws IOException {
+		if (bytesIter == null)
+			throw new IllegalStateException("call setBytesRefIterator() before usage");
+	}
 
-  @Override
-  public final boolean incrementToken() throws IOException {
-    if (bytesIter == null)
-      throw new IllegalStateException("call setBytesRefIterator() before usage");
+	@Override
+	public final boolean incrementToken() throws IOException {
+		if (bytesIter == null)
+			throw new IllegalStateException("call setBytesRefIterator() before usage");
 
-    // get next
-    BytesRef bytes = bytesIter.next();
-    if (bytes == null) {
-      return false;
-    } else {
-      clearAttributes();
-      bytesAtt.setBytesRef(bytes);
-      //note: we don't bother setting posInc or type attributes.  There's no point to it.
-      return true;
-    }
-  }
+		// get next
+		BytesRef bytes = bytesIter.next();
+		if (bytes == null) {
+			return false;
+		} else {
+			clearAttributes();
+			bytesAtt.setBytesRef(bytes);
+			//note: we don't bother setting posInc or type attributes.  There's no point to it.
+			return true;
+		}
+	}
 
-  //members
-  private final BytesTermAttribute bytesAtt = addAttribute(BytesTermAttribute.class);
+	//members
+	private final BytesTermAttribute bytesAtt = addAttribute(BytesTermAttribute.class);
 
-  private BytesRefIterator bytesIter = null; // null means not initialized
+	private BytesRefIterator bytesIter = null; // null means not initialized
 
 }

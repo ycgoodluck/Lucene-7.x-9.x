@@ -17,7 +17,6 @@
 package org.apache.lucene.codecs.memory;
 
 
-
 import java.io.IOException;
 
 import org.apache.lucene.codecs.FieldsConsumer;
@@ -36,43 +35,43 @@ import org.apache.lucene.util.IOUtils;
  */
 
 public final class FSTPostingsFormat extends PostingsFormat {
-  public FSTPostingsFormat() {
-    super("FST50");
-  }
+	public FSTPostingsFormat() {
+		super("FST50");
+	}
 
-  @Override
-  public String toString() {
-    return getName();
-  }
+	@Override
+	public String toString() {
+		return getName();
+	}
 
-  @Override
-  public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    PostingsWriterBase postingsWriter = new Lucene84PostingsWriter(state);
+	@Override
+	public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
+		PostingsWriterBase postingsWriter = new Lucene84PostingsWriter(state);
 
-    boolean success = false;
-    try {
-      FieldsConsumer ret = new FSTTermsWriter(state, postingsWriter);
-      success = true;
-      return ret;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(postingsWriter);
-      }
-    }
-  }
+		boolean success = false;
+		try {
+			FieldsConsumer ret = new FSTTermsWriter(state, postingsWriter);
+			success = true;
+			return ret;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(postingsWriter);
+			}
+		}
+	}
 
-  @Override
-  public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
-    PostingsReaderBase postingsReader = new Lucene84PostingsReader(state);
-    boolean success = false;
-    try {
-      FieldsProducer ret = new FSTTermsReader(state, postingsReader);
-      success = true;
-      return ret;
-    } finally {
-      if (!success) {
-        IOUtils.closeWhileHandlingException(postingsReader);
-      }
-    }
-  }
+	@Override
+	public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
+		PostingsReaderBase postingsReader = new Lucene84PostingsReader(state);
+		boolean success = false;
+		try {
+			FieldsProducer ret = new FSTTermsReader(state, postingsReader);
+			success = true;
+			return ret;
+		} finally {
+			if (!success) {
+				IOUtils.closeWhileHandlingException(postingsReader);
+			}
+		}
+	}
 }

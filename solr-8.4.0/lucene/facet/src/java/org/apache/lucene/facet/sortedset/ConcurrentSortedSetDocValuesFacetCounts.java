@@ -52,303 +52,313 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.LongValues;
 
-/** Like {@link SortedSetDocValuesFacetCounts}, but aggregates counts concurrently across segments.
+/**
+ * Like {@link SortedSetDocValuesFacetCounts}, but aggregates counts concurrently across segments.
  *
- * @lucene.experimental */
+ * @lucene.experimental
+ */
 public class ConcurrentSortedSetDocValuesFacetCounts extends Facets {
 
-  final ExecutorService exec;
-  final SortedSetDocValuesReaderState state;
-  final SortedSetDocValues dv;
-  final String field;
-  final AtomicIntegerArray counts;
+	final ExecutorService exec;
+	final SortedSetDocValuesReaderState state;
+	final SortedSetDocValues dv;
+	final String field;
+	final AtomicIntegerArray counts;
 
-  /** Returns all facet counts, same result as searching on {@link MatchAllDocsQuery} but faster. */
-  public ConcurrentSortedSetDocValuesFacetCounts(SortedSetDocValuesReaderState state, ExecutorService exec)
-    throws IOException, InterruptedException {
-    this(state, null, exec);
-  }
+	/**
+	 * Returns all facet counts, same result as searching on {@link MatchAllDocsQuery} but faster.
+	 */
+	public ConcurrentSortedSetDocValuesFacetCounts(SortedSetDocValuesReaderState state, ExecutorService exec)
+		throws IOException, InterruptedException {
+		this(state, null, exec);
+	}
 
-  /** Counts all facet dimensions across the provided hits. */
-  public ConcurrentSortedSetDocValuesFacetCounts(SortedSetDocValuesReaderState state, FacetsCollector hits, ExecutorService exec)
-    throws IOException, InterruptedException {
-    this.state = state;
-    this.field = state.getField();
-    this.exec = exec;
-    dv = state.getDocValues();    
-    counts = new AtomicIntegerArray(state.getSize());
-    if (hits == null) {
-      // browse only
-      countAll();
-    } else {
-      count(hits.getMatchingDocs());
-    }
-  }
+	/**
+	 * Counts all facet dimensions across the provided hits.
+	 */
+	public ConcurrentSortedSetDocValuesFacetCounts(SortedSetDocValuesReaderState state, FacetsCollector hits, ExecutorService exec)
+		throws IOException, InterruptedException {
+		this.state = state;
+		this.field = state.getField();
+		this.exec = exec;
+		dv = state.getDocValues();
+		counts = new AtomicIntegerArray(state.getSize());
+		if (hits == null) {
+			// browse only
+			countAll();
+		} else {
+			count(hits.getMatchingDocs());
+		}
+	}
 
-  @Override
-  public FacetResult getTopChildren(int topN, String dim, String... path) throws IOException {
-    if (topN <= 0) {
-      throw new IllegalArgumentException("topN must be > 0 (got: " + topN + ")");
-    }
-    if (path.length > 0) {
-      throw new IllegalArgumentException("path should be 0 length");
-    }
-    OrdRange ordRange = state.getOrdRange(dim);
-    if (ordRange == null) {
-      throw new IllegalArgumentException("dimension \"" + dim + "\" was not indexed");
-    }
-    return getDim(dim, ordRange, topN);
-  }
+	@Override
+	public FacetResult getTopChildren(int topN, String dim, String... path) throws IOException {
+		if (topN <= 0) {
+			throw new IllegalArgumentException("topN must be > 0 (got: " + topN + ")");
+		}
+		if (path.length > 0) {
+			throw new IllegalArgumentException("path should be 0 length");
+		}
+		OrdRange ordRange = state.getOrdRange(dim);
+		if (ordRange == null) {
+			throw new IllegalArgumentException("dimension \"" + dim + "\" was not indexed");
+		}
+		return getDim(dim, ordRange, topN);
+	}
 
-  private final FacetResult getDim(String dim, OrdRange ordRange, int topN) throws IOException {
+	private final FacetResult getDim(String dim, OrdRange ordRange, int topN) throws IOException {
 
-    TopOrdAndIntQueue q = null;
+		TopOrdAndIntQueue q = null;
 
-    int bottomCount = 0;
+		int bottomCount = 0;
 
-    int dimCount = 0;
-    int childCount = 0;
+		int dimCount = 0;
+		int childCount = 0;
 
-    TopOrdAndIntQueue.OrdAndValue reuse = null;
-    //System.out.println("getDim : " + ordRange.start + " - " + ordRange.end);
-    for(int ord=ordRange.start; ord<=ordRange.end; ord++) {
-      //System.out.println("  ord=" + ord + " count=" + counts[ord]);
-      if (counts.get(ord) > 0) {
-        dimCount += counts.get(ord);
-        childCount++;
-        if (counts.get(ord) > bottomCount) {
-          if (reuse == null) {
-            reuse = new TopOrdAndIntQueue.OrdAndValue();
-          }
-          reuse.ord = ord;
-          reuse.value = counts.get(ord);
-          if (q == null) {
-            // Lazy init, so we don't create this for the
-            // sparse case unnecessarily
-            q = new TopOrdAndIntQueue(topN);
-          }
-          reuse = q.insertWithOverflow(reuse);
-          if (q.size() == topN) {
-            bottomCount = q.top().value;
-          }
-        }
-      }
-    }
+		TopOrdAndIntQueue.OrdAndValue reuse = null;
+		//System.out.println("getDim : " + ordRange.start + " - " + ordRange.end);
+		for (int ord = ordRange.start; ord <= ordRange.end; ord++) {
+			//System.out.println("  ord=" + ord + " count=" + counts[ord]);
+			if (counts.get(ord) > 0) {
+				dimCount += counts.get(ord);
+				childCount++;
+				if (counts.get(ord) > bottomCount) {
+					if (reuse == null) {
+						reuse = new TopOrdAndIntQueue.OrdAndValue();
+					}
+					reuse.ord = ord;
+					reuse.value = counts.get(ord);
+					if (q == null) {
+						// Lazy init, so we don't create this for the
+						// sparse case unnecessarily
+						q = new TopOrdAndIntQueue(topN);
+					}
+					reuse = q.insertWithOverflow(reuse);
+					if (q.size() == topN) {
+						bottomCount = q.top().value;
+					}
+				}
+			}
+		}
 
-    if (q == null) {
-      return null;
-    }
+		if (q == null) {
+			return null;
+		}
 
-    LabelAndValue[] labelValues = new LabelAndValue[q.size()];
-    for(int i=labelValues.length-1;i>=0;i--) {
-      TopOrdAndIntQueue.OrdAndValue ordAndValue = q.pop();
-      final BytesRef term = dv.lookupOrd(ordAndValue.ord);
-      String[] parts = FacetsConfig.stringToPath(term.utf8ToString());
-      labelValues[i] = new LabelAndValue(parts[1], ordAndValue.value);
-    }
+		LabelAndValue[] labelValues = new LabelAndValue[q.size()];
+		for (int i = labelValues.length - 1; i >= 0; i--) {
+			TopOrdAndIntQueue.OrdAndValue ordAndValue = q.pop();
+			final BytesRef term = dv.lookupOrd(ordAndValue.ord);
+			String[] parts = FacetsConfig.stringToPath(term.utf8ToString());
+			labelValues[i] = new LabelAndValue(parts[1], ordAndValue.value);
+		}
 
-    return new FacetResult(dim, new String[0], dimCount, labelValues, childCount);
-  }
+		return new FacetResult(dim, new String[0], dimCount, labelValues, childCount);
+	}
 
-  private class CountOneSegment implements Callable<Void> {
-    final LeafReader leafReader;
-    final MatchingDocs hits;
-    final OrdinalMap ordinalMap;
-    final int segOrd;
-    
-    public CountOneSegment(LeafReader leafReader, MatchingDocs hits, OrdinalMap ordinalMap, int segOrd) {
-      this.leafReader = leafReader;
-      this.hits = hits;
-      this.ordinalMap = ordinalMap;
-      this.segOrd = segOrd;
-    }
-                           
-    @Override
-    public Void call() throws IOException {
-      SortedSetDocValues segValues = leafReader.getSortedSetDocValues(field);
-      if (segValues == null) {
-        // nothing to count here
-        return null;
-      }
+	private class CountOneSegment implements Callable<Void> {
+		final LeafReader leafReader;
+		final MatchingDocs hits;
+		final OrdinalMap ordinalMap;
+		final int segOrd;
 
-      // TODO: yet another option is to count all segs
-      // first, only in seg-ord space, and then do a
-      // merge-sort-PQ in the end to only "resolve to
-      // global" those seg ords that can compete, if we know
-      // we just want top K?  ie, this is the same algo
-      // that'd be used for merging facets across shards
-      // (distributed faceting).  but this has much higher
-      // temp ram req'ts (sum of number of ords across all
-      // segs)
-      DocIdSetIterator it;
-      if (hits == null) {
-        // count all
-        it = segValues;
-      } else {
-        it = ConjunctionDISI.intersectIterators(Arrays.asList(hits.bits.iterator(), segValues));
-      }
+		public CountOneSegment(LeafReader leafReader, MatchingDocs hits, OrdinalMap ordinalMap, int segOrd) {
+			this.leafReader = leafReader;
+			this.hits = hits;
+			this.ordinalMap = ordinalMap;
+			this.segOrd = segOrd;
+		}
 
-      if (ordinalMap != null) {
-        final LongValues ordMap = ordinalMap.getGlobalOrds(segOrd);
+		@Override
+		public Void call() throws IOException {
+			SortedSetDocValues segValues = leafReader.getSortedSetDocValues(field);
+			if (segValues == null) {
+				// nothing to count here
+				return null;
+			}
 
-        int numSegOrds = (int) segValues.getValueCount();
+			// TODO: yet another option is to count all segs
+			// first, only in seg-ord space, and then do a
+			// merge-sort-PQ in the end to only "resolve to
+			// global" those seg ords that can compete, if we know
+			// we just want top K?  ie, this is the same algo
+			// that'd be used for merging facets across shards
+			// (distributed faceting).  but this has much higher
+			// temp ram req'ts (sum of number of ords across all
+			// segs)
+			DocIdSetIterator it;
+			if (hits == null) {
+				// count all
+				it = segValues;
+			} else {
+				it = ConjunctionDISI.intersectIterators(Arrays.asList(hits.bits.iterator(), segValues));
+			}
 
-        if (hits != null && hits.totalHits < numSegOrds/10) {
-          // Remap every ord to global ord as we iterate:
-          for (int doc = it.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = it.nextDoc()) {
-            int term = (int) segValues.nextOrd();
-            while (term != SortedSetDocValues.NO_MORE_ORDS) {
-              counts.incrementAndGet((int) ordMap.get(term));
-              term = (int) segValues.nextOrd();
-            }
-          }
-        } else {
+			if (ordinalMap != null) {
+				final LongValues ordMap = ordinalMap.getGlobalOrds(segOrd);
 
-          // First count in seg-ord space:
-          final int[] segCounts = new int[numSegOrds];
-          for (int doc = it.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = it.nextDoc()) {
-            int term = (int) segValues.nextOrd();
-            while (term != SortedSetDocValues.NO_MORE_ORDS) {
-              segCounts[term]++;
-              term = (int) segValues.nextOrd();
-            }
-          }
+				int numSegOrds = (int) segValues.getValueCount();
 
-          // Then, migrate to global ords:
-          for(int ord=0;ord<numSegOrds;ord++) {
-            int count = segCounts[ord];
-            if (count != 0) {
-              counts.addAndGet((int) ordMap.get(ord), count);
-            }
-          }
-        }
-      } else {
-        // No ord mapping (e.g., single segment index):
-        // just aggregate directly into counts:
-        for (int doc = it.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = it.nextDoc()) {
-          int term = (int) segValues.nextOrd();
-          while (term != SortedSetDocValues.NO_MORE_ORDS) {
-            counts.incrementAndGet(term);
-            term = (int) segValues.nextOrd();
-          }
-        }
-      }
-      
-      return null;
-    }
-  }
+				if (hits != null && hits.totalHits < numSegOrds / 10) {
+					// Remap every ord to global ord as we iterate:
+					for (int doc = it.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = it.nextDoc()) {
+						int term = (int) segValues.nextOrd();
+						while (term != SortedSetDocValues.NO_MORE_ORDS) {
+							counts.incrementAndGet((int) ordMap.get(term));
+							term = (int) segValues.nextOrd();
+						}
+					}
+				} else {
 
-  /** Does all the "real work" of tallying up the counts. */
-  private final void count(List<MatchingDocs> matchingDocs) throws IOException, InterruptedException {
+					// First count in seg-ord space:
+					final int[] segCounts = new int[numSegOrds];
+					for (int doc = it.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = it.nextDoc()) {
+						int term = (int) segValues.nextOrd();
+						while (term != SortedSetDocValues.NO_MORE_ORDS) {
+							segCounts[term]++;
+							term = (int) segValues.nextOrd();
+						}
+					}
 
-    OrdinalMap ordinalMap;
+					// Then, migrate to global ords:
+					for (int ord = 0; ord < numSegOrds; ord++) {
+						int count = segCounts[ord];
+						if (count != 0) {
+							counts.addAndGet((int) ordMap.get(ord), count);
+						}
+					}
+				}
+			} else {
+				// No ord mapping (e.g., single segment index):
+				// just aggregate directly into counts:
+				for (int doc = it.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = it.nextDoc()) {
+					int term = (int) segValues.nextOrd();
+					while (term != SortedSetDocValues.NO_MORE_ORDS) {
+						counts.incrementAndGet(term);
+						term = (int) segValues.nextOrd();
+					}
+				}
+			}
 
-    // TODO: is this right?  really, we need a way to
-    // verify that this ordinalMap "matches" the leaves in
-    // matchingDocs...
-    if (dv instanceof MultiDocValues.MultiSortedSetDocValues && matchingDocs.size() > 1) {
-      ordinalMap = ((MultiSortedSetDocValues) dv).mapping;
-    } else {
-      ordinalMap = null;
-    }
-    
-    IndexReader reader = state.getReader();
-    List<Future<Void>> results = new ArrayList<>();
+			return null;
+		}
+	}
 
-    for (MatchingDocs hits : matchingDocs) {
-      // LUCENE-5090: make sure the provided reader context "matches"
-      // the top-level reader passed to the
-      // SortedSetDocValuesReaderState, else cryptic
-      // AIOOBE can happen:
-      if (ReaderUtil.getTopLevelContext(hits.context).reader() != reader) {
-        throw new IllegalStateException("the SortedSetDocValuesReaderState provided to this class does not match the reader being searched; you must create a new SortedSetDocValuesReaderState every time you open a new IndexReader");
-      }
-      
-      results.add(exec.submit(new CountOneSegment(hits.context.reader(), hits, ordinalMap, hits.context.ord)));
-    }
+	/**
+	 * Does all the "real work" of tallying up the counts.
+	 */
+	private final void count(List<MatchingDocs> matchingDocs) throws IOException, InterruptedException {
 
-    for (Future<Void> result : results) {
-      try {
-        result.get();
-      } catch (ExecutionException ee) {
-        // Theoretically cause can be null; guard against that.
-        Throwable cause = ee.getCause();
-        throw IOUtils.rethrowAlways(cause != null ? cause : ee);
-      }
-    }
-  }
+		OrdinalMap ordinalMap;
 
-  /** Does all the "real work" of tallying up the counts. */
-  private final void countAll() throws IOException, InterruptedException {
-    //System.out.println("ssdv count");
+		// TODO: is this right?  really, we need a way to
+		// verify that this ordinalMap "matches" the leaves in
+		// matchingDocs...
+		if (dv instanceof MultiDocValues.MultiSortedSetDocValues && matchingDocs.size() > 1) {
+			ordinalMap = ((MultiSortedSetDocValues) dv).mapping;
+		} else {
+			ordinalMap = null;
+		}
 
-    OrdinalMap ordinalMap;
+		IndexReader reader = state.getReader();
+		List<Future<Void>> results = new ArrayList<>();
 
-    // TODO: is this right?  really, we need a way to
-    // verify that this ordinalMap "matches" the leaves in
-    // matchingDocs...
-    if (dv instanceof MultiDocValues.MultiSortedSetDocValues) {
-      ordinalMap = ((MultiSortedSetDocValues) dv).mapping;
-    } else {
-      ordinalMap = null;
-    }
-    
-    List<Future<Void>> results = new ArrayList<>();
+		for (MatchingDocs hits : matchingDocs) {
+			// LUCENE-5090: make sure the provided reader context "matches"
+			// the top-level reader passed to the
+			// SortedSetDocValuesReaderState, else cryptic
+			// AIOOBE can happen:
+			if (ReaderUtil.getTopLevelContext(hits.context).reader() != reader) {
+				throw new IllegalStateException("the SortedSetDocValuesReaderState provided to this class does not match the reader being searched; you must create a new SortedSetDocValuesReaderState every time you open a new IndexReader");
+			}
 
-    for (LeafReaderContext context : state.getReader().leaves()) {
-      results.add(exec.submit(new CountOneSegment(context.reader(), null, ordinalMap, context.ord)));
-    }
+			results.add(exec.submit(new CountOneSegment(hits.context.reader(), hits, ordinalMap, hits.context.ord)));
+		}
 
-    for (Future<Void> result : results) {
-      try {
-        result.get();
-      } catch (ExecutionException ee) {
-        // Theoretically cause can be null; guard against that.
-        Throwable cause = ee.getCause();
-        throw IOUtils.rethrowAlways(cause != null ? cause : ee);
-      }
-    }
-  }
+		for (Future<Void> result : results) {
+			try {
+				result.get();
+			} catch (ExecutionException ee) {
+				// Theoretically cause can be null; guard against that.
+				Throwable cause = ee.getCause();
+				throw IOUtils.rethrowAlways(cause != null ? cause : ee);
+			}
+		}
+	}
 
-  @Override
-  public Number getSpecificValue(String dim, String... path) throws IOException {
-    if (path.length != 1) {
-      throw new IllegalArgumentException("path must be length=1");
-    }
-    int ord = (int) dv.lookupTerm(new BytesRef(FacetsConfig.pathToString(dim, path)));
-    if (ord < 0) {
-      return -1;
-    }
+	/**
+	 * Does all the "real work" of tallying up the counts.
+	 */
+	private final void countAll() throws IOException, InterruptedException {
+		//System.out.println("ssdv count");
 
-    return counts.get(ord);
-  }
+		OrdinalMap ordinalMap;
 
-  @Override
-  public List<FacetResult> getAllDims(int topN) throws IOException {
+		// TODO: is this right?  really, we need a way to
+		// verify that this ordinalMap "matches" the leaves in
+		// matchingDocs...
+		if (dv instanceof MultiDocValues.MultiSortedSetDocValues) {
+			ordinalMap = ((MultiSortedSetDocValues) dv).mapping;
+		} else {
+			ordinalMap = null;
+		}
 
-    List<FacetResult> results = new ArrayList<>();
-    for(Map.Entry<String,OrdRange> ent : state.getPrefixToOrdRange().entrySet()) {
-      FacetResult fr = getDim(ent.getKey(), ent.getValue(), topN);
-      if (fr != null) {
-        results.add(fr);
-      }
-    }
+		List<Future<Void>> results = new ArrayList<>();
 
-    // Sort by highest count:
-    Collections.sort(results,
-                     new Comparator<FacetResult>() {
-                       @Override
-                       public int compare(FacetResult a, FacetResult b) {
-                         if (a.value.intValue() > b.value.intValue()) {
-                           return -1;
-                         } else if (b.value.intValue() > a.value.intValue()) {
-                           return 1;
-                         } else {
-                           return a.dim.compareTo(b.dim);
-                         }
-                       }
-                     });
+		for (LeafReaderContext context : state.getReader().leaves()) {
+			results.add(exec.submit(new CountOneSegment(context.reader(), null, ordinalMap, context.ord)));
+		}
 
-    return results;
-  }
+		for (Future<Void> result : results) {
+			try {
+				result.get();
+			} catch (ExecutionException ee) {
+				// Theoretically cause can be null; guard against that.
+				Throwable cause = ee.getCause();
+				throw IOUtils.rethrowAlways(cause != null ? cause : ee);
+			}
+		}
+	}
+
+	@Override
+	public Number getSpecificValue(String dim, String... path) throws IOException {
+		if (path.length != 1) {
+			throw new IllegalArgumentException("path must be length=1");
+		}
+		int ord = (int) dv.lookupTerm(new BytesRef(FacetsConfig.pathToString(dim, path)));
+		if (ord < 0) {
+			return -1;
+		}
+
+		return counts.get(ord);
+	}
+
+	@Override
+	public List<FacetResult> getAllDims(int topN) throws IOException {
+
+		List<FacetResult> results = new ArrayList<>();
+		for (Map.Entry<String, OrdRange> ent : state.getPrefixToOrdRange().entrySet()) {
+			FacetResult fr = getDim(ent.getKey(), ent.getValue(), topN);
+			if (fr != null) {
+				results.add(fr);
+			}
+		}
+
+		// Sort by highest count:
+		Collections.sort(results,
+			new Comparator<FacetResult>() {
+				@Override
+				public int compare(FacetResult a, FacetResult b) {
+					if (a.value.intValue() > b.value.intValue()) {
+						return -1;
+					} else if (b.value.intValue() > a.value.intValue()) {
+						return 1;
+					} else {
+						return a.dim.compareTo(b.dim);
+					}
+				}
+			});
+
+		return results;
+	}
 }

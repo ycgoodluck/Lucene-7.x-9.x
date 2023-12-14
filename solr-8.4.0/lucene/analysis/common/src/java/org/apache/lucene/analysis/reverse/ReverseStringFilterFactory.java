@@ -32,25 +32,29 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since solr 1.4
  * @lucene.spi {@value #NAME}
+ * @since solr 1.4
  */
 public class ReverseStringFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "reverseString";
-  
-  /** Creates a new ReverseStringFilterFactory */
-  public ReverseStringFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public ReverseStringFilter create(TokenStream in) {
-    return new ReverseStringFilter(in);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "reverseString";
+
+	/**
+	 * Creates a new ReverseStringFilterFactory
+	 */
+	public ReverseStringFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public ReverseStringFilter create(TokenStream in) {
+		return new ReverseStringFilter(in);
+	}
 }
 

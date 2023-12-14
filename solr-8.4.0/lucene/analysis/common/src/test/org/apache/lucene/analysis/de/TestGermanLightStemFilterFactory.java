@@ -27,18 +27,20 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the German light stem factory is working.
  */
 public class TestGermanLightStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("häuser");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("GermanLightStem").create(stream);
-    assertTokenStreamContents(stream, new String[] { "haus" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("GermanLightStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("häuser");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("GermanLightStem").create(stream);
+		assertTokenStreamContents(stream, new String[]{"haus"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("GermanLightStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

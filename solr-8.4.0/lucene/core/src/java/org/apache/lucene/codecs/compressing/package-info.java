@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 /**
  * StoredFieldsFormat that allows cross-document and cross-field compression of stored fields.
  */

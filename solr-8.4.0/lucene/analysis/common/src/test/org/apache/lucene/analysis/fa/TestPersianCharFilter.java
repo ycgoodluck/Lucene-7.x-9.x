@@ -24,37 +24,39 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.MockTokenizer;
 
 public class TestPersianCharFilter extends BaseTokenStreamTestCase {
-  private Analyzer analyzer;
-  
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    analyzer = new Analyzer() {
-      @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        return new TokenStreamComponents(new MockTokenizer());
-      }
+	private Analyzer analyzer;
 
-      @Override
-      protected Reader initReader(String fieldName, Reader reader) {
-        return new PersianCharFilter(reader);
-      }
-    };
-  }
-  
-  @Override
-  public void tearDown() throws Exception {
-    analyzer.close();
-    super.tearDown();
-  }
-  
-  public void testBasics() throws Exception {
-    assertAnalyzesTo(analyzer, "this is a\u200Ctest",
-        new String[] { "this", "is", "a", "test" });
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    checkRandomData(random(), analyzer, 1000*RANDOM_MULTIPLIER);
-  }
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		analyzer = new Analyzer() {
+			@Override
+			protected TokenStreamComponents createComponents(String fieldName) {
+				return new TokenStreamComponents(new MockTokenizer());
+			}
+
+			@Override
+			protected Reader initReader(String fieldName, Reader reader) {
+				return new PersianCharFilter(reader);
+			}
+		};
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		analyzer.close();
+		super.tearDown();
+	}
+
+	public void testBasics() throws Exception {
+		assertAnalyzesTo(analyzer, "this is a\u200Ctest",
+			new String[]{"this", "is", "a", "test"});
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		checkRandomData(random(), analyzer, 1000 * RANDOM_MULTIPLIER);
+	}
 }

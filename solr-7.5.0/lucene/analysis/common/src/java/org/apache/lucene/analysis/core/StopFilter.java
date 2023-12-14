@@ -25,23 +25,22 @@ import org.apache.lucene.analysis.TokenStream;
  * <p>
  * This class moved to Lucene Core, but a reference in the {@code analysis/common} module
  * is preserved for documentation purposes and consistency with filter factory.
+ *
  * @see org.apache.lucene.analysis.StopFilter
  * @see StopFilterFactory
  */
 public final class StopFilter extends org.apache.lucene.analysis.StopFilter {
 
-  /**
-   * Constructs a filter which removes words from the input TokenStream that are
-   * named in the Set.
-   * 
-   * @param in
-   *          Input stream
-   * @param stopWords
-   *          A {@link CharArraySet} representing the stopwords.
-   * @see #makeStopSet(java.lang.String...)
-   */
-  public StopFilter(TokenStream in, CharArraySet stopWords) {
-    super(in, stopWords);
-  }
+	/**
+	 * Constructs a filter which removes words from the input TokenStream that are
+	 * named in the Set.
+	 *
+	 * @param in        Input stream
+	 * @param stopWords A {@link CharArraySet} representing the stopwords.
+	 * @see #makeStopSet(java.lang.String...)
+	 */
+	public StopFilter(TokenStream in, CharArraySet stopWords) {
+		super(in, stopWords);
+	}
 
 }

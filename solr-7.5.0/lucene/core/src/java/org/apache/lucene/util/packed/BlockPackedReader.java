@@ -35,75 +35,78 @@ import org.apache.lucene.util.LongValues;
 
 /**
  * Provides random access to a stream written with {@link BlockPackedWriter}.
+ *
  * @lucene.internal
  */
 public final class BlockPackedReader extends LongValues implements Accountable {
 
-  private final int blockShift, blockMask;
-  private final long valueCount;
-  private final long[] minValues;
-  private final PackedInts.Reader[] subReaders;
-  private final long sumBPV;
+	private final int blockShift, blockMask;
+	private final long valueCount;
+	private final long[] minValues;
+	private final PackedInts.Reader[] subReaders;
+	private final long sumBPV;
 
-  /** Sole constructor. */
-  public BlockPackedReader(IndexInput in, int packedIntsVersion, int blockSize, long valueCount, boolean direct) throws IOException {
-    this.valueCount = valueCount;
-    blockShift = checkBlockSize(blockSize, MIN_BLOCK_SIZE, MAX_BLOCK_SIZE);
-    blockMask = blockSize - 1;
-    final int numBlocks = numBlocks(valueCount, blockSize);
-    long[] minValues = null;
-    subReaders = new PackedInts.Reader[numBlocks];
-    long sumBPV = 0;
-    for (int i = 0; i < numBlocks; ++i) {
-      final int token = in.readByte() & 0xFF;
-      final int bitsPerValue = token >>> BPV_SHIFT;
-      sumBPV += bitsPerValue;
-      if (bitsPerValue > 64) {
-        throw new CorruptIndexException("Corrupted Block#" + i, in);
-      }
-      if ((token & MIN_VALUE_EQUALS_0) == 0) {
-        if (minValues == null) {
-          minValues = new long[numBlocks];
-        }
-        minValues[i] = zigZagDecode(1L + readVLong(in));
-      }
-      if (bitsPerValue == 0) {
-        subReaders[i] = new PackedInts.NullReader(blockSize);
-      } else {
-        final int size = (int) Math.min(blockSize, valueCount - (long) i * blockSize);
-        if (direct) {
-          final long pointer = in.getFilePointer();
-          subReaders[i] = PackedInts.getDirectReaderNoHeader(in, PackedInts.Format.PACKED, packedIntsVersion, size, bitsPerValue);
-          in.seek(pointer + PackedInts.Format.PACKED.byteCount(packedIntsVersion, size, bitsPerValue));
-        } else {
-          subReaders[i] = PackedInts.getReaderNoHeader(in, PackedInts.Format.PACKED, packedIntsVersion, size, bitsPerValue);
-        }
-      }
-    }
-    this.minValues = minValues;
-    this.sumBPV = sumBPV;
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public BlockPackedReader(IndexInput in, int packedIntsVersion, int blockSize, long valueCount, boolean direct) throws IOException {
+		this.valueCount = valueCount;
+		blockShift = checkBlockSize(blockSize, MIN_BLOCK_SIZE, MAX_BLOCK_SIZE);
+		blockMask = blockSize - 1;
+		final int numBlocks = numBlocks(valueCount, blockSize);
+		long[] minValues = null;
+		subReaders = new PackedInts.Reader[numBlocks];
+		long sumBPV = 0;
+		for (int i = 0; i < numBlocks; ++i) {
+			final int token = in.readByte() & 0xFF;
+			final int bitsPerValue = token >>> BPV_SHIFT;
+			sumBPV += bitsPerValue;
+			if (bitsPerValue > 64) {
+				throw new CorruptIndexException("Corrupted Block#" + i, in);
+			}
+			if ((token & MIN_VALUE_EQUALS_0) == 0) {
+				if (minValues == null) {
+					minValues = new long[numBlocks];
+				}
+				minValues[i] = zigZagDecode(1L + readVLong(in));
+			}
+			if (bitsPerValue == 0) {
+				subReaders[i] = new PackedInts.NullReader(blockSize);
+			} else {
+				final int size = (int) Math.min(blockSize, valueCount - (long) i * blockSize);
+				if (direct) {
+					final long pointer = in.getFilePointer();
+					subReaders[i] = PackedInts.getDirectReaderNoHeader(in, PackedInts.Format.PACKED, packedIntsVersion, size, bitsPerValue);
+					in.seek(pointer + PackedInts.Format.PACKED.byteCount(packedIntsVersion, size, bitsPerValue));
+				} else {
+					subReaders[i] = PackedInts.getReaderNoHeader(in, PackedInts.Format.PACKED, packedIntsVersion, size, bitsPerValue);
+				}
+			}
+		}
+		this.minValues = minValues;
+		this.sumBPV = sumBPV;
+	}
 
-  @Override
-  public long get(long index) {
-    assert index >= 0 && index < valueCount;
-    final int block = (int) (index >>> blockShift);
-    final int idx = (int) (index & blockMask);
-    return (minValues == null ? 0 : minValues[block]) + subReaders[block].get(idx);
-  }
+	@Override
+	public long get(long index) {
+		assert index >= 0 && index < valueCount;
+		final int block = (int) (index >>> blockShift);
+		final int idx = (int) (index & blockMask);
+		return (minValues == null ? 0 : minValues[block]) + subReaders[block].get(idx);
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    long size = 0;
-    for (PackedInts.Reader reader : subReaders) {
-      size += reader.ramBytesUsed();
-    }
-    return size;
-  }
-  
-  @Override
-  public String toString() {
-    long avgBPV = subReaders.length == 0 ? 0 : sumBPV / subReaders.length;
-    return getClass().getSimpleName() + "(blocksize=" + (1<<blockShift) + ",size=" + valueCount + ",avgBPV=" + avgBPV + ")";
-  }
+	@Override
+	public long ramBytesUsed() {
+		long size = 0;
+		for (PackedInts.Reader reader : subReaders) {
+			size += reader.ramBytesUsed();
+		}
+		return size;
+	}
+
+	@Override
+	public String toString() {
+		long avgBPV = subReaders.length == 0 ? 0 : sumBPV / subReaders.length;
+		return getClass().getSimpleName() + "(blocksize=" + (1 << blockShift) + ",size=" + valueCount + ",avgBPV=" + avgBPV + ")";
+	}
 }

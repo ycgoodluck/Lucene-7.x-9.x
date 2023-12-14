@@ -32,90 +32,90 @@ import com.carrotsearch.randomizedtesting.generators.RandomNumbers;
  */
 public abstract class CompressingCodec extends FilterCodec {
 
-  /**
-   * Create a random instance.
-   */
-  public static CompressingCodec randomInstance(Random random, int chunkSize, int maxDocsPerChunk, boolean withSegmentSuffix, int blockSize) {
-    switch (random.nextInt(4)) {
-    case 0:
-      return new FastCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
-    case 1:
-      return new FastDecompressionCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
-    case 2:
-      return new HighCompressionCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
-    case 3:
-      return new DummyCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
-    default:
-      throw new AssertionError();
-    }
-  }
+	/**
+	 * Create a random instance.
+	 */
+	public static CompressingCodec randomInstance(Random random, int chunkSize, int maxDocsPerChunk, boolean withSegmentSuffix, int blockSize) {
+		switch (random.nextInt(4)) {
+			case 0:
+				return new FastCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
+			case 1:
+				return new FastDecompressionCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
+			case 2:
+				return new HighCompressionCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
+			case 3:
+				return new DummyCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
+			default:
+				throw new AssertionError();
+		}
+	}
 
-  /**
-   * Creates a random {@link CompressingCodec} that is using an empty segment 
-   * suffix
-   */
-  public static CompressingCodec randomInstance(Random random) {
-    final int chunkSize = random.nextBoolean() ? RandomNumbers.randomIntBetween(random, 1, 10) : RandomNumbers.randomIntBetween(random, 1, 1 << 15);
-    final int chunkDocs = random.nextBoolean() ? RandomNumbers.randomIntBetween(random, 1, 10) : RandomNumbers.randomIntBetween(random, 64, 1024);
-    final int blockSize = random.nextBoolean() ? RandomNumbers.randomIntBetween(random, 1, 10) : RandomNumbers.randomIntBetween(random, 1, 1024);
-    return randomInstance(random, chunkSize, chunkDocs, false, blockSize);
-  }
+	/**
+	 * Creates a random {@link CompressingCodec} that is using an empty segment
+	 * suffix
+	 */
+	public static CompressingCodec randomInstance(Random random) {
+		final int chunkSize = random.nextBoolean() ? RandomNumbers.randomIntBetween(random, 1, 10) : RandomNumbers.randomIntBetween(random, 1, 1 << 15);
+		final int chunkDocs = random.nextBoolean() ? RandomNumbers.randomIntBetween(random, 1, 10) : RandomNumbers.randomIntBetween(random, 64, 1024);
+		final int blockSize = random.nextBoolean() ? RandomNumbers.randomIntBetween(random, 1, 10) : RandomNumbers.randomIntBetween(random, 1, 1024);
+		return randomInstance(random, chunkSize, chunkDocs, false, blockSize);
+	}
 
-  /**
-   * Creates a random {@link CompressingCodec} with more reasonable parameters for big tests.
-   */
-  public static CompressingCodec reasonableInstance(Random random) {
-    // e.g. defaults use 2^14 for FAST and ~ 2^16 for HIGH
-    final int chunkSize = TestUtil.nextInt(random, 1<<13, 1<<17);
-    // e.g. defaults use 128 for FAST and 512 for HIGH
-    final int chunkDocs = TestUtil.nextInt(random, 1<<6, 1<<10);
-    // e.g. defaults use 1024 for both cases
-    final int blockSize = TestUtil.nextInt(random, 1<<9, 1<<11);
-    return randomInstance(random, chunkSize, chunkDocs, false, blockSize);
-  }
-  
-  /**
-   * Creates a random {@link CompressingCodec} that is using a segment suffix
-   */
-  public static CompressingCodec randomInstance(Random random, boolean withSegmentSuffix) {
-    return randomInstance(random, 
-                          RandomNumbers.randomIntBetween(random, 1, 1 << 15), 
-                          RandomNumbers.randomIntBetween(random, 64, 1024), 
-                          withSegmentSuffix,
-                          RandomNumbers.randomIntBetween(random, 1, 1024));
-  }
+	/**
+	 * Creates a random {@link CompressingCodec} with more reasonable parameters for big tests.
+	 */
+	public static CompressingCodec reasonableInstance(Random random) {
+		// e.g. defaults use 2^14 for FAST and ~ 2^16 for HIGH
+		final int chunkSize = TestUtil.nextInt(random, 1 << 13, 1 << 17);
+		// e.g. defaults use 128 for FAST and 512 for HIGH
+		final int chunkDocs = TestUtil.nextInt(random, 1 << 6, 1 << 10);
+		// e.g. defaults use 1024 for both cases
+		final int blockSize = TestUtil.nextInt(random, 1 << 9, 1 << 11);
+		return randomInstance(random, chunkSize, chunkDocs, false, blockSize);
+	}
 
-  private final CompressingStoredFieldsFormat storedFieldsFormat;
-  private final CompressingTermVectorsFormat termVectorsFormat;
+	/**
+	 * Creates a random {@link CompressingCodec} that is using a segment suffix
+	 */
+	public static CompressingCodec randomInstance(Random random, boolean withSegmentSuffix) {
+		return randomInstance(random,
+			RandomNumbers.randomIntBetween(random, 1, 1 << 15),
+			RandomNumbers.randomIntBetween(random, 64, 1024),
+			withSegmentSuffix,
+			RandomNumbers.randomIntBetween(random, 1, 1024));
+	}
 
-  /**
-   * Creates a compressing codec with a given segment suffix
-   */
-  public CompressingCodec(String name, String segmentSuffix, CompressionMode compressionMode, int chunkSize, int maxDocsPerChunk, int blockSize) {
-    super(name, TestUtil.getDefaultCodec());
-    this.storedFieldsFormat = new CompressingStoredFieldsFormat(name, segmentSuffix, compressionMode, chunkSize, maxDocsPerChunk, blockSize);
-    this.termVectorsFormat = new CompressingTermVectorsFormat(name, segmentSuffix, compressionMode, chunkSize, blockSize);
-  }
-  
-  /**
-   * Creates a compressing codec with an empty segment suffix
-   */
-  public CompressingCodec(String name, CompressionMode compressionMode, int chunkSize, int maxDocsPerChunk, int blockSize) {
-    this(name, "", compressionMode, chunkSize, maxDocsPerChunk, blockSize);
-  }
+	private final CompressingStoredFieldsFormat storedFieldsFormat;
+	private final CompressingTermVectorsFormat termVectorsFormat;
 
-  @Override
-  public StoredFieldsFormat storedFieldsFormat() {
-    return storedFieldsFormat;
-  }
+	/**
+	 * Creates a compressing codec with a given segment suffix
+	 */
+	public CompressingCodec(String name, String segmentSuffix, CompressionMode compressionMode, int chunkSize, int maxDocsPerChunk, int blockSize) {
+		super(name, TestUtil.getDefaultCodec());
+		this.storedFieldsFormat = new CompressingStoredFieldsFormat(name, segmentSuffix, compressionMode, chunkSize, maxDocsPerChunk, blockSize);
+		this.termVectorsFormat = new CompressingTermVectorsFormat(name, segmentSuffix, compressionMode, chunkSize, blockSize);
+	}
 
-  @Override
-  public TermVectorsFormat termVectorsFormat() {
-    return termVectorsFormat;
-  }
+	/**
+	 * Creates a compressing codec with an empty segment suffix
+	 */
+	public CompressingCodec(String name, CompressionMode compressionMode, int chunkSize, int maxDocsPerChunk, int blockSize) {
+		this(name, "", compressionMode, chunkSize, maxDocsPerChunk, blockSize);
+	}
 
-  @Override
-  public String toString() {
-    return getName() + "(storedFieldsFormat=" + storedFieldsFormat + ", termVectorsFormat=" + termVectorsFormat + ")";
-  }
+	@Override
+	public StoredFieldsFormat storedFieldsFormat() {
+		return storedFieldsFormat;
+	}
+
+	@Override
+	public TermVectorsFormat termVectorsFormat() {
+		return termVectorsFormat;
+	}
+
+	@Override
+	public String toString() {
+		return getName() + "(storedFieldsFormat=" + storedFieldsFormat + ", termVectorsFormat=" + termVectorsFormat + ")";
+	}
 }

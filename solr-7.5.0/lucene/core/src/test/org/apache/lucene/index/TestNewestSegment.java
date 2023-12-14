@@ -22,11 +22,11 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestNewestSegment extends LuceneTestCase {
-  public void testNewestSegment() throws Exception {
-    Directory directory = newDirectory();
-    IndexWriter writer = new IndexWriter(directory, newIndexWriterConfig(new MockAnalyzer(random())));
-    assertNull(writer.newestSegment());
-    writer.close();
-    directory.close();
-  }
+	public void testNewestSegment() throws Exception {
+		Directory directory = newDirectory();
+		IndexWriter writer = new IndexWriter(directory, newIndexWriterConfig(new MockAnalyzer(random())));
+		assertNull(writer.newestSegment());
+		writer.close();
+		directory.close();
+	}
 }

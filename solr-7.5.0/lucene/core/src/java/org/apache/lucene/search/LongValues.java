@@ -24,15 +24,16 @@ import java.io.IOException;
  */
 public abstract class LongValues {
 
-  /**
-   * Get the long value for the current document
-   */
-  public abstract long longValue() throws IOException;
+	/**
+	 * Get the long value for the current document
+	 */
+	public abstract long longValue() throws IOException;
 
-  /**
-   * Advance this instance to the given document id
-   * @return true if there is a value for this document
-   */
-  public abstract boolean advanceExact(int doc) throws IOException;
+	/**
+	 * Advance this instance to the given document id
+	 *
+	 * @return true if there is a value for this document
+	 */
+	public abstract boolean advanceExact(int doc) throws IOException;
 
 }

@@ -23,28 +23,30 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
-/** PrintStream for text areas */
+/**
+ * PrintStream for text areas
+ */
 public final class TextAreaPrintStream extends PrintStream {
 
-  private final ByteArrayOutputStream baos;
+	private final ByteArrayOutputStream baos;
 
-  private final JTextArea textArea;
+	private final JTextArea textArea;
 
-  public TextAreaPrintStream(JTextArea textArea) throws UnsupportedEncodingException {
-    super(new ByteArrayOutputStream(), false, StandardCharsets.UTF_8.name()); // TODO: replace by Charset in Java 11
-    this.baos = (ByteArrayOutputStream) out;
-    this.textArea = textArea;
-    baos.reset();
-  }
+	public TextAreaPrintStream(JTextArea textArea) throws UnsupportedEncodingException {
+		super(new ByteArrayOutputStream(), false, StandardCharsets.UTF_8.name()); // TODO: replace by Charset in Java 11
+		this.baos = (ByteArrayOutputStream) out;
+		this.textArea = textArea;
+		baos.reset();
+	}
 
-  @Override
-  public void flush() {
-    try {
-      textArea.append(baos.toString(StandardCharsets.UTF_8.name())); // TODO: replace by Charset in Java 11
-    } catch (UnsupportedEncodingException e) {
-      setError();
-    } finally {
-      baos.reset();
-    }
-  }
+	@Override
+	public void flush() {
+		try {
+			textArea.append(baos.toString(StandardCharsets.UTF_8.name())); // TODO: replace by Charset in Java 11
+		} catch (UnsupportedEncodingException e) {
+			setError();
+		} finally {
+			baos.reset();
+		}
+	}
 }

@@ -49,88 +49,88 @@ import org.apache.lucene.queryparser.flexible.standard.nodes.PointRangeQueryNode
  * <br>
  * Note that {@link FieldQueryNode}s children of a
  * {@link RangeQueryNode} are ignored.
- * 
+ *
  * @see ConfigurationKeys#POINTS_CONFIG
  * @see FieldQueryNode
  * @see PointsConfig
  * @see PointQueryNode
  */
 public class PointQueryNodeProcessor extends QueryNodeProcessorImpl {
-  
-  /**
-   * Constructs a {@link PointQueryNodeProcessor} object.
-   */
-  public PointQueryNodeProcessor() {
-  // empty constructor
-  }
-  
-  @Override
-  protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
-    
-    if (node instanceof FieldQueryNode
-        && !(node.getParent() instanceof RangeQueryNode)) {
-      
-      QueryConfigHandler config = getQueryConfigHandler();
-      
-      if (config != null) {
-        FieldQueryNode fieldNode = (FieldQueryNode) node;
-        FieldConfig fieldConfig = config.getFieldConfig(fieldNode
-            .getFieldAsString());
-        
-        if (fieldConfig != null) {
-          PointsConfig numericConfig = fieldConfig.get(ConfigurationKeys.POINTS_CONFIG);
-          
-          if (numericConfig != null) {
-            
-            NumberFormat numberFormat = numericConfig.getNumberFormat();
-            String text = fieldNode.getTextAsString();
-            Number number = null;
-            
-            if (text.length() > 0) {
-              
-              try {
-                number = numberFormat.parse(text);
-                
-              } catch (ParseException e) {
-                throw new QueryNodeParseException(new MessageImpl(
-                    QueryParserMessages.COULD_NOT_PARSE_NUMBER, fieldNode
-                        .getTextAsString(), numberFormat.getClass()
-                        .getCanonicalName()), e);
-              }
-              
-              if (Integer.class.equals(numericConfig.getType())) {
-                number = number.intValue();
-              } else if (Long.class.equals(numericConfig.getType())) {
-                number = number.longValue();
-              } else if (Double.class.equals(numericConfig.getType())) {
-                number = number.doubleValue();
-              } else if (Float.class.equals(numericConfig.getType())) {
-                number = number.floatValue();
-              }
-              
-            } else {
-              throw new QueryNodeParseException(new MessageImpl(
-                  QueryParserMessages.NUMERIC_CANNOT_BE_EMPTY, fieldNode.getFieldAsString()));
-            }
-            
-            PointQueryNode lowerNode = new PointQueryNode(fieldNode.getField(), number, numberFormat);
-            PointQueryNode upperNode = new PointQueryNode(fieldNode.getField(), number, numberFormat);
-            
-            return new PointRangeQueryNode(lowerNode, upperNode, true, true, numericConfig);
-          }
-        }
-      }
-    }
-    return node;
-  }
-  
-  @Override
-  protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
-    return node;
-  }
-  
-  @Override
-  protected List<QueryNode> setChildrenOrder(List<QueryNode> children) throws QueryNodeException {
-    return children;
-  }
+
+	/**
+	 * Constructs a {@link PointQueryNodeProcessor} object.
+	 */
+	public PointQueryNodeProcessor() {
+		// empty constructor
+	}
+
+	@Override
+	protected QueryNode postProcessNode(QueryNode node) throws QueryNodeException {
+
+		if (node instanceof FieldQueryNode
+			&& !(node.getParent() instanceof RangeQueryNode)) {
+
+			QueryConfigHandler config = getQueryConfigHandler();
+
+			if (config != null) {
+				FieldQueryNode fieldNode = (FieldQueryNode) node;
+				FieldConfig fieldConfig = config.getFieldConfig(fieldNode
+					.getFieldAsString());
+
+				if (fieldConfig != null) {
+					PointsConfig numericConfig = fieldConfig.get(ConfigurationKeys.POINTS_CONFIG);
+
+					if (numericConfig != null) {
+
+						NumberFormat numberFormat = numericConfig.getNumberFormat();
+						String text = fieldNode.getTextAsString();
+						Number number = null;
+
+						if (text.length() > 0) {
+
+							try {
+								number = numberFormat.parse(text);
+
+							} catch (ParseException e) {
+								throw new QueryNodeParseException(new MessageImpl(
+									QueryParserMessages.COULD_NOT_PARSE_NUMBER, fieldNode
+									.getTextAsString(), numberFormat.getClass()
+									.getCanonicalName()), e);
+							}
+
+							if (Integer.class.equals(numericConfig.getType())) {
+								number = number.intValue();
+							} else if (Long.class.equals(numericConfig.getType())) {
+								number = number.longValue();
+							} else if (Double.class.equals(numericConfig.getType())) {
+								number = number.doubleValue();
+							} else if (Float.class.equals(numericConfig.getType())) {
+								number = number.floatValue();
+							}
+
+						} else {
+							throw new QueryNodeParseException(new MessageImpl(
+								QueryParserMessages.NUMERIC_CANNOT_BE_EMPTY, fieldNode.getFieldAsString()));
+						}
+
+						PointQueryNode lowerNode = new PointQueryNode(fieldNode.getField(), number, numberFormat);
+						PointQueryNode upperNode = new PointQueryNode(fieldNode.getField(), number, numberFormat);
+
+						return new PointRangeQueryNode(lowerNode, upperNode, true, true, numericConfig);
+					}
+				}
+			}
+		}
+		return node;
+	}
+
+	@Override
+	protected QueryNode preProcessNode(QueryNode node) throws QueryNodeException {
+		return node;
+	}
+
+	@Override
+	protected List<QueryNode> setChildrenOrder(List<QueryNode> children) throws QueryNodeException {
+		return children;
+	}
 }

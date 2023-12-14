@@ -28,45 +28,45 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.junit.Test;
 
 public class TestQueryTreeBuilder extends LuceneTestCase {
-  
-  @Test
-  public void testSetFieldBuilder() throws QueryNodeException {
-    QueryTreeBuilder qtb = new QueryTreeBuilder();
-    qtb.setBuilder("field", new DummyBuilder());
-    Object result = qtb.build(new FieldQueryNode(new UnescapedCharSequence("field"), "foo", 0, 0));
-    Assert.assertEquals("OK", result);
-    
-    // LUCENE-4890
-    qtb = new QueryTreeBuilder();
-    qtb.setBuilder(DummyQueryNodeInterface.class, new DummyBuilder());
-    result = qtb.build(new DummyQueryNode());
-    Assert.assertEquals("OK", result);
-  }
-  
-  private static interface DummyQueryNodeInterface extends QueryNode {
-    
-  }
-  
-  private static abstract class AbstractDummyQueryNode extends QueryNodeImpl implements DummyQueryNodeInterface {
-    
-  }
-  
-  private static class DummyQueryNode extends AbstractDummyQueryNode {
 
-    @Override
-    public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser) {
-      return "DummyQueryNode";
-    }
-    
-  }
-  
-  private static class DummyBuilder implements QueryBuilder {
+	@Test
+	public void testSetFieldBuilder() throws QueryNodeException {
+		QueryTreeBuilder qtb = new QueryTreeBuilder();
+		qtb.setBuilder("field", new DummyBuilder());
+		Object result = qtb.build(new FieldQueryNode(new UnescapedCharSequence("field"), "foo", 0, 0));
+		Assert.assertEquals("OK", result);
 
-    @Override
-    public Object build(QueryNode queryNode) throws QueryNodeException {
-      return "OK";
-    }
-    
-  }
+		// LUCENE-4890
+		qtb = new QueryTreeBuilder();
+		qtb.setBuilder(DummyQueryNodeInterface.class, new DummyBuilder());
+		result = qtb.build(new DummyQueryNode());
+		Assert.assertEquals("OK", result);
+	}
+
+	private static interface DummyQueryNodeInterface extends QueryNode {
+
+	}
+
+	private static abstract class AbstractDummyQueryNode extends QueryNodeImpl implements DummyQueryNodeInterface {
+
+	}
+
+	private static class DummyQueryNode extends AbstractDummyQueryNode {
+
+		@Override
+		public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser) {
+			return "DummyQueryNode";
+		}
+
+	}
+
+	private static class DummyBuilder implements QueryBuilder {
+
+		@Override
+		public Object build(QueryNode queryNode) throws QueryNodeException {
+			return "OK";
+		}
+
+	}
 
 }

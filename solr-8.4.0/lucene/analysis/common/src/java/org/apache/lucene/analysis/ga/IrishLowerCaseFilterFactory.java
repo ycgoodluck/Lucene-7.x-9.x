@@ -22,8 +22,8 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
- * Factory for {@link IrishLowerCaseFilter}. 
+/**
+ * Factory for {@link IrishLowerCaseFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_ga" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -31,30 +31,35 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.IrishLowerCaseFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.6.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.6.0
  */
 public class IrishLowerCaseFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "irishLowercase";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "irishLowercase";
 
-  /** Creates a new IrishLowerCaseFilterFactory */
-  public IrishLowerCaseFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new IrishLowerCaseFilter(input);
-  }
+	/**
+	 * Creates a new IrishLowerCaseFilterFactory
+	 */
+	public IrishLowerCaseFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  // this will 'mostly work', except for special cases, just like most other filters
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new IrishLowerCaseFilter(input);
+	}
+
+	// this will 'mostly work', except for special cases, just like most other filters
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

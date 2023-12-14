@@ -28,77 +28,88 @@ import java.util.Map;
  */
 public interface QueryNode {
 
-  /** convert to a query string understood by the query parser */
-  // TODO: this interface might be changed in the future
-  public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser);
+	/**
+	 * convert to a query string understood by the query parser
+	 */
+	// TODO: this interface might be changed in the future
+	public CharSequence toQueryString(EscapeQuerySyntax escapeSyntaxParser);
 
-  /** for printing */
-  @Override
-  public String toString();
+	/**
+	 * for printing
+	 */
+	@Override
+	public String toString();
 
-  /** get Children nodes */
-  public List<QueryNode> getChildren();
+	/**
+	 * get Children nodes
+	 */
+	public List<QueryNode> getChildren();
 
-  /** verify if a node is a Leaf node */
-  public boolean isLeaf();
+	/**
+	 * verify if a node is a Leaf node
+	 */
+	public boolean isLeaf();
 
-  /** verify if a node contains a tag */
-  public boolean containsTag(String tagName);
-  
-  /**
-   * Returns object stored under that tag name
-   */
-  public Object getTag(String tagName);
-  
-  public QueryNode getParent();
+	/**
+	 * verify if a node contains a tag
+	 */
+	public boolean containsTag(String tagName);
 
-  /**
-   * Recursive clone the QueryNode tree The tags are not copied to the new tree
-   * when you call the cloneTree() method
-   * 
-   * @return the cloned tree
-   */
-  public QueryNode cloneTree() throws CloneNotSupportedException;
+	/**
+	 * Returns object stored under that tag name
+	 */
+	public Object getTag(String tagName);
 
-  // Below are the methods that can change state of a QueryNode
-  // Write Operations (not Thread Safe)
+	public QueryNode getParent();
 
-  // add a new child to a non Leaf node
-  public void add(QueryNode child);
+	/**
+	 * Recursive clone the QueryNode tree The tags are not copied to the new tree
+	 * when you call the cloneTree() method
+	 *
+	 * @return the cloned tree
+	 */
+	public QueryNode cloneTree() throws CloneNotSupportedException;
 
-  public void add(List<QueryNode> children);
+	// Below are the methods that can change state of a QueryNode
+	// Write Operations (not Thread Safe)
 
-  // reset the children of a node
-  public void set(List<QueryNode> children);
+	// add a new child to a non Leaf node
+	public void add(QueryNode child);
 
-  /**
-   * Associate the specified value with the specified tagName. If the tagName
-   * already exists, the old value is replaced. The tagName and value cannot be
-   * null. tagName will be converted to lowercase.
-   */
-  public void setTag(String tagName, Object value);
-  
-  /**
-   * Unset a tag. tagName will be converted to lowercase.
-   */
-  public void unsetTag(String tagName);
-  
-  /**
-   * Returns a map containing all tags attached to this query node. 
-   * 
-   * @return a map containing all tags attached to this query node
-   */
-  public Map<String, Object> getTagMap();
+	public void add(List<QueryNode> children);
 
-  /**
-   * Removes this query node from its parent.
-   */
-  public void removeFromParent();
+	// reset the children of a node
+	public void set(List<QueryNode> children);
+
+	/**
+	 * Associate the specified value with the specified tagName. If the tagName
+	 * already exists, the old value is replaced. The tagName and value cannot be
+	 * null. tagName will be converted to lowercase.
+	 */
+	public void setTag(String tagName, Object value);
+
+	/**
+	 * Unset a tag. tagName will be converted to lowercase.
+	 */
+	public void unsetTag(String tagName);
+
+	/**
+	 * Returns a map containing all tags attached to this query node.
+	 *
+	 * @return a map containing all tags attached to this query node
+	 */
+	public Map<String, Object> getTagMap();
+
+	/**
+	 * Removes this query node from its parent.
+	 */
+	public void removeFromParent();
 
 
-  /**
-   * Remove a child node
-   * @param childNode Which child to remove
-   */
-  public void removeChildren(QueryNode childNode);
+	/**
+	 * Remove a child node
+	 *
+	 * @param childNode Which child to remove
+	 */
+	public void removeChildren(QueryNode childNode);
 }

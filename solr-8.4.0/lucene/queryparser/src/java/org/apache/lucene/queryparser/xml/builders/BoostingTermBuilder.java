@@ -32,16 +32,16 @@ import org.w3c.dom.Element;
  */
 public class BoostingTermBuilder extends SpanBuilderBase {
 
-  @Override
-  public SpanQuery getSpanQuery(Element e) throws ParserException {
-    String fieldName = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
-    String value = DOMUtils.getNonBlankTextOrFail(e);
+	@Override
+	public SpanQuery getSpanQuery(Element e) throws ParserException {
+		String fieldName = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
+		String value = DOMUtils.getNonBlankTextOrFail(e);
 
-    // TODO make function and decoder pluggable somehow?
-    SpanQuery btq = new PayloadScoreQuery(new SpanTermQuery(new Term(fieldName, value)),
-        new AveragePayloadFunction(), PayloadDecoder.FLOAT_DECODER);
-    btq = new SpanBoostQuery(btq, DOMUtils.getAttribute(e, "boost", 1.0f));
-    return btq;
-  }
+		// TODO make function and decoder pluggable somehow?
+		SpanQuery btq = new PayloadScoreQuery(new SpanTermQuery(new Term(fieldName, value)),
+			new AveragePayloadFunction(), PayloadDecoder.FLOAT_DECODER);
+		btq = new SpanBoostQuery(btq, DOMUtils.getAttribute(e, "boost", 1.0f));
+		return btq;
+	}
 
 }

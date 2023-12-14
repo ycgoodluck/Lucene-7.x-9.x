@@ -36,57 +36,59 @@ import org.apache.lucene.search.SimpleCollector;
  */
 public class AllGroupsCollector<T> extends SimpleCollector {
 
-  private final GroupSelector<T> groupSelector;
+	private final GroupSelector<T> groupSelector;
 
-  private final Set<T> groups = new HashSet<T>();
+	private final Set<T> groups = new HashSet<T>();
 
-  /**
-   * Create a new AllGroupsCollector
-   * @param groupSelector the GroupSelector to determine groups
-   */
-  public AllGroupsCollector(GroupSelector<T> groupSelector) {
-    this.groupSelector = groupSelector;
-  }
+	/**
+	 * Create a new AllGroupsCollector
+	 *
+	 * @param groupSelector the GroupSelector to determine groups
+	 */
+	public AllGroupsCollector(GroupSelector<T> groupSelector) {
+		this.groupSelector = groupSelector;
+	}
 
-  /**
-   * Returns the total number of groups for the executed search.
-   * This is a convenience method. The following code snippet has the same effect: <pre>getGroups().size()</pre>
-   *
-   * @return The total number of groups for the executed search
-   */
-  public int getGroupCount() {
-    return getGroups().size();
-  }
+	/**
+	 * Returns the total number of groups for the executed search.
+	 * This is a convenience method. The following code snippet has the same effect: <pre>getGroups().size()</pre>
+	 *
+	 * @return The total number of groups for the executed search
+	 */
+	public int getGroupCount() {
+		return getGroups().size();
+	}
 
-  /**
-   * Returns the group values
-   * <p>
-   * This is an unordered collections of group values.
-   *
-   * @return the group values
-   */
-  public Collection<T> getGroups() {
-    return groups;
-  }
+	/**
+	 * Returns the group values
+	 * <p>
+	 * This is an unordered collections of group values.
+	 *
+	 * @return the group values
+	 */
+	public Collection<T> getGroups() {
+		return groups;
+	}
 
-  @Override
-  public void setScorer(Scorable scorer) throws IOException {}
+	@Override
+	public void setScorer(Scorable scorer) throws IOException {
+	}
 
-  @Override
-  protected void doSetNextReader(LeafReaderContext context) throws IOException {
-    groupSelector.setNextReader(context);
-  }
+	@Override
+	protected void doSetNextReader(LeafReaderContext context) throws IOException {
+		groupSelector.setNextReader(context);
+	}
 
-  @Override
-  public void collect(int doc) throws IOException {
-    groupSelector.advanceTo(doc);
-    if (groups.contains(groupSelector.currentValue()))
-      return;
-    groups.add(groupSelector.copyValue());
-  }
+	@Override
+	public void collect(int doc) throws IOException {
+		groupSelector.advanceTo(doc);
+		if (groups.contains(groupSelector.currentValue()))
+			return;
+		groups.add(groupSelector.copyValue());
+	}
 
-  @Override
-  public ScoreMode scoreMode() {
-    return ScoreMode.COMPLETE_NO_SCORES; // the result is unaffected by relevancy
-  }
+	@Override
+	public ScoreMode scoreMode() {
+		return ScoreMode.COMPLETE_NO_SCORES; // the result is unaffected by relevancy
+	}
 }

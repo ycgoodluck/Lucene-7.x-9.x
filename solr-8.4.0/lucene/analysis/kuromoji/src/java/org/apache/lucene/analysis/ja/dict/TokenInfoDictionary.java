@@ -31,46 +31,47 @@ import org.apache.lucene.util.fst.PositiveIntOutputs;
  */
 public final class TokenInfoDictionary extends BinaryDictionary {
 
-  public static final String FST_FILENAME_SUFFIX = "$fst.dat";
+	public static final String FST_FILENAME_SUFFIX = "$fst.dat";
 
-  private final TokenInfoFST fst;
-  
-  /**
-   * @param resourceScheme - scheme for loading resources (FILE or CLASSPATH).
-   * @param resourcePath - where to load resources (dictionaries) from. If null, with CLASSPATH scheme only, use
-   * this class's name as the path.
-   */
-  public TokenInfoDictionary(ResourceScheme resourceScheme, String resourcePath) throws IOException {
-    super(resourceScheme, resourcePath);
-    FST<Long> fst;
-    try (InputStream is = new BufferedInputStream(getResource(FST_FILENAME_SUFFIX))) {
-      fst = new FST<>(new InputStreamDataInput(is), PositiveIntOutputs.getSingleton());
-    }
-    // TODO: some way to configure?
-    this.fst = new TokenInfoFST(fst, true);
-  }
+	private final TokenInfoFST fst;
 
-  private TokenInfoDictionary() throws IOException {
-    this(ResourceScheme.CLASSPATH, null);
-  }
-  
-  public TokenInfoFST getFST() {
-    return fst;
-  }
-   
-  public static TokenInfoDictionary getInstance() {
-    return SingletonHolder.INSTANCE;
-  }
-  
-  private static class SingletonHolder {
-    static final TokenInfoDictionary INSTANCE;
-    static {
-      try {
-        INSTANCE = new TokenInfoDictionary();
-      } catch (IOException ioe) {
-        throw new RuntimeException("Cannot load TokenInfoDictionary.", ioe);
-      }
-    }
-   }
-  
+	/**
+	 * @param resourceScheme - scheme for loading resources (FILE or CLASSPATH).
+	 * @param resourcePath   - where to load resources (dictionaries) from. If null, with CLASSPATH scheme only, use
+	 *                       this class's name as the path.
+	 */
+	public TokenInfoDictionary(ResourceScheme resourceScheme, String resourcePath) throws IOException {
+		super(resourceScheme, resourcePath);
+		FST<Long> fst;
+		try (InputStream is = new BufferedInputStream(getResource(FST_FILENAME_SUFFIX))) {
+			fst = new FST<>(new InputStreamDataInput(is), PositiveIntOutputs.getSingleton());
+		}
+		// TODO: some way to configure?
+		this.fst = new TokenInfoFST(fst, true);
+	}
+
+	private TokenInfoDictionary() throws IOException {
+		this(ResourceScheme.CLASSPATH, null);
+	}
+
+	public TokenInfoFST getFST() {
+		return fst;
+	}
+
+	public static TokenInfoDictionary getInstance() {
+		return SingletonHolder.INSTANCE;
+	}
+
+	private static class SingletonHolder {
+		static final TokenInfoDictionary INSTANCE;
+
+		static {
+			try {
+				INSTANCE = new TokenInfoDictionary();
+			} catch (IOException ioe) {
+				throw new RuntimeException("Cannot load TokenInfoDictionary.", ioe);
+			}
+		}
+	}
+
 }

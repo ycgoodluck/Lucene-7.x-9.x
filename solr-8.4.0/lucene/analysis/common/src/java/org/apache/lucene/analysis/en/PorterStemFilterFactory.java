@@ -33,24 +33,28 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class PorterStemFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "porterStem";
-  
-  /** Creates a new PorterStemFilterFactory */
-  public PorterStemFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public PorterStemFilter create(TokenStream input) {
-    return new PorterStemFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "porterStem";
+
+	/**
+	 * Creates a new PorterStemFilterFactory
+	 */
+	public PorterStemFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public PorterStemFilter create(TokenStream input) {
+		return new PorterStemFilter(input);
+	}
 }

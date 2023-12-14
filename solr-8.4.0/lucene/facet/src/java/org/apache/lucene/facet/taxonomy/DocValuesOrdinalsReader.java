@@ -26,87 +26,95 @@ import org.apache.lucene.util.ArrayUtil;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IntsRef;
 
-/** Decodes ordinals previously indexed into a BinaryDocValues field */
+/**
+ * Decodes ordinals previously indexed into a BinaryDocValues field
+ */
 public class DocValuesOrdinalsReader extends OrdinalsReader {
-  private final String field;
+	private final String field;
 
-  /** Default constructor. */
-  public DocValuesOrdinalsReader() {
-    this(FacetsConfig.DEFAULT_INDEX_FIELD_NAME);
-  }
+	/**
+	 * Default constructor.
+	 */
+	public DocValuesOrdinalsReader() {
+		this(FacetsConfig.DEFAULT_INDEX_FIELD_NAME);
+	}
 
-  /** Create this, with the specified indexed field name. */
-  public DocValuesOrdinalsReader(String field) {
-    this.field = field;
-  }
+	/**
+	 * Create this, with the specified indexed field name.
+	 */
+	public DocValuesOrdinalsReader(String field) {
+		this.field = field;
+	}
 
-  @Override
-  public OrdinalsSegmentReader getReader(LeafReaderContext context) throws IOException {
-    BinaryDocValues values0 = context.reader().getBinaryDocValues(field);
-    if (values0 == null) {
-      values0 = DocValues.emptyBinary();
-    }
+	@Override
+	public OrdinalsSegmentReader getReader(LeafReaderContext context) throws IOException {
+		BinaryDocValues values0 = context.reader().getBinaryDocValues(field);
+		if (values0 == null) {
+			values0 = DocValues.emptyBinary();
+		}
 
-    final BinaryDocValues values = values0;
+		final BinaryDocValues values = values0;
 
-    return new OrdinalsSegmentReader() {
+		return new OrdinalsSegmentReader() {
 
-      private int lastDocID;
-      
-      @Override
-      public void get(int docID, IntsRef ordinals) throws IOException {
-        if (docID < lastDocID) {
-          throw new AssertionError("docs out of order: lastDocID=" + lastDocID + " vs docID=" + docID);
-        }
-        lastDocID = docID;
-        if (docID > values.docID()) {
-          values.advance(docID);
-        }
-        final BytesRef bytes;
-        if (values.docID() == docID) {
-          bytes = values.binaryValue();
-        } else {
-          bytes = new BytesRef(BytesRef.EMPTY_BYTES);
-        }
-        decode(bytes, ordinals);
-      }
-    };
-  }
+			private int lastDocID;
 
-  @Override
-  public String getIndexFieldName() {
-    return field;
-  }
+			@Override
+			public void get(int docID, IntsRef ordinals) throws IOException {
+				if (docID < lastDocID) {
+					throw new AssertionError("docs out of order: lastDocID=" + lastDocID + " vs docID=" + docID);
+				}
+				lastDocID = docID;
+				if (docID > values.docID()) {
+					values.advance(docID);
+				}
+				final BytesRef bytes;
+				if (values.docID() == docID) {
+					bytes = values.binaryValue();
+				} else {
+					bytes = new BytesRef(BytesRef.EMPTY_BYTES);
+				}
+				decode(bytes, ordinals);
+			}
+		};
+	}
 
-  /** Subclass and override if you change the encoding. */
-  protected void decode(BytesRef buf, IntsRef ordinals) {
+	@Override
+	public String getIndexFieldName() {
+		return field;
+	}
 
-    // grow the buffer up front, even if by a large number of values (buf.length)
-    // that saves the need to check inside the loop for every decoded value if
-    // the buffer needs to grow.
-    if (ordinals.ints.length < buf.length) {
-      ordinals.ints = ArrayUtil.grow(ordinals.ints, buf.length);
-    }
+	/**
+	 * Subclass and override if you change the encoding.
+	 */
+	protected void decode(BytesRef buf, IntsRef ordinals) {
 
-    ordinals.offset = 0;
-    ordinals.length = 0;
+		// grow the buffer up front, even if by a large number of values (buf.length)
+		// that saves the need to check inside the loop for every decoded value if
+		// the buffer needs to grow.
+		if (ordinals.ints.length < buf.length) {
+			ordinals.ints = ArrayUtil.grow(ordinals.ints, buf.length);
+		}
 
-    // it is better if the decoding is inlined like so, and not e.g.
-    // in a utility method
-    int upto = buf.offset + buf.length;
-    int value = 0;
-    int offset = buf.offset;
-    int prev = 0;
-    while (offset < upto) {
-      byte b = buf.bytes[offset++];
-      if (b >= 0) {
-        ordinals.ints[ordinals.length] = ((value << 7) | b) + prev;
-        value = 0;
-        prev = ordinals.ints[ordinals.length];
-        ordinals.length++;
-      } else {
-        value = (value << 7) | (b & 0x7F);
-      }
-    }
-  }
+		ordinals.offset = 0;
+		ordinals.length = 0;
+
+		// it is better if the decoding is inlined like so, and not e.g.
+		// in a utility method
+		int upto = buf.offset + buf.length;
+		int value = 0;
+		int offset = buf.offset;
+		int prev = 0;
+		while (offset < upto) {
+			byte b = buf.bytes[offset++];
+			if (b >= 0) {
+				ordinals.ints[ordinals.length] = ((value << 7) | b) + prev;
+				value = 0;
+				prev = ordinals.ints[ordinals.length];
+				ordinals.length++;
+			} else {
+				value = (value << 7) | (b & 0x7F);
+			}
+		}
+	}
 }

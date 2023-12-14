@@ -37,65 +37,65 @@ import org.egothor.stemmer.Trie;
  * </p>
  */
 public class StempelStemmer {
-  private Trie stemmer = null;
-  private StringBuilder buffer = new StringBuilder();
+	private Trie stemmer = null;
+	private StringBuilder buffer = new StringBuilder();
 
-  /**
-   * Create a Stemmer using selected stemmer table
-   * 
-   * @param stemmerTable stemmer table.
-   */
-  public StempelStemmer(InputStream stemmerTable) throws IOException {
-    this(load(stemmerTable));
-  }
+	/**
+	 * Create a Stemmer using selected stemmer table
+	 *
+	 * @param stemmerTable stemmer table.
+	 */
+	public StempelStemmer(InputStream stemmerTable) throws IOException {
+		this(load(stemmerTable));
+	}
 
-  /**
-   * Create a Stemmer using pre-loaded stemmer table
-   * 
-   * @param stemmer pre-loaded stemmer table
-   */
-  public StempelStemmer(Trie stemmer) {
-    this.stemmer = stemmer;
-  }
-  
-  /**
-   * Load a stemmer table from an inputstream.
-   */
-  public static Trie load(InputStream stemmerTable) throws IOException {
-    DataInputStream in = null;
-    try {
-      in = new DataInputStream(new BufferedInputStream(stemmerTable));
-      String method = in.readUTF().toUpperCase(Locale.ROOT);
-      if (method.indexOf('M') < 0) {
-        return new org.egothor.stemmer.Trie(in);
-      } else {
-        return new org.egothor.stemmer.MultiTrie2(in);
-      }
-    } finally {
-      in.close();
-    }
-  }
+	/**
+	 * Create a Stemmer using pre-loaded stemmer table
+	 *
+	 * @param stemmer pre-loaded stemmer table
+	 */
+	public StempelStemmer(Trie stemmer) {
+		this.stemmer = stemmer;
+	}
 
-  /**
-   * Stem a word. 
-   * 
-   * @param word input word to be stemmed.
-   * @return stemmed word, or null if the stem could not be generated.
-   */
-  public StringBuilder stem(CharSequence word) {
-    CharSequence cmd = stemmer.getLastOnPath(word);
-    
-    if (cmd == null)
-        return null;
-    
-    buffer.setLength(0);
-    buffer.append(word);
+	/**
+	 * Load a stemmer table from an inputstream.
+	 */
+	public static Trie load(InputStream stemmerTable) throws IOException {
+		DataInputStream in = null;
+		try {
+			in = new DataInputStream(new BufferedInputStream(stemmerTable));
+			String method = in.readUTF().toUpperCase(Locale.ROOT);
+			if (method.indexOf('M') < 0) {
+				return new org.egothor.stemmer.Trie(in);
+			} else {
+				return new org.egothor.stemmer.MultiTrie2(in);
+			}
+		} finally {
+			in.close();
+		}
+	}
 
-    Diff.apply(buffer, cmd);
-    
-    if (buffer.length() > 0)
-      return buffer;
-    else
-      return null;
-  }
+	/**
+	 * Stem a word.
+	 *
+	 * @param word input word to be stemmed.
+	 * @return stemmed word, or null if the stem could not be generated.
+	 */
+	public StringBuilder stem(CharSequence word) {
+		CharSequence cmd = stemmer.getLastOnPath(word);
+
+		if (cmd == null)
+			return null;
+
+		buffer.setLength(0);
+		buffer.append(word);
+
+		Diff.apply(buffer, cmd);
+
+		if (buffer.length() > 0)
+			return buffer;
+		else
+			return null;
+	}
 }

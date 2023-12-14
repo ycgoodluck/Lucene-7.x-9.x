@@ -33,59 +33,59 @@ import java.util.HashSet;
 
 public final class SingleInstanceLockFactory extends LockFactory {
 
-  final HashSet<String> locks = new HashSet<>();
+	final HashSet<String> locks = new HashSet<>();
 
-  @Override
-  public Lock obtainLock(Directory dir, String lockName) throws IOException {
-    synchronized (locks) {
-      if (locks.add(lockName)) {
-        return new SingleInstanceLock(lockName);
-      } else {
-        throw new LockObtainFailedException("lock instance already obtained: (dir=" + dir + ", lockName=" + lockName + ")");
-      }
-    }
-  }
+	@Override
+	public Lock obtainLock(Directory dir, String lockName) throws IOException {
+		synchronized (locks) {
+			if (locks.add(lockName)) {
+				return new SingleInstanceLock(lockName);
+			} else {
+				throw new LockObtainFailedException("lock instance already obtained: (dir=" + dir + ", lockName=" + lockName + ")");
+			}
+		}
+	}
 
-  private class SingleInstanceLock extends Lock {
-    private final String lockName;
-    private volatile boolean closed;
+	private class SingleInstanceLock extends Lock {
+		private final String lockName;
+		private volatile boolean closed;
 
-    public SingleInstanceLock(String lockName) {
-      this.lockName = lockName;
-    }
+		public SingleInstanceLock(String lockName) {
+			this.lockName = lockName;
+		}
 
-    @Override
-    public void ensureValid() throws IOException {
-      if (closed) {
-        throw new AlreadyClosedException("Lock instance already released: " + this);
-      }
-      // check we are still in the locks map (some debugger or something crazy didn't remove us)
-      synchronized (locks) {
-        if (!locks.contains(lockName)) {
-          throw new AlreadyClosedException("Lock instance was invalidated from map: " + this);
-        }
-      }
-    }
+		@Override
+		public void ensureValid() throws IOException {
+			if (closed) {
+				throw new AlreadyClosedException("Lock instance already released: " + this);
+			}
+			// check we are still in the locks map (some debugger or something crazy didn't remove us)
+			synchronized (locks) {
+				if (!locks.contains(lockName)) {
+					throw new AlreadyClosedException("Lock instance was invalidated from map: " + this);
+				}
+			}
+		}
 
-    @Override
-    public synchronized void close() throws IOException {
-      if (closed) {
-        return;
-      }
-      try {
-        synchronized (locks) {
-          if (!locks.remove(lockName)) {
-            throw new AlreadyClosedException("Lock was already released: " + this);
-          }
-        }
-      } finally {
-        closed = true;
-      }
-    }
+		@Override
+		public synchronized void close() throws IOException {
+			if (closed) {
+				return;
+			}
+			try {
+				synchronized (locks) {
+					if (!locks.remove(lockName)) {
+						throw new AlreadyClosedException("Lock was already released: " + this);
+					}
+				}
+			} finally {
+				closed = true;
+			}
+		}
 
-    @Override
-    public String toString() {
-      return super.toString() + ": " + lockName;
-    }
-  }
+		@Override
+		public String toString() {
+			return super.toString() + ": " + lockName;
+		}
+	}
 }

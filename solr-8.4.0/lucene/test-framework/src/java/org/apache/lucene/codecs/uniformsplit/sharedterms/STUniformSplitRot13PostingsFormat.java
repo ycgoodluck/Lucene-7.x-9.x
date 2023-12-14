@@ -30,30 +30,30 @@ import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
 
 /**
- *  {@link STUniformSplitPostingsFormat} with block encoding using ROT13 cypher.
+ * {@link STUniformSplitPostingsFormat} with block encoding using ROT13 cypher.
  */
 public class STUniformSplitRot13PostingsFormat extends UniformSplitRot13PostingsFormat {
 
-  public STUniformSplitRot13PostingsFormat() {
-    super("STUniformSplitRot13");
-  }
+	public STUniformSplitRot13PostingsFormat() {
+		super("STUniformSplitRot13");
+	}
 
-  protected FieldsConsumer createFieldsConsumer(SegmentWriteState segmentWriteState, PostingsWriterBase postingsWriter) throws IOException {
-    return new STUniformSplitTermsWriter(postingsWriter, segmentWriteState,
-        UniformSplitTermsWriter.DEFAULT_TARGET_NUM_BLOCK_LINES,
-        UniformSplitTermsWriter.DEFAULT_DELTA_NUM_LINES,
-        getBlockEncoder()
-    ) {
-      @Override
-      protected void writeDictionary(IndexDictionary.Builder dictionaryBuilder) throws IOException {
-        recordBlockEncodingCall();
-        super.writeDictionary(dictionaryBuilder);
-        recordDictionaryEncodingCall();
-      }
-    };
-  }
+	protected FieldsConsumer createFieldsConsumer(SegmentWriteState segmentWriteState, PostingsWriterBase postingsWriter) throws IOException {
+		return new STUniformSplitTermsWriter(postingsWriter, segmentWriteState,
+			UniformSplitTermsWriter.DEFAULT_TARGET_NUM_BLOCK_LINES,
+			UniformSplitTermsWriter.DEFAULT_DELTA_NUM_LINES,
+			getBlockEncoder()
+		) {
+			@Override
+			protected void writeDictionary(IndexDictionary.Builder dictionaryBuilder) throws IOException {
+				recordBlockEncodingCall();
+				super.writeDictionary(dictionaryBuilder);
+				recordDictionaryEncodingCall();
+			}
+		};
+	}
 
-  protected FieldsProducer createFieldsProducer(SegmentReadState segmentReadState, PostingsReaderBase postingsReader) throws IOException {
-    return new STUniformSplitTermsReader(postingsReader, segmentReadState, getBlockDecoder());
-  }
+	protected FieldsProducer createFieldsProducer(SegmentReadState segmentReadState, PostingsReaderBase postingsReader) throws IOException {
+		return new STUniformSplitTermsReader(postingsReader, segmentReadState, getBlockDecoder());
+	}
 }

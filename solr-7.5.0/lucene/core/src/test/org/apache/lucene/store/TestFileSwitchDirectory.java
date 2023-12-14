@@ -36,99 +36,99 @@ import org.apache.lucene.util.TestUtil;
 // See: https://issues.apache.org/jira/browse/SOLR-12028 Tests cannot remove files on Windows machines occasionally
 public class TestFileSwitchDirectory extends BaseDirectoryTestCase {
 
-  /**
-   * Test if writing doc stores to disk and everything else to ram works.
-   */
-  public void testBasic() throws IOException {
-    Set<String> fileExtensions = new HashSet<>();
-    fileExtensions.add(CompressingStoredFieldsWriter.FIELDS_EXTENSION);
-    fileExtensions.add(CompressingStoredFieldsWriter.FIELDS_INDEX_EXTENSION);
-    
-    MockDirectoryWrapper primaryDir = new MockDirectoryWrapper(random(), new RAMDirectory());
-    primaryDir.setCheckIndexOnClose(false); // only part of an index
-    MockDirectoryWrapper secondaryDir = new MockDirectoryWrapper(random(), new RAMDirectory());
-    secondaryDir.setCheckIndexOnClose(false); // only part of an index
-    
-    FileSwitchDirectory fsd = new FileSwitchDirectory(fileExtensions, primaryDir, secondaryDir, true);
-    // for now we wire the default codec because we rely upon its specific impl
-    IndexWriter writer = new IndexWriter(
-        fsd,
-        new IndexWriterConfig(new MockAnalyzer(random())).
-            setMergePolicy(newLogMergePolicy(false)).setCodec(TestUtil.getDefaultCodec()).setUseCompoundFile(false)
-    );
-    TestIndexWriterReader.createIndexNoClose(true, "ram", writer);
-    IndexReader reader = DirectoryReader.open(writer);
-    assertEquals(100, reader.maxDoc());
-    writer.commit();
-    // we should see only fdx,fdt files here
-    String[] files = primaryDir.listAll();
-    assertTrue(files.length > 0);
-    for (int x=0; x < files.length; x++) {
-      String ext = FileSwitchDirectory.getExtension(files[x]);
-      assertTrue(fileExtensions.contains(ext));
-    }
-    files = secondaryDir.listAll();
-    assertTrue(files.length > 0);
-    // we should not see fdx,fdt files here
-    for (int x=0; x < files.length; x++) {
-      String ext = FileSwitchDirectory.getExtension(files[x]);
-      assertFalse(fileExtensions.contains(ext));
-    }
-    reader.close();
-    writer.close();
+	/**
+	 * Test if writing doc stores to disk and everything else to ram works.
+	 */
+	public void testBasic() throws IOException {
+		Set<String> fileExtensions = new HashSet<>();
+		fileExtensions.add(CompressingStoredFieldsWriter.FIELDS_EXTENSION);
+		fileExtensions.add(CompressingStoredFieldsWriter.FIELDS_INDEX_EXTENSION);
 
-    files = fsd.listAll();
-    for(int i=0;i<files.length;i++) {
-      assertNotNull(files[i]);
-    }
-    fsd.close();
-  }
-  
-  private Directory newFSSwitchDirectory(Set<String> primaryExtensions) throws IOException {
-    Path primDir = createTempDir("foo");
-    Path secondDir = createTempDir("bar");
-    return newFSSwitchDirectory(primDir, secondDir, primaryExtensions);
-  }
+		MockDirectoryWrapper primaryDir = new MockDirectoryWrapper(random(), new RAMDirectory());
+		primaryDir.setCheckIndexOnClose(false); // only part of an index
+		MockDirectoryWrapper secondaryDir = new MockDirectoryWrapper(random(), new RAMDirectory());
+		secondaryDir.setCheckIndexOnClose(false); // only part of an index
 
-  private Directory newFSSwitchDirectory(Path aDir, Path bDir, Set<String> primaryExtensions) throws IOException {
-    Directory a = new SimpleFSDirectory(aDir);
-    Directory b = new SimpleFSDirectory(bDir);
-    return new FileSwitchDirectory(primaryExtensions, a, b, true);
-  }
-  
-  // LUCENE-3380 -- make sure we get exception if the directory really does not exist.
-  public void testNoDir() throws Throwable {
-    Path primDir = createTempDir("foo");
-    Path secondDir = createTempDir("bar");
-    Directory dir = newFSSwitchDirectory(primDir, secondDir, Collections.<String>emptySet());
-    expectThrows(IndexNotFoundException.class, () -> {
-      DirectoryReader.open(dir);
-    });
+		FileSwitchDirectory fsd = new FileSwitchDirectory(fileExtensions, primaryDir, secondaryDir, true);
+		// for now we wire the default codec because we rely upon its specific impl
+		IndexWriter writer = new IndexWriter(
+			fsd,
+			new IndexWriterConfig(new MockAnalyzer(random())).
+				setMergePolicy(newLogMergePolicy(false)).setCodec(TestUtil.getDefaultCodec()).setUseCompoundFile(false)
+		);
+		TestIndexWriterReader.createIndexNoClose(true, "ram", writer);
+		IndexReader reader = DirectoryReader.open(writer);
+		assertEquals(100, reader.maxDoc());
+		writer.commit();
+		// we should see only fdx,fdt files here
+		String[] files = primaryDir.listAll();
+		assertTrue(files.length > 0);
+		for (int x = 0; x < files.length; x++) {
+			String ext = FileSwitchDirectory.getExtension(files[x]);
+			assertTrue(fileExtensions.contains(ext));
+		}
+		files = secondaryDir.listAll();
+		assertTrue(files.length > 0);
+		// we should not see fdx,fdt files here
+		for (int x = 0; x < files.length; x++) {
+			String ext = FileSwitchDirectory.getExtension(files[x]);
+			assertFalse(fileExtensions.contains(ext));
+		}
+		reader.close();
+		writer.close();
 
-    dir.close();
-  }
+		files = fsd.listAll();
+		for (int i = 0; i < files.length; i++) {
+			assertNotNull(files[i]);
+		}
+		fsd.close();
+	}
 
-  @Override
-  protected Directory getDirectory(Path path) throws IOException {
-    Set<String> extensions = new HashSet<String>();
-    if (random().nextBoolean()) {
-      extensions.add("cfs");
-    }
-    if (random().nextBoolean()) {
-      extensions.add("prx");
-    }
-    if (random().nextBoolean()) {
-      extensions.add("frq");
-    }
-    if (random().nextBoolean()) {
-      extensions.add("tip");
-    }
-    if (random().nextBoolean()) {
-      extensions.add("tim");
-    }
-    if (random().nextBoolean()) {
-      extensions.add("del");
-    }
-    return newFSSwitchDirectory(extensions);
-  }
+	private Directory newFSSwitchDirectory(Set<String> primaryExtensions) throws IOException {
+		Path primDir = createTempDir("foo");
+		Path secondDir = createTempDir("bar");
+		return newFSSwitchDirectory(primDir, secondDir, primaryExtensions);
+	}
+
+	private Directory newFSSwitchDirectory(Path aDir, Path bDir, Set<String> primaryExtensions) throws IOException {
+		Directory a = new SimpleFSDirectory(aDir);
+		Directory b = new SimpleFSDirectory(bDir);
+		return new FileSwitchDirectory(primaryExtensions, a, b, true);
+	}
+
+	// LUCENE-3380 -- make sure we get exception if the directory really does not exist.
+	public void testNoDir() throws Throwable {
+		Path primDir = createTempDir("foo");
+		Path secondDir = createTempDir("bar");
+		Directory dir = newFSSwitchDirectory(primDir, secondDir, Collections.<String>emptySet());
+		expectThrows(IndexNotFoundException.class, () -> {
+			DirectoryReader.open(dir);
+		});
+
+		dir.close();
+	}
+
+	@Override
+	protected Directory getDirectory(Path path) throws IOException {
+		Set<String> extensions = new HashSet<String>();
+		if (random().nextBoolean()) {
+			extensions.add("cfs");
+		}
+		if (random().nextBoolean()) {
+			extensions.add("prx");
+		}
+		if (random().nextBoolean()) {
+			extensions.add("frq");
+		}
+		if (random().nextBoolean()) {
+			extensions.add("tip");
+		}
+		if (random().nextBoolean()) {
+			extensions.add("tim");
+		}
+		if (random().nextBoolean()) {
+			extensions.add("del");
+		}
+		return newFSSwitchDirectory(extensions);
+	}
 }

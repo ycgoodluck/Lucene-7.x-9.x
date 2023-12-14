@@ -30,40 +30,40 @@ import org.apache.lucene.search.TermRangeQuery;
  * object.
  */
 public class TermRangeQueryNodeBuilder implements StandardQueryBuilder {
-  
-  public TermRangeQueryNodeBuilder() {
-  // empty constructor
-  }
-  
-  @Override
-  public TermRangeQuery build(QueryNode queryNode) throws QueryNodeException {
-    TermRangeQueryNode rangeNode = (TermRangeQueryNode) queryNode;
-    FieldQueryNode upper = rangeNode.getUpperBound();
-    FieldQueryNode lower = rangeNode.getLowerBound();
-    
-    String field = StringUtils.toString(rangeNode.getField());
-    String lowerText = lower.getTextAsString();
-    String upperText = upper.getTextAsString();
-    
-    if (lowerText.length() == 0) {
-      lowerText = null;
-    }
-    
-    if (upperText.length() == 0) {
-      upperText = null;
-    }
-    
-    TermRangeQuery rangeQuery = TermRangeQuery.newStringRange(field, lowerText, upperText, rangeNode
-        .isLowerInclusive(), rangeNode.isUpperInclusive());
-    
-    MultiTermQuery.RewriteMethod method = (MultiTermQuery.RewriteMethod) queryNode
-        .getTag(MultiTermRewriteMethodProcessor.TAG_ID);
-    if (method != null) {
-      rangeQuery.setRewriteMethod(method);
-    }
-    
-    return rangeQuery;
-    
-  }
-  
+
+	public TermRangeQueryNodeBuilder() {
+		// empty constructor
+	}
+
+	@Override
+	public TermRangeQuery build(QueryNode queryNode) throws QueryNodeException {
+		TermRangeQueryNode rangeNode = (TermRangeQueryNode) queryNode;
+		FieldQueryNode upper = rangeNode.getUpperBound();
+		FieldQueryNode lower = rangeNode.getLowerBound();
+
+		String field = StringUtils.toString(rangeNode.getField());
+		String lowerText = lower.getTextAsString();
+		String upperText = upper.getTextAsString();
+
+		if (lowerText.length() == 0) {
+			lowerText = null;
+		}
+
+		if (upperText.length() == 0) {
+			upperText = null;
+		}
+
+		TermRangeQuery rangeQuery = TermRangeQuery.newStringRange(field, lowerText, upperText, rangeNode
+			.isLowerInclusive(), rangeNode.isUpperInclusive());
+
+		MultiTermQuery.RewriteMethod method = (MultiTermQuery.RewriteMethod) queryNode
+			.getTag(MultiTermRewriteMethodProcessor.TAG_ID);
+		if (method != null) {
+			rangeQuery.setRewriteMethod(method);
+		}
+
+		return rangeQuery;
+
+	}
+
 }

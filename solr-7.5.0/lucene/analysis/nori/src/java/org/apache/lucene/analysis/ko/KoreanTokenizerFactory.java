@@ -57,55 +57,58 @@ import org.apache.lucene.analysis.ko.KoreanTokenizer.DecompoundMode;
  *   <li>decompoundMode: Decompound mode. Either 'none', 'discard', 'mixed'. Default is discard. See {@link DecompoundMode}</li>
  *   <li>outputUnknownUnigrams: If true outputs unigrams for unknown words.</li>
  * </ul>
+ *
  * @lucene.experimental
  */
 public class KoreanTokenizerFactory extends TokenizerFactory implements ResourceLoaderAware {
-  private static final String USER_DICT_PATH = "userDictionary";
-  private static final String USER_DICT_ENCODING = "userDictionaryEncoding";
-  private static final String DECOMPOUND_MODE = "decompoundMode";
-  private static final String OUTPUT_UNKNOWN_UNIGRAMS = "outputUnknownUnigrams";
+	private static final String USER_DICT_PATH = "userDictionary";
+	private static final String USER_DICT_ENCODING = "userDictionaryEncoding";
+	private static final String DECOMPOUND_MODE = "decompoundMode";
+	private static final String OUTPUT_UNKNOWN_UNIGRAMS = "outputUnknownUnigrams";
 
-  private final String userDictionaryPath;
-  private final String userDictionaryEncoding;
-  private UserDictionary userDictionary;
+	private final String userDictionaryPath;
+	private final String userDictionaryEncoding;
+	private UserDictionary userDictionary;
 
-  private final KoreanTokenizer.DecompoundMode mode;
-  private final boolean outputUnknownUnigrams;
+	private final KoreanTokenizer.DecompoundMode mode;
+	private final boolean outputUnknownUnigrams;
 
-  /** Creates a new KoreanTokenizerFactory */
-  public KoreanTokenizerFactory(Map<String, String> args) {
-    super(args);
-    userDictionaryPath = args.remove(USER_DICT_PATH);
-    userDictionaryEncoding = args.remove(USER_DICT_ENCODING);
-    mode = KoreanTokenizer.DecompoundMode.valueOf(get(args, DECOMPOUND_MODE, KoreanTokenizer.DEFAULT_DECOMPOUND.toString()).toUpperCase(Locale.ROOT));
-    outputUnknownUnigrams = getBoolean(args, OUTPUT_UNKNOWN_UNIGRAMS, false);
+	/**
+	 * Creates a new KoreanTokenizerFactory
+	 */
+	public KoreanTokenizerFactory(Map<String, String> args) {
+		super(args);
+		userDictionaryPath = args.remove(USER_DICT_PATH);
+		userDictionaryEncoding = args.remove(USER_DICT_ENCODING);
+		mode = KoreanTokenizer.DecompoundMode.valueOf(get(args, DECOMPOUND_MODE, KoreanTokenizer.DEFAULT_DECOMPOUND.toString()).toUpperCase(Locale.ROOT));
+		outputUnknownUnigrams = getBoolean(args, OUTPUT_UNKNOWN_UNIGRAMS, false);
 
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    if (userDictionaryPath != null) {
-      try (InputStream stream = loader.openResource(userDictionaryPath)) {
-        String encoding = userDictionaryEncoding;
-        if (encoding == null) {
-          encoding = IOUtils.UTF_8;
-        }
-        CharsetDecoder decoder = Charset.forName(encoding).newDecoder()
-          .onMalformedInput(CodingErrorAction.REPORT)
-          .onUnmappableCharacter(CodingErrorAction.REPORT);
-        Reader reader = new InputStreamReader(stream, decoder);
-        userDictionary = UserDictionary.open(reader);
-      }
-    } else {
-      userDictionary = null;
-    }
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		if (userDictionaryPath != null) {
+			try (InputStream stream = loader.openResource(userDictionaryPath)) {
+				String encoding = userDictionaryEncoding;
+				if (encoding == null) {
+					encoding = IOUtils.UTF_8;
+				}
+				CharsetDecoder decoder = Charset.forName(encoding).newDecoder()
+					.onMalformedInput(CodingErrorAction.REPORT)
+					.onUnmappableCharacter(CodingErrorAction.REPORT);
+				Reader reader = new InputStreamReader(stream, decoder);
+				userDictionary = UserDictionary.open(reader);
+			}
+		} else {
+			userDictionary = null;
+		}
+	}
 
-  @Override
-  public KoreanTokenizer create(AttributeFactory factory) {
-    return new KoreanTokenizer(factory, userDictionary, mode, outputUnknownUnigrams);
-  }
+	@Override
+	public KoreanTokenizer create(AttributeFactory factory) {
+		return new KoreanTokenizer(factory, userDictionary, mode, outputUnknownUnigrams);
+	}
 }

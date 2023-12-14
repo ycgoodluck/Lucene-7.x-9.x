@@ -21,37 +21,37 @@ package org.apache.lucene.queryparser.flexible.core.config;
  */
 public class FieldConfig extends AbstractQueryConfig {
 
-  private String fieldName;
-  
-  /**
-   * Constructs a {@link FieldConfig}
-   * 
-   * @param fieldName the field name, it must not be null
-   * @throws IllegalArgumentException if the field name is null
-   */
-  public FieldConfig(String fieldName) {
+	private String fieldName;
 
-    if (fieldName == null) {
-      throw new IllegalArgumentException("field name must not be null!");
-    }
+	/**
+	 * Constructs a {@link FieldConfig}
+	 *
+	 * @param fieldName the field name, it must not be null
+	 * @throws IllegalArgumentException if the field name is null
+	 */
+	public FieldConfig(String fieldName) {
 
-    this.fieldName = fieldName;
+		if (fieldName == null) {
+			throw new IllegalArgumentException("field name must not be null!");
+		}
 
-  }
+		this.fieldName = fieldName;
 
-  /**
-   * Returns the field name this configuration represents.
-   * 
-   * @return the field name
-   */
-  public String getField() {
-    return this.fieldName;
-  }
+	}
 
-  @Override
-  public String toString() {
-    return "<fieldconfig name=\"" + this.fieldName + "\" configurations=\""
-        + super.toString() + "\"/>";
-  }
+	/**
+	 * Returns the field name this configuration represents.
+	 *
+	 * @return the field name
+	 */
+	public String getField() {
+		return this.fieldName;
+	}
+
+	@Override
+	public String toString() {
+		return "<fieldconfig name=\"" + this.fieldName + "\" configurations=\""
+			+ super.toString() + "\"/>";
+	}
 
 }

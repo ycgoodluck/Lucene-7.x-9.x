@@ -27,22 +27,24 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the digit normalization factory is working.
  */
 public class TestDecimalDigitFilterFactory extends BaseTokenStreamFactoryTestCase {
-  
-  /**
-   * Ensure the filter actually normalizes digits.
-   */
-  public void testNormalization() throws Exception {
-    Reader reader = new StringReader("١٢٣٤");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("DecimalDigit").create(stream);
-    assertTokenStreamContents(stream, new String[] { "1234" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("DecimalDigit", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+
+	/**
+	 * Ensure the filter actually normalizes digits.
+	 */
+	public void testNormalization() throws Exception {
+		Reader reader = new StringReader("١٢٣٤");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("DecimalDigit").create(stream);
+		assertTokenStreamContents(stream, new String[]{"1234"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("DecimalDigit", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

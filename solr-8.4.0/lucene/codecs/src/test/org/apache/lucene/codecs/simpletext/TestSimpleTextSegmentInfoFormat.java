@@ -25,15 +25,15 @@ import org.apache.lucene.util.Version;
  * Tests SimpleTextSegmentInfoFormat
  */
 public class TestSimpleTextSegmentInfoFormat extends BaseSegmentInfoFormatTestCase {
-  private final Codec codec = new SimpleTextCodec();
-  
-  @Override
-  protected Version[] getVersions() {
-    return new Version[] { Version.LATEST };
-  }
+	private final Codec codec = new SimpleTextCodec();
 
-  @Override
-  protected Codec getCodec() {
-    return codec;
-  }
+	@Override
+	protected Version[] getVersions() {
+		return new Version[]{Version.LATEST};
+	}
+
+	@Override
+	protected Codec getCodec() {
+		return codec;
+	}
 }

@@ -27,18 +27,20 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure this factory is working
  */
 public class TestTrimFilterFactory extends BaseTokenStreamFactoryTestCase {
-  public void testTrimming() throws Exception {
-    Reader reader = new StringReader("trim me    ");
-    TokenStream stream = keywordMockTokenizer(reader);
-    stream = tokenFilterFactory("Trim").create(stream);
-    assertTokenStreamContents(stream, new String[] { "trim me" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("Trim", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testTrimming() throws Exception {
+		Reader reader = new StringReader("trim me    ");
+		TokenStream stream = keywordMockTokenizer(reader);
+		stream = tokenFilterFactory("Trim").create(stream);
+		assertTokenStreamContents(stream, new String[]{"trim me"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("Trim", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

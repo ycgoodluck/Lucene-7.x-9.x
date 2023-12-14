@@ -34,86 +34,86 @@ import org.junit.Test;
  */
 public class TestKeywordMarkerFilter extends BaseTokenStreamTestCase {
 
-  @Test
-  public void testSetFilterIncrementToken() throws IOException {
-    CharArraySet set = new CharArraySet( 5, true);
-    set.add("lucenefox");
-    String[] output = new String[] { "the", "quick", "brown", "LuceneFox",
-        "jumps" };
-    assertTokenStreamContents(new LowerCaseFilterMock(
-        new SetKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), set)), output);
-    CharArraySet mixedCaseSet = new CharArraySet( asSet("LuceneFox"), false);
-    assertTokenStreamContents(new LowerCaseFilterMock(
-        new SetKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), mixedCaseSet)), output);
-    CharArraySet set2 = set;
-    assertTokenStreamContents(new LowerCaseFilterMock(
-        new SetKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), set2)), output);
-  }
-  
-  @Test
-  public void testPatternFilterIncrementToken() throws IOException {
-    String[] output = new String[] { "the", "quick", "brown", "LuceneFox",
-        "jumps" };
-    assertTokenStreamContents(new LowerCaseFilterMock(
-        new PatternKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), Pattern.compile("[a-zA-Z]+[fF]ox"))), output);
-    
-    output = new String[] { "the", "quick", "brown", "lucenefox",
-    "jumps" };
-    
-    assertTokenStreamContents(new LowerCaseFilterMock(
-        new PatternKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), Pattern.compile("[a-zA-Z]+[f]ox"))), output);
-  }
+	@Test
+	public void testSetFilterIncrementToken() throws IOException {
+		CharArraySet set = new CharArraySet(5, true);
+		set.add("lucenefox");
+		String[] output = new String[]{"the", "quick", "brown", "LuceneFox",
+			"jumps"};
+		assertTokenStreamContents(new LowerCaseFilterMock(
+			new SetKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), set)), output);
+		CharArraySet mixedCaseSet = new CharArraySet(asSet("LuceneFox"), false);
+		assertTokenStreamContents(new LowerCaseFilterMock(
+			new SetKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), mixedCaseSet)), output);
+		CharArraySet set2 = set;
+		assertTokenStreamContents(new LowerCaseFilterMock(
+			new SetKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), set2)), output);
+	}
 
-  // LUCENE-2901
-  public void testComposition() throws Exception {   
-    TokenStream ts = new LowerCaseFilterMock(
-                     new SetKeywordMarkerFilter(
-                     new SetKeywordMarkerFilter(
-                     whitespaceMockTokenizer("Dogs Trees Birds Houses"),
-                     new CharArraySet( asSet("Birds", "Houses"), false)), 
-                     new CharArraySet( asSet("Dogs", "Trees"), false)));
-    
-    assertTokenStreamContents(ts, new String[] { "Dogs", "Trees", "Birds", "Houses" });
-    
-    ts = new LowerCaseFilterMock(
-        new PatternKeywordMarkerFilter(
-        new PatternKeywordMarkerFilter(
-        whitespaceMockTokenizer("Dogs Trees Birds Houses"),
-        Pattern.compile("Birds|Houses")), 
-        Pattern.compile("Dogs|Trees")));
+	@Test
+	public void testPatternFilterIncrementToken() throws IOException {
+		String[] output = new String[]{"the", "quick", "brown", "LuceneFox",
+			"jumps"};
+		assertTokenStreamContents(new LowerCaseFilterMock(
+			new PatternKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), Pattern.compile("[a-zA-Z]+[fF]ox"))), output);
 
-    assertTokenStreamContents(ts, new String[] { "Dogs", "Trees", "Birds", "Houses" });
-    
-    ts = new LowerCaseFilterMock(
-        new SetKeywordMarkerFilter(
-        new PatternKeywordMarkerFilter(
-        whitespaceMockTokenizer("Dogs Trees Birds Houses"),
-        Pattern.compile("Birds|Houses")), 
-        new CharArraySet( asSet("Dogs", "Trees"), false)));
+		output = new String[]{"the", "quick", "brown", "lucenefox",
+			"jumps"};
 
-    assertTokenStreamContents(ts, new String[] { "Dogs", "Trees", "Birds", "Houses" });
-  }
-  
-  public static final class LowerCaseFilterMock extends TokenFilter {
+		assertTokenStreamContents(new LowerCaseFilterMock(
+			new PatternKeywordMarkerFilter(whitespaceMockTokenizer("The quIck browN LuceneFox Jumps"), Pattern.compile("[a-zA-Z]+[f]ox"))), output);
+	}
 
-    private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-    private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+	// LUCENE-2901
+	public void testComposition() throws Exception {
+		TokenStream ts = new LowerCaseFilterMock(
+			new SetKeywordMarkerFilter(
+				new SetKeywordMarkerFilter(
+					whitespaceMockTokenizer("Dogs Trees Birds Houses"),
+					new CharArraySet(asSet("Birds", "Houses"), false)),
+				new CharArraySet(asSet("Dogs", "Trees"), false)));
 
-    public LowerCaseFilterMock(TokenStream in) {
-      super(in);
-    }
+		assertTokenStreamContents(ts, new String[]{"Dogs", "Trees", "Birds", "Houses"});
 
-    @Override
-    public boolean incrementToken() throws IOException {
-      if (input.incrementToken()) {
-        if (!keywordAttr.isKeyword()) {
-          final String term = termAtt.toString().toLowerCase(Locale.ROOT);
-          termAtt.setEmpty().append(term);
-        }
-        return true;
-      }
-      return false;
-    }
+		ts = new LowerCaseFilterMock(
+			new PatternKeywordMarkerFilter(
+				new PatternKeywordMarkerFilter(
+					whitespaceMockTokenizer("Dogs Trees Birds Houses"),
+					Pattern.compile("Birds|Houses")),
+				Pattern.compile("Dogs|Trees")));
 
-  }
+		assertTokenStreamContents(ts, new String[]{"Dogs", "Trees", "Birds", "Houses"});
+
+		ts = new LowerCaseFilterMock(
+			new SetKeywordMarkerFilter(
+				new PatternKeywordMarkerFilter(
+					whitespaceMockTokenizer("Dogs Trees Birds Houses"),
+					Pattern.compile("Birds|Houses")),
+				new CharArraySet(asSet("Dogs", "Trees"), false)));
+
+		assertTokenStreamContents(ts, new String[]{"Dogs", "Trees", "Birds", "Houses"});
+	}
+
+	public static final class LowerCaseFilterMock extends TokenFilter {
+
+		private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+		private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+
+		public LowerCaseFilterMock(TokenStream in) {
+			super(in);
+		}
+
+		@Override
+		public boolean incrementToken() throws IOException {
+			if (input.incrementToken()) {
+				if (!keywordAttr.isKeyword()) {
+					final String term = termAtt.toString().toLowerCase(Locale.ROOT);
+					termAtt.setEmpty().append(term);
+				}
+				return true;
+			}
+			return false;
+		}
+
+	}
 }

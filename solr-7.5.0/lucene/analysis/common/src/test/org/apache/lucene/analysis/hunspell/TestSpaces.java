@@ -20,24 +20,24 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestSpaces extends StemmerTestBase {
-  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("spaces.aff", "spaces.dic");
-  }
-  
-  public void testStemming() {
-    assertStemsTo("four", "four");
-    assertStemsTo("fours", "four");
-    assertStemsTo("five", "five");
-    assertStemsTo("forty four", "forty four");
-    assertStemsTo("forty fours", "forty four");
-    assertStemsTo("forty five", "forty five");
-    assertStemsTo("fifty", "50");
-    assertStemsTo("fiftys", "50");
-    assertStemsTo("sixty", "60");
-    assertStemsTo("sixty four", "64");
-    assertStemsTo("fifty four", "54");
-    assertStemsTo("fifty fours", "54");
-  }
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("spaces.aff", "spaces.dic");
+	}
+
+	public void testStemming() {
+		assertStemsTo("four", "four");
+		assertStemsTo("fours", "four");
+		assertStemsTo("five", "five");
+		assertStemsTo("forty four", "forty four");
+		assertStemsTo("forty fours", "forty four");
+		assertStemsTo("forty five", "forty five");
+		assertStemsTo("fifty", "50");
+		assertStemsTo("fiftys", "50");
+		assertStemsTo("sixty", "60");
+		assertStemsTo("sixty four", "64");
+		assertStemsTo("fifty four", "54");
+		assertStemsTo("fifty fours", "54");
+	}
 }

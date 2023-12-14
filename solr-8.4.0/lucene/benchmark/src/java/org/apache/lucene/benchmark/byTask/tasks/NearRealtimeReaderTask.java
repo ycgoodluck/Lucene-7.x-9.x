@@ -34,85 +34,85 @@ import org.apache.lucene.util.ArrayUtil;
  */
 public class NearRealtimeReaderTask extends PerfTask {
 
-  long pauseMSec = 3000L;
+	long pauseMSec = 3000L;
 
-  int reopenCount;
-  int[] reopenTimes = new int[1];
+	int reopenCount;
+	int[] reopenTimes = new int[1];
 
-  public NearRealtimeReaderTask(PerfRunData runData) {
-    super(runData);
-  }
+	public NearRealtimeReaderTask(PerfRunData runData) {
+		super(runData);
+	}
 
-  @Override
-  public int doLogic() throws Exception {
+	@Override
+	public int doLogic() throws Exception {
 
-    final PerfRunData runData = getRunData();
+		final PerfRunData runData = getRunData();
 
-    // Get initial reader
-    IndexWriter w = runData.getIndexWriter();
-    if (w == null) {
-      throw new RuntimeException("please open the writer before invoking NearRealtimeReader");
-    }
+		// Get initial reader
+		IndexWriter w = runData.getIndexWriter();
+		if (w == null) {
+			throw new RuntimeException("please open the writer before invoking NearRealtimeReader");
+		}
 
-    if (runData.getIndexReader() != null) {
-      throw new RuntimeException("please close the existing reader before invoking NearRealtimeReader");
-    }
-    
-    long t = System.currentTimeMillis();
-    DirectoryReader r = DirectoryReader.open(w);
-    runData.setIndexReader(r);
-    // Transfer our reference to runData
-    r.decRef();
+		if (runData.getIndexReader() != null) {
+			throw new RuntimeException("please close the existing reader before invoking NearRealtimeReader");
+		}
 
-    // TODO: gather basic metrics for reporting -- eg mean,
-    // stddev, min/max reopen latencies
+		long t = System.currentTimeMillis();
+		DirectoryReader r = DirectoryReader.open(w);
+		runData.setIndexReader(r);
+		// Transfer our reference to runData
+		r.decRef();
 
-    // Parent sequence sets stopNow
-    reopenCount = 0;
-    while(!stopNow) {
-      long waitForMsec = (pauseMSec - (System.currentTimeMillis() - t));
-      if (waitForMsec > 0) {
-        Thread.sleep(waitForMsec);
-        //System.out.println("NRT wait: " + waitForMsec + " msec");
-      }
+		// TODO: gather basic metrics for reporting -- eg mean,
+		// stddev, min/max reopen latencies
 
-      t = System.currentTimeMillis();
-      final DirectoryReader newReader = DirectoryReader.openIfChanged(r);
-      if (newReader != null) {
-        final int delay = (int) (System.currentTimeMillis()-t);
-        if (reopenTimes.length == reopenCount) {
-          reopenTimes = ArrayUtil.grow(reopenTimes, 1+reopenCount);
-        }
-        reopenTimes[reopenCount++] = delay;
-        // TODO: somehow we need to enable warming, here
-        runData.setIndexReader(newReader);
-        // Transfer our reference to runData
-        newReader.decRef();
-        r = newReader;
-      }
-    }
-    stopNow = false;
+		// Parent sequence sets stopNow
+		reopenCount = 0;
+		while (!stopNow) {
+			long waitForMsec = (pauseMSec - (System.currentTimeMillis() - t));
+			if (waitForMsec > 0) {
+				Thread.sleep(waitForMsec);
+				//System.out.println("NRT wait: " + waitForMsec + " msec");
+			}
 
-    return reopenCount;
-  }
+			t = System.currentTimeMillis();
+			final DirectoryReader newReader = DirectoryReader.openIfChanged(r);
+			if (newReader != null) {
+				final int delay = (int) (System.currentTimeMillis() - t);
+				if (reopenTimes.length == reopenCount) {
+					reopenTimes = ArrayUtil.grow(reopenTimes, 1 + reopenCount);
+				}
+				reopenTimes[reopenCount++] = delay;
+				// TODO: somehow we need to enable warming, here
+				runData.setIndexReader(newReader);
+				// Transfer our reference to runData
+				newReader.decRef();
+				r = newReader;
+			}
+		}
+		stopNow = false;
 
-  @Override
-  public void setParams(String params) {
-    super.setParams(params);
-    pauseMSec = (long) (1000.0*Float.parseFloat(params));
-  }
+		return reopenCount;
+	}
 
-  @Override
-  public void close() {
-    System.out.println("NRT reopen times:");
-    for(int i=0;i<reopenCount;i++) {
-      System.out.print(" " + reopenTimes[i]);
-    }
-    System.out.println();
-  }
+	@Override
+	public void setParams(String params) {
+		super.setParams(params);
+		pauseMSec = (long) (1000.0 * Float.parseFloat(params));
+	}
 
-  @Override
-  public boolean supportsParams() {
-    return true;
-  }
+	@Override
+	public void close() {
+		System.out.println("NRT reopen times:");
+		for (int i = 0; i < reopenCount; i++) {
+			System.out.print(" " + reopenTimes[i]);
+		}
+		System.out.println();
+	}
+
+	@Override
+	public boolean supportsParams() {
+		return true;
+	}
 }

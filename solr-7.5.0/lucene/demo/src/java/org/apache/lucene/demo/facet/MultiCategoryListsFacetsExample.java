@@ -41,98 +41,110 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 
-/** Demonstrates indexing categories into different indexed fields. */
+/**
+ * Demonstrates indexing categories into different indexed fields.
+ */
 public class MultiCategoryListsFacetsExample {
 
-  private final Directory indexDir = new RAMDirectory();
-  private final Directory taxoDir = new RAMDirectory();
-  private final FacetsConfig config = new FacetsConfig();
+	private final Directory indexDir = new RAMDirectory();
+	private final Directory taxoDir = new RAMDirectory();
+	private final FacetsConfig config = new FacetsConfig();
 
-  /** Creates a new instance and populates the category list params mapping. */
-  public MultiCategoryListsFacetsExample() {
-    config.setIndexFieldName("Author", "author");
-    config.setIndexFieldName("Publish Date", "pubdate");
-    config.setHierarchical("Publish Date", true);
-  }
+	/**
+	 * Creates a new instance and populates the category list params mapping.
+	 */
+	public MultiCategoryListsFacetsExample() {
+		config.setIndexFieldName("Author", "author");
+		config.setIndexFieldName("Publish Date", "pubdate");
+		config.setHierarchical("Publish Date", true);
+	}
 
-  /** Build the example index. */
-  private void index() throws IOException {
-    IndexWriter indexWriter = new IndexWriter(indexDir, new IndexWriterConfig(
-        new WhitespaceAnalyzer()).setOpenMode(OpenMode.CREATE));
+	/**
+	 * Build the example index.
+	 */
+	private void index() throws IOException {
+		IndexWriter indexWriter = new IndexWriter(indexDir, new IndexWriterConfig(
+			new WhitespaceAnalyzer()).setOpenMode(OpenMode.CREATE));
 
-    // Writes facet ords to a separate directory from the main index
-    DirectoryTaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
+		// Writes facet ords to a separate directory from the main index
+		DirectoryTaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
 
-    Document doc = new Document();
-    doc.add(new FacetField("Author", "Bob"));
-    doc.add(new FacetField("Publish Date", "2010", "10", "15"));
-    indexWriter.addDocument(config.build(taxoWriter, doc));
+		Document doc = new Document();
+		doc.add(new FacetField("Author", "Bob"));
+		doc.add(new FacetField("Publish Date", "2010", "10", "15"));
+		indexWriter.addDocument(config.build(taxoWriter, doc));
 
-    doc = new Document();
-    doc.add(new FacetField("Author", "Lisa"));
-    doc.add(new FacetField("Publish Date", "2010", "10", "20"));
-    indexWriter.addDocument(config.build(taxoWriter, doc));
+		doc = new Document();
+		doc.add(new FacetField("Author", "Lisa"));
+		doc.add(new FacetField("Publish Date", "2010", "10", "20"));
+		indexWriter.addDocument(config.build(taxoWriter, doc));
 
-    doc = new Document();
-    doc.add(new FacetField("Author", "Lisa"));
-    doc.add(new FacetField("Publish Date", "2012", "1", "1"));
-    indexWriter.addDocument(config.build(taxoWriter, doc));
+		doc = new Document();
+		doc.add(new FacetField("Author", "Lisa"));
+		doc.add(new FacetField("Publish Date", "2012", "1", "1"));
+		indexWriter.addDocument(config.build(taxoWriter, doc));
 
-    doc = new Document();
-    doc.add(new FacetField("Author", "Susan"));
-    doc.add(new FacetField("Publish Date", "2012", "1", "7"));
-    indexWriter.addDocument(config.build(taxoWriter, doc));
+		doc = new Document();
+		doc.add(new FacetField("Author", "Susan"));
+		doc.add(new FacetField("Publish Date", "2012", "1", "7"));
+		indexWriter.addDocument(config.build(taxoWriter, doc));
 
-    doc = new Document();
-    doc.add(new FacetField("Author", "Frank"));
-    doc.add(new FacetField("Publish Date", "1999", "5", "5"));
-    indexWriter.addDocument(config.build(taxoWriter, doc));
-    
-    indexWriter.close();
-    taxoWriter.close();
-  }
+		doc = new Document();
+		doc.add(new FacetField("Author", "Frank"));
+		doc.add(new FacetField("Publish Date", "1999", "5", "5"));
+		indexWriter.addDocument(config.build(taxoWriter, doc));
 
-  /** User runs a query and counts facets. */
-  private List<FacetResult> search() throws IOException {
-    DirectoryReader indexReader = DirectoryReader.open(indexDir);
-    IndexSearcher searcher = new IndexSearcher(indexReader);
-    TaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
+		indexWriter.close();
+		taxoWriter.close();
+	}
 
-    FacetsCollector fc = new FacetsCollector();
+	/**
+	 * User runs a query and counts facets.
+	 */
+	private List<FacetResult> search() throws IOException {
+		DirectoryReader indexReader = DirectoryReader.open(indexDir);
+		IndexSearcher searcher = new IndexSearcher(indexReader);
+		TaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
 
-    // MatchAllDocsQuery is for "browsing" (counts facets
-    // for all non-deleted docs in the index); normally
-    // you'd use a "normal" query:
-    FacetsCollector.search(searcher, new MatchAllDocsQuery(), 10, fc);
+		FacetsCollector fc = new FacetsCollector();
 
-    // Retrieve results
-    List<FacetResult> results = new ArrayList<>();
+		// MatchAllDocsQuery is for "browsing" (counts facets
+		// for all non-deleted docs in the index); normally
+		// you'd use a "normal" query:
+		FacetsCollector.search(searcher, new MatchAllDocsQuery(), 10, fc);
 
-    // Count both "Publish Date" and "Author" dimensions
-    Facets author = new FastTaxonomyFacetCounts("author", taxoReader, config, fc);
-    results.add(author.getTopChildren(10, "Author"));
+		// Retrieve results
+		List<FacetResult> results = new ArrayList<>();
 
-    Facets pubDate = new FastTaxonomyFacetCounts("pubdate", taxoReader, config, fc);
-    results.add(pubDate.getTopChildren(10, "Publish Date"));
-    
-    indexReader.close();
-    taxoReader.close();
-    
-    return results;
-  }
+		// Count both "Publish Date" and "Author" dimensions
+		Facets author = new FastTaxonomyFacetCounts("author", taxoReader, config, fc);
+		results.add(author.getTopChildren(10, "Author"));
 
-  /** Runs the search example. */
-  public List<FacetResult> runSearch() throws IOException {
-    index();
-    return search();
-  }
-  
-  /** Runs the search example and prints the results. */
-  public static void main(String[] args) throws Exception {
-    System.out.println("Facet counting over multiple category lists example:");
-    System.out.println("-----------------------");
-    List<FacetResult> results = new MultiCategoryListsFacetsExample().runSearch();
-    System.out.println("Author: " + results.get(0));
-    System.out.println("Publish Date: " + results.get(1));
-  }
+		Facets pubDate = new FastTaxonomyFacetCounts("pubdate", taxoReader, config, fc);
+		results.add(pubDate.getTopChildren(10, "Publish Date"));
+
+		indexReader.close();
+		taxoReader.close();
+
+		return results;
+	}
+
+	/**
+	 * Runs the search example.
+	 */
+	public List<FacetResult> runSearch() throws IOException {
+		index();
+		return search();
+	}
+
+	/**
+	 * Runs the search example and prints the results.
+	 */
+	public static void main(String[] args) throws Exception {
+		System.out.println("Facet counting over multiple category lists example:");
+		System.out.println("-----------------------");
+		List<FacetResult> results = new MultiCategoryListsFacetsExample().runSearch();
+		System.out.println("Author: " + results.get(0));
+		System.out.println("Publish Date: " + results.get(1));
+	}
 }

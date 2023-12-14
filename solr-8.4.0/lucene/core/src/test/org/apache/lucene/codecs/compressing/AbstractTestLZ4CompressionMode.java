@@ -24,89 +24,89 @@ import com.carrotsearch.randomizedtesting.generators.RandomNumbers;
 
 public abstract class AbstractTestLZ4CompressionMode extends AbstractTestCompressionMode {
 
-  @Override
-  public byte[] test(byte[] decompressed) throws IOException {
-    final byte[] compressed = super.test(decompressed);
-    int off = 0;
-    int decompressedOff = 0;
-    for (;;) {
-      final int token = compressed[off++] & 0xFF;
-      int literalLen = token >>> 4;
-      if (literalLen == 0x0F) {
-        while (compressed[off] == (byte) 0xFF) {
-          literalLen += 0xFF;
-          ++off;
-        }
-        literalLen += compressed[off++] & 0xFF;
-      }
-      // skip literals
-      off += literalLen;
-      decompressedOff += literalLen;
+	@Override
+	public byte[] test(byte[] decompressed) throws IOException {
+		final byte[] compressed = super.test(decompressed);
+		int off = 0;
+		int decompressedOff = 0;
+		for (; ; ) {
+			final int token = compressed[off++] & 0xFF;
+			int literalLen = token >>> 4;
+			if (literalLen == 0x0F) {
+				while (compressed[off] == (byte) 0xFF) {
+					literalLen += 0xFF;
+					++off;
+				}
+				literalLen += compressed[off++] & 0xFF;
+			}
+			// skip literals
+			off += literalLen;
+			decompressedOff += literalLen;
 
-      // check that the stream ends with literals and that there are at least
-      // 5 of them
-      if (off == compressed.length) {
-        assertEquals(decompressed.length, decompressedOff);
-        assertTrue("lastLiterals=" + literalLen + ", bytes=" + decompressed.length,
-            literalLen >= LZ4.LAST_LITERALS || literalLen == decompressed.length);
-        break;
-      }
+			// check that the stream ends with literals and that there are at least
+			// 5 of them
+			if (off == compressed.length) {
+				assertEquals(decompressed.length, decompressedOff);
+				assertTrue("lastLiterals=" + literalLen + ", bytes=" + decompressed.length,
+					literalLen >= LZ4.LAST_LITERALS || literalLen == decompressed.length);
+				break;
+			}
 
-      final int matchDec = (compressed[off++] & 0xFF) | ((compressed[off++] & 0xFF) << 8);
-      // check that match dec is not 0
-      assertTrue(matchDec + " " + decompressedOff, matchDec > 0 && matchDec <= decompressedOff);
+			final int matchDec = (compressed[off++] & 0xFF) | ((compressed[off++] & 0xFF) << 8);
+			// check that match dec is not 0
+			assertTrue(matchDec + " " + decompressedOff, matchDec > 0 && matchDec <= decompressedOff);
 
-      int matchLen = token & 0x0F;
-      if (matchLen == 0x0F) {
-        while (compressed[off] == (byte) 0xFF) {
-          matchLen += 0xFF;
-          ++off;
-        }
-        matchLen += compressed[off++] & 0xFF;
-      }
-      matchLen += LZ4.MIN_MATCH;
+			int matchLen = token & 0x0F;
+			if (matchLen == 0x0F) {
+				while (compressed[off] == (byte) 0xFF) {
+					matchLen += 0xFF;
+					++off;
+				}
+				matchLen += compressed[off++] & 0xFF;
+			}
+			matchLen += LZ4.MIN_MATCH;
 
-      // if the match ends prematurely, the next sequence should not have
-      // literals or this means we are wasting space
-      if (decompressedOff + matchLen < decompressed.length - LZ4.LAST_LITERALS) {
-        final boolean moreCommonBytes = decompressed[decompressedOff + matchLen] == decompressed[decompressedOff - matchDec + matchLen];
-        final boolean nextSequenceHasLiterals = ((compressed[off] & 0xFF) >>> 4) != 0;
-        assertTrue(!moreCommonBytes || !nextSequenceHasLiterals);
-      }      
+			// if the match ends prematurely, the next sequence should not have
+			// literals or this means we are wasting space
+			if (decompressedOff + matchLen < decompressed.length - LZ4.LAST_LITERALS) {
+				final boolean moreCommonBytes = decompressed[decompressedOff + matchLen] == decompressed[decompressedOff - matchDec + matchLen];
+				final boolean nextSequenceHasLiterals = ((compressed[off] & 0xFF) >>> 4) != 0;
+				assertTrue(!moreCommonBytes || !nextSequenceHasLiterals);
+			}
 
-      decompressedOff += matchLen;
-    }
-    assertEquals(decompressed.length, decompressedOff);
-    return compressed;
-  }
+			decompressedOff += matchLen;
+		}
+		assertEquals(decompressed.length, decompressedOff);
+		return compressed;
+	}
 
-  public void testShortLiteralsAndMatchs() throws IOException {
-    // literals and matchs lengths <= 15
-    final byte[] decompressed = "1234562345673456745678910123".getBytes(StandardCharsets.UTF_8);
-    test(decompressed);
-  }
+	public void testShortLiteralsAndMatchs() throws IOException {
+		// literals and matchs lengths <= 15
+		final byte[] decompressed = "1234562345673456745678910123".getBytes(StandardCharsets.UTF_8);
+		test(decompressed);
+	}
 
-  public void testLongMatchs() throws IOException {
-    // match length >= 20
-    final byte[] decompressed = new byte[RandomNumbers.randomIntBetween(random(), 300, 1024)];
-    for (int i = 0; i < decompressed.length; ++i) {
-      decompressed[i] = (byte) i;
-    }
-    test(decompressed);
-  }
+	public void testLongMatchs() throws IOException {
+		// match length >= 20
+		final byte[] decompressed = new byte[RandomNumbers.randomIntBetween(random(), 300, 1024)];
+		for (int i = 0; i < decompressed.length; ++i) {
+			decompressed[i] = (byte) i;
+		}
+		test(decompressed);
+	}
 
-  public void testLongLiterals() throws IOException {
-    // long literals (length >= 16) which are not the last literals
-    final byte[] decompressed = randomArray(RandomNumbers.randomIntBetween(random(), 400, 1024), 256);
-    final int matchRef = random().nextInt(30);
-    final int matchOff = RandomNumbers.randomIntBetween(random(), decompressed.length - 40, decompressed.length - 20);
-    final int matchLength = RandomNumbers.randomIntBetween(random(), 4, 10);
-    System.arraycopy(decompressed, matchRef, decompressed, matchOff, matchLength);
-    test(decompressed);
-  }
+	public void testLongLiterals() throws IOException {
+		// long literals (length >= 16) which are not the last literals
+		final byte[] decompressed = randomArray(RandomNumbers.randomIntBetween(random(), 400, 1024), 256);
+		final int matchRef = random().nextInt(30);
+		final int matchOff = RandomNumbers.randomIntBetween(random(), decompressed.length - 40, decompressed.length - 20);
+		final int matchLength = RandomNumbers.randomIntBetween(random(), 4, 10);
+		System.arraycopy(decompressed, matchRef, decompressed, matchOff, matchLength);
+		test(decompressed);
+	}
 
-  public void testMatchRightBeforeLastLiterals() throws IOException {
-    test(new byte[] {1,2,3,4, 1,2,3,4, 1,2,3,4,5});
-  }
+	public void testMatchRightBeforeLastLiterals() throws IOException {
+		test(new byte[]{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 5});
+	}
 
 }

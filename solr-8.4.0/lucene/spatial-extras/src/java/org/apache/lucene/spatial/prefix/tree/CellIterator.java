@@ -26,51 +26,55 @@ import java.util.NoSuchElementException;
  */
 public abstract class CellIterator implements Iterator<Cell> {
 
-  //note: nextCell or thisCell can be non-null but neither at the same time. That's
-  // because they might return the same instance when re-used!
+	//note: nextCell or thisCell can be non-null but neither at the same time. That's
+	// because they might return the same instance when re-used!
 
-  protected Cell nextCell;//to be returned by next(), and null'ed after
-  protected Cell thisCell;//see next() & thisCell(). Should be cleared in hasNext().
+	protected Cell nextCell;//to be returned by next(), and null'ed after
+	protected Cell thisCell;//see next() & thisCell(). Should be cleared in hasNext().
 
-  /** Returns the cell last returned from {@link #next()}. It's cleared by hasNext(). */
-  public Cell thisCell() {
-    assert thisCell != null : "Only call thisCell() after next(), not hasNext()";
-    return thisCell;
-  }
+	/**
+	 * Returns the cell last returned from {@link #next()}. It's cleared by hasNext().
+	 */
+	public Cell thisCell() {
+		assert thisCell != null : "Only call thisCell() after next(), not hasNext()";
+		return thisCell;
+	}
 
-  // Arguably this belongs here and not on Cell
-  //public SpatialRelation getShapeRel()
+	// Arguably this belongs here and not on Cell
+	//public SpatialRelation getShapeRel()
 
-  /**
-   * Gets the next cell that is &gt;= {@code fromCell}, compared using non-leaf bytes. If it returns null then
-   * the iterator is exhausted.
-   */
-  public Cell nextFrom(Cell fromCell) {
-    while (true) {
-      if (!hasNext())
-        return null;
-      Cell c = next();//will update thisCell
-      if (c.compareToNoLeaf(fromCell) >= 0) {
-        return c;
-      }
-    }
-  }
+	/**
+	 * Gets the next cell that is &gt;= {@code fromCell}, compared using non-leaf bytes. If it returns null then
+	 * the iterator is exhausted.
+	 */
+	public Cell nextFrom(Cell fromCell) {
+		while (true) {
+			if (!hasNext())
+				return null;
+			Cell c = next();//will update thisCell
+			if (c.compareToNoLeaf(fromCell) >= 0) {
+				return c;
+			}
+		}
+	}
 
-  /** This prevents sub-cells (those underneath the current cell) from being iterated to,
-   *  if applicable, otherwise a NO-OP. */
-  @Override
-  public void remove() {
-    assert thisCell != null;
-  }
+	/**
+	 * This prevents sub-cells (those underneath the current cell) from being iterated to,
+	 * if applicable, otherwise a NO-OP.
+	 */
+	@Override
+	public void remove() {
+		assert thisCell != null;
+	}
 
-  @Override
-  public Cell next() {
-    if (nextCell == null) {
-      if (!hasNext())
-        throw new NoSuchElementException();
-    }
-    thisCell = nextCell;
-    nextCell = null;
-    return thisCell;
-  }
+	@Override
+	public Cell next() {
+		if (nextCell == null) {
+			if (!hasNext())
+				throw new NoSuchElementException();
+		}
+		thisCell = nextCell;
+		nextCell = null;
+		return thisCell;
+	}
 }

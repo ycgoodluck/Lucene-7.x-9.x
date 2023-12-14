@@ -34,128 +34,130 @@ import org.apache.lucene.search.QueryVisitor;
 
 abstract class SpanContainQuery extends SpanQuery implements Cloneable {
 
-  SpanQuery big;
-  SpanQuery little;
+	SpanQuery big;
+	SpanQuery little;
 
-  SpanContainQuery(SpanQuery big, SpanQuery little) {
-    this.big = Objects.requireNonNull(big);
-    this.little = Objects.requireNonNull(little);
-    Objects.requireNonNull(big.getField());
-    Objects.requireNonNull(little.getField());
-    if (! big.getField().equals(little.getField())) {
-      throw new IllegalArgumentException("big and little not same field");
-    }
-  }
+	SpanContainQuery(SpanQuery big, SpanQuery little) {
+		this.big = Objects.requireNonNull(big);
+		this.little = Objects.requireNonNull(little);
+		Objects.requireNonNull(big.getField());
+		Objects.requireNonNull(little.getField());
+		if (!big.getField().equals(little.getField())) {
+			throw new IllegalArgumentException("big and little not same field");
+		}
+	}
 
-  @Override
-  public String getField() { return big.getField(); }
-  
-  public SpanQuery getBig() {
-    return big;
-  }
+	@Override
+	public String getField() {
+		return big.getField();
+	}
 
-  public SpanQuery getLittle() {
-    return little;
-  }
+	public SpanQuery getBig() {
+		return big;
+	}
 
-  public abstract class SpanContainWeight extends SpanWeight {
+	public SpanQuery getLittle() {
+		return little;
+	}
 
-    final SpanWeight bigWeight;
-    final SpanWeight littleWeight;
+	public abstract class SpanContainWeight extends SpanWeight {
 
-    public SpanContainWeight(IndexSearcher searcher, Map<Term, TermStates> terms,
-                             SpanWeight bigWeight, SpanWeight littleWeight, float boost) throws IOException {
-      super(SpanContainQuery.this, searcher, terms, boost);
-      this.bigWeight = bigWeight;
-      this.littleWeight = littleWeight;
-    }
+		final SpanWeight bigWeight;
+		final SpanWeight littleWeight;
 
-    /**
-     * Extract terms from both <code>big</code> and <code>little</code>.
-     */
-    @Override
-    public void extractTerms(Set<Term> terms) {
-      bigWeight.extractTerms(terms);
-      littleWeight.extractTerms(terms);
-    }
+		public SpanContainWeight(IndexSearcher searcher, Map<Term, TermStates> terms,
+														 SpanWeight bigWeight, SpanWeight littleWeight, float boost) throws IOException {
+			super(SpanContainQuery.this, searcher, terms, boost);
+			this.bigWeight = bigWeight;
+			this.littleWeight = littleWeight;
+		}
 
-    ArrayList<Spans> prepareConjunction(final LeafReaderContext context, Postings postings) throws IOException {
-      Spans bigSpans = bigWeight.getSpans(context, postings);
-      if (bigSpans == null) {
-        return null;
-      }
-      Spans littleSpans = littleWeight.getSpans(context, postings);
-      if (littleSpans == null) {
-        return null;
-      }
-      ArrayList<Spans> bigAndLittle = new ArrayList<>();
-      bigAndLittle.add(bigSpans);
-      bigAndLittle.add(littleSpans);
-      return bigAndLittle;
-    }
+		/**
+		 * Extract terms from both <code>big</code> and <code>little</code>.
+		 */
+		@Override
+		public void extractTerms(Set<Term> terms) {
+			bigWeight.extractTerms(terms);
+			littleWeight.extractTerms(terms);
+		}
 
-    @Override
-    public void extractTermStates(Map<Term, TermStates> contexts) {
-      bigWeight.extractTermStates(contexts);
-      littleWeight.extractTermStates(contexts);
-    }
+		ArrayList<Spans> prepareConjunction(final LeafReaderContext context, Postings postings) throws IOException {
+			Spans bigSpans = bigWeight.getSpans(context, postings);
+			if (bigSpans == null) {
+				return null;
+			}
+			Spans littleSpans = littleWeight.getSpans(context, postings);
+			if (littleSpans == null) {
+				return null;
+			}
+			ArrayList<Spans> bigAndLittle = new ArrayList<>();
+			bigAndLittle.add(bigSpans);
+			bigAndLittle.add(littleSpans);
+			return bigAndLittle;
+		}
 
-  }
+		@Override
+		public void extractTermStates(Map<Term, TermStates> contexts) {
+			bigWeight.extractTermStates(contexts);
+			littleWeight.extractTermStates(contexts);
+		}
 
-  String toString(String field, String name) {
-    StringBuilder buffer = new StringBuilder();
-    buffer.append(name);
-    buffer.append("(");
-    buffer.append(big.toString(field));
-    buffer.append(", ");
-    buffer.append(little.toString(field));
-    buffer.append(")");
-    return buffer.toString();
-  }
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    SpanQuery rewrittenBig = (SpanQuery) big.rewrite(reader);
-    SpanQuery rewrittenLittle = (SpanQuery) little.rewrite(reader);
-    if (big != rewrittenBig || little != rewrittenLittle) {
-      try {
-        SpanContainQuery clone = (SpanContainQuery) super.clone();
-        clone.big = rewrittenBig;
-        clone.little = rewrittenLittle;
-        return clone;
-      } catch (CloneNotSupportedException e) {
-        throw new AssertionError(e);
-      }
-    }
-    return super.rewrite(reader);
-  }
+	String toString(String field, String name) {
+		StringBuilder buffer = new StringBuilder();
+		buffer.append(name);
+		buffer.append("(");
+		buffer.append(big.toString(field));
+		buffer.append(", ");
+		buffer.append(little.toString(field));
+		buffer.append(")");
+		return buffer.toString();
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    if (visitor.acceptField(getField())) {
-      QueryVisitor v = visitor.getSubVisitor(BooleanClause.Occur.MUST, this);
-      big.visit(v);
-      little.visit(v);
-    }
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		SpanQuery rewrittenBig = (SpanQuery) big.rewrite(reader);
+		SpanQuery rewrittenLittle = (SpanQuery) little.rewrite(reader);
+		if (big != rewrittenBig || little != rewrittenLittle) {
+			try {
+				SpanContainQuery clone = (SpanContainQuery) super.clone();
+				clone.big = rewrittenBig;
+				clone.little = rewrittenLittle;
+				return clone;
+			} catch (CloneNotSupportedException e) {
+				throw new AssertionError(e);
+			}
+		}
+		return super.rewrite(reader);
+	}
 
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  } 
-  
-  private boolean equalsTo(SpanContainQuery other) {
-    return big.equals(other.big) && 
-           little.equals(other.little);
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		if (visitor.acceptField(getField())) {
+			QueryVisitor v = visitor.getSubVisitor(BooleanClause.Occur.MUST, this);
+			big.visit(v);
+			little.visit(v);
+		}
+	}
 
-  @Override
-  public int hashCode() {
-    int h = Integer.rotateLeft(classHash(), 1);
-    h ^= big.hashCode();
-    h = Integer.rotateLeft(h, 1);
-    h ^= little.hashCode();
-    return h;
-  }
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
+
+	private boolean equalsTo(SpanContainQuery other) {
+		return big.equals(other.big) &&
+			little.equals(other.little);
+	}
+
+	@Override
+	public int hashCode() {
+		int h = Integer.rotateLeft(classHash(), 1);
+		h ^= big.hashCode();
+		h = Integer.rotateLeft(h, 1);
+		h ^= little.hashCode();
+		return h;
+	}
 }

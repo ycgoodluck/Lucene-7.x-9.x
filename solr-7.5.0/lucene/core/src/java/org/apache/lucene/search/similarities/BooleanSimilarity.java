@@ -37,59 +37,62 @@ import org.apache.lucene.util.BytesRef;
  */
 public class BooleanSimilarity extends Similarity {
 
-  private static final Similarity BM25_SIM = new BM25Similarity();
+	private static final Similarity BM25_SIM = new BM25Similarity();
 
-  /** Sole constructor */
-  public BooleanSimilarity() {}
+	/**
+	 * Sole constructor
+	 */
+	public BooleanSimilarity() {
+	}
 
-  @Override
-  public long computeNorm(FieldInvertState state) {
-    return BM25_SIM.computeNorm(state);
-  }
+	@Override
+	public long computeNorm(FieldInvertState state) {
+		return BM25_SIM.computeNorm(state);
+	}
 
-  @Override
-  public SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-    return new BooleanWeight(boost);
-  }
+	@Override
+	public SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+		return new BooleanWeight(boost);
+	}
 
-  private static class BooleanWeight extends SimWeight {
-    final float boost;
+	private static class BooleanWeight extends SimWeight {
+		final float boost;
 
-    BooleanWeight(float boost) {
-      this.boost = boost;
-    }
-  }
+		BooleanWeight(float boost) {
+			this.boost = boost;
+		}
+	}
 
-  @Override
-  public SimScorer simScorer(SimWeight weight, LeafReaderContext context) throws IOException {
-    final float boost = ((BooleanWeight) weight).boost;
+	@Override
+	public SimScorer simScorer(SimWeight weight, LeafReaderContext context) throws IOException {
+		final float boost = ((BooleanWeight) weight).boost;
 
-    return new SimScorer() {
+		return new SimScorer() {
 
-      @Override
-      public float score(int doc, float freq) throws IOException {
-        return boost;
-      }
+			@Override
+			public float score(int doc, float freq) throws IOException {
+				return boost;
+			}
 
-      @Override
-      public Explanation explain(int doc, Explanation freq) throws IOException {
-        Explanation queryBoostExpl = Explanation.match(boost, "query boost");
-        return Explanation.match(
-            queryBoostExpl.getValue(),
-            "score(" + getClass().getSimpleName() + ", doc=" + doc + "), computed from:",
-            queryBoostExpl);
-      }
+			@Override
+			public Explanation explain(int doc, Explanation freq) throws IOException {
+				Explanation queryBoostExpl = Explanation.match(boost, "query boost");
+				return Explanation.match(
+					queryBoostExpl.getValue(),
+					"score(" + getClass().getSimpleName() + ", doc=" + doc + "), computed from:",
+					queryBoostExpl);
+			}
 
-      @Override
-      public float computeSlopFactor(int distance) {
-        return 1f;
-      }
+			@Override
+			public float computeSlopFactor(int distance) {
+				return 1f;
+			}
 
-      @Override
-      public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
-        return 1f;
-      }
-    };
-  }
+			@Override
+			public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
+				return 1f;
+			}
+		};
+	}
 
 }

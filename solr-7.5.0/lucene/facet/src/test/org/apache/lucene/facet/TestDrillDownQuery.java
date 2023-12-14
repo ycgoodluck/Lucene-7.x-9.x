@@ -43,253 +43,253 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 public class TestDrillDownQuery extends FacetTestCase {
-  
-  private static IndexReader reader;
-  private static DirectoryTaxonomyReader taxo;
-  private static Directory dir;
-  private static Directory taxoDir;
-  private static FacetsConfig config;
 
-  @AfterClass
-  public static void afterClassDrillDownQueryTest() throws Exception {
-    IOUtils.close(reader, taxo, dir, taxoDir);
-    reader = null;
-    taxo = null;
-    dir = null;
-    taxoDir = null;
-    config = null;
-  }
+	private static IndexReader reader;
+	private static DirectoryTaxonomyReader taxo;
+	private static Directory dir;
+	private static Directory taxoDir;
+	private static FacetsConfig config;
 
-  @BeforeClass
-  public static void beforeClassDrillDownQueryTest() throws Exception {
-    dir = newDirectory();
-    Random r = random();
-    RandomIndexWriter writer = new RandomIndexWriter(r, dir, 
-        newIndexWriterConfig(new MockAnalyzer(r, MockTokenizer.KEYWORD, false)));
-    
-    taxoDir = newDirectory();
-    TaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
-    config = new FacetsConfig();
+	@AfterClass
+	public static void afterClassDrillDownQueryTest() throws Exception {
+		IOUtils.close(reader, taxo, dir, taxoDir);
+		reader = null;
+		taxo = null;
+		dir = null;
+		taxoDir = null;
+		config = null;
+	}
 
-    // Randomize the per-dim config:
-    config.setHierarchical("a", random().nextBoolean());
-    config.setMultiValued("a", random().nextBoolean());
-    if (random().nextBoolean()) {
-      config.setIndexFieldName("a", "$a");
-    }
-    config.setRequireDimCount("a", true);
+	@BeforeClass
+	public static void beforeClassDrillDownQueryTest() throws Exception {
+		dir = newDirectory();
+		Random r = random();
+		RandomIndexWriter writer = new RandomIndexWriter(r, dir,
+			newIndexWriterConfig(new MockAnalyzer(r, MockTokenizer.KEYWORD, false)));
 
-    config.setHierarchical("b", random().nextBoolean());
-    config.setMultiValued("b", random().nextBoolean());
-    if (random().nextBoolean()) {
-      config.setIndexFieldName("b", "$b");
-    }
-    config.setRequireDimCount("b", true);
+		taxoDir = newDirectory();
+		TaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
+		config = new FacetsConfig();
 
-    for (int i = 0; i < 100; i++) {
-      Document doc = new Document();
-      if (i % 2 == 0) { // 50
-        doc.add(new TextField("content", "foo", Field.Store.NO));
-      }
-      if (i % 3 == 0) { // 33
-        doc.add(new TextField("content", "bar", Field.Store.NO));
-      }
-      if (i % 4 == 0) { // 25
-        if (r.nextBoolean()) {
-          doc.add(new FacetField("a", "1"));
-        } else {
-          doc.add(new FacetField("a", "2"));
-        }
-      }
-      if (i % 5 == 0) { // 20
-        doc.add(new FacetField("b", "1"));
-      }
-      writer.addDocument(config.build(taxoWriter, doc));
-    }
-    
-    taxoWriter.close();
-    reader = writer.getReader();
-    writer.close();
-    
-    taxo = new DirectoryTaxonomyReader(taxoDir);
-  }
-  
-  public void testAndOrs() throws Exception {
-    IndexSearcher searcher = newSearcher(reader);
+		// Randomize the per-dim config:
+		config.setHierarchical("a", random().nextBoolean());
+		config.setMultiValued("a", random().nextBoolean());
+		if (random().nextBoolean()) {
+			config.setIndexFieldName("a", "$a");
+		}
+		config.setRequireDimCount("a", true);
 
-    // test (a/1 OR a/2) AND b/1
-    DrillDownQuery q = new DrillDownQuery(config);
-    q.add("a", "1");
-    q.add("a", "2");
-    q.add("b", "1");
-    TopDocs docs = searcher.search(q, 100);
-    assertEquals(5, docs.totalHits);
-  }
-  
-  public void testQuery() throws IOException {
-    IndexSearcher searcher = newSearcher(reader);
+		config.setHierarchical("b", random().nextBoolean());
+		config.setMultiValued("b", random().nextBoolean());
+		if (random().nextBoolean()) {
+			config.setIndexFieldName("b", "$b");
+		}
+		config.setRequireDimCount("b", true);
 
-    // Making sure the query yields 25 documents with the facet "a"
-    DrillDownQuery q = new DrillDownQuery(config);
-    q.add("a");
-    QueryUtils.check(q);
-    TopDocs docs = searcher.search(q, 100);
-    assertEquals(25, docs.totalHits);
-    
-    // Making sure the query yields 5 documents with the facet "b" and the
-    // previous (facet "a") query as a base query
-    DrillDownQuery q2 = new DrillDownQuery(config, q);
-    q2.add("b");
-    docs = searcher.search(q2, 100);
-    assertEquals(5, docs.totalHits);
+		for (int i = 0; i < 100; i++) {
+			Document doc = new Document();
+			if (i % 2 == 0) { // 50
+				doc.add(new TextField("content", "foo", Field.Store.NO));
+			}
+			if (i % 3 == 0) { // 33
+				doc.add(new TextField("content", "bar", Field.Store.NO));
+			}
+			if (i % 4 == 0) { // 25
+				if (r.nextBoolean()) {
+					doc.add(new FacetField("a", "1"));
+				} else {
+					doc.add(new FacetField("a", "2"));
+				}
+			}
+			if (i % 5 == 0) { // 20
+				doc.add(new FacetField("b", "1"));
+			}
+			writer.addDocument(config.build(taxoWriter, doc));
+		}
 
-    // Making sure that a query of both facet "a" and facet "b" yields 5 results
-    DrillDownQuery q3 = new DrillDownQuery(config);
-    q3.add("a");
-    q3.add("b");
-    docs = searcher.search(q3, 100);
-    
-    assertEquals(5, docs.totalHits);
-    // Check that content:foo (which yields 50% results) and facet/b (which yields 20%)
-    // would gather together 10 results (10%..) 
-    Query fooQuery = new TermQuery(new Term("content", "foo"));
-    DrillDownQuery q4 = new DrillDownQuery(config, fooQuery);
-    q4.add("b");
-    docs = searcher.search(q4, 100);
-    assertEquals(10, docs.totalHits);
-  }
-  
-  public void testQueryImplicitDefaultParams() throws IOException {
-    IndexSearcher searcher = newSearcher(reader);
+		taxoWriter.close();
+		reader = writer.getReader();
+		writer.close();
 
-    // Create the base query to start with
-    DrillDownQuery q = new DrillDownQuery(config);
-    q.add("a");
-    
-    // Making sure the query yields 5 documents with the facet "b" and the
-    // previous (facet "a") query as a base query
-    DrillDownQuery q2 = new DrillDownQuery(config, q);
-    q2.add("b");
-    TopDocs docs = searcher.search(q2, 100);
-    assertEquals(5, docs.totalHits);
+		taxo = new DirectoryTaxonomyReader(taxoDir);
+	}
 
-    // Check that content:foo (which yields 50% results) and facet/b (which yields 20%)
-    // would gather together 10 results (10%..) 
-    Query fooQuery = new TermQuery(new Term("content", "foo"));
-    DrillDownQuery q4 = new DrillDownQuery(config, fooQuery);
-    q4.add("b");
-    docs = searcher.search(q4, 100);
-    assertEquals(10, docs.totalHits);
-  }
-  
-  public void testZeroLimit() throws IOException {
-    IndexSearcher searcher = newSearcher(reader);
-    DrillDownQuery q = new DrillDownQuery(config);
-    q.add("b", "1");
-    int limit = 0;
-    FacetsCollector facetCollector = new FacetsCollector();
-    FacetsCollector.search(searcher, q, limit, facetCollector);
-    Facets facets = getTaxonomyFacetCounts(taxo, config, facetCollector, config.getDimConfig("b").indexFieldName);
-    assertNotNull(facets.getTopChildren(10, "b"));
-  }
-  
-  public void testScoring() throws IOException {
-    // verify that drill-down queries do not modify scores
-    IndexSearcher searcher = newSearcher(reader);
+	public void testAndOrs() throws Exception {
+		IndexSearcher searcher = newSearcher(reader);
 
-    float[] scores = new float[reader.maxDoc()];
-    
-    Query q = new TermQuery(new Term("content", "foo"));
-    TopDocs docs = searcher.search(q, reader.maxDoc()); // fetch all available docs to this query
-    for (ScoreDoc sd : docs.scoreDocs) {
-      scores[sd.doc] = sd.score;
-    }
-    
-    // create a drill-down query with category "a", scores should not change
-    DrillDownQuery q2 = new DrillDownQuery(config, q);
-    q2.add("a");
-    docs = searcher.search(q2, reader.maxDoc()); // fetch all available docs to this query
-    for (ScoreDoc sd : docs.scoreDocs) {
-      assertEquals("score of doc=" + sd.doc + " modified", scores[sd.doc], sd.score, 0f);
-    }
-  }
-  
-  public void testScoringNoBaseQuery() throws IOException {
-    // verify that drill-down queries (with no base query) returns 0.0 score
-    IndexSearcher searcher = newSearcher(reader);
-    
-    DrillDownQuery q = new DrillDownQuery(config);
-    q.add("a");
-    TopDocs docs = searcher.search(q, reader.maxDoc()); // fetch all available docs to this query
-    for (ScoreDoc sd : docs.scoreDocs) {
-      assertEquals(0f, sd.score, 0f);
-    }
-  }
-  
-  public void testTermNonDefault() {
-    String aField = config.getDimConfig("a").indexFieldName;
-    Term termA = DrillDownQuery.term(aField, "a");
-    assertEquals(new Term(aField, "a"), termA);
-    
-    String bField = config.getDimConfig("b").indexFieldName;
-    Term termB = DrillDownQuery.term(bField, "b");
-    assertEquals(new Term(bField, "b"), termB);
-  }
+		// test (a/1 OR a/2) AND b/1
+		DrillDownQuery q = new DrillDownQuery(config);
+		q.add("a", "1");
+		q.add("a", "2");
+		q.add("b", "1");
+		TopDocs docs = searcher.search(q, 100);
+		assertEquals(5, docs.totalHits);
+	}
 
-  public void testClone() throws Exception {
-    DrillDownQuery q = new DrillDownQuery(config, new MatchAllDocsQuery());
-    q.add("a");
-    
-    DrillDownQuery clone = q.clone();
-    clone.add("b");
-    
-    assertFalse("query wasn't cloned: source=" + q + " clone=" + clone, q.toString().equals(clone.toString()));
-  }
-  
-  public void testNoDrillDown() throws Exception {
-    Query base = new MatchAllDocsQuery();
-    DrillDownQuery q = new DrillDownQuery(config, base);
-    Query rewrite = q.rewrite(reader).rewrite(reader);
-    assertEquals(base, rewrite);
-  }
+	public void testQuery() throws IOException {
+		IndexSearcher searcher = newSearcher(reader);
 
-  public void testRequireDimensionDrillDown() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(random(), dir, 
-                  newIndexWriterConfig(new MockAnalyzer(random(), MockTokenizer.KEYWORD, false)));
-    Directory taxoDir = newDirectory();
-    TaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
-    FacetsConfig config = new FacetsConfig();
+		// Making sure the query yields 25 documents with the facet "a"
+		DrillDownQuery q = new DrillDownQuery(config);
+		q.add("a");
+		QueryUtils.check(q);
+		TopDocs docs = searcher.search(q, 100);
+		assertEquals(25, docs.totalHits);
 
-    config.setRequireDimensionDrillDown("a", true);
-    config.setRequireDimensionDrillDown("b", false);
+		// Making sure the query yields 5 documents with the facet "b" and the
+		// previous (facet "a") query as a base query
+		DrillDownQuery q2 = new DrillDownQuery(config, q);
+		q2.add("b");
+		docs = searcher.search(q2, 100);
+		assertEquals(5, docs.totalHits);
 
-    Document doc = new Document();
-    doc.add(new FacetField("a", "1"));
-    doc.add(new FacetField("b", "2"));
-    writer.addDocument(config.build(taxoWriter, doc));
-    taxoWriter.close();
+		// Making sure that a query of both facet "a" and facet "b" yields 5 results
+		DrillDownQuery q3 = new DrillDownQuery(config);
+		q3.add("a");
+		q3.add("b");
+		docs = searcher.search(q3, 100);
 
-    IndexReader reader = writer.getReader();
-    DirectoryTaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
-    IndexSearcher searcher = newSearcher(reader);
+		assertEquals(5, docs.totalHits);
+		// Check that content:foo (which yields 50% results) and facet/b (which yields 20%)
+		// would gather together 10 results (10%..)
+		Query fooQuery = new TermQuery(new Term("content", "foo"));
+		DrillDownQuery q4 = new DrillDownQuery(config, fooQuery);
+		q4.add("b");
+		docs = searcher.search(q4, 100);
+		assertEquals(10, docs.totalHits);
+	}
 
-    DrillDownQuery q = new DrillDownQuery(config);
-    q.add("a", "1");
-    assertEquals(1, searcher.count(q));
+	public void testQueryImplicitDefaultParams() throws IOException {
+		IndexSearcher searcher = newSearcher(reader);
 
-    q = new DrillDownQuery(config);
-    q.add("a");
-    assertEquals(1, searcher.count(q));
+		// Create the base query to start with
+		DrillDownQuery q = new DrillDownQuery(config);
+		q.add("a");
 
-    q = new DrillDownQuery(config);
-    q.add("b", "2");
-    assertEquals(1, searcher.count(q));
+		// Making sure the query yields 5 documents with the facet "b" and the
+		// previous (facet "a") query as a base query
+		DrillDownQuery q2 = new DrillDownQuery(config, q);
+		q2.add("b");
+		TopDocs docs = searcher.search(q2, 100);
+		assertEquals(5, docs.totalHits);
 
-    q = new DrillDownQuery(config);
-    q.add("b");
-    // no hits because we disabled dimension drill down for dimension "b":
-    assertEquals(0, searcher.count(q));
-    IOUtils.close(taxoReader, reader, writer, dir, taxoDir);
-  }
+		// Check that content:foo (which yields 50% results) and facet/b (which yields 20%)
+		// would gather together 10 results (10%..)
+		Query fooQuery = new TermQuery(new Term("content", "foo"));
+		DrillDownQuery q4 = new DrillDownQuery(config, fooQuery);
+		q4.add("b");
+		docs = searcher.search(q4, 100);
+		assertEquals(10, docs.totalHits);
+	}
+
+	public void testZeroLimit() throws IOException {
+		IndexSearcher searcher = newSearcher(reader);
+		DrillDownQuery q = new DrillDownQuery(config);
+		q.add("b", "1");
+		int limit = 0;
+		FacetsCollector facetCollector = new FacetsCollector();
+		FacetsCollector.search(searcher, q, limit, facetCollector);
+		Facets facets = getTaxonomyFacetCounts(taxo, config, facetCollector, config.getDimConfig("b").indexFieldName);
+		assertNotNull(facets.getTopChildren(10, "b"));
+	}
+
+	public void testScoring() throws IOException {
+		// verify that drill-down queries do not modify scores
+		IndexSearcher searcher = newSearcher(reader);
+
+		float[] scores = new float[reader.maxDoc()];
+
+		Query q = new TermQuery(new Term("content", "foo"));
+		TopDocs docs = searcher.search(q, reader.maxDoc()); // fetch all available docs to this query
+		for (ScoreDoc sd : docs.scoreDocs) {
+			scores[sd.doc] = sd.score;
+		}
+
+		// create a drill-down query with category "a", scores should not change
+		DrillDownQuery q2 = new DrillDownQuery(config, q);
+		q2.add("a");
+		docs = searcher.search(q2, reader.maxDoc()); // fetch all available docs to this query
+		for (ScoreDoc sd : docs.scoreDocs) {
+			assertEquals("score of doc=" + sd.doc + " modified", scores[sd.doc], sd.score, 0f);
+		}
+	}
+
+	public void testScoringNoBaseQuery() throws IOException {
+		// verify that drill-down queries (with no base query) returns 0.0 score
+		IndexSearcher searcher = newSearcher(reader);
+
+		DrillDownQuery q = new DrillDownQuery(config);
+		q.add("a");
+		TopDocs docs = searcher.search(q, reader.maxDoc()); // fetch all available docs to this query
+		for (ScoreDoc sd : docs.scoreDocs) {
+			assertEquals(0f, sd.score, 0f);
+		}
+	}
+
+	public void testTermNonDefault() {
+		String aField = config.getDimConfig("a").indexFieldName;
+		Term termA = DrillDownQuery.term(aField, "a");
+		assertEquals(new Term(aField, "a"), termA);
+
+		String bField = config.getDimConfig("b").indexFieldName;
+		Term termB = DrillDownQuery.term(bField, "b");
+		assertEquals(new Term(bField, "b"), termB);
+	}
+
+	public void testClone() throws Exception {
+		DrillDownQuery q = new DrillDownQuery(config, new MatchAllDocsQuery());
+		q.add("a");
+
+		DrillDownQuery clone = q.clone();
+		clone.add("b");
+
+		assertFalse("query wasn't cloned: source=" + q + " clone=" + clone, q.toString().equals(clone.toString()));
+	}
+
+	public void testNoDrillDown() throws Exception {
+		Query base = new MatchAllDocsQuery();
+		DrillDownQuery q = new DrillDownQuery(config, base);
+		Query rewrite = q.rewrite(reader).rewrite(reader);
+		assertEquals(base, rewrite);
+	}
+
+	public void testRequireDimensionDrillDown() throws Exception {
+		Directory dir = newDirectory();
+		RandomIndexWriter writer = new RandomIndexWriter(random(), dir,
+			newIndexWriterConfig(new MockAnalyzer(random(), MockTokenizer.KEYWORD, false)));
+		Directory taxoDir = newDirectory();
+		TaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
+		FacetsConfig config = new FacetsConfig();
+
+		config.setRequireDimensionDrillDown("a", true);
+		config.setRequireDimensionDrillDown("b", false);
+
+		Document doc = new Document();
+		doc.add(new FacetField("a", "1"));
+		doc.add(new FacetField("b", "2"));
+		writer.addDocument(config.build(taxoWriter, doc));
+		taxoWriter.close();
+
+		IndexReader reader = writer.getReader();
+		DirectoryTaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
+		IndexSearcher searcher = newSearcher(reader);
+
+		DrillDownQuery q = new DrillDownQuery(config);
+		q.add("a", "1");
+		assertEquals(1, searcher.count(q));
+
+		q = new DrillDownQuery(config);
+		q.add("a");
+		assertEquals(1, searcher.count(q));
+
+		q = new DrillDownQuery(config);
+		q.add("b", "2");
+		assertEquals(1, searcher.count(q));
+
+		q = new DrillDownQuery(config);
+		q.add("b");
+		// no hits because we disabled dimension drill down for dimension "b":
+		assertEquals(0, searcher.count(q));
+		IOUtils.close(taxoReader, reader, writer, dir, taxoDir);
+	}
 }

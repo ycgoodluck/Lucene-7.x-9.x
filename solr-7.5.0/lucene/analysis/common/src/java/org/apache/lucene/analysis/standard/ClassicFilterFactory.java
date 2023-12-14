@@ -33,20 +33,23 @@ import org.apache.lucene.analysis.standard.ClassicFilter;
  *     &lt;filter class="solr.ClassicFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
+ *
  * @since 3.1.0
  */
 public class ClassicFilterFactory extends TokenFilterFactory {
-  
-  /** Creates a new ClassicFilterFactory */
-  public ClassicFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenFilter create(TokenStream input) {
-    return new ClassicFilter(input);
-  }
+
+	/**
+	 * Creates a new ClassicFilterFactory
+	 */
+	public ClassicFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenFilter create(TokenStream input) {
+		return new ClassicFilter(input);
+	}
 }

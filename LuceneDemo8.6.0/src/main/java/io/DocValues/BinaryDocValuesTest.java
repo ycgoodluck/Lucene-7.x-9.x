@@ -21,67 +21,69 @@ import java.nio.file.Paths;
  * @date 2020/11/27 下午1:27
  */
 public class BinaryDocValuesTest {
-    private Directory directory;
-    {
-        try {
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    private Analyzer analyzer = new WhitespaceAnalyzer();
-    private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
-    private IndexWriter indexWriter;
+	private Directory directory;
 
-    public void doIndexAndSearch() throws Exception {
-        conf.setUseCompoundFile(false);
-        conf.setMergePolicy(NoMergePolicy.INSTANCE);
-        indexWriter = new IndexWriter(directory, conf);
-        Document doc;
-        int count = 0;
-        while (count++ < 100){
+	{
+		try {
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-            // 文档0
-            doc = new Document();
-            doc.add(new BinaryDocValuesField("level", new BytesRef("a df")));
-            doc.add(new TextField("abc", "document0", Field.Store.YES));
-            indexWriter.addDocument(doc);
-            // 文档1
-            doc = new Document();
-            doc.add(new BinaryDocValuesField("level", new BytesRef("dc")));
-            doc.add(new TextField("abc", "document1", Field.Store.YES));
-            indexWriter.addDocument(doc);
-            // 文档2
-            doc = new Document();
-            doc.add(new TextField("abc", "document2", Field.Store.YES));
-            indexWriter.addDocument(doc);
-            // 文档3
-            doc = new Document();
-            doc.add(new BinaryDocValuesField("level", new BytesRef("da")));
-            doc.add(new TextField("abc", "document3", Field.Store.YES));
-            indexWriter.addDocument(doc);
-            indexWriter.commit();
-        }
-        indexWriter.forceMerge(1);
-        indexWriter.commit();
-        IndexReader reader = DirectoryReader.open(indexWriter);
-        IndexSearcher searcher = new IndexSearcher(reader);
-        Sort sortByLevel = new Sort(new SortField("level", SortField.Type.STRING_VAL, false));
-        ScoreDoc[] scoreDoc= searcher.search(new MatchAllDocsQuery(), 4, sortByLevel).scoreDocs;
-        assert scoreDoc.length == 4;
-        assert scoreDoc[0].doc == 2;
-        assert reader.document(scoreDoc[0].doc).get("abc").equals("document2");
-        assert scoreDoc[1].doc == 0;
-        assert reader.document(scoreDoc[1].doc).get("abc").equals("document0");
-        assert scoreDoc[2].doc == 3;
-        assert reader.document(scoreDoc[2].doc).get("abc").equals("document3");
-        assert scoreDoc[3].doc == 1;
-        assert reader.document(scoreDoc[3].doc).get("abc").equals("document1");
-    }
+	private Analyzer analyzer = new WhitespaceAnalyzer();
+	private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	private IndexWriter indexWriter;
 
-    public static void main(String[] args) throws Exception{
-        BinaryDocValuesTest test = new BinaryDocValuesTest();
-        test.doIndexAndSearch();
-    }
+	public void doIndexAndSearch() throws Exception {
+		conf.setUseCompoundFile(false);
+		conf.setMergePolicy(NoMergePolicy.INSTANCE);
+		indexWriter = new IndexWriter(directory, conf);
+		Document doc;
+		int count = 0;
+		while (count++ < 100) {
+
+			// 文档0
+			doc = new Document();
+			doc.add(new BinaryDocValuesField("level", new BytesRef("a df")));
+			doc.add(new TextField("abc", "document0", Field.Store.YES));
+			indexWriter.addDocument(doc);
+			// 文档1
+			doc = new Document();
+			doc.add(new BinaryDocValuesField("level", new BytesRef("dc")));
+			doc.add(new TextField("abc", "document1", Field.Store.YES));
+			indexWriter.addDocument(doc);
+			// 文档2
+			doc = new Document();
+			doc.add(new TextField("abc", "document2", Field.Store.YES));
+			indexWriter.addDocument(doc);
+			// 文档3
+			doc = new Document();
+			doc.add(new BinaryDocValuesField("level", new BytesRef("da")));
+			doc.add(new TextField("abc", "document3", Field.Store.YES));
+			indexWriter.addDocument(doc);
+			indexWriter.commit();
+		}
+		indexWriter.forceMerge(1);
+		indexWriter.commit();
+		IndexReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
+		Sort sortByLevel = new Sort(new SortField("level", SortField.Type.STRING_VAL, false));
+		ScoreDoc[] scoreDoc = searcher.search(new MatchAllDocsQuery(), 4, sortByLevel).scoreDocs;
+		assert scoreDoc.length == 4;
+		assert scoreDoc[0].doc == 2;
+		assert reader.document(scoreDoc[0].doc).get("abc").equals("document2");
+		assert scoreDoc[1].doc == 0;
+		assert reader.document(scoreDoc[1].doc).get("abc").equals("document0");
+		assert scoreDoc[2].doc == 3;
+		assert reader.document(scoreDoc[2].doc).get("abc").equals("document3");
+		assert scoreDoc[3].doc == 1;
+		assert reader.document(scoreDoc[3].doc).get("abc").equals("document1");
+	}
+
+	public static void main(String[] args) throws Exception {
+		BinaryDocValuesTest test = new BinaryDocValuesTest();
+		test.doIndexAndSearch();
+	}
 }

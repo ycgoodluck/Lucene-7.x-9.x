@@ -20,15 +20,15 @@ package org.apache.lucene.analysis.hunspell;
 import org.junit.BeforeClass;
 
 public class TestStrangeOvergeneration extends StemmerTestBase {
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    init("strange-overgeneration.aff", "strange-overgeneration.dic");
-  }
-  
-  public void testStemming() {
-    assertStemsTo("btasty", "beer");
-    assertStemsTo("tasty");
-    assertStemsTo("yuck");
-    assertStemsTo("foo");
-  }
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		init("strange-overgeneration.aff", "strange-overgeneration.dic");
+	}
+
+	public void testStemming() {
+		assertStemsTo("btasty", "beer");
+		assertStemsTo("tasty");
+		assertStemsTo("yuck");
+		assertStemsTo("foo");
+	}
 }

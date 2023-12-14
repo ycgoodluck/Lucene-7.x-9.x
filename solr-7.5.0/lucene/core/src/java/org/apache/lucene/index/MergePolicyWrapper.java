@@ -18,19 +18,20 @@ package org.apache.lucene.index;
 
 /**
  * A wrapper for {@link MergePolicy} instances.
- * @deprecated replace with FilterMergePolicy
+ *
  * @lucene.experimental
+ * @deprecated replace with FilterMergePolicy
  */
 @Deprecated
 public class MergePolicyWrapper extends FilterMergePolicy {
-  // placeholder for backwards compatibility
+	// placeholder for backwards compatibility
 
-  /**
-   * Creates a new merge policy instance wrapping another.
-   *
-   * @param in the wrapped {@link MergePolicy}
-   */
-  public MergePolicyWrapper(MergePolicy in) {
-    super(in);
-  }
+	/**
+	 * Creates a new merge policy instance wrapping another.
+	 *
+	 * @param in the wrapped {@link MergePolicy}
+	 */
+	public MergePolicyWrapper(MergePolicy in) {
+		super(in);
+	}
 }

@@ -28,23 +28,23 @@ import opennlp.tools.util.Span;
  * Requires binary models from OpenNLP project on SourceForge.
  */
 public class NLPSentenceDetectorOp {
-  private final SentenceDetectorME sentenceSplitter;
+	private final SentenceDetectorME sentenceSplitter;
 
-  public NLPSentenceDetectorOp(SentenceModel model) throws IOException {
-    sentenceSplitter  = new SentenceDetectorME(model);
-  }
+	public NLPSentenceDetectorOp(SentenceModel model) throws IOException {
+		sentenceSplitter = new SentenceDetectorME(model);
+	}
 
-  public NLPSentenceDetectorOp() {
-    sentenceSplitter = null;
-  }
+	public NLPSentenceDetectorOp() {
+		sentenceSplitter = null;
+	}
 
-  public synchronized Span[] splitSentences(String line) {
-    if (sentenceSplitter != null) {
-      return sentenceSplitter.sentPosDetect(line);
-    } else {
-      Span[] shorty = new Span[1];
-      shorty[0] = new Span(0, line.length());
-      return shorty;
-    }
-  }
+	public synchronized Span[] splitSentences(String line) {
+		if (sentenceSplitter != null) {
+			return sentenceSplitter.sentPosDetect(line);
+		} else {
+			Span[] shorty = new Span[1];
+			shorty[0] = new Span(0, line.length());
+			return shorty;
+		}
+	}
 }

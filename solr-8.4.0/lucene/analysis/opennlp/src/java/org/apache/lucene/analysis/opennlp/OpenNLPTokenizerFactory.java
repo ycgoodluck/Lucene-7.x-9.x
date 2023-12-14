@@ -37,48 +37,51 @@ import org.apache.lucene.util.AttributeFactory;
  *     &lt;tokenizer class="solr.OpenNLPTokenizerFactory" sentenceModel="filename" tokenizerModel="filename"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 7.3.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 7.3.0
  */
 public class OpenNLPTokenizerFactory extends TokenizerFactory implements ResourceLoaderAware {
 
-  /** SPI name */
-  public static final String NAME = "openNlp";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "openNlp";
 
-  public static final String SENTENCE_MODEL = "sentenceModel";
-  public static final String TOKENIZER_MODEL = "tokenizerModel";
+	public static final String SENTENCE_MODEL = "sentenceModel";
+	public static final String TOKENIZER_MODEL = "tokenizerModel";
 
-  private final String sentenceModelFile;
-  private final String tokenizerModelFile;
+	private final String sentenceModelFile;
+	private final String tokenizerModelFile;
 
-  public OpenNLPTokenizerFactory(Map<String,String> args) {
-    super(args);
-    sentenceModelFile = require(args, SENTENCE_MODEL);
-    tokenizerModelFile = require(args, TOKENIZER_MODEL);
-    if ( ! args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	public OpenNLPTokenizerFactory(Map<String, String> args) {
+		super(args);
+		sentenceModelFile = require(args, SENTENCE_MODEL);
+		tokenizerModelFile = require(args, TOKENIZER_MODEL);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public OpenNLPTokenizer create(AttributeFactory factory) {
-    try {
-      NLPSentenceDetectorOp sentenceOp = OpenNLPOpsFactory.getSentenceDetector(sentenceModelFile);
-      NLPTokenizerOp tokenizerOp = OpenNLPOpsFactory.getTokenizer(tokenizerModelFile);
-      return new OpenNLPTokenizer(factory, sentenceOp, tokenizerOp);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
+	@Override
+	public OpenNLPTokenizer create(AttributeFactory factory) {
+		try {
+			NLPSentenceDetectorOp sentenceOp = OpenNLPOpsFactory.getSentenceDetector(sentenceModelFile);
+			NLPTokenizerOp tokenizerOp = OpenNLPOpsFactory.getTokenizer(tokenizerModelFile);
+			return new OpenNLPTokenizer(factory, sentenceOp, tokenizerOp);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    // register models in cache with file/resource names
-    if (sentenceModelFile != null) {
-      OpenNLPOpsFactory.getSentenceModel(sentenceModelFile, loader);
-    }
-    if (tokenizerModelFile != null) {
-      OpenNLPOpsFactory.getTokenizerModel(tokenizerModelFile, loader);
-    }
-  }
+	@Override
+	public void inform(ResourceLoader loader) throws IOException {
+		// register models in cache with file/resource names
+		if (sentenceModelFile != null) {
+			OpenNLPOpsFactory.getSentenceModel(sentenceModelFile, loader);
+		}
+		if (tokenizerModelFile != null) {
+			OpenNLPOpsFactory.getTokenizerModel(tokenizerModelFile, loader);
+		}
+	}
 }

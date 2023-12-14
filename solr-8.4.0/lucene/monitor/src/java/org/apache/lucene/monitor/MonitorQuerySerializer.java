@@ -31,62 +31,61 @@ import org.apache.lucene.util.BytesRef;
 
 /**
  * Serializes and deserializes MonitorQuery objects into byte streams
- *
+ * <p>
  * Use this for persistent query indexes
  */
 public interface MonitorQuerySerializer {
 
-  /**
-   * Builds a MonitorQuery from a byte representation
-   */
-  MonitorQuery deserialize(BytesRef binaryValue);
+	/**
+	 * Builds a MonitorQuery from a byte representation
+	 */
+	MonitorQuery deserialize(BytesRef binaryValue);
 
-  /**
-   * Converts a MonitorQuery into a byte representation
-   */
-  BytesRef serialize(MonitorQuery query);
+	/**
+	 * Converts a MonitorQuery into a byte representation
+	 */
+	BytesRef serialize(MonitorQuery query);
 
-  /**
-   * Build a serializer from a query parser
-   *
-   * @param parser a parser to convert a String representation of a query into a lucene query object
-   */
-  static MonitorQuerySerializer fromParser(Function<String, Query> parser) {
-    return new MonitorQuerySerializer() {
-      @Override
-      public MonitorQuery deserialize(BytesRef binaryValue) {
-        ByteArrayInputStream is = new ByteArrayInputStream(binaryValue.bytes, binaryValue.offset, binaryValue.length);
-        try (InputStreamDataInput data = new InputStreamDataInput(is)) {
-          String id = data.readString();
-          String query = data.readString();
-          Map<String, String> metadata = new HashMap<>();
-          for (int i = data.readInt(); i > 0; i--) {
-            metadata.put(data.readString(), data.readString());
-          }
-          return new MonitorQuery(id, parser.apply(query), query, metadata);
-        } catch (IOException e) {
-          throw new RuntimeException(e);  // shouldn't happen, we're reading from a bytearray!
-        }
-      }
+	/**
+	 * Build a serializer from a query parser
+	 *
+	 * @param parser a parser to convert a String representation of a query into a lucene query object
+	 */
+	static MonitorQuerySerializer fromParser(Function<String, Query> parser) {
+		return new MonitorQuerySerializer() {
+			@Override
+			public MonitorQuery deserialize(BytesRef binaryValue) {
+				ByteArrayInputStream is = new ByteArrayInputStream(binaryValue.bytes, binaryValue.offset, binaryValue.length);
+				try (InputStreamDataInput data = new InputStreamDataInput(is)) {
+					String id = data.readString();
+					String query = data.readString();
+					Map<String, String> metadata = new HashMap<>();
+					for (int i = data.readInt(); i > 0; i--) {
+						metadata.put(data.readString(), data.readString());
+					}
+					return new MonitorQuery(id, parser.apply(query), query, metadata);
+				} catch (IOException e) {
+					throw new RuntimeException(e);  // shouldn't happen, we're reading from a bytearray!
+				}
+			}
 
-      @Override
-      public BytesRef serialize(MonitorQuery query) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        try (OutputStreamDataOutput data = new OutputStreamDataOutput(os)) {
-          data.writeString(query.getId());
-          data.writeString(query.getQueryString());
-          data.writeInt(query.getMetadata().size());
-          for (Map.Entry<String, String> entry : query.getMetadata().entrySet()) {
-            data.writeString(entry.getKey());
-            data.writeString(entry.getValue());
-          }
-          return new BytesRef(os.toByteArray());
-        }
-        catch (IOException e) {
-          throw new RuntimeException(e);  // All in memory, so no IOException should be thrown
-        }
-      }
-    };
-  }
+			@Override
+			public BytesRef serialize(MonitorQuery query) {
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				try (OutputStreamDataOutput data = new OutputStreamDataOutput(os)) {
+					data.writeString(query.getId());
+					data.writeString(query.getQueryString());
+					data.writeInt(query.getMetadata().size());
+					for (Map.Entry<String, String> entry : query.getMetadata().entrySet()) {
+						data.writeString(entry.getKey());
+						data.writeString(entry.getValue());
+					}
+					return new BytesRef(os.toByteArray());
+				} catch (IOException e) {
+					throw new RuntimeException(e);  // All in memory, so no IOException should be thrown
+				}
+			}
+		};
+	}
 
 }

@@ -27,71 +27,71 @@ import java.util.*;
  */
 public class MatchingQueries<T extends QueryMatch> {
 
-  private final Map<String, T> matches;
-  private final Map<String, Exception> errors;
+	private final Map<String, T> matches;
+	private final Map<String, Exception> errors;
 
-  private final long queryBuildTime;
-  private final long searchTime;
-  private final int queriesRun;
+	private final long queryBuildTime;
+	private final long searchTime;
+	private final int queriesRun;
 
-  MatchingQueries(Map<String, T> matches, Map<String, Exception> errors,
-                  long queryBuildTime, long searchTime, int queriesRun) {
-    this.matches = Collections.unmodifiableMap(matches);
-    this.errors = Collections.unmodifiableMap(errors);
-    this.queryBuildTime = queryBuildTime;
-    this.searchTime = searchTime;
-    this.queriesRun = queriesRun;
-  }
+	MatchingQueries(Map<String, T> matches, Map<String, Exception> errors,
+									long queryBuildTime, long searchTime, int queriesRun) {
+		this.matches = Collections.unmodifiableMap(matches);
+		this.errors = Collections.unmodifiableMap(errors);
+		this.queryBuildTime = queryBuildTime;
+		this.searchTime = searchTime;
+		this.queriesRun = queriesRun;
+	}
 
-  /**
-   * Returns the QueryMatch for the given query, or null if it did not match
-   *
-   * @param queryId the query id
-   */
-  public T matches(String queryId) {
-    return matches.get(queryId);
-  }
+	/**
+	 * Returns the QueryMatch for the given query, or null if it did not match
+	 *
+	 * @param queryId the query id
+	 */
+	public T matches(String queryId) {
+		return matches.get(queryId);
+	}
 
-  /**
-   * @return all matches
-   */
-  public Collection<T> getMatches() {
-    return matches.values();
-  }
+	/**
+	 * @return all matches
+	 */
+	public Collection<T> getMatches() {
+		return matches.values();
+	}
 
-  /**
-   * @return the number of queries that matched
-   */
-  public int getMatchCount() {
-    return matches.size();
-  }
+	/**
+	 * @return the number of queries that matched
+	 */
+	public int getMatchCount() {
+		return matches.size();
+	}
 
-  /**
-   * @return how long (in ms) it took to build the Presearcher query for the matcher run
-   */
-  public long getQueryBuildTime() {
-    return queryBuildTime;
-  }
+	/**
+	 * @return how long (in ms) it took to build the Presearcher query for the matcher run
+	 */
+	public long getQueryBuildTime() {
+		return queryBuildTime;
+	}
 
-  /**
-   * @return how long (in ms) it took to run the selected queries
-   */
-  public long getSearchTime() {
-    return searchTime;
-  }
+	/**
+	 * @return how long (in ms) it took to run the selected queries
+	 */
+	public long getSearchTime() {
+		return searchTime;
+	}
 
-  /**
-   * @return the number of queries passed to this CandidateMatcher during the matcher run
-   */
-  public int getQueriesRun() {
-    return queriesRun;
-  }
+	/**
+	 * @return the number of queries passed to this CandidateMatcher during the matcher run
+	 */
+	public int getQueriesRun() {
+		return queriesRun;
+	}
 
-  /**
-   * @return a List of any MatchErrors created during the matcher run
-   */
-  public Map<String, Exception> getErrors() {
-    return errors;
-  }
+	/**
+	 * @return a List of any MatchErrors created during the matcher run
+	 */
+	public Map<String, Exception> getErrors() {
+		return errors;
+	}
 
 }

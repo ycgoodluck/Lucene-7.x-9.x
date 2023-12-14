@@ -34,26 +34,29 @@ import java.util.Map;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;
  * </pre>
+ *
  * @since 3.6.0
  */
 public class JapaneseKatakanaStemFilterFactory extends TokenFilterFactory {
-  private static final String MINIMUM_LENGTH_PARAM = "minimumLength";
-  private final int minimumLength;
-  
-  /** Creates a new JapaneseKatakanaStemFilterFactory */
-  public JapaneseKatakanaStemFilterFactory(Map<String,String> args) {
-    super(args);
-    minimumLength = getInt(args, MINIMUM_LENGTH_PARAM, JapaneseKatakanaStemFilter.DEFAULT_MINIMUM_LENGTH);
-    if (minimumLength < 2) {
-      throw new IllegalArgumentException("Illegal " + MINIMUM_LENGTH_PARAM + " " + minimumLength + " (must be 2 or greater)");
-    }
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	private static final String MINIMUM_LENGTH_PARAM = "minimumLength";
+	private final int minimumLength;
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new JapaneseKatakanaStemFilter(input, minimumLength);
-  }
+	/**
+	 * Creates a new JapaneseKatakanaStemFilterFactory
+	 */
+	public JapaneseKatakanaStemFilterFactory(Map<String, String> args) {
+		super(args);
+		minimumLength = getInt(args, MINIMUM_LENGTH_PARAM, JapaneseKatakanaStemFilter.DEFAULT_MINIMUM_LENGTH);
+		if (minimumLength < 2) {
+			throw new IllegalArgumentException("Illegal " + MINIMUM_LENGTH_PARAM + " " + minimumLength + " (must be 2 or greater)");
+		}
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new JapaneseKatakanaStemFilter(input, minimumLength);
+	}
 }

@@ -23,14 +23,14 @@ package org.apache.lucene.spatial.prefix.tree;
  */
 class SingletonCellIterator extends CellIterator {
 
-  SingletonCellIterator(Cell cell) {
-    this.nextCell = cell;//preload nextCell
-  }
+	SingletonCellIterator(Cell cell) {
+		this.nextCell = cell;//preload nextCell
+	}
 
-  @Override
-  public boolean hasNext() {
-    thisCell = null;
-    return nextCell != null;
-  }
+	@Override
+	public boolean hasNext() {
+		thisCell = null;
+		return nextCell != null;
+	}
 
 }

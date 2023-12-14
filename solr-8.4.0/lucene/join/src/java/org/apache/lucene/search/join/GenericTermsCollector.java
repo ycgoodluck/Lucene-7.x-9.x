@@ -31,117 +31,117 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.BytesRefHash;
 
 interface GenericTermsCollector extends Collector {
-  
-  BytesRefHash getCollectedTerms() ;
-  
-  float[] getScoresPerTerm();
-  
-  static GenericTermsCollector createCollectorMV(Function<SortedSetDocValues> mvFunction,
-      ScoreMode mode) {
-    
-    switch (mode) {
-      case None:
-        return wrap(new TermsCollector.MV(mvFunction));
-      case Avg:
-        return new MV.Avg(mvFunction);
-      default:
-        return new MV(mvFunction, mode);
-    }
-  }
 
-  static Function<SortedSetDocValues> verbose(PrintStream out, Function<SortedSetDocValues> mvFunction){
-    return (ctx) -> {
-      final SortedSetDocValues target = mvFunction.apply(ctx);
-      return new SortedSetDocValues() {
-        
-        @Override
-        public int docID() {
-          return target.docID();
-        }
+	BytesRefHash getCollectedTerms();
 
-        @Override
-        public int nextDoc() throws IOException {
-          int docID = target.nextDoc();
-          out.println("\nnextDoc doc# "+docID);
-          return docID;
-        }
+	float[] getScoresPerTerm();
 
-        @Override
-        public int advance(int dest) throws IOException {
-          int docID = target.advance(dest);
-          out.println("\nadvance(" + dest + ") -> doc# "+docID);
-          return docID;
-        }
+	static GenericTermsCollector createCollectorMV(Function<SortedSetDocValues> mvFunction,
+																								 ScoreMode mode) {
 
-        @Override
-        public boolean advanceExact(int dest) throws IOException {
-          boolean exists = target.advanceExact(dest);
-          out.println("\nadvanceExact(" + dest + ") -> exists# "+exists);
-          return exists;
-        }
+		switch (mode) {
+			case None:
+				return wrap(new TermsCollector.MV(mvFunction));
+			case Avg:
+				return new MV.Avg(mvFunction);
+			default:
+				return new MV(mvFunction, mode);
+		}
+	}
 
-        @Override
-        public long cost() {
-          return target.cost();
-        }
-        
-        @Override
-        public long nextOrd() throws IOException {
-          return target.nextOrd();
-        }
-        
-        @Override
-        public BytesRef lookupOrd(long ord) throws IOException {
-          final BytesRef val = target.lookupOrd(ord);
-          out.println(val.toString()+", ");
-          return val;
-        }
-        
-        @Override
-        public long getValueCount() {
-          return target.getValueCount();
-        }
-      };
-      
-    };
-  }
+	static Function<SortedSetDocValues> verbose(PrintStream out, Function<SortedSetDocValues> mvFunction) {
+		return (ctx) -> {
+			final SortedSetDocValues target = mvFunction.apply(ctx);
+			return new SortedSetDocValues() {
 
-  static GenericTermsCollector createCollectorSV(Function<BinaryDocValues> svFunction,
-      ScoreMode mode) {
-    
-    switch (mode) {
-      case None:
-        return wrap(new TermsCollector.SV(svFunction));
-      case Avg:
-        return new SV.Avg(svFunction);
-      default:
-        return new SV(svFunction, mode);  
-    }
-  }
-  
-  static GenericTermsCollector wrap(final TermsCollector<?> collector) {
-    return new GenericTermsCollector() {
+				@Override
+				public int docID() {
+					return target.docID();
+				}
 
-      
-      @Override
-      public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
-        return collector.getLeafCollector(context);
-      }
+				@Override
+				public int nextDoc() throws IOException {
+					int docID = target.nextDoc();
+					out.println("\nnextDoc doc# " + docID);
+					return docID;
+				}
 
-      @Override
-      public org.apache.lucene.search.ScoreMode scoreMode() {
-        return collector.scoreMode();
-      }
+				@Override
+				public int advance(int dest) throws IOException {
+					int docID = target.advance(dest);
+					out.println("\nadvance(" + dest + ") -> doc# " + docID);
+					return docID;
+				}
 
-      @Override
-      public BytesRefHash getCollectedTerms() {
-        return collector.getCollectorTerms();
-      }
+				@Override
+				public boolean advanceExact(int dest) throws IOException {
+					boolean exists = target.advanceExact(dest);
+					out.println("\nadvanceExact(" + dest + ") -> exists# " + exists);
+					return exists;
+				}
 
-      @Override
-      public float[] getScoresPerTerm() {
-        throw new UnsupportedOperationException("scores are not available for "+collector);
-      }
-    };
-  }
+				@Override
+				public long cost() {
+					return target.cost();
+				}
+
+				@Override
+				public long nextOrd() throws IOException {
+					return target.nextOrd();
+				}
+
+				@Override
+				public BytesRef lookupOrd(long ord) throws IOException {
+					final BytesRef val = target.lookupOrd(ord);
+					out.println(val.toString() + ", ");
+					return val;
+				}
+
+				@Override
+				public long getValueCount() {
+					return target.getValueCount();
+				}
+			};
+
+		};
+	}
+
+	static GenericTermsCollector createCollectorSV(Function<BinaryDocValues> svFunction,
+																								 ScoreMode mode) {
+
+		switch (mode) {
+			case None:
+				return wrap(new TermsCollector.SV(svFunction));
+			case Avg:
+				return new SV.Avg(svFunction);
+			default:
+				return new SV(svFunction, mode);
+		}
+	}
+
+	static GenericTermsCollector wrap(final TermsCollector<?> collector) {
+		return new GenericTermsCollector() {
+
+
+			@Override
+			public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
+				return collector.getLeafCollector(context);
+			}
+
+			@Override
+			public org.apache.lucene.search.ScoreMode scoreMode() {
+				return collector.scoreMode();
+			}
+
+			@Override
+			public BytesRefHash getCollectedTerms() {
+				return collector.getCollectorTerms();
+			}
+
+			@Override
+			public float[] getScoresPerTerm() {
+				throw new UnsupportedOperationException("scores are not available for " + collector);
+			}
+		};
+	}
 }

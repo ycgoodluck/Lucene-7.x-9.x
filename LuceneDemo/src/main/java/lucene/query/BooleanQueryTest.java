@@ -19,89 +19,89 @@ import java.nio.file.Paths;
  * @date 2019-08-19 16:33
  */
 public class BooleanQueryTest {
-    private Directory directory;
+	private Directory directory;
 
-    {
-        try {
-            // 每次运行demo先清空索引目录中的索引文件
-            FileOperation.deleteFile("./data");
-            directory = new MMapDirectory(Paths.get("./data"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	{
+		try {
+			// 每次运行demo先清空索引目录中的索引文件
+			FileOperation.deleteFile("./data");
+			directory = new MMapDirectory(Paths.get("./data"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    // 空格分词器
-    private Analyzer analyzer = new WhitespaceAnalyzer();
-    private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+	// 空格分词器
+	private Analyzer analyzer = new WhitespaceAnalyzer();
+	private IndexWriterConfig conf = new IndexWriterConfig(analyzer);
 
-    private void doDemo() throws Exception {
-        IndexWriter indexWriter = new IndexWriter(directory, conf);
-        Document doc ;
-        // 文档0
-        doc = new Document();
-        doc.add(new TextField("content", "h", Field.Store.YES));
-        doc.add(new TextField("author", "author1", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档1
-        doc = new Document();
-        doc.add(new TextField("content", "b", Field.Store.YES));
-        doc.add(new TextField("author", "author2", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档2
-        doc = new Document();
-        doc.add(new TextField("content", "a c", Field.Store.YES));
-        doc.add(new TextField("author", "author3", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档3
-        doc = new Document();
-        doc.add(new TextField("content", "a c e", Field.Store.YES));
-        doc.add(new TextField("author", "author4", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档4
-        doc = new Document();
-        doc.add(new TextField("content", "a", Field.Store.YES));
-        doc.add(new TextField("author", "author5", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档5
-        doc = new Document();
-        doc.add(new TextField("content", "c e", Field.Store.YES));
-        doc.add(new TextField("author", "author6", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档6
-        doc = new Document();
-        doc.add(new TextField("content", "c a e", Field.Store.YES));
-        doc.add(new TextField("author", "author7", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档7
-        doc = new Document();
-        doc.add(new TextField("content", "f", Field.Store.YES));
-        doc.add(new TextField("author", "author8", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档8
-        doc = new Document();
-        doc.add(new TextField("content", "b c d h h e c e", Field.Store.YES));
-        doc.add(new TextField("author", "author9", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        // 文档9
-        doc = new Document();
-        doc.add(new TextField("content", "a c e a b c", Field.Store.YES));
-        doc.add(new TextField("author", "author10", Field.Store.YES));
-        indexWriter.addDocument(doc);
-        indexWriter.commit();
-        // 索引阶段结束
+	private void doDemo() throws Exception {
+		IndexWriter indexWriter = new IndexWriter(directory, conf);
+		Document doc;
+		// 文档0
+		doc = new Document();
+		doc.add(new TextField("content", "h", Field.Store.YES));
+		doc.add(new TextField("author", "author1", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档1
+		doc = new Document();
+		doc.add(new TextField("content", "b", Field.Store.YES));
+		doc.add(new TextField("author", "author2", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档2
+		doc = new Document();
+		doc.add(new TextField("content", "a c", Field.Store.YES));
+		doc.add(new TextField("author", "author3", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档3
+		doc = new Document();
+		doc.add(new TextField("content", "a c e", Field.Store.YES));
+		doc.add(new TextField("author", "author4", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档4
+		doc = new Document();
+		doc.add(new TextField("content", "a", Field.Store.YES));
+		doc.add(new TextField("author", "author5", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档5
+		doc = new Document();
+		doc.add(new TextField("content", "c e", Field.Store.YES));
+		doc.add(new TextField("author", "author6", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档6
+		doc = new Document();
+		doc.add(new TextField("content", "c a e", Field.Store.YES));
+		doc.add(new TextField("author", "author7", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档7
+		doc = new Document();
+		doc.add(new TextField("content", "f", Field.Store.YES));
+		doc.add(new TextField("author", "author8", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档8
+		doc = new Document();
+		doc.add(new TextField("content", "b c d h h e c e", Field.Store.YES));
+		doc.add(new TextField("author", "author9", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		// 文档9
+		doc = new Document();
+		doc.add(new TextField("content", "a c e a b c", Field.Store.YES));
+		doc.add(new TextField("author", "author10", Field.Store.YES));
+		indexWriter.addDocument(doc);
+		indexWriter.commit();
+		// 索引阶段结束
 
-        // 查询阶段
-        IndexReader reader = DirectoryReader.open(indexWriter);
-        IndexSearcher searcher = new IndexSearcher(reader);
-        BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        builder.add(new TermQuery(new Term("content", "h")), BooleanClause.Occur.SHOULD);
-        builder.add(new TermQuery(new Term("content", "f")), BooleanClause.Occur.SHOULD);
-        builder.add(new TermQuery(new Term("content", "a")), BooleanClause.Occur.SHOULD);
-        builder.setMinimumNumberShouldMatch(1);
-        Query query = builder.build();
+		// 查询阶段
+		IndexReader reader = DirectoryReader.open(indexWriter);
+		IndexSearcher searcher = new IndexSearcher(reader);
+		BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		builder.add(new TermQuery(new Term("content", "h")), BooleanClause.Occur.SHOULD);
+		builder.add(new TermQuery(new Term("content", "f")), BooleanClause.Occur.SHOULD);
+		builder.add(new TermQuery(new Term("content", "a")), BooleanClause.Occur.SHOULD);
+		builder.setMinimumNumberShouldMatch(1);
+		Query query = builder.build();
 
-        // 返回Top5的结果
+		// 返回Top5的结果
 //        int resultTopN = 5;
 //
 //        ScoreDoc[] scoreDocs = searcher.search(query, resultTopN).scoreDocs;
@@ -112,10 +112,10 @@ public class BooleanQueryTest {
 //            // 输出满足查询条件的 文档号
 //            System.out.println("result"+i+": 文档"+scoreDoc.doc+", "+scoreDoc.score+"");
 //        }
-    }
+	}
 
-    public static void main(String[] args) throws Exception{
-        BooleanQueryTest queryTest = new BooleanQueryTest();
-        queryTest.doDemo();
-    }
+	public static void main(String[] args) throws Exception {
+		BooleanQueryTest queryTest = new BooleanQueryTest();
+		queryTest.doDemo();
+	}
 }

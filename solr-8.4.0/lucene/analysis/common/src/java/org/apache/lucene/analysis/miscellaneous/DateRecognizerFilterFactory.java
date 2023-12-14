@@ -27,7 +27,7 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
  * Factory for {@link DateRecognizerFilter}.
- * 
+ *
  * <pre class="prettyprint">
  * &lt;fieldType name="text_filter_none_date" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -36,54 +36,59 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;
  * </pre>
- * 
+ *
  * <p>
  * The {@code datePattern} is optional. If omitted, {@link DateRecognizerFilter} will be created with the default date
  * format of the system. The {@code locale} is optional and if omitted the filter will be created with
  * {@link Locale#ENGLISH}.
- * @since 5.5.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 5.5.0
  */
 public class DateRecognizerFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "dateRecognizer";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "dateRecognizer";
 
-  public static final String DATE_PATTERN = "datePattern";
-  public static final String LOCALE = "locale";
+	public static final String DATE_PATTERN = "datePattern";
+	public static final String LOCALE = "locale";
 
-  private final DateFormat dateFormat;
-  private final Locale locale;
+	private final DateFormat dateFormat;
+	private final Locale locale;
 
-  /** Creates a new FingerprintFilterFactory */
-  public DateRecognizerFilterFactory(Map<String,String> args) {
-    super(args);
-    this.locale = getLocale(get(args, LOCALE));
-    this.dateFormat = getDataFormat(get(args, DATE_PATTERN));
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * Creates a new FingerprintFilterFactory
+	 */
+	public DateRecognizerFilterFactory(Map<String, String> args) {
+		super(args);
+		this.locale = getLocale(get(args, LOCALE));
+		this.dateFormat = getDataFormat(get(args, DATE_PATTERN));
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new DateRecognizerFilter(input, dateFormat);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new DateRecognizerFilter(input, dateFormat);
+	}
 
-  private Locale getLocale(String localeStr) {
-    if (localeStr == null) {
-      return Locale.ENGLISH;
-    } else {
-      return new Locale.Builder().setLanguageTag(localeStr).build();
-    }
-  }
-  
-  public DateFormat getDataFormat(String datePattern) {
-    if (datePattern != null) {
-      return new SimpleDateFormat(datePattern, locale);
-    } else {
-      return DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
-    }
-  }
-  
+	private Locale getLocale(String localeStr) {
+		if (localeStr == null) {
+			return Locale.ENGLISH;
+		} else {
+			return new Locale.Builder().setLanguageTag(localeStr).build();
+		}
+	}
+
+	public DateFormat getDataFormat(String datePattern) {
+		if (datePattern != null) {
+			return new SimpleDateFormat(datePattern, locale);
+		} else {
+			return DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
+		}
+	}
+
 }

@@ -28,43 +28,45 @@ import org.apache.lucene.util.Constants;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.LuceneTestCase.SuppressFileSystems;
 
-/** LUCENE-5574 */
+/**
+ * LUCENE-5574
+ */
 @SuppressFileSystems("WindowsFS") // the bug doesn't happen on windows.
 public class TestNRTReaderCleanup extends LuceneTestCase {
 
-  public void testClosingNRTReaderDoesNotCorruptYourIndex() throws IOException {
+	public void testClosingNRTReaderDoesNotCorruptYourIndex() throws IOException {
 
-    // Windows disallows deleting & overwriting files still
-    // open for reading:
-    assumeFalse("this test can't run on Windows", Constants.WINDOWS);
+		// Windows disallows deleting & overwriting files still
+		// open for reading:
+		assumeFalse("this test can't run on Windows", Constants.WINDOWS);
 
-    MockDirectoryWrapper dir = newMockDirectory();
-    
-    IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()));
-    LogMergePolicy lmp = new LogDocMergePolicy();
-    lmp.setMergeFactor(2);
-    iwc.setMergePolicy(lmp);
+		MockDirectoryWrapper dir = newMockDirectory();
 
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir, iwc);
-    Document doc = new Document();
-    doc.add(new TextField("a", "foo", Field.Store.NO));
-    w.addDocument(doc);
-    w.commit();
-    w.addDocument(doc);
+		IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()));
+		LogMergePolicy lmp = new LogDocMergePolicy();
+		lmp.setMergeFactor(2);
+		iwc.setMergePolicy(lmp);
 
-    // Get a new reader, but this also sets off a merge:
-    IndexReader r = w.getReader();
-    w.close();
+		RandomIndexWriter w = new RandomIndexWriter(random(), dir, iwc);
+		Document doc = new Document();
+		doc.add(new TextField("a", "foo", Field.Store.NO));
+		w.addDocument(doc);
+		w.commit();
+		w.addDocument(doc);
 
-    // Blow away index and make a new writer:
-    for(String name : dir.listAll()) {
-      dir.deleteFile(name);
-    }
+		// Get a new reader, but this also sets off a merge:
+		IndexReader r = w.getReader();
+		w.close();
 
-    w = new RandomIndexWriter(random(), dir);
-    w.addDocument(doc);
-    w.close();
-    r.close();
-    dir.close();
-  }
+		// Blow away index and make a new writer:
+		for (String name : dir.listAll()) {
+			dir.deleteFile(name);
+		}
+
+		w = new RandomIndexWriter(random(), dir);
+		w.addDocument(doc);
+		w.close();
+		r.close();
+		dir.close();
+	}
 }

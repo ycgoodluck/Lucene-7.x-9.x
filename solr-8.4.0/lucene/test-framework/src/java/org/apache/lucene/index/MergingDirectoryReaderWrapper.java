@@ -26,25 +26,27 @@ import java.io.IOException;
  */
 public final class MergingDirectoryReaderWrapper extends FilterDirectoryReader {
 
-  /** Wrap the given directory. */
-  public MergingDirectoryReaderWrapper(DirectoryReader in) throws IOException {
-    super(in, new SubReaderWrapper() {
-      @Override
-      public LeafReader wrap(LeafReader reader) {
-        return new MergingCodecReader((CodecReader) reader);
-      }
-    });
-  }
+	/**
+	 * Wrap the given directory.
+	 */
+	public MergingDirectoryReaderWrapper(DirectoryReader in) throws IOException {
+		super(in, new SubReaderWrapper() {
+			@Override
+			public LeafReader wrap(LeafReader reader) {
+				return new MergingCodecReader((CodecReader) reader);
+			}
+		});
+	}
 
-  @Override
-  protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
-    return new MergingDirectoryReaderWrapper(in);
-  }
+	@Override
+	protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
+		return new MergingDirectoryReaderWrapper(in);
+	}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    // doesn't change the content: can delegate
-    return in.getReaderCacheHelper();
-  }
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		// doesn't change the content: can delegate
+		return in.getReaderCacheHelper();
+	}
 
 }

@@ -28,73 +28,73 @@ import org.apache.lucene.util.LuceneTestCase;
 // LUCENE-6382
 public class TestMaxPosition extends LuceneTestCase {
 
-  public void testTooBigPosition() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    // This is at position 1:
-    Token t1 = new Token("foo", 0, 3);
-    t1.setPositionIncrement(2);
-    if (random().nextBoolean()) {
-      t1.setPayload(new BytesRef(new byte[] { 0x1 } ));
-    }
-    Token t2 = new Token("foo", 4, 7);
-    // This should overflow max:
-    t2.setPositionIncrement(IndexWriter.MAX_POSITION);
-    if (random().nextBoolean()) {
-      t2.setPayload(new BytesRef(new byte[] { 0x1 } ));
-    }
-    doc.add(new TextField("foo", new CannedTokenStream(new Token[] {t1, t2})));
-    expectThrows(IllegalArgumentException.class, () -> {
-      iw.addDocument(doc);
-    });
+	public void testTooBigPosition() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		// This is at position 1:
+		Token t1 = new Token("foo", 0, 3);
+		t1.setPositionIncrement(2);
+		if (random().nextBoolean()) {
+			t1.setPayload(new BytesRef(new byte[]{0x1}));
+		}
+		Token t2 = new Token("foo", 4, 7);
+		// This should overflow max:
+		t2.setPositionIncrement(IndexWriter.MAX_POSITION);
+		if (random().nextBoolean()) {
+			t2.setPayload(new BytesRef(new byte[]{0x1}));
+		}
+		doc.add(new TextField("foo", new CannedTokenStream(new Token[]{t1, t2})));
+		expectThrows(IllegalArgumentException.class, () -> {
+			iw.addDocument(doc);
+		});
 
-    // Document should not be visible:
-    IndexReader r = DirectoryReader.open(iw);
-    assertEquals(0, r.numDocs());
-    r.close();
+		// Document should not be visible:
+		IndexReader r = DirectoryReader.open(iw);
+		assertEquals(0, r.numDocs());
+		r.close();
 
-    iw.close();
-    dir.close();
-  }
-  
-  public void testMaxPosition() throws Exception {
-    Directory dir = newDirectory();
-    IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
-    Document doc = new Document();
-    // This is at position 0:
-    Token t1 = new Token("foo", 0, 3);
-    if (random().nextBoolean()) {
-      t1.setPayload(new BytesRef(new byte[] { 0x1 } ));
-    }
-    Token t2 = new Token("foo", 4, 7);
-    t2.setPositionIncrement(IndexWriter.MAX_POSITION);
-    if (random().nextBoolean()) {
-      t2.setPayload(new BytesRef(new byte[] { 0x1 } ));
-    }
-    doc.add(new TextField("foo", new CannedTokenStream(new Token[] {t1, t2})));
-    iw.addDocument(doc);
+		iw.close();
+		dir.close();
+	}
 
-    // Document should be visible:
-    IndexReader r = DirectoryReader.open(iw);
-    assertEquals(1, r.numDocs());
-    PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "foo", new BytesRef("foo"));
+	public void testMaxPosition() throws Exception {
+		Directory dir = newDirectory();
+		IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig(null));
+		Document doc = new Document();
+		// This is at position 0:
+		Token t1 = new Token("foo", 0, 3);
+		if (random().nextBoolean()) {
+			t1.setPayload(new BytesRef(new byte[]{0x1}));
+		}
+		Token t2 = new Token("foo", 4, 7);
+		t2.setPositionIncrement(IndexWriter.MAX_POSITION);
+		if (random().nextBoolean()) {
+			t2.setPayload(new BytesRef(new byte[]{0x1}));
+		}
+		doc.add(new TextField("foo", new CannedTokenStream(new Token[]{t1, t2})));
+		iw.addDocument(doc);
 
-    // "foo" appears in docID=0
-    assertEquals(0, postings.nextDoc());
+		// Document should be visible:
+		IndexReader r = DirectoryReader.open(iw);
+		assertEquals(1, r.numDocs());
+		PostingsEnum postings = MultiTerms.getTermPostingsEnum(r, "foo", new BytesRef("foo"));
 
-    // "foo" appears 2 times in the doc
-    assertEquals(2, postings.freq());
+		// "foo" appears in docID=0
+		assertEquals(0, postings.nextDoc());
 
-    // first at pos=0
-    assertEquals(0, postings.nextPosition());
+		// "foo" appears 2 times in the doc
+		assertEquals(2, postings.freq());
 
-    // next at pos=MAX
-    assertEquals(IndexWriter.MAX_POSITION, postings.nextPosition());
+		// first at pos=0
+		assertEquals(0, postings.nextPosition());
 
-    r.close();
+		// next at pos=MAX
+		assertEquals(IndexWriter.MAX_POSITION, postings.nextPosition());
 
-    iw.close();
-    dir.close();
-  }
+		r.close();
+
+		iw.close();
+		dir.close();
+	}
 }

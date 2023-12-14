@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 package org.apache.lucene.search.highlight;
+
 /**
- * Processes terms found in the original text, typically by applying some form 
+ * Processes terms found in the original text, typically by applying some form
  * of mark-up to highlight terms in HTML search results pages.
- *
  */
-public interface Formatter
-{
-  /**
-   * @param originalText The section of text being considered for markup
-   * @param tokenGroup contains one or several overlapping Tokens along with
-   * their scores and positions.
-   */
-  String highlightTerm(String originalText, TokenGroup tokenGroup);
+public interface Formatter {
+	/**
+	 * @param originalText The section of text being considered for markup
+	 * @param tokenGroup   contains one or several overlapping Tokens along with
+	 *                     their scores and positions.
+	 */
+	String highlightTerm(String originalText, TokenGroup tokenGroup);
 }

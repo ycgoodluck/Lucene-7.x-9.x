@@ -30,63 +30,76 @@ import org.apache.lucene.util.AttributeSource;
 import org.apache.lucene.util.BytesRef;
 
 abstract class TermCollectingRewrite<B> extends MultiTermQuery.RewriteMethod {
-  
-  
-  /** Return a suitable builder for the top-level Query for holding all expanded terms. */
-  protected abstract B getTopLevelBuilder() throws IOException;
 
-  /** Finalize the creation of the query from the builder. */
-  protected abstract Query build(B builder);
 
-  /** Add a MultiTermQuery term to the top-level query builder. */
-  protected final void addClause(B topLevel, Term term, int docCount, float boost) throws IOException {
-    addClause(topLevel, term, docCount, boost, null);
-  }
-  
-  protected abstract void addClause(B topLevel, Term term, int docCount, float boost, TermContext states) throws IOException;
+	/**
+	 * Return a suitable builder for the top-level Query for holding all expanded terms.
+	 */
+	protected abstract B getTopLevelBuilder() throws IOException;
 
-  
-  final void collectTerms(IndexReader reader, MultiTermQuery query, TermCollector collector) throws IOException {
-    IndexReaderContext topReaderContext = reader.getContext();
-    for (LeafReaderContext context : topReaderContext.leaves()) {
-      final Terms terms = context.reader().terms(query.field);
-      if (terms == null) {
-        // field does not exist
-        continue;
-      }
+	/**
+	 * Finalize the creation of the query from the builder.
+	 */
+	protected abstract Query build(B builder);
 
-      final TermsEnum termsEnum = getTermsEnum(query, terms, collector.attributes);
-      assert termsEnum != null;
+	/**
+	 * Add a MultiTermQuery term to the top-level query builder.
+	 */
+	protected final void addClause(B topLevel, Term term, int docCount, float boost) throws IOException {
+		addClause(topLevel, term, docCount, boost, null);
+	}
 
-      if (termsEnum == TermsEnum.EMPTY)
-        continue;
-      
-      collector.setReaderContext(topReaderContext, context);
-      collector.setNextEnum(termsEnum);
-      BytesRef bytes;
-      while ((bytes = termsEnum.next()) != null) {
-        if (!collector.collect(bytes))
-          return; // interrupt whole term collection, so also don't iterate other subReaders
-      }
-    }
-  }
-  
-  static abstract class TermCollector {
-    
-    protected LeafReaderContext readerContext;
-    protected IndexReaderContext topReaderContext;
+	protected abstract void addClause(B topLevel, Term term, int docCount, float boost, TermContext states) throws IOException;
 
-    public void setReaderContext(IndexReaderContext topReaderContext, LeafReaderContext readerContext) {
-      this.readerContext = readerContext;
-      this.topReaderContext = topReaderContext;
-    }
-    /** attributes used for communication with the enum */
-    public final AttributeSource attributes = new AttributeSource();
-  
-    /** return false to stop collecting */
-    public abstract boolean collect(BytesRef bytes) throws IOException;
-    
-    /** the next segment's {@link TermsEnum} that is used to collect terms */
-    public abstract void setNextEnum(TermsEnum termsEnum) throws IOException;
-  }
+
+	final void collectTerms(IndexReader reader, MultiTermQuery query, TermCollector collector) throws IOException {
+		IndexReaderContext topReaderContext = reader.getContext();
+		for (LeafReaderContext context : topReaderContext.leaves()) {
+			final Terms terms = context.reader().terms(query.field);
+			if (terms == null) {
+				// field does not exist
+				continue;
+			}
+
+			final TermsEnum termsEnum = getTermsEnum(query, terms, collector.attributes);
+			assert termsEnum != null;
+
+			if (termsEnum == TermsEnum.EMPTY)
+				continue;
+
+			collector.setReaderContext(topReaderContext, context);
+			collector.setNextEnum(termsEnum);
+			BytesRef bytes;
+			while ((bytes = termsEnum.next()) != null) {
+				if (!collector.collect(bytes))
+					return; // interrupt whole term collection, so also don't iterate other subReaders
+			}
+		}
+	}
+
+	static abstract class TermCollector {
+
+		protected LeafReaderContext readerContext;
+		protected IndexReaderContext topReaderContext;
+
+		public void setReaderContext(IndexReaderContext topReaderContext, LeafReaderContext readerContext) {
+			this.readerContext = readerContext;
+			this.topReaderContext = topReaderContext;
+		}
+
+		/**
+		 * attributes used for communication with the enum
+		 */
+		public final AttributeSource attributes = new AttributeSource();
+
+		/**
+		 * return false to stop collecting
+		 */
+		public abstract boolean collect(BytesRef bytes) throws IOException;
+
+		/**
+		 * the next segment's {@link TermsEnum} that is used to collect terms
+		 */
+		public abstract void setNextEnum(TermsEnum termsEnum) throws IOException;
+	}
 }

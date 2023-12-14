@@ -15,16 +15,14 @@
  * limitations under the License.
  */
 package org.apache.lucene.search.highlight;
+
 /**
  * Exception thrown if TokenStream Tokens are incompatible with provided text
- *
  */
-public class InvalidTokenOffsetsException extends Exception
-{
+public class InvalidTokenOffsetsException extends Exception {
 
-  public InvalidTokenOffsetsException(String message)
-  {
-    super(message);
-  }
+	public InvalidTokenOffsetsException(String message) {
+		super(message);
+	}
 
 }

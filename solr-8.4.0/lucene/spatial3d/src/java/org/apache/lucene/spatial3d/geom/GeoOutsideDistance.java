@@ -22,34 +22,36 @@ package org.apache.lucene.spatial3d.geom;
  * @lucene.experimental
  */
 public interface GeoOutsideDistance extends Membership {
-  
-  // The following methods compute distances from the shape to a point
-  // expected to be OUTSIDE the shape.  Typically a value of 0.0
-  // is returned for points that happen to be within the shape.
-  
-  /**
-   * Compute this shape's distance to the GeoPoint.
-   * A return value of 0.0 should be returned for
-   * points inside of the shape.
-   * @param distanceStyle is the distance style.
-   * @param point is the point to compute the distance to.
-   * @return the distance.
-   */
-  public default double computeOutsideDistance(final DistanceStyle distanceStyle, final GeoPoint point) {
-    return computeOutsideDistance(distanceStyle, point.x, point.y, point.z);
-  }
 
-  /**
-   * Compute this shape's distance to the GeoPoint.
-   * A return value of 0.0 should be returned for
-   * points inside of the shape.
-   * @param distanceStyle is the distance style.
-   * @param x is the point's unit x coordinate (using U.S. convention).
-   * @param y is the point's unit y coordinate (using U.S. convention).
-   * @param z is the point's unit z coordinate (using U.S. convention).
-   * @return the distance.
-   */
-  public double computeOutsideDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z);
+	// The following methods compute distances from the shape to a point
+	// expected to be OUTSIDE the shape.  Typically a value of 0.0
+	// is returned for points that happen to be within the shape.
+
+	/**
+	 * Compute this shape's distance to the GeoPoint.
+	 * A return value of 0.0 should be returned for
+	 * points inside of the shape.
+	 *
+	 * @param distanceStyle is the distance style.
+	 * @param point         is the point to compute the distance to.
+	 * @return the distance.
+	 */
+	public default double computeOutsideDistance(final DistanceStyle distanceStyle, final GeoPoint point) {
+		return computeOutsideDistance(distanceStyle, point.x, point.y, point.z);
+	}
+
+	/**
+	 * Compute this shape's distance to the GeoPoint.
+	 * A return value of 0.0 should be returned for
+	 * points inside of the shape.
+	 *
+	 * @param distanceStyle is the distance style.
+	 * @param x             is the point's unit x coordinate (using U.S. convention).
+	 * @param y             is the point's unit y coordinate (using U.S. convention).
+	 * @param z             is the point's unit z coordinate (using U.S. convention).
+	 * @return the distance.
+	 */
+	public double computeOutsideDistance(final DistanceStyle distanceStyle, final double x, final double y, final double z);
 
 }
 

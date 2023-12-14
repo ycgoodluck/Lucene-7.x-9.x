@@ -27,72 +27,76 @@ import org.apache.lucene.util.automaton.CompiledAutomaton;
  */
 public abstract class FilterSortedDocValues extends SortedDocValues {
 
-  /** Wrapped values */
-  protected final SortedDocValues in;
-  
-  /** Sole constructor */
-  public FilterSortedDocValues(SortedDocValues in) {
-    Objects.requireNonNull(in);
-    this.in = in;
-  }
+	/**
+	 * Wrapped values
+	 */
+	protected final SortedDocValues in;
 
-  @Override
-  public boolean advanceExact(int target) throws IOException {
-    return in.advanceExact(target);
-  }
+	/**
+	 * Sole constructor
+	 */
+	public FilterSortedDocValues(SortedDocValues in) {
+		Objects.requireNonNull(in);
+		this.in = in;
+	}
 
-  @Override
-  public int ordValue() throws IOException {
-    return in.ordValue();
-  }
+	@Override
+	public boolean advanceExact(int target) throws IOException {
+		return in.advanceExact(target);
+	}
 
-  @Override
-  public BytesRef lookupOrd(int ord) throws IOException {
-    return in.lookupOrd(ord);
-  }
+	@Override
+	public int ordValue() throws IOException {
+		return in.ordValue();
+	}
 
-  @Override
-  public BytesRef binaryValue() throws IOException {
-    return in.binaryValue();
-  }
+	@Override
+	public BytesRef lookupOrd(int ord) throws IOException {
+		return in.lookupOrd(ord);
+	}
 
-  @Override
-  public int getValueCount() {
-    return in.getValueCount();
-  }
+	@Override
+	public BytesRef binaryValue() throws IOException {
+		return in.binaryValue();
+	}
 
-  @Override
-  public int lookupTerm(BytesRef key) throws IOException {
-    return in.lookupTerm(key);
-  }
+	@Override
+	public int getValueCount() {
+		return in.getValueCount();
+	}
 
-  @Override
-  public TermsEnum termsEnum() throws IOException {
-    return in.termsEnum();
-  }
+	@Override
+	public int lookupTerm(BytesRef key) throws IOException {
+		return in.lookupTerm(key);
+	}
 
-  @Override
-  public TermsEnum intersect(CompiledAutomaton automaton) throws IOException {
-    return in.intersect(automaton);
-  }
+	@Override
+	public TermsEnum termsEnum() throws IOException {
+		return in.termsEnum();
+	}
 
-  @Override
-  public int docID() {
-    return in.docID();
-  }
+	@Override
+	public TermsEnum intersect(CompiledAutomaton automaton) throws IOException {
+		return in.intersect(automaton);
+	}
 
-  @Override
-  public int nextDoc() throws IOException {
-    return in.nextDoc();
-  }
+	@Override
+	public int docID() {
+		return in.docID();
+	}
 
-  @Override
-  public int advance(int target) throws IOException {
-    return in.advance(target);
-  }
+	@Override
+	public int nextDoc() throws IOException {
+		return in.nextDoc();
+	}
 
-  @Override
-  public long cost() {
-    return in.cost();
-  }
+	@Override
+	public int advance(int target) throws IOException {
+		return in.advance(target);
+	}
+
+	@Override
+	public long cost() {
+		return in.cost();
+	}
 }

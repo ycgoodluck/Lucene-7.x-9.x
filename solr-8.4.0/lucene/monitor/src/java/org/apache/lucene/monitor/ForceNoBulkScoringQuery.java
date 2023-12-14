@@ -33,78 +33,78 @@ import org.apache.lucene.search.Matches;
  */
 class ForceNoBulkScoringQuery extends Query {
 
-  private final Query inner;
+	private final Query inner;
 
-  public ForceNoBulkScoringQuery(Query inner) {
-    this.inner = inner;
-  }
+	public ForceNoBulkScoringQuery(Query inner) {
+		this.inner = inner;
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    Query rewritten = inner.rewrite(reader);
-    if (rewritten != inner)
-      return new ForceNoBulkScoringQuery(rewritten);
-    return super.rewrite(reader);
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		Query rewritten = inner.rewrite(reader);
+		if (rewritten != inner)
+			return new ForceNoBulkScoringQuery(rewritten);
+		return super.rewrite(reader);
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    inner.visit(visitor);
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		inner.visit(visitor);
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    ForceNoBulkScoringQuery that = (ForceNoBulkScoringQuery) o;
-    return Objects.equals(inner, that.inner);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		ForceNoBulkScoringQuery that = (ForceNoBulkScoringQuery) o;
+		return Objects.equals(inner, that.inner);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(inner);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(inner);
+	}
 
-  public Query getWrappedQuery() {
-    return inner;
-  }
+	public Query getWrappedQuery() {
+		return inner;
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
 
-    final Weight innerWeight = inner.createWeight(searcher, scoreMode, boost);
+		final Weight innerWeight = inner.createWeight(searcher, scoreMode, boost);
 
-    return new Weight(ForceNoBulkScoringQuery.this) {
+		return new Weight(ForceNoBulkScoringQuery.this) {
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return innerWeight.isCacheable(ctx);
-      }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return innerWeight.isCacheable(ctx);
+			}
 
-      @Override
-      public Explanation explain(LeafReaderContext leafReaderContext, int i) throws IOException {
-        return innerWeight.explain(leafReaderContext, i);
-      }
+			@Override
+			public Explanation explain(LeafReaderContext leafReaderContext, int i) throws IOException {
+				return innerWeight.explain(leafReaderContext, i);
+			}
 
-      @Override
-      public Scorer scorer(LeafReaderContext leafReaderContext) throws IOException {
-        return innerWeight.scorer(leafReaderContext);
-      }
+			@Override
+			public Scorer scorer(LeafReaderContext leafReaderContext) throws IOException {
+				return innerWeight.scorer(leafReaderContext);
+			}
 
-      @Override
-      public void extractTerms(Set<Term> terms) {
-        innerWeight.extractTerms(terms);
-      }
+			@Override
+			public void extractTerms(Set<Term> terms) {
+				innerWeight.extractTerms(terms);
+			}
 
-      @Override
-      public Matches matches(LeafReaderContext context, int doc) throws IOException {
-        return innerWeight.matches(context, doc);
-      }
-    };
-  }
+			@Override
+			public Matches matches(LeafReaderContext context, int doc) throws IOException {
+				return innerWeight.matches(context, doc);
+			}
+		};
+	}
 
-  @Override
-  public String toString(String s) {
-    return "NoBulkScorer(" + inner.toString(s) + ")";
-  }
+	@Override
+	public String toString(String s) {
+		return "NoBulkScorer(" + inner.toString(s) + ")";
+	}
 }

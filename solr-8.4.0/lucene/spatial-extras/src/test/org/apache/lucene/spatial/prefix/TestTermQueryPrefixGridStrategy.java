@@ -33,25 +33,25 @@ import java.util.Arrays;
 
 public class TestTermQueryPrefixGridStrategy extends SpatialTestCase {
 
-  @Test
-  public void testNGramPrefixGridLosAngeles() throws IOException {
-    SpatialContext ctx = SpatialContext.GEO;
-    TermQueryPrefixTreeStrategy prefixGridStrategy = new TermQueryPrefixTreeStrategy(new QuadPrefixTree(ctx), "geo");
+	@Test
+	public void testNGramPrefixGridLosAngeles() throws IOException {
+		SpatialContext ctx = SpatialContext.GEO;
+		TermQueryPrefixTreeStrategy prefixGridStrategy = new TermQueryPrefixTreeStrategy(new QuadPrefixTree(ctx), "geo");
 
-    Shape point = ctx.makePoint(-118.243680, 34.052230);
+		Shape point = ctx.makePoint(-118.243680, 34.052230);
 
-    Document losAngeles = new Document();
-    losAngeles.add(new StringField("name", "Los Angeles", Field.Store.YES));
-    for (Field field : prefixGridStrategy.createIndexableFields(point)) {
-      losAngeles.add(field);
-    }
-    losAngeles.add(new StoredField(prefixGridStrategy.getFieldName(), point.toString()));//just for diagnostics
+		Document losAngeles = new Document();
+		losAngeles.add(new StringField("name", "Los Angeles", Field.Store.YES));
+		for (Field field : prefixGridStrategy.createIndexableFields(point)) {
+			losAngeles.add(field);
+		}
+		losAngeles.add(new StoredField(prefixGridStrategy.getFieldName(), point.toString()));//just for diagnostics
 
-    addDocumentsAndCommit(Arrays.asList(losAngeles));
+		addDocumentsAndCommit(Arrays.asList(losAngeles));
 
-    // This won't work with simple spatial context...
-    SpatialArgsParser spatialArgsParser = new SpatialArgsParser();
-    // TODO... use a non polygon query
+		// This won't work with simple spatial context...
+		SpatialArgsParser spatialArgsParser = new SpatialArgsParser();
+		// TODO... use a non polygon query
 //    SpatialArgs spatialArgs = spatialArgsParser.parse(
 //        "Intersects(POLYGON((-127.00390625 39.8125,-112.765625 39.98828125,-111.53515625 31.375,-125.94921875 30.14453125,-127.00390625 39.8125)))",
 //        new SimpleSpatialContext());
@@ -59,5 +59,5 @@ public class TestTermQueryPrefixGridStrategy extends SpatialTestCase {
 //    Query query = prefixGridStrategy.makeQuery(spatialArgs, fieldInfo);
 //    SearchResults searchResults = executeQuery(query, 1);
 //    assertEquals(1, searchResults.numFound);
-  }
+	}
 }

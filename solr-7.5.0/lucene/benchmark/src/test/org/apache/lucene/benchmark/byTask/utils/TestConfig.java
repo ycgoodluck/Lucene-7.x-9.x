@@ -24,14 +24,14 @@ import org.junit.Test;
 
 public class TestConfig extends LuceneTestCase {
 
-  @Test
-  public void testAbsolutePathNamesWindows() throws Exception {
-    Properties props = new Properties();
-    props.setProperty("work.dir1", "c:\\temp");
-    props.setProperty("work.dir2", "c:/temp");
-    Config conf = new Config(props);
-    assertEquals("c:\\temp", conf.get("work.dir1", ""));
-    assertEquals("c:/temp", conf.get("work.dir2", ""));
-  }
+	@Test
+	public void testAbsolutePathNamesWindows() throws Exception {
+		Properties props = new Properties();
+		props.setProperty("work.dir1", "c:\\temp");
+		props.setProperty("work.dir2", "c:/temp");
+		Config conf = new Config(props);
+		assertEquals("c:\\temp", conf.get("work.dir1", ""));
+		assertEquals("c:/temp", conf.get("work.dir2", ""));
+	}
 
 }

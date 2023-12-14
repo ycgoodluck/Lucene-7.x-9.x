@@ -21,28 +21,32 @@ import org.apache.lucene.search.Explanation;
 
 /**
  * Model of the information gain based on Laplace's law of succession.
+ *
  * @lucene.experimental
  */
 public class AfterEffectL extends AfterEffect {
-  
-  /** Sole constructor: parameter-free */
-  public AfterEffectL() {}
 
-  @Override
-  public final double scoreTimes1pTfn(BasicStats stats) {
-    return 1.0;
-  }
-  
-  @Override
-  public final Explanation explain(BasicStats stats, double tfn) {
-    return Explanation.match(
-        (float) (scoreTimes1pTfn(stats) / (1 + tfn)),
-        getClass().getSimpleName() + ", computed as 1 / (tfn + 1) from:",
-        Explanation.match((float) tfn, "tfn, normalized term frequency"));
-  }
-  
-  @Override
-  public String toString() {
-    return "L";
-  }
+	/**
+	 * Sole constructor: parameter-free
+	 */
+	public AfterEffectL() {
+	}
+
+	@Override
+	public final double scoreTimes1pTfn(BasicStats stats) {
+		return 1.0;
+	}
+
+	@Override
+	public final Explanation explain(BasicStats stats, double tfn) {
+		return Explanation.match(
+			(float) (scoreTimes1pTfn(stats) / (1 + tfn)),
+			getClass().getSimpleName() + ", computed as 1 / (tfn + 1) from:",
+			Explanation.match((float) tfn, "tfn, normalized term frequency"));
+	}
+
+	@Override
+	public String toString() {
+		return "L";
+	}
 }

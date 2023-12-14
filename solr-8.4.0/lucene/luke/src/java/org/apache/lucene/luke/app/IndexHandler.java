@@ -27,121 +27,123 @@ import org.apache.lucene.luke.models.LukeException;
 import org.apache.lucene.luke.models.util.IndexUtils;
 import org.apache.lucene.luke.util.LoggerFactory;
 
-/** Index open/close handler */
+/**
+ * Index open/close handler
+ */
 public final class IndexHandler extends AbstractHandler<IndexObserver> {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private static final IndexHandler instance = new IndexHandler();
+	private static final IndexHandler instance = new IndexHandler();
 
-  private LukeStateImpl state;
+	private LukeStateImpl state;
 
-  public static IndexHandler getInstance() {
-    return instance;
-  }
+	public static IndexHandler getInstance() {
+		return instance;
+	}
 
-  @Override
-  protected void notifyOne(IndexObserver observer) {
-    if (state.closed) {
-      observer.closeIndex();
-    } else {
-      observer.openIndex(state);
-    }
-  }
+	@Override
+	protected void notifyOne(IndexObserver observer) {
+		if (state.closed) {
+			observer.closeIndex();
+		} else {
+			observer.openIndex(state);
+		}
+	}
 
-  public boolean indexOpened() {
-    return state != null && !state.closed;
-  }
+	public boolean indexOpened() {
+		return state != null && !state.closed;
+	}
 
-  public void open(String indexPath, String dirImpl) {
-    open(indexPath, dirImpl, false, false, false);
-  }
+	public void open(String indexPath, String dirImpl) {
+		open(indexPath, dirImpl, false, false, false);
+	}
 
-  public void open(String indexPath, String dirImpl, boolean readOnly, boolean useCompound, boolean keepAllCommits) {
-    Objects.requireNonNull(indexPath);
+	public void open(String indexPath, String dirImpl, boolean readOnly, boolean useCompound, boolean keepAllCommits) {
+		Objects.requireNonNull(indexPath);
 
-    if (indexOpened()) {
-      close();
-    }
+		if (indexOpened()) {
+			close();
+		}
 
-    IndexReader reader;
-    try {
-      reader = IndexUtils.openIndex(indexPath, dirImpl);
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      throw new LukeException(MessageUtils.getLocalizedMessage("openindex.message.index_path_invalid", indexPath), e);
-    }
+		IndexReader reader;
+		try {
+			reader = IndexUtils.openIndex(indexPath, dirImpl);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw new LukeException(MessageUtils.getLocalizedMessage("openindex.message.index_path_invalid", indexPath), e);
+		}
 
-    state = new LukeStateImpl();
-    state.indexPath = indexPath;
-    state.reader = reader;
-    state.dirImpl = dirImpl;
-    state.readOnly = readOnly;
-    state.useCompound = useCompound;
-    state.keepAllCommits = keepAllCommits;
+		state = new LukeStateImpl();
+		state.indexPath = indexPath;
+		state.reader = reader;
+		state.dirImpl = dirImpl;
+		state.readOnly = readOnly;
+		state.useCompound = useCompound;
+		state.keepAllCommits = keepAllCommits;
 
-    notifyObservers();
-  }
+		notifyObservers();
+	}
 
-  public void close() {
-    if (state == null) {
-      return;
-    }
+	public void close() {
+		if (state == null) {
+			return;
+		}
 
-    IndexUtils.close(state.reader);
+		IndexUtils.close(state.reader);
 
-    state.closed = true;
-    notifyObservers();
-  }
+		state.closed = true;
+		notifyObservers();
+	}
 
-  public void reOpen() {
-    close();
-    open(state.getIndexPath(), state.getDirImpl(), state.readOnly(), state.useCompound(), state.keepAllCommits());
-  }
+	public void reOpen() {
+		close();
+		open(state.getIndexPath(), state.getDirImpl(), state.readOnly(), state.useCompound(), state.keepAllCommits());
+	}
 
-  public LukeState getState() {
-    return state;
-  }
+	public LukeState getState() {
+		return state;
+	}
 
-  private static class LukeStateImpl implements LukeState {
+	private static class LukeStateImpl implements LukeState {
 
-    private boolean closed = false;
+		private boolean closed = false;
 
-    private String indexPath;
-    private IndexReader reader;
-    private String dirImpl;
-    private boolean readOnly;
-    private boolean useCompound;
-    private boolean keepAllCommits;
+		private String indexPath;
+		private IndexReader reader;
+		private String dirImpl;
+		private boolean readOnly;
+		private boolean useCompound;
+		private boolean keepAllCommits;
 
-    @Override
-    public String getIndexPath() {
-      return indexPath;
-    }
+		@Override
+		public String getIndexPath() {
+			return indexPath;
+		}
 
-    @Override
-    public IndexReader getIndexReader() {
-      return reader;
-    }
+		@Override
+		public IndexReader getIndexReader() {
+			return reader;
+		}
 
-    @Override
-    public String getDirImpl() {
-      return dirImpl;
-    }
+		@Override
+		public String getDirImpl() {
+			return dirImpl;
+		}
 
-    @Override
-    public boolean readOnly() {
-      return readOnly;
-    }
+		@Override
+		public boolean readOnly() {
+			return readOnly;
+		}
 
-    @Override
-    public boolean useCompound() {
-      return useCompound;
-    }
+		@Override
+		public boolean useCompound() {
+			return useCompound;
+		}
 
-    @Override
-    public boolean keepAllCommits() {
-      return keepAllCommits;
-    }
-  }
+		@Override
+		public boolean keepAllCommits() {
+			return keepAllCommits;
+		}
+	}
 }

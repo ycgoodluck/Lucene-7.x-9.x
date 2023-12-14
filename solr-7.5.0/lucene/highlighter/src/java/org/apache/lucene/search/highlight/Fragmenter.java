@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.lucene.search.highlight;
+
 import org.apache.lucene.analysis.TokenStream;
 
 /**
@@ -25,21 +26,20 @@ import org.apache.lucene.analysis.TokenStream;
  */
 public interface Fragmenter {
 
-  /**
-   * Initializes the Fragmenter. You can grab references to the Attributes you are
-   * interested in from tokenStream and then access the values in {@link #isNewFragment()}.
-   * 
-   * @param originalText the original source text
-   * @param tokenStream the {@link TokenStream} to be fragmented
-   */
-  public void start(String originalText, TokenStream tokenStream);
+	/**
+	 * Initializes the Fragmenter. You can grab references to the Attributes you are
+	 * interested in from tokenStream and then access the values in {@link #isNewFragment()}.
+	 *
+	 * @param originalText the original source text
+	 * @param tokenStream  the {@link TokenStream} to be fragmented
+	 */
+	public void start(String originalText, TokenStream tokenStream);
 
 
-  /**
-   * Test to see if this token from the stream should be held in a new
-   * TextFragment. Every time this is called, the TokenStream
-   * passed to start(String, TokenStream) will have been incremented.
-   * 
-   */
-  public boolean isNewFragment();
+	/**
+	 * Test to see if this token from the stream should be held in a new
+	 * TextFragment. Every time this is called, the TokenStream
+	 * passed to start(String, TokenStream) will have been incremented.
+	 */
+	public boolean isNewFragment();
 }

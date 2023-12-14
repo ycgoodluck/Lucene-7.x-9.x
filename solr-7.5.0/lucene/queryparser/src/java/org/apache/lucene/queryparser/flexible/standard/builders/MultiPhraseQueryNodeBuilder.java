@@ -35,50 +35,50 @@ import org.apache.lucene.search.TermQuery;
  */
 public class MultiPhraseQueryNodeBuilder implements StandardQueryBuilder {
 
-  public MultiPhraseQueryNodeBuilder() {
-    // empty constructor
-  }
+	public MultiPhraseQueryNodeBuilder() {
+		// empty constructor
+	}
 
-  @Override
-  public MultiPhraseQuery build(QueryNode queryNode) throws QueryNodeException {
-    MultiPhraseQueryNode phraseNode = (MultiPhraseQueryNode) queryNode;
+	@Override
+	public MultiPhraseQuery build(QueryNode queryNode) throws QueryNodeException {
+		MultiPhraseQueryNode phraseNode = (MultiPhraseQueryNode) queryNode;
 
-    MultiPhraseQuery.Builder phraseQueryBuilder = new MultiPhraseQuery.Builder();
+		MultiPhraseQuery.Builder phraseQueryBuilder = new MultiPhraseQuery.Builder();
 
-    List<QueryNode> children = phraseNode.getChildren();
+		List<QueryNode> children = phraseNode.getChildren();
 
-    if (children != null) {
-      TreeMap<Integer, List<Term>> positionTermMap = new TreeMap<>();
+		if (children != null) {
+			TreeMap<Integer, List<Term>> positionTermMap = new TreeMap<>();
 
-      for (QueryNode child : children) {
-        FieldQueryNode termNode = (FieldQueryNode) child;
-        TermQuery termQuery = (TermQuery) termNode
-            .getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
-        List<Term> termList = positionTermMap.get(termNode
-            .getPositionIncrement());
+			for (QueryNode child : children) {
+				FieldQueryNode termNode = (FieldQueryNode) child;
+				TermQuery termQuery = (TermQuery) termNode
+					.getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+				List<Term> termList = positionTermMap.get(termNode
+					.getPositionIncrement());
 
-        if (termList == null) {
-          termList = new LinkedList<>();
-          positionTermMap.put(termNode.getPositionIncrement(), termList);
+				if (termList == null) {
+					termList = new LinkedList<>();
+					positionTermMap.put(termNode.getPositionIncrement(), termList);
 
-        }
+				}
 
-        termList.add(termQuery.getTerm());
+				termList.add(termQuery.getTerm());
 
-      }
+			}
 
-      for (int positionIncrement : positionTermMap.keySet()) {
-        List<Term> termList = positionTermMap.get(positionIncrement);
+			for (int positionIncrement : positionTermMap.keySet()) {
+				List<Term> termList = positionTermMap.get(positionIncrement);
 
-        phraseQueryBuilder.add(termList.toArray(new Term[termList.size()]),
-            positionIncrement);
+				phraseQueryBuilder.add(termList.toArray(new Term[termList.size()]),
+					positionIncrement);
 
-      }
+			}
 
-    }
+		}
 
-    return phraseQueryBuilder.build();
+		return phraseQueryBuilder.build();
 
-  }
+	}
 
 }

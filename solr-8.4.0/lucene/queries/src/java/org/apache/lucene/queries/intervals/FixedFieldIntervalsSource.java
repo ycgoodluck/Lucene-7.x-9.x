@@ -29,59 +29,59 @@ import org.apache.lucene.search.QueryVisitor;
 
 class FixedFieldIntervalsSource extends IntervalsSource {
 
-  private final String field;
-  private final IntervalsSource source;
+	private final String field;
+	private final IntervalsSource source;
 
-  FixedFieldIntervalsSource(String field, IntervalsSource source) {
-    this.field = field;
-    this.source = source;
-  }
+	FixedFieldIntervalsSource(String field, IntervalsSource source) {
+		this.field = field;
+		this.source = source;
+	}
 
-  @Override
-  public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
-    return source.intervals(this.field, ctx);
-  }
+	@Override
+	public IntervalIterator intervals(String field, LeafReaderContext ctx) throws IOException {
+		return source.intervals(this.field, ctx);
+	}
 
-  @Override
-  public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
-    return source.matches(this.field, ctx, doc);
-  }
+	@Override
+	public MatchesIterator matches(String field, LeafReaderContext ctx, int doc) throws IOException {
+		return source.matches(this.field, ctx, doc);
+	}
 
-  @Override
-  public void visit(String field, QueryVisitor visitor) {
-    source.visit(this.field, visitor);
-  }
+	@Override
+	public void visit(String field, QueryVisitor visitor) {
+		source.visit(this.field, visitor);
+	}
 
-  @Override
-  public int minExtent() {
-    return source.minExtent();
-  }
+	@Override
+	public int minExtent() {
+		return source.minExtent();
+	}
 
-  @Override
-  public Collection<IntervalsSource> pullUpDisjunctions() {
-    Collection<IntervalsSource> inner = source.pullUpDisjunctions();
-    if (inner.size() == 1) {
-      return Collections.singleton(this);
-    }
-    return inner.stream().map(s -> new FixedFieldIntervalsSource(field, s)).collect(Collectors.toSet());
-  }
+	@Override
+	public Collection<IntervalsSource> pullUpDisjunctions() {
+		Collection<IntervalsSource> inner = source.pullUpDisjunctions();
+		if (inner.size() == 1) {
+			return Collections.singleton(this);
+		}
+		return inner.stream().map(s -> new FixedFieldIntervalsSource(field, s)).collect(Collectors.toSet());
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    FixedFieldIntervalsSource that = (FixedFieldIntervalsSource) o;
-    return Objects.equals(field, that.field) &&
-        Objects.equals(source, that.source);
-  }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		FixedFieldIntervalsSource that = (FixedFieldIntervalsSource) o;
+		return Objects.equals(field, that.field) &&
+			Objects.equals(source, that.source);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(field, source);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(field, source);
+	}
 
-  @Override
-  public String toString() {
-    return "FIELD(" + field + "," + source + ")";
-  }
+	@Override
+	public String toString() {
+		return "FIELD(" + field + "," + source + ")";
+	}
 }

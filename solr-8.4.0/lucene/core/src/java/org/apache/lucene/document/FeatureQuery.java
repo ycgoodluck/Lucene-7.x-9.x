@@ -42,149 +42,149 @@ import org.apache.lucene.util.BytesRef;
 
 final class FeatureQuery extends Query {
 
-  private final String fieldName;
-  private final String featureName;
-  private final FeatureFunction function;
+	private final String fieldName;
+	private final String featureName;
+	private final FeatureFunction function;
 
-  FeatureQuery(String fieldName, String featureName, FeatureFunction function) {
-    this.fieldName = Objects.requireNonNull(fieldName);
-    this.featureName = Objects.requireNonNull(featureName);
-    this.function = Objects.requireNonNull(function);
-  }
+	FeatureQuery(String fieldName, String featureName, FeatureFunction function) {
+		this.fieldName = Objects.requireNonNull(fieldName);
+		this.featureName = Objects.requireNonNull(featureName);
+		this.function = Objects.requireNonNull(function);
+	}
 
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    FeatureFunction rewritten = function.rewrite(reader);
-    if (function != rewritten) {
-      return new FeatureQuery(fieldName, featureName, rewritten);
-    }
-    return super.rewrite(reader);
-  }
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		FeatureFunction rewritten = function.rewrite(reader);
+		if (function != rewritten) {
+			return new FeatureQuery(fieldName, featureName, rewritten);
+		}
+		return super.rewrite(reader);
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    FeatureQuery that = (FeatureQuery) obj;
-    return Objects.equals(fieldName, that.fieldName) &&
-        Objects.equals(featureName, that.featureName) &&
-        Objects.equals(function, that.function);
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || getClass() != obj.getClass()) {
+			return false;
+		}
+		FeatureQuery that = (FeatureQuery) obj;
+		return Objects.equals(fieldName, that.fieldName) &&
+			Objects.equals(featureName, that.featureName) &&
+			Objects.equals(function, that.function);
+	}
 
-  @Override
-  public int hashCode() {
-    int h = getClass().hashCode();
-    h = 31 * h + fieldName.hashCode();
-    h = 31 * h + featureName.hashCode();
-    h = 31 * h + function.hashCode();
-    return h;
-  }
+	@Override
+	public int hashCode() {
+		int h = getClass().hashCode();
+		h = 31 * h + fieldName.hashCode();
+		h = 31 * h + featureName.hashCode();
+		h = 31 * h + function.hashCode();
+		return h;
+	}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
-    return new Weight(this) {
+	@Override
+	public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost) throws IOException {
+		return new Weight(this) {
 
-      @Override
-      public boolean isCacheable(LeafReaderContext ctx) {
-        return false;
-      }
+			@Override
+			public boolean isCacheable(LeafReaderContext ctx) {
+				return false;
+			}
 
-      @Override
-      public void extractTerms(Set<Term> terms) {
-        if (scoreMode.needsScores() == false) {
-          // features are irrelevant to highlighting, skip
-        } else {
-          // extracting the term here will help get better scoring with
-          // distributed term statistics if the saturation function is used
-          // and the pivot value is computed automatically
-          terms.add(new Term(fieldName, featureName));
-        }
-      }
+			@Override
+			public void extractTerms(Set<Term> terms) {
+				if (scoreMode.needsScores() == false) {
+					// features are irrelevant to highlighting, skip
+				} else {
+					// extracting the term here will help get better scoring with
+					// distributed term statistics if the saturation function is used
+					// and the pivot value is computed automatically
+					terms.add(new Term(fieldName, featureName));
+				}
+			}
 
-      @Override
-      public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-        String desc = "weight(" + getQuery() + " in " + doc + ") [" + function + "]";
+			@Override
+			public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+				String desc = "weight(" + getQuery() + " in " + doc + ") [" + function + "]";
 
-        Terms terms = context.reader().terms(fieldName);
-        if (terms == null) {
-          return Explanation.noMatch(desc + ". Field " + fieldName + " doesn't exist.");
-        }
-        TermsEnum termsEnum = terms.iterator();
-        if (termsEnum.seekExact(new BytesRef(featureName)) == false) {
-          return Explanation.noMatch(desc + ". Feature " + featureName + " doesn't exist.");
-        }
+				Terms terms = context.reader().terms(fieldName);
+				if (terms == null) {
+					return Explanation.noMatch(desc + ". Field " + fieldName + " doesn't exist.");
+				}
+				TermsEnum termsEnum = terms.iterator();
+				if (termsEnum.seekExact(new BytesRef(featureName)) == false) {
+					return Explanation.noMatch(desc + ". Feature " + featureName + " doesn't exist.");
+				}
 
-        PostingsEnum postings = termsEnum.postings(null, PostingsEnum.FREQS);
-        if (postings.advance(doc) != doc) {
-          return Explanation.noMatch(desc + ". Feature " + featureName + " isn't set.");
-        }
+				PostingsEnum postings = termsEnum.postings(null, PostingsEnum.FREQS);
+				if (postings.advance(doc) != doc) {
+					return Explanation.noMatch(desc + ". Feature " + featureName + " isn't set.");
+				}
 
-        return function.explain(fieldName, featureName, boost, postings.freq());
-      }
+				return function.explain(fieldName, featureName, boost, postings.freq());
+			}
 
-      @Override
-      public Scorer scorer(LeafReaderContext context) throws IOException {
-        Terms terms = context.reader().terms(fieldName);
-        if (terms == null) {
-          return null;
-        }
-        TermsEnum termsEnum = terms.iterator();
-        if (termsEnum.seekExact(new BytesRef(featureName)) == false) {
-          return null;
-        }
+			@Override
+			public Scorer scorer(LeafReaderContext context) throws IOException {
+				Terms terms = context.reader().terms(fieldName);
+				if (terms == null) {
+					return null;
+				}
+				TermsEnum termsEnum = terms.iterator();
+				if (termsEnum.seekExact(new BytesRef(featureName)) == false) {
+					return null;
+				}
 
-        final SimScorer scorer = function.scorer(boost);
-        final ImpactsEnum impacts = termsEnum.impacts(PostingsEnum.FREQS);
-        final ImpactsDISI impactsDisi = new ImpactsDISI(impacts, impacts, scorer);
+				final SimScorer scorer = function.scorer(boost);
+				final ImpactsEnum impacts = termsEnum.impacts(PostingsEnum.FREQS);
+				final ImpactsDISI impactsDisi = new ImpactsDISI(impacts, impacts, scorer);
 
-        return new Scorer(this) {
+				return new Scorer(this) {
 
-          @Override
-          public int docID() {
-            return impacts.docID();
-          }
+					@Override
+					public int docID() {
+						return impacts.docID();
+					}
 
-          @Override
-          public float score() throws IOException {
-            return scorer.score(impacts.freq(), 1L);
-          }
+					@Override
+					public float score() throws IOException {
+						return scorer.score(impacts.freq(), 1L);
+					}
 
-          @Override
-          public DocIdSetIterator iterator() {
-            return impactsDisi;
-          }
+					@Override
+					public DocIdSetIterator iterator() {
+						return impactsDisi;
+					}
 
-          @Override
-          public int advanceShallow(int target) throws IOException {
-            return impactsDisi.advanceShallow(target);
-          }
+					@Override
+					public int advanceShallow(int target) throws IOException {
+						return impactsDisi.advanceShallow(target);
+					}
 
-          @Override
-          public float getMaxScore(int upTo) throws IOException {
-            return impactsDisi.getMaxScore(upTo);
-          }
+					@Override
+					public float getMaxScore(int upTo) throws IOException {
+						return impactsDisi.getMaxScore(upTo);
+					}
 
-          @Override
-          public void setMinCompetitiveScore(float minScore) {
-            impactsDisi.setMinCompetitiveScore(minScore);
-          }
-        };
-      }
+					@Override
+					public void setMinCompetitiveScore(float minScore) {
+						impactsDisi.setMinCompetitiveScore(minScore);
+					}
+				};
+			}
 
-    };
-  }
+		};
+	}
 
-  @Override
-  public void visit(QueryVisitor visitor) {
-    if (visitor.acceptField(fieldName)) {
-      visitor.visitLeaf(this);
-    }
-  }
+	@Override
+	public void visit(QueryVisitor visitor) {
+		if (visitor.acceptField(fieldName)) {
+			visitor.visitLeaf(this);
+		}
+	}
 
-  @Override
-  public String toString(String field) {
-    return "FeatureQuery(field=" + fieldName + ", feature=" + featureName + ", function=" + function + ")";
-  }
+	@Override
+	public String toString(String field) {
+		return "FeatureQuery(field=" + fieldName + ", feature=" + featureName + ", function=" + function + ")";
+	}
 
 }

@@ -20,16 +20,18 @@ package org.apache.lucene.analysis.util;
 import java.io.Reader;
 import java.util.Map;
 
-/** Fake char filter factory for tests. */
+/**
+ * Fake char filter factory for tests.
+ */
 public class MockNameLackingCharFilterFactory extends CharFilterFactory {
 
-  public MockNameLackingCharFilterFactory(Map<String, String> args) {
-    super(args);
-  }
+	public MockNameLackingCharFilterFactory(Map<String, String> args) {
+		super(args);
+	}
 
-  @Override
-  public Reader create(Reader input) {
-    return input;
-  }
+	@Override
+	public Reader create(Reader input) {
+		return input;
+	}
 
 }

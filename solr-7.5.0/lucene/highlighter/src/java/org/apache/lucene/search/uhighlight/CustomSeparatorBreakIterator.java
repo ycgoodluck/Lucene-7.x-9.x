@@ -24,127 +24,127 @@ import java.text.CharacterIterator;
  */
 public final class CustomSeparatorBreakIterator extends BreakIterator {
 
-  private final char separator;
-  private CharacterIterator text;
-  private int current;
+	private final char separator;
+	private CharacterIterator text;
+	private int current;
 
-  public CustomSeparatorBreakIterator(char separator) {
-    this.separator = separator;
-  }
+	public CustomSeparatorBreakIterator(char separator) {
+		this.separator = separator;
+	}
 
-  @Override
-  public int current() {
-    return current;
-  }
+	@Override
+	public int current() {
+		return current;
+	}
 
-  @Override
-  public int first() {
-    text.setIndex(text.getBeginIndex());
-    return current = text.getIndex();
-  }
+	@Override
+	public int first() {
+		text.setIndex(text.getBeginIndex());
+		return current = text.getIndex();
+	}
 
-  @Override
-  public int last() {
-    text.setIndex(text.getEndIndex());
-    return current = text.getIndex();
-  }
+	@Override
+	public int last() {
+		text.setIndex(text.getEndIndex());
+		return current = text.getIndex();
+	}
 
-  @Override
-  public int next() {
-    if (text.getIndex() == text.getEndIndex()) {
-      return DONE;
-    } else {
-      return advanceForward();
-    }
-  }
+	@Override
+	public int next() {
+		if (text.getIndex() == text.getEndIndex()) {
+			return DONE;
+		} else {
+			return advanceForward();
+		}
+	}
 
-  private int advanceForward() {
-    char c;
-    while ((c = text.next()) != CharacterIterator.DONE) {
-      if (c == separator) {
-        return current = text.getIndex() + 1;
-      }
-    }
-    assert text.getIndex() == text.getEndIndex();
-    return current = text.getIndex();
-  }
+	private int advanceForward() {
+		char c;
+		while ((c = text.next()) != CharacterIterator.DONE) {
+			if (c == separator) {
+				return current = text.getIndex() + 1;
+			}
+		}
+		assert text.getIndex() == text.getEndIndex();
+		return current = text.getIndex();
+	}
 
-  @Override
-  public int following(int pos) {
-    if (pos < text.getBeginIndex() || pos > text.getEndIndex()) {
-      throw new IllegalArgumentException("offset out of bounds");
-    } else if (pos == text.getEndIndex()) {
-      // this conflicts with the javadocs, but matches actual behavior (Oracle has a bug in something)
-      // https://bugs.openjdk.java.net/browse/JDK-8015110
-      text.setIndex(text.getEndIndex());
-      current = text.getIndex();
-      return DONE;
-    } else {
-      text.setIndex(pos);
-      current = text.getIndex();
-      return advanceForward();
-    }
-  }
+	@Override
+	public int following(int pos) {
+		if (pos < text.getBeginIndex() || pos > text.getEndIndex()) {
+			throw new IllegalArgumentException("offset out of bounds");
+		} else if (pos == text.getEndIndex()) {
+			// this conflicts with the javadocs, but matches actual behavior (Oracle has a bug in something)
+			// https://bugs.openjdk.java.net/browse/JDK-8015110
+			text.setIndex(text.getEndIndex());
+			current = text.getIndex();
+			return DONE;
+		} else {
+			text.setIndex(pos);
+			current = text.getIndex();
+			return advanceForward();
+		}
+	}
 
-  @Override
-  public int previous() {
-    if (text.getIndex() == text.getBeginIndex()) {
-      return DONE;
-    } else {
-      return advanceBackward();
-    }
-  }
+	@Override
+	public int previous() {
+		if (text.getIndex() == text.getBeginIndex()) {
+			return DONE;
+		} else {
+			return advanceBackward();
+		}
+	}
 
-  private int advanceBackward() {
-    char c;
-    while ((c = text.previous()) != CharacterIterator.DONE) {
-      if (c == separator) {
-        return current = text.getIndex() + 1;
-      }
-    }
-    assert text.getIndex() == text.getBeginIndex();
-    return current = text.getIndex();
-  }
+	private int advanceBackward() {
+		char c;
+		while ((c = text.previous()) != CharacterIterator.DONE) {
+			if (c == separator) {
+				return current = text.getIndex() + 1;
+			}
+		}
+		assert text.getIndex() == text.getBeginIndex();
+		return current = text.getIndex();
+	}
 
-  @Override
-  public int preceding(int pos) {
-    if (pos < text.getBeginIndex() || pos > text.getEndIndex()) {
-      throw new IllegalArgumentException("offset out of bounds");
-    } else if (pos == text.getBeginIndex()) {
-      // this conflicts with the javadocs, but matches actual behavior (Oracle has a bug in something)
-      // https://bugs.openjdk.java.net/browse/JDK-8015110
-      text.setIndex(text.getBeginIndex());
-      current = text.getIndex();
-      return DONE;
-    } else {
-      text.setIndex(pos);
-      current = text.getIndex();
-      return advanceBackward();
-    }
-  }
+	@Override
+	public int preceding(int pos) {
+		if (pos < text.getBeginIndex() || pos > text.getEndIndex()) {
+			throw new IllegalArgumentException("offset out of bounds");
+		} else if (pos == text.getBeginIndex()) {
+			// this conflicts with the javadocs, but matches actual behavior (Oracle has a bug in something)
+			// https://bugs.openjdk.java.net/browse/JDK-8015110
+			text.setIndex(text.getBeginIndex());
+			current = text.getIndex();
+			return DONE;
+		} else {
+			text.setIndex(pos);
+			current = text.getIndex();
+			return advanceBackward();
+		}
+	}
 
-  @Override
-  public int next(int n) {
-    if (n < 0) {
-      for (int i = 0; i < -n; i++) {
-        previous();
-      }
-    } else {
-      for (int i = 0; i < n; i++) {
-        next();
-      }
-    }
-    return current();
-  }
+	@Override
+	public int next(int n) {
+		if (n < 0) {
+			for (int i = 0; i < -n; i++) {
+				previous();
+			}
+		} else {
+			for (int i = 0; i < n; i++) {
+				next();
+			}
+		}
+		return current();
+	}
 
-  @Override
-  public CharacterIterator getText() {
-    return text;
-  }
+	@Override
+	public CharacterIterator getText() {
+		return text;
+	}
 
-  @Override
-  public void setText(CharacterIterator newText) {
-    text = newText;
-    current = text.getBeginIndex();
-  }
+	@Override
+	public void setText(CharacterIterator newText) {
+		text = newText;
+		current = text.getBeginIndex();
+	}
 }

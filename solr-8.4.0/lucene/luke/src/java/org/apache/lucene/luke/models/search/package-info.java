@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Models and APIs for the Search tab */
+/**
+ * Models and APIs for the Search tab
+ */
 package org.apache.lucene.luke.models.search;

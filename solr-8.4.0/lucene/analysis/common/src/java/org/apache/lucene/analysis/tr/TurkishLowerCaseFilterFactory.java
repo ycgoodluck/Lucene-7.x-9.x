@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
+/**
  * Factory for {@link TurkishLowerCaseFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_trlwr" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -31,29 +31,34 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.TurkishLowerCaseFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 3.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.1.0
  */
 public class TurkishLowerCaseFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "turkishLowercase";
-  
-  /** Creates a new TurkishLowerCaseFilterFactory */
-  public TurkishLowerCaseFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new TurkishLowerCaseFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "turkishLowercase";
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	/**
+	 * Creates a new TurkishLowerCaseFilterFactory
+	 */
+	public TurkishLowerCaseFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new TurkishLowerCaseFilter(input);
+	}
+
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

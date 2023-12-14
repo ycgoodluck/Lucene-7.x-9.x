@@ -46,285 +46,290 @@ import org.apache.lucene.benchmark.byTask.utils.Config;
  */
 public abstract class PerfTask implements Cloneable {
 
-  static final int DEFAULT_LOG_STEP = 1000;
-  
-  private PerfRunData runData;
-  
-  // propeties that all tasks have
-  private String name;
-  private int depth = 0;
-  protected int logStep;
-  private int logStepCount = 0;
-  private int maxDepthLogStart = 0;
-  private boolean disableCounting = false;
-  protected String params = null;
+	static final int DEFAULT_LOG_STEP = 1000;
 
-  private boolean runInBackground;
-  private int deltaPri;
+	private PerfRunData runData;
 
-  // The first line of this task's definition in the alg file
-  private int algLineNum = 0;
+	// propeties that all tasks have
+	private String name;
+	private int depth = 0;
+	protected int logStep;
+	private int logStepCount = 0;
+	private int maxDepthLogStart = 0;
+	private boolean disableCounting = false;
+	protected String params = null;
 
-  protected static final String NEW_LINE = System.getProperty("line.separator");
+	private boolean runInBackground;
+	private int deltaPri;
 
-  /** Should not be used externally */
-  private PerfTask() {
-    name = getClass().getSimpleName();
-    if (name.endsWith("Task")) {
-      name = name.substring(0, name.length() - 4);
-    }
-  }
+	// The first line of this task's definition in the alg file
+	private int algLineNum = 0;
 
-  public void setRunInBackground(int deltaPri) {
-    runInBackground = true;
-    this.deltaPri = deltaPri;
-  }
+	protected static final String NEW_LINE = System.getProperty("line.separator");
 
-  public boolean getRunInBackground() {
-    return runInBackground;
-  }
+	/**
+	 * Should not be used externally
+	 */
+	private PerfTask() {
+		name = getClass().getSimpleName();
+		if (name.endsWith("Task")) {
+			name = name.substring(0, name.length() - 4);
+		}
+	}
 
-  public int getBackgroundDeltaPriority() {
-    return deltaPri;
-  }
+	public void setRunInBackground(int deltaPri) {
+		runInBackground = true;
+		this.deltaPri = deltaPri;
+	}
 
-  protected volatile boolean stopNow;
+	public boolean getRunInBackground() {
+		return runInBackground;
+	}
 
-  public void stopNow() {
-    stopNow = true;
-  }
+	public int getBackgroundDeltaPriority() {
+		return deltaPri;
+	}
 
-  public PerfTask(PerfRunData runData) {
-    this();
-    this.runData = runData;
-    Config config = runData.getConfig();
-    this.maxDepthLogStart = config.get("task.max.depth.log",0);
+	protected volatile boolean stopNow;
 
-    String logStepAtt = "log.step";
-    String taskLogStepAtt = "log.step." + name;
-    if (config.get(taskLogStepAtt, null) != null) {
-      logStepAtt = taskLogStepAtt;
-    }
+	public void stopNow() {
+		stopNow = true;
+	}
 
-    // It's important to read this from Config, to support vals-by-round.
-    logStep = config.get(logStepAtt, DEFAULT_LOG_STEP);
-    // To avoid the check 'if (logStep > 0)' in tearDown(). This effectively
-    // turns logging off.
-    if (logStep <= 0) {
-      logStep = Integer.MAX_VALUE;
-    }
-  }
-  
-  @Override
-  protected PerfTask clone() throws CloneNotSupportedException {
-    // tasks having non primitive data structures should override this.
-    // otherwise parallel running of a task sequence might not run correctly. 
-    return (PerfTask)super.clone();
-  }
+	public PerfTask(PerfRunData runData) {
+		this();
+		this.runData = runData;
+		Config config = runData.getConfig();
+		this.maxDepthLogStart = config.get("task.max.depth.log", 0);
 
-  public void close() throws Exception {
-  }
+		String logStepAtt = "log.step";
+		String taskLogStepAtt = "log.step." + name;
+		if (config.get(taskLogStepAtt, null) != null) {
+			logStepAtt = taskLogStepAtt;
+		}
 
-  /**
-   * Run the task, record statistics.
-   * @return number of work items done by this task.
-   */
-  public final int runAndMaybeStats(boolean reportStats) throws Exception {
-    if (!reportStats || shouldNotRecordStats()) {
-      setup();
-      int count = doLogic();
-      count = disableCounting ? 0 : count;
-      tearDown();
-      return count;
-    }
-    if (reportStats && depth <= maxDepthLogStart && !shouldNeverLogAtStart()) {
-      System.out.println("------------> starting task: " + getName());
-    }
-    setup();
-    Points pnts = runData.getPoints();
-    TaskStats ts = pnts.markTaskStart(this, runData.getConfig().getRoundNumber());
-    int count = doLogic();
-    count = disableCounting ? 0 : count;
-    pnts.markTaskEnd(ts, count);
-    tearDown();
-    return count;
-  }
+		// It's important to read this from Config, to support vals-by-round.
+		logStep = config.get(logStepAtt, DEFAULT_LOG_STEP);
+		// To avoid the check 'if (logStep > 0)' in tearDown(). This effectively
+		// turns logging off.
+		if (logStep <= 0) {
+			logStep = Integer.MAX_VALUE;
+		}
+	}
 
-  /**
-   * Perform the task once (ignoring repetitions specification)
-   * Return number of work items done by this task.
-   * For indexing that can be number of docs added.
-   * For warming that can be number of scanned items, etc.
-   * @return number of work items done by this task.
-   */
-  public abstract int doLogic() throws Exception;
-  
-  /**
-   * @return Returns the name.
-   */
-  public String getName() {
-    if (params==null) {
-      return name;
-    } 
-    return new StringBuilder(name).append('(').append(params).append(')').toString();
-  }
+	@Override
+	protected PerfTask clone() throws CloneNotSupportedException {
+		// tasks having non primitive data structures should override this.
+		// otherwise parallel running of a task sequence might not run correctly.
+		return (PerfTask) super.clone();
+	}
 
-  /**
-   * @param name The name to set.
-   */
-  protected void setName(String name) {
-    this.name = name;
-  }
+	public void close() throws Exception {
+	}
 
-  /**
-   * @return Returns the run data.
-   */
-  public PerfRunData getRunData() {
-    return runData;
-  }
+	/**
+	 * Run the task, record statistics.
+	 *
+	 * @return number of work items done by this task.
+	 */
+	public final int runAndMaybeStats(boolean reportStats) throws Exception {
+		if (!reportStats || shouldNotRecordStats()) {
+			setup();
+			int count = doLogic();
+			count = disableCounting ? 0 : count;
+			tearDown();
+			return count;
+		}
+		if (reportStats && depth <= maxDepthLogStart && !shouldNeverLogAtStart()) {
+			System.out.println("------------> starting task: " + getName());
+		}
+		setup();
+		Points pnts = runData.getPoints();
+		TaskStats ts = pnts.markTaskStart(this, runData.getConfig().getRoundNumber());
+		int count = doLogic();
+		count = disableCounting ? 0 : count;
+		pnts.markTaskEnd(ts, count);
+		tearDown();
+		return count;
+	}
 
-  /**
-   * @return Returns the depth.
-   */
-  public int getDepth() {
-    return depth;
-  }
+	/**
+	 * Perform the task once (ignoring repetitions specification)
+	 * Return number of work items done by this task.
+	 * For indexing that can be number of docs added.
+	 * For warming that can be number of scanned items, etc.
+	 *
+	 * @return number of work items done by this task.
+	 */
+	public abstract int doLogic() throws Exception;
 
-  /**
-   * @param depth The depth to set.
-   */
-  public void setDepth(int depth) {
-    this.depth = depth;
-  }
-  
-  // compute a blank string padding for printing this task indented by its depth  
-  String getPadding () {
-    char c[] = new char[4*getDepth()];
-    for (int i = 0; i < c.length; i++) c[i] = ' ';
-    return new String(c);
-  }
-  
-  @Override
-  public String toString() {
-    String padd = getPadding();
-    StringBuilder sb = new StringBuilder(padd);
-    if (disableCounting) {
-      sb.append('-');
-    }
-    sb.append(getName());
-    if (getRunInBackground()) {
-      sb.append(" &");
-      int x = getBackgroundDeltaPriority();
-      if (x != 0) {
-        sb.append(x);
-      }
-    }
-    return sb.toString();
-  }
+	/**
+	 * @return Returns the name.
+	 */
+	public String getName() {
+		if (params == null) {
+			return name;
+		}
+		return new StringBuilder(name).append('(').append(params).append(')').toString();
+	}
 
-  /**
-   * @return Returns the maxDepthLogStart.
-   */
-  int getMaxDepthLogStart() {
-    return maxDepthLogStart;
-  }
+	/**
+	 * @param name The name to set.
+	 */
+	protected void setName(String name) {
+		this.name = name;
+	}
 
-  protected String getLogMessage(int recsCount) {
-    return "processed " + recsCount + " records";
-  }
-  
-  /**
-   * Tasks that should never log at start can override this.  
-   * @return true if this task should never log when it start.
-   */
-  protected boolean shouldNeverLogAtStart () {
-    return false;
-  }
-  
-  /**
-   * Tasks that should not record statistics can override this.  
-   * @return true if this task should never record its statistics.
-   */
-  protected boolean shouldNotRecordStats () {
-    return false;
-  }
+	/**
+	 * @return Returns the run data.
+	 */
+	public PerfRunData getRunData() {
+		return runData;
+	}
 
-  /**
-   * Task setup work that should not be measured for that specific task. By
-   * default it does nothing, but tasks can implement this, moving work from
-   * {@link #doLogic()} to this method. Only the work done in {@link #doLogic()}
-   * is measured for this task. Notice that higher level (sequence) tasks
-   * containing this task would then measure larger time than the sum of their
-   * contained tasks.
-   */
-  public void setup () throws Exception {
-  }
+	/**
+	 * @return Returns the depth.
+	 */
+	public int getDepth() {
+		return depth;
+	}
 
-  /**
-   * Task tearDown work that should not be measured for that specific task. By
-   * default it does nothing, but tasks can implement this, moving work from
-   * {@link #doLogic()} to this method. Only the work done in {@link #doLogic()}
-   * is measured for this task. Notice that higher level (sequence) tasks
-   * containing this task would then measure larger time than the sum of their
-   * contained tasks.
-   */
-  public void tearDown() throws Exception {
-    if (++logStepCount % logStep == 0) {
-      double time = (System.currentTimeMillis() - runData.getStartTimeMillis()) / 1000.0;
-      System.out.println(String.format(Locale.ROOT, "%7.2f",time) + " sec --> "
-          + Thread.currentThread().getName() + " " + getLogMessage(logStepCount));
-    }
-  }
+	/**
+	 * @param depth The depth to set.
+	 */
+	public void setDepth(int depth) {
+		this.depth = depth;
+	}
 
-  /**
-   * Sub classes that support parameters must override this method to return
-   * true.
-   * 
-   * @return true iff this task supports command line params.
-   */
-  public boolean supportsParams () {
-    return false;
-  }
+	// compute a blank string padding for printing this task indented by its depth
+	String getPadding() {
+		char c[] = new char[4 * getDepth()];
+		for (int i = 0; i < c.length; i++) c[i] = ' ';
+		return new String(c);
+	}
 
-  /**
-   * Set the params of this task.
-   * 
-   * @exception UnsupportedOperationException
-   *              for tasks supporting command line parameters.
-   */
-  public void setParams(String params) {
-    if (!supportsParams()) {
-      throw new UnsupportedOperationException(getName()+" does not support command line parameters.");
-    }
-    this.params = params;
-  }
-  
-  /**
-   * @return Returns the Params.
-   */
-  public String getParams() {
-    return params;
-  }
+	@Override
+	public String toString() {
+		String padd = getPadding();
+		StringBuilder sb = new StringBuilder(padd);
+		if (disableCounting) {
+			sb.append('-');
+		}
+		sb.append(getName());
+		if (getRunInBackground()) {
+			sb.append(" &");
+			int x = getBackgroundDeltaPriority();
+			if (x != 0) {
+				sb.append(x);
+			}
+		}
+		return sb.toString();
+	}
 
-  /**
-   * Return true if counting is disabled for this task.
-   */
-  public boolean isDisableCounting() {
-    return disableCounting;
-  }
+	/**
+	 * @return Returns the maxDepthLogStart.
+	 */
+	int getMaxDepthLogStart() {
+		return maxDepthLogStart;
+	}
 
-  /**
-   * See {@link #isDisableCounting()}
-   */
-  public void setDisableCounting(boolean disableCounting) {
-    this.disableCounting = disableCounting;
-  }
+	protected String getLogMessage(int recsCount) {
+		return "processed " + recsCount + " records";
+	}
 
-  public void setAlgLineNum(int algLineNum) {
-    this.algLineNum = algLineNum;
-  }
+	/**
+	 * Tasks that should never log at start can override this.
+	 *
+	 * @return true if this task should never log when it start.
+	 */
+	protected boolean shouldNeverLogAtStart() {
+		return false;
+	}
 
-  public int getAlgLineNum() {
-    return algLineNum;
-  }
+	/**
+	 * Tasks that should not record statistics can override this.
+	 *
+	 * @return true if this task should never record its statistics.
+	 */
+	protected boolean shouldNotRecordStats() {
+		return false;
+	}
+
+	/**
+	 * Task setup work that should not be measured for that specific task. By
+	 * default it does nothing, but tasks can implement this, moving work from
+	 * {@link #doLogic()} to this method. Only the work done in {@link #doLogic()}
+	 * is measured for this task. Notice that higher level (sequence) tasks
+	 * containing this task would then measure larger time than the sum of their
+	 * contained tasks.
+	 */
+	public void setup() throws Exception {
+	}
+
+	/**
+	 * Task tearDown work that should not be measured for that specific task. By
+	 * default it does nothing, but tasks can implement this, moving work from
+	 * {@link #doLogic()} to this method. Only the work done in {@link #doLogic()}
+	 * is measured for this task. Notice that higher level (sequence) tasks
+	 * containing this task would then measure larger time than the sum of their
+	 * contained tasks.
+	 */
+	public void tearDown() throws Exception {
+		if (++logStepCount % logStep == 0) {
+			double time = (System.currentTimeMillis() - runData.getStartTimeMillis()) / 1000.0;
+			System.out.println(String.format(Locale.ROOT, "%7.2f", time) + " sec --> "
+				+ Thread.currentThread().getName() + " " + getLogMessage(logStepCount));
+		}
+	}
+
+	/**
+	 * Sub classes that support parameters must override this method to return
+	 * true.
+	 *
+	 * @return true iff this task supports command line params.
+	 */
+	public boolean supportsParams() {
+		return false;
+	}
+
+	/**
+	 * Set the params of this task.
+	 *
+	 * @throws UnsupportedOperationException for tasks supporting command line parameters.
+	 */
+	public void setParams(String params) {
+		if (!supportsParams()) {
+			throw new UnsupportedOperationException(getName() + " does not support command line parameters.");
+		}
+		this.params = params;
+	}
+
+	/**
+	 * @return Returns the Params.
+	 */
+	public String getParams() {
+		return params;
+	}
+
+	/**
+	 * Return true if counting is disabled for this task.
+	 */
+	public boolean isDisableCounting() {
+		return disableCounting;
+	}
+
+	/**
+	 * See {@link #isDisableCounting()}
+	 */
+	public void setDisableCounting(boolean disableCounting) {
+		this.disableCounting = disableCounting;
+	}
+
+	public void setAlgLineNum(int algLineNum) {
+		this.algLineNum = algLineNum;
+	}
+
+	public int getAlgLineNum() {
+		return algLineNum;
+	}
 }

@@ -27,7 +27,9 @@ import org.apache.lucene.util.Attribute;
  * and will be null.
  */
 public interface ReadingAttribute extends Attribute {
-  public String getReading();
-  public String getPronunciation();
-  public void setToken(Token token);
+	public String getReading();
+
+	public String getPronunciation();
+
+	public void setToken(Token token);
 }

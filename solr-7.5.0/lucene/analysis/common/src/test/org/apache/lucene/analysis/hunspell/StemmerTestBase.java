@@ -30,57 +30,59 @@ import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.LuceneTestCase;
 import org.junit.AfterClass;
 
-/** base class for hunspell stemmer tests */
+/**
+ * base class for hunspell stemmer tests
+ */
 public abstract class StemmerTestBase extends LuceneTestCase {
-  private static Stemmer stemmer;
-  
-  @AfterClass
-  public static void afterClass() {
-    stemmer = null;
-  }
-  
-  static void init(String affix, String dictionary) throws IOException, ParseException {
-    init(false, affix, dictionary);
-  }
+	private static Stemmer stemmer;
 
-  static void init(boolean ignoreCase, String affix, String... dictionaries) throws IOException, ParseException {
-    if (dictionaries.length == 0) {
-      throw new IllegalArgumentException("there must be at least one dictionary");
-    }
-    
-    InputStream affixStream = StemmerTestBase.class.getResourceAsStream(affix);
-    if (affixStream == null) {
-      throw new FileNotFoundException("file not found: " + affix);
-    }
-    
-    InputStream dictStreams[] = new InputStream[dictionaries.length];
-    for (int i = 0; i < dictionaries.length; i++) {
-      dictStreams[i] = StemmerTestBase.class.getResourceAsStream(dictionaries[i]);
-      if (dictStreams[i] == null) {
-        throw new FileNotFoundException("file not found: " + dictStreams[i]);
-      }
-    }
-    
-    try {
-      Dictionary dictionary = new Dictionary(new RAMDirectory(), "dictionary", affixStream, Arrays.asList(dictStreams), ignoreCase);
-      stemmer = new Stemmer(dictionary);
-    } finally {
-      IOUtils.closeWhileHandlingException(affixStream);
-      IOUtils.closeWhileHandlingException(dictStreams);
-    }
-  }
-  
-  static void assertStemsTo(String s, String... expected) {
-    assertNotNull(stemmer);
-    Arrays.sort(expected);
-    
-    List<CharsRef> stems = stemmer.stem(s);
-    String actual[] = new String[stems.size()];
-    for (int i = 0; i < actual.length; i++) {
-      actual[i] = stems.get(i).toString();
-    }
-    Arrays.sort(actual);
-    
-    assertArrayEquals("expected=" + Arrays.toString(expected) + ",actual=" + Arrays.toString(actual), expected, actual);
-  }
+	@AfterClass
+	public static void afterClass() {
+		stemmer = null;
+	}
+
+	static void init(String affix, String dictionary) throws IOException, ParseException {
+		init(false, affix, dictionary);
+	}
+
+	static void init(boolean ignoreCase, String affix, String... dictionaries) throws IOException, ParseException {
+		if (dictionaries.length == 0) {
+			throw new IllegalArgumentException("there must be at least one dictionary");
+		}
+
+		InputStream affixStream = StemmerTestBase.class.getResourceAsStream(affix);
+		if (affixStream == null) {
+			throw new FileNotFoundException("file not found: " + affix);
+		}
+
+		InputStream dictStreams[] = new InputStream[dictionaries.length];
+		for (int i = 0; i < dictionaries.length; i++) {
+			dictStreams[i] = StemmerTestBase.class.getResourceAsStream(dictionaries[i]);
+			if (dictStreams[i] == null) {
+				throw new FileNotFoundException("file not found: " + dictStreams[i]);
+			}
+		}
+
+		try {
+			Dictionary dictionary = new Dictionary(new RAMDirectory(), "dictionary", affixStream, Arrays.asList(dictStreams), ignoreCase);
+			stemmer = new Stemmer(dictionary);
+		} finally {
+			IOUtils.closeWhileHandlingException(affixStream);
+			IOUtils.closeWhileHandlingException(dictStreams);
+		}
+	}
+
+	static void assertStemsTo(String s, String... expected) {
+		assertNotNull(stemmer);
+		Arrays.sort(expected);
+
+		List<CharsRef> stems = stemmer.stem(s);
+		String actual[] = new String[stems.size()];
+		for (int i = 0; i < actual.length; i++) {
+			actual[i] = stems.get(i).toString();
+		}
+		Arrays.sort(actual);
+
+		assertArrayEquals("expected=" + Arrays.toString(expected) + ",actual=" + Arrays.toString(actual), expected, actual);
+	}
 }

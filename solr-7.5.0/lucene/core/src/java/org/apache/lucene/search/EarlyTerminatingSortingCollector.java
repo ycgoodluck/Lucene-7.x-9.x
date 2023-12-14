@@ -54,76 +54,79 @@ import org.apache.lucene.search.TotalHitCountCollector;
 @Deprecated
 public class EarlyTerminatingSortingCollector extends FilterCollector {
 
-  /** Returns whether collection can be early-terminated if it sorts with the
-   *  provided {@link Sort} and if segments are merged with the provided
-   *  {@link Sort}. */
-  public static boolean canEarlyTerminate(Sort searchSort, Sort mergePolicySort) {
-    final SortField[] fields1 = searchSort.getSort();
-    final SortField[] fields2 = mergePolicySort.getSort();
-    // early termination is possible if fields1 is a prefix of fields2
-    if (fields1.length > fields2.length) {
-      return false;
-    }
-    return Arrays.asList(fields1).equals(Arrays.asList(fields2).subList(0, fields1.length));
-  }
+	/**
+	 * Returns whether collection can be early-terminated if it sorts with the
+	 * provided {@link Sort} and if segments are merged with the provided
+	 * {@link Sort}.
+	 */
+	public static boolean canEarlyTerminate(Sort searchSort, Sort mergePolicySort) {
+		final SortField[] fields1 = searchSort.getSort();
+		final SortField[] fields2 = mergePolicySort.getSort();
+		// early termination is possible if fields1 is a prefix of fields2
+		if (fields1.length > fields2.length) {
+			return false;
+		}
+		return Arrays.asList(fields1).equals(Arrays.asList(fields2).subList(0, fields1.length));
+	}
 
-  /** Sort used to sort the search results */
-  protected final Sort sort;
-  /** Number of documents to collect in each segment */
-  protected final int numDocsToCollect;
-  private final AtomicBoolean terminatedEarly = new AtomicBoolean(false);
+	/**
+	 * Sort used to sort the search results
+	 */
+	protected final Sort sort;
+	/**
+	 * Number of documents to collect in each segment
+	 */
+	protected final int numDocsToCollect;
+	private final AtomicBoolean terminatedEarly = new AtomicBoolean(false);
 
-  /**
-   * Create a new {@link EarlyTerminatingSortingCollector} instance.
-   *
-   * @param in
-   *          the collector to wrap
-   * @param sort
-   *          the sort you are sorting the search results on
-   * @param numDocsToCollect
-   *          the number of documents to collect on each segment. When wrapping
-   *          a {@link TopDocsCollector}, this number should be the number of
-   *          hits.
-   * @throws IllegalArgumentException if the sort order doesn't allow for early
-   *          termination with the given merge policy.
-   */
-  public EarlyTerminatingSortingCollector(Collector in, Sort sort, int numDocsToCollect) {
-    super(in);
-    if (numDocsToCollect <= 0) {
-      throw new IllegalArgumentException("numDocsToCollect must always be > 0, got " + numDocsToCollect);
-    }
-    this.sort = sort;
-    this.numDocsToCollect = numDocsToCollect;
-  }
+	/**
+	 * Create a new {@link EarlyTerminatingSortingCollector} instance.
+	 *
+	 * @param in               the collector to wrap
+	 * @param sort             the sort you are sorting the search results on
+	 * @param numDocsToCollect the number of documents to collect on each segment. When wrapping
+	 *                         a {@link TopDocsCollector}, this number should be the number of
+	 *                         hits.
+	 * @throws IllegalArgumentException if the sort order doesn't allow for early
+	 *                                  termination with the given merge policy.
+	 */
+	public EarlyTerminatingSortingCollector(Collector in, Sort sort, int numDocsToCollect) {
+		super(in);
+		if (numDocsToCollect <= 0) {
+			throw new IllegalArgumentException("numDocsToCollect must always be > 0, got " + numDocsToCollect);
+		}
+		this.sort = sort;
+		this.numDocsToCollect = numDocsToCollect;
+	}
 
-  @Override
-  public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
-    Sort segmentSort = context.reader().getMetaData().getSort();
-    if (segmentSort != null && canEarlyTerminate(sort, segmentSort) == false) {
-      throw new IllegalStateException("Cannot early terminate with sort order " + sort + " if segments are sorted with " + segmentSort);
-    }
+	@Override
+	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
+		Sort segmentSort = context.reader().getMetaData().getSort();
+		if (segmentSort != null && canEarlyTerminate(sort, segmentSort) == false) {
+			throw new IllegalStateException("Cannot early terminate with sort order " + sort + " if segments are sorted with " + segmentSort);
+		}
 
-    if (segmentSort != null) {
-      // segment is sorted, can early-terminate
-      return new FilterLeafCollector(super.getLeafCollector(context)) {
-        private int numCollected;
+		if (segmentSort != null) {
+			// segment is sorted, can early-terminate
+			return new FilterLeafCollector(super.getLeafCollector(context)) {
+				private int numCollected;
 
-        @Override
-        public void collect(int doc) throws IOException {
-          super.collect(doc);
-          if (++numCollected >= numDocsToCollect) {
-            terminatedEarly.set(true);
-            throw new CollectionTerminatedException();
-          }
-        }
+				@Override
+				public void collect(int doc) throws IOException {
+					super.collect(doc);
+					if (++numCollected >= numDocsToCollect) {
+						terminatedEarly.set(true);
+						throw new CollectionTerminatedException();
+					}
+				}
 
-      };
-    } else {
-      return super.getLeafCollector(context);
-    }
-  }
+			};
+		} else {
+			return super.getLeafCollector(context);
+		}
+	}
 
-  public boolean terminatedEarly() {
-    return terminatedEarly.get();
-  }
+	public boolean terminatedEarly() {
+		return terminatedEarly.get();
+	}
 }

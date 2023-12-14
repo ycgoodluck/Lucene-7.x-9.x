@@ -32,31 +32,34 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @see TrimFilter
- *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @see TrimFilter
+ * @since 3.1
  */
 public class TrimFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "trim";
-  
-  /** Creates a new TrimFilterFactory */
-  public TrimFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new TrimFilter(input);
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "trim";
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	/**
+	 * Creates a new TrimFilterFactory
+	 */
+	public TrimFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
+
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new TrimFilter(input);
+	}
+
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

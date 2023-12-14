@@ -28,24 +28,26 @@ import java.io.StringReader;
  */
 public class TestPatternReplaceFilterFactory extends BaseTokenStreamFactoryTestCase {
 
-  public void testReplaceAll() throws Exception {
-    Reader reader = new StringReader("aabfooaabfooabfoob ab caaaaaaaaab");
-    TokenStream stream = whitespaceMockTokenizer(reader);
-    stream = tokenFilterFactory("PatternReplace",
-        "pattern", "a*b",
-        "replacement", "-").create(stream);
-                   
-    assertTokenStreamContents(stream, 
-        new String[] { "-foo-foo-foo-", "-", "c-" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      tokenFilterFactory("PatternReplace",
-          "pattern", "something",
-          "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testReplaceAll() throws Exception {
+		Reader reader = new StringReader("aabfooaabfooabfoob ab caaaaaaaaab");
+		TokenStream stream = whitespaceMockTokenizer(reader);
+		stream = tokenFilterFactory("PatternReplace",
+			"pattern", "a*b",
+			"replacement", "-").create(stream);
+
+		assertTokenStreamContents(stream,
+			new String[]{"-foo-foo-foo-", "-", "c-"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("PatternReplace",
+				"pattern", "something",
+				"bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

@@ -59,7 +59,7 @@
  *   <td>(abba,42,46)</td>
  *  </tr>
  * </table>
- * 
+ * <p>
  * The input token is always preserved and the filters do not alter the case of word parts. There are two variants of the
  * filter available:
  * <ul>
@@ -70,7 +70,7 @@
  *  brute-force dictionary-only based approach to find the word parts of a given
  *  word.</li>
  * </ul>
- * 
+ *
  * <h3>Compound word token filters</h3>
  * <h4>HyphenationCompoundWordTokenFilter</h4>
  * The {@link
@@ -96,7 +96,7 @@
  * Credits for the hyphenation code go to the
  * <a href="http://xmlgraphics.apache.org/fop/">Apache FOP project</a>
  * .
- * 
+ *
  * <h4>DictionaryCompoundWordTokenFilter</h4>
  * The {@link
  * org.apache.lucene.analysis.compound.DictionaryCompoundWordTokenFilter
@@ -104,7 +104,7 @@
  * find subwords in a compound word. It is much slower than the one that
  * uses the hyphenation grammars. You can use it as a first start to
  * see if your dictionary is good or not because it is much simpler in design.
- * 
+ *
  * <h3>Dictionary</h3>
  * The output quality of both token filters is directly connected to the
  * quality of the dictionary you use. They are language dependent of course.
@@ -115,7 +115,7 @@
  * <a href="http://wiki.services.openoffice.org/wiki/Dictionaries">OpenOffice
  * dictionaries</a>
  * Wiki.
- * 
+ *
  * <h3>Which variant should I use?</h3>
  * This decision matrix should help you:
  * <table border="1" summary="comparison of dictionary and hyphenation based decompounding">
@@ -140,46 +140,46 @@
  *   public void testHyphenationCompoundWordsDE() throws Exception {
  *     String[] dict = { "Rind", "Fleisch", "Draht", "Schere", "Gesetz",
  *         "Aufgabe", "&Uuml;berwachung" };
- * 
+ *
  *     Reader reader = new FileReader("de_DR.xml");
- * 
+ *
  *     HyphenationTree hyphenator = HyphenationCompoundWordTokenFilter
  *         .getHyphenationTree(reader);
- * 
+ *
  *     HyphenationCompoundWordTokenFilter tf = new HyphenationCompoundWordTokenFilter(
  *         new WhitespaceTokenizer(new StringReader(
  *             "Rindfleisch&uuml;berwachungsgesetz Drahtschere abba")), hyphenator,
  *         dict, CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
  *         CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
  *         CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, false);
- *         
+ *
  *     CharTermAttribute t = tf.addAttribute(CharTermAttribute.class);
  *     while (tf.incrementToken()) {
  *        System.out.println(t);
  *     }
  *   }
- * 
+ *
  *   public void testHyphenationCompoundWordsWithoutDictionaryDE() throws Exception {
  *     Reader reader = new FileReader("de_DR.xml");
- * 
+ *
  *     HyphenationTree hyphenator = HyphenationCompoundWordTokenFilter
  *         .getHyphenationTree(reader);
- * 
+ *
  *     HyphenationCompoundWordTokenFilter tf = new HyphenationCompoundWordTokenFilter(
  *         new WhitespaceTokenizer(new StringReader(
  *             "Rindfleisch&uuml;berwachungsgesetz Drahtschere abba")), hyphenator);
- *         
+ *
  *     CharTermAttribute t = tf.addAttribute(CharTermAttribute.class);
  *     while (tf.incrementToken()) {
  *        System.out.println(t);
  *     }
  *   }
- *   
+ *
  *   public void testDumbCompoundWordsSE() throws Exception {
  *     String[] dict = { "Bil", "D&ouml;rr", "Motor", "Tak", "Borr", "Slag", "Hammar",
  *         "Pelar", "Glas", "&Ouml;gon", "Fodral", "Bas", "Fiol", "Makare", "Ges&auml;ll",
  *         "Sko", "Vind", "Rute", "Torkare", "Blad" };
- * 
+ *
  *     DictionaryCompoundWordTokenFilter tf = new DictionaryCompoundWordTokenFilter(
  *         new WhitespaceTokenizer(
  *             new StringReader(

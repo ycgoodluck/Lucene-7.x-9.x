@@ -31,30 +31,35 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.LowerCaseFilterFactory"/&gt;
  *     &lt;filter class="solr.GermanNormalizationFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
- * &lt;/fieldType&gt;</pre> 
- * @since 3.6.0
+ * &lt;/fieldType&gt;</pre>
+ *
  * @lucene.spi {@value #NAME}
+ * @since 3.6.0
  */
 public class GermanNormalizationFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "germanNormalization";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "germanNormalization";
 
-  /** Creates a new GermanNormalizationFilterFactory */
-  public GermanNormalizationFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new GermanNormalizationFilter(input);
-  }
+	/**
+	 * Creates a new GermanNormalizationFilterFactory
+	 */
+	public GermanNormalizationFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new GermanNormalizationFilter(input);
+	}
+
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

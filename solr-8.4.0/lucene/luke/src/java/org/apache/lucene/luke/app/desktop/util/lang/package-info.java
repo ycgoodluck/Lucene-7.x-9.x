@@ -15,5 +15,7 @@
  * limitations under the License.
  */
 
-/** Syntax sugars / helpers */
+/**
+ * Syntax sugars / helpers
+ */
 package org.apache.lucene.luke.app.desktop.util.lang;

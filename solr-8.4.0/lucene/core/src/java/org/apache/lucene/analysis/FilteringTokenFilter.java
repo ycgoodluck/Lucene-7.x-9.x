@@ -29,46 +29,49 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
  */
 public abstract class FilteringTokenFilter extends TokenFilter {
 
-  private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
-  private int skippedPositions;
+	private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
+	private int skippedPositions;
 
-  /**
-   * Create a new {@link FilteringTokenFilter}.
-   * @param in      the {@link TokenStream} to consume
-   */
-  public FilteringTokenFilter(TokenStream in) {
-    super(in);
-  }
+	/**
+	 * Create a new {@link FilteringTokenFilter}.
+	 *
+	 * @param in the {@link TokenStream} to consume
+	 */
+	public FilteringTokenFilter(TokenStream in) {
+		super(in);
+	}
 
-  /** Override this method and return if the current input token should be returned by {@link #incrementToken}. */
-  protected abstract boolean accept() throws IOException;
+	/**
+	 * Override this method and return if the current input token should be returned by {@link #incrementToken}.
+	 */
+	protected abstract boolean accept() throws IOException;
 
-  @Override
-  public final boolean incrementToken() throws IOException {
-    skippedPositions = 0;
-    while (input.incrementToken()) {
-      if (accept()) {
-        if (skippedPositions != 0) {
-          posIncrAtt.setPositionIncrement(posIncrAtt.getPositionIncrement() + skippedPositions);
-        }
-        return true;
-      }
-      skippedPositions += posIncrAtt.getPositionIncrement();
-    }
+	@Override
+	public final boolean incrementToken() throws IOException {
+		skippedPositions = 0;
+		while (input.incrementToken()) {
+			if (accept()) {
+				if (skippedPositions != 0) {
+					posIncrAtt.setPositionIncrement(posIncrAtt.getPositionIncrement() + skippedPositions);
+				}
+				return true;
+			}
+			skippedPositions += posIncrAtt.getPositionIncrement();
+		}
 
-    // reached EOS -- return false
-    return false;
-  }
+		// reached EOS -- return false
+		return false;
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    skippedPositions = 0;
-  }
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		skippedPositions = 0;
+	}
 
-  @Override
-  public void end() throws IOException {
-    super.end();
-    posIncrAtt.setPositionIncrement(posIncrAtt.getPositionIncrement() + skippedPositions);
-  }
+	@Override
+	public void end() throws IOException {
+		super.end();
+		posIncrAtt.setPositionIncrement(posIncrAtt.getPositionIncrement() + skippedPositions);
+	}
 }

@@ -37,113 +37,113 @@ import org.junit.Test;
  */
 public class SimpleNaiveBayesClassifierTest extends ClassificationTestBase<BytesRef> {
 
-  @Test
-  public void testBasicUsage() throws Exception {
-    LeafReader leafReader = null;
-    try {
-      MockAnalyzer analyzer = new MockAnalyzer(random());
-      leafReader = getSampleIndex(analyzer);
-      SimpleNaiveBayesClassifier classifier = new SimpleNaiveBayesClassifier(leafReader, analyzer, null, categoryFieldName, textFieldName);
-      checkCorrectClassification(classifier, TECHNOLOGY_INPUT, TECHNOLOGY_RESULT);
-      checkCorrectClassification(classifier, POLITICS_INPUT, POLITICS_RESULT);
-    } finally {
-      if (leafReader != null) {
-        leafReader.close();
-      }
-    }
-  }
+	@Test
+	public void testBasicUsage() throws Exception {
+		LeafReader leafReader = null;
+		try {
+			MockAnalyzer analyzer = new MockAnalyzer(random());
+			leafReader = getSampleIndex(analyzer);
+			SimpleNaiveBayesClassifier classifier = new SimpleNaiveBayesClassifier(leafReader, analyzer, null, categoryFieldName, textFieldName);
+			checkCorrectClassification(classifier, TECHNOLOGY_INPUT, TECHNOLOGY_RESULT);
+			checkCorrectClassification(classifier, POLITICS_INPUT, POLITICS_RESULT);
+		} finally {
+			if (leafReader != null) {
+				leafReader.close();
+			}
+		}
+	}
 
-  @Test
-  public void testBasicUsageWithQuery() throws Exception {
-    LeafReader leafReader = null;
-    try {
-      MockAnalyzer analyzer = new MockAnalyzer(random());
-      leafReader = getSampleIndex(analyzer);
-      TermQuery query = new TermQuery(new Term(textFieldName, "a"));
-      SimpleNaiveBayesClassifier classifier = new SimpleNaiveBayesClassifier(leafReader, analyzer, query, categoryFieldName, textFieldName);
-      checkCorrectClassification(classifier, TECHNOLOGY_INPUT, TECHNOLOGY_RESULT);
-      checkCorrectClassification(classifier, POLITICS_INPUT, POLITICS_RESULT);
-    } finally {
-      if (leafReader != null) {
-        leafReader.close();
-      }
-    }
-  }
+	@Test
+	public void testBasicUsageWithQuery() throws Exception {
+		LeafReader leafReader = null;
+		try {
+			MockAnalyzer analyzer = new MockAnalyzer(random());
+			leafReader = getSampleIndex(analyzer);
+			TermQuery query = new TermQuery(new Term(textFieldName, "a"));
+			SimpleNaiveBayesClassifier classifier = new SimpleNaiveBayesClassifier(leafReader, analyzer, query, categoryFieldName, textFieldName);
+			checkCorrectClassification(classifier, TECHNOLOGY_INPUT, TECHNOLOGY_RESULT);
+			checkCorrectClassification(classifier, POLITICS_INPUT, POLITICS_RESULT);
+		} finally {
+			if (leafReader != null) {
+				leafReader.close();
+			}
+		}
+	}
 
-  @Test
-  public void testNGramUsage() throws Exception {
-    LeafReader leafReader = null;
-    try {
-      Analyzer analyzer = new NGramAnalyzer();
-      leafReader = getSampleIndex(analyzer);
-      SimpleNaiveBayesClassifier classifier = new SimpleNaiveBayesClassifier(leafReader, analyzer, null, categoryFieldName, textFieldName);
-      checkCorrectClassification(classifier, TECHNOLOGY_INPUT, TECHNOLOGY_RESULT);
-    } finally {
-      if (leafReader != null) {
-        leafReader.close();
-      }
-    }
-  }
+	@Test
+	public void testNGramUsage() throws Exception {
+		LeafReader leafReader = null;
+		try {
+			Analyzer analyzer = new NGramAnalyzer();
+			leafReader = getSampleIndex(analyzer);
+			SimpleNaiveBayesClassifier classifier = new SimpleNaiveBayesClassifier(leafReader, analyzer, null, categoryFieldName, textFieldName);
+			checkCorrectClassification(classifier, TECHNOLOGY_INPUT, TECHNOLOGY_RESULT);
+		} finally {
+			if (leafReader != null) {
+				leafReader.close();
+			}
+		}
+	}
 
-  private static class NGramAnalyzer extends Analyzer {
-    @Override
-    protected TokenStreamComponents createComponents(String fieldName) {
-      final Tokenizer tokenizer = new KeywordTokenizer();
-      return new TokenStreamComponents(tokenizer, new ReverseStringFilter(new EdgeNGramTokenFilter(new ReverseStringFilter(tokenizer), 10, 20, false)));
-    }
-  }
+	private static class NGramAnalyzer extends Analyzer {
+		@Override
+		protected TokenStreamComponents createComponents(String fieldName) {
+			final Tokenizer tokenizer = new KeywordTokenizer();
+			return new TokenStreamComponents(tokenizer, new ReverseStringFilter(new EdgeNGramTokenFilter(new ReverseStringFilter(tokenizer), 10, 20, false)));
+		}
+	}
 
-  @Test
-  public void testPerformance() throws Exception {
-    MockAnalyzer analyzer = new MockAnalyzer(random());
-    LeafReader leafReader = getRandomIndex(analyzer, 100);
-    try {
-      SimpleNaiveBayesClassifier simpleNaiveBayesClassifier = new SimpleNaiveBayesClassifier(leafReader,
-          analyzer, null, categoryFieldName, textFieldName);
+	@Test
+	public void testPerformance() throws Exception {
+		MockAnalyzer analyzer = new MockAnalyzer(random());
+		LeafReader leafReader = getRandomIndex(analyzer, 100);
+		try {
+			SimpleNaiveBayesClassifier simpleNaiveBayesClassifier = new SimpleNaiveBayesClassifier(leafReader,
+				analyzer, null, categoryFieldName, textFieldName);
 
-      ConfusionMatrixGenerator.ConfusionMatrix confusionMatrix = ConfusionMatrixGenerator.getConfusionMatrix(leafReader,
-          simpleNaiveBayesClassifier, categoryFieldName, textFieldName, -1);
-      assertNotNull(confusionMatrix);
+			ConfusionMatrixGenerator.ConfusionMatrix confusionMatrix = ConfusionMatrixGenerator.getConfusionMatrix(leafReader,
+				simpleNaiveBayesClassifier, categoryFieldName, textFieldName, -1);
+			assertNotNull(confusionMatrix);
 
-      double avgClassificationTime = confusionMatrix.getAvgClassificationTime();
-      assertTrue(avgClassificationTime >= 0);
+			double avgClassificationTime = confusionMatrix.getAvgClassificationTime();
+			assertTrue(avgClassificationTime >= 0);
 
-      double f1 = confusionMatrix.getF1Measure();
-      assertTrue(f1 >= 0d);
-      assertTrue(f1 <= 1d);
+			double f1 = confusionMatrix.getF1Measure();
+			assertTrue(f1 >= 0d);
+			assertTrue(f1 <= 1d);
 
-      double accuracy = confusionMatrix.getAccuracy();
-      assertTrue(accuracy >= 0d);
-      assertTrue(accuracy <= 1d);
+			double accuracy = confusionMatrix.getAccuracy();
+			assertTrue(accuracy >= 0d);
+			assertTrue(accuracy <= 1d);
 
-      double recall = confusionMatrix.getRecall();
-      assertTrue(recall >= 0d);
-      assertTrue(recall <= 1d);
+			double recall = confusionMatrix.getRecall();
+			assertTrue(recall >= 0d);
+			assertTrue(recall <= 1d);
 
-      double precision = confusionMatrix.getPrecision();
-      assertTrue(precision >= 0d);
-      assertTrue(precision <= 1d);
+			double precision = confusionMatrix.getPrecision();
+			assertTrue(precision >= 0d);
+			assertTrue(precision <= 1d);
 
-      Terms terms = MultiTerms.getTerms(leafReader, categoryFieldName);
-      TermsEnum iterator = terms.iterator();
-      BytesRef term;
-      while ((term = iterator.next()) != null) {
-        String s = term.utf8ToString();
-        recall = confusionMatrix.getRecall(s);
-        assertTrue(recall >= 0d);
-        assertTrue(recall <= 1d);
-        precision = confusionMatrix.getPrecision(s);
-        assertTrue(precision >= 0d);
-        assertTrue(precision <= 1d);
-        double f1Measure = confusionMatrix.getF1Measure(s);
-        assertTrue(f1Measure >= 0d);
-        assertTrue(f1Measure <= 1d);
-      }
+			Terms terms = MultiTerms.getTerms(leafReader, categoryFieldName);
+			TermsEnum iterator = terms.iterator();
+			BytesRef term;
+			while ((term = iterator.next()) != null) {
+				String s = term.utf8ToString();
+				recall = confusionMatrix.getRecall(s);
+				assertTrue(recall >= 0d);
+				assertTrue(recall <= 1d);
+				precision = confusionMatrix.getPrecision(s);
+				assertTrue(precision >= 0d);
+				assertTrue(precision <= 1d);
+				double f1Measure = confusionMatrix.getF1Measure(s);
+				assertTrue(f1Measure >= 0d);
+				assertTrue(f1Measure <= 1d);
+			}
 
-    } finally {
-      leafReader.close();
-    }
+		} finally {
+			leafReader.close();
+		}
 
-  }
+	}
 
 }

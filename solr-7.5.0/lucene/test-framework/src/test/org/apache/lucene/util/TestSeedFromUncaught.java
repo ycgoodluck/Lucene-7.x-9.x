@@ -25,37 +25,37 @@ import org.junit.runner.notification.Failure;
 
 /**
  * Check that uncaught exceptions result in seed info being dumped to
- * console. 
+ * console.
  */
 public class TestSeedFromUncaught extends WithNestedTests {
-  public static class ThrowInUncaught extends AbstractNestedTest {
-    @Test
-    public void testFoo() throws Exception {
-      Thread t = new Thread() {
-        @Override
-        public void run() {
-          throw new RuntimeException("foobar");
-        }
-      };
-      t.start();
-      t.join();
-    }
-  }
+	public static class ThrowInUncaught extends AbstractNestedTest {
+		@Test
+		public void testFoo() throws Exception {
+			Thread t = new Thread() {
+				@Override
+				public void run() {
+					throw new RuntimeException("foobar");
+				}
+			};
+			t.start();
+			t.join();
+		}
+	}
 
-  public TestSeedFromUncaught() {
-    super(/* suppress normal output. */ true);
-  }
+	public TestSeedFromUncaught() {
+		super(/* suppress normal output. */ true);
+	}
 
-  /**
-   * Verify super method calls on {@link LuceneTestCase#setUp()}.
-   */
-  @Test
-  public void testUncaughtDumpsSeed() {
-    Result result = JUnitCore.runClasses(ThrowInUncaught.class);
-    assertFailureCount(1, result);
-    Failure f = result.getFailures().get(0);
-    String trace = f.getTrace();
-    Assert.assertTrue(trace.contains("SeedInfo.seed("));
-    Assert.assertTrue(trace.contains("foobar"));
-  }
+	/**
+	 * Verify super method calls on {@link LuceneTestCase#setUp()}.
+	 */
+	@Test
+	public void testUncaughtDumpsSeed() {
+		Result result = JUnitCore.runClasses(ThrowInUncaught.class);
+		assertFailureCount(1, result);
+		Failure f = result.getFailures().get(0);
+		String trace = f.getTrace();
+		Assert.assertTrue(trace.contains("SeedInfo.seed("));
+		Assert.assertTrue(trace.contains("foobar"));
+	}
 }

@@ -42,10 +42,8 @@ import org.apache.lucene.search.Weight;
  *    <li>(optional) the score of its {@link FunctionQuery} (or queries).</li>
  * </ol>
  * Subclasses can modify the computation by overriding {@link #getCustomScoreProvider}.
- * 
- * @lucene.experimental
  *
- * Clients should instead use FunctionScoreQuery.  For simple multiplicative boosts, use
+ * @lucene.experimental Clients should instead use FunctionScoreQuery.  For simple multiplicative boosts, use
  * {@link FunctionScoreQuery#boostByValue(Query, DoubleValuesSource)}.  For more complex
  * custom scores, use the lucene-expressions library
  * <pre>
@@ -56,278 +54,289 @@ import org.apache.lucene.search.Weight;
  *   Expression expr = JavascriptCompiler.compile("score * (boost1 + ln(boost2))");
  *   FunctionScoreQuery q = new FunctionScoreQuery(inputQuery, expr.getDoubleValuesSource(bindings));
  * </pre>
- *
  * @deprecated use {@link org.apache.lucene.queries.function.FunctionScoreQuery}
  */
 @Deprecated
 public class CustomScoreQuery extends Query implements Cloneable {
 
-  private Query subQuery;
-  private Query[] scoringQueries; // never null (empty array if there are no valSrcQueries).
+	private Query subQuery;
+	private Query[] scoringQueries; // never null (empty array if there are no valSrcQueries).
 
-  /**
-   * Create a CustomScoreQuery over input subQuery.
-   * @param subQuery the sub query whose scored is being customized. Must not be null. 
-   */
-  public CustomScoreQuery(Query subQuery) {
-    this(subQuery, new FunctionQuery[0]);
-  }
+	/**
+	 * Create a CustomScoreQuery over input subQuery.
+	 *
+	 * @param subQuery the sub query whose scored is being customized. Must not be null.
+	 */
+	public CustomScoreQuery(Query subQuery) {
+		this(subQuery, new FunctionQuery[0]);
+	}
 
-  /**
-   * Create a CustomScoreQuery over input subQuery and a {@link org.apache.lucene.queries.function.FunctionQuery}.
-   * @param subQuery the sub query whose score is being customized. Must not be null.
-   * @param scoringQuery a value source query whose scores are used in the custom score
-   * computation.  This parameter is optional - it can be null.
-   */
-  public CustomScoreQuery(Query subQuery, FunctionQuery scoringQuery) {
-    this(subQuery, scoringQuery!=null ? // don't want an array that contains a single null..
-        new FunctionQuery[] {scoringQuery} : new FunctionQuery[0]);
-  }
+	/**
+	 * Create a CustomScoreQuery over input subQuery and a {@link org.apache.lucene.queries.function.FunctionQuery}.
+	 *
+	 * @param subQuery     the sub query whose score is being customized. Must not be null.
+	 * @param scoringQuery a value source query whose scores are used in the custom score
+	 *                     computation.  This parameter is optional - it can be null.
+	 */
+	public CustomScoreQuery(Query subQuery, FunctionQuery scoringQuery) {
+		this(subQuery, scoringQuery != null ? // don't want an array that contains a single null..
+			new FunctionQuery[]{scoringQuery} : new FunctionQuery[0]);
+	}
 
-  /**
-   * Create a CustomScoreQuery over input subQuery and a {@link org.apache.lucene.queries.function.FunctionQuery}.
-   * @param subQuery the sub query whose score is being customized. Must not be null.
-   * @param scoringQueries value source queries whose scores are used in the custom score
-   * computation.  This parameter is optional - it can be null or even an empty array.
-   */
-  public CustomScoreQuery(Query subQuery, FunctionQuery... scoringQueries) {
-    this.subQuery = subQuery;
-    this.scoringQueries = scoringQueries !=null?
-        scoringQueries : new Query[0];
-    if (subQuery == null) throw new IllegalArgumentException("<subquery> must not be null!");
-  }
+	/**
+	 * Create a CustomScoreQuery over input subQuery and a {@link org.apache.lucene.queries.function.FunctionQuery}.
+	 *
+	 * @param subQuery       the sub query whose score is being customized. Must not be null.
+	 * @param scoringQueries value source queries whose scores are used in the custom score
+	 *                       computation.  This parameter is optional - it can be null or even an empty array.
+	 */
+	public CustomScoreQuery(Query subQuery, FunctionQuery... scoringQueries) {
+		this.subQuery = subQuery;
+		this.scoringQueries = scoringQueries != null ?
+			scoringQueries : new Query[0];
+		if (subQuery == null) throw new IllegalArgumentException("<subquery> must not be null!");
+	}
 
-  /*(non-Javadoc) @see org.apache.lucene.search.Query#rewrite(org.apache.lucene.index.IndexReader) */
-  @Override
-  public Query rewrite(IndexReader reader) throws IOException {
-    CustomScoreQuery clone = null;
-    
-    final Query sq = subQuery.rewrite(reader);
-    if (sq != subQuery) {
-      clone = clone();
-      clone.subQuery = sq;
-    }
+	/*(non-Javadoc) @see org.apache.lucene.search.Query#rewrite(org.apache.lucene.index.IndexReader) */
+	@Override
+	public Query rewrite(IndexReader reader) throws IOException {
+		CustomScoreQuery clone = null;
 
-    for(int i = 0; i < scoringQueries.length; i++) {
-      final Query v = scoringQueries[i].rewrite(reader);
-      if (v != scoringQueries[i]) {
-        if (clone == null) clone = clone();
-        clone.scoringQueries[i] = v;
-      }
-    }
-    
-    return (clone == null) ? this : clone;
-  }
+		final Query sq = subQuery.rewrite(reader);
+		if (sq != subQuery) {
+			clone = clone();
+			clone.subQuery = sq;
+		}
 
-  /*(non-Javadoc) @see org.apache.lucene.search.Query#clone() */
-  @Override
-  public CustomScoreQuery clone() {
-    CustomScoreQuery clone;
-    try {
-      clone = (CustomScoreQuery)super.clone();
-    } catch (CloneNotSupportedException bogus) {
-      // cannot happen
-      throw new Error(bogus);
-    }
-    clone.subQuery = subQuery;
-    clone.scoringQueries = new Query[scoringQueries.length];
-    for(int i = 0; i < scoringQueries.length; i++) {
-      clone.scoringQueries[i] = scoringQueries[i];
-    }
-    return clone;
-  }
+		for (int i = 0; i < scoringQueries.length; i++) {
+			final Query v = scoringQueries[i].rewrite(reader);
+			if (v != scoringQueries[i]) {
+				if (clone == null) clone = clone();
+				clone.scoringQueries[i] = v;
+			}
+		}
 
-  /* (non-Javadoc) @see org.apache.lucene.search.Query#toString(java.lang.String) */
-  @Override
-  public String toString(String field) {
-    StringBuilder sb = new StringBuilder(name()).append("(");
-    sb.append(subQuery.toString(field));
-    for (Query scoringQuery : scoringQueries) {
-      sb.append(", ").append(scoringQuery.toString(field));
-    }
-    sb.append(")");
-    return sb.toString();
-  }
+		return (clone == null) ? this : clone;
+	}
 
-  /** Returns true if <code>o</code> is equal to this. */
-  @Override
-  public boolean equals(Object other) {
-    return sameClassAs(other) &&
-           equalsTo(getClass().cast(other));
-  }
+	/*(non-Javadoc) @see org.apache.lucene.search.Query#clone() */
+	@Override
+	public CustomScoreQuery clone() {
+		CustomScoreQuery clone;
+		try {
+			clone = (CustomScoreQuery) super.clone();
+		} catch (CloneNotSupportedException bogus) {
+			// cannot happen
+			throw new Error(bogus);
+		}
+		clone.subQuery = subQuery;
+		clone.scoringQueries = new Query[scoringQueries.length];
+		for (int i = 0; i < scoringQueries.length; i++) {
+			clone.scoringQueries[i] = scoringQueries[i];
+		}
+		return clone;
+	}
 
-  private boolean equalsTo(CustomScoreQuery other) {
-    return subQuery.equals(other.subQuery) &&
-           scoringQueries.length == other.scoringQueries.length &&
-           Arrays.equals(scoringQueries, other.scoringQueries);
-  }
+	/* (non-Javadoc) @see org.apache.lucene.search.Query#toString(java.lang.String) */
+	@Override
+	public String toString(String field) {
+		StringBuilder sb = new StringBuilder(name()).append("(");
+		sb.append(subQuery.toString(field));
+		for (Query scoringQuery : scoringQueries) {
+			sb.append(", ").append(scoringQuery.toString(field));
+		}
+		sb.append(")");
+		return sb.toString();
+	}
 
-  /** Returns a hash code value for this object. */
-  @Override
-  public int hashCode() {
-    // Didn't change this hashcode, but it looks suspicious.
-    return (classHash() + 
-        subQuery.hashCode() + 
-        Arrays.hashCode(scoringQueries));
-  }
-  
-  /**
-   * Returns a {@link CustomScoreProvider} that calculates the custom scores
-   * for the given {@link IndexReader}. The default implementation returns a default
-   * implementation as specified in the docs of {@link CustomScoreProvider}.
-   * @since 2.9.2
-   */
-  protected CustomScoreProvider getCustomScoreProvider(LeafReaderContext context) throws IOException {
-    return new CustomScoreProvider(context);
-  }
+	/**
+	 * Returns true if <code>o</code> is equal to this.
+	 */
+	@Override
+	public boolean equals(Object other) {
+		return sameClassAs(other) &&
+			equalsTo(getClass().cast(other));
+	}
 
-  //=========================== W E I G H T ============================
-  
-  private class CustomWeight extends Weight {
-    final Weight subQueryWeight;
-    final Weight[] valSrcWeights;
-    final float queryWeight;
+	private boolean equalsTo(CustomScoreQuery other) {
+		return subQuery.equals(other.subQuery) &&
+			scoringQueries.length == other.scoringQueries.length &&
+			Arrays.equals(scoringQueries, other.scoringQueries);
+	}
 
-    public CustomWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-      super(CustomScoreQuery.this);
-      // note we DONT incorporate our boost, nor pass down any boost 
-      // (e.g. from outer BQ), as there is no guarantee that the CustomScoreProvider's 
-      // function obeys the distributive law... it might call sqrt() on the subQuery score
-      // or some other arbitrary function other than multiplication.
-      // so, instead boosts are applied directly in score()
-      this.subQueryWeight = subQuery.createWeight(searcher, needsScores, 1f);
-      this.valSrcWeights = new Weight[scoringQueries.length];
-      for(int i = 0; i < scoringQueries.length; i++) {
-        this.valSrcWeights[i] = scoringQueries[i].createWeight(searcher, needsScores, 1f);
-      }
-      this.queryWeight = boost;
-    }
+	/**
+	 * Returns a hash code value for this object.
+	 */
+	@Override
+	public int hashCode() {
+		// Didn't change this hashcode, but it looks suspicious.
+		return (classHash() +
+			subQuery.hashCode() +
+			Arrays.hashCode(scoringQueries));
+	}
 
-    @Override
-    public void extractTerms(Set<Term> terms) {
-      subQueryWeight.extractTerms(terms);
-      for (Weight scoringWeight : valSrcWeights) {
-        scoringWeight.extractTerms(terms);
-      }
-    }
+	/**
+	 * Returns a {@link CustomScoreProvider} that calculates the custom scores
+	 * for the given {@link IndexReader}. The default implementation returns a default
+	 * implementation as specified in the docs of {@link CustomScoreProvider}.
+	 *
+	 * @since 2.9.2
+	 */
+	protected CustomScoreProvider getCustomScoreProvider(LeafReaderContext context) throws IOException {
+		return new CustomScoreProvider(context);
+	}
 
-    @Override
-    public Scorer scorer(LeafReaderContext context) throws IOException {
-      Scorer subQueryScorer = subQueryWeight.scorer(context);
-      if (subQueryScorer == null) {
-        return null;
-      }
-      Scorer[] valSrcScorers = new Scorer[valSrcWeights.length];
-      for(int i = 0; i < valSrcScorers.length; i++) {
-         valSrcScorers[i] = valSrcWeights[i].scorer(context);
-      }
-      return new CustomScorer(CustomScoreQuery.this.getCustomScoreProvider(context), this, queryWeight, subQueryScorer, valSrcScorers);
-    }
+	//=========================== W E I G H T ============================
 
-    @Override
-    public boolean isCacheable(LeafReaderContext ctx) {
-      if (subQueryWeight.isCacheable(ctx) == false)
-        return false;
-      for (Weight w : valSrcWeights) {
-        if (w.isCacheable(ctx) == false)
-          return false;
-      }
-      return true;
-    }
+	private class CustomWeight extends Weight {
+		final Weight subQueryWeight;
+		final Weight[] valSrcWeights;
+		final float queryWeight;
 
-    @Override
-    public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-      Explanation explain = doExplain(context, doc);
-      return explain == null ? Explanation.noMatch("no matching docs") : explain;
-    }
-    
-    private Explanation doExplain(LeafReaderContext info, int doc) throws IOException {
-      Explanation subQueryExpl = subQueryWeight.explain(info, doc);
-      if (!subQueryExpl.isMatch()) {
-        return subQueryExpl;
-      }
-      // match
-      Explanation[] valSrcExpls = new Explanation[valSrcWeights.length];
-      for(int i = 0; i < valSrcWeights.length; i++) {
-        valSrcExpls[i] = valSrcWeights[i].explain(info, doc);
-      }
-      Explanation customExp = CustomScoreQuery.this.getCustomScoreProvider(info).customExplain(doc,subQueryExpl,valSrcExpls);
-      float sc = queryWeight * customExp.getValue();
-      return Explanation.match(
-        sc, CustomScoreQuery.this.toString() + ", product of:",
-        customExp, Explanation.match(queryWeight, "queryWeight"));
-    }
-    
-  }
+		public CustomWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+			super(CustomScoreQuery.this);
+			// note we DONT incorporate our boost, nor pass down any boost
+			// (e.g. from outer BQ), as there is no guarantee that the CustomScoreProvider's
+			// function obeys the distributive law... it might call sqrt() on the subQuery score
+			// or some other arbitrary function other than multiplication.
+			// so, instead boosts are applied directly in score()
+			this.subQueryWeight = subQuery.createWeight(searcher, needsScores, 1f);
+			this.valSrcWeights = new Weight[scoringQueries.length];
+			for (int i = 0; i < scoringQueries.length; i++) {
+				this.valSrcWeights[i] = scoringQueries[i].createWeight(searcher, needsScores, 1f);
+			}
+			this.queryWeight = boost;
+		}
+
+		@Override
+		public void extractTerms(Set<Term> terms) {
+			subQueryWeight.extractTerms(terms);
+			for (Weight scoringWeight : valSrcWeights) {
+				scoringWeight.extractTerms(terms);
+			}
+		}
+
+		@Override
+		public Scorer scorer(LeafReaderContext context) throws IOException {
+			Scorer subQueryScorer = subQueryWeight.scorer(context);
+			if (subQueryScorer == null) {
+				return null;
+			}
+			Scorer[] valSrcScorers = new Scorer[valSrcWeights.length];
+			for (int i = 0; i < valSrcScorers.length; i++) {
+				valSrcScorers[i] = valSrcWeights[i].scorer(context);
+			}
+			return new CustomScorer(CustomScoreQuery.this.getCustomScoreProvider(context), this, queryWeight, subQueryScorer, valSrcScorers);
+		}
+
+		@Override
+		public boolean isCacheable(LeafReaderContext ctx) {
+			if (subQueryWeight.isCacheable(ctx) == false)
+				return false;
+			for (Weight w : valSrcWeights) {
+				if (w.isCacheable(ctx) == false)
+					return false;
+			}
+			return true;
+		}
+
+		@Override
+		public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+			Explanation explain = doExplain(context, doc);
+			return explain == null ? Explanation.noMatch("no matching docs") : explain;
+		}
+
+		private Explanation doExplain(LeafReaderContext info, int doc) throws IOException {
+			Explanation subQueryExpl = subQueryWeight.explain(info, doc);
+			if (!subQueryExpl.isMatch()) {
+				return subQueryExpl;
+			}
+			// match
+			Explanation[] valSrcExpls = new Explanation[valSrcWeights.length];
+			for (int i = 0; i < valSrcWeights.length; i++) {
+				valSrcExpls[i] = valSrcWeights[i].explain(info, doc);
+			}
+			Explanation customExp = CustomScoreQuery.this.getCustomScoreProvider(info).customExplain(doc, subQueryExpl, valSrcExpls);
+			float sc = queryWeight * customExp.getValue();
+			return Explanation.match(
+				sc, CustomScoreQuery.this.toString() + ", product of:",
+				customExp, Explanation.match(queryWeight, "queryWeight"));
+		}
+
+	}
 
 
-  //=========================== S C O R E R ============================
-  
-  /**
-   * A scorer that applies a (callback) function on scores of the subQuery.
-   */
-  private static class CustomScorer extends FilterScorer {
-    private final float qWeight;
-    private final Scorer subQueryScorer;
-    private final Scorer[] valSrcScorers;
-    private final CustomScoreProvider provider;
-    private final float[] vScores; // reused in score() to avoid allocating this array for each doc
-    private int valSrcDocID = -1; // we lazily advance subscorers.
+	//=========================== S C O R E R ============================
 
-    // constructor
-    private CustomScorer(CustomScoreProvider provider, CustomWeight w, float qWeight,
-        Scorer subQueryScorer, Scorer[] valSrcScorers) {
-      super(subQueryScorer, w);
-      this.qWeight = qWeight;
-      this.subQueryScorer = subQueryScorer;
-      this.valSrcScorers = valSrcScorers;
-      this.vScores = new float[valSrcScorers.length];
-      this.provider = provider;
-    }
-    
-    @Override
-    public float score() throws IOException {
-      // lazily advance to current doc.
-      int doc = docID();
-      if (doc > valSrcDocID) {
-        for (Scorer valSrcScorer : valSrcScorers) {
-          valSrcScorer.iterator().advance(doc);
-        }
-        valSrcDocID = doc;
-      }
-      // TODO: this thing technically takes any Query, so what about when subs don't match?
-      for (int i = 0; i < valSrcScorers.length; i++) {
-        vScores[i] = valSrcScorers[i].score();
-      }
-      return qWeight * provider.customScore(subQueryScorer.docID(), subQueryScorer.score(), vScores);
-    }
+	/**
+	 * A scorer that applies a (callback) function on scores of the subQuery.
+	 */
+	private static class CustomScorer extends FilterScorer {
+		private final float qWeight;
+		private final Scorer subQueryScorer;
+		private final Scorer[] valSrcScorers;
+		private final CustomScoreProvider provider;
+		private final float[] vScores; // reused in score() to avoid allocating this array for each doc
+		private int valSrcDocID = -1; // we lazily advance subscorers.
 
-    @Override
-    public Collection<ChildScorer> getChildren() {
-      return Collections.singleton(new ChildScorer(subQueryScorer, "CUSTOM"));
-    }
-  }
+		// constructor
+		private CustomScorer(CustomScoreProvider provider, CustomWeight w, float qWeight,
+												 Scorer subQueryScorer, Scorer[] valSrcScorers) {
+			super(subQueryScorer, w);
+			this.qWeight = qWeight;
+			this.subQueryScorer = subQueryScorer;
+			this.valSrcScorers = valSrcScorers;
+			this.vScores = new float[valSrcScorers.length];
+			this.provider = provider;
+		}
 
-  @Override
-  public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-    return new CustomWeight(searcher, needsScores, boost);
-  }
+		@Override
+		public float score() throws IOException {
+			// lazily advance to current doc.
+			int doc = docID();
+			if (doc > valSrcDocID) {
+				for (Scorer valSrcScorer : valSrcScorers) {
+					valSrcScorer.iterator().advance(doc);
+				}
+				valSrcDocID = doc;
+			}
+			// TODO: this thing technically takes any Query, so what about when subs don't match?
+			for (int i = 0; i < valSrcScorers.length; i++) {
+				vScores[i] = valSrcScorers[i].score();
+			}
+			return qWeight * provider.customScore(subQueryScorer.docID(), subQueryScorer.score(), vScores);
+		}
 
-  /** The sub-query that CustomScoreQuery wraps, affecting both the score and which documents match. */
-  public Query getSubQuery() {
-    return subQuery;
-  }
+		@Override
+		public Collection<ChildScorer> getChildren() {
+			return Collections.singleton(new ChildScorer(subQueryScorer, "CUSTOM"));
+		}
+	}
 
-  /** The scoring queries that only affect the score of CustomScoreQuery. */
-  public Query[] getScoringQueries() {
-    return scoringQueries;
-  }
+	@Override
+	public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+		return new CustomWeight(searcher, needsScores, boost);
+	}
 
-  /**
-   * A short name of this query, used in {@link #toString(String)}.
-   */
-  public String name() {
-    return "custom";
-  }
+	/**
+	 * The sub-query that CustomScoreQuery wraps, affecting both the score and which documents match.
+	 */
+	public Query getSubQuery() {
+		return subQuery;
+	}
+
+	/**
+	 * The scoring queries that only affect the score of CustomScoreQuery.
+	 */
+	public Query[] getScoringQueries() {
+		return scoringQueries;
+	}
+
+	/**
+	 * A short name of this query, used in {@link #toString(String)}.
+	 */
+	public String name() {
+		return "custom";
+	}
 
 }

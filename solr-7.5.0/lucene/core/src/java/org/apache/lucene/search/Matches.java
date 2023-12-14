@@ -22,7 +22,7 @@ import java.io.IOException;
 /**
  * Reports the positions and optionally offsets of all matching terms in a query
  * for a single document
- *
+ * <p>
  * To obtain a {@link MatchesIterator} for a particular field, call {@link #getMatches(String)}.
  * Note that you can call {@link #getMatches(String)} multiple times to retrieve new
  * iterators, but it is not thread-safe.
@@ -31,10 +31,10 @@ import java.io.IOException;
  */
 public interface Matches extends Iterable<String> {
 
-  /**
-   * Returns a {@link MatchesIterator} over the matches for a single field,
-   * or {@code null} if there are no matches in that field.
-   */
-  MatchesIterator getMatches(String field) throws IOException;
+	/**
+	 * Returns a {@link MatchesIterator} over the matches for a single field,
+	 * or {@code null} if there are no matches in that field.
+	 */
+	MatchesIterator getMatches(String field) throws IOException;
 
 }

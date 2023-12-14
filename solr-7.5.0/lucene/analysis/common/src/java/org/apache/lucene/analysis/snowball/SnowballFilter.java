@@ -29,7 +29,7 @@ import org.tartarus.snowball.SnowballProgram;
 
 /**
  * A filter that stems words using a Snowball-generated stemmer.
- *
+ * <p>
  * Available stemmers are listed in {@link org.tartarus.snowball.ext}.
  * <p><b>NOTE</b>: SnowballFilter expects lowercased text.
  * <ul>
@@ -42,67 +42,67 @@ import org.tartarus.snowball.SnowballProgram;
  * certain terms from being passed to the stemmer
  * {@link KeywordAttribute#isKeyword()} should be set to <code>true</code>
  * in a previous {@link TokenStream}.
- *
+ * <p>
  * Note: For including the original term as well as the stemmed version, see
  * {@link org.apache.lucene.analysis.miscellaneous.KeywordRepeatFilterFactory}
  * </p>
- *
- *
  */
 public final class SnowballFilter extends TokenFilter {
 
-  private final SnowballProgram stemmer;
+	private final SnowballProgram stemmer;
 
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
 
-  public SnowballFilter(TokenStream input, SnowballProgram stemmer) {
-    super(input);
-    this.stemmer = stemmer;
-  }
+	public SnowballFilter(TokenStream input, SnowballProgram stemmer) {
+		super(input);
+		this.stemmer = stemmer;
+	}
 
-  /**
-   * Construct the named stemming filter.
-   *
-   * Available stemmers are listed in {@link org.tartarus.snowball.ext}.
-   * The name of a stemmer is the part of the class name before "Stemmer",
-   * e.g., the stemmer in {@link org.tartarus.snowball.ext.EnglishStemmer} is named "English".
-   *
-   * @param in the input tokens to stem
-   * @param name the name of a stemmer
-   */
-  public SnowballFilter(TokenStream in, String name) {
-    super(in);
-    //Class.forName is frowned upon in place of the ResourceLoader but in this case,
-    // the factory will use the other constructor so that the program is already loaded.
-    try {
-      Class<? extends SnowballProgram> stemClass =
-        Class.forName("org.tartarus.snowball.ext." + name + "Stemmer").asSubclass(SnowballProgram.class);
-      stemmer = stemClass.newInstance();
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Invalid stemmer class specified: " + name, e);
-    }
-  }
+	/**
+	 * Construct the named stemming filter.
+	 * <p>
+	 * Available stemmers are listed in {@link org.tartarus.snowball.ext}.
+	 * The name of a stemmer is the part of the class name before "Stemmer",
+	 * e.g., the stemmer in {@link org.tartarus.snowball.ext.EnglishStemmer} is named "English".
+	 *
+	 * @param in   the input tokens to stem
+	 * @param name the name of a stemmer
+	 */
+	public SnowballFilter(TokenStream in, String name) {
+		super(in);
+		//Class.forName is frowned upon in place of the ResourceLoader but in this case,
+		// the factory will use the other constructor so that the program is already loaded.
+		try {
+			Class<? extends SnowballProgram> stemClass =
+				Class.forName("org.tartarus.snowball.ext." + name + "Stemmer").asSubclass(SnowballProgram.class);
+			stemmer = stemClass.newInstance();
+		} catch (Exception e) {
+			throw new IllegalArgumentException("Invalid stemmer class specified: " + name, e);
+		}
+	}
 
-  /** Returns the next input Token, after being stemmed */
-  @Override
-  public final boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      if (!keywordAttr.isKeyword()) {
-        char termBuffer[] = termAtt.buffer();
-        final int length = termAtt.length();
-        stemmer.setCurrent(termBuffer, length);
-        stemmer.stem();
-        final char finalTerm[] = stemmer.getCurrentBuffer();
-        final int newLength = stemmer.getCurrentBufferLength();
-        if (finalTerm != termBuffer)
-          termAtt.copyBuffer(finalTerm, 0, newLength);
-        else
-          termAtt.setLength(newLength);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
+	/**
+	 * Returns the next input Token, after being stemmed
+	 */
+	@Override
+	public final boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			if (!keywordAttr.isKeyword()) {
+				char termBuffer[] = termAtt.buffer();
+				final int length = termAtt.length();
+				stemmer.setCurrent(termBuffer, length);
+				stemmer.stem();
+				final char finalTerm[] = stemmer.getCurrentBuffer();
+				final int newLength = stemmer.getCurrentBufferLength();
+				if (finalTerm != termBuffer)
+					termAtt.copyBuffer(finalTerm, 0, newLength);
+				else
+					termAtt.setLength(newLength);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

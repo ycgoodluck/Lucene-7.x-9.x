@@ -39,37 +39,37 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  * Note make sure your Tokenizer doesn't split on the delimiter, or this won't work
  */
 public final class DelimitedTermFrequencyTokenFilter extends TokenFilter {
-  public static final char DEFAULT_DELIMITER = '|';
-  
-  private final char delimiter;
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final TermFrequencyAttribute tfAtt = addAttribute(TermFrequencyAttribute.class);
+	public static final char DEFAULT_DELIMITER = '|';
+
+	private final char delimiter;
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final TermFrequencyAttribute tfAtt = addAttribute(TermFrequencyAttribute.class);
 
 
-  public DelimitedTermFrequencyTokenFilter(TokenStream input) {
-    this(input, DEFAULT_DELIMITER);
-  }
+	public DelimitedTermFrequencyTokenFilter(TokenStream input) {
+		this(input, DEFAULT_DELIMITER);
+	}
 
-  public DelimitedTermFrequencyTokenFilter(TokenStream input, char delimiter) {
-    super(input);
-    this.delimiter = delimiter;
-  }
+	public DelimitedTermFrequencyTokenFilter(TokenStream input, char delimiter) {
+		super(input);
+		this.delimiter = delimiter;
+	}
 
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (input.incrementToken()) {
-      final char[] buffer = termAtt.buffer();
-      final int length = termAtt.length();
-      for (int i = 0; i < length; i++) {
-        if (buffer[i] == delimiter) {
-          termAtt.setLength(i); // simply set a new length
-          i++;
-          tfAtt.setTermFrequency(ArrayUtil.parseInt(buffer, i, length - i));
-          return true;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
+	@Override
+	public boolean incrementToken() throws IOException {
+		if (input.incrementToken()) {
+			final char[] buffer = termAtt.buffer();
+			final int length = termAtt.length();
+			for (int i = 0; i < length; i++) {
+				if (buffer[i] == delimiter) {
+					termAtt.setLength(i); // simply set a new length
+					i++;
+					tfAtt.setTermFrequency(ArrayUtil.parseInt(buffer, i, length - i));
+					return true;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
 }

@@ -28,21 +28,23 @@ import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
  * Simple tests to ensure the Bulgarian stem filter factory is working.
  */
 public class TestBulgarianStemFilterFactory extends BaseTokenStreamFactoryTestCase {
-  /**
-   * Ensure the filter actually stems text.
-   */
-  public void testStemming() throws Exception {
-    Reader reader = new StringReader("компютри");
-    Tokenizer tokenizer = whitespaceMockTokenizer(reader);
-    TokenStream stream = tokenFilterFactory("BulgarianStem").create(tokenizer);
-    assertTokenStreamContents(stream, new String[] { "компютр" });
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {      
-      tokenFilterFactory("BulgarianStem", "bogusArg", "bogusValue");
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Ensure the filter actually stems text.
+	 */
+	public void testStemming() throws Exception {
+		Reader reader = new StringReader("компютри");
+		Tokenizer tokenizer = whitespaceMockTokenizer(reader);
+		TokenStream stream = tokenFilterFactory("BulgarianStem").create(tokenizer);
+		assertTokenStreamContents(stream, new String[]{"компютр"});
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			tokenFilterFactory("BulgarianStem", "bogusArg", "bogusValue");
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

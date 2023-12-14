@@ -38,92 +38,92 @@ import org.apache.lucene.luke.app.desktop.components.dialog.HelpDialogFactory;
  */
 public final class HelpHeaderRenderer implements TableCellRenderer {
 
-  private JTable table;
+	private JTable table;
 
-  private final JPanel panel = new JPanel();
+	private final JPanel panel = new JPanel();
 
-  private final JComponent helpContent;
+	private final JComponent helpContent;
 
-  private final HelpDialogFactory helpDialogFactory;
+	private final HelpDialogFactory helpDialogFactory;
 
-  private final String title;
+	private final String title;
 
-  private final String desc;
+	private final String desc;
 
-  private final JDialog parent;
+	private final JDialog parent;
 
-  public HelpHeaderRenderer(String title, String desc, JComponent helpContent, HelpDialogFactory helpDialogFactory) {
-    this(title, desc, helpContent, helpDialogFactory, null);
-  }
+	public HelpHeaderRenderer(String title, String desc, JComponent helpContent, HelpDialogFactory helpDialogFactory) {
+		this(title, desc, helpContent, helpDialogFactory, null);
+	}
 
-  public HelpHeaderRenderer(String title, String desc, JComponent helpContent, HelpDialogFactory helpDialogFactory,
-                            JDialog parent) {
-    this.title = title;
-    this.desc = desc;
-    this.helpContent = helpContent;
-    this.helpDialogFactory = helpDialogFactory;
-    this.parent = parent;
-  }
+	public HelpHeaderRenderer(String title, String desc, JComponent helpContent, HelpDialogFactory helpDialogFactory,
+														JDialog parent) {
+		this.title = title;
+		this.desc = desc;
+		this.helpContent = helpContent;
+		this.helpDialogFactory = helpDialogFactory;
+		this.parent = parent;
+	}
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-    if (table != null && this.table != table) {
-      this.table = table;
-      final JTableHeader header = table.getTableHeader();
-      if (header != null) {
-        panel.setLayout(new FlowLayout(FlowLayout.LEADING));
-        panel.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-        panel.add(new JLabel(value.toString()));
+	@Override
+	@SuppressWarnings("unchecked")
+	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+		if (table != null && this.table != table) {
+			this.table = table;
+			final JTableHeader header = table.getTableHeader();
+			if (header != null) {
+				panel.setLayout(new FlowLayout(FlowLayout.LEADING));
+				panel.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
+				panel.add(new JLabel(value.toString()));
 
-        // add label with mouse click listener
-        // when the label is clicked, help dialog will be displayed.
-        JLabel helpLabel = new JLabel(FontUtils.elegantIconHtml("&#x74;", MessageUtils.getLocalizedMessage("label.help")));
-        helpLabel.setHorizontalAlignment(JLabel.LEFT);
-        helpLabel.setIconTextGap(5);
-        panel.add(FontUtils.toLinkText(helpLabel));
+				// add label with mouse click listener
+				// when the label is clicked, help dialog will be displayed.
+				JLabel helpLabel = new JLabel(FontUtils.elegantIconHtml("&#x74;", MessageUtils.getLocalizedMessage("label.help")));
+				helpLabel.setHorizontalAlignment(JLabel.LEFT);
+				helpLabel.setIconTextGap(5);
+				panel.add(FontUtils.toLinkText(helpLabel));
 
-        // add mouse listener to JTableHeader object.
-        // see: https://stackoverflow.com/questions/7137786/how-can-i-put-a-control-in-the-jtableheader-of-a-jtable
-        header.addMouseListener(new HelpClickListener(column));
-      }
-    }
-    return panel;
-  }
+				// add mouse listener to JTableHeader object.
+				// see: https://stackoverflow.com/questions/7137786/how-can-i-put-a-control-in-the-jtableheader-of-a-jtable
+				header.addMouseListener(new HelpClickListener(column));
+			}
+		}
+		return panel;
+	}
 
-  class HelpClickListener extends MouseAdapter {
+	class HelpClickListener extends MouseAdapter {
 
-    int column;
+		int column;
 
-    HelpClickListener(int column) {
-      this.column = column;
-    }
+		HelpClickListener(int column) {
+			this.column = column;
+		}
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
-      showPopupIfNeeded(e);
-    }
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			showPopupIfNeeded(e);
+		}
 
-    private void showPopupIfNeeded(MouseEvent e) {
-      JTableHeader header = (JTableHeader) e.getSource();
-      int column = header.getTable().columnAtPoint(e.getPoint());
-      if (column == this.column && e.getClickCount() == 1 && column != -1) {
-        // only when the targeted column header is clicked, pop up the dialog
-        if (Objects.nonNull(parent)) {
-          new DialogOpener<>(helpDialogFactory).open(parent, title, 600, 350,
-              (factory) -> {
-                factory.setDesc(desc);
-                factory.setContent(helpContent);
-              });
-        } else {
-          new DialogOpener<>(helpDialogFactory).open(title, 600, 350,
-              (factory) -> {
-                factory.setDesc(desc);
-                factory.setContent(helpContent);
-              });
-        }
-      }
-    }
+		private void showPopupIfNeeded(MouseEvent e) {
+			JTableHeader header = (JTableHeader) e.getSource();
+			int column = header.getTable().columnAtPoint(e.getPoint());
+			if (column == this.column && e.getClickCount() == 1 && column != -1) {
+				// only when the targeted column header is clicked, pop up the dialog
+				if (Objects.nonNull(parent)) {
+					new DialogOpener<>(helpDialogFactory).open(parent, title, 600, 350,
+						(factory) -> {
+							factory.setDesc(desc);
+							factory.setContent(helpContent);
+						});
+				} else {
+					new DialogOpener<>(helpDialogFactory).open(title, 600, 350,
+						(factory) -> {
+							factory.setDesc(desc);
+							factory.setContent(helpContent);
+						});
+				}
+			}
+		}
 
-  }
+	}
 }

@@ -30,94 +30,94 @@ import java.util.Map;
  */
 public class MultiMatchingQueries<T extends QueryMatch> {
 
-  private final List<Map<String, T>> matches;
-  private final Map<String, Exception> errors;
+	private final List<Map<String, T>> matches;
+	private final Map<String, Exception> errors;
 
-  private final long queryBuildTime;
-  private final long searchTime;
-  private final int queriesRun;
-  private final int batchSize;
+	private final long queryBuildTime;
+	private final long searchTime;
+	private final int queriesRun;
+	private final int batchSize;
 
-  MultiMatchingQueries(List<Map<String, T>> matches, Map<String, Exception> errors,
-                  long queryBuildTime, long searchTime, int queriesRun, int batchSize) {
-    this.matches = Collections.unmodifiableList(matches);
-    this.errors = Collections.unmodifiableMap(errors);
-    this.queryBuildTime = queryBuildTime;
-    this.searchTime = searchTime;
-    this.queriesRun = queriesRun;
-    this.batchSize = batchSize;
-  }
+	MultiMatchingQueries(List<Map<String, T>> matches, Map<String, Exception> errors,
+											 long queryBuildTime, long searchTime, int queriesRun, int batchSize) {
+		this.matches = Collections.unmodifiableList(matches);
+		this.errors = Collections.unmodifiableMap(errors);
+		this.queryBuildTime = queryBuildTime;
+		this.searchTime = searchTime;
+		this.queriesRun = queriesRun;
+		this.batchSize = batchSize;
+	}
 
-  /**
-   * Returns the QueryMatch for the given query and document, or null if it did not match
-   *
-   * @param queryId the query id
-   * @param docId   the doc id
-   * @return the QueryMatch for the given query and document, or null if it did not match
-   */
-  public T matches(String queryId, int docId) {
-    Map<String, T> docMatches = matches.get(docId);
-    if (docMatches == null)
-      return null;
-    return docMatches.get(queryId);
-  }
+	/**
+	 * Returns the QueryMatch for the given query and document, or null if it did not match
+	 *
+	 * @param queryId the query id
+	 * @param docId   the doc id
+	 * @return the QueryMatch for the given query and document, or null if it did not match
+	 */
+	public T matches(String queryId, int docId) {
+		Map<String, T> docMatches = matches.get(docId);
+		if (docMatches == null)
+			return null;
+		return docMatches.get(queryId);
+	}
 
-  /**
-   * @param docId document id to check
-   * @return all matches for a particular document
-   */
-  public Collection<T> getMatches(int docId) {
-    return matches.get(docId).values();
-  }
+	/**
+	 * @param docId document id to check
+	 * @return all matches for a particular document
+	 */
+	public Collection<T> getMatches(int docId) {
+		return matches.get(docId).values();
+	}
 
-  /**
-   * @param docId document id to check
-   * @return the number of queries that matched for a given document
-   */
-  public int getMatchCount(int docId) {
-    Map<String, T> docMatches = matches.get(docId);
-    if (docMatches == null)
-      return 0;
-    return docMatches.size();
-  }
+	/**
+	 * @param docId document id to check
+	 * @return the number of queries that matched for a given document
+	 */
+	public int getMatchCount(int docId) {
+		Map<String, T> docMatches = matches.get(docId);
+		if (docMatches == null)
+			return 0;
+		return docMatches.size();
+	}
 
-  /**
-   * @return how long (in ms) it took to build the Presearcher query for the matcher run
-   */
-  public long getQueryBuildTime() {
-    return queryBuildTime;
-  }
+	/**
+	 * @return how long (in ms) it took to build the Presearcher query for the matcher run
+	 */
+	public long getQueryBuildTime() {
+		return queryBuildTime;
+	}
 
-  /**
-   * @return how long (in ms) it took to run the selected queries
-   */
-  public long getSearchTime() {
-    return searchTime;
-  }
+	/**
+	 * @return how long (in ms) it took to run the selected queries
+	 */
+	public long getSearchTime() {
+		return searchTime;
+	}
 
-  /**
-   * @return the number of queries passed to this CandidateMatcher during the matcher run
-   */
-  public int getQueriesRun() {
-    return queriesRun;
-  }
+	/**
+	 * @return the number of queries passed to this CandidateMatcher during the matcher run
+	 */
+	public int getQueriesRun() {
+		return queriesRun;
+	}
 
-  /**
-   * @return the number of documents in the batch
-   */
-  public int getBatchSize() {
-    return batchSize;
-  }
+	/**
+	 * @return the number of documents in the batch
+	 */
+	public int getBatchSize() {
+		return batchSize;
+	}
 
-  /**
-   * @return a List of any MatchErrors created during the matcher run
-   */
-  public Map<String, Exception> getErrors() {
-    return errors;
-  }
+	/**
+	 * @return a List of any MatchErrors created during the matcher run
+	 */
+	public Map<String, Exception> getErrors() {
+		return errors;
+	}
 
-  MatchingQueries<T> singleton() {
-    assert matches.size() == 1;
-    return new MatchingQueries<>(matches.get(0), errors, queryBuildTime, searchTime, queriesRun);
-  }
+	MatchingQueries<T> singleton() {
+		assert matches.size() == 1;
+		return new MatchingQueries<>(matches.get(0), errors, queryBuildTime, searchTime, queriesRun);
+	}
 }

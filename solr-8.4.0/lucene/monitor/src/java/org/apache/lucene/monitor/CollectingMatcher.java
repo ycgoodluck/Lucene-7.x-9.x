@@ -28,57 +28,57 @@ import org.apache.lucene.search.SimpleCollector;
 
 abstract class CollectingMatcher<T extends QueryMatch> extends CandidateMatcher<T> {
 
-  private final ScoreMode scoreMode;
+	private final ScoreMode scoreMode;
 
-  CollectingMatcher(IndexSearcher searcher, ScoreMode scoreMode) {
-    super(searcher);
-    this.scoreMode = scoreMode;
-  }
+	CollectingMatcher(IndexSearcher searcher, ScoreMode scoreMode) {
+		super(searcher);
+		this.scoreMode = scoreMode;
+	}
 
-  @Override
-  protected void matchQuery(final String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
-    searcher.search(matchQuery, new MatchCollector(queryId, scoreMode));
-  }
+	@Override
+	protected void matchQuery(final String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
+		searcher.search(matchQuery, new MatchCollector(queryId, scoreMode));
+	}
 
-  /**
-   * Called when a query matches a Document
-   *
-   * @param queryId the query ID
-   * @param doc     the index of the document in the DocumentBatch
-   * @param scorer  the Scorer for this query
-   * @return a match object
-   * @throws IOException on IO error
-   */
-  protected abstract T doMatch(String queryId, int doc, Scorable scorer) throws IOException;
+	/**
+	 * Called when a query matches a Document
+	 *
+	 * @param queryId the query ID
+	 * @param doc     the index of the document in the DocumentBatch
+	 * @param scorer  the Scorer for this query
+	 * @return a match object
+	 * @throws IOException on IO error
+	 */
+	protected abstract T doMatch(String queryId, int doc, Scorable scorer) throws IOException;
 
-  private class MatchCollector extends SimpleCollector {
+	private class MatchCollector extends SimpleCollector {
 
-    private final String queryId;
-    private final ScoreMode scoreMode;
-    private Scorable scorer;
+		private final String queryId;
+		private final ScoreMode scoreMode;
+		private Scorable scorer;
 
-    MatchCollector(String queryId, ScoreMode scoreMode) {
-      this.queryId = queryId;
-      this.scoreMode = scoreMode;
-    }
+		MatchCollector(String queryId, ScoreMode scoreMode) {
+			this.queryId = queryId;
+			this.scoreMode = scoreMode;
+		}
 
-    @Override
-    public void collect(int doc) throws IOException {
-      T match = doMatch(queryId, doc, scorer);
-      if (match != null) {
-        addMatch(match, doc);
-      }
-    }
+		@Override
+		public void collect(int doc) throws IOException {
+			T match = doMatch(queryId, doc, scorer);
+			if (match != null) {
+				addMatch(match, doc);
+			}
+		}
 
-    @Override
-    public void setScorer(Scorable scorer) {
-      this.scorer = scorer;
-    }
+		@Override
+		public void setScorer(Scorable scorer) {
+			this.scorer = scorer;
+		}
 
-    @Override
-    public ScoreMode scoreMode() {
-      return scoreMode;
-    }
-  }
+		@Override
+		public ScoreMode scoreMode() {
+			return scoreMode;
+		}
+	}
 
 }

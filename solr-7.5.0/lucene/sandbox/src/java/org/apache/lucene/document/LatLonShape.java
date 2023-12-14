@@ -44,132 +44,143 @@ import static org.apache.lucene.geo.GeoEncodingUtils.encodeLongitude;
  *   <li>{@link #createIndexableFields(String, Polygon)} for matching polygons that intersect a bounding box.
  *   <li>{@link #newBoxQuery newBoxQuery()} for matching polygons that intersect a bounding box.
  * </ul>
-
+ *
  * <b>WARNING</b>: Like {@link LatLonPoint}, vertex values are indexed with some loss of precision from the
  * original {@code double} values (4.190951585769653E-8 for the latitude component
  * and 8.381903171539307E-8 for longitude).
- * @see PointValues
- * @see LatLonDocValuesField
  *
  * @lucene.experimental
+ * @see PointValues
+ * @see LatLonDocValuesField
  */
 public class LatLonShape {
-  public static final int BYTES = LatLonPoint.BYTES;
+	public static final int BYTES = LatLonPoint.BYTES;
 
-  protected static final FieldType TYPE = new FieldType();
-  static {
-    TYPE.setDimensions(6, BYTES);
-    TYPE.freeze();
-  }
+	protected static final FieldType TYPE = new FieldType();
 
-  // no instance:
-  private LatLonShape() {
-  }
+	static {
+		TYPE.setDimensions(6, BYTES);
+		TYPE.freeze();
+	}
 
-  /** create indexable fields for polygon geometry */
-  public static Field[] createIndexableFields(String fieldName, Polygon polygon) {
-    // the lionshare of the indexing is done by the tessellator
-    List<Triangle> tessellation = Tessellator.tessellate(polygon);
-    List<LatLonTriangle> fields = new ArrayList<>();
-    for (Triangle t : tessellation) {
-      fields.add(new LatLonTriangle(fieldName, t.getEncodedX(0), t.getEncodedY(0),
-          t.getEncodedX(1), t.getEncodedY(1), t.getEncodedX(2), t.getEncodedY(2)));
-    }
-    return fields.toArray(new Field[fields.size()]);
-  }
+	// no instance:
+	private LatLonShape() {
+	}
 
-  /** create indexable fields for line geometry */
-  public static Field[] createIndexableFields(String fieldName, Line line) {
-    int numPoints = line.numPoints();
-    List<LatLonTriangle> fields = new ArrayList<>(numPoints - 1);
+	/**
+	 * create indexable fields for polygon geometry
+	 */
+	public static Field[] createIndexableFields(String fieldName, Polygon polygon) {
+		// the lionshare of the indexing is done by the tessellator
+		List<Triangle> tessellation = Tessellator.tessellate(polygon);
+		List<LatLonTriangle> fields = new ArrayList<>();
+		for (Triangle t : tessellation) {
+			fields.add(new LatLonTriangle(fieldName, t.getEncodedX(0), t.getEncodedY(0),
+				t.getEncodedX(1), t.getEncodedY(1), t.getEncodedX(2), t.getEncodedY(2)));
+		}
+		return fields.toArray(new Field[fields.size()]);
+	}
 
-    // encode the line vertices
-    int[] encodedLats = new int[numPoints];
-    int[] encodedLons = new int[numPoints];
-    for (int i = 0; i < numPoints; ++i) {
-      encodedLats[i] = encodeLatitude(line.getLat(i));
-      encodedLons[i] = encodeLongitude(line.getLon(i));
-    }
+	/**
+	 * create indexable fields for line geometry
+	 */
+	public static Field[] createIndexableFields(String fieldName, Line line) {
+		int numPoints = line.numPoints();
+		List<LatLonTriangle> fields = new ArrayList<>(numPoints - 1);
 
-    // create "flat" triangles
-    int aLat, bLat, aLon, bLon, temp;
-    for (int i = 0, j = 1; j < numPoints; ++i, ++j) {
-      aLat = encodedLats[i];
-      aLon = encodedLons[i];
-      bLat = encodedLats[j];
-      bLon = encodedLons[j];
-      if (aLat > bLat) {
-        temp = aLat;
-        aLat = bLat;
-        bLat = temp;
-        temp = aLon;
-        aLon = bLon;
-        bLon = temp;
-      } else if (aLat == bLat) {
-        if (aLon > bLon) {
-          temp = aLat;
-          aLat = bLat;
-          bLat = temp;
-          temp = aLon;
-          aLon = bLon;
-          bLon = temp;
-        }
-      }
-      fields.add(new LatLonTriangle(fieldName, aLon, aLat, bLon, bLat, aLon, aLat));
-    }
-    return fields.toArray(new Field[fields.size()]);
-  }
+		// encode the line vertices
+		int[] encodedLats = new int[numPoints];
+		int[] encodedLons = new int[numPoints];
+		for (int i = 0; i < numPoints; ++i) {
+			encodedLats[i] = encodeLatitude(line.getLat(i));
+			encodedLons[i] = encodeLongitude(line.getLon(i));
+		}
 
-  /** create indexable fields for point geometry */
-  public static Field[] createIndexableFields(String fieldName, double lat, double lon) {
-    final int encodedLat = encodeLatitude(lat);
-    final int encodedLon = encodeLongitude(lon);
-    return new Field[] {new LatLonTriangle(fieldName, encodedLon, encodedLat, encodedLon, encodedLat, encodedLon, encodedLat)};
-  }
+		// create "flat" triangles
+		int aLat, bLat, aLon, bLon, temp;
+		for (int i = 0, j = 1; j < numPoints; ++i, ++j) {
+			aLat = encodedLats[i];
+			aLon = encodedLons[i];
+			bLat = encodedLats[j];
+			bLon = encodedLons[j];
+			if (aLat > bLat) {
+				temp = aLat;
+				aLat = bLat;
+				bLat = temp;
+				temp = aLon;
+				aLon = bLon;
+				bLon = temp;
+			} else if (aLat == bLat) {
+				if (aLon > bLon) {
+					temp = aLat;
+					aLat = bLat;
+					bLat = temp;
+					temp = aLon;
+					aLon = bLon;
+					bLon = temp;
+				}
+			}
+			fields.add(new LatLonTriangle(fieldName, aLon, aLat, bLon, bLat, aLon, aLat));
+		}
+		return fields.toArray(new Field[fields.size()]);
+	}
 
-  /** create a query to find all polygons that intersect a defined bounding box
-   *  note: does not currently support dateline crossing boxes
-   * todo split dateline crossing boxes into two queries like {@link LatLonPoint#newBoxQuery}
-   **/
-  public static Query newBoxQuery(String field, QueryRelation queryRelation, double minLatitude, double maxLatitude, double minLongitude, double maxLongitude) {
-    return new LatLonShapeBoundingBoxQuery(field, queryRelation, minLatitude, maxLatitude, minLongitude, maxLongitude);
-  }
+	/**
+	 * create indexable fields for point geometry
+	 */
+	public static Field[] createIndexableFields(String fieldName, double lat, double lon) {
+		final int encodedLat = encodeLatitude(lat);
+		final int encodedLon = encodeLongitude(lon);
+		return new Field[]{new LatLonTriangle(fieldName, encodedLon, encodedLat, encodedLon, encodedLat, encodedLon, encodedLat)};
+	}
 
-  public static Query newPolygonQuery(String field, QueryRelation queryRelation, Polygon... polygons) {
-    return new LatLonShapePolygonQuery(field, queryRelation, polygons);
-  }
+	/**
+	 * create a query to find all polygons that intersect a defined bounding box
+	 * note: does not currently support dateline crossing boxes
+	 * todo split dateline crossing boxes into two queries like {@link LatLonPoint#newBoxQuery}
+	 **/
+	public static Query newBoxQuery(String field, QueryRelation queryRelation, double minLatitude, double maxLatitude, double minLongitude, double maxLongitude) {
+		return new LatLonShapeBoundingBoxQuery(field, queryRelation, minLatitude, maxLatitude, minLongitude, maxLongitude);
+	}
 
-  /** polygons are decomposed into tessellated triangles using {@link org.apache.lucene.geo.Tessellator}
-   * these triangles are encoded and inserted as separate indexed POINT fields
-   */
-  private static class LatLonTriangle extends Field {
+	public static Query newPolygonQuery(String field, QueryRelation queryRelation, Polygon... polygons) {
+		return new LatLonShapePolygonQuery(field, queryRelation, polygons);
+	}
 
-    LatLonTriangle(String name, int ax, int ay, int bx, int by, int cx, int cy) {
-      super(name, TYPE);
-      setTriangleValue(ax, ay, bx, by, cx, cy);
-    }
+	/**
+	 * polygons are decomposed into tessellated triangles using {@link org.apache.lucene.geo.Tessellator}
+	 * these triangles are encoded and inserted as separate indexed POINT fields
+	 */
+	private static class LatLonTriangle extends Field {
 
-    public void setTriangleValue(int aX, int aY, int bX, int bY, int cX, int cY) {
-      final byte[] bytes;
+		LatLonTriangle(String name, int ax, int ay, int bx, int by, int cx, int cy) {
+			super(name, TYPE);
+			setTriangleValue(ax, ay, bx, by, cx, cy);
+		}
 
-      if (fieldsData == null) {
-        bytes = new byte[24];
-        fieldsData = new BytesRef(bytes);
-      } else {
-        bytes = ((BytesRef) fieldsData).bytes;
-      }
+		public void setTriangleValue(int aX, int aY, int bX, int bY, int cX, int cY) {
+			final byte[] bytes;
 
-      NumericUtils.intToSortableBytes(aY, bytes, 0);
-      NumericUtils.intToSortableBytes(aX, bytes, BYTES);
-      NumericUtils.intToSortableBytes(bY, bytes, BYTES * 2);
-      NumericUtils.intToSortableBytes(bX, bytes, BYTES * 3);
-      NumericUtils.intToSortableBytes(cY, bytes, BYTES * 4);
-      NumericUtils.intToSortableBytes(cX, bytes, BYTES * 5);
-    }
-  }
+			if (fieldsData == null) {
+				bytes = new byte[24];
+				fieldsData = new BytesRef(bytes);
+			} else {
+				bytes = ((BytesRef) fieldsData).bytes;
+			}
 
-  /** Query Relation Types **/
-  public enum QueryRelation {
-    INTERSECTS, WITHIN, DISJOINT
-  }
+			NumericUtils.intToSortableBytes(aY, bytes, 0);
+			NumericUtils.intToSortableBytes(aX, bytes, BYTES);
+			NumericUtils.intToSortableBytes(bY, bytes, BYTES * 2);
+			NumericUtils.intToSortableBytes(bX, bytes, BYTES * 3);
+			NumericUtils.intToSortableBytes(cY, bytes, BYTES * 4);
+			NumericUtils.intToSortableBytes(cX, bytes, BYTES * 5);
+		}
+	}
+
+	/**
+	 * Query Relation Types
+	 **/
+	public enum QueryRelation {
+		INTERSECTS, WITHIN, DISJOINT
+	}
 }

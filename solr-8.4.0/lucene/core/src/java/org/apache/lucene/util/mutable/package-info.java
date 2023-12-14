@@ -16,6 +16,6 @@
  */
 
 /**
- * Comparable object wrappers 
+ * Comparable object wrappers
  */
 package org.apache.lucene.util.mutable;

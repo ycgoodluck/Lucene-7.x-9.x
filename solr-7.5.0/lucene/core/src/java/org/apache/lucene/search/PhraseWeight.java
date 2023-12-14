@@ -24,111 +24,112 @@ import org.apache.lucene.search.similarities.Similarity;
 
 abstract class PhraseWeight extends Weight {
 
-  final boolean needsScores;
-  final Similarity.SimWeight stats;
-  final Similarity similarity;
-  final String field;
+	final boolean needsScores;
+	final Similarity.SimWeight stats;
+	final Similarity similarity;
+	final String field;
 
-  protected PhraseWeight(Query query, String field, IndexSearcher searcher, boolean needsScores) throws IOException {
-    super(query);
-    this.needsScores = needsScores;
-    this.field = field;
-    this.similarity = searcher.getSimilarity(needsScores);
-    this.stats = getStats(searcher);
-  }
+	protected PhraseWeight(Query query, String field, IndexSearcher searcher, boolean needsScores) throws IOException {
+		super(query);
+		this.needsScores = needsScores;
+		this.field = field;
+		this.similarity = searcher.getSimilarity(needsScores);
+		this.stats = getStats(searcher);
+	}
 
-  protected abstract Similarity.SimWeight getStats(IndexSearcher searcher) throws IOException;
+	protected abstract Similarity.SimWeight getStats(IndexSearcher searcher) throws IOException;
 
-  protected abstract PhraseMatcher getPhraseMatcher(LeafReaderContext context, boolean exposeOffsets) throws IOException;
+	protected abstract PhraseMatcher getPhraseMatcher(LeafReaderContext context, boolean exposeOffsets) throws IOException;
 
-  @Override
-  public Scorer scorer(LeafReaderContext context) throws IOException {
-    PhraseMatcher matcher = getPhraseMatcher(context, false);
-    if (matcher == null)
-      return null;
-    Similarity.SimScorer simScorer = similarity.simScorer(stats, context);
-    return new PhraseScorer(this, matcher, needsScores, simScorer);
-  }
+	@Override
+	public Scorer scorer(LeafReaderContext context) throws IOException {
+		PhraseMatcher matcher = getPhraseMatcher(context, false);
+		if (matcher == null)
+			return null;
+		Similarity.SimScorer simScorer = similarity.simScorer(stats, context);
+		return new PhraseScorer(this, matcher, needsScores, simScorer);
+	}
 
-  @Override
-  public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-    PhraseMatcher matcher = getPhraseMatcher(context, false);
-    if (matcher == null || matcher.approximation.advance(doc) != doc) {
-      return Explanation.noMatch("no matching terms");
-    }
-    matcher.reset();
-    if (matcher.nextMatch() == false) {
-      return Explanation.noMatch("no matching phrase");
-    }
-    Similarity.SimScorer simScorer = similarity.simScorer(stats, context);
-    float freq = matcher.sloppyWeight(simScorer);
-    while (matcher.nextMatch()) {
-      freq += matcher.sloppyWeight(simScorer);
-    }
-    Explanation freqExplanation = Explanation.match(freq, "phraseFreq=" + freq);
-    Explanation scoreExplanation = simScorer.explain(doc, freqExplanation);
-    return Explanation.match(
-        scoreExplanation.getValue(),
-        "weight("+getQuery()+" in "+doc+") [" + similarity.getClass().getSimpleName() + "], result of:",
-        scoreExplanation);
-  }
+	@Override
+	public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+		PhraseMatcher matcher = getPhraseMatcher(context, false);
+		if (matcher == null || matcher.approximation.advance(doc) != doc) {
+			return Explanation.noMatch("no matching terms");
+		}
+		matcher.reset();
+		if (matcher.nextMatch() == false) {
+			return Explanation.noMatch("no matching phrase");
+		}
+		Similarity.SimScorer simScorer = similarity.simScorer(stats, context);
+		float freq = matcher.sloppyWeight(simScorer);
+		while (matcher.nextMatch()) {
+			freq += matcher.sloppyWeight(simScorer);
+		}
+		Explanation freqExplanation = Explanation.match(freq, "phraseFreq=" + freq);
+		Explanation scoreExplanation = simScorer.explain(doc, freqExplanation);
+		return Explanation.match(
+			scoreExplanation.getValue(),
+			"weight(" + getQuery() + " in " + doc + ") [" + similarity.getClass().getSimpleName() + "], result of:",
+			scoreExplanation);
+	}
 
-  @Override
-  public Matches matches(LeafReaderContext context, int doc) throws IOException {
-    return MatchesUtils.forField(field, () -> {
-      PhraseMatcher matcher = getPhraseMatcher(context, true);
-      if (matcher == null || matcher.approximation.advance(doc) != doc) {
-        return null;
-      }
-      matcher.reset();
-      if (matcher.nextMatch() == false) {
-        return null;
-      }
-      return new MatchesIterator() {
-        boolean started = false;
-        @Override
-        public boolean next() throws IOException {
-          if (started == false) {
-            return started = true;
-          }
-          return matcher.nextMatch();
-        }
+	@Override
+	public Matches matches(LeafReaderContext context, int doc) throws IOException {
+		return MatchesUtils.forField(field, () -> {
+			PhraseMatcher matcher = getPhraseMatcher(context, true);
+			if (matcher == null || matcher.approximation.advance(doc) != doc) {
+				return null;
+			}
+			matcher.reset();
+			if (matcher.nextMatch() == false) {
+				return null;
+			}
+			return new MatchesIterator() {
+				boolean started = false;
 
-        @Override
-        public int startPosition() {
-          return matcher.startPosition();
-        }
+				@Override
+				public boolean next() throws IOException {
+					if (started == false) {
+						return started = true;
+					}
+					return matcher.nextMatch();
+				}
 
-        @Override
-        public int endPosition() {
-          return matcher.endPosition();
-        }
+				@Override
+				public int startPosition() {
+					return matcher.startPosition();
+				}
 
-        @Override
-        public int startOffset() throws IOException {
-          return matcher.startOffset();
-        }
+				@Override
+				public int endPosition() {
+					return matcher.endPosition();
+				}
 
-        @Override
-        public int endOffset() throws IOException {
-          return matcher.endOffset();
-        }
+				@Override
+				public int startOffset() throws IOException {
+					return matcher.startOffset();
+				}
 
-        @Override
-        public MatchesIterator getSubMatches() throws IOException {
-          return null;    // phrases are treated as leaves
-        }
+				@Override
+				public int endOffset() throws IOException {
+					return matcher.endOffset();
+				}
 
-        @Override
-        public Query getQuery() {
-          return PhraseWeight.this.getQuery();
-        }
-      };
-    });
-  }
+				@Override
+				public MatchesIterator getSubMatches() throws IOException {
+					return null;    // phrases are treated as leaves
+				}
 
-  @Override
-  public boolean isCacheable(LeafReaderContext ctx) {
-    return true;
-  }
+				@Override
+				public Query getQuery() {
+					return PhraseWeight.this.getQuery();
+				}
+			};
+		});
+	}
+
+	@Override
+	public boolean isCacheable(LeafReaderContext ctx) {
+		return true;
+	}
 }

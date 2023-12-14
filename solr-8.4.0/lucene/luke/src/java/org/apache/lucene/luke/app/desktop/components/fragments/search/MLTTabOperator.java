@@ -23,11 +23,13 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.luke.app.desktop.components.ComponentOperatorRegistry;
 import org.apache.lucene.luke.models.search.MLTConfig;
 
-/** Operator of the MLT tab */
+/**
+ * Operator of the MLT tab
+ */
 public interface MLTTabOperator extends ComponentOperatorRegistry.ComponentOperator {
-  void setAnalyzer(Analyzer analyzer);
+	void setAnalyzer(Analyzer analyzer);
 
-  void setFields(Collection<String> fields);
+	void setFields(Collection<String> fields);
 
-  MLTConfig getConfig();
+	MLTConfig getConfig();
 }

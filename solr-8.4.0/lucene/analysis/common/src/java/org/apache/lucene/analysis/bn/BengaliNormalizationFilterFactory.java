@@ -22,8 +22,8 @@ import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-/** 
- * Factory for {@link BengaliNormalizationFilter}. 
+/**
+ * Factory for {@link BengaliNormalizationFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_bnnormal" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -31,28 +31,31 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.BengaliNormalizationFilterFactory"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 7.1.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 7.1.0
  */
 public class BengaliNormalizationFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "bengaliNormalization";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "bengaliNormalization";
 
-  public BengaliNormalizationFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new BengaliNormalizationFilter(input);
-  }
+	public BengaliNormalizationFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new BengaliNormalizationFilter(input);
+	}
+
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }

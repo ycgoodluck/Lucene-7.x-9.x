@@ -14,18 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-/** 
+
+/**
  * Necessary interfaces to implement text parsers.
- * 
+ *
  * <h2>Parser</h2>
  * <p>
  * The package <tt>org.apache.lucene.queryparser.flexible.parser</tt> contains interfaces
  * that should be implemented by the parsers.
- * 
+ * <p>
  * Parsers produce QueryNode Trees from a string object.
  * These package still needs some work to add support to for multiple parsers.
- * 
+ * <p>
  * Features that should be supported for the future, related with the parser:
  * - QueryNode tree should be able convertible to any parser syntax.
  * - The query syntax should support calling other parsers.

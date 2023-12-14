@@ -31,29 +31,31 @@ import org.apache.lucene.util.Version;
  * Simple tests for {@link KoreanPartOfSpeechStopFilterFactory}
  */
 public class TestKoreanPartOfSpeechStopFilterFactory extends BaseTokenStreamTestCase {
-  public void testStopTags() throws IOException {
-    KoreanTokenizerFactory tokenizerFactory = new KoreanTokenizerFactory(new HashMap<String,String>());
-    tokenizerFactory.inform(new StringMockResourceLoader(""));
-    TokenStream ts = tokenizerFactory.create();
-    ((Tokenizer)ts).setReader(new StringReader(" 한국은 대단한 나라입니다."));
-    Map<String,String> args = new HashMap<>();
-    args.put("luceneMatchVersion", Version.LATEST.toString());
-    args.put("tags", "E, J");
-    KoreanPartOfSpeechStopFilterFactory factory = new KoreanPartOfSpeechStopFilterFactory(args);
-    ts = factory.create(ts);
-    assertTokenStreamContents(ts,
-        new String[] { "한국", "대단", "하", "나라", "이" }
-    );
-  }
+	public void testStopTags() throws IOException {
+		KoreanTokenizerFactory tokenizerFactory = new KoreanTokenizerFactory(new HashMap<String, String>());
+		tokenizerFactory.inform(new StringMockResourceLoader(""));
+		TokenStream ts = tokenizerFactory.create();
+		((Tokenizer) ts).setReader(new StringReader(" 한국은 대단한 나라입니다."));
+		Map<String, String> args = new HashMap<>();
+		args.put("luceneMatchVersion", Version.LATEST.toString());
+		args.put("tags", "E, J");
+		KoreanPartOfSpeechStopFilterFactory factory = new KoreanPartOfSpeechStopFilterFactory(args);
+		ts = factory.create(ts);
+		assertTokenStreamContents(ts,
+			new String[]{"한국", "대단", "하", "나라", "이"}
+		);
+	}
 
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new KoreanPartOfSpeechStopFilterFactory(new HashMap<String,String>() {{
-        put("luceneMatchVersion", Version.LATEST.toString());
-        put("bogusArg", "bogusValue");
-      }});
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new KoreanPartOfSpeechStopFilterFactory(new HashMap<String, String>() {{
+				put("luceneMatchVersion", Version.LATEST.toString());
+				put("bogusArg", "bogusValue");
+			}});
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

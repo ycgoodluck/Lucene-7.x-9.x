@@ -30,44 +30,44 @@ import org.apache.lucene.index.Terms;
  */
 public final class CompletionTerms extends FilterLeafReader.FilterTerms {
 
-  private final CompletionsTermsReader reader;
+	private final CompletionsTermsReader reader;
 
-  /**
-   * Creates a completionTerms based on {@link CompletionsTermsReader}
-   */
-  CompletionTerms(Terms in, CompletionsTermsReader reader) {
-    super(in);
-    this.reader = reader;
-  }
+	/**
+	 * Creates a completionTerms based on {@link CompletionsTermsReader}
+	 */
+	CompletionTerms(Terms in, CompletionsTermsReader reader) {
+		super(in);
+		this.reader = reader;
+	}
 
-  /**
-   * Returns the type of FST, either {@link SuggestField#TYPE} or
-   * {@link ContextSuggestField#TYPE}
-   */
-  public byte getType() {
-    return (reader != null) ? reader.type : SuggestField.TYPE;
-  }
+	/**
+	 * Returns the type of FST, either {@link SuggestField#TYPE} or
+	 * {@link ContextSuggestField#TYPE}
+	 */
+	public byte getType() {
+		return (reader != null) ? reader.type : SuggestField.TYPE;
+	}
 
-  /**
-   * Returns the minimum weight of all entries in the weighted FST
-   */
-  public long getMinWeight() {
-    return (reader != null) ? reader.minWeight : 0;
-  }
+	/**
+	 * Returns the minimum weight of all entries in the weighted FST
+	 */
+	public long getMinWeight() {
+		return (reader != null) ? reader.minWeight : 0;
+	}
 
-  /**
-   * Returns the maximum weight of all entries in the weighted FST
-   */
-  public long getMaxWeight() {
-    return (reader != null) ? reader.maxWeight : 0;
-  }
+	/**
+	 * Returns the maximum weight of all entries in the weighted FST
+	 */
+	public long getMaxWeight() {
+		return (reader != null) ? reader.maxWeight : 0;
+	}
 
-  /**
-   * Returns a {@link NRTSuggester} for the field
-   * or <code>null</code> if no FST
-   * was indexed for this field
-   */
-  public NRTSuggester suggester() throws IOException {
-    return (reader != null) ? reader.suggester() : null;
-  }
+	/**
+	 * Returns a {@link NRTSuggester} for the field
+	 * or <code>null</code> if no FST
+	 * was indexed for this field
+	 */
+	public NRTSuggester suggester() throws IOException {
+		return (reader != null) ? reader.suggester() : null;
+	}
 }

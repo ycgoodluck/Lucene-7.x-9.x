@@ -26,22 +26,22 @@ import org.junit.runner.notification.RunListener;
  * due to thread leaks happen outside of any rule contexts.
  */
 public class FailureMarker extends RunListener {
-  static final AtomicInteger failures = new AtomicInteger();
+	static final AtomicInteger failures = new AtomicInteger();
 
-  @Override
-  public void testFailure(Failure failure) throws Exception {
-    failures.incrementAndGet();
-  }
+	@Override
+	public void testFailure(Failure failure) throws Exception {
+		failures.incrementAndGet();
+	}
 
-  public static boolean hadFailures() {
-    return failures.get() > 0;
-  }
+	public static boolean hadFailures() {
+		return failures.get() > 0;
+	}
 
-  static int getFailures() {
-    return failures.get();
-  }
+	static int getFailures() {
+		return failures.get();
+	}
 
-  public static void resetFailures() {
-    failures.set(0);
-  }
+	public static void resetFailures() {
+		failures.set(0);
+	}
 }

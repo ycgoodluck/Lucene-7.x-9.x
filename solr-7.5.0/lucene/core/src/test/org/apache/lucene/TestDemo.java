@@ -33,47 +33,47 @@ import org.apache.lucene.util.LuceneTestCase;
 
 /**
  * A very simple demo used in the API documentation (src/java/overview.html).
- *
+ * <p>
  * Please try to keep src/java/overview.html up-to-date when making changes
  * to this class.
  */
 public class TestDemo extends LuceneTestCase {
 
-  public void testDemo() throws IOException {
-    Analyzer analyzer = new MockAnalyzer(random());
+	public void testDemo() throws IOException {
+		Analyzer analyzer = new MockAnalyzer(random());
 
-    // Store the index in memory:
-    Directory directory = newDirectory();
-    // To store an index on disk, use this instead:
-    // Directory directory = FSDirectory.open(new File("/tmp/testindex"));
-    RandomIndexWriter iwriter = new RandomIndexWriter(random(), directory, analyzer);
-    Document doc = new Document();
-    String longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
-    String text = "This is the text to be indexed. " + longTerm;
-    doc.add(newTextField("fieldname", text, Field.Store.YES));
-    iwriter.addDocument(doc);
-    iwriter.close();
-    
-    // Now search the index:
-    IndexReader ireader = DirectoryReader.open(directory); // read-only=true
-    IndexSearcher isearcher = newSearcher(ireader);
+		// Store the index in memory:
+		Directory directory = newDirectory();
+		// To store an index on disk, use this instead:
+		// Directory directory = FSDirectory.open(new File("/tmp/testindex"));
+		RandomIndexWriter iwriter = new RandomIndexWriter(random(), directory, analyzer);
+		Document doc = new Document();
+		String longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
+		String text = "This is the text to be indexed. " + longTerm;
+		doc.add(newTextField("fieldname", text, Field.Store.YES));
+		iwriter.addDocument(doc);
+		iwriter.close();
 
-    assertEquals(1, isearcher.search(new TermQuery(new Term("fieldname", longTerm)), 1).totalHits);
-    Query query = new TermQuery(new Term("fieldname", "text"));
-    TopDocs hits = isearcher.search(query, 1);
-    assertEquals(1, hits.totalHits);
-    // Iterate through the results:
-    for (int i = 0; i < hits.scoreDocs.length; i++) {
-      Document hitDoc = isearcher.doc(hits.scoreDocs[i].doc);
-      assertEquals(text, hitDoc.get("fieldname"));
-    }
+		// Now search the index:
+		IndexReader ireader = DirectoryReader.open(directory); // read-only=true
+		IndexSearcher isearcher = newSearcher(ireader);
 
-    // Test simple phrase query
-    PhraseQuery phraseQuery = new PhraseQuery("fieldname", "to", "be");
-    assertEquals(1, isearcher.search(phraseQuery, 1).totalHits);
+		assertEquals(1, isearcher.search(new TermQuery(new Term("fieldname", longTerm)), 1).totalHits);
+		Query query = new TermQuery(new Term("fieldname", "text"));
+		TopDocs hits = isearcher.search(query, 1);
+		assertEquals(1, hits.totalHits);
+		// Iterate through the results:
+		for (int i = 0; i < hits.scoreDocs.length; i++) {
+			Document hitDoc = isearcher.doc(hits.scoreDocs[i].doc);
+			assertEquals(text, hitDoc.get("fieldname"));
+		}
 
-    ireader.close();
-    directory.close();
-    analyzer.close();
-  }
+		// Test simple phrase query
+		PhraseQuery phraseQuery = new PhraseQuery("fieldname", "to", "be");
+		assertEquals(1, isearcher.search(phraseQuery, 1).totalHits);
+
+		ireader.close();
+		directory.close();
+		analyzer.close();
+	}
 }

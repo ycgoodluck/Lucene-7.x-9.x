@@ -32,52 +32,54 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.fst.FST;
 import org.apache.lucene.util.fst.PairOutputs.Pair;
 
-/** BlockTree's implementation of {@link Terms}. */
+/**
+ * BlockTree's implementation of {@link Terms}.
+ */
 // public for CheckIndex:
 final class VersionFieldReader extends Terms implements Accountable {
-  final long numTerms;
-  final FieldInfo fieldInfo;
-  final long sumTotalTermFreq;
-  final long sumDocFreq;
-  final int docCount;
-  final long indexStartFP;
-  final long rootBlockFP;
-  final Pair<BytesRef,Long> rootCode;
-  final BytesRef minTerm;
-  final BytesRef maxTerm;
-  final int longsSize;
-  final VersionBlockTreeTermsReader parent;
+	final long numTerms;
+	final FieldInfo fieldInfo;
+	final long sumTotalTermFreq;
+	final long sumDocFreq;
+	final int docCount;
+	final long indexStartFP;
+	final long rootBlockFP;
+	final Pair<BytesRef, Long> rootCode;
+	final BytesRef minTerm;
+	final BytesRef maxTerm;
+	final int longsSize;
+	final VersionBlockTreeTermsReader parent;
 
-  final FST<Pair<BytesRef,Long>> index;
-  //private boolean DEBUG;
+	final FST<Pair<BytesRef, Long>> index;
+	//private boolean DEBUG;
 
-  VersionFieldReader(VersionBlockTreeTermsReader parent, FieldInfo fieldInfo, long numTerms, Pair<BytesRef,Long> rootCode, long sumTotalTermFreq, long sumDocFreq, int docCount,
-              long indexStartFP, int longsSize, IndexInput indexIn, BytesRef minTerm, BytesRef maxTerm) throws IOException {
-    assert numTerms > 0;
-    this.fieldInfo = fieldInfo;
-    //DEBUG = BlockTreeTermsReader.DEBUG && fieldInfo.name.equals("id");
-    this.parent = parent;
-    this.numTerms = numTerms;
-    this.sumTotalTermFreq = sumTotalTermFreq; 
-    this.sumDocFreq = sumDocFreq; 
-    this.docCount = docCount;
-    this.indexStartFP = indexStartFP;
-    this.rootCode = rootCode;
-    this.longsSize = longsSize;
-    this.minTerm = minTerm;
-    this.maxTerm = maxTerm;
-    // if (DEBUG) {
-    //   System.out.println("BTTR: seg=" + segment + " field=" + fieldInfo.name + " rootBlockCode=" + rootCode + " divisor=" + indexDivisor);
-    // }
+	VersionFieldReader(VersionBlockTreeTermsReader parent, FieldInfo fieldInfo, long numTerms, Pair<BytesRef, Long> rootCode, long sumTotalTermFreq, long sumDocFreq, int docCount,
+										 long indexStartFP, int longsSize, IndexInput indexIn, BytesRef minTerm, BytesRef maxTerm) throws IOException {
+		assert numTerms > 0;
+		this.fieldInfo = fieldInfo;
+		//DEBUG = BlockTreeTermsReader.DEBUG && fieldInfo.name.equals("id");
+		this.parent = parent;
+		this.numTerms = numTerms;
+		this.sumTotalTermFreq = sumTotalTermFreq;
+		this.sumDocFreq = sumDocFreq;
+		this.docCount = docCount;
+		this.indexStartFP = indexStartFP;
+		this.rootCode = rootCode;
+		this.longsSize = longsSize;
+		this.minTerm = minTerm;
+		this.maxTerm = maxTerm;
+		// if (DEBUG) {
+		//   System.out.println("BTTR: seg=" + segment + " field=" + fieldInfo.name + " rootBlockCode=" + rootCode + " divisor=" + indexDivisor);
+		// }
 
-    rootBlockFP = (new ByteArrayDataInput(rootCode.output1.bytes, rootCode.output1.offset, rootCode.output1.length)).readVLong() >>> VersionBlockTreeTermsWriter.OUTPUT_FLAGS_NUM_BITS;
+		rootBlockFP = (new ByteArrayDataInput(rootCode.output1.bytes, rootCode.output1.offset, rootCode.output1.length)).readVLong() >>> VersionBlockTreeTermsWriter.OUTPUT_FLAGS_NUM_BITS;
 
-    if (indexIn != null) {
-      final IndexInput clone = indexIn.clone();
-      //System.out.println("start=" + indexStartFP + " field=" + fieldInfo.name);
-      clone.seek(indexStartFP);
-      index = new FST<>(clone, VersionBlockTreeTermsWriter.FST_OUTPUTS);
-        
+		if (indexIn != null) {
+			final IndexInput clone = indexIn.clone();
+			//System.out.println("start=" + indexStartFP + " field=" + fieldInfo.name);
+			clone.seek(indexStartFP);
+			index = new FST<>(clone, VersionBlockTreeTermsWriter.FST_OUTPUTS);
+
       /*
         if (false) {
         final String dotFileName = segment + "_" + fieldInfo.name + ".dot";
@@ -87,92 +89,92 @@ final class VersionFieldReader extends Terms implements Accountable {
         w.close();
         }
       */
-    } else {
-      index = null;
-    }
-  }
+		} else {
+			index = null;
+		}
+	}
 
-  @Override
-  public BytesRef getMin() throws IOException {
-    if (minTerm == null) {
-      // Older index that didn't store min/maxTerm
-      return super.getMin();
-    } else {
-      return minTerm;
-    }
-  }
+	@Override
+	public BytesRef getMin() throws IOException {
+		if (minTerm == null) {
+			// Older index that didn't store min/maxTerm
+			return super.getMin();
+		} else {
+			return minTerm;
+		}
+	}
 
-  @Override
-  public BytesRef getMax() throws IOException {
-    if (maxTerm == null) {
-      // Older index that didn't store min/maxTerm
-      return super.getMax();
-    } else {
-      return maxTerm;
-    }
-  }
+	@Override
+	public BytesRef getMax() throws IOException {
+		if (maxTerm == null) {
+			// Older index that didn't store min/maxTerm
+			return super.getMax();
+		} else {
+			return maxTerm;
+		}
+	}
 
-  @Override
-  public boolean hasFreqs() {
-    return fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0;
-  }
+	@Override
+	public boolean hasFreqs() {
+		return fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS) >= 0;
+	}
 
-  @Override
-  public boolean hasOffsets() {
-    return fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS) >= 0;
-  }
+	@Override
+	public boolean hasOffsets() {
+		return fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS) >= 0;
+	}
 
-  @Override
-  public boolean hasPositions() {
-    return fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS) >= 0;
-  }
-    
-  @Override
-  public boolean hasPayloads() {
-    return fieldInfo.hasPayloads();
-  }
+	@Override
+	public boolean hasPositions() {
+		return fieldInfo.getIndexOptions().compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS) >= 0;
+	}
 
-  @Override
-  public TermsEnum iterator() throws IOException {
-    return new IDVersionSegmentTermsEnum(this);
-  }
+	@Override
+	public boolean hasPayloads() {
+		return fieldInfo.hasPayloads();
+	}
 
-  @Override
-  public long size() {
-    return numTerms;
-  }
+	@Override
+	public TermsEnum iterator() throws IOException {
+		return new IDVersionSegmentTermsEnum(this);
+	}
 
-  @Override
-  public long getSumTotalTermFreq() {
-    return sumTotalTermFreq;
-  }
+	@Override
+	public long size() {
+		return numTerms;
+	}
 
-  @Override
-  public long getSumDocFreq() {
-    return sumDocFreq;
-  }
+	@Override
+	public long getSumTotalTermFreq() {
+		return sumTotalTermFreq;
+	}
 
-  @Override
-  public int getDocCount() {
-    return docCount;
-  }
+	@Override
+	public long getSumDocFreq() {
+		return sumDocFreq;
+	}
 
-  @Override
-  public long ramBytesUsed() {
-    return ((index!=null)? index.ramBytesUsed() : 0);
-  }
-  
-  @Override
-  public Collection<Accountable> getChildResources() {
-    if (index == null) {
-      return Collections.emptyList();
-    } else {
-      return Collections.singletonList(Accountables.namedAccountable("term index", index));
-    }
-  }
+	@Override
+	public int getDocCount() {
+		return docCount;
+	}
 
-  @Override
-  public String toString() {
-    return "IDVersionTerms(terms=" + numTerms + ",postings=" + sumDocFreq + ",positions=" + sumTotalTermFreq + ",docs=" + docCount + ")";
-  }
+	@Override
+	public long ramBytesUsed() {
+		return ((index != null) ? index.ramBytesUsed() : 0);
+	}
+
+	@Override
+	public Collection<Accountable> getChildResources() {
+		if (index == null) {
+			return Collections.emptyList();
+		} else {
+			return Collections.singletonList(Accountables.namedAccountable("term index", index));
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "IDVersionTerms(terms=" + numTerms + ",postings=" + sumDocFreq + ",positions=" + sumTotalTermFreq + ",docs=" + docCount + ")";
+	}
 }

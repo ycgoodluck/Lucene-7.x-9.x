@@ -35,25 +35,25 @@ import java.io.IOException;
  */
 public final class ApostropheFilter extends TokenFilter {
 
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
 
-  public ApostropheFilter(TokenStream in) {
-    super(in);
-  }
+	public ApostropheFilter(TokenStream in) {
+		super(in);
+	}
 
-  @Override
-  public final boolean incrementToken() throws IOException {
-    if (!input.incrementToken())
-      return false;
+	@Override
+	public final boolean incrementToken() throws IOException {
+		if (!input.incrementToken())
+			return false;
 
-    final char[] buffer = termAtt.buffer();
-    final int length = termAtt.length();
+		final char[] buffer = termAtt.buffer();
+		final int length = termAtt.length();
 
-    for (int i = 0; i < length; i++)
-      if (buffer[i] == '\'' || buffer[i] == '\u2019') {
-        termAtt.setLength(i);
-        return true;
-      }
-    return true;
-  }
+		for (int i = 0; i < length; i++)
+			if (buffer[i] == '\'' || buffer[i] == '\u2019') {
+				termAtt.setLength(i);
+				return true;
+			}
+		return true;
+	}
 }

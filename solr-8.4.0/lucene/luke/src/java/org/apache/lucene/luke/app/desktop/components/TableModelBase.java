@@ -22,54 +22,56 @@ import java.util.Map;
 
 import org.apache.lucene.luke.app.desktop.util.TableUtils;
 
-/** Base table model that stores table's meta data and content. This also provides some default implementation of the {@link javax.swing.table.TableModel} interface. */
+/**
+ * Base table model that stores table's meta data and content. This also provides some default implementation of the {@link javax.swing.table.TableModel} interface.
+ */
 public abstract class TableModelBase<T extends TableColumnInfo> extends AbstractTableModel {
 
-  private final Map<Integer, T> columnMap = TableUtils.columnMap(columnInfos());
+	private final Map<Integer, T> columnMap = TableUtils.columnMap(columnInfos());
 
-  private final String[] colNames = TableUtils.columnNames(columnInfos());
+	private final String[] colNames = TableUtils.columnNames(columnInfos());
 
-  protected final Object[][] data;
+	protected final Object[][] data;
 
-  protected TableModelBase() {
-    this.data = new Object[0][colNames.length];
-  }
+	protected TableModelBase() {
+		this.data = new Object[0][colNames.length];
+	}
 
-  protected TableModelBase(int rows) {
-    this.data = new Object[rows][colNames.length];
-  }
+	protected TableModelBase(int rows) {
+		this.data = new Object[rows][colNames.length];
+	}
 
-  protected abstract T[] columnInfos();
+	protected abstract T[] columnInfos();
 
-  @Override
-  public int getRowCount() {
-    return data.length;
-  }
+	@Override
+	public int getRowCount() {
+		return data.length;
+	}
 
-  @Override
-  public int getColumnCount() {
-    return colNames.length;
-  }
+	@Override
+	public int getColumnCount() {
+		return colNames.length;
+	}
 
-  @Override
-  public String getColumnName(int colIndex) {
-    if (columnMap.containsKey(colIndex)) {
-      return columnMap.get(colIndex).getColName();
-    }
-    return "";
-  }
+	@Override
+	public String getColumnName(int colIndex) {
+		if (columnMap.containsKey(colIndex)) {
+			return columnMap.get(colIndex).getColName();
+		}
+		return "";
+	}
 
-  @Override
-  public Class<?> getColumnClass(int colIndex) {
-    if (columnMap.containsKey(colIndex)) {
-      return columnMap.get(colIndex).getType();
-    }
-    return Object.class;
-  }
+	@Override
+	public Class<?> getColumnClass(int colIndex) {
+		if (columnMap.containsKey(colIndex)) {
+			return columnMap.get(colIndex).getType();
+		}
+		return Object.class;
+	}
 
 
-  @Override
-  public Object getValueAt(int rowIndex, int columnIndex) {
-    return data[rowIndex][columnIndex];
-  }
+	@Override
+	public Object getValueAt(int rowIndex, int columnIndex) {
+		return data[rowIndex][columnIndex];
+	}
 }

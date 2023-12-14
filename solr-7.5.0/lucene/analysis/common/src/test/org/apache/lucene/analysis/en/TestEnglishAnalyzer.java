@@ -24,41 +24,49 @@ import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 
 public class TestEnglishAnalyzer extends BaseTokenStreamTestCase {
-  /** This test fails with NPE when the 
-   * stopwords file is missing in classpath */
-  public void testResourcesAvailable() {
-    new EnglishAnalyzer().close();
-  }
-  
-  /** test stopwords and stemming */
-  public void testBasics() throws IOException {
-    Analyzer a = new EnglishAnalyzer();
-    // stemming
-    checkOneTerm(a, "books", "book");
-    checkOneTerm(a, "book", "book");
-    // stopword
-    assertAnalyzesTo(a, "the", new String[] {});
-    // possessive removal
-    checkOneTerm(a, "steven's", "steven");
-    checkOneTerm(a, "steven\u2019s", "steven");
-    checkOneTerm(a, "steven\uFF07s", "steven");
-    a.close();
-  }
-  
-  /** test use of exclusion set */
-  public void testExclude() throws IOException {
-    CharArraySet exclusionSet = new CharArraySet( asSet("books"), false);
-    Analyzer a = new EnglishAnalyzer( 
-        EnglishAnalyzer.getDefaultStopSet(), exclusionSet);
-    checkOneTerm(a, "books", "books");
-    checkOneTerm(a, "book", "book");
-    a.close();
-  }
-  
-  /** blast some random strings through the analyzer */
-  public void testRandomStrings() throws Exception {
-    Analyzer a = new EnglishAnalyzer();
-    checkRandomData(random(), a, 1000*RANDOM_MULTIPLIER);
-    a.close();
-  }
+	/**
+	 * This test fails with NPE when the
+	 * stopwords file is missing in classpath
+	 */
+	public void testResourcesAvailable() {
+		new EnglishAnalyzer().close();
+	}
+
+	/**
+	 * test stopwords and stemming
+	 */
+	public void testBasics() throws IOException {
+		Analyzer a = new EnglishAnalyzer();
+		// stemming
+		checkOneTerm(a, "books", "book");
+		checkOneTerm(a, "book", "book");
+		// stopword
+		assertAnalyzesTo(a, "the", new String[]{});
+		// possessive removal
+		checkOneTerm(a, "steven's", "steven");
+		checkOneTerm(a, "steven\u2019s", "steven");
+		checkOneTerm(a, "steven\uFF07s", "steven");
+		a.close();
+	}
+
+	/**
+	 * test use of exclusion set
+	 */
+	public void testExclude() throws IOException {
+		CharArraySet exclusionSet = new CharArraySet(asSet("books"), false);
+		Analyzer a = new EnglishAnalyzer(
+			EnglishAnalyzer.getDefaultStopSet(), exclusionSet);
+		checkOneTerm(a, "books", "books");
+		checkOneTerm(a, "book", "book");
+		a.close();
+	}
+
+	/**
+	 * blast some random strings through the analyzer
+	 */
+	public void testRandomStrings() throws Exception {
+		Analyzer a = new EnglishAnalyzer();
+		checkRandomData(random(), a, 1000 * RANDOM_MULTIPLIER);
+		a.close();
+	}
 }

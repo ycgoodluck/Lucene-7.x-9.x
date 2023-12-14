@@ -23,24 +23,24 @@ import org.apache.lucene.util.TestUtil;
 @Monster("uses lots of space and takes a few minutes")
 public class Test2GBCharBlockArray extends LuceneTestCase {
 
-  public void test2GBChars() throws Exception {
-    int blockSize = 32768;
-    CharBlockArray array = new CharBlockArray(blockSize);
+	public void test2GBChars() throws Exception {
+		int blockSize = 32768;
+		CharBlockArray array = new CharBlockArray(blockSize);
 
-    int size = TestUtil.nextInt(random(), 20000, 40000);
+		int size = TestUtil.nextInt(random(), 20000, 40000);
 
-    char[] chars = new char[size];
-    int count = 0;
-    while (true) {
-      count++;
-      try {
-        array.append(chars, 0, size);
-      } catch (IllegalStateException ise) {
-        assertTrue(count * (long) size + blockSize > Integer.MAX_VALUE);
-        break;
-      }
-      assertFalse("appended " + (count * (long) size - Integer.MAX_VALUE) + " characters beyond Integer.MAX_VALUE!",
-                  count * (long) size > Integer.MAX_VALUE);
-    }
-  }
+		char[] chars = new char[size];
+		int count = 0;
+		while (true) {
+			count++;
+			try {
+				array.append(chars, 0, size);
+			} catch (IllegalStateException ise) {
+				assertTrue(count * (long) size + blockSize > Integer.MAX_VALUE);
+				break;
+			}
+			assertFalse("appended " + (count * (long) size - Integer.MAX_VALUE) + " characters beyond Integer.MAX_VALUE!",
+				count * (long) size > Integer.MAX_VALUE);
+		}
+	}
 }

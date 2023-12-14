@@ -35,64 +35,66 @@ import org.apache.lucene.util.AttributeFactory;
  * following filters can use this information to apply operations to tokens one sentence at a time.
  */
 public final class OpenNLPTokenizer extends SegmentingTokenizerBase {
-  public static int EOS_FLAG_BIT = 1;
+	public static int EOS_FLAG_BIT = 1;
 
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final FlagsAttribute flagsAtt = addAttribute(FlagsAttribute.class);
-  private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final FlagsAttribute flagsAtt = addAttribute(FlagsAttribute.class);
+	private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
 
-  private Span[] termSpans = null;
-  private int termNum = 0;
-  private int sentenceStart = 0;
+	private Span[] termSpans = null;
+	private int termNum = 0;
+	private int sentenceStart = 0;
 
-  private NLPSentenceDetectorOp sentenceOp = null;
-  private NLPTokenizerOp tokenizerOp = null;
+	private NLPSentenceDetectorOp sentenceOp = null;
+	private NLPTokenizerOp tokenizerOp = null;
 
-  public OpenNLPTokenizer(AttributeFactory factory, NLPSentenceDetectorOp sentenceOp, NLPTokenizerOp tokenizerOp) throws IOException {
-    super(factory, new OpenNLPSentenceBreakIterator(sentenceOp));
-    if (sentenceOp == null || tokenizerOp == null) {
-      throw new IllegalArgumentException("OpenNLPTokenizer: both a Sentence Detector and a Tokenizer are required");
-    }
-    this.sentenceOp = sentenceOp;
-    this.tokenizerOp = tokenizerOp;
-  }
+	public OpenNLPTokenizer(AttributeFactory factory, NLPSentenceDetectorOp sentenceOp, NLPTokenizerOp tokenizerOp) throws IOException {
+		super(factory, new OpenNLPSentenceBreakIterator(sentenceOp));
+		if (sentenceOp == null || tokenizerOp == null) {
+			throw new IllegalArgumentException("OpenNLPTokenizer: both a Sentence Detector and a Tokenizer are required");
+		}
+		this.sentenceOp = sentenceOp;
+		this.tokenizerOp = tokenizerOp;
+	}
 
-  @Override
-  public void close() throws IOException {
-    super.close();
-    termSpans = null;
-    termNum = sentenceStart = 0;
-  };
+	@Override
+	public void close() throws IOException {
+		super.close();
+		termSpans = null;
+		termNum = sentenceStart = 0;
+	}
 
-  @Override
-  protected void setNextSentence(int sentenceStart, int sentenceEnd) {
-    this.sentenceStart = sentenceStart;
-    String sentenceText = new String(buffer, sentenceStart, sentenceEnd - sentenceStart);
-    termSpans = tokenizerOp.getTerms(sentenceText);
-    termNum = 0;
-  }
+	;
 
-  @Override
-  protected boolean incrementWord() {
-    if (termSpans == null || termNum == termSpans.length) {
-      return false;
-    }
-    clearAttributes();
-    Span term = termSpans[termNum];
-    termAtt.copyBuffer(buffer, sentenceStart + term.getStart(), term.length());
-    offsetAtt.setOffset(correctOffset(offset + sentenceStart + term.getStart()),
-                        correctOffset(offset + sentenceStart + term.getEnd()));
-    if (termNum == termSpans.length - 1) {
-      flagsAtt.setFlags(flagsAtt.getFlags() | EOS_FLAG_BIT); // mark the last token in the sentence with EOS_FLAG_BIT
-    }
-    ++termNum;
-    return true;
-  }
+	@Override
+	protected void setNextSentence(int sentenceStart, int sentenceEnd) {
+		this.sentenceStart = sentenceStart;
+		String sentenceText = new String(buffer, sentenceStart, sentenceEnd - sentenceStart);
+		termSpans = tokenizerOp.getTerms(sentenceText);
+		termNum = 0;
+	}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    termSpans = null;
-    termNum = sentenceStart = 0;
-  }
+	@Override
+	protected boolean incrementWord() {
+		if (termSpans == null || termNum == termSpans.length) {
+			return false;
+		}
+		clearAttributes();
+		Span term = termSpans[termNum];
+		termAtt.copyBuffer(buffer, sentenceStart + term.getStart(), term.length());
+		offsetAtt.setOffset(correctOffset(offset + sentenceStart + term.getStart()),
+			correctOffset(offset + sentenceStart + term.getEnd()));
+		if (termNum == termSpans.length - 1) {
+			flagsAtt.setFlags(flagsAtt.getFlags() | EOS_FLAG_BIT); // mark the last token in the sentence with EOS_FLAG_BIT
+		}
+		++termNum;
+		return true;
+	}
+
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		termSpans = null;
+		termNum = sentenceStart = 0;
+	}
 }

@@ -30,43 +30,44 @@ import org.apache.lucene.store.DataOutput;
 import org.apache.lucene.store.OutputStreamDataOutput;
 
 final class ConnectionCostsWriter {
-  
-  private final short[][] costs; // array is backward IDs first since get is called using the same backward ID consecutively. maybe doesn't matter.
-  private final int forwardSize;
-  private final int backwardSize;
-  /**
-   * Constructor for building. TODO: remove write access
-   */
-  ConnectionCostsWriter(int forwardSize, int backwardSize) {
-    this.forwardSize = forwardSize;
-    this.backwardSize = backwardSize;
-    this.costs = new short[backwardSize][forwardSize];
-  }
-  
-  public void add(int forwardId, int backwardId, int cost) {
-    this.costs[backwardId][forwardId] = (short)cost;
-  }
-  
-  public void write(Path baseDir) throws IOException {
-    Files.createDirectories(baseDir);
-    String fileName = ConnectionCosts.class.getName().replace('.', '/') + ConnectionCosts.FILENAME_SUFFIX;
-    try (OutputStream os = Files.newOutputStream(baseDir.resolve(fileName));
-         OutputStream bos = new BufferedOutputStream(os)) {
-      final DataOutput out = new OutputStreamDataOutput(bos);
-      CodecUtil.writeHeader(out, ConnectionCosts.HEADER, ConnectionCosts.VERSION);
-      out.writeVInt(forwardSize);
-      out.writeVInt(backwardSize);
-      int last = 0;
-      assert costs.length == backwardSize;
-      for (short[] a : costs) {
-        assert a.length == forwardSize;
-        for (short cost : a) {
-          int delta = (int) cost - last;
-          out.writeZInt(delta);
-          last = cost;
-        }
-      }
-    }
-  }
-  
+
+	private final short[][] costs; // array is backward IDs first since get is called using the same backward ID consecutively. maybe doesn't matter.
+	private final int forwardSize;
+	private final int backwardSize;
+
+	/**
+	 * Constructor for building. TODO: remove write access
+	 */
+	ConnectionCostsWriter(int forwardSize, int backwardSize) {
+		this.forwardSize = forwardSize;
+		this.backwardSize = backwardSize;
+		this.costs = new short[backwardSize][forwardSize];
+	}
+
+	public void add(int forwardId, int backwardId, int cost) {
+		this.costs[backwardId][forwardId] = (short) cost;
+	}
+
+	public void write(Path baseDir) throws IOException {
+		Files.createDirectories(baseDir);
+		String fileName = ConnectionCosts.class.getName().replace('.', '/') + ConnectionCosts.FILENAME_SUFFIX;
+		try (OutputStream os = Files.newOutputStream(baseDir.resolve(fileName));
+				 OutputStream bos = new BufferedOutputStream(os)) {
+			final DataOutput out = new OutputStreamDataOutput(bos);
+			CodecUtil.writeHeader(out, ConnectionCosts.HEADER, ConnectionCosts.VERSION);
+			out.writeVInt(forwardSize);
+			out.writeVInt(backwardSize);
+			int last = 0;
+			assert costs.length == backwardSize;
+			for (short[] a : costs) {
+				assert a.length == forwardSize;
+				for (short cost : a) {
+					int delta = (int) cost - last;
+					out.writeZInt(delta);
+					last = cost;
+				}
+			}
+		}
+	}
+
 }

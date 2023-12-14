@@ -25,116 +25,117 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.Objects;
 
-/**  
- * A {@code FilterFileChannel} contains another 
- * {@code FileChannel}, which it uses as its basic 
- * source of data, possibly transforming the data along the 
- * way or providing additional functionality. 
+/**
+ * A {@code FilterFileChannel} contains another
+ * {@code FileChannel}, which it uses as its basic
+ * source of data, possibly transforming the data along the
+ * way or providing additional functionality.
  */
 public abstract class FilterFileChannel extends FileChannel {
-  
-  /** 
-   * The underlying {@code FileChannel} instance. 
-   */
-  protected final FileChannel delegate;
-  
-  /**
-   * Construct a {@code FilterFileChannel} based on 
-   * the specified base channel.
-   * <p>
-   * Note that base channel is closed if this channel is closed.
-   * @param delegate specified base channel.
-   */
-  public FilterFileChannel(FileChannel delegate) {
-    this.delegate = Objects.requireNonNull(delegate);
-  }
 
-  @Override
-  public int read(ByteBuffer dst) throws IOException {
-    return delegate.read(dst);
-  }
+	/**
+	 * The underlying {@code FileChannel} instance.
+	 */
+	protected final FileChannel delegate;
 
-  @Override
-  public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
-    return delegate.read(dsts, offset, length);
-  }
+	/**
+	 * Construct a {@code FilterFileChannel} based on
+	 * the specified base channel.
+	 * <p>
+	 * Note that base channel is closed if this channel is closed.
+	 *
+	 * @param delegate specified base channel.
+	 */
+	public FilterFileChannel(FileChannel delegate) {
+		this.delegate = Objects.requireNonNull(delegate);
+	}
 
-  @Override
-  public int write(ByteBuffer src) throws IOException {
-    return delegate.write(src);
-  }
+	@Override
+	public int read(ByteBuffer dst) throws IOException {
+		return delegate.read(dst);
+	}
 
-  @Override
-  public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
-    return delegate.write(srcs, offset, length);
-  }
+	@Override
+	public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
+		return delegate.read(dsts, offset, length);
+	}
 
-  @Override
-  public long position() throws IOException {
-    return delegate.position();
-  }
+	@Override
+	public int write(ByteBuffer src) throws IOException {
+		return delegate.write(src);
+	}
 
-  @Override
-  public FileChannel position(long newPosition) throws IOException {
-    delegate.position(newPosition);
-    return this;
-  }
+	@Override
+	public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
+		return delegate.write(srcs, offset, length);
+	}
 
-  @Override
-  public long size() throws IOException {
-    return delegate.size();
-  }
+	@Override
+	public long position() throws IOException {
+		return delegate.position();
+	}
 
-  @Override
-  public FileChannel truncate(long size) throws IOException {
-    delegate.truncate(size);
-    return this;
-  }
+	@Override
+	public FileChannel position(long newPosition) throws IOException {
+		delegate.position(newPosition);
+		return this;
+	}
 
-  @Override
-  public void force(boolean metaData) throws IOException {
-    delegate.force(metaData);
-  }
+	@Override
+	public long size() throws IOException {
+		return delegate.size();
+	}
 
-  @Override
-  public long transferTo(long position, long count, WritableByteChannel target) throws IOException {
-    return delegate.transferTo(position, count, target);
-  }
+	@Override
+	public FileChannel truncate(long size) throws IOException {
+		delegate.truncate(size);
+		return this;
+	}
 
-  @Override
-  public long transferFrom(ReadableByteChannel src, long position, long count) throws IOException {
-    return delegate.transferFrom(src, position, count);
-  }
+	@Override
+	public void force(boolean metaData) throws IOException {
+		delegate.force(metaData);
+	}
 
-  @Override
-  public int read(ByteBuffer dst, long position) throws IOException {
-    return delegate.read(dst, position);
-  }
+	@Override
+	public long transferTo(long position, long count, WritableByteChannel target) throws IOException {
+		return delegate.transferTo(position, count, target);
+	}
 
-  @Override
-  public int write(ByteBuffer src, long position) throws IOException {
-    return delegate.write(src, position);
-  }
+	@Override
+	public long transferFrom(ReadableByteChannel src, long position, long count) throws IOException {
+		return delegate.transferFrom(src, position, count);
+	}
 
-  @Override
-  public MappedByteBuffer map(MapMode mode, long position, long size) throws IOException {
-    return delegate.map(mode, position, size);
-  }
+	@Override
+	public int read(ByteBuffer dst, long position) throws IOException {
+		return delegate.read(dst, position);
+	}
 
-  @Override
-  public FileLock lock(long position, long size, boolean shared) throws IOException {
-    return delegate.lock(position, size, shared);
-  }
+	@Override
+	public int write(ByteBuffer src, long position) throws IOException {
+		return delegate.write(src, position);
+	}
 
-  @Override
-  public FileLock tryLock(long position, long size, boolean shared) throws IOException {
-    return delegate.tryLock(position, size, shared);
-  }
+	@Override
+	public MappedByteBuffer map(MapMode mode, long position, long size) throws IOException {
+		return delegate.map(mode, position, size);
+	}
 
-  @Override
-  protected void implCloseChannel() throws IOException {
-    // we can't call implCloseChannel, but calling this instead is "ok":
-    // http://mail.openjdk.java.net/pipermail/nio-dev/2015-September/003322.html
-    delegate.close();
-  }
+	@Override
+	public FileLock lock(long position, long size, boolean shared) throws IOException {
+		return delegate.lock(position, size, shared);
+	}
+
+	@Override
+	public FileLock tryLock(long position, long size, boolean shared) throws IOException {
+		return delegate.tryLock(position, size, shared);
+	}
+
+	@Override
+	protected void implCloseChannel() throws IOException {
+		// we can't call implCloseChannel, but calling this instead is "ok":
+		// http://mail.openjdk.java.net/pipermail/nio-dev/2015-September/003322.html
+		delegate.close();
+	}
 }

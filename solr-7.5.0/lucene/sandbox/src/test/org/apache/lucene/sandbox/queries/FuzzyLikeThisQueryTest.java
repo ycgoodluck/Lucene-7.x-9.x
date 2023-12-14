@@ -35,119 +35,119 @@ import java.io.IOException;
 import java.util.HashSet;
 
 public class FuzzyLikeThisQueryTest extends LuceneTestCase {
-  private Directory directory;
-  private IndexSearcher searcher;
-  private IndexReader reader;
-  private Analyzer analyzer;
+	private Directory directory;
+	private IndexSearcher searcher;
+	private IndexReader reader;
+	private Analyzer analyzer;
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
 
-    analyzer = new MockAnalyzer(random());
-    directory = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(random(), directory, newIndexWriterConfig(analyzer).setMergePolicy(newLogMergePolicy()));
+		analyzer = new MockAnalyzer(random());
+		directory = newDirectory();
+		RandomIndexWriter writer = new RandomIndexWriter(random(), directory, newIndexWriterConfig(analyzer).setMergePolicy(newLogMergePolicy()));
 
-    //Add series of docs with misspelt names
-    addDoc(writer, "jonathon smythe", "1");
-    addDoc(writer, "jonathan smith", "2");
-    addDoc(writer, "johnathon smyth", "3");
-    addDoc(writer, "johnny smith", "4");
-    addDoc(writer, "jonny smith", "5");
-    addDoc(writer, "johnathon smythe", "6");
-    reader = writer.getReader();
-    writer.close();
-    searcher = newSearcher(reader);
-  }
+		//Add series of docs with misspelt names
+		addDoc(writer, "jonathon smythe", "1");
+		addDoc(writer, "jonathan smith", "2");
+		addDoc(writer, "johnathon smyth", "3");
+		addDoc(writer, "johnny smith", "4");
+		addDoc(writer, "jonny smith", "5");
+		addDoc(writer, "johnathon smythe", "6");
+		reader = writer.getReader();
+		writer.close();
+		searcher = newSearcher(reader);
+	}
 
-  @Override
-  public void tearDown() throws Exception {
-    IOUtils.close(reader, directory, analyzer);
-    super.tearDown();
-  }
+	@Override
+	public void tearDown() throws Exception {
+		IOUtils.close(reader, directory, analyzer);
+		super.tearDown();
+	}
 
-  private void addDoc(RandomIndexWriter writer, String name, String id) throws IOException {
-    Document doc = new Document();
-    doc.add(newTextField("name", name, Field.Store.YES));
-    doc.add(newTextField("id", id, Field.Store.YES));
-    writer.addDocument(doc);
-  }
-
-
-  //Tests that idf ranking is not favouring rare mis-spellings over a strong edit-distance match
-  public void testClosestEditDistanceMatchComesFirst() throws Throwable {
-    FuzzyLikeThisQuery flt = new FuzzyLikeThisQuery(10, analyzer);
-    flt.addTerms("smith", "name", 2, 1);
-    Query q = flt.rewrite(searcher.getIndexReader());
-    HashSet<Term> queryTerms = new HashSet<>();
-    searcher.createWeight(q, true, 1f).extractTerms(queryTerms);
-    assertTrue("Should have variant smythe", queryTerms.contains(new Term("name", "smythe")));
-    assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
-    assertTrue("Should have variant smyth", queryTerms.contains(new Term("name", "smyth")));
-    TopDocs topDocs = searcher.search(flt, 1);
-    ScoreDoc[] sd = topDocs.scoreDocs;
-    assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
-    Document doc = searcher.doc(sd[0].doc);
-    assertEquals("Should match most similar not most rare variant", "2", doc.get("id"));
-  }
-
-  //Test multiple input words are having variants produced
-  public void testMultiWord() throws Throwable {
-    FuzzyLikeThisQuery flt = new FuzzyLikeThisQuery(10, analyzer);
-    flt.addTerms("jonathin smoth", "name", 2, 1);
-    Query q = flt.rewrite(searcher.getIndexReader());
-    HashSet<Term> queryTerms = new HashSet<>();
-    searcher.createWeight(q, true, 1f).extractTerms(queryTerms);
-    assertTrue("Should have variant jonathan", queryTerms.contains(new Term("name", "jonathan")));
-    assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
-    TopDocs topDocs = searcher.search(flt, 1);
-    ScoreDoc[] sd = topDocs.scoreDocs;
-    assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
-    Document doc = searcher.doc(sd[0].doc);
-    assertEquals("Should match most similar when using 2 words", "2", doc.get("id"));
-  }
-  
-  // LUCENE-4809
-  public void testNonExistingField() throws Throwable {
-    FuzzyLikeThisQuery flt = new FuzzyLikeThisQuery(10, analyzer);
-    flt.addTerms("jonathin smoth", "name", 2, 1);
-    flt.addTerms("jonathin smoth", "this field does not exist", 2, 1);
-    // don't fail here just because the field doesn't exits
-    Query q = flt.rewrite(searcher.getIndexReader());
-    HashSet<Term> queryTerms = new HashSet<>();
-    searcher.createWeight(q, true, 1f).extractTerms(queryTerms);
-    assertTrue("Should have variant jonathan", queryTerms.contains(new Term("name", "jonathan")));
-    assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
-    TopDocs topDocs = searcher.search(flt, 1);
-    ScoreDoc[] sd = topDocs.scoreDocs;
-    assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
-    Document doc = searcher.doc(sd[0].doc);
-    assertEquals("Should match most similar when using 2 words", "2", doc.get("id"));
-  }
+	private void addDoc(RandomIndexWriter writer, String name, String id) throws IOException {
+		Document doc = new Document();
+		doc.add(newTextField("name", name, Field.Store.YES));
+		doc.add(newTextField("id", id, Field.Store.YES));
+		writer.addDocument(doc);
+	}
 
 
-  //Test bug found when first query word does not match anything
-  public void testNoMatchFirstWordBug() throws Throwable {
-    FuzzyLikeThisQuery flt = new FuzzyLikeThisQuery(10, analyzer);
-    flt.addTerms("fernando smith", "name", 2, 1);
-    Query q = flt.rewrite(searcher.getIndexReader());
-    HashSet<Term> queryTerms = new HashSet<>();
-    searcher.createWeight(q, true, 1f).extractTerms(queryTerms);
-    assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
-    TopDocs topDocs = searcher.search(flt, 1);
-    ScoreDoc[] sd = topDocs.scoreDocs;
-    assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
-    Document doc = searcher.doc(sd[0].doc);
-    assertEquals("Should match most similar when using 2 words", "2", doc.get("id"));
-  }
+	//Tests that idf ranking is not favouring rare mis-spellings over a strong edit-distance match
+	public void testClosestEditDistanceMatchComesFirst() throws Throwable {
+		FuzzyLikeThisQuery flt = new FuzzyLikeThisQuery(10, analyzer);
+		flt.addTerms("smith", "name", 2, 1);
+		Query q = flt.rewrite(searcher.getIndexReader());
+		HashSet<Term> queryTerms = new HashSet<>();
+		searcher.createWeight(q, true, 1f).extractTerms(queryTerms);
+		assertTrue("Should have variant smythe", queryTerms.contains(new Term("name", "smythe")));
+		assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
+		assertTrue("Should have variant smyth", queryTerms.contains(new Term("name", "smyth")));
+		TopDocs topDocs = searcher.search(flt, 1);
+		ScoreDoc[] sd = topDocs.scoreDocs;
+		assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
+		Document doc = searcher.doc(sd[0].doc);
+		assertEquals("Should match most similar not most rare variant", "2", doc.get("id"));
+	}
 
-  public void testFuzzyLikeThisQueryEquals() {
-    Analyzer analyzer = new MockAnalyzer(random());
-    FuzzyLikeThisQuery fltq1 = new FuzzyLikeThisQuery(10, analyzer);
-    fltq1.addTerms("javi", "subject", 2, 2);
-    FuzzyLikeThisQuery fltq2 = new FuzzyLikeThisQuery(10, analyzer);
-    fltq2.addTerms("javi", "subject", 2, 2);
-    assertEquals("FuzzyLikeThisQuery with same attributes is not equal", fltq1,
-        fltq2);
-  }
+	//Test multiple input words are having variants produced
+	public void testMultiWord() throws Throwable {
+		FuzzyLikeThisQuery flt = new FuzzyLikeThisQuery(10, analyzer);
+		flt.addTerms("jonathin smoth", "name", 2, 1);
+		Query q = flt.rewrite(searcher.getIndexReader());
+		HashSet<Term> queryTerms = new HashSet<>();
+		searcher.createWeight(q, true, 1f).extractTerms(queryTerms);
+		assertTrue("Should have variant jonathan", queryTerms.contains(new Term("name", "jonathan")));
+		assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
+		TopDocs topDocs = searcher.search(flt, 1);
+		ScoreDoc[] sd = topDocs.scoreDocs;
+		assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
+		Document doc = searcher.doc(sd[0].doc);
+		assertEquals("Should match most similar when using 2 words", "2", doc.get("id"));
+	}
+
+	// LUCENE-4809
+	public void testNonExistingField() throws Throwable {
+		FuzzyLikeThisQuery flt = new FuzzyLikeThisQuery(10, analyzer);
+		flt.addTerms("jonathin smoth", "name", 2, 1);
+		flt.addTerms("jonathin smoth", "this field does not exist", 2, 1);
+		// don't fail here just because the field doesn't exits
+		Query q = flt.rewrite(searcher.getIndexReader());
+		HashSet<Term> queryTerms = new HashSet<>();
+		searcher.createWeight(q, true, 1f).extractTerms(queryTerms);
+		assertTrue("Should have variant jonathan", queryTerms.contains(new Term("name", "jonathan")));
+		assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
+		TopDocs topDocs = searcher.search(flt, 1);
+		ScoreDoc[] sd = topDocs.scoreDocs;
+		assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
+		Document doc = searcher.doc(sd[0].doc);
+		assertEquals("Should match most similar when using 2 words", "2", doc.get("id"));
+	}
+
+
+	//Test bug found when first query word does not match anything
+	public void testNoMatchFirstWordBug() throws Throwable {
+		FuzzyLikeThisQuery flt = new FuzzyLikeThisQuery(10, analyzer);
+		flt.addTerms("fernando smith", "name", 2, 1);
+		Query q = flt.rewrite(searcher.getIndexReader());
+		HashSet<Term> queryTerms = new HashSet<>();
+		searcher.createWeight(q, true, 1f).extractTerms(queryTerms);
+		assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
+		TopDocs topDocs = searcher.search(flt, 1);
+		ScoreDoc[] sd = topDocs.scoreDocs;
+		assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
+		Document doc = searcher.doc(sd[0].doc);
+		assertEquals("Should match most similar when using 2 words", "2", doc.get("id"));
+	}
+
+	public void testFuzzyLikeThisQueryEquals() {
+		Analyzer analyzer = new MockAnalyzer(random());
+		FuzzyLikeThisQuery fltq1 = new FuzzyLikeThisQuery(10, analyzer);
+		fltq1.addTerms("javi", "subject", 2, 2);
+		FuzzyLikeThisQuery fltq2 = new FuzzyLikeThisQuery(10, analyzer);
+		fltq2.addTerms("javi", "subject", 2, 2);
+		assertEquals("FuzzyLikeThisQuery with same attributes is not equal", fltq1,
+			fltq2);
+	}
 }

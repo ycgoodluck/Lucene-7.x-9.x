@@ -28,65 +28,73 @@ import org.apache.lucene.util.IOSupplier;
  */
 public final class NoMergePolicy extends MergePolicy {
 
-  /** Singleton instance. */
-  public static final MergePolicy INSTANCE = new NoMergePolicy();
+	/**
+	 * Singleton instance.
+	 */
+	public static final MergePolicy INSTANCE = new NoMergePolicy();
 
-  private NoMergePolicy() {
-    super();
-  }
+	private NoMergePolicy() {
+		super();
+	}
 
-  @Override
-  public MergeSpecification findMerges(MergeTrigger mergeTrigger, SegmentInfos segmentInfos, MergeContext mergeContext) { return null; }
+	@Override
+	public MergeSpecification findMerges(MergeTrigger mergeTrigger, SegmentInfos segmentInfos, MergeContext mergeContext) {
+		return null;
+	}
 
-  @Override
-  public MergeSpecification findForcedMerges(SegmentInfos segmentInfos,
-                                             int maxSegmentCount, Map<SegmentCommitInfo,Boolean> segmentsToMerge, MergeContext mergeContext) { return null; }
+	@Override
+	public MergeSpecification findForcedMerges(SegmentInfos segmentInfos,
+																						 int maxSegmentCount, Map<SegmentCommitInfo, Boolean> segmentsToMerge, MergeContext mergeContext) {
+		return null;
+	}
 
-  @Override
-  public MergeSpecification findForcedDeletesMerges(SegmentInfos segmentInfos, MergeContext mergeContext) { return null; }
+	@Override
+	public MergeSpecification findForcedDeletesMerges(SegmentInfos segmentInfos, MergeContext mergeContext) {
+		return null;
+	}
 
-  @Override
-  public boolean useCompoundFile(SegmentInfos segments, SegmentCommitInfo newSegment, MergeContext mergeContext) {
-    return newSegment.info.getUseCompoundFile();
-  }
+	@Override
+	public boolean useCompoundFile(SegmentInfos segments, SegmentCommitInfo newSegment, MergeContext mergeContext) {
+		return newSegment.info.getUseCompoundFile();
+	}
 
-  @Override
-  protected long size(SegmentCommitInfo info, MergeContext context) throws IOException {
-    return Long.MAX_VALUE;
-  }
+	@Override
+	protected long size(SegmentCommitInfo info, MergeContext context) throws IOException {
+		return Long.MAX_VALUE;
+	}
 
-  @Override
-  public double getNoCFSRatio() {
-    return super.getNoCFSRatio();
-  }
+	@Override
+	public double getNoCFSRatio() {
+		return super.getNoCFSRatio();
+	}
 
-  @Override
-  public double getMaxCFSSegmentSizeMB() {
-    return super.getMaxCFSSegmentSizeMB();
-  }
+	@Override
+	public double getMaxCFSSegmentSizeMB() {
+		return super.getMaxCFSSegmentSizeMB();
+	}
 
-  @Override
-  public void setMaxCFSSegmentSizeMB(double v) {
-    super.setMaxCFSSegmentSizeMB(v);
-  }
+	@Override
+	public void setMaxCFSSegmentSizeMB(double v) {
+		super.setMaxCFSSegmentSizeMB(v);
+	}
 
-  @Override
-  public void setNoCFSRatio(double noCFSRatio) {
-    super.setNoCFSRatio(noCFSRatio);
-  }
+	@Override
+	public void setNoCFSRatio(double noCFSRatio) {
+		super.setNoCFSRatio(noCFSRatio);
+	}
 
-  @Override
-  public boolean keepFullyDeletedSegment(IOSupplier<CodecReader> readerIOSupplier) throws IOException {
-    return super.keepFullyDeletedSegment(readerIOSupplier);
-  }
+	@Override
+	public boolean keepFullyDeletedSegment(IOSupplier<CodecReader> readerIOSupplier) throws IOException {
+		return super.keepFullyDeletedSegment(readerIOSupplier);
+	}
 
-  @Override
-  public int numDeletesToMerge(SegmentCommitInfo info, int delCount, IOSupplier<CodecReader> readerSupplier) throws IOException {
-    return  super.numDeletesToMerge(info, delCount, readerSupplier);
-  }
+	@Override
+	public int numDeletesToMerge(SegmentCommitInfo info, int delCount, IOSupplier<CodecReader> readerSupplier) throws IOException {
+		return super.numDeletesToMerge(info, delCount, readerSupplier);
+	}
 
-  @Override
-  public String toString() {
-    return "NoMergePolicy";
-  }
+	@Override
+	public String toString() {
+		return "NoMergePolicy";
+	}
 }

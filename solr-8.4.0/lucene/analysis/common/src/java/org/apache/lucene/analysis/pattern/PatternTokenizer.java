@@ -44,7 +44,7 @@ import org.apache.lucene.util.AttributeFactory;
  *  pattern = \'([^\']+)\'
  *  group = 0
  *  input = aaa 'bbb' 'ccc'
- *</pre>
+ * </pre>
  * the output will be two tokens: 'bbb' and 'ccc' (including the ' marks).  With the same input
  * but using group=1, the output would be: bbb and ccc (no ' marks)
  * <p>NOTE: This Tokenizer does not output tokens that are of zero length.</p>
@@ -53,114 +53,119 @@ import org.apache.lucene.util.AttributeFactory;
  */
 public final class PatternTokenizer extends Tokenizer {
 
-  private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-  private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
+	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+	private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
 
-  private final StringBuilder str = new StringBuilder();
-  private int index;
-  
-  private final int group;
-  private final Matcher matcher;
+	private final StringBuilder str = new StringBuilder();
+	private int index;
 
-  /** creates a new PatternTokenizer returning tokens from group (-1 for split functionality) */
-  public PatternTokenizer(Pattern pattern, int group) {
-    this(DEFAULT_TOKEN_ATTRIBUTE_FACTORY, pattern, group);
-  }
+	private final int group;
+	private final Matcher matcher;
 
-  /** creates a new PatternTokenizer returning tokens from group (-1 for split functionality) */
-  public PatternTokenizer(AttributeFactory factory, Pattern pattern, int group) {
-    super(factory);
-    this.group = group;
+	/**
+	 * creates a new PatternTokenizer returning tokens from group (-1 for split functionality)
+	 */
+	public PatternTokenizer(Pattern pattern, int group) {
+		this(DEFAULT_TOKEN_ATTRIBUTE_FACTORY, pattern, group);
+	}
 
-    // Use "" instead of str so don't consume chars
-    // (fillBuffer) from the input on throwing IAE below:
-    matcher = pattern.matcher("");
+	/**
+	 * creates a new PatternTokenizer returning tokens from group (-1 for split functionality)
+	 */
+	public PatternTokenizer(AttributeFactory factory, Pattern pattern, int group) {
+		super(factory);
+		this.group = group;
 
-    // confusingly group count depends ENTIRELY on the pattern but is only accessible via matcher
-    if (group >= 0 && group > matcher.groupCount()) {
-      throw new IllegalArgumentException("invalid group specified: pattern only has: " + matcher.groupCount() + " capturing groups");
-    }
-  }
+		// Use "" instead of str so don't consume chars
+		// (fillBuffer) from the input on throwing IAE below:
+		matcher = pattern.matcher("");
 
-  @Override
-  public boolean incrementToken() {
-    if (index >= str.length()) return false;
-    clearAttributes();
-    if (group >= 0) {
-    
-      // match a specific group
-      while (matcher.find()) {
-        index = matcher.start(group);
-        final int endIndex = matcher.end(group);
-        if (index == endIndex) continue;       
-        termAtt.setEmpty().append(str, index, endIndex);
-        offsetAtt.setOffset(correctOffset(index), correctOffset(endIndex));
-        return true;
-      }
-      
-      index = Integer.MAX_VALUE; // mark exhausted
-      return false;
-      
-    } else {
-    
-      // String.split() functionality
-      while (matcher.find()) {
-        if (matcher.start() - index > 0) {
-          // found a non-zero-length token
-          termAtt.setEmpty().append(str, index, matcher.start());
-          offsetAtt.setOffset(correctOffset(index), correctOffset(matcher.start()));
-          index = matcher.end();
-          return true;
-        }
-        
-        index = matcher.end();
-      }
-      
-      if (str.length() - index == 0) {
-        index = Integer.MAX_VALUE; // mark exhausted
-        return false;
-      }
-      
-      termAtt.setEmpty().append(str, index, str.length());
-      offsetAtt.setOffset(correctOffset(index), correctOffset(str.length()));
-      index = Integer.MAX_VALUE; // mark exhausted
-      return true;
-    }
-  }
+		// confusingly group count depends ENTIRELY on the pattern but is only accessible via matcher
+		if (group >= 0 && group > matcher.groupCount()) {
+			throw new IllegalArgumentException("invalid group specified: pattern only has: " + matcher.groupCount() + " capturing groups");
+		}
+	}
 
-  @Override
-  public void end() throws IOException {
-    super.end();
-    final int ofs = correctOffset(str.length());
-    offsetAtt.setOffset(ofs, ofs);
-  }
+	@Override
+	public boolean incrementToken() {
+		if (index >= str.length()) return false;
+		clearAttributes();
+		if (group >= 0) {
 
-  @Override
-  public void close() throws IOException {
-    try {
-      super.close();
-    } finally {
-      str.setLength(0);
-      str.trimToSize();
-    }
-  }
+			// match a specific group
+			while (matcher.find()) {
+				index = matcher.start(group);
+				final int endIndex = matcher.end(group);
+				if (index == endIndex) continue;
+				termAtt.setEmpty().append(str, index, endIndex);
+				offsetAtt.setOffset(correctOffset(index), correctOffset(endIndex));
+				return true;
+			}
 
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    fillBuffer(input);
-    matcher.reset(str);
-    index = 0;
-  }
-  
-  // TODO: we should see if we can make this tokenizer work without reading
-  // the entire document into RAM, perhaps with Matcher.hitEnd/requireEnd ?
-  final char[] buffer = new char[8192];
-  private void fillBuffer(Reader input) throws IOException {
-    int len;
-    str.setLength(0);
-    while ((len = input.read(buffer)) > 0) {
-      str.append(buffer, 0, len);
-    }
-  }
+			index = Integer.MAX_VALUE; // mark exhausted
+			return false;
+
+		} else {
+
+			// String.split() functionality
+			while (matcher.find()) {
+				if (matcher.start() - index > 0) {
+					// found a non-zero-length token
+					termAtt.setEmpty().append(str, index, matcher.start());
+					offsetAtt.setOffset(correctOffset(index), correctOffset(matcher.start()));
+					index = matcher.end();
+					return true;
+				}
+
+				index = matcher.end();
+			}
+
+			if (str.length() - index == 0) {
+				index = Integer.MAX_VALUE; // mark exhausted
+				return false;
+			}
+
+			termAtt.setEmpty().append(str, index, str.length());
+			offsetAtt.setOffset(correctOffset(index), correctOffset(str.length()));
+			index = Integer.MAX_VALUE; // mark exhausted
+			return true;
+		}
+	}
+
+	@Override
+	public void end() throws IOException {
+		super.end();
+		final int ofs = correctOffset(str.length());
+		offsetAtt.setOffset(ofs, ofs);
+	}
+
+	@Override
+	public void close() throws IOException {
+		try {
+			super.close();
+		} finally {
+			str.setLength(0);
+			str.trimToSize();
+		}
+	}
+
+	@Override
+	public void reset() throws IOException {
+		super.reset();
+		fillBuffer(input);
+		matcher.reset(str);
+		index = 0;
+	}
+
+	// TODO: we should see if we can make this tokenizer work without reading
+	// the entire document into RAM, perhaps with Matcher.hitEnd/requireEnd ?
+	final char[] buffer = new char[8192];
+
+	private void fillBuffer(Reader input) throws IOException {
+		int len;
+		str.setLength(0);
+		while ((len = input.read(buffer)) > 0) {
+			str.append(buffer, 0, len);
+		}
+	}
 }

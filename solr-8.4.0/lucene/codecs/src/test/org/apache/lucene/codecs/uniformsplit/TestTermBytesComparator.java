@@ -42,148 +42,148 @@ import org.apache.lucene.util.LuceneTestCase;
  */
 public class TestTermBytesComparator extends LuceneTestCase {
 
-  public void testComparison() throws IOException {
-    TermBytes[] vocab = new TermBytes[]{
-        termBytes(1, "abaco"),
-        termBytes(2, "amiga"),
-        termBytes(5, "amigo"),
-        termBytes(2, "arco"),
-        termBytes(1, "bloom"),
-        termBytes(1, "frien"),
-        termBytes(6, "frienchies"),
-        termBytes(6, "friend"),
-        termBytes(7, "friendalan"),
-        termBytes(7, "friende"),
-        termBytes(8, "friendez"),
-    };
-    List<BlockLine> lines = generateBlockLines(vocab);
-    Directory directory = new ByteBuffersDirectory();
-    try (IndexOutput indexOutput = directory.createOutput("temp.bin", IOContext.DEFAULT)) {
-      indexOutput.writeVInt(5);
-    }
+	public void testComparison() throws IOException {
+		TermBytes[] vocab = new TermBytes[]{
+			termBytes(1, "abaco"),
+			termBytes(2, "amiga"),
+			termBytes(5, "amigo"),
+			termBytes(2, "arco"),
+			termBytes(1, "bloom"),
+			termBytes(1, "frien"),
+			termBytes(6, "frienchies"),
+			termBytes(6, "friend"),
+			termBytes(7, "friendalan"),
+			termBytes(7, "friende"),
+			termBytes(8, "friendez"),
+		};
+		List<BlockLine> lines = generateBlockLines(vocab);
+		Directory directory = new ByteBuffersDirectory();
+		try (IndexOutput indexOutput = directory.createOutput("temp.bin", IOContext.DEFAULT)) {
+			indexOutput.writeVInt(5);
+		}
 
-    MockBlockReader blockReader = new MockBlockReader(lines, directory);
+		MockBlockReader blockReader = new MockBlockReader(lines, directory);
 
-    assertAlwaysGreater(blockReader, new BytesRef("z"));
+		assertAlwaysGreater(blockReader, new BytesRef("z"));
 
-    assertGreaterUntil(1, blockReader, new BytesRef("abacu"));
+		assertGreaterUntil(1, blockReader, new BytesRef("abacu"));
 
-    assertGreaterUntil(4, blockReader, new BytesRef("bar"));
+		assertGreaterUntil(4, blockReader, new BytesRef("bar"));
 
-    assertGreaterUntil(2, blockReader, new BytesRef("amigas"));
+		assertGreaterUntil(2, blockReader, new BytesRef("amigas"));
 
-    assertGreaterUntil(10, blockReader, new BytesRef("friendez"));
+		assertGreaterUntil(10, blockReader, new BytesRef("friendez"));
 
-  }
+	}
 
-  private TermsEnum.SeekStatus assertGreaterUntil(int expectedPosition, MockBlockReader blockReader, BytesRef lookedTerm) throws IOException {
-    TermsEnum.SeekStatus seekStatus = blockReader.seekInBlock(lookedTerm);
-    assertEquals("looked Term: " + lookedTerm.utf8ToString(), expectedPosition, blockReader.lineIndexInBlock - 1);
+	private TermsEnum.SeekStatus assertGreaterUntil(int expectedPosition, MockBlockReader blockReader, BytesRef lookedTerm) throws IOException {
+		TermsEnum.SeekStatus seekStatus = blockReader.seekInBlock(lookedTerm);
+		assertEquals("looked Term: " + lookedTerm.utf8ToString(), expectedPosition, blockReader.lineIndexInBlock - 1);
 
-    //reset the state
-    blockReader.reset();
-    return seekStatus;
-  }
+		//reset the state
+		blockReader.reset();
+		return seekStatus;
+	}
 
-  private void assertAlwaysGreater(MockBlockReader blockReader, BytesRef lookedTerm) throws IOException {
-    TermsEnum.SeekStatus seekStatus = assertGreaterUntil(-1, blockReader, lookedTerm);
-    assertEquals(TermsEnum.SeekStatus.END, seekStatus);
-  }
+	private void assertAlwaysGreater(MockBlockReader blockReader, BytesRef lookedTerm) throws IOException {
+		TermsEnum.SeekStatus seekStatus = assertGreaterUntil(-1, blockReader, lookedTerm);
+		assertEquals(TermsEnum.SeekStatus.END, seekStatus);
+	}
 
-  private List<BlockLine> generateBlockLines(TermBytes[] words) {
-    List<BlockLine> lines = new ArrayList<>(words.length);
-    for (TermBytes word : words) {
-      lines.add(new BlockLine(word, null));
-    }
-    return lines;
-  }
+	private List<BlockLine> generateBlockLines(TermBytes[] words) {
+		List<BlockLine> lines = new ArrayList<>(words.length);
+		for (TermBytes word : words) {
+			lines.add(new BlockLine(word, null));
+		}
+		return lines;
+	}
 
-  class MockBlockReader extends BlockReader {
+	class MockBlockReader extends BlockReader {
 
-    private List<BlockLine> lines;
+		private List<BlockLine> lines;
 
-    MockBlockReader(List<BlockLine> lines, Directory directory) throws IOException {
-      super(null, directory.openInput("temp.bin", IOContext.DEFAULT),
-          createMockPostingReaderBase(), new FieldMetadata(null, 1), null);
-      this.lines = lines;
-    }
+		MockBlockReader(List<BlockLine> lines, Directory directory) throws IOException {
+			super(null, directory.openInput("temp.bin", IOContext.DEFAULT),
+				createMockPostingReaderBase(), new FieldMetadata(null, 1), null);
+			this.lines = lines;
+		}
 
-    @Override
-    protected int compareToMiddleAndJump(BytesRef searchedTerm) {
-      // Do not jump in test.
-      return -1;
-    }
+		@Override
+		protected int compareToMiddleAndJump(BytesRef searchedTerm) {
+			// Do not jump in test.
+			return -1;
+		}
 
-    @Override
-    protected BlockLine readLineInBlock() {
-      if (lineIndexInBlock >= lines.size()) {
-        lineIndexInBlock = 0;
-        return blockLine = null;
-      }
-      return blockLine = lines.get(lineIndexInBlock++);
-    }
+		@Override
+		protected BlockLine readLineInBlock() {
+			if (lineIndexInBlock >= lines.size()) {
+				lineIndexInBlock = 0;
+				return blockLine = null;
+			}
+			return blockLine = lines.get(lineIndexInBlock++);
+		}
 
-    @Override
-    protected void initializeHeader(BytesRef searchedTerm, long targetBlockStartFP) throws IOException {
-      // Force blockStartFP to an impossible value so we never trigger the optimization
-      // that keeps the current block with our mock block reader.
-      blockStartFP = Long.MIN_VALUE;
-      super.initializeHeader(searchedTerm, targetBlockStartFP);
-    }
+		@Override
+		protected void initializeHeader(BytesRef searchedTerm, long targetBlockStartFP) throws IOException {
+			// Force blockStartFP to an impossible value so we never trigger the optimization
+			// that keeps the current block with our mock block reader.
+			blockStartFP = Long.MIN_VALUE;
+			super.initializeHeader(searchedTerm, targetBlockStartFP);
+		}
 
-    @Override
-    protected BlockHeader readHeader() {
-      return blockHeader = lineIndexInBlock >= lines.size() ? null : new BlockHeader(lines.size(), 0, 0, 0, 0, 0);
-    }
+		@Override
+		protected BlockHeader readHeader() {
+			return blockHeader = lineIndexInBlock >= lines.size() ? null : new BlockHeader(lines.size(), 0, 0, 0, 0, 0);
+		}
 
-    void reset() {
-      lineIndexInBlock = 0;
-      blockHeader = null;
-      blockLine = null;
-    }
-  }
+		void reset() {
+			lineIndexInBlock = 0;
+			blockHeader = null;
+			blockLine = null;
+		}
+	}
 
-  private static TermBytes termBytes(int mdpLength, String term) {
-    return new TermBytes(mdpLength, new BytesRef(term));
-  }
+	private static TermBytes termBytes(int mdpLength, String term) {
+		return new TermBytes(mdpLength, new BytesRef(term));
+	}
 
-  private static PostingsReaderBase createMockPostingReaderBase() {
-    return new PostingsReaderBase() {
-      @Override
-      public void init(IndexInput termsIn, SegmentReadState state) {
-      }
+	private static PostingsReaderBase createMockPostingReaderBase() {
+		return new PostingsReaderBase() {
+			@Override
+			public void init(IndexInput termsIn, SegmentReadState state) {
+			}
 
-      @Override
-      public BlockTermState newTermState() {
-        return null;
-      }
+			@Override
+			public BlockTermState newTermState() {
+				return null;
+			}
 
-      @Override
-      public void decodeTerm(long[] longs, DataInput in, FieldInfo fieldInfo, BlockTermState state, boolean absolute) {
-      }
+			@Override
+			public void decodeTerm(long[] longs, DataInput in, FieldInfo fieldInfo, BlockTermState state, boolean absolute) {
+			}
 
-      @Override
-      public PostingsEnum postings(FieldInfo fieldInfo, BlockTermState state, PostingsEnum reuse, int flags) {
-        return null;
-      }
+			@Override
+			public PostingsEnum postings(FieldInfo fieldInfo, BlockTermState state, PostingsEnum reuse, int flags) {
+				return null;
+			}
 
-      @Override
-      public ImpactsEnum impacts(FieldInfo fieldInfo, BlockTermState state, int flags) {
-        return null;
-      }
+			@Override
+			public ImpactsEnum impacts(FieldInfo fieldInfo, BlockTermState state, int flags) {
+				return null;
+			}
 
-      @Override
-      public void checkIntegrity() {
-      }
+			@Override
+			public void checkIntegrity() {
+			}
 
-      @Override
-      public void close() {
-      }
+			@Override
+			public void close() {
+			}
 
-      @Override
-      public long ramBytesUsed() {
-        return 0;
-      }
-    };
-  }
+			@Override
+			public long ramBytesUsed() {
+				return 0;
+			}
+		};
+	}
 }

@@ -54,243 +54,247 @@ import org.apache.lucene.luke.models.documents.DocValues;
 import org.apache.lucene.luke.util.BytesRefUtils;
 import org.apache.lucene.util.NumericUtils;
 
-/** Factory of doc values dialog */
+/**
+ * Factory of doc values dialog
+ */
 public final class DocValuesDialogFactory implements DialogOpener.DialogFactory {
 
-  private static DocValuesDialogFactory instance;
+	private static DocValuesDialogFactory instance;
 
-  private final Preferences prefs;
+	private final Preferences prefs;
 
-  private final JComboBox<String> decodersCombo = new JComboBox<>();
+	private final JComboBox<String> decodersCombo = new JComboBox<>();
 
-  private final JList<String> valueList = new JList<>();
+	private final JList<String> valueList = new JList<>();
 
-  private final ListenerFunctions listeners = new ListenerFunctions();
+	private final ListenerFunctions listeners = new ListenerFunctions();
 
-  private JDialog dialog;
+	private JDialog dialog;
 
-  private String field;
+	private String field;
 
-  private DocValues docValues;
+	private DocValues docValues;
 
-  public synchronized static DocValuesDialogFactory getInstance() throws IOException {
-    if (instance == null) {
-      instance = new DocValuesDialogFactory();
-    }
-    return instance;
-  }
+	public synchronized static DocValuesDialogFactory getInstance() throws IOException {
+		if (instance == null) {
+			instance = new DocValuesDialogFactory();
+		}
+		return instance;
+	}
 
-  private DocValuesDialogFactory() throws IOException {
-    this.prefs = PreferencesFactory.getInstance();
-  }
+	private DocValuesDialogFactory() throws IOException {
+		this.prefs = PreferencesFactory.getInstance();
+	}
 
-  public void setValue(String field, DocValues docValues) {
-    this.field = field;
-    this.docValues = docValues;
+	public void setValue(String field, DocValues docValues) {
+		this.field = field;
+		this.docValues = docValues;
 
-    DefaultListModel<String> values = new DefaultListModel<>();
-    if (docValues.getValues().size() > 0) {
-      decodersCombo.setEnabled(false);
-      docValues.getValues().stream()
-          .map(BytesRefUtils::decode)
-          .forEach(values::addElement);
-    } else if (docValues.getNumericValues().size() > 0) {
-      decodersCombo.setEnabled(true);
-      docValues.getNumericValues().stream()
-          .map(String::valueOf)
-          .forEach(values::addElement);
-    }
+		DefaultListModel<String> values = new DefaultListModel<>();
+		if (docValues.getValues().size() > 0) {
+			decodersCombo.setEnabled(false);
+			docValues.getValues().stream()
+				.map(BytesRefUtils::decode)
+				.forEach(values::addElement);
+		} else if (docValues.getNumericValues().size() > 0) {
+			decodersCombo.setEnabled(true);
+			docValues.getNumericValues().stream()
+				.map(String::valueOf)
+				.forEach(values::addElement);
+		}
 
-    valueList.setModel(values);
-  }
+		valueList.setModel(values);
+	}
 
-  @Override
-  public JDialog create(Window owner, String title, int width, int height) {
-    if (Objects.isNull(field) || Objects.isNull(docValues)) {
-      throw new IllegalStateException("field name and/or doc values is not set.");
-    }
+	@Override
+	public JDialog create(Window owner, String title, int width, int height) {
+		if (Objects.isNull(field) || Objects.isNull(docValues)) {
+			throw new IllegalStateException("field name and/or doc values is not set.");
+		}
 
-    dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
-    dialog.add(content());
-    dialog.setSize(new Dimension(width, height));
-    dialog.setLocationRelativeTo(owner);
-    dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
-    return dialog;
-  }
+		dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
+		dialog.add(content());
+		dialog.setSize(new Dimension(width, height));
+		dialog.setLocationRelativeTo(owner);
+		dialog.getContentPane().setBackground(prefs.getColorTheme().getBackgroundColor());
+		return dialog;
+	}
 
-  private JPanel content() {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setOpaque(false);
-    panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-    panel.add(headerPanel(), BorderLayout.PAGE_START);
-    JScrollPane scrollPane = new JScrollPane(valueList());
-    scrollPane.setOpaque(false);
-    scrollPane.getViewport().setOpaque(false);
-    panel.add(scrollPane, BorderLayout.CENTER);
-    panel.add(footerPanel(), BorderLayout.PAGE_END);
-    return panel;
-  }
+	private JPanel content() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setOpaque(false);
+		panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+		panel.add(headerPanel(), BorderLayout.PAGE_START);
+		JScrollPane scrollPane = new JScrollPane(valueList());
+		scrollPane.setOpaque(false);
+		scrollPane.getViewport().setOpaque(false);
+		panel.add(scrollPane, BorderLayout.CENTER);
+		panel.add(footerPanel(), BorderLayout.PAGE_END);
+		return panel;
+	}
 
-  private JPanel headerPanel() {
-    JPanel header = new JPanel();
-    header.setOpaque(false);
-    header.setLayout(new BoxLayout(header, BoxLayout.PAGE_AXIS));
+	private JPanel headerPanel() {
+		JPanel header = new JPanel();
+		header.setOpaque(false);
+		header.setLayout(new BoxLayout(header, BoxLayout.PAGE_AXIS));
 
-    JPanel fieldHeader = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
-    fieldHeader.setOpaque(false);
-    fieldHeader.add(new JLabel(MessageUtils.getLocalizedMessage("documents.docvalues.label.doc_values")));
-    fieldHeader.add(new JLabel(field));
-    header.add(fieldHeader);
+		JPanel fieldHeader = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
+		fieldHeader.setOpaque(false);
+		fieldHeader.add(new JLabel(MessageUtils.getLocalizedMessage("documents.docvalues.label.doc_values")));
+		fieldHeader.add(new JLabel(field));
+		header.add(fieldHeader);
 
-    JPanel typeHeader = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
-    typeHeader.setOpaque(false);
-    typeHeader.add(new JLabel(MessageUtils.getLocalizedMessage("documents.docvalues.label.type")));
-    typeHeader.add(new JLabel(docValues.getDvType().toString()));
-    header.add(typeHeader);
+		JPanel typeHeader = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
+		typeHeader.setOpaque(false);
+		typeHeader.add(new JLabel(MessageUtils.getLocalizedMessage("documents.docvalues.label.type")));
+		typeHeader.add(new JLabel(docValues.getDvType().toString()));
+		header.add(typeHeader);
 
-    JPanel decodeHeader = new JPanel(new FlowLayout(FlowLayout.TRAILING, 3, 3));
-    decodeHeader.setOpaque(false);
-    decodeHeader.add(new JLabel("decoded as"));
-    String[] decoders = Arrays.stream(Decoder.values()).map(Decoder::toString).toArray(String[]::new);
-    decodersCombo.setModel(new DefaultComboBoxModel<>(decoders));
-    decodersCombo.setSelectedItem(Decoder.LONG.toString());
-    decodersCombo.addActionListener(listeners::selectDecoder);
-    decodeHeader.add(decodersCombo);
-    if (docValues.getValues().size() > 0) {
-      decodeHeader.setEnabled(false);
-    }
-    header.add(decodeHeader);
+		JPanel decodeHeader = new JPanel(new FlowLayout(FlowLayout.TRAILING, 3, 3));
+		decodeHeader.setOpaque(false);
+		decodeHeader.add(new JLabel("decoded as"));
+		String[] decoders = Arrays.stream(Decoder.values()).map(Decoder::toString).toArray(String[]::new);
+		decodersCombo.setModel(new DefaultComboBoxModel<>(decoders));
+		decodersCombo.setSelectedItem(Decoder.LONG.toString());
+		decodersCombo.addActionListener(listeners::selectDecoder);
+		decodeHeader.add(decodersCombo);
+		if (docValues.getValues().size() > 0) {
+			decodeHeader.setEnabled(false);
+		}
+		header.add(decodeHeader);
 
-    return header;
-  }
+		return header;
+	}
 
-  private JList<String> valueList() {
-    valueList.setVisibleRowCount(5);
-    valueList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-    valueList.setLayoutOrientation(JList.VERTICAL);
+	private JList<String> valueList() {
+		valueList.setVisibleRowCount(5);
+		valueList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		valueList.setLayoutOrientation(JList.VERTICAL);
 
-    DefaultListModel<String> values = new DefaultListModel<>();
-    if (docValues.getValues().size() > 0) {
-      docValues.getValues().stream()
-          .map(BytesRefUtils::decode)
-          .forEach(values::addElement);
-    } else {
-      docValues.getNumericValues().stream()
-          .map(String::valueOf)
-          .forEach(values::addElement);
-    }
-    valueList.setModel(values);
+		DefaultListModel<String> values = new DefaultListModel<>();
+		if (docValues.getValues().size() > 0) {
+			docValues.getValues().stream()
+				.map(BytesRefUtils::decode)
+				.forEach(values::addElement);
+		} else {
+			docValues.getNumericValues().stream()
+				.map(String::valueOf)
+				.forEach(values::addElement);
+		}
+		valueList.setModel(values);
 
-    return valueList;
-  }
+		return valueList;
+	}
 
-  private JPanel footerPanel() {
-    JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 5));
-    footer.setOpaque(false);
+	private JPanel footerPanel() {
+		JPanel footer = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 5));
+		footer.setOpaque(false);
 
-    JButton copyBtn = new JButton(FontUtils.elegantIconHtml("&#xe0e6;", MessageUtils.getLocalizedMessage("button.copy")));
-    copyBtn.setMargin(new Insets(3, 0, 3, 0));
-    copyBtn.addActionListener(listeners::copyValues);
-    footer.add(copyBtn);
+		JButton copyBtn = new JButton(FontUtils.elegantIconHtml("&#xe0e6;", MessageUtils.getLocalizedMessage("button.copy")));
+		copyBtn.setMargin(new Insets(3, 0, 3, 0));
+		copyBtn.addActionListener(listeners::copyValues);
+		footer.add(copyBtn);
 
-    JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
-    closeBtn.setMargin(new Insets(3, 0, 3, 0));
-    closeBtn.addActionListener(e -> dialog.dispose());
-    footer.add(closeBtn);
+		JButton closeBtn = new JButton(MessageUtils.getLocalizedMessage("button.close"));
+		closeBtn.setMargin(new Insets(3, 0, 3, 0));
+		closeBtn.addActionListener(e -> dialog.dispose());
+		footer.add(closeBtn);
 
-    return footer;
-  }
+		return footer;
+	}
 
-  // control methods
+	// control methods
 
-  private void selectDecoder() {
-    String decoderLabel = (String) decodersCombo.getSelectedItem();
-    Decoder decoder = Decoder.fromLabel(decoderLabel);
+	private void selectDecoder() {
+		String decoderLabel = (String) decodersCombo.getSelectedItem();
+		Decoder decoder = Decoder.fromLabel(decoderLabel);
 
-    if (docValues.getNumericValues().isEmpty()) {
-      return;
-    }
+		if (docValues.getNumericValues().isEmpty()) {
+			return;
+		}
 
-    DefaultListModel<String> values = new DefaultListModel<>();
-    switch (decoder) {
-      case LONG:
-        docValues.getNumericValues().stream()
-            .map(String::valueOf)
-            .forEach(values::addElement);
-        break;
-      case FLOAT:
-        docValues.getNumericValues().stream()
-            .mapToInt(Long::intValue)
-            .mapToObj(NumericUtils::sortableIntToFloat)
-            .map(String::valueOf)
-            .forEach(values::addElement);
-        break;
-      case DOUBLE:
-        docValues.getNumericValues().stream()
-            .map(NumericUtils::sortableLongToDouble)
-            .map(String::valueOf)
-            .forEach(values::addElement);
-        break;
-    }
+		DefaultListModel<String> values = new DefaultListModel<>();
+		switch (decoder) {
+			case LONG:
+				docValues.getNumericValues().stream()
+					.map(String::valueOf)
+					.forEach(values::addElement);
+				break;
+			case FLOAT:
+				docValues.getNumericValues().stream()
+					.mapToInt(Long::intValue)
+					.mapToObj(NumericUtils::sortableIntToFloat)
+					.map(String::valueOf)
+					.forEach(values::addElement);
+				break;
+			case DOUBLE:
+				docValues.getNumericValues().stream()
+					.map(NumericUtils::sortableLongToDouble)
+					.map(String::valueOf)
+					.forEach(values::addElement);
+				break;
+		}
 
-    valueList.setModel(values);
-  }
+		valueList.setModel(values);
+	}
 
-  private void copyValues() {
-    List<String> values = valueList.getSelectedValuesList();
-    if (values.isEmpty()) {
-      values = getAllVlues();
-    }
+	private void copyValues() {
+		List<String> values = valueList.getSelectedValuesList();
+		if (values.isEmpty()) {
+			values = getAllVlues();
+		}
 
-    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-    StringSelection selection = new StringSelection(String.join("\n", values));
-    clipboard.setContents(selection, null);
-  }
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		StringSelection selection = new StringSelection(String.join("\n", values));
+		clipboard.setContents(selection, null);
+	}
 
-  private List<String> getAllVlues() {
-    List<String> values = new ArrayList<>();
-    for (int i = 0; i < valueList.getModel().getSize(); i++) {
-      values.add(valueList.getModel().getElementAt(i));
-    }
-    return values;
-  }
+	private List<String> getAllVlues() {
+		List<String> values = new ArrayList<>();
+		for (int i = 0; i < valueList.getModel().getSize(); i++) {
+			values.add(valueList.getModel().getElementAt(i));
+		}
+		return values;
+	}
 
-  private class ListenerFunctions {
+	private class ListenerFunctions {
 
-    void selectDecoder(ActionEvent e) {
-      DocValuesDialogFactory.this.selectDecoder();
-    }
+		void selectDecoder(ActionEvent e) {
+			DocValuesDialogFactory.this.selectDecoder();
+		}
 
-    void copyValues(ActionEvent e) {
-      DocValuesDialogFactory.this.copyValues();
-    }
-  }
+		void copyValues(ActionEvent e) {
+			DocValuesDialogFactory.this.copyValues();
+		}
+	}
 
 
-  /** doc value decoders */
-  public enum Decoder {
+	/**
+	 * doc value decoders
+	 */
+	public enum Decoder {
 
-    LONG("long"), FLOAT("float"), DOUBLE("double");
+		LONG("long"), FLOAT("float"), DOUBLE("double");
 
-    private final String label;
+		private final String label;
 
-    Decoder(String label) {
-      this.label = label;
-    }
+		Decoder(String label) {
+			this.label = label;
+		}
 
-    @Override
-    public String toString() {
-      return label;
-    }
+		@Override
+		public String toString() {
+			return label;
+		}
 
-    public static Decoder fromLabel(String label) {
-      for (Decoder d : values()) {
-        if (d.label.equalsIgnoreCase(label)) {
-          return d;
-        }
-      }
-      throw new IllegalArgumentException("No such decoder: " + label);
-    }
-  }
+		public static Decoder fromLabel(String label) {
+			for (Decoder d : values()) {
+				if (d.label.equalsIgnoreCase(label)) {
+					return d;
+				}
+			}
+			throw new IllegalArgumentException("No such decoder: " + label);
+		}
+	}
 
 }

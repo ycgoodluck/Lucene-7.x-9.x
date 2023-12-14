@@ -24,43 +24,46 @@ import java.util.Objects;
  */
 public abstract class FilterSortedNumericDocValues extends SortedNumericDocValues {
 
-  /** Wrapped values */
-  protected final SortedNumericDocValues in;
+	/**
+	 * Wrapped values
+	 */
+	protected final SortedNumericDocValues in;
 
-  /** Sole constructor */
-  public FilterSortedNumericDocValues(SortedNumericDocValues in) {
-    Objects.requireNonNull(in);
-    this.in = in;
-  }
+	/**
+	 * Sole constructor
+	 */
+	public FilterSortedNumericDocValues(SortedNumericDocValues in) {
+		Objects.requireNonNull(in);
+		this.in = in;
+	}
 
-  public boolean advanceExact(int target) throws IOException {
-    return in.advanceExact(target);
-  }
+	public boolean advanceExact(int target) throws IOException {
+		return in.advanceExact(target);
+	}
 
-  public long nextValue() throws IOException {
-    return in.nextValue();
-  }
+	public long nextValue() throws IOException {
+		return in.nextValue();
+	}
 
-  public int docValueCount() {
-    return in.docValueCount();
-  }
+	public int docValueCount() {
+		return in.docValueCount();
+	}
 
-  public int docID() {
-    return in.docID();
-  }
+	public int docID() {
+		return in.docID();
+	}
 
-  public int nextDoc() throws IOException {
-    return in.nextDoc();
-  }
+	public int nextDoc() throws IOException {
+		return in.nextDoc();
+	}
 
-  public int advance(int target) throws IOException {
-    return in.advance(target);
-  }
+	public int advance(int target) throws IOException {
+		return in.advance(target);
+	}
 
-  public long cost() {
-    return in.cost();
-  }
+	public long cost() {
+		return in.cost();
+	}
 
-  
 
 }

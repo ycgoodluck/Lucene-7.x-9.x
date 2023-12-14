@@ -32,177 +32,187 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.TwoPhaseIterator;
 import org.apache.lucene.search.Weight;
 
-/** Represents a range over long values.
+/**
+ * Represents a range over long values.
  *
- * @lucene.experimental */
+ * @lucene.experimental
+ */
 public final class LongRange extends Range {
-  /** Minimum (inclusive). */
-  public final long min;
+	/**
+	 * Minimum (inclusive).
+	 */
+	public final long min;
 
-  /** Maximum (inclusive). */
-  public final long max;
+	/**
+	 * Maximum (inclusive).
+	 */
+	public final long max;
 
-  // TODO: can we require fewer args? (same for
-  // Double/FloatRange too)
+	// TODO: can we require fewer args? (same for
+	// Double/FloatRange too)
 
-  /** Create a LongRange. */
-  public LongRange(String label, long minIn, boolean minInclusive, long maxIn, boolean maxInclusive) {
-    super(label);
+	/**
+	 * Create a LongRange.
+	 */
+	public LongRange(String label, long minIn, boolean minInclusive, long maxIn, boolean maxInclusive) {
+		super(label);
 
-    if (!minInclusive) {
-      if (minIn != Long.MAX_VALUE) {
-        minIn++;
-      } else {
-        failNoMatch();
-      }
-    }
+		if (!minInclusive) {
+			if (minIn != Long.MAX_VALUE) {
+				minIn++;
+			} else {
+				failNoMatch();
+			}
+		}
 
-    if (!maxInclusive) {
-      if (maxIn != Long.MIN_VALUE) {
-        maxIn--;
-      } else {
-        failNoMatch();
-      }
-    }
+		if (!maxInclusive) {
+			if (maxIn != Long.MIN_VALUE) {
+				maxIn--;
+			} else {
+				failNoMatch();
+			}
+		}
 
-    if (minIn > maxIn) {
-      failNoMatch();
-    }
+		if (minIn > maxIn) {
+			failNoMatch();
+		}
 
-    this.min = minIn;
-    this.max = maxIn;
-  }
+		this.min = minIn;
+		this.max = maxIn;
+	}
 
-  /** True if this range accepts the provided value. */
-  public boolean accept(long value) {
-    return value >= min && value <= max;
-  }
+	/**
+	 * True if this range accepts the provided value.
+	 */
+	public boolean accept(long value) {
+		return value >= min && value <= max;
+	}
 
-  @Override
-  public String toString() {
-    return "LongRange(" + label + ": " + min + " to " + max + ")";
-  }
+	@Override
+	public String toString() {
+		return "LongRange(" + label + ": " + min + " to " + max + ")";
+	}
 
-  @Override
-  public boolean equals(Object _that) {
-    if (_that instanceof LongRange == false) {
-      return false;
-    }
-    LongRange that = (LongRange) _that;
-    return that.label.equals(this.label) &&
-        that.min == this.min &&
-        that.max == this.max;
-  }
+	@Override
+	public boolean equals(Object _that) {
+		if (_that instanceof LongRange == false) {
+			return false;
+		}
+		LongRange that = (LongRange) _that;
+		return that.label.equals(this.label) &&
+			that.min == this.min &&
+			that.max == this.max;
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(label, min, max);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(label, min, max);
+	}
 
-  private static class ValueSourceQuery extends Query {
-    private final LongRange range;
-    private final Query fastMatchQuery;
-    private final LongValuesSource valueSource;
+	private static class ValueSourceQuery extends Query {
+		private final LongRange range;
+		private final Query fastMatchQuery;
+		private final LongValuesSource valueSource;
 
-    ValueSourceQuery(LongRange range, Query fastMatchQuery, LongValuesSource valueSource) {
-      this.range = range;
-      this.fastMatchQuery = fastMatchQuery;
-      this.valueSource = valueSource;
-    }
+		ValueSourceQuery(LongRange range, Query fastMatchQuery, LongValuesSource valueSource) {
+			this.range = range;
+			this.fastMatchQuery = fastMatchQuery;
+			this.valueSource = valueSource;
+		}
 
-    @Override
-    public boolean equals(Object other) {
-      return sameClassAs(other) &&
-             equalsTo(getClass().cast(other));
-    }
+		@Override
+		public boolean equals(Object other) {
+			return sameClassAs(other) &&
+				equalsTo(getClass().cast(other));
+		}
 
-    private boolean equalsTo(ValueSourceQuery other) {
-      return range.equals(other.range) && 
-             Objects.equals(fastMatchQuery, other.fastMatchQuery) && 
-             valueSource.equals(other.valueSource);
-    }
+		private boolean equalsTo(ValueSourceQuery other) {
+			return range.equals(other.range) &&
+				Objects.equals(fastMatchQuery, other.fastMatchQuery) &&
+				valueSource.equals(other.valueSource);
+		}
 
-    @Override
-    public int hashCode() {
-      return classHash() + 31 * Objects.hash(range, fastMatchQuery, valueSource);
-    }
+		@Override
+		public int hashCode() {
+			return classHash() + 31 * Objects.hash(range, fastMatchQuery, valueSource);
+		}
 
-    @Override
-    public String toString(String field) {
-      return "Filter(" + range.toString() + ")";
-    }
+		@Override
+		public String toString(String field) {
+			return "Filter(" + range.toString() + ")";
+		}
 
-    @Override
-    public Query rewrite(IndexReader reader) throws IOException {
-      if (fastMatchQuery != null) {
-        final Query fastMatchRewritten = fastMatchQuery.rewrite(reader);
-        if (fastMatchRewritten != fastMatchQuery) {
-          return new ValueSourceQuery(range, fastMatchRewritten, valueSource);
-        }
-      }
-      return super.rewrite(reader);
-    }
+		@Override
+		public Query rewrite(IndexReader reader) throws IOException {
+			if (fastMatchQuery != null) {
+				final Query fastMatchRewritten = fastMatchQuery.rewrite(reader);
+				if (fastMatchRewritten != fastMatchQuery) {
+					return new ValueSourceQuery(range, fastMatchRewritten, valueSource);
+				}
+			}
+			return super.rewrite(reader);
+		}
 
-    @Override
-    public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-      final Weight fastMatchWeight = fastMatchQuery == null
-          ? null
-          : searcher.createWeight(fastMatchQuery, false, 1f);
+		@Override
+		public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+			final Weight fastMatchWeight = fastMatchQuery == null
+				? null
+				: searcher.createWeight(fastMatchQuery, false, 1f);
 
-      return new ConstantScoreWeight(this, boost) {
-        @Override
-        public Scorer scorer(LeafReaderContext context) throws IOException {
-          final int maxDoc = context.reader().maxDoc();
+			return new ConstantScoreWeight(this, boost) {
+				@Override
+				public Scorer scorer(LeafReaderContext context) throws IOException {
+					final int maxDoc = context.reader().maxDoc();
 
-          final DocIdSetIterator approximation;
-          if (fastMatchWeight == null) {
-            approximation = DocIdSetIterator.all(maxDoc);
-          } else {
-            Scorer s = fastMatchWeight.scorer(context);
-            if (s == null) {
-              return null;
-            }
-            approximation = s.iterator();
-          }
+					final DocIdSetIterator approximation;
+					if (fastMatchWeight == null) {
+						approximation = DocIdSetIterator.all(maxDoc);
+					} else {
+						Scorer s = fastMatchWeight.scorer(context);
+						if (s == null) {
+							return null;
+						}
+						approximation = s.iterator();
+					}
 
-          final LongValues values = valueSource.getValues(context, null);
-          final TwoPhaseIterator twoPhase = new TwoPhaseIterator(approximation) {
-            @Override
-            public boolean matches() throws IOException {
-              return values.advanceExact(approximation.docID()) && range.accept(values.longValue());
-            }
+					final LongValues values = valueSource.getValues(context, null);
+					final TwoPhaseIterator twoPhase = new TwoPhaseIterator(approximation) {
+						@Override
+						public boolean matches() throws IOException {
+							return values.advanceExact(approximation.docID()) && range.accept(values.longValue());
+						}
 
-            @Override
-            public float matchCost() {
-              return 100; // TODO: use cost of range.accept()
-            }
-          };
-          return new ConstantScoreScorer(this, score(), twoPhase);
-        }
+						@Override
+						public float matchCost() {
+							return 100; // TODO: use cost of range.accept()
+						}
+					};
+					return new ConstantScoreScorer(this, score(), twoPhase);
+				}
 
-        @Override
-        public boolean isCacheable(LeafReaderContext ctx) {
-          return valueSource.isCacheable(ctx);
-        }
+				@Override
+				public boolean isCacheable(LeafReaderContext ctx) {
+					return valueSource.isCacheable(ctx);
+				}
 
-      };
-    }
+			};
+		}
 
-  }
+	}
 
-  /**
-   * Create a Query that matches documents in this range
-   *
-   * The query will check all documents that match the provided match query,
-   * or every document in the index if the match query is null.
-   *
-   * If the value source is static, eg an indexed numeric field, it may be
-   * faster to use {@link org.apache.lucene.search.PointRangeQuery}
-   *
-   * @param fastMatchQuery a query to use as a filter
-   * @param valueSource    the source of values for the range check
-   */
-  public Query getQuery(Query fastMatchQuery, LongValuesSource valueSource) {
-    return new ValueSourceQuery(this, fastMatchQuery, valueSource);
-  }
+	/**
+	 * Create a Query that matches documents in this range
+	 * <p>
+	 * The query will check all documents that match the provided match query,
+	 * or every document in the index if the match query is null.
+	 * <p>
+	 * If the value source is static, eg an indexed numeric field, it may be
+	 * faster to use {@link org.apache.lucene.search.PointRangeQuery}
+	 *
+	 * @param fastMatchQuery a query to use as a filter
+	 * @param valueSource    the source of values for the range check
+	 */
+	public Query getQuery(Query fastMatchQuery, LongValuesSource valueSource) {
+		return new ValueSourceQuery(this, fastMatchQuery, valueSource);
+	}
 }

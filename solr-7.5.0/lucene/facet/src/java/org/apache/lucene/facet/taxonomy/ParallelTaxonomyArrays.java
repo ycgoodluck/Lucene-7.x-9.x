@@ -26,40 +26,42 @@ package org.apache.lucene.facet.taxonomy;
  * <li>{@code siblings}: {@code siblings[i]} denotes the sibling of category
  * ordinal {@code i}.</li>
  * </ul>
- * 
+ * <p>
  * To traverse the taxonomy tree, you typically start with {@code children[0]}
  * (ordinal 0 is reserved for ROOT), and then depends if you want to do DFS or
  * BFS, you call {@code children[children[0]]} or {@code siblings[children[0]]}
  * and so forth, respectively.
- * 
+ *
  * <p>
  * <b>NOTE:</b> you are not expected to modify the values of the arrays, since
  * the arrays are shared with other threads.
- * 
+ *
  * @lucene.experimental
  */
 public abstract class ParallelTaxonomyArrays {
 
-  /** Sole constructor. */
-  public ParallelTaxonomyArrays() {
-  }
+	/**
+	 * Sole constructor.
+	 */
+	public ParallelTaxonomyArrays() {
+	}
 
-  /**
-   * Returns the parents array, where {@code parents[i]} denotes the parent of
-   * category ordinal {@code i}.
-   */
-  public abstract int[] parents();
-  
-  /**
-   * Returns the children array, where {@code children[i]} denotes a child of
-   * category ordinal {@code i}.
-   */
-  public abstract int[] children();
-  
-  /**
-   * Returns the siblings array, where {@code siblings[i]} denotes the sibling
-   * of category ordinal {@code i}.
-   */
-  public abstract int[] siblings();
+	/**
+	 * Returns the parents array, where {@code parents[i]} denotes the parent of
+	 * category ordinal {@code i}.
+	 */
+	public abstract int[] parents();
+
+	/**
+	 * Returns the children array, where {@code children[i]} denotes a child of
+	 * category ordinal {@code i}.
+	 */
+	public abstract int[] children();
+
+	/**
+	 * Returns the siblings array, where {@code siblings[i]} denotes the sibling
+	 * of category ordinal {@code i}.
+	 */
+	public abstract int[] siblings();
 
 }

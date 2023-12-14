@@ -31,34 +31,36 @@ import org.apache.lucene.util.Version;
  * Simple tests for {@link JapanesePartOfSpeechStopFilterFactory}
  */
 public class TestJapanesePartOfSpeechStopFilterFactory extends BaseTokenStreamTestCase {
-  public void testBasics() throws IOException {
-    String tags = 
-        "#  verb-main:\n" +
-        "動詞-自立\n";
-    
-    JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String,String>());
-    tokenizerFactory.inform(new StringMockResourceLoader(""));
-    TokenStream ts = tokenizerFactory.create();
-    ((Tokenizer)ts).setReader(new StringReader("私は制限スピードを超える。"));
-    Map<String,String> args = new HashMap<>();
-    args.put("luceneMatchVersion", Version.LATEST.toString());
-    args.put("tags", "stoptags.txt");
-    JapanesePartOfSpeechStopFilterFactory factory = new JapanesePartOfSpeechStopFilterFactory(args);
-    factory.inform(new StringMockResourceLoader(tags));
-    ts = factory.create(ts);
-    assertTokenStreamContents(ts,
-        new String[] { "私", "は", "制限", "スピード", "を" }
-    );
-  }
-  
-  /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
-      new JapanesePartOfSpeechStopFilterFactory(new HashMap<String,String>() {{
-        put("luceneMatchVersion", Version.LATEST.toString());
-        put("bogusArg", "bogusValue");
-      }});
-    });
-    assertTrue(expected.getMessage().contains("Unknown parameters"));
-  }
+	public void testBasics() throws IOException {
+		String tags =
+			"#  verb-main:\n" +
+				"動詞-自立\n";
+
+		JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(new HashMap<String, String>());
+		tokenizerFactory.inform(new StringMockResourceLoader(""));
+		TokenStream ts = tokenizerFactory.create();
+		((Tokenizer) ts).setReader(new StringReader("私は制限スピードを超える。"));
+		Map<String, String> args = new HashMap<>();
+		args.put("luceneMatchVersion", Version.LATEST.toString());
+		args.put("tags", "stoptags.txt");
+		JapanesePartOfSpeechStopFilterFactory factory = new JapanesePartOfSpeechStopFilterFactory(args);
+		factory.inform(new StringMockResourceLoader(tags));
+		ts = factory.create(ts);
+		assertTokenStreamContents(ts,
+			new String[]{"私", "は", "制限", "スピード", "を"}
+		);
+	}
+
+	/**
+	 * Test that bogus arguments result in exception
+	 */
+	public void testBogusArguments() throws Exception {
+		IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {
+			new JapanesePartOfSpeechStopFilterFactory(new HashMap<String, String>() {{
+				put("luceneMatchVersion", Version.LATEST.toString());
+				put("bogusArg", "bogusValue");
+			}});
+		});
+		assertTrue(expected.getMessage().contains("Unknown parameters"));
+	}
 }

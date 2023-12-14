@@ -34,72 +34,73 @@ import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 
 /**
  * Test indexes ~82M docs with 52 positions each, so you get &gt; Integer.MAX_VALUE positions
+ *
  * @lucene.experimental
  */
-@SuppressCodecs({ "SimpleText", "Memory", "Direct" })
+@SuppressCodecs({"SimpleText", "Memory", "Direct"})
 @Monster("uses lots of space and takes a few minutes")
 public class Test2BPositions extends LuceneTestCase {
 
-  public void test() throws Exception {
-    BaseDirectoryWrapper dir = newFSDirectory(createTempDir("2BPositions"));
-    if (dir instanceof MockDirectoryWrapper) {
-      ((MockDirectoryWrapper)dir).setThrottling(MockDirectoryWrapper.Throttling.NEVER);
-    }
-    
-    IndexWriter w = new IndexWriter(dir,
-        new IndexWriterConfig(new MockAnalyzer(random()))
-        .setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH)
-        .setRAMBufferSizeMB(256.0)
-        .setMergeScheduler(new ConcurrentMergeScheduler())
-        .setMergePolicy(newLogMergePolicy(false, 10))
-        .setOpenMode(IndexWriterConfig.OpenMode.CREATE)
-        .setCodec(TestUtil.getDefaultCodec()));
+	public void test() throws Exception {
+		BaseDirectoryWrapper dir = newFSDirectory(createTempDir("2BPositions"));
+		if (dir instanceof MockDirectoryWrapper) {
+			((MockDirectoryWrapper) dir).setThrottling(MockDirectoryWrapper.Throttling.NEVER);
+		}
 
-    MergePolicy mp = w.getConfig().getMergePolicy();
-    if (mp instanceof LogByteSizeMergePolicy) {
-      // 1 petabyte:
-      ((LogByteSizeMergePolicy) mp).setMaxMergeMB(1024*1024*1024);
-    }
+		IndexWriter w = new IndexWriter(dir,
+			new IndexWriterConfig(new MockAnalyzer(random()))
+				.setMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH)
+				.setRAMBufferSizeMB(256.0)
+				.setMergeScheduler(new ConcurrentMergeScheduler())
+				.setMergePolicy(newLogMergePolicy(false, 10))
+				.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
+				.setCodec(TestUtil.getDefaultCodec()));
 
-    Document doc = new Document();
-    FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-    ft.setOmitNorms(true);
-    Field field = new Field("field", new MyTokenStream(), ft);
-    doc.add(field);
-    
-    final int numDocs = (Integer.MAX_VALUE / 26) + 1;
-    for (int i = 0; i < numDocs; i++) {
-      w.addDocument(doc);
-      if (VERBOSE && i % 100000 == 0) {
-        System.out.println(i + " of " + numDocs + "...");
-      }
-    }
-    w.forceMerge(1);
-    w.close();
-    dir.close();
-  }
-  
-  public static final class MyTokenStream extends TokenStream {
-    private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-    private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
-    int index;
+		MergePolicy mp = w.getConfig().getMergePolicy();
+		if (mp instanceof LogByteSizeMergePolicy) {
+			// 1 petabyte:
+			((LogByteSizeMergePolicy) mp).setMaxMergeMB(1024 * 1024 * 1024);
+		}
 
-    @Override
-    public boolean incrementToken() {
-      if (index < 52) {
-        clearAttributes();
-        termAtt.setLength(1);
-        termAtt.buffer()[0] = 'a';
-        posIncAtt.setPositionIncrement(1+index);
-        index++;
-        return true;
-      }
-      return false;
-    }
-    
-    @Override
-    public void reset() {
-      index = 0;
-    }
-  }
+		Document doc = new Document();
+		FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
+		ft.setOmitNorms(true);
+		Field field = new Field("field", new MyTokenStream(), ft);
+		doc.add(field);
+
+		final int numDocs = (Integer.MAX_VALUE / 26) + 1;
+		for (int i = 0; i < numDocs; i++) {
+			w.addDocument(doc);
+			if (VERBOSE && i % 100000 == 0) {
+				System.out.println(i + " of " + numDocs + "...");
+			}
+		}
+		w.forceMerge(1);
+		w.close();
+		dir.close();
+	}
+
+	public static final class MyTokenStream extends TokenStream {
+		private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+		private final PositionIncrementAttribute posIncAtt = addAttribute(PositionIncrementAttribute.class);
+		int index;
+
+		@Override
+		public boolean incrementToken() {
+			if (index < 52) {
+				clearAttributes();
+				termAtt.setLength(1);
+				termAtt.buffer()[0] = 'a';
+				posIncAtt.setPositionIncrement(1 + index);
+				index++;
+				return true;
+			}
+			return false;
+		}
+
+		@Override
+		public void reset() {
+			index = 0;
+		}
+	}
 }

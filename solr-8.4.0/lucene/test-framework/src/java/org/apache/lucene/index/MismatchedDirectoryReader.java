@@ -25,30 +25,30 @@ import java.util.Random;
  */
 public class MismatchedDirectoryReader extends FilterDirectoryReader {
 
-  static class MismatchedSubReaderWrapper extends SubReaderWrapper {
-    final Random random;
-    
-    MismatchedSubReaderWrapper(Random random) {
-      this.random = random;
-    }
-    
-    @Override
-    public LeafReader wrap(LeafReader reader) {
-      return new MismatchedLeafReader(reader, random);
-    }
-  }
+	static class MismatchedSubReaderWrapper extends SubReaderWrapper {
+		final Random random;
 
-  public MismatchedDirectoryReader(DirectoryReader in, Random random) throws IOException {
-    super(in, new MismatchedSubReaderWrapper(random));
-  }
+		MismatchedSubReaderWrapper(Random random) {
+			this.random = random;
+		}
 
-  @Override
-  protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
-    return new AssertingDirectoryReader(in);
-  }
+		@Override
+		public LeafReader wrap(LeafReader reader) {
+			return new MismatchedLeafReader(reader, random);
+		}
+	}
 
-  @Override
-  public CacheHelper getReaderCacheHelper() {
-    return in.getReaderCacheHelper();
-  }
+	public MismatchedDirectoryReader(DirectoryReader in, Random random) throws IOException {
+		super(in, new MismatchedSubReaderWrapper(random));
+	}
+
+	@Override
+	protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) throws IOException {
+		return new AssertingDirectoryReader(in);
+	}
+
+	@Override
+	public CacheHelper getReaderCacheHelper() {
+		return in.getReaderCacheHelper();
+	}
 }

@@ -38,49 +38,52 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *     &lt;filter class="solr.OpenNLPChunkerFilterFactory" chunkerModel="filename"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
- * @since 7.3.0
+ *
  * @lucene.spi {@value #NAME}
+ * @since 7.3.0
  */
 public class OpenNLPChunkerFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
 
-  /** SPI name */
-  public static final String NAME = "openNlpChunker";
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "openNlpChunker";
 
-  public static final String CHUNKER_MODEL = "chunkerModel";
+	public static final String CHUNKER_MODEL = "chunkerModel";
 
-  private final String chunkerModelFile;
+	private final String chunkerModelFile;
 
-  public OpenNLPChunkerFilterFactory(Map<String,String> args) {
-    super(args);
-    chunkerModelFile = get(args, CHUNKER_MODEL);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	public OpenNLPChunkerFilterFactory(Map<String, String> args) {
+		super(args);
+		chunkerModelFile = get(args, CHUNKER_MODEL);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public OpenNLPChunkerFilter create(TokenStream in) {
-    try {
-      NLPChunkerOp chunkerOp = null;
+	@Override
+	public OpenNLPChunkerFilter create(TokenStream in) {
+		try {
+			NLPChunkerOp chunkerOp = null;
 
-      if (chunkerModelFile != null) {
-        chunkerOp = OpenNLPOpsFactory.getChunker(chunkerModelFile);
-      }
-      return new OpenNLPChunkerFilter(in, chunkerOp);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
-  }
+			if (chunkerModelFile != null) {
+				chunkerOp = OpenNLPOpsFactory.getChunker(chunkerModelFile);
+			}
+			return new OpenNLPChunkerFilter(in, chunkerOp);
+		} catch (IOException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
 
-  @Override
-  public void inform(ResourceLoader loader) {
-    try {
-      // load and register read-only models in cache with file/resource names
-      if (chunkerModelFile != null) {
-        OpenNLPOpsFactory.getChunkerModel(chunkerModelFile, loader);
-      }
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
-  }
+	@Override
+	public void inform(ResourceLoader loader) {
+		try {
+			// load and register read-only models in cache with file/resource names
+			if (chunkerModelFile != null) {
+				OpenNLPOpsFactory.getChunkerModel(chunkerModelFile, loader);
+			}
+		} catch (IOException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
 }

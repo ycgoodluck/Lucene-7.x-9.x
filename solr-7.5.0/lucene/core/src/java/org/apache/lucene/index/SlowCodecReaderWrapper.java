@@ -36,292 +36,295 @@ import org.apache.lucene.util.Bits;
  * instead.
  */
 public final class SlowCodecReaderWrapper {
-  
-  /** No instantiation */
-  private SlowCodecReaderWrapper() {}
-  
-  /**
-   * Returns a {@code CodecReader} view of reader. 
-   * <p>
-   * If {@code reader} is already a {@code CodecReader}, it is returned
-   * directly. Otherwise, a (slow) view is returned.
-   */
-  public static CodecReader wrap(final LeafReader reader) throws IOException {
-    if (reader instanceof CodecReader) {
-      return (CodecReader) reader;
-    } else {
-      // simulate it slowly, over the leafReader api:
-      reader.checkIntegrity();
-      return new CodecReader() {
 
-        @Override
-        public TermVectorsReader getTermVectorsReader() {
-          reader.ensureOpen();
-          return readerToTermVectorsReader(reader);
-        }
+	/**
+	 * No instantiation
+	 */
+	private SlowCodecReaderWrapper() {
+	}
 
-        @Override
-        public StoredFieldsReader getFieldsReader() {
-          reader.ensureOpen();
-          return readerToStoredFieldsReader(reader);
-        }
+	/**
+	 * Returns a {@code CodecReader} view of reader.
+	 * <p>
+	 * If {@code reader} is already a {@code CodecReader}, it is returned
+	 * directly. Otherwise, a (slow) view is returned.
+	 */
+	public static CodecReader wrap(final LeafReader reader) throws IOException {
+		if (reader instanceof CodecReader) {
+			return (CodecReader) reader;
+		} else {
+			// simulate it slowly, over the leafReader api:
+			reader.checkIntegrity();
+			return new CodecReader() {
 
-        @Override
-        public NormsProducer getNormsReader() {
-          reader.ensureOpen();
-          return readerToNormsProducer(reader);
-        }
+				@Override
+				public TermVectorsReader getTermVectorsReader() {
+					reader.ensureOpen();
+					return readerToTermVectorsReader(reader);
+				}
 
-        @Override
-        public DocValuesProducer getDocValuesReader() {
-          reader.ensureOpen();
-          return readerToDocValuesProducer(reader);
-        }
+				@Override
+				public StoredFieldsReader getFieldsReader() {
+					reader.ensureOpen();
+					return readerToStoredFieldsReader(reader);
+				}
 
-        @Override
-        public FieldsProducer getPostingsReader() {
-          reader.ensureOpen();
-          try {
-            return readerToFieldsProducer(reader);
-          } catch (IOException bogus) {
-            throw new AssertionError(bogus);
-          }
-        }
+				@Override
+				public NormsProducer getNormsReader() {
+					reader.ensureOpen();
+					return readerToNormsProducer(reader);
+				}
 
-        @Override
-        public FieldInfos getFieldInfos() {
-          return reader.getFieldInfos();
-        }
+				@Override
+				public DocValuesProducer getDocValuesReader() {
+					reader.ensureOpen();
+					return readerToDocValuesProducer(reader);
+				}
 
-        @Override
-        public PointsReader getPointsReader() {
-          return pointValuesToReader(reader);
-        }
+				@Override
+				public FieldsProducer getPostingsReader() {
+					reader.ensureOpen();
+					try {
+						return readerToFieldsProducer(reader);
+					} catch (IOException bogus) {
+						throw new AssertionError(bogus);
+					}
+				}
 
-        @Override
-        public Bits getLiveDocs() {
-          return reader.getLiveDocs();
-        }
+				@Override
+				public FieldInfos getFieldInfos() {
+					return reader.getFieldInfos();
+				}
 
-        @Override
-        public int numDocs() {
-          return reader.numDocs();
-        }
+				@Override
+				public PointsReader getPointsReader() {
+					return pointValuesToReader(reader);
+				}
 
-        @Override
-        public int maxDoc() {
-          return reader.maxDoc();
-        }
+				@Override
+				public Bits getLiveDocs() {
+					return reader.getLiveDocs();
+				}
 
-        @Override
-        public CacheHelper getCoreCacheHelper() {
-          return reader.getCoreCacheHelper();
-        }
+				@Override
+				public int numDocs() {
+					return reader.numDocs();
+				}
 
-        @Override
-        public CacheHelper getReaderCacheHelper() {
-          return reader.getReaderCacheHelper();
-        }
+				@Override
+				public int maxDoc() {
+					return reader.maxDoc();
+				}
 
-        @Override
-        public String toString() {
-          return "SlowCodecReaderWrapper(" + reader + ")";
-        }
+				@Override
+				public CacheHelper getCoreCacheHelper() {
+					return reader.getCoreCacheHelper();
+				}
 
-        @Override
-        public LeafMetaData getMetaData() {
-          return reader.getMetaData();
-        }
-      };
-    }
-  }
+				@Override
+				public CacheHelper getReaderCacheHelper() {
+					return reader.getReaderCacheHelper();
+				}
 
-  private static PointsReader pointValuesToReader(LeafReader reader) {
-    return new PointsReader() {
+				@Override
+				public String toString() {
+					return "SlowCodecReaderWrapper(" + reader + ")";
+				}
 
-      @Override
-      public PointValues getValues(String field) throws IOException {
-        return reader.getPointValues(field);
-      }
+				@Override
+				public LeafMetaData getMetaData() {
+					return reader.getMetaData();
+				}
+			};
+		}
+	}
 
-      @Override
-      public void checkIntegrity() throws IOException {
-        // We already checkIntegrity the entire reader up front
-      }
+	private static PointsReader pointValuesToReader(LeafReader reader) {
+		return new PointsReader() {
 
-      @Override
-      public void close() {
-      }
+			@Override
+			public PointValues getValues(String field) throws IOException {
+				return reader.getPointValues(field);
+			}
 
-      @Override
-      public long ramBytesUsed() {
-        return 0;
-      }
+			@Override
+			public void checkIntegrity() throws IOException {
+				// We already checkIntegrity the entire reader up front
+			}
 
-    };
-  }
-  
-  private static NormsProducer readerToNormsProducer(final LeafReader reader) {
-    return new NormsProducer() {
+			@Override
+			public void close() {
+			}
 
-      @Override
-      public NumericDocValues getNorms(FieldInfo field) throws IOException {
-        return reader.getNormValues(field.name);
-      }
+			@Override
+			public long ramBytesUsed() {
+				return 0;
+			}
 
-      @Override
-      public void checkIntegrity() throws IOException {
-        // We already checkIntegrity the entire reader up front
-      }
+		};
+	}
 
-      @Override
-      public void close() {
-      }
+	private static NormsProducer readerToNormsProducer(final LeafReader reader) {
+		return new NormsProducer() {
 
-      @Override
-      public long ramBytesUsed() {
-        return 0;
-      }
-    };
-  }
+			@Override
+			public NumericDocValues getNorms(FieldInfo field) throws IOException {
+				return reader.getNormValues(field.name);
+			}
 
-  private static DocValuesProducer readerToDocValuesProducer(final LeafReader reader) {
-    return new DocValuesProducer() {
+			@Override
+			public void checkIntegrity() throws IOException {
+				// We already checkIntegrity the entire reader up front
+			}
 
-      @Override
-      public NumericDocValues getNumeric(FieldInfo field) throws IOException {
-        return reader.getNumericDocValues(field.name);
-      }
+			@Override
+			public void close() {
+			}
 
-      @Override
-      public BinaryDocValues getBinary(FieldInfo field) throws IOException {
-        return reader.getBinaryDocValues(field.name);
-      }
+			@Override
+			public long ramBytesUsed() {
+				return 0;
+			}
+		};
+	}
 
-      @Override
-      public SortedDocValues getSorted(FieldInfo field) throws IOException {
-        return reader.getSortedDocValues(field.name);
-      }
+	private static DocValuesProducer readerToDocValuesProducer(final LeafReader reader) {
+		return new DocValuesProducer() {
 
-      @Override
-      public SortedNumericDocValues getSortedNumeric(FieldInfo field) throws IOException {
-        return reader.getSortedNumericDocValues(field.name);
-      }
+			@Override
+			public NumericDocValues getNumeric(FieldInfo field) throws IOException {
+				return reader.getNumericDocValues(field.name);
+			}
 
-      @Override
-      public SortedSetDocValues getSortedSet(FieldInfo field) throws IOException {
-        return reader.getSortedSetDocValues(field.name);
-      }
+			@Override
+			public BinaryDocValues getBinary(FieldInfo field) throws IOException {
+				return reader.getBinaryDocValues(field.name);
+			}
 
-      @Override
-      public void checkIntegrity() throws IOException {
-        // We already checkIntegrity the entire reader up front
-      }
+			@Override
+			public SortedDocValues getSorted(FieldInfo field) throws IOException {
+				return reader.getSortedDocValues(field.name);
+			}
 
-      @Override
-      public void close() {
-      }
+			@Override
+			public SortedNumericDocValues getSortedNumeric(FieldInfo field) throws IOException {
+				return reader.getSortedNumericDocValues(field.name);
+			}
 
-      @Override
-      public long ramBytesUsed() {
-        return 0;
-      }
-    };
-  }
+			@Override
+			public SortedSetDocValues getSortedSet(FieldInfo field) throws IOException {
+				return reader.getSortedSetDocValues(field.name);
+			}
 
-  private static StoredFieldsReader readerToStoredFieldsReader(final LeafReader reader) {
-    return new StoredFieldsReader() {
-      @Override
-      public void visitDocument(int docID, StoredFieldVisitor visitor) throws IOException {
-        reader.document(docID, visitor);
-      }
+			@Override
+			public void checkIntegrity() throws IOException {
+				// We already checkIntegrity the entire reader up front
+			}
 
-      @Override
-      public StoredFieldsReader clone() {
-        return readerToStoredFieldsReader(reader);
-      }
+			@Override
+			public void close() {
+			}
 
-      @Override
-      public void checkIntegrity() throws IOException {
-        // We already checkIntegrity the entire reader up front
-      }
+			@Override
+			public long ramBytesUsed() {
+				return 0;
+			}
+		};
+	}
 
-      @Override
-      public void close() {
-      }
+	private static StoredFieldsReader readerToStoredFieldsReader(final LeafReader reader) {
+		return new StoredFieldsReader() {
+			@Override
+			public void visitDocument(int docID, StoredFieldVisitor visitor) throws IOException {
+				reader.document(docID, visitor);
+			}
 
-      @Override
-      public long ramBytesUsed() {
-        return 0;
-      }
-    };
-  }
+			@Override
+			public StoredFieldsReader clone() {
+				return readerToStoredFieldsReader(reader);
+			}
 
-  private static TermVectorsReader readerToTermVectorsReader(final LeafReader reader) {
-    return new TermVectorsReader() {
-      @Override
-      public Fields get(int docID) throws IOException {
-        return reader.getTermVectors(docID);
-      }
+			@Override
+			public void checkIntegrity() throws IOException {
+				// We already checkIntegrity the entire reader up front
+			}
 
-      @Override
-      public TermVectorsReader clone() {
-        return readerToTermVectorsReader(reader);
-      }
+			@Override
+			public void close() {
+			}
 
-      @Override
-      public void checkIntegrity() throws IOException {
-        // We already checkIntegrity the entire reader up front
-      }
+			@Override
+			public long ramBytesUsed() {
+				return 0;
+			}
+		};
+	}
 
-      @Override
-      public void close() {
-      }
+	private static TermVectorsReader readerToTermVectorsReader(final LeafReader reader) {
+		return new TermVectorsReader() {
+			@Override
+			public Fields get(int docID) throws IOException {
+				return reader.getTermVectors(docID);
+			}
 
-      @Override
-      public long ramBytesUsed() {
-        return 0;
-      }
-    };
-  }
+			@Override
+			public TermVectorsReader clone() {
+				return readerToTermVectorsReader(reader);
+			}
 
-  private static FieldsProducer readerToFieldsProducer(final LeafReader reader) throws IOException {
-    ArrayList<String> indexedFields = new ArrayList<>();
-    for (FieldInfo fieldInfo : reader.getFieldInfos()) {
-      if (fieldInfo.getIndexOptions() != IndexOptions.NONE) {
-        indexedFields.add(fieldInfo.name);
-      }
-    }
-    Collections.sort(indexedFields);
-    return new FieldsProducer() {
-      @Override
-      public Iterator<String> iterator() {
-        return indexedFields.iterator();
-      }
+			@Override
+			public void checkIntegrity() throws IOException {
+				// We already checkIntegrity the entire reader up front
+			}
 
-      @Override
-      public Terms terms(String field) throws IOException {
-        return reader.terms(field);
-      }
+			@Override
+			public void close() {
+			}
 
-      @Override
-      public int size() {
-        return indexedFields.size();
-      }
+			@Override
+			public long ramBytesUsed() {
+				return 0;
+			}
+		};
+	}
 
-      @Override
-      public void checkIntegrity() throws IOException {
-        // We already checkIntegrity the entire reader up front
-      }
+	private static FieldsProducer readerToFieldsProducer(final LeafReader reader) throws IOException {
+		ArrayList<String> indexedFields = new ArrayList<>();
+		for (FieldInfo fieldInfo : reader.getFieldInfos()) {
+			if (fieldInfo.getIndexOptions() != IndexOptions.NONE) {
+				indexedFields.add(fieldInfo.name);
+			}
+		}
+		Collections.sort(indexedFields);
+		return new FieldsProducer() {
+			@Override
+			public Iterator<String> iterator() {
+				return indexedFields.iterator();
+			}
 
-      @Override
-      public void close() {
-      }
+			@Override
+			public Terms terms(String field) throws IOException {
+				return reader.terms(field);
+			}
 
-      @Override
-      public long ramBytesUsed() {
-        return 0;
-      }
-    };
-  }
+			@Override
+			public int size() {
+				return indexedFields.size();
+			}
+
+			@Override
+			public void checkIntegrity() throws IOException {
+				// We already checkIntegrity the entire reader up front
+			}
+
+			@Override
+			public void close() {
+			}
+
+			@Override
+			public long ramBytesUsed() {
+				return 0;
+			}
+		};
+	}
 }

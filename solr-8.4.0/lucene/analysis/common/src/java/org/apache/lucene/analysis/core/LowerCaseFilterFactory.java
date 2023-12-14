@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link LowerCaseFilter}. 
+ * Factory for {@link LowerCaseFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_lwrcase" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
@@ -32,29 +32,33 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class LowerCaseFilterFactory extends TokenFilterFactory {
 
-  /** SPI name */
-  public static final String NAME = "lowercase";
-  
-  /** Creates a new LowerCaseFilterFactory */
-  public LowerCaseFilterFactory(Map<String,String> args) {
-    super(args);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
-    }
-  }
+	/**
+	 * SPI name
+	 */
+	public static final String NAME = "lowercase";
 
-  @Override
-  public TokenStream create(TokenStream input) {
-    return new LowerCaseFilter(input);
-  }
+	/**
+	 * Creates a new LowerCaseFilterFactory
+	 */
+	public LowerCaseFilterFactory(Map<String, String> args) {
+		super(args);
+		if (!args.isEmpty()) {
+			throw new IllegalArgumentException("Unknown parameters: " + args);
+		}
+	}
 
-  @Override
-  public TokenStream normalize(TokenStream input) {
-    return create(input);
-  }
+	@Override
+	public TokenStream create(TokenStream input) {
+		return new LowerCaseFilter(input);
+	}
+
+	@Override
+	public TokenStream normalize(TokenStream input) {
+		return create(input);
+	}
 }
